@@ -60,6 +60,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private static final int INDEX_SCREEN_HEIGHT         = 7;
     private static final int INDEX_SCREEN_LAYOUT_SIZE    = 8;
     private static final int INDEX_SCREEN_RATIO          = 9;
+    private static final int INDEX_SCREEN_ROUND          = 9;
     private static final int INDEX_SCREEN_ORIENTATION    = 10;
     private static final int INDEX_UI_MODE               = 11;
     private static final int INDEX_NIGHT_MODE            = 12;
@@ -314,6 +315,9 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof ScreenRatioQualifier) {
             mQualifiers[INDEX_SCREEN_RATIO] = qualifier;
 
+        } else if (qualifier instanceof ScreenRoundQualifier) {
+            mQualifiers[INDEX_SCREEN_ROUND] = qualifier;
+
         } else if (qualifier instanceof ScreenOrientationQualifier) {
             mQualifiers[INDEX_SCREEN_ORIENTATION] = qualifier;
 
@@ -462,6 +466,15 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     @Nullable
     public ScreenRatioQualifier getScreenRatioQualifier() {
         return (ScreenRatioQualifier)mQualifiers[INDEX_SCREEN_RATIO];
+    }
+
+    public void setScreenRoundQualifier(ScreenRoundQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_ROUND] = qualifier;
+    }
+
+    @Nullable
+    public ScreenRoundQualifier getScreenRoundQualifier() {
+        return (ScreenRoundQualifier)mQualifiers[INDEX_SCREEN_ROUND];
     }
 
     public void setScreenOrientationQualifier(ScreenOrientationQualifier qualifier) {
@@ -1035,6 +1048,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
         mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenSizeQualifier();
         mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
+        mQualifiers[INDEX_SCREEN_ROUND] = new ScreenRoundQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
         mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();
         mQualifiers[INDEX_NIGHT_MODE] = new NightModeQualifier();
