@@ -75,6 +75,10 @@ public class FileUtils {
         return new File(dir, Joiner.on(File.separatorChar).join(paths));
     }
 
+    public static String join(String... paths) {
+        return Joiner.on(File.separatorChar).join(paths);
+    }
+
     public static String relativePath(@NonNull File file, @NonNull File dir) {
         checkArgument(file.isFile(), "%s is not a file.", file.getPath());
         checkArgument(dir.isDirectory(), "%s is not a directory.", dir.getPath());
