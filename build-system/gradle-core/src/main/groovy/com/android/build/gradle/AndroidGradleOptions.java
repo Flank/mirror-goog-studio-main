@@ -82,6 +82,10 @@ public class AndroidGradleOptions {
         return getString(project, AndroidProject.PROPERTY_APK_LOCATION);
     }
 
+    public static boolean isIntegrationTest() {
+        return Boolean.parseBoolean(System.getenv("INTEGRATION_TEST"));
+    }
+
     @Nullable
     public static Integer getThreadPoolSize(@NonNull Project project) {
         Integer size = getInteger(project, PROPERTY_THREAD_POOL_SIZE);
