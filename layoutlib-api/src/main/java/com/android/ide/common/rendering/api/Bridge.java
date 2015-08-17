@@ -35,7 +35,7 @@ import java.util.Map;
 @SuppressWarnings({"MethodMayBeStatic", "UnusedDeclaration"})
 public abstract class Bridge {
 
-    public static final int API_CURRENT = 15;
+    public static final int API_CURRENT = 16;
 
     /**
      * Returns the API level of the layout library.
