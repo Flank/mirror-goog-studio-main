@@ -98,7 +98,9 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Java
             Category.CORRECTNESS,
             3,
             Severity.WARNING,
-            IMPLEMENTATION);
+            IMPLEMENTATION)
+            // Because of b.android.com/183120, fixed in 1.4
+            .setEnabledByDefault(false);
 
     /** Constructs a new detector */
     public PrivateResourceDetector() {
