@@ -443,6 +443,23 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                                 "; recommended version is " + recommended + " or later";
                         report(context, valueCookie, DEPENDENCY, message);
                     }
+
+                    // 23.0.0 shipped with a serious bugs which affects program correctness
+                    // (such as https://code.google.com/p/android/issues/detail?id=183180)
+                    // Make developers aware of this and suggest upgrading
+                    if (version.getMajor() == 23 && version.getMinor() == 0 &&
+                            version.getMicro() == 0 && context.isEnabled(COMPATIBILITY)) {
+                        // This specific version is actually a preview version which should
+                        // not be used (https://code.google.com/p/android/issues/detail?id=75292)
+                        if (recommended == null || recommended.getMajor() < 23) {
+                            // First planned release to fix this
+                            recommended = new Revision(23, 0, 3);
+                        }
+                        String message = String.format("Build Tools `23.0.0` should not be used; "
+                                + "it has some known serious bugs. Use version `%1$s` "
+                                + "instead.", recommended);
+                        report(context, valueCookie, COMPATIBILITY, message);
+                    }
                 }
             }
         } else if (parent.equals("dependencies")) {

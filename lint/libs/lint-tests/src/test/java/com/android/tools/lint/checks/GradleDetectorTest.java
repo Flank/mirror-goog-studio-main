@@ -155,7 +155,11 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     "extras/google/m2repository/com/google/android/support/wearable/1.0.0/wearable-1.0.0.aar",
                     "extras/google/m2repository/com/google/android/wearable/wearable/1.0.0/wearable-1.0.0.aar",
                     "extras/google//m2repository/com/google/android/support/wearable/1.2.0/wearable-1.2.0.aar",
-                    "extras/google//m2repository/com/google/android/support/wearable/1.3.0/wearable-1.3.0.aar"
+                    "extras/google//m2repository/com/google/android/support/wearable/1.3.0/wearable-1.3.0.aar",
+
+                    // build tools
+                    "build-tools/23.0.0/aapt",
+                    "build-tools/23.0.3/aapt"
             };
 
             createSdkPaths(mSdkDir, paths);
@@ -603,6 +607,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 lintProject("gradle/PlayServices2.gradle=>build.gradle"));
     }
 
+
     public void testWrongQuotes() throws Exception {
         mEnabled = Collections.singleton(NOT_INTERPOLATED);
         assertEquals(""
@@ -666,6 +671,31 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" // OK
                         + "  }\n"
                         + "}\n")));
+    }
+
+    public void testBadBuildTools() throws Exception {
+        // Warn about build tools 23.0.0 which is known to be a bad version
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                + "build.gradle:7: Error: Build Tools 23.0.0 should not be used; it has some known serious bugs. Use version 23.0.3 instead. [GradleCompatible]\n"
+                + "    buildToolsVersion \"23.0.0\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        source("build.gradle", ""
+                                + "apply plugin: 'com.android.application'\n"
+                                + "\n"
+                                + "android {\n"
+                                + "    compileSdkVersion 18\n"
+                                + "    buildToolsVersion \"19.0.0\"\n" // OK
+                                + "    buildToolsVersion \"22.1.0\"\n" // OK
+                                + "    buildToolsVersion \"23.0.0\"\n" // ERROR
+                                + "    buildToolsVersion \"23.0.1\"\n" // OK
+                                + "    buildToolsVersion \"23.1.0\"\n" // OK
+                                + "    buildToolsVersion \"24.0.0\"\n" // OK
+                                + "    buildToolsVersion \"23.0.+\"\n" // OK
+                                + "}")));
     }
 
     @Override
