@@ -148,7 +148,7 @@ final class Device implements IDevice {
                         if (m.matches()) {
                             mErrorMessage = m.group(1);
                         } else {
-                            mErrorMessage = "Unknown failure";
+                            mErrorMessage = "Unknown failure (" + line + ")";
                         }
                     }
                 }
