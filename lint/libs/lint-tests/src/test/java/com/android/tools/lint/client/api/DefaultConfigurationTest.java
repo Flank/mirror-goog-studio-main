@@ -326,6 +326,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "    <issue id=\"ObsoleteLayoutParam\">\n"
                                 + "        <ignore path=\"**/layout-x*/onclick.xml\" />\n"
                                 + "        <ignore path=\"res/**/activation.xml\" />\n"
+                                + "        <ignore path=\"**/res2/**\" />\n"
                                 + "    </issue>\n"
                                 + "</lint>");
 
@@ -340,6 +341,22 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertTrue(
                 configuration.isIgnored(
                         largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation, ""));
+
+        File res2 =
+                new File(
+                        projectDir,
+                        "something"
+                                + File.separator
+                                + "res2"
+                                + File.separator
+                                + "something"
+                                + File.separator
+                                + "something2.xml");
+        Location res2Location = Location.create(res2);
+        Context res2Context = new Context(driver, project, project, res2, null);
+        assertTrue(
+                configuration.isIgnored(
+                        res2Context, ObsoleteLayoutParamsDetector.ISSUE, res2Location, ""));
     }
 
     public void testMessagePatternIgnore() throws Exception {
