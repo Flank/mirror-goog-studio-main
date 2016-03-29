@@ -54,7 +54,7 @@ public class LintGradleClient extends LintCliClient {
             @NonNull AndroidProject modelProject,
             @Nullable File sdkHome,
             @Nullable String variantName) {
-        super(flags);
+        super(flags, CLIENT_GRADLE);
         mGradleProject = gradleProject;
         mModelProject = modelProject;
         mVariantName = variantName;

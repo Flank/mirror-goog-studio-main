@@ -23,6 +23,8 @@ import static com.android.SdkConstants.ATTR_LABEL;
 import static com.android.SdkConstants.ATTR_PROMPT;
 import static com.android.SdkConstants.ATTR_TEXT;
 import static com.android.SdkConstants.ATTR_TITLE;
+import static com.android.tools.lint.checks.RestrictionsDetector.ATTR_DESCRIPTION;
+import static com.android.tools.lint.checks.RestrictionsDetector.TAG_RESTRICTIONS;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -91,13 +93,18 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 ATTR_PROMPT,
 
                 // Menus
-                ATTR_TITLE
+                ATTR_TITLE,
+
+                // App restrictions
+                ATTR_DESCRIPTION
         );
     }
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.MENU;
+        return folderType == ResourceFolderType.LAYOUT
+                || folderType == ResourceFolderType.MENU
+                || folderType == ResourceFolderType.XML;
     }
 
     @Override
@@ -107,6 +114,34 @@ public class HardcodedValuesDetector extends LayoutDetector {
             // Make sure this is really one of the android: attributes
             if (!ANDROID_URI.equals(attribute.getNamespaceURI())) {
                 return;
+            }
+
+            // Filter out a few special cases:
+
+            if (value.equals("Hello World!")) {
+                // This is the default text in new templates. Users are unlikely to
+                // leave this in, so let's not add warnings in the editor as their
+                // welcome to Android development greeting.
+                return;
+            }
+            if (value.equals("Large Text") || value.equals("Medium Text") ||
+                    value.equals("Small Text") || value.startsWith("New ") &&
+                    (value.equals("New Text")
+                            || value.equals("New " + attribute.getOwnerElement().getTagName()))) {
+                // The layout editor initially places the label "New Button", "New TextView",
+                // etc on widgets dropped on the layout editor. Again, users are unlikely
+                // to leave it that way, so let's not flag it until they change it.
+                return;
+            }
+
+            // In XML folders, currently only checking application restriction files
+            // (since in general the res/xml folder can contain arbitrary XML content
+            // interpreted by the app)
+            if (context.getResourceFolderType() == ResourceFolderType.XML) {
+                String tagName = attribute.getOwnerDocument().getDocumentElement().getTagName();
+                if (!tagName.equals(TAG_RESTRICTIONS)) {
+                    return;
+                }
             }
 
             context.report(ISSUE, attribute, context.getLocation(attribute),

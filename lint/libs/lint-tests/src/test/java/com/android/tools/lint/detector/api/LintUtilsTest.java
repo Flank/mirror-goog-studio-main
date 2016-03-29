@@ -18,12 +18,12 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintUtils.computeResourceName;
 import static com.android.tools.lint.detector.api.LintUtils.convertVersion;
-import static com.android.tools.lint.detector.api.LintUtils.escapePropertyValue;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.getFormattedParameters;
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
+import static com.android.utils.SdkUtils.escapePropertyValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,9 +31,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
@@ -403,7 +403,7 @@ public class LintUtilsTest extends TestCase {
                 new LintCliClient());
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         TestContext context = new TestContext(driver, client, project, javaSource, fullPath);
-        JavaParser parser = new EcjParser(client, project);
+        JavaParser parser = context.getParser();
         parser.prepareJavaParse(Collections.<JavaContext>singletonList(context));
         Node compilationUnit = parser.parseJava(context);
         assertNotNull(javaSource, compilationUnit);
@@ -423,29 +423,29 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testIsModelOlderThan() throws Exception {
-        AndroidProject project = mock(AndroidProject.class);
-        when(project.getModelVersion()).thenReturn("0.10.4");
+        Project project = mock(Project.class);
+        when(project.getGradleModelVersion()).thenReturn(GradleVersion.parse("0.10.4"));
 
         assertTrue(LintUtils.isModelOlderThan(project, 0, 10, 5));
         assertTrue(LintUtils.isModelOlderThan(project, 0, 11, 0));
         assertTrue(LintUtils.isModelOlderThan(project, 0, 11, 4));
         assertTrue(LintUtils.isModelOlderThan(project, 1, 0, 0));
 
-        project = mock(AndroidProject.class);
-        when(project.getModelVersion()).thenReturn("0.11.0");
+        project = mock(Project.class);
+        when(project.getGradleModelVersion()).thenReturn(GradleVersion.parse("0.11.0"));
 
         assertTrue(LintUtils.isModelOlderThan(project, 1, 0, 0));
         assertFalse(LintUtils.isModelOlderThan(project, 0, 11, 0));
         assertFalse(LintUtils.isModelOlderThan(project, 0, 10, 4));
 
-        project = mock(AndroidProject.class);
-        when(project.getModelVersion()).thenReturn("0.11.5");
+        project = mock(Project.class);
+        when(project.getGradleModelVersion()).thenReturn(GradleVersion.parse("0.11.5"));
 
         assertTrue(LintUtils.isModelOlderThan(project, 1, 0, 0));
         assertFalse(LintUtils.isModelOlderThan(project, 0, 11, 0));
 
-        project = mock(AndroidProject.class);
-        when(project.getModelVersion()).thenReturn("1.0.0");
+        project = mock(Project.class);
+        when(project.getGradleModelVersion()).thenReturn(GradleVersion.parse("1.0.0"));
 
         assertTrue(LintUtils.isModelOlderThan(project, 1, 0, 1));
         assertFalse(LintUtils.isModelOlderThan(project, 1, 0, 0));
@@ -509,7 +509,7 @@ public class LintUtilsTest extends TestCase {
                 String javaSource, File file) {
             //noinspection ConstantConditions
             super(driver, project,
-                    null, file, client.getJavaParser(null));
+                    null, file, client.getJavaParser(project));
 
             mJavaSource = javaSource;
         }

@@ -27,6 +27,7 @@ import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_WEBP;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
@@ -41,6 +42,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.ide.common.resources.ResourceUrl;
@@ -52,7 +54,6 @@ import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.sdklib.repository.FullRevision;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
@@ -72,13 +73,11 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -259,6 +258,22 @@ public class LintUtils {
      */
     public static boolean isRootElement(Element element) {
         return element == element.getOwnerDocument().getDocumentElement();
+    }
+
+    /**
+     * Returns the corresponding R field name for the given XML resource name
+     * @param styleName the XML name
+     * @return the corresponding R field name
+     */
+    public static String getFieldName(@NonNull String styleName) {
+        for (int i = 0, n = styleName.length(); i < n; i++) {
+            char c = styleName.charAt(i);
+            if (c == '.' || c == '-' || c == ':') {
+                return styleName.replace('.', '_').replace('-', '_').replace(':', '_');
+            }
+        }
+
+        return styleName;
     }
 
     /**
@@ -582,7 +597,7 @@ public class LintUtils {
             text = new String(data, offset, length, charset);
         } catch (UnsupportedEncodingException e) {
             try {
-                if (charset != defaultCharset) {
+                if (!charset.equals(defaultCharset)) {
                     text = new String(data, offset, length, defaultCharset);
                 }
             } catch (UnsupportedEncodingException u) {
@@ -1071,25 +1086,23 @@ public class LintUtils {
     /**
      * Returns true if the given Gradle model is older than the given version number
      */
-    public static boolean isModelOlderThan(@Nullable AndroidProject project,
+    /**
+     * Returns true if the given Gradle model is older than the given version number
+     */
+    public static boolean isModelOlderThan(@NonNull Project project,
             int major, int minor, int micro) {
-        if (project != null) {
-            String modelVersion = project.getModelVersion();
-            try {
-                FullRevision version = FullRevision.parseRevision(modelVersion);
-                if (version.getMajor() != major) {
-                    return version.getMajor() < major;
-                }
-                if (version.getMinor() != minor) {
-                    return version.getMinor() < minor;
-                }
-                return version.getMicro() < micro;
-            } catch (NumberFormatException e) {
-                // ignore
-            }
+        GradleVersion version = project.getGradleModelVersion();
+        if (version == null) {
+            return false;
         }
 
-        return false;
+        if (version.getMajor() != major) {
+            return version.getMajor() < major;
+        }
+        if (version.getMinor() != minor) {
+            return version.getMinor() < minor;
+        }
+        return version.getMicro() < micro;
     }
 
     /**
@@ -1177,40 +1190,6 @@ public class LintUtils {
     }
 
     /**
-     * Escapes the given property file value (right hand side of property assignment)
-     * as required by the property file format (e.g. escapes colons and backslashes)
-     *
-     * @param value the value to be escaped
-     * @return the escaped value
-     */
-    @NonNull
-    public static String escapePropertyValue(@NonNull String value) {
-        // Slow, stupid implementation, but is 100% compatible with Java's property file
-        // implementation
-        Properties properties = new Properties();
-        properties.setProperty("k", value); // key doesn't matter
-        StringWriter writer = new StringWriter();
-        try {
-            properties.store(writer, null);
-            String s = writer.toString();
-            int end = s.length();
-
-            // Writer inserts trailing newline
-            String lineSeparator = SdkUtils.getLineSeparator();
-            if (s.endsWith(lineSeparator)) {
-                end -= lineSeparator.length();
-            }
-
-            int start = s.indexOf('=');
-            assert start != -1 : s;
-            return s.substring(start + 1, end);
-        }
-        catch (IOException e) {
-            return value; // shouldn't happen; we're not going to disk
-        }
-    }
-
-    /**
      * Returns the locale for the given parent folder.
      *
      * @param parent the name of the parent folder
@@ -1261,5 +1240,25 @@ public class LintUtils {
         } else {
             return "en".equals(locale.getLanguage());  //$NON-NLS-1$
         }
+    }
+
+    /**
+     * Create a {@link Location} for an error in the top level build.gradle file.
+     * This is necessary when we're doing an analysis based on the Gradle interpreted model,
+     * not from parsing Gradle files - and the model doesn't provide source positions.
+     * @param project the project containing the gradle file being analyzed
+     * @return location for the top level gradle file if it exists, otherwise fall back to
+     *     the project directory.
+     */
+    public static Location guessGradleLocation(@NonNull Project project) {
+        File dir = project.getDir();
+        Location location;
+        File topLevel = new File(dir, FN_BUILD_GRADLE);
+        if (topLevel.exists()) {
+            location = Location.create(topLevel);
+        } else {
+            location = Location.create(dir);
+        }
+        return location;
     }
 }

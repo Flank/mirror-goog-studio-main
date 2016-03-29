@@ -30,7 +30,8 @@ import java.util.List;
 /** Registry which provides a list of checks to be performed on an Android project */
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
-    static final int INITIAL_CAPACITY = 222;
+
+    static final int INITIAL_CAPACITY = 253;
 
     static {
         List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
@@ -38,9 +39,15 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(AddJavascriptInterfaceDetector.ISSUE);
         issues.add(AlarmDetector.ISSUE);
+        issues.add(AllowAllHostnameVerifierDetector.ISSUE);
         issues.add(AlwaysShowActionDetector.ISSUE);
+        issues.add(AndroidAutoDetector.INVALID_USES_TAG_ISSUE);
+        issues.add(AndroidAutoDetector.MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH);
+        issues.add(AndroidAutoDetector.MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE);
+        issues.add(AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH);
         issues.add(AnnotationDetector.FLAG_STYLE);
         issues.add(AnnotationDetector.INSIDE_METHOD);
+        issues.add(AnnotationDetector.SWITCH_TYPE_DEF);
         issues.add(AnnotationDetector.UNIQUE);
         issues.add(ApiDetector.INLINED);
         issues.add(ApiDetector.OVERRIDE);
@@ -48,10 +55,14 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ApiDetector.UNUSED);
         issues.add(AppCompatCallDetector.ISSUE);
         issues.add(AppCompatResourceDetector.ISSUE);
-        issues.add(AppIndexingApiDetector.ISSUE_ERROR);
-        issues.add(AppIndexingApiDetector.ISSUE_WARNING);
+        issues.add(AppIndexingApiDetector.ISSUE_APP_INDEXING_API);
+        issues.add(AppIndexingApiDetector.ISSUE_URL_ERROR);
+        issues.add(AppIndexingApiDetector.ISSUE_APP_INDEXING);
+        issues.add(AppLinksAutoVerifyDetector.ISSUE_ERROR);
+        issues.add(AppLinksAutoVerifyDetector.ISSUE_WARNING);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(AssertDetector.ISSUE);
+        issues.add(BadHostnameVerifierDetector.ISSUE);
         issues.add(ButtonDetector.BACK_BUTTON);
         issues.add(ButtonDetector.CASE);
         issues.add(ButtonDetector.ORDER);
@@ -69,6 +80,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CustomViewDetector.ISSUE);
         issues.add(CutPasteDetector.ISSUE);
         issues.add(DateFormatDetector.DATE_FORMAT);
+        issues.add(SetTextDetector.SET_TEXT_I18N);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(DosLineEndingDetector.ISSUE);
@@ -76,6 +88,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(DuplicateResourceDetector.ISSUE);
         issues.add(DuplicateResourceDetector.TYPE_MISMATCH);
+        issues.add(UnsafeNativeCodeDetector.LOAD);
+        issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
         issues.add(ExtraTextDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(FullBackupContentDetector.ISSUE);
@@ -87,6 +101,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.DEPRECATED);
         issues.add(GradleDetector.GRADLE_GETTER);
         issues.add(GradleDetector.IDE_SUPPORT);
+        issues.add(GradleDetector.NOT_INTERPOLATED);
         issues.add(GradleDetector.PATH);
         issues.add(GradleDetector.PLUS);
         issues.add(GradleDetector.STRING_INTEGER);
@@ -116,6 +131,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InefficientWeightDetector.NESTED_WEIGHTS);
         issues.add(InefficientWeightDetector.ORIENTATION);
         issues.add(InefficientWeightDetector.WRONG_0DP);
+        issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(InvalidPackageDetector.ISSUE);
         issues.add(JavaPerformanceDetector.PAINT_ALLOC);
         issues.add(JavaPerformanceDetector.USE_SPARSE_ARRAY);
@@ -148,6 +164,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestDetector.UNIQUE_PERMISSION);
         issues.add(ManifestDetector.USES_SDK);
         issues.add(ManifestDetector.WRONG_PARENT);
+        issues.add(ManifestResourceDetector.ISSUE);
         issues.add(ManifestTypoDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
         issues.add(MergeRootFrameLayoutDetector.ISSUE);
@@ -183,12 +200,15 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(PxUsageDetector.IN_MM_ISSUE);
         issues.add(PxUsageDetector.PX_ISSUE);
         issues.add(PxUsageDetector.SMALL_SP_ISSUE);
+        issues.add(ReadParcelableDetector.ISSUE);
+        issues.add(RecyclerViewDetector.ISSUE);
         issues.add(RegistrationDetector.ISSUE);
         issues.add(RelativeOverlapDetector.ISSUE);
         issues.add(RequiredAttributeDetector.ISSUE);
         issues.add(ResourceCycleDetector.CRASH);
         issues.add(ResourceCycleDetector.CYCLE);
         issues.add(ResourcePrefixDetector.ISSUE);
+        issues.add(RestrictionsDetector.ISSUE);
         issues.add(RtlDetector.COMPAT);
         issues.add(RtlDetector.ENABLED);
         issues.add(RtlDetector.SYMMETRY);
@@ -200,6 +220,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SecurityDetector.EXPORTED_PROVIDER);
         issues.add(SecurityDetector.EXPORTED_RECEIVER);
         issues.add(SecurityDetector.EXPORTED_SERVICE);
+        issues.add(SecurityDetector.SET_READABLE);
+        issues.add(SecurityDetector.SET_WRITABLE);
         issues.add(SecurityDetector.OPEN_PROVIDER);
         issues.add(SecurityDetector.WORLD_READABLE);
         issues.add(SecurityDetector.WORLD_WRITEABLE);
@@ -208,6 +230,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SharedPrefsDetector.ISSUE);
         issues.add(SignatureOrSystemDetector.ISSUE);
         issues.add(SQLiteDetector.ISSUE);
+        issues.add(SslCertificateSocketFactoryDetector.CREATE_SOCKET);
+        issues.add(SslCertificateSocketFactoryDetector.GET_INSECURE);
         issues.add(StateListDetector.ISSUE);
         issues.add(StringFormatDetector.ARG_COUNT);
         issues.add(StringFormatDetector.ARG_TYPES);
@@ -231,18 +255,26 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TooManyViewsDetector.TOO_MANY);
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
+        issues.add(AndroidTvDetector.MISSING_LEANBACK_LAUNCHER);
+        issues.add(AndroidTvDetector.MISSING_LEANBACK_SUPPORT);
+        issues.add(AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
+        issues.add(AndroidTvDetector.UNSUPPORTED_TV_HARDWARE);
+        issues.add(AndroidTvDetector.MISSING_BANNER);
         issues.add(TypoDetector.ISSUE);
         issues.add(TypographyDetector.DASHES);
         issues.add(TypographyDetector.ELLIPSIS);
         issues.add(TypographyDetector.FRACTIONS);
         issues.add(TypographyDetector.OTHER);
         issues.add(TypographyDetector.QUOTES);
+        issues.add(UnsafeBroadcastReceiverDetector.ACTION_STRING);
+        issues.add(UnsafeBroadcastReceiverDetector.BROADCAST_SMS);
         issues.add(UnusedResourceDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE_IDS);
         issues.add(UseCompoundDrawableDetector.ISSUE);
         issues.add(UselessViewDetector.USELESS_LEAF);
         issues.add(UselessViewDetector.USELESS_PARENT);
         issues.add(Utf8Detector.ISSUE);
+        issues.add(VectorDetector.ISSUE);
         issues.add(ViewConstructorDetector.ISSUE);
         issues.add(ViewHolderDetector.ISSUE);
         issues.add(ViewTagDetector.ISSUE);
@@ -286,11 +318,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 55;
+                initialSize += 72;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 15;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 30;
+                initialSize += 37;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 5;
             }
