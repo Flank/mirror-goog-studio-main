@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.tools.lint.checks.SupportAnnotationDetector.CHECK_RESULT_ANNOTATION;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
 
 import com.android.annotations.NonNull;
@@ -470,7 +471,7 @@ public class ExternalAnnotationRepository {
                 return m.parameterAnnotations.get(parameterIndex);
             }
 
-            return m.annotations;
+            return null;
         }
 
         @Nullable
@@ -772,7 +773,11 @@ public class ExternalAnnotationRepository {
 
         @Nullable
         private FieldInfo findField(@NonNull ResolvedField field) {
-            ClassInfo c = findClass(field.getContainingClass());
+            ResolvedClass containingClass = field.getContainingClass();
+            if (containingClass == null) {
+                return null;
+            }
+            ClassInfo c = findClass(containingClass);
             if (c == null) {
                 return null;
             }
@@ -981,8 +986,10 @@ public class ExternalAnnotationRepository {
             if (valueElements.isEmpty()
                     // Permission annotations are sometimes used as marker annotations (on
                     // parameters) but that shouldn't let us conclude that any future
-                    // permission annotations are
-                    && !name.startsWith(PERMISSION_ANNOTATION)) {
+                    // permission annotations are. Ditto for @CheckResult, where we sometimes
+                    // specify a suggestion.
+                    && !name.startsWith(PERMISSION_ANNOTATION)
+                    && !name.equals(CHECK_RESULT_ANNOTATION)) {
                 mMarkerAnnotations.put(name, annotation);
                 return annotation;
             }
@@ -1078,8 +1085,10 @@ public class ExternalAnnotationRepository {
             } else if (obj instanceof ResolvedField) {
                 ResolvedField field = (ResolvedField)obj;
                 if (mSignature.endsWith(field.getName())) {
-                    String signature = field.getContainingClass().getSignature() +
-                            "." + field.getName();
+                    ResolvedClass containingClass = field.getContainingClass();
+                    String signature = containingClass != null
+                            ? containingClass.getSignature() + "." + field.getName()
+                            : field.getName();
                     return mSignature.equals(signature);
                 }
                 return false;
@@ -1109,10 +1118,10 @@ public class ExternalAnnotationRepository {
             return new DefaultTypeDescriptor(mSignature);
         }
 
-        @NonNull
+        @Nullable
         @Override
         public ResolvedClass getContainingClass() {
-            throw new UnsupportedOperationException();
+            return null;
         }
 
         @Override
@@ -1164,7 +1173,6 @@ public class ExternalAnnotationRepository {
     /** For test usage only */
     @VisibleForTesting
     static synchronized void set(ExternalAnnotationRepository singleton) {
-        assert singleton == null || sSingleton == null;
         sSingleton = singleton;
     }
 }

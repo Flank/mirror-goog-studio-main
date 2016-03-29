@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ALLOW_BACKUP;
+import static com.android.SdkConstants.ATTR_FULL_BACKUP_CONTENT;
 import static com.android.SdkConstants.ATTR_ICON;
 import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_NAME;
@@ -39,6 +40,7 @@ import static com.android.SdkConstants.TAG_USES_FEATURE;
 import static com.android.SdkConstants.TAG_USES_LIBRARY;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
@@ -169,7 +171,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
             "The `<uses-library>` element should be defined as a direct child of the " +
             "`<application>` tag, not the `<manifest>` tag or an `<activity>` tag. Similarly, " +
-            "a `<uses-sdk>` tag much be declared at the root level, and so on. This check " +
+            "a `<uses-sdk>` tag must be declared at the root level, and so on. This check " +
             "looks for incorrect declaration locations in the manifest, and complains " +
             "if an element is found in the wrong place.",
 
@@ -206,9 +208,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     /** Not explicitly defining allowBackup */
     public static final Issue ALLOW_BACKUP = Issue.create(
             "AllowBackup", //$NON-NLS-1$
-            "Missing `allowBackup` attribute",
+            "AllowBackup/FullBackupContent Problems",
 
-            "The allowBackup attribute determines if an application's data can be backed up " +
+            "The `allowBackup` attribute determines if an application's data can be backed up " +
             "and restored. It is documented at " +
             "http://developer.android.com/reference/android/R.attr.html#allowBackup\n" +
             "\n" +
@@ -228,7 +230,10 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             "restore.\n" +
             "\n" +
             "To fix this warning, decide whether your application should support backup, " +
-            "and explicitly set `android:allowBackup=(true|false)\"`",
+            "and explicitly set `android:allowBackup=(true|false)\"`.\n" +
+            "\n" +
+            "If not set to false, and if targeting API 23 or later, lint will also warn " +
+            "that you should set `android:fullBackupContent` to configure auto backup.",
 
             Category.SECURITY,
             3,
@@ -543,23 +548,19 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 ProductFlavor flavor = variant.getMergedFlavor();
                 String gradleValue = null;
                 if (ATTR_MIN_SDK_VERSION.equals(attributeName)) {
-                    try {
-                        ApiVersion minSdkVersion = flavor.getMinSdkVersion();
-                        gradleValue = minSdkVersion != null ? minSdkVersion.getApiString() : null;
-                    } catch (Throwable e) {
-                        // TODO: REMOVE ME
-                        // This method was added in the 0.11 model. We'll need to drop support
-                        // for 0.10 shortly but until 0.11 is available this is a stopgap measure
+                    if (element.hasAttributeNS(TOOLS_URI, "overrideLibrary")) {
+                        // The manifest may be setting a minSdkVersion here to deliberately
+                        // let the manifest merger know that a library dependency's manifest
+                        // with a higher value is okay: this value wins. The manifest merger
+                        // should really be taking the Gradle file into account instead,
+                        // but for now we filter these out; http://b.android.com/186762
+                        return;
                     }
+                    ApiVersion minSdkVersion = flavor.getMinSdkVersion();
+                    gradleValue = minSdkVersion != null ? minSdkVersion.getApiString() : null;
                 } else if (ATTR_TARGET_SDK_VERSION.equals(attributeName)) {
-                    try {
-                        ApiVersion targetSdkVersion = flavor.getTargetSdkVersion();
-                        gradleValue = targetSdkVersion != null ? targetSdkVersion.getApiString() : null;
-                    } catch (Throwable e) {
-                        // TODO: REMOVE ME
-                        // This method was added in the 0.11 model. We'll need to drop support
-                        // for 0.10 shortly but until 0.11 is available this is a stopgap measure
-                    }
+                    ApiVersion targetSdkVersion = flavor.getTargetSdkVersion();
+                    gradleValue = targetSdkVersion != null ? targetSdkVersion.getApiString() : null;
                 } else if (ATTR_VERSION_CODE.equals(attributeName)) {
                     Integer versionCode = flavor.getVersionCode();
                     if (versionCode != null) {
@@ -828,7 +829,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                     (mApplicationTagHandle == null || isMainManifest(context, context.file))) {
                 mApplicationTagHandle = context.createLocationHandle(element);
             }
-            Attr fullBackupNode = element.getAttributeNodeNS(ANDROID_URI, "fullBackupContent");
+            Attr fullBackupNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT);
             if (fullBackupNode != null &&
                     fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF) &&
                     context.getClient().supportsProjectResources()) {
@@ -843,6 +844,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                             "Missing `<full-backup-content>` resource");
                 }
             } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
+                    && !context.getProject().isLibrary()
                     && context.getMainProject().getTargetSdk() >= 23) {
                 if (hasGcmReceiver(element)) {
                     Location location = context.getLocation(element);
@@ -1003,6 +1005,13 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             }
 
             // Test source set?
+            for (SourceProviderContainer extra : model.getDefaultConfig().getExtraSourceProviders()) {
+                String artifactName = extra.getArtifactName();
+                if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)
+                        && manifestFile.equals(extra.getSourceProvider().getManifestFile())) {
+                    return true;
+                }
+            }
             for (ProductFlavorContainer container : model.getProductFlavors()) {
                 for (SourceProviderContainer extra : container.getExtraSourceProviders()) {
                     String artifactName = extra.getArtifactName();

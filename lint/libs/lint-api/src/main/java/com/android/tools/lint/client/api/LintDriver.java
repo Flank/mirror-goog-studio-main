@@ -35,9 +35,11 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.resources.ResourceFolderType;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.local.LocalSdk;
 import com.android.tools.lint.client.api.LintListener.EventType;
@@ -101,6 +103,7 @@ import java.util.regex.Pattern;
 
 import lombok.ast.Annotation;
 import lombok.ast.AnnotationElement;
+import lombok.ast.AnnotationMethodDeclaration;
 import lombok.ast.AnnotationValue;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.ConstructorDeclaration;
@@ -641,6 +644,7 @@ public class LintDriver {
             List<Detector> resourceFileDetectors = mScopeDetectors.get(Scope.RESOURCE_FILE);
             if (resourceFileDetectors != null) {
                 for (Detector detector : resourceFileDetectors) {
+                    // This is wrong; it should allow XmlScanner instead of ResourceXmlScanner!
                     assert detector instanceof ResourceXmlDetector : detector;
                 }
             }
@@ -1254,7 +1258,7 @@ public class LintDriver {
         // the parent chains (such that for example for a virtual dispatch, we can
         // also check the super classes).
 
-        List<File> libraries = project.getJavaLibraries();
+        List<File> libraries = project.getJavaLibraries(false);
         List<ClassEntry> libraryEntries = ClassEntry.fromClassPath(mClient, libraries, true);
 
         List<File> classFolders = project.getJavaClassFolders();
@@ -1471,7 +1475,7 @@ public class LintDriver {
             }
         }
         // Search in the libraries
-        for (File root : mClient.getJavaLibraries(project)) {
+        for (File root : mClient.getJavaLibraries(project, true)) {
             // TODO: Handle .jar files!
             //if (root.getPath().endsWith(DOT_JAR)) {
             //}
@@ -1717,7 +1721,8 @@ public class LintDriver {
                             visitor.getParser());
                     fireEvent(EventType.SCANNING_FILE, context);
                     visitor.visitFile(context, file);
-                } else if (binaryChecks != null && LintUtils.isBitmapFile(file)) {
+                } else if (binaryChecks != null && (LintUtils.isBitmapFile(file) ||
+                            type == ResourceFolderType.RAW)) {
                     ResourceContext context = new ResourceContext(this, project, main, file, type);
                     fireEvent(EventType.SCANNING_FILE, context);
                     visitor.visitBinaryResource(context);
@@ -1830,6 +1835,7 @@ public class LintDriver {
         private final LintClient mDelegate;
 
         public LintClientWrapper(@NonNull LintClient delegate) {
+            super(getClientName());
             mDelegate = delegate;
         }
 
@@ -1907,8 +1913,37 @@ public class LintDriver {
 
         @NonNull
         @Override
-        public List<File> getJavaLibraries(@NonNull Project project) {
-            return mDelegate.getJavaLibraries(project);
+        public List<File> getJavaLibraries(@NonNull Project project, boolean includeProvided) {
+            return mDelegate.getJavaLibraries(project, includeProvided);
+        }
+
+        @NonNull
+        @Override
+        public List<File> getTestSourceFolders(@NonNull Project project) {
+            return mDelegate.getTestSourceFolders(project);
+        }
+
+        @Override
+        public Collection<Project> getKnownProjects() {
+            return mDelegate.getKnownProjects();
+        }
+
+        @Nullable
+        @Override
+        public BuildToolInfo getBuildTools(@NonNull Project project) {
+            return mDelegate.getBuildTools(project);
+        }
+
+        @NonNull
+        @Override
+        public Map<String, String> createSuperClassMap(@NonNull Project project) {
+            return mDelegate.createSuperClassMap(project);
+        }
+
+        @NonNull
+        @Override
+        public ResourceVisibilityLookup.Provider getResourceVisibilityProvider() {
+            return mDelegate.getResourceVisibilityProvider();
         }
 
         @Override
@@ -2056,6 +2091,17 @@ public class LintDriver {
         @Override
         public IssueRegistry addCustomLintRules(@NonNull IssueRegistry registry) {
             return mDelegate.addCustomLintRules(registry);
+        }
+
+        @NonNull
+        @Override
+        public List<File> getAssetFolders(@NonNull Project project) {
+            return mDelegate.getAssetFolders(project);
+        }
+
+        @Override
+        public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
+            return mDelegate.createUrlClassLoader(urls, parent);
         }
 
         @Override
@@ -2399,6 +2445,12 @@ public class LintDriver {
             } else if (TypeDeclaration.class.isAssignableFrom(type)) {
                 // Class, annotation, enum, interface
                 TypeDeclaration declaration = (TypeDeclaration) scope;
+                if (isSuppressed(issue, declaration.astModifiers())) {
+                    return true;
+                }
+            } else if (type == AnnotationMethodDeclaration.class) {
+                // Look for annotations on the method
+                AnnotationMethodDeclaration declaration = (AnnotationMethodDeclaration) scope;
                 if (isSuppressed(issue, declaration.astModifiers())) {
                     return true;
                 }

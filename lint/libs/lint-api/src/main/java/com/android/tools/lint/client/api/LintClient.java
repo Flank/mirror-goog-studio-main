@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api;
 import static com.android.SdkConstants.CLASS_FOLDER;
 import static com.android.SdkConstants.DOT_AAR;
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.GEN_FOLDER;
 import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.SdkConstants.RES_FOLDER;
@@ -34,6 +35,7 @@ import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.prefs.AndroidLocation;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.repository.local.LocalSdk;
@@ -60,6 +62,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,6 +83,14 @@ import java.util.Set;
 @Beta
 public abstract class LintClient {
     private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";  //$NON-NLS-1$
+
+    protected LintClient(@NonNull String clientName) {
+        sClientName = clientName;
+    }
+
+    protected LintClient() {
+        sClientName = "unknown";
+    }
 
     /**
      * Returns a configuration for use by the given project. The configuration
@@ -236,12 +247,15 @@ public abstract class LintClient {
     /**
      * Returns the list of Java libraries
      *
-     * @param project the project to look up jar dependencies for
+     * @param project         the project to look up jar dependencies for
+     * @param includeProvided If true, included provided libraries too (libraries that are not
+     *                        packaged with the app, but are provided for compilation purposes and
+     *                        are assumed to be present in the running environment)
      * @return a list of jar dependencies containing .class files
      */
     @NonNull
-    public List<File> getJavaLibraries(@NonNull Project project) {
-        return getClassPath(project).getLibraries();
+    public List<File> getJavaLibraries(@NonNull Project project, boolean includeProvided) {
+        return getClassPath(project).getLibraries(includeProvided);
     }
 
     /**
@@ -266,6 +280,22 @@ public abstract class LintClient {
         File res = new File(project.getDir(), RES_FOLDER);
         if (res.exists()) {
             return Collections.singletonList(res);
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
+     * Returns the asset folders.
+     *
+     * @param project the project to look up the asset folder for
+     * @return a list of files pointing to the asset folders, possibly empty
+     */
+    @NonNull
+    public List<File> getAssetFolders(@NonNull Project project) {
+        File assets = new File(project.getDir(), FD_ASSETS);
+        if (assets.exists()) {
+            return Collections.singletonList(assets);
         }
 
         return Collections.emptyList();
@@ -418,16 +448,19 @@ public abstract class LintClient {
         private final List<File> mClassFolders;
         private final List<File> mSourceFolders;
         private final List<File> mLibraries;
+        private final List<File> mNonProvidedLibraries;
         private final List<File> mTestFolders;
 
         public ClassPathInfo(
                 @NonNull List<File> sourceFolders,
                 @NonNull List<File> classFolders,
                 @NonNull List<File> libraries,
+                @NonNull List<File> nonProvidedLibraries,
                 @NonNull List<File> testFolders) {
             mSourceFolders = sourceFolders;
             mClassFolders = classFolders;
             mLibraries = libraries;
+            mNonProvidedLibraries = nonProvidedLibraries;
             mTestFolders = testFolders;
         }
 
@@ -442,8 +475,8 @@ public abstract class LintClient {
         }
 
         @NonNull
-        public List<File> getLibraries() {
-            return mLibraries;
+        public List<File> getLibraries(boolean includeProvided) {
+            return includeProvided ? mLibraries : mNonProvidedLibraries;
         }
 
         public List<File> getTestSourceFolders() {
@@ -576,7 +609,7 @@ public abstract class LintClient {
                 }
             }
 
-            info = new ClassPathInfo(sources, classes, libraries, tests);
+            info = new ClassPathInfo(sources, classes, libraries, libraries, tests);
             mProjectInfo.put(project, info);
         }
 
@@ -705,9 +738,9 @@ public abstract class LintClient {
     @NonNull
     public IAndroidTarget[] getTargets() {
         if (mTargets == null) {
-            LocalSdk localSdk = getSdk();
-            if (localSdk != null) {
-                mTargets = localSdk.getTargets();
+            LocalSdk sdkHandler = getSdk();
+            if (sdkHandler != null) {
+                mTargets = sdkHandler.getTargets();
             } else {
                 mTargets = new IAndroidTarget[0];
             }
@@ -725,12 +758,12 @@ public abstract class LintClient {
      */
     @Nullable
     public LocalSdk getSdk() {
-         if (mSdk == null) {
-             File sdkHome = getSdkHome();
-             if (sdkHome != null) {
-                 mSdk = new LocalSdk(sdkHome);
-             }
-         }
+        if (mSdk == null) {
+            File sdkHome = getSdkHome();
+            if (sdkHome != null) {
+                mSdk = new LocalSdk(sdkHome);
+            }
+        }
 
         return mSdk;
     }
@@ -774,6 +807,23 @@ public abstract class LintClient {
         }
 
         return max;
+    }
+
+    /**
+     * Returns the specific version of the build tools being used for the given project, if known
+     *
+     * @param project the project in question
+     *
+     * @return the build tools version in use by the project, or null if not known
+     */
+    @Nullable
+    public BuildToolInfo getBuildTools(@NonNull Project project) {
+        LocalSdk sdk = getSdk();
+        // Build systems like Eclipse and ant just use the latest available
+        // build tools, regardless of project metadata. In Gradle, this
+        // method is overridden to use the actual build tools specified in the
+        // project.
+        return sdk != null ? sdk.getLatestBuildTool() : null;
     }
 
     /**
@@ -827,7 +877,7 @@ public abstract class LintClient {
      */
     @NonNull
     public Map<String, String> createSuperClassMap(@NonNull Project project) {
-        List<File> libraries = project.getJavaLibraries();
+        List<File> libraries = project.getJavaLibraries(true);
         List<File> classFolders = project.getJavaClassFolders();
         List<ClassEntry> classEntries = ClassEntry.fromClassPath(this, classFolders, true);
         if (libraries.isEmpty()) {
@@ -1038,6 +1088,17 @@ public abstract class LintClient {
     }
 
     /**
+     * Creates a {@link ClassLoader} which can load in a set of Jar files.
+     *
+     * @param urls the URLs
+     * @param parent the parent class loader
+     * @return a new class loader
+     */
+    public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
+        return new URLClassLoader(urls, parent);
+    }
+
+    /**
      * Returns true if this client supports project resource repository lookup via
      * {@link #getProjectResources(Project,boolean)}
      *
@@ -1084,5 +1145,64 @@ public abstract class LintClient {
             mResourceVisibility = new ResourceVisibilityLookup.Provider();
         }
         return mResourceVisibility;
+    }
+
+    /**
+     * The client name returned by {@link #getClientName()} when running in
+     * Android Studio/IntelliJ IDEA
+     */
+    public static final String CLIENT_STUDIO = "studio";
+
+    /**
+     * The client name returned by {@link #getClientName()} when running in
+     * Gradle
+     */
+    public static final String CLIENT_GRADLE = "gradle";
+
+    /**
+     * The client name returned by {@link #getClientName()} when running in
+     * the CLI (command line interface) version of lint, {@code lint}
+     */
+    public static final String CLIENT_CLI = "cli";
+
+    /**
+     * The client name returned by {@link #getClientName()} when running in
+     * some unknown client
+     */
+    public static final String CLIENT_UNKNOWN = "unknown";
+
+    /** The client name. */
+    @NonNull
+    private static String sClientName = CLIENT_UNKNOWN;
+
+    /**
+     * Returns the name of the embedding client. It could be not just
+     * {@link #CLIENT_STUDIO}, {@link #CLIENT_GRADLE}, {@link #CLIENT_CLI}
+     * etc but other values too as lint is integrated in other embedding contexts.
+     *
+     * @return the name of the embedding client
+     */
+    @NonNull
+    public static String getClientName() {
+        return sClientName;
+    }
+
+    /**
+     * Returns true if the embedding client currently running lint is Android Studio
+     * (or IntelliJ IDEA)
+     *
+     * @return true if running in Android Studio / IntelliJ IDEA
+     */
+    public static boolean isStudio() {
+        return CLIENT_STUDIO.equals(sClientName);
+    }
+
+    /**
+     * Returns true if the embedding client currently running lint is Gradle
+     *
+     * @return true if running in Gradle
+     */
+    public static boolean isGradle() {
+        return CLIENT_GRADLE.equals(sClientName);
     }
 }

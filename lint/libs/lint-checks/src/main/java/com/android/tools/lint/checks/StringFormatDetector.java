@@ -17,13 +17,15 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.CLASS_CONTEXT;
+import static com.android.SdkConstants.CLASS_FRAGMENT;
+import static com.android.SdkConstants.CLASS_RESOURCES;
+import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.FORMAT_METHOD;
 import static com.android.SdkConstants.GET_STRING_METHOD;
 import static com.android.SdkConstants.R_CLASS;
-import static com.android.SdkConstants.R_PREFIX;
 import static com.android.SdkConstants.TAG_STRING;
-import static com.android.tools.lint.checks.SharedPrefsDetector.ANDROID_CONTENT_SHARED_PREFERENCES;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_CHAR;
@@ -45,7 +47,9 @@ import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.tools.lint.client.api.JavaParser;
+import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
+import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
+import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -62,6 +66,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -85,6 +90,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.ast.ArrayCreation;
+import lombok.ast.ArrayDimension;
+import lombok.ast.ArrayInitializer;
 import lombok.ast.AstVisitor;
 import lombok.ast.BooleanLiteral;
 import lombok.ast.CharLiteral;
@@ -219,8 +227,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     private Map<String, List<Pair<Handle, String>>> mFormatStrings;
 
     /**
-     * Map of strings that contain percents that aren't formatting strings; these
-     * should not be passed to String.format.
+     * Map of strings that do not contain any formatting.
      */
     private final Map<String, Handle> mNotFormatStrings = new HashMap<String, Handle>();
 
@@ -301,7 +308,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
     }
 
     private void checkTextNode(XmlContext context, Element element, String text) {
-        String name = null;
+        String name = element.getAttribute(ATTR_NAME);
         boolean found = false;
         boolean foundPlural = false;
 
@@ -313,10 +320,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 j++;
             }
             if (c == '%') {
-                if (name == null) {
-                    name = element.getAttribute(ATTR_NAME);
-                }
-
                 // Also make sure this String isn't an unformatted String
                 String formatted = element.getAttribute("formatted"); //$NON-NLS-1$
                 if (!formatted.isEmpty() && !Boolean.parseBoolean(formatted)) {
@@ -375,25 +378,29 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             }
         }
 
-        if (found && name != null) {
-            if (!context.getProject().getReportIssues()) {
-                // If this is a library project not being analyzed, ignore it
-                return;
-            }
+        if (!context.getProject().getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
 
-            // Record it for analysis when seen in Java code
-            if (mFormatStrings == null) {
-                mFormatStrings = new HashMap<String, List<Pair<Handle,String>>>();
-            }
-
-            List<Pair<Handle, String>> list = mFormatStrings.get(name);
-            if (list == null) {
-                list = new ArrayList<Pair<Handle, String>>();
-                mFormatStrings.put(name, list);
-            }
+        if (name != null) {
             Handle handle = context.createLocationHandle(element);
             handle.setClientData(element);
-            list.add(Pair.of(handle, text));
+            if (found) {
+                // Record it for analysis when seen in Java code
+                if (mFormatStrings == null) {
+                    mFormatStrings = new HashMap<String, List<Pair<Handle, String>>>();
+                }
+
+                List<Pair<Handle, String>> list = mFormatStrings.get(name);
+                if (list == null) {
+                    list = new ArrayList<Pair<Handle, String>>();
+                    mFormatStrings.put(name, list);
+                }
+                list.add(Pair.of(handle, text));
+            } else {
+                mNotFormatStrings.put(name, handle);
+            }
         }
     }
 
@@ -483,6 +490,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
 
                 // Check argument counts
                 if (checkCount) {
+                    Handle notFormatted = mNotFormatStrings.get(name);
+                    if (notFormatted != null) {
+                        list = ImmutableList.<Pair<Handle, String>>builder()
+                                .add(Pair.of(notFormatted, name)).addAll(list).build();
+                    }
                     checkArity(context, name, list);
                 }
 
@@ -1007,54 +1019,114 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             return;
         }
 
+        ResolvedNode resolved = context.resolve(node);
+        if (!(resolved instanceof ResolvedMethod)) {
+            return;
+        }
+        ResolvedMethod method = (ResolvedMethod) resolved;
         String methodName = node.astName().astValue();
         if (methodName.equals(FORMAT_METHOD)) {
-            // String.format(getResources().getString(R.string.foo), arg1, arg2, ...)
-            // Check that the arguments in R.string.foo match arg1, arg2, ...
-            if (node.astOperand() instanceof VariableReference) {
-                VariableReference ref = (VariableReference) node.astOperand();
-                if ("String".equals(ref.astIdentifier().astValue())) { //$NON-NLS-1$
-                    // Found a String.format call
-                    // Look inside to see if we can find an R string
-                    // Find surrounding method
-                    checkFormatCall(context, node);
-                }
+            if (method.getContainingClass().matches(TYPE_STRING)) {
+                // Check formatting parameters for
+                //   java.lang.String#format(String format, Object... formatArgs)
+                //   java.lang.String#format(Locale locale, String format, Object... formatArgs)
+                checkFormatCall(context, node, method.getArgumentCount() == 3);
+
+                // TODO: Consider also enforcing
+                // java.util.Formatter#format(String string, Object... formatArgs)
             }
         } else {
-            // getResources().getString(R.string.foo, arg1, arg2, ...)
-            // Check that the arguments in R.string.foo match arg1, arg2, ...
-            if (node.astArguments().size() > 1 && node.astOperand() != null ) {
-                checkFormatCall(context, node);
+            // Look up any of these string formatting methods:
+            // android.content.res.Resources#getString(@StringRes int resId, Object... formatArgs)
+            // android.content.Context#getString(@StringRes int resId, Object... formatArgs)
+            // android.app.Fragment#getString(@StringRes int resId, Object... formatArgs)
+            // android.support.v4.app.Fragment#getString(@StringRes int resId, Object... formatArgs)
+
+            // Many of these also define a plain getString method:
+            // android.content.res.Resources#getString(@StringRes int resId)
+            // However, while it's possible that these contain formatting strings) it's
+            // also possible that they're looking up strings that are not intended to be used
+            // for formatting so while we may want to warn about this it's not necessarily
+            // an error.
+            if (method.getArgumentCount() < 2) {
+                return;
             }
+
+            ResolvedClass containingClass = method.getContainingClass();
+            if (containingClass.isSubclassOf(CLASS_RESOURCES, false) ||
+                    containingClass.isSubclassOf(CLASS_CONTEXT, false) ||
+                    containingClass.isSubclassOf(CLASS_FRAGMENT, false) ||
+                    containingClass.isSubclassOf(CLASS_V4_FRAGMENT, false)) {
+                checkFormatCall(context, node, false);
+            }
+
+            // TODO: Consider also looking up
+            // android.content.res.Resources#getQuantityString(@PluralsRes int id, int quantity,
+            //              Object... formatArgs)
+            // though this will require being smarter about cross referencing formatting
+            // strings since we'll need to go via the quantity string definitions
         }
     }
 
-    private void checkFormatCall(JavaContext context, MethodInvocation node) {
+    private void checkFormatCall(JavaContext context, MethodInvocation node,
+            boolean specifiesLocale) {
         lombok.ast.Node current = getParentMethod(node);
         if (current != null) {
-            checkStringFormatCall(context, current, node);
+            checkStringFormatCall(context, current, node, specifiesLocale);
         }
     }
 
     /**
-     * Check the given String.format call (with the given arguments) to see if
-     * the string format is being used correctly
-     *
+     * Checks a String.format call that is using a string that doesn't contain format placeholders.
      * @param context the context to report errors to
-     * @param method the method containing the {@link String#format} call
      * @param call the AST node for the {@link String#format}
+     * @param name the string name
+     * @param handle the string location
+     */
+    private static void checkNotFormattedHandle(
+            JavaContext context,
+            MethodInvocation call,
+            String name,
+            Handle handle) {
+        Object clientData = handle.getClientData();
+        if (clientData instanceof Node) {
+            if (context.getDriver().isSuppressed(null, INVALID, (Node) clientData)) {
+                return;
+            }
+        }
+        Location location = context.getLocation(call);
+        Location secondary = handle.resolve();
+        secondary.setMessage("This definition does not require arguments");
+        location.setSecondary(secondary);
+        String message = String.format(
+                "Format string '`%1$s`' is not a valid format string so it should not be " +
+                        "passed to `String.format`",
+                name);
+        context.report(INVALID, call, location, message);
+    }
+
+    /**
+     * Check the given String.format call (with the given arguments) to see if the string format is
+     * being used correctly
+     *
+     * @param context         the context to report errors to
+     * @param method          the method containing the {@link String#format} call
+     * @param call            the AST node for the {@link String#format}
+     * @param specifiesLocale whether the first parameter is a locale string, shifting the
+     *                        formatting string to the second argument
      */
     private void checkStringFormatCall(
             JavaContext context,
             lombok.ast.Node method,
-            MethodInvocation call) {
+            MethodInvocation call,
+            boolean specifiesLocale) {
 
         StrictListAccessor<Expression, MethodInvocation> args = call.astArguments();
         if (args.isEmpty()) {
             return;
         }
 
-        StringTracker tracker = new StringTracker(context, method, call, 0);
+        StringTracker tracker = new StringTracker(context, method, call, specifiesLocale ? 1 : 0);
         method.accept(tracker);
         String name = tracker.getFormatStringName();
         if (name == null) {
@@ -1065,44 +1137,44 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             return;
         }
 
-        if (mNotFormatStrings.containsKey(name)) {
-            Handle handle = mNotFormatStrings.get(name);
-            Object clientData = handle.getClientData();
-            if (clientData instanceof Node) {
-                if (context.getDriver().isSuppressed(null, INVALID, (Node) clientData)) {
+        boolean passingVarArgsArray = false;
+        int callCount = args.size() - 1 - (specifiesLocale ? 1 : 0);
+        if (callCount == 1) {
+            // If instead of a varargs call like
+            //    getString(R.string.foo, arg1, arg2, arg3)
+            // the code is calling the varargs method with a packed Object array, as in
+            //    getString(R.string.foo, new Object[] { arg1, arg2, arg3 })
+            // we'll need to handle that such that we don't think this is a single
+            // argument
+            TypeDescriptor type = context.getType(args.last());
+            if (type != null && type.isArray() && !type.isPrimitive()) {
+                boolean knownArity = false;
+                if (args.last() instanceof ArrayCreation) {
+                    ArrayCreation creation = (ArrayCreation) args.last();
+                    ArrayInitializer initializer = creation.astInitializer();
+                    if (initializer != null) {
+                        callCount = initializer.astExpressions().size();
+                        knownArity = true;
+                    } else if (creation.astDimensions() != null
+                            && creation.astDimensions().size() == 1) {
+                        ArrayDimension first = creation.astDimensions().first();
+                        Expression expression = first.astDimension();
+                        if (expression instanceof IntegralLiteral) {
+                            callCount = ((IntegralLiteral) expression).astIntValue();
+                            knownArity = true;
+                        }
+                    }
+                }
+                if (!knownArity) {
                     return;
                 }
+                passingVarArgsArray = true;
             }
-            Location location = handle.resolve();
-            String message = String.format(
-                    "Format string '`%1$s`' is not a valid format string so it should not be " +
-                    "passed to `String.format`",
-                    name);
-            context.report(INVALID, call, location, message);
-            return;
         }
 
-        Iterator<Expression> argIterator = args.iterator();
-        Expression first = argIterator.next();
-        Expression second = argIterator.hasNext() ? argIterator.next() : null;
-
-        boolean specifiesLocale;
-        TypeDescriptor parameterType = context.getType(first);
-        if (parameterType != null) {
-            specifiesLocale = isLocaleReference(parameterType.getName());
-        } else if (!call.astName().astValue().equals(FORMAT_METHOD)) {
-            specifiesLocale = false;
-        } else {
-            // No type information with this AST; use string patterns instead to make
-            // an educated guess
-            String firstName = first.toString();
-            specifiesLocale = firstName.startsWith("Locale.")                     //$NON-NLS-1$
-                    || firstName.contains("locale")                               //$NON-NLS-1$
-                    || firstName.equals("null")                                   //$NON-NLS-1$
-                    || (second != null && second.toString().contains("getString") //$NON-NLS-1$
-                        && !firstName.contains("getString")                       //$NON-NLS-1$
-                        && !firstName.contains(R_PREFIX)
-                        && !(first instanceof StringLiteral));
+        if (callCount > 0 && mNotFormatStrings.containsKey(name)) {
+            checkNotFormattedHandle(context, call, name, mNotFormatStrings.get(name));
+            return;
         }
 
         List<Pair<Handle, String>> list = mFormatStrings != null ? mFormatStrings.get(name) : null;
@@ -1112,8 +1184,13 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     !context.getScope().contains(Scope.RESOURCE_FILE)) {
                 AbstractResourceRepository resources = client
                         .getProjectResources(context.getMainProject(), true);
-                List<ResourceItem> items = resources
-                        .getResourceItem(ResourceType.STRING, name);
+                List<ResourceItem> items;
+                if (resources != null) {
+                    items = resources.getResourceItem(ResourceType.STRING, name);
+                } else {
+                    // Must be a non-Android module
+                    items = null;
+                }
                 if (items != null) {
                     for (final ResourceItem item : items) {
                         ResourceValue v = item.getResourceValue(false);
@@ -1148,6 +1225,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                     // If the user marked the string with
                                 }
 
+                                Handle handle = client.createResourceItemHandle(item);
                                 if (isFormattingString) {
                                     if (list == null) {
                                         list = Lists.newArrayList();
@@ -1156,8 +1234,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                                         }
                                         mFormatStrings.put(name, list);
                                     }
-                                    Handle handle = client.createResourceItemHandle(item);
                                     list.add(Pair.of(handle, value));
+                                } else if (callCount > 0) {
+                                    checkNotFormattedHandle(context, call, name, handle);
                                 }
                             }
                         }
@@ -1177,11 +1256,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 }
                 int count = getFormatArgumentCount(s, null);
                 Handle handle = pair.getFirst();
-                if (count != args.size() - 1 - (specifiesLocale ? 1 : 0)) {
-                    if (isSharedPreferenceGetString(context, call)) {
-                        continue;
-                    }
-
+                if (count != callCount) {
                     Location location = context.getLocation(call);
                     Location secondary = handle.resolve();
                     secondary.setMessage(String.format("This definition requires %1$d arguments",
@@ -1190,13 +1265,18 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                     String message = String.format(
                             "Wrong argument count, format string `%1$s` requires `%2$d` but format " +
                             "call supplies `%3$d`",
-                            name, count, args.size() - 1 - (specifiesLocale ? 1 : 0));
+                            name, count, callCount);
                     context.report(ARG_TYPES, method, location, message);
                     if (reported == null) {
                         reported = Sets.newHashSet();
                     }
                     reported.add(s);
                 } else {
+                    if (passingVarArgsArray) {
+                        // Can't currently check these: make sure we don't incorrectly
+                        // flag parameters on the Object[] instead of the wrapped parameters
+                        return;
+                    }
                     for (int i = 1; i <= count; i++) {
                         int argumentIndex = i + (specifiesLocale ? 1 : 0);
                         Class<?> type = tracker.getArgumentType(argumentIndex);
@@ -1261,10 +1341,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                             }
 
                             if (!valid) {
-                                if (isSharedPreferenceGetString(context, call)) {
-                                    continue;
-                                }
-
                                 Expression argument = tracker.getArgument(argumentIndex);
                                 Location location = context.getLocation(argument);
                                 Location secondary = handle.resolve();
@@ -1288,22 +1364,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 }
             }
         }
-    }
-
-    private static boolean isSharedPreferenceGetString(@NonNull JavaContext context,
-            @NonNull MethodInvocation call) {
-        if (!GET_STRING_METHOD.equals(call.astName().astValue())) {
-            return false;
-        }
-
-        JavaParser.ResolvedNode resolved = context.resolve(call);
-        if (resolved instanceof JavaParser.ResolvedMethod) {
-            JavaParser.ResolvedMethod resolvedMethod = (JavaParser.ResolvedMethod) resolved;
-            JavaParser.ResolvedClass containingClass = resolvedMethod.getContainingClass();
-            return containingClass.isSubclassOf(ANDROID_CONTENT_SHARED_PREFERENCES, false);
-        }
-
-        return false; // not certain
     }
 
     private static boolean isLocaleReference(@Nullable TypeDescriptor reference) {
@@ -1525,13 +1585,45 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
                 // See if we're on the right hand side of an assignment
                 lombok.ast.Node current = node.getParent().getParent();
                 String reference = ((Select) current).astIdentifier().astValue();
-
+                lombok.ast.Node prev = current;
                 while (current != mTop && !(current instanceof VariableDefinitionEntry)) {
                     if (current == mTargetNode) {
-                        mName = reference;
-                        mDone = true;
-                        return false;
+                        // Make sure the reference we found was part of the
+                        // target parameter (e.g. for a string format check,
+                        // the actual formatting string, not one of the arguments
+                        // supplied to the formatting string)
+                        boolean isParameterArg = false;
+                        Iterator<Expression> iterator = null;
+                        if (mTargetNode instanceof MethodInvocation) {
+                            MethodInvocation call = (MethodInvocation) mTargetNode;
+                            iterator = call.astArguments().iterator();
+                        } else if (mTargetNode instanceof ConstructorInvocation) {
+                            ConstructorInvocation call = (ConstructorInvocation) mTargetNode;
+                            iterator = call.astArguments().iterator();
+                        }
+                        if (iterator != null) {
+                            Expression arg = null;
+                            for (int i = 0; i <= mArgIndex; i++) {
+                                if (iterator.hasNext()) {
+                                    arg = iterator.next();
+                                } else {
+                                    arg = null;
+                                }
+                            }
+                            if (arg == prev) {
+                                isParameterArg = true;
+                            }
+                        } else {
+                            // Constructor?
+                            isParameterArg = true;
+                        }
+                        if (isParameterArg) {
+                            mName = reference;
+                            mDone = true;
+                            return false;
+                        }
                     }
+                    prev = current;
                     current = current.getParent();
                 }
                 if (current instanceof VariableDefinitionEntry) {

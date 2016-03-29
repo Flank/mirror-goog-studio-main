@@ -424,7 +424,7 @@ public class LintGradleProject extends Project {
 
         @NonNull
         @Override
-        public List<File> getJavaLibraries() {
+        public List<File> getJavaLibraries(boolean includeProvided) {
             if (mJavaLibraries == null) {
                 Collection<JavaLibrary> libs = mVariant.getMainArtifact().getDependencies().getJavaLibraries();
                 mJavaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
@@ -619,7 +619,7 @@ public class LintGradleProject extends Project {
 
         @NonNull
         @Override
-        public List<File> getJavaLibraries() {
+        public List<File> getJavaLibraries(boolean includeProvided) {
             if (mJavaLibraries == null) {
                 mJavaLibraries = Lists.newArrayList();
                 File jarFile = mLibrary.getJarFile();

@@ -26,6 +26,7 @@ import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.IMAGE_VIEW;
 import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_TAG;
@@ -171,6 +172,12 @@ public class DetectMissingPrefix extends LayoutDetector {
                 // Data binding: Can add attributes like onClickListener to buttons etc.
                 Element root = attribute.getOwnerDocument().getDocumentElement();
                 if (TAG_LAYOUT.equals(root.getTagName())) {
+                    return;
+                }
+
+                // Appcompat now encourages decorating standard views (like ImageView and
+                // ImageButton) with srcCompat in the app namespace
+                if (attribute.getLocalName().equals("srcCompat")) {
                     return;
                 }
             }

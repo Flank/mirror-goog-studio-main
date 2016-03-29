@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_APP_ACTIVITY;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.ControlFlowGraph.Node;
@@ -50,6 +48,7 @@ import java.util.List;
  * which can lead to unnecessary battery usage.
  */
 public class WakelockDetector extends Detector implements ClassScanner {
+    public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";        //$NON-NLS-1$
 
     /** Problems using wakelocks */
     public static final Issue ISSUE = Issue.create(
@@ -187,8 +186,6 @@ public class WakelockDetector extends Detector implements ClassScanner {
 
     private static void checkFlow(@NonNull ClassContext context, @NonNull ClassNode classNode,
             @NonNull MethodNode method, @NonNull MethodInsnNode acquire) {
-        // Track allocations such that we know whether the type of the call
-        // is on a SecureRandom rather than a Random
         final InsnList instructions = method.instructions;
         MethodInsnNode release = null;
 

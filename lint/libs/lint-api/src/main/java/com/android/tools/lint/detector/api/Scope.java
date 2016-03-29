@@ -62,7 +62,7 @@ public enum Scope {
     BINARY_RESOURCE_FILE,
 
     /**
-     * The analysis considers the resource folders
+     * The analysis considers the resource folders (which also includes asset folders)
      */
     RESOURCE_FOLDER,
 
@@ -112,7 +112,8 @@ public enum Scope {
 
     /**
      * The analysis considers classes in the libraries for this project. These
-     * will be analyzed before the classes themselves.
+     * will be analyzed before the classes themselves. NOTE: This excludes
+     * provided libraries.
      */
     JAVA_LIBRARIES,
 

@@ -16,12 +16,12 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FD_BUILD_TOOLS;
-import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
 import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
+import static com.android.tools.lint.detector.api.LintUtils.guessGradleLocation;
 import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.SdkConstants;
@@ -107,7 +107,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Incompatible Android Gradle plugin */
     public static final Issue GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
-            "AndroidGradlePluginVersion", //$NON-NLS-1$
+            "GradlePluginVersion", //$NON-NLS-1$
             "Incompatible Android Gradle Plugin",
             "Not all versions of the Android Gradle plugin are compatible with all versions " +
             "of the SDK. If you update your tools, or if you are trying to open a project that " +
@@ -209,6 +209,20 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             8,
             Severity.ERROR,
             IMPLEMENTATION);
+
+    /** Attempting to use substitution with single quotes */
+    public static final Issue NOT_INTERPOLATED = Issue.create(
+          "NotInterpolated", //$NON-NLS-1$
+          "Incorrect Interpolation",
+
+          "To insert the value of a variable, you can use `${variable}` inside " +
+          "a string literal, but *only* if you are using double quotes!",
+
+          Category.CORRECTNESS,
+          8,
+          Severity.ERROR,
+          IMPLEMENTATION)
+          .addMoreInfo("http://www.groovy-lang.org/syntax.html#_string_interpolation");
 
     /** A newer version is available on a remote server */
     public static final Issue REMOTE_VERSION = Issue.create(
@@ -432,6 +446,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 if (dependency != null) {
                     GradleCoordinate gc = GradleCoordinate.parseCoordinateString(dependency);
                     if (gc != null && dependency.contains("$")) {
+                        if (value.startsWith("'") && value.endsWith("'") &&
+                            context.isEnabled(NOT_INTERPOLATED)) {
+                            String message = "It looks like you are trying to substitute a "
+                                             + "version variable, but using single quotes ('). For Groovy "
+                                             + "string interpolation you must use double quotes (\").";
+                            report(context, statementCookie, NOT_INTERPOLATED, message);
+                        }
+
                         gc = resolveCoordinate(context, gc);
                     }
                     if (gc != null) {
@@ -586,12 +608,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else if (issue == STRING_INTEGER) {
             return findSubstring(errorMessage, "replace ", " with ");
         } else if (issue == DEPRECATED) {
-            if (errorMessage.contains(GradleDetector.APP_PLUGIN_ID) &&
-                    errorMessage.contains(GradleDetector.OLD_APP_PLUGIN_ID)) {
-                return GradleDetector.OLD_APP_PLUGIN_ID;
-            } else if (errorMessage.contains(GradleDetector.LIB_PLUGIN_ID) &&
-                    errorMessage.contains(GradleDetector.OLD_LIB_PLUGIN_ID)) {
-                return GradleDetector.OLD_LIB_PLUGIN_ID;
+            if (errorMessage.contains(APP_PLUGIN_ID) &&
+                errorMessage.contains(OLD_APP_PLUGIN_ID)) {
+                return OLD_APP_PLUGIN_ID;
+            } else if (errorMessage.contains(LIB_PLUGIN_ID) &&
+                       errorMessage.contains(OLD_LIB_PLUGIN_ID)) {
+                return OLD_LIB_PLUGIN_ID;
             }
             // "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
             return findSubstring(errorMessage, "Replace '", "'");
@@ -635,12 +657,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else if (issue == STRING_INTEGER) {
             return findSubstring(errorMessage, " just ", ")");
         } else if (issue == DEPRECATED) {
-            if (errorMessage.contains(GradleDetector.APP_PLUGIN_ID) &&
-                    errorMessage.contains(GradleDetector.OLD_APP_PLUGIN_ID)) {
-                return GradleDetector.APP_PLUGIN_ID;
-            } else if (errorMessage.contains(GradleDetector.LIB_PLUGIN_ID) &&
-                    errorMessage.contains(GradleDetector.OLD_LIB_PLUGIN_ID)) {
-                return GradleDetector.LIB_PLUGIN_ID;
+            if (errorMessage.contains(APP_PLUGIN_ID) &&
+                errorMessage.contains(OLD_APP_PLUGIN_ID)) {
+                return APP_PLUGIN_ID;
+            } else if (errorMessage.contains(LIB_PLUGIN_ID) &&
+                       errorMessage.contains(OLD_LIB_PLUGIN_ID)) {
+                return LIB_PLUGIN_ID;
             }
             // "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
             return findSubstring(errorMessage, " with '", "'");
@@ -696,7 +718,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private static boolean isModelOlderThan011(@NonNull Context context) {
-        return LintUtils.isModelOlderThan(context.getProject().getGradleProjectModel(), 0, 11, 0);
+        return LintUtils.isModelOlderThan(context.getProject(), 0, 11, 0);
     }
 
     private static int sMajorBuildTools;
@@ -717,7 +739,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             sMajorBuildTools = major;
 
             List<PreciseRevision> revisions = Lists.newArrayList();
-            if (major == 21) {
+            if (major == 23) {
+                revisions.add(new PreciseRevision(23, 0, 1));
+            } else if (major == 22) {
+                revisions.add(new PreciseRevision(22, 0, 1));
+            } else if (major == 21) {
                 revisions.add(new PreciseRevision(21, 1, 2));
             } else if (major == 20) {
                 revisions.add(new PreciseRevision(20));
@@ -854,7 +880,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             version = getNewerRevision(dependency, new PreciseRevision(18, 0));
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new PreciseRevision(2, 3));
+            version = getNewerRevision(dependency, new PreciseRevision(2, 4));
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new PreciseRevision(4, 3, 5));
@@ -1061,8 +1087,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         String artifactId = dependency.getArtifactId();
         assert groupId != null && artifactId != null;
 
-        // See if the support library version is lower than the targetSdkVersion
-        if (mTargetSdkVersion > 0 && dependency.getMajorVersion() < mTargetSdkVersion &&
+        if (mCompileSdkVersion >= 18 && dependency.getMajorVersion() != mCompileSdkVersion &&
+                dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE &&
+                // The multidex library doesn't follow normal supportlib numbering scheme
+                !dependency.getArtifactId().startsWith("multidex") &&
+                context.isEnabled(COMPATIBILITY)) {
+            String message = "This support library should not use a different version ("
+                    + dependency.getMajorVersion() + ") than the `compileSdkVersion` ("
+                    + mCompileSdkVersion + ")";
+            report(context, cookie, COMPATIBILITY, message);
+        } else if (mTargetSdkVersion > 0 && dependency.getMajorVersion() < mTargetSdkVersion &&
                 dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE &&
                 // The multidex library doesn't follow normal supportlib numbering scheme
                 !dependency.getArtifactId().startsWith("multidex") &&
@@ -1159,19 +1193,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (cookie != null) {
                 report(context, cookie, COMPATIBILITY, message);
             } else {
-                // Associate the error with the top level build.gradle file, if found
-                // (if not, fall back to the project directory). This is necessary because
-                // we're doing this analysis based on the Gradle interpreted model, not from
-                // parsing Gradle files - and the model doesn't provide source positions.
-                File dir = context.getProject().getDir();
-                Location location;
-                File topLevel = new File(dir, FN_BUILD_GRADLE);
-                if (topLevel.exists()) {
-                    location = Location.create(topLevel);
-                } else {
-                    location = Location.create(dir);
-                }
-                context.report(COMPATIBILITY, location, message);
+                context.report(COMPATIBILITY, guessGradleLocation(context.getProject()), message);
             }
         }
     }

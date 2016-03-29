@@ -18,11 +18,18 @@ package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
+@SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class SharedPrefsDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new SharedPrefsDetector();
+    }
+
+    @Override
+    protected boolean allowCompilationErrors() {
+        // Some of these unit tests are still relying on source code that references
+        // unresolved symbols etc.
+        return true;
     }
 
     public void test() throws Exception {
@@ -138,5 +145,43 @@ public class SharedPrefsDetectorTest extends AbstractCheckTest {
             lintProject(
                     "apicheck/minsdk11.xml=>AndroidManifest.xml",
                     "src/test/pkg/SharedPrefsTest8.java.txt=>src/test/pkg/SharedPrefsTest8.java"));
+    }
+
+    public void testChainedCalls() throws Exception {
+        assertEquals(""
+                + "src/test/pkg/Chained.java:24: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]\n"
+                + "        PreferenceManager\n"
+                + "        ^\n"
+                + "0 errors, 1 warnings\n",
+                lintProject(java("src/test/pkg/Chained.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "import android.preference.PreferenceManager;\n"
+                        + "\n"
+                        + "public class Chained {\n"
+                        + "    private static void falsePositive(Context context) {\n"
+                        + "        PreferenceManager\n"
+                        + "                .getDefaultSharedPreferences(context)\n"
+                        + "                .edit()\n"
+                        + "                .putString(\"wat\", \"wat\")\n"
+                        + "                .commit();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private static void falsePositive2(Context context) {\n"
+                        + "        boolean var = PreferenceManager\n"
+                        + "                .getDefaultSharedPreferences(context)\n"
+                        + "                .edit()\n"
+                        + "                .putString(\"wat\", \"wat\")\n"
+                        + "                .commit();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private static void truePositive(Context context) {\n"
+                        + "        PreferenceManager\n"
+                        + "                .getDefaultSharedPreferences(context)\n"
+                        + "                .edit()\n"
+                        + "                .putString(\"wat\", \"wat\");\n"
+                        + "    }\n"
+                        + "}\n")));
     }
 }
