@@ -90,6 +90,8 @@ import org.w3c.dom.Element;
  */
 public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
 
+    // TODO: Use the new merged manifest model
+
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION = new Implementation(
             RtlDetector.class,

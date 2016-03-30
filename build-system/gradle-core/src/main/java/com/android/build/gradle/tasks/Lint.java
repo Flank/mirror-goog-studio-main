@@ -42,6 +42,7 @@ import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
@@ -89,6 +90,8 @@ public class Lint extends BaseTask {
     private boolean fatalOnly;
     private ToolingModelBuilderRegistry toolingRegistry;
     @Nullable private File reportsDir;
+    private File manifestReportFile;
+    private File outputsDir;
 
     public void setLintOptions(@NonNull LintOptions lintOptions) {
         this.lintOptions = lintOptions;
@@ -185,7 +188,7 @@ public class Lint extends BaseTask {
             LintCliFlags flags = new LintCliFlags();
             LintGradleClient client = new LintGradleClient(
                     registry, flags, getProject(), modelProject,
-                    sdkHome, variant, getBuildTools());
+                    sdkHome, variant, getBuildTools(), getManifestReportFile(variant));
             syncOptions(lintOptions, client, flags, null, getProject(), reportsDir,
                     true, fatalOnly);
 
@@ -319,7 +322,7 @@ public class Lint extends BaseTask {
         IssueRegistry registry = createIssueRegistry();
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client = new LintGradleClient(registry, flags, getProject(), modelProject,
-                sdkHome, variant, getBuildTools());
+                sdkHome, variant, getBuildTools(), getManifestReportFile(variant));
         if (fatalOnly) {
             if (lintOptions != null && !lintOptions.isCheckReleaseBuilds()) {
                 return Pair.of(Collections.emptyList(), null);
@@ -376,6 +379,33 @@ public class Lint extends BaseTask {
 
     private static BuiltinIssueRegistry createIssueRegistry() {
         return new LintGradleIssueRegistry();
+    }
+
+    public void setManifestReportFile(@Nullable File manifestReportFile) {
+        this.manifestReportFile = manifestReportFile;
+    }
+
+    @Nullable
+    public File getManifestReportFile(@Nullable Variant variant) {
+        if (manifestReportFile == null && outputsDir != null && variant != null) {
+            // When running the lint-all (all variants task) we don't
+            // have a report file since it varies by variant; this
+            // duplicates the logic in VariantScopeImpl#getManifestReportFile
+            manifestReportFile = FileUtils.join(outputsDir,
+                    "logs", "manifest-merger-" + variant.getDisplayName()
+                            + "-report.txt");
+            // variant.getDisplayName corresponds to variantData.getVariantConfiguration().getBaseName()
+        }
+        return manifestReportFile;
+    }
+
+    public void setOutputsDir(@Nullable File outputsDir) {
+        this.outputsDir = outputsDir;
+    }
+
+    @Nullable
+    public File getOutputsDir() {
+        return outputsDir;
     }
 
     // Issue registry when Lint is run inside Gradle: we replace the Gradle
@@ -439,8 +469,10 @@ public class Lint extends BaseTask {
             lint.setVariantName(scope.getVariantConfiguration().getFullName());
             lint.setToolingRegistry(globalScope.getToolingRegistry());
             lint.setReportsDir(globalScope.getReportsDir());
+            lint.setOutputsDir(scope.getGlobalScope().getOutputsDir());
+            lint.setManifestReportFile(scope.getManifestReportFile());
             lint.setDescription("Runs lint on the " + StringHelper
-                            .capitalize(scope.getVariantConfiguration().getFullName()) + " build.");
+                    .capitalize(scope.getVariantConfiguration().getFullName()) + " build.");
             lint.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
         }
     }
@@ -477,6 +509,8 @@ public class Lint extends BaseTask {
             task.setVariantName(variantName);
             task.setToolingRegistry(globalScope.getToolingRegistry());
             task.setReportsDir(globalScope.getReportsDir());
+            task.setOutputsDir(scope.getGlobalScope().getOutputsDir());
+            task.setManifestReportFile(scope.getManifestReportFile());
             task.setFatalOnly(true);
             task.setDescription(
                     "Runs lint on just the fatal issues in the " + variantName + " build.");
@@ -515,6 +549,7 @@ public class Lint extends BaseTask {
             }
             lintTask.setToolingRegistry(globalScope.getToolingRegistry());
             lintTask.setReportsDir(globalScope.getReportsDir());
+            lintTask.setOutputsDir(globalScope.getOutputsDir());
             lintTask.setAndroidBuilder(globalScope.getAndroidBuilder());
         }
     }

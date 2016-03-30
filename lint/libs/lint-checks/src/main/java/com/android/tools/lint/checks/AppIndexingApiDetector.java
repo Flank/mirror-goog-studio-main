@@ -22,6 +22,8 @@ import static com.android.SdkConstants.ATTR_PATH;
 import static com.android.SdkConstants.ATTR_PATH_PREFIX;
 import static com.android.SdkConstants.ATTR_SCHEME;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
+import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getSubTagsByName;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_MIME_TYPE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PORT;
@@ -43,7 +45,6 @@ import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -52,6 +53,7 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -66,7 +68,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethodCallExpression;
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -182,12 +183,10 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element application) {
-        List<Element> activities = extractChildrenByName(application, NODE_ACTIVITY);
         boolean applicationHasActionView = false;
-        for (Element activity : activities) {
-            List<Element> intents = extractChildrenByName(activity, NODE_INTENT);
+        for (Element activity : XmlUtils.getSubTagsByName(application, NODE_ACTIVITY)) {
             boolean activityHasActionView = false;
-            for (Element intent : intents) {
+            for (Element intent : XmlUtils.getSubTagsByName(activity, NODE_INTENT)) {
                 boolean actionView = hasActionView(intent);
                 if (actionView) {
                     activityHasActionView = true;
@@ -275,41 +274,50 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
             }
 
             JavaEvaluator evaluator = mContext.getEvaluator();
-            if (methodName.equals(APP_INDEX_START)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
-                    mStartMethods.add(node);
-                }
-            } else if (methodName.equals(APP_INDEX_END)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
-                    mEndMethods.add(node);
-                }
-            } else if (methodName.equals(APP_INDEX_VIEW)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
-                    mStartMethods.add(node);
-                }
-            } else if (methodName.equals(APP_INDEX_VIEW_END)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
-                    mEndMethods.add(node);
-                }
-            } else if (methodName.equals(CLIENT_CONNECT)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), GOOGLE_API_CLIENT_CLASS)) {
-                    mConnectMethods.add(node);
-                }
-            } else if (methodName.equals(CLIENT_DISCONNECT)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), GOOGLE_API_CLIENT_CLASS)) {
-                    mDisconnectMethods.add(node);
-                }
-            } else if (methodName.equals(ADD_API)) {
-                if (evaluator.isMemberInClass(node.resolveMethod(), GOOGLE_API_CLIENT_BUILDER_CLASS)) {
-                    PsiExpression[] args = node.getArgumentList().getExpressions();
-                    if (args.length > 0) {
-                        PsiElement resolved = evaluator.resolve(args[0]);
-                        if (resolved instanceof PsiField &&
-                                evaluator.isMemberInClass((PsiField) resolved, API_CLASS)) {
-                            mHasAddAppIndexApi = true;
+            switch (methodName) {
+                case APP_INDEX_START:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
+                        mStartMethods.add(node);
+                    }
+                    break;
+                case APP_INDEX_END:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
+                        mEndMethods.add(node);
+                    }
+                    break;
+                case APP_INDEX_VIEW:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
+                        mStartMethods.add(node);
+                    }
+                    break;
+                case APP_INDEX_VIEW_END:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), APP_INDEXING_API_CLASS)) {
+                        mEndMethods.add(node);
+                    }
+                    break;
+                case CLIENT_CONNECT:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), GOOGLE_API_CLIENT_CLASS)) {
+                        mConnectMethods.add(node);
+                    }
+                    break;
+                case CLIENT_DISCONNECT:
+                    if (evaluator.isMemberInClass(node.resolveMethod(), GOOGLE_API_CLIENT_CLASS)) {
+                        mDisconnectMethods.add(node);
+                    }
+                    break;
+                case ADD_API:
+                    if (evaluator.isMemberInClass(node.resolveMethod(),
+                            GOOGLE_API_CLIENT_BUILDER_CLASS)) {
+                        PsiExpression[] args = node.getArgumentList().getExpressions();
+                        if (args.length > 0) {
+                            PsiElement resolved = evaluator.resolve(args[0]);
+                            if (resolved instanceof PsiField &&
+                                    evaluator.isMemberInClass((PsiField) resolved, API_CLASS)) {
+                                mHasAddAppIndexApi = true;
+                            }
                         }
                     }
-                }
+                    break;
             }
         }
 
@@ -413,55 +421,27 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
     }
 
     /**
-     * Gets names of activities which needs app indexing. i.e. the activities have data tag in their
-     * intent filters.
-     * TODO: Cache the activities to speed up batch lint.
+     * Gets names of activities which needs app indexing. i.e. the activities have data tag in
+     * their intent filters.
      *
      * @param context The context to check in.
      */
+    @NonNull
     private static Set<String> getActivitiesToCheck(Context context) {
         Set<String> activitiesToCheck = Sets.newHashSet();
-        List<File> manifestFiles = context.getProject().getManifestFiles();
-        XmlParser xmlParser = context.getDriver().getClient().getXmlParser();
-        if (xmlParser != null) {
-            // TODO: Avoid visit all manifest files before enable this check by default.
-            for (File manifest : manifestFiles) {
-                XmlContext xmlContext =
-                        new XmlContext(context.getDriver(), context.getProject(),
-                                null, manifest, null, xmlParser);
-                Document doc = xmlParser.parseXml(xmlContext);
-                if (doc != null) {
-                    for (Element child : XmlUtils.getSubTags(doc)) {
-                        if (child.getNodeName().equals(NODE_MANIFEST)) {
-                            List<Element> apps = extractChildrenByName(child, NODE_APPLICATION);
-                            for (Element app : apps) {
-                                List<Element> acts = extractChildrenByName(app, NODE_ACTIVITY);
-                                for (Element act : acts) {
-                                    List<Element> intents = extractChildrenByName(act, NODE_INTENT);
-                                    for (Element intent : intents) {
-                                        List<Element> data = extractChildrenByName(intent,
-                                                NODE_DATA);
-                                        if (!data.isEmpty() && act.hasAttributeNS(
-                                                ANDROID_URI, ATTRIBUTE_NAME)) {
-                                            Attr attr = act.getAttributeNodeNS(
-                                                    ANDROID_URI, ATTRIBUTE_NAME);
-                                            String activityName = attr.getValue();
-                                            int dotIndex = activityName.indexOf('.');
-                                            if (dotIndex <= 0) {
-                                                String pkg = context.getMainProject().getPackage();
-                                                if (pkg != null) {
-                                                    if (dotIndex == 0) {
-                                                        activityName = pkg + activityName;
-                                                    }
-                                                    else {
-                                                        activityName = pkg + '.' + activityName;
-                                                    }
-                                                }
-                                            }
-                                            activitiesToCheck.add(activityName);
-                                        }
-                                    }
-                                }
+        Document doc = context.getMainProject().getMergedManifest();
+        if (doc == null) {
+            return Collections.emptySet();
+        }
+        for (Element child : XmlUtils.getSubTags(doc)) {
+            if (child.getNodeName().equals(NODE_MANIFEST)) {
+                for (Element app : getSubTagsByName(child, NODE_APPLICATION)) {
+                    for (Element act : getSubTagsByName(app, NODE_ACTIVITY)) {
+                        for (Element intent : getSubTagsByName(act, NODE_INTENT)) {
+                            boolean hasData = getFirstSubTagTagByName(intent, NODE_DATA) != null;
+                            if (hasData && act.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
+                                String activityName = LintUtils.resolveManifestName(act);
+                                activitiesToCheck.add(activityName);
                             }
                         }
                     }
@@ -481,8 +461,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
         boolean hasPath = false;
         boolean hasMimeType = false;
         Element firstData = null;
-        List<Element> children = extractChildrenByName(intent, NODE_DATA);
-        for (Element data : children) {
+        for (Element data : XmlUtils.getSubTagsByName(intent, NODE_DATA)) {
             if (firstData == null) {
                 firstData = data;
             }
@@ -561,8 +540,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
      * @return true if it does
      */
     private static boolean hasActionView(@NonNull Element intent) {
-        List<Element> children = extractChildrenByName(intent, NODE_ACTION);
-        for (Element action : children) {
+        for (Element action : XmlUtils.getSubTagsByName(intent, NODE_ACTION)) {
             if (action.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
                 Attr attr = action.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
                 if (attr.getValue().equals("android.intent.action.VIEW")) {
@@ -580,8 +558,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
      * @return true if it does
      */
     private static boolean isBrowsable(@NonNull Element intent) {
-        List<Element> children = extractChildrenByName(intent, NODE_CATEGORY);
-        for (Element e : children) {
+        for (Element e : XmlUtils.getSubTagsByName(intent, NODE_CATEGORY)) {
             if (e.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
                 Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
                 if (attr.getNodeValue().equals("android.intent.category.BROWSABLE")) {
@@ -627,6 +604,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
             Attr attr = data.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_PORT);
             try {
                 String port = replaceUrlWithValue(context, attr.getValue());
+                //noinspection ResultOfMethodCallIgnored
                 Integer.parseInt(port);
             } catch (NumberFormatException e) {
                 context.report(ISSUE_URL_ERROR, attr, context.getLocation(attr),
@@ -709,16 +687,5 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
             }
         }
         return false;
-    }
-
-    private static List<Element> extractChildrenByName(@NonNull Element node,
-            @NonNull String name) {
-        List<Element> result = Lists.newArrayList();
-        for (Element child : XmlUtils.getSubTags(node)) {
-            if (child.getNodeName().equals(name)) {
-                result.add(child);
-            }
-        }
-        return result;
     }
 }

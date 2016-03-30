@@ -140,6 +140,7 @@ public class Project {
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
     private BuildToolInfo buildTools;
+    private Document mergedManifest;
 
     /**
      * Creates a new {@link Project} for the given directory.
@@ -234,6 +235,23 @@ public class Project {
     @Nullable
     public Variant getCurrentVariant() {
         return null;
+    }
+
+    /**
+     * Returns the merged manifest of this project. This may return null
+     * if not called on the main project. Note that the file reference
+     * in the merged manifest isn't accurate; the merged manifest accumulates
+     * information from a wide variety of locations.
+     *
+     * @return The merged manifest, if available.
+     */
+    @Nullable
+    public Document getMergedManifest() {
+        if (mergedManifest == null) {
+            mergedManifest = client.getMergedManifest(this);
+        }
+
+        return mergedManifest;
     }
 
     /** Creates a new Project. Use one of the factory methods to create. */

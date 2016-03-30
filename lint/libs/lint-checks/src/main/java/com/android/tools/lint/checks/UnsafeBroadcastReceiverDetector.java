@@ -23,25 +23,32 @@ import static com.android.SdkConstants.CLASS_BROADCASTRECEIVER;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_INTENT;
 import static com.android.SdkConstants.TAG_ACTION;
+import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TAG_RECEIVER;
+import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getSubTagsByName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
+import com.google.common.collect.Sets;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -52,13 +59,16 @@ import com.intellij.psi.PsiReferenceExpression;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class UnsafeBroadcastReceiverDetector extends Detector
         implements JavaPsiScanner, XmlScanner {
+
+    // TODO: Use the new merged manifest model
+
 
     /* Description of check implementations:
      *
@@ -108,7 +118,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             6,
             Severity.WARNING,
             new Implementation(UnsafeBroadcastReceiverDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)));
+                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
+                    Scope.JAVA_FILE_SCOPE));
 
     public static final Issue BROADCAST_SMS = Issue.create(
             "UnprotectedSMSBroadcastReceiver",
@@ -511,7 +522,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         }
     }
 
-    private final Set<String> mReceiversWithProtectedBroadcastIntentFilter = new HashSet<>();
+    private Set<String> mReceiversWithProtectedBroadcastIntentFilter = null;
 
     public UnsafeBroadcastReceiverDetector() {
     }
@@ -528,7 +539,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             @NonNull Element element) {
         String tag = element.getTagName();
         if (TAG_RECEIVER.equals(tag)) {
-            String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+            String name = LintUtils.resolveManifestName(element);
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
             // If no permission attribute, then if any exists at the application
             // element, it applies
@@ -536,39 +547,71 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 Element parent = (Element) element.getParentNode();
                 permission = parent.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
             }
-            for (Element child : XmlUtils.getSubTags(element)) {
-                String tagName = child.getTagName();
-                if (TAG_INTENT_FILTER.equals(tagName)) {
-                    if (name.startsWith(".")) {
-                        name = context.getProject().getPackage() + name;
+            Element filter = getFirstSubTagTagByName(element, TAG_INTENT_FILTER);
+            if (filter != null) {
+                for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
+                    String actionName = action.getAttributeNS(
+                            ANDROID_URI, ATTR_NAME);
+                    if (("android.provider.Telephony.SMS_DELIVER".equals(actionName) ||
+                            "android.provider.Telephony.SMS_RECEIVED".
+                                equals(actionName)) &&
+                            !"android.permission.BROADCAST_SMS".equals(permission)) {
+                        context.report(
+                                BROADCAST_SMS,
+                                element,
+                                context.getLocation(element),
+                                "BroadcastReceivers that declare an intent-filter for " +
+                                "SMS_DELIVER or SMS_RECEIVED must ensure that the " +
+                                "caller has the BROADCAST_SMS permission, otherwise it " +
+                                "is possible for malicious actors to spoof intents.");
                     }
-                    name = name.replace('$', '.');
-                    for (Element child2 : XmlUtils.getSubTags(child)) {
-                        if (TAG_ACTION.equals(child2.getTagName())) {
-                            String actionName = child2.getAttributeNS(
-                                    ANDROID_URI, ATTR_NAME);
-                            if (("android.provider.Telephony.SMS_DELIVER".equals(actionName) ||
-                                    "android.provider.Telephony.SMS_RECEIVED".
-                                        equals(actionName)) &&
-                                    !"android.permission.BROADCAST_SMS".equals(permission)) {
-                                context.report(
-                                        BROADCAST_SMS,
-                                        element,
-                                        context.getLocation(element),
-                                        "BroadcastReceivers that declare an intent-filter for " +
-                                        "SMS_DELIVER or SMS_RECEIVED must ensure that the " +
-                                        "caller has the BROADCAST_SMS permission, otherwise it " +
-                                        "is possible for malicious actors to spoof intents.");
-                            }
-                            else if (isProtectedBroadcast(actionName)) {
-                                mReceiversWithProtectedBroadcastIntentFilter.add(name);
-                            }
+                    else if (isProtectedBroadcast(actionName)) {
+                        if (mReceiversWithProtectedBroadcastIntentFilter == null) {
+                            mReceiversWithProtectedBroadcastIntentFilter = Sets.newHashSet();
                         }
+                        mReceiversWithProtectedBroadcastIntentFilter.add(name);
                     }
-                    break;
                 }
             }
         }
+    }
+
+    private Set<String> getReceiversWithProtectedBroadcastIntentFilter(@NonNull Context context) {
+        if (mReceiversWithProtectedBroadcastIntentFilter == null) {
+            if (context.getScope().contains(Scope.MANIFEST)) {
+                mReceiversWithProtectedBroadcastIntentFilter = Collections.emptySet();
+            } else {
+                // Compute from merged manifest
+                mReceiversWithProtectedBroadcastIntentFilter = Sets.newHashSet();
+
+                Project mainProject = context.getMainProject();
+                Document mergedManifest = mainProject.getMergedManifest();
+                if (mergedManifest != null &&
+                        mergedManifest.getDocumentElement() != null) {
+                    Element application = getFirstSubTagTagByName(
+                            mergedManifest.getDocumentElement(), TAG_APPLICATION);
+                    if (application != null) {
+                        for (Element element : XmlUtils.getSubTags(application)) {
+                            if (TAG_RECEIVER.equals(element.getTagName())) {
+                                Element filter = getFirstSubTagTagByName(element, TAG_INTENT_FILTER);
+                                if (filter != null) {
+                                    for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
+                                        String actionName = action.getAttributeNS(
+                                                ANDROID_URI, ATTR_NAME);
+                                        if (isProtectedBroadcast(actionName)) {
+                                            String name = LintUtils.resolveManifestName(element);
+                                            mReceiversWithProtectedBroadcastIntentFilter.add(name);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return mReceiversWithProtectedBroadcastIntentFilter;
     }
 
     // ---- Implements JavaScanner ----
@@ -576,8 +619,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     @Nullable
     @Override
     public List<String> applicableSuperClasses() {
-        return mReceiversWithProtectedBroadcastIntentFilter.isEmpty()
-                ? null : Collections.singletonList(CLASS_BROADCASTRECEIVER);
+        return Collections.singletonList(CLASS_BROADCASTRECEIVER);
     }
 
     @Override
@@ -591,7 +633,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         if (qualifiedName == null) {
             return;
         }
-        if (!mReceiversWithProtectedBroadcastIntentFilter.contains(qualifiedName)) {
+        if (!getReceiversWithProtectedBroadcastIntentFilter(context).contains(qualifiedName)) {
             return;
         }
         JavaEvaluator evaluator = context.getEvaluator();

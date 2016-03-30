@@ -13,6 +13,7 @@ maven_java_library(
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/annotations",
+        "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/lint:tools.lint-api",

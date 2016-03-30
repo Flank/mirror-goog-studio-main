@@ -19,7 +19,10 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.CharBuffer;
 import java.util.Arrays;
@@ -268,6 +271,11 @@ public class CharSequences {
         }
 
         return null;
+    }
+
+    @NonNull
+    public static InputStream getInputStream(CharSequence text) {
+        return new ByteArrayInputStream(text.toString().getBytes(Charsets.UTF_8));
     }
 
     /**
