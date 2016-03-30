@@ -392,9 +392,9 @@ public class ExtractAnnotationsDriver {
         options.originalSourceLevel = options.sourceLevel;
         options.inlineJsrBytecode = true; // >= 1.5
 
-        INameEnvironment environment = EcjParser.parse(options, sourceUnits, classpath,
-                outputMap, null);
+        EcjParser.EcjResult result = EcjParser.parse(options, sourceUnits, classpath,
+                null);
         Collection<CompilationUnitDeclaration> parsedUnits = outputMap.values();
-        return Pair.of(parsedUnits, environment);
+        return Pair.of(parsedUnits, result.getNameEnvironment());
     }
 }
