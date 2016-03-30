@@ -26,7 +26,9 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.sdklib.repository.FullRevision;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -35,12 +37,20 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("javadoc")
 public class ApiDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new ApiDetector();
+    }
+
+    @Override
+    protected boolean allowCompilationErrors() {
+        // Some of these unit tests are still relying on source code that references
+        // unresolved symbols etc.
+        return true;
     }
 
     public void testXmlApi1() throws Exception {
@@ -145,6 +155,36 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "apicheck/minsdk1.xml=>AndroidManifest.xml",
                         "apicheck/attribute2.xml=>res/layout/attribute2.xml"
                 ));
+    }
+
+    public void testRtlManifestAttribute() throws Exception {
+        // Treat the manifest RTL attribute in the same was as the layout start/end attributes:
+        // these are known to be benign on older platforms, so don't flag it.
+        assertEquals("No warnings.",
+                lintProject(
+                        xml("AndroidManifest.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"test.bytecode\">\n"
+                                + "\n"
+                                + "    <uses-sdk android:minSdkVersion=\"1\" />\n"
+                                + "\n"
+                                + "    <application\n"
+                                + "        android:supportsRtl='true'\n"
+
+                                // Ditto for the fullBackupContent attribute. If you're targeting
+                                // 23, you'll want to use it, but it's not an error that older
+                                // platforms aren't looking at it.
+
+                                + "        android:fullBackupContent='false'\n"
+                                + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                + "        android:label=\"@string/app_name\" >\n"
+                                + "    </application>\n"
+                                + "\n"
+                                + "</manifest>\n")
+
+                )
+        );
     }
 
     public void testXmlApi() throws Exception {
@@ -827,7 +867,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             lintProject(
                     "apicheck/classpath=>.classpath",
                     "apicheck/minsdk4.xml=>AndroidManifest.xml",
-                    "project.properties1=>project.properties",
+                    "project.properties19=>project.properties",
                     "apicheck/ApiCallTest12.java.txt=>src/test/pkg/ApiCallTest12.java",
                     "apicheck/ApiCallTest12.class.data=>bin/classes/test/pkg/ApiCallTest12.class"
                 ));
@@ -840,7 +880,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             lintProject(
                     "apicheck/classpath=>.classpath",
                     "apicheck/minsdk10.xml=>AndroidManifest.xml",
-                    "project.properties1=>project.properties",
+                    "project.properties19=>project.properties",
                     "apicheck/ApiCallTest12.java.txt=>src/test/pkg/ApiCallTest12.java",
                     "apicheck/ApiCallTest12.class.data=>bin/classes/test/pkg/ApiCallTest12.class"
                 ));
@@ -887,12 +927,12 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ApiSourceCheck.java:90: Warning: Field requires API level 8 (current min is 1): android.R.id#custom [InlinedApi]\n"
                 + "        int custom = android.R.id.custom; // API 8\n"
                 + "                     ~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ApiSourceCheck.java:94: Warning: Field requires API level 13 (current min is 1): android.Manifest.permission#SET_POINTER_SPEED [InlinedApi]\n"
-                + "        String setPointerSpeed = permission.SET_POINTER_SPEED;\n"
-                + "                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ApiSourceCheck.java:95: Warning: Field requires API level 13 (current min is 1): android.Manifest.permission#SET_POINTER_SPEED [InlinedApi]\n"
-                + "        String setPointerSpeed2 = Manifest.permission.SET_POINTER_SPEED;\n"
-                + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ApiSourceCheck.java:94: Warning: Field requires API level 19 (current min is 1): android.Manifest.permission#BLUETOOTH_PRIVILEGED [InlinedApi]\n"
+                + "        String setPointerSpeed = permission.BLUETOOTH_PRIVILEGED;\n"
+                + "                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ApiSourceCheck.java:95: Warning: Field requires API level 19 (current min is 1): android.Manifest.permission#BLUETOOTH_PRIVILEGED [InlinedApi]\n"
+                + "        String setPointerSpeed2 = Manifest.permission.BLUETOOTH_PRIVILEGED;\n"
+                + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ApiSourceCheck.java:120: Warning: Field requires API level 11 (current min is 1): android.view.View#MEASURED_STATE_MASK [InlinedApi]\n"
                 + "        int y = View.MEASURED_STATE_MASK; // Not OK\n"
                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -907,7 +947,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "apicheck/ApiSourceCheck.java.txt=>src/test/pkg/ApiSourceCheck.java",
                         "apicheck/ApiSourceCheck.class.data=>bin/classes/test/pkg/ApiSourceCheck.class"
                 ));
@@ -923,7 +963,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk10.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "res/values/styles2.xml"
                 ));
     }
@@ -938,7 +978,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk10.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "res/values/styles2.xml=>res/values-v9/styles2.xml"
                 ));
     }
@@ -950,7 +990,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk10.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "res/values/styles2.xml=>res/values-v11/styles2.xml"
                 ));
     }
@@ -962,7 +1002,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk10.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "res/values/styles2.xml=>res/values-v14/styles2.xml"
                 ));
     }
@@ -982,7 +1022,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "apicheck/ApiSourceCheck2.java.txt=>src/test/pkg/ApiSourceCheck2.java",
                         "apicheck/ApiSourceCheck2.class.data=>bin/classes/test/pkg/ApiSourceCheck2.class"
                 ));
@@ -1027,7 +1067,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/classpath=>.classpath",
                         "apicheck/minsdk4.xml=>AndroidManifest.xml",
-                        "project.properties1=>project.properties",
+                        "project.properties19=>project.properties",
                         "apicheck/ApiCallTest13.java.txt=>src/test/pkg/ApiCallTest13.java",
                         "apicheck/ApiCallTest13.class.data=>bin/classes/test/pkg/ApiCallTest13.class"
                 ));
@@ -1141,7 +1181,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testVector() throws Exception {
         assertEquals(""
-                        + "res/drawable/vector.xml:1: Error: <vector> requires API level 21 (current min is 4) [NewApi]\n"
+                        + "res/drawable/vector.xml:1: Error: <vector> requires API level 21 (current min is 4) or building with Android Gradle plugin 1.4 or higher [NewApi]\n"
                         + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
                         + "^\n"
                         + "1 errors, 0 warnings\n",
@@ -1153,6 +1193,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testVector_withGradleSupport() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(
+                        "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                        "apicheck/vector.xml=>res/drawable/vector.xml"
+                ));
+    }
+
+    public void testVector_withGradleSupportSNAPSHOT() throws Exception {
         assertEquals("No warnings.",
                 lintProject(
                         "apicheck/minsdk4.xml=>AndroidManifest.xml",
@@ -1207,6 +1255,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 lintProject(
                         "apicheck/minsdk4.xml=>AndroidManifest.xml",
                         "apicheck/padding_start.xml=>res/layout-v17/padding_start.xml"
+                ));
+    }
+
+    public void testPaddingStartWithOldBuildTools() throws Exception {
+        assertEquals(""
+                        + "res/layout/padding_start.xml:14: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
+                        + "            android:paddingStart=\"20dp\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/padding_start.xml:21: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
+                        + "            android:paddingStart=\"20dp\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/padding_start.xml:28: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
+                        + "            android:paddingStart=\"20dp\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "3 errors, 0 warnings\n",
+                lintProject(
+                        "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                        "apicheck/padding_start.xml=>res/layout/padding_start.xml"
+                ));
+    }
+
+    public void testPaddingStartWithNewBuildTools() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(
+                        "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                        "apicheck/padding_start.xml=>res/layout/padding_start.xml"
                 ));
     }
 
@@ -1752,6 +1826,181 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testHigherCompileSdkVersionThanPlatformTools() throws Exception {
+        // Warn if the platform tools are too old on the system
+        assertTrue(Pattern.matches(""
+                + "ApiDetectorTest_testHigherCompileSdkVersionThanPlatformTools: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml"),
+                        source("project.properties", "target=android-400"), // in the future
+                        copy("apicheck/ApiCallTest12.java.txt", "src/test/pkg/ApiCallTest12.java"),
+                        copy("apicheck/ApiCallTest12.class.data", "bin/classes/test/pkg/ApiCallTest12.class")
+                )));
+    }
+
+    public void testHigherCompileSdkVersionThanPlatformToolsInEditor() throws Exception {
+        // When editing a file we place the error on the first line of the file instead
+        assertTrue(Pattern.matches(""
+                + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
+                + "package test.pkg;\n"
+                + "~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProjectIncrementally(
+                        "src/test/pkg/ApiCallTest12.java",
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml"),
+                        source("project.properties", "target=android-400"), // in the future
+                        copy("apicheck/ApiCallTest12.java.txt", "src/test/pkg/ApiCallTest12.java"),
+                        copy("apicheck/ApiCallTest12.class.data", "bin/classes/test/pkg/ApiCallTest12.class")
+                )));
+    }
+
+    @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
+    public void testCastChecks() throws Exception {
+        // When editing a file we place the error on the first line of the file instead
+        assertEquals(""
+                + "src/test/pkg/CastTest.java:15: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
+                + "        Closeable closeable = (Closeable) cursor; // Requires 16\n"
+                + "                              ~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/CastTest.java:21: Error: Cast from KeyCharacterMap to Parcelable requires API level 16 (current min is 14) [NewApi]\n"
+                + "        Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
+                + "                                 ~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/CastTest.java:27: Error: Cast from AnimatorListenerAdapter to Animator.AnimatorPauseListener requires API level 19 (current min is 14) [NewApi]\n"
+                + "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
+                + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "3 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/CastTest.java", ""
+                                + "import android.animation.Animator.AnimatorPauseListener;\n"
+                                + "import android.animation.AnimatorListenerAdapter;\n"
+                                + "import android.database.Cursor;\n"
+                                + "import android.database.CursorWindow;\n"
+                                + "import android.os.Parcelable;\n"
+                                + "import android.view.KeyCharacterMap;\n"
+                                + "\n"
+                                + "import java.io.Closeable;\n"
+                                + "import java.io.IOException;\n"
+                                + "\n"
+                                + "@SuppressWarnings({\"RedundantCast\", \"unused\"})\n"
+                                + "public class CastTest {\n"
+                                + "    public void test(Cursor cursor) throws IOException {\n"
+                                + "        cursor.close();\n"
+                                + "        Closeable closeable = (Closeable) cursor; // Requires 16\n"
+                                + "        closeable.close();\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void test(CursorWindow window, KeyCharacterMap map) {\n"
+                                + "        Parcelable parcelable1 = (Parcelable)window; // OK\n"
+                                + "        Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @SuppressWarnings(\"UnnecessaryLocalVariable\")\n"
+                                + "    public void test(AnimatorListenerAdapter adapter) {\n"
+                                + "        // Uh oh - what if the cast isn't needed anymore\n"
+                                + "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
+                                + "    }\n"
+                                + "}"),
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                ));
+    }
+
+    @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName",
+            "UnnecessaryLocalVariable"})
+    public void testImplicitCastTest() throws Exception {
+        // When editing a file we place the error on the first line of the file instead
+        assertEquals(""
+                + "src/test/pkg/ImplicitCastTest.java:14: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
+                + "        Closeable closeable = c;\n"
+                + "                              ~\n"
+                + "src/test/pkg/ImplicitCastTest.java:26: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
+                + "        closeable = c;\n"
+                + "        ~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ImplicitCastTest.java:36: Error: Cast from ParcelFileDescriptor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
+                + "        safeClose(pfd);\n"
+                + "                  ~~~\n"
+                + "src/test/pkg/ImplicitCastTest.java:47: Error: Cast from AccelerateDecelerateInterpolator to BaseInterpolator requires API level 22 (current min is 14) [NewApi]\n"
+                + "        android.view.animation.BaseInterpolator base = interpolator;\n"
+                + "                                                       ~~~~~~~~~~~~\n"
+                + "4 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/ImplicitCastTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.database.Cursor;\n"
+                                + "import android.os.ParcelFileDescriptor;\n"
+                                + "\n"
+                                + "import java.io.Closeable;\n"
+                                + "import java.io.IOException;\n"
+                                + "\n"
+                                + "@SuppressWarnings(\"unused\")\n"
+                                + "public class ImplicitCastTest {\n"
+                                + "    // https://code.google.com/p/android/issues/detail?id=174535\n"
+                                + "    @SuppressWarnings(\"UnnecessaryLocalVariable\")\n"
+                                + "    public void testImplicitCast(Cursor c) {\n"
+                                + "        Closeable closeable = c;\n"
+                                + "        try {\n"
+                                + "            closeable.close();\n"
+                                + "        } catch (IOException e) {\n"
+                                + "            e.printStackTrace();\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    // Like the above, but with assignment instead of initializer\n"
+                                + "    public void testImplicitCast2(Cursor c) {\n"
+                                + "        @SuppressWarnings(\"UnnecessaryLocalVariable\")\n"
+                                + "        Closeable closeable;\n"
+                                + "        closeable = c;\n"
+                                + "        try {\n"
+                                + "            closeable.close();\n"
+                                + "        } catch (IOException e) {\n"
+                                + "            e.printStackTrace();\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    // https://code.google.com/p/android/issues/detail?id=191120\n"
+                                + "    public void testImplicitCast(ParcelFileDescriptor pfd) {\n"
+                                + "        safeClose(pfd);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private static void safeClose(Closeable closeable) {\n"
+                                + "        try {\n"
+                                + "            closeable.close();\n"
+                                + "        } catch (IOException ignore) {\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void testImplicitCast(android.view.animation.AccelerateDecelerateInterpolator interpolator) {\n"
+                                + "        android.view.animation.BaseInterpolator base = interpolator;\n"
+                                + "    }\n"
+                                + "\n"
+                                + "}\n"),
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                ));
+    }
+
+    public void testSupportLibraryCalls() throws Exception {
+        assertEquals(""
+                + "src/test/pkg/SupportLibraryApiTest.java:22: Error: Call requires API level 21 (current min is 14): android.widget.ImageButton#setBackgroundTintList [NewApi]\n"
+                + "        button.setBackgroundTintList(colors); // ERROR\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+                lintProject(
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml"),
+                        copy("bytecode/SupportLibraryApiTest.java.txt",
+                                "src/test/pkg/SupportLibraryApiTest.java"),
+                        copy("bytecode/SupportLibraryApiTest.class.data",
+                                "bin/classes/test/pkg/SupportLibraryApiTest.class"),
+                        copy("bytecode/FloatingActionButton.java.txt",
+                                "src/android/support/design/widget/FloatingActionButton.java"),
+                        copy("bytecode/FloatingActionButton.class.data",
+                                "bin/classes/android/support/design/widget/FloatingActionButton.class")
+                ));
+    }
+
     @Override
     protected TestLintClient createClient() {
         if (getName().equals("testMissingApiDatabase")) {
@@ -1778,11 +2027,219 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 }
             };
         }
+        if (getName().equals("testVector_withGradleSupportSNAPSHOT")) {
+            return new TestLintClient() {
+                @NonNull
+                @Override
+                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                    AndroidProject model = mock(AndroidProject.class);
+                    when(model.getModelVersion()).thenReturn("2.1.0-SNAPSHOT");
+
+                    Project fromSuper = super.createProject(dir, referenceDir);
+                    Project spy = spy(fromSuper);
+                    when(spy.getGradleProjectModel()).thenReturn(model);
+                    return spy;
+                }
+            };
+        }
+
+        if (getName().equals("testPaddingStart")) {
+            return new TestLintClient() {
+                @NonNull
+                @Override
+                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                    Project fromSuper = super.createProject(dir, referenceDir);
+                    Project spy = spy(fromSuper);
+                    when(spy.getBuildTools()).thenReturn(null);
+                    return spy;
+                }
+            };
+        }
+        if (getName().equals("testPaddingStartWithOldBuildTools")) {
+            return new TestLintClient() {
+                @NonNull
+                @Override
+                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                    FullRevision revision = new FullRevision(22, 2, 1);
+                    BuildToolInfo info = new BuildToolInfo(revision, dir);
+
+                    Project fromSuper = super.createProject(dir, referenceDir);
+                    Project spy = spy(fromSuper);
+                    when(spy.getBuildTools()).thenReturn(info);
+                    return spy;
+                }
+            };
+        }
+        if (getName().equals("testPaddingStartWithNewBuildTools")) {
+            return new TestLintClient() {
+                @NonNull
+                @Override
+                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                    FullRevision revision = new FullRevision(23, 0, 2);
+                    BuildToolInfo info = new BuildToolInfo(revision, dir);
+
+                    Project fromSuper = super.createProject(dir, referenceDir);
+                    Project spy = spy(fromSuper);
+                    when(spy.getBuildTools()).thenReturn(info);
+                    return spy;
+                }
+            };
+        }
         return super.createClient();
     }
 
+    // bug 198295: Add a test for a case that crashes ApiDetector due to an
+    // invalid parameterIndex causing by a varargs method invocation.
+    public void testMethodWithPrimitiveAndVarargs() throws Exception {
+        // In case of a crash, there is an assertion failure in tearDown()
+        //noinspection ClassNameDiffersFromFileName
+        assertEquals("No warnings.",
+                lintProject(
+                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml"),
+                        java("src/test/pkg/LogHelper.java", "" +
+                                "package test.pkg;\n"
+                                + "\n"
+                                + "public class LogHelper {\n"
+                                + "\n"
+                                + "    public static void log(String tag, Object... args) {\n"
+                                + "    }\n"
+                                + "}"),
+                        java("src/test/pkg/Browser.java", "" +
+                                "package test.pkg;\n"
+                                + "\n"
+                                + "public class Browser {\n"
+                                + "    \n"
+                                + "    public void onCreate() {\n"
+                                + "        LogHelper.log(\"TAG\", \"arg1\", \"arg2\", 1, \"arg4\", this /*non primitive*/);\n"
+                                + "    }\n"
+                                + "}")
+                ));
+    }
+
+    public void testMethodInvocationWithGenericTypeArgs() throws Exception {
+        // Test case for https://code.google.com/p/android/issues/detail?id=198439
+        //noinspection ClassNameDiffersFromFileName
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/Loader.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "public abstract class Loader<P> {\n"
+                                + "    private P mParam;\n"
+                                + "\n"
+                                + "    public abstract void loadInBackground(P val);\n"
+                                + "\n"
+                                + "    public void load() {\n"
+                                + "        // Invoke a method that takes a generic type.\n"
+                                + "        loadInBackground(mParam);\n"
+                                + "    }\n"
+                                + "}\n")
+                ));
+    }
+
+    public void testMultiCatch() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=198854
+        // Check disjointed exception types
+
+        //noinspection ClassNameDiffersFromFileName
+        assertEquals(""
+                + "src/test/pkg/MultiCatch.java:12: Error: Class requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
+                + "        } catch (MediaDrm.MediaDrmStateException | UnsupportedSchemeException e) {\n"
+                + "                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/MultiCatch.java:12: Error: Class requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
+                + "        } catch (MediaDrm.MediaDrmStateException | UnsupportedSchemeException e) {\n"
+                + "                          ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/MultiCatch.java:18: Error: Class requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
+                + "        } catch (MediaDrm.MediaDrmStateException\n"
+                + "                          ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/MultiCatch.java:19: Error: Class requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
+                + "                  | UnsupportedSchemeException e) {\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/MultiCatch.java:26: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
+                + "            e.printStackTrace();\n"
+                + "              ~~~~~~~~~~~~~~~\n"
+                + "5 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/MultiCatch.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.media.MediaDrm;\n"
+                                + "import android.media.UnsupportedSchemeException;\n"
+                                + "\n"
+                                + "import java.lang.reflect.InvocationTargetException;\n"
+                                + "\n"
+                                + "public class MultiCatch {\n"
+                                + "    public void test() {\n"
+                                + "        try {\n"
+                                + "            method1();\n"
+                                + "        } catch (MediaDrm.MediaDrmStateException | UnsupportedSchemeException e) {\n"
+                                + "            e.printStackTrace();\n"
+                                + "        }\n"
+                                + "\n"
+                                + "        try {\n"
+                                + "            method2();\n"
+                                + "        } catch (MediaDrm.MediaDrmStateException\n"
+                                + "                  | UnsupportedSchemeException e) {\n"
+                                + "            e.printStackTrace();\n"
+                                + "        }\n"
+                                + "\n"
+                                + "        try {\n"
+                                + "            String.class.getMethod(\"trim\").invoke(\"\");\n"
+                                + "        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {\n"
+                                + "            e.printStackTrace();\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void method1() throws MediaDrm.MediaDrmStateException, UnsupportedSchemeException {\n"
+                                + "    }\n"
+                                + "    public void method2() throws MediaDrm.MediaDrmStateException, UnsupportedSchemeException {\n"
+                                + "    }\n"
+                                + "}\n"),
+                        base64("bin/classes/test/pkg/MultiCatch.class", ""
+                                + "yv66vgAAADMARgoADAAmCgASACcHACkHACwKAC0ALgoAEgAvBwAwCAAxBwAy"
+                                + "CgAJADMIADQHADUKADYANwcAOAcAOQcAOgoAOwAuBwA8AQAGPGluaXQ+AQAD"
+                                + "KClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVU"
+                                + "YWJsZQEABHRoaXMBABVMdGVzdC9wa2cvTXVsdGlDYXRjaDsBAAR0ZXN0AQAB"
+                                + "ZQEAFUxqYXZhL2xhbmcvRXhjZXB0aW9uOwEAKExqYXZhL2xhbmcvUmVmbGVj"
+                                + "dGl2ZU9wZXJhdGlvbkV4Y2VwdGlvbjsBAA1TdGFja01hcFRhYmxlBwA9BwA+"
+                                + "AQAHbWV0aG9kMQEACkV4Y2VwdGlvbnMBAAdtZXRob2QyAQAKU291cmNlRmls"
+                                + "ZQEAD011bHRpQ2F0Y2guamF2YQwAEwAUDAAhABQHAD8BAC1hbmRyb2lkL21l"
+                                + "ZGlhL01lZGlhRHJtJE1lZGlhRHJtU3RhdGVFeGNlcHRpb24BABZNZWRpYURy"
+                                + "bVN0YXRlRXhjZXB0aW9uAQAMSW5uZXJDbGFzc2VzAQAoYW5kcm9pZC9tZWRp"
+                                + "YS9VbnN1cHBvcnRlZFNjaGVtZUV4Y2VwdGlvbgcAPQwAQAAUDAAjABQBABBq"
+                                + "YXZhL2xhbmcvU3RyaW5nAQAEdHJpbQEAD2phdmEvbGFuZy9DbGFzcwwAQQBC"
+                                + "AQAAAQAQamF2YS9sYW5nL09iamVjdAcAQwwARABFAQAgamF2YS9sYW5nL0ls"
+                                + "bGVnYWxBY2Nlc3NFeGNlcHRpb24BACtqYXZhL2xhbmcvcmVmbGVjdC9JbnZv"
+                                + "Y2F0aW9uVGFyZ2V0RXhjZXB0aW9uAQAfamF2YS9sYW5nL05vU3VjaE1ldGhv"
+                                + "ZEV4Y2VwdGlvbgcAPgEAE3Rlc3QvcGtnL011bHRpQ2F0Y2gBABNqYXZhL2xh"
+                                + "bmcvRXhjZXB0aW9uAQAmamF2YS9sYW5nL1JlZmxlY3RpdmVPcGVyYXRpb25F"
+                                + "eGNlcHRpb24BABZhbmRyb2lkL21lZGlhL01lZGlhRHJtAQAPcHJpbnRTdGFj"
+                                + "a1RyYWNlAQAJZ2V0TWV0aG9kAQBAKExqYXZhL2xhbmcvU3RyaW5nO1tMamF2"
+                                + "YS9sYW5nL0NsYXNzOylMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwEAGGph"
+                                + "dmEvbGFuZy9yZWZsZWN0L01ldGhvZAEABmludm9rZQEAOShMamF2YS9sYW5n"
+                                + "L09iamVjdDtbTGphdmEvbGFuZy9PYmplY3Q7KUxqYXZhL2xhbmcvT2JqZWN0"
+                                + "OwAhABIADAAAAAAABAABABMAFAABABUAAAAvAAEAAQAAAAUqtwABsQAAAAIA"
+                                + "FgAAAAYAAQAAAAgAFwAAAAwAAQAAAAUAGAAZAAAAAQAaABQAAQAVAAAA/QAD"
+                                + "AAIAAAA2KrYAAqcACEwrtgAFKrYABqcACEwrtgAFEgcSCAO9AAm2AAoSCwO9"
+                                + "AAy2AA1XpwAITCu2ABGxAAcAAAAEAAcAAwAAAAQABwAEAAwAEAATAAMADAAQ"
+                                + "ABMABAAYAC0AMAAOABgALQAwAA8AGAAtADAAEAADABYAAAA2AA0AAAALAAQA"
+                                + "DgAHAAwACAANAAwAEQAQABUAEwASABQAFAAYABgALQAbADAAGQAxABoANQAc"
+                                + "ABcAAAAqAAQACAAEABsAHAABABQABAAbABwAAQAxAAQAGwAdAAEAAAA2ABgA"
+                                + "GQAAAB4AAAARAAZHBwAfBEYHAB8EVwcAIAQAAQAhABQAAgAVAAAAKwAAAAEA"
+                                + "AAABsQAAAAIAFgAAAAYAAQAAAB8AFwAAAAwAAQAAAAEAGAAZAAAAIgAAAAYA"
+                                + "AgADAAQAAQAjABQAAgAVAAAAKwAAAAEAAAABsQAAAAIAFgAAAAYAAQAAACEA"
+                                + "FwAAAAwAAQAAAAEAGAAZAAAAIgAAAAYAAgADAAQAAgAkAAAAAgAlACsAAAAK"
+                                + "AAEAAwAoACoAGQ==")
+
+                ));
+    }
+
+
+
     @Override
     protected boolean ignoreSystemErrors() {
+        //noinspection SimplifiableIfStatement
         if (getName().equals("testMissingApiDatabase")) {
             return false;
         }
@@ -1793,8 +2250,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
             @NonNull Severity severity, @Nullable Location location, @NonNull String message) {
         if (issue == UNSUPPORTED || issue == INLINED) {
+            if (message.startsWith("The SDK platform-tools version (")) {
+                return;
+            }
             int requiredVersion = ApiDetector.getRequiredVersion(issue, message, TEXT);
-            assertTrue("Could not extract message tokens from " + message,
+            assertTrue("Could not extract message tokens from \"" + message + "\"",
                     requiredVersion >= 1 && requiredVersion <= SdkVersionInfo.HIGHEST_KNOWN_API);
         }
     }

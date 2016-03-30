@@ -23,6 +23,8 @@ import static com.android.tools.lint.client.api.JavaParser.ResolvedField;
 import static com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import static com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import static com.android.tools.lint.client.api.JavaParser.ResolvedVariable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
@@ -40,7 +42,9 @@ import org.junit.Assert;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.ast.AnnotationElement;
 import lombok.ast.BinaryExpression;
@@ -64,6 +68,10 @@ import lombok.ast.printer.SourceFormatter;
 import lombok.ast.printer.SourcePrinter;
 import lombok.ast.printer.TextFormatter;
 
+// Disable code warnings that are applied to injected languages in ECJ sample code: these
+// are deliberately doing dodgy things to test parser scenarios
+@SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ImplicitArrayToString",
+        "UnnecessaryLocalVariable", "UnnecessarySemicolon"})
 public class EcjParserTest extends AbstractCheckTest {
     public void testTryCatchHang() throws Exception {
         // Ensure that we're really using this parser
@@ -80,6 +88,7 @@ public class EcjParserTest extends AbstractCheckTest {
     }
 
     public void testKitKatLanguageFeatures() throws Exception {
+        @Language("JAVA")
         String testClass = "" +
                 "package test.pkg;\n" +
                 "\n" +
@@ -243,7 +252,88 @@ public class EcjParserTest extends AbstractCheckTest {
         assertTrue(found.get());
     }
 
+    @SuppressWarnings("ClassNameDiffersFromFileName")
+    public void testRemoveDuplicates() throws Exception {
+        @SuppressWarnings("override")
+        @Language("JAVA")
+        String source = ""
+                + "package test.pkg;\n"
+                + "import java.lang.annotation.Retention;\n"
+                + "import java.lang.annotation.RetentionPolicy;\n"
+                + "\n"
+                + "@SuppressWarnings(\"unused\")\n"
+                + "public class AnnotationTest {\n"
+                + "    @Retention(RetentionPolicy.CLASS)\n"
+                + "    public @interface Annotation1 {};\n"
+                + "    @Retention(RetentionPolicy.CLASS)\n"
+                + "    public @interface Annotation2 {};\n"
+                + "    @Retention(RetentionPolicy.CLASS)\n"
+                + "    public @interface Annotation3 {};\n"
+                + "\n"
+                + "    public static void method(ChildClass child) {\n"
+                + "        child.method(0xff0000);\n"
+                + "    }\n"
+                + "\n"
+                + "    public static class ParentClass {\n"
+                + "        @Annotation1\n"
+                + "        void method(@Annotation2 int rgb) {\n"
+                + "        }\n"
+                + "    }\n"
+                + "\n"
+                + "    public static class ChildClass extends ParentClass {\n"
+                + "        @Annotation1\n"
+                + "        void method(@Annotation2 @Annotation3 int rgb) {\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n";
+
+        final JavaContext context = LintUtilsTest.parse(source,
+                new File("src/test/pkg/AnnotationTest.java"));
+        assertNotNull(context);
+
+        Node compilationUnit = context.getCompilationUnit();
+        assertNotNull(compilationUnit);
+        final AtomicBoolean found = new AtomicBoolean();
+        compilationUnit.accept(new ForwardingAstVisitor() {
+            @Override
+            public boolean visitMethodInvocation(MethodInvocation node) {
+                if (node.astName().astValue().equals("method")) {
+                    found.set(true);
+                    ResolvedNode resolved = context.resolve(node);
+                    assertNotNull(resolved);
+                    ResolvedMethod method = (ResolvedMethod) resolved;
+                    List<ResolvedAnnotation> methodAnnotations =
+                            Lists.newArrayList(method.getAnnotations());
+                    // This is the point of this test: make sure there is only *one* occurrence
+                    // of this annotation (prior to this fix, we'd accumulate up the hierarchy)
+                    assertEquals(1, methodAnnotations.size());
+                    assertEquals("test.pkg.AnnotationTest.Annotation1",
+                            methodAnnotations.get(0).getName());
+                    assertEquals(methodAnnotations.get(0).getName(),
+                            methodAnnotations.get(0).getSignature());
+
+                    List<ResolvedAnnotation> annotations =
+                            Lists.newArrayList(method.getParameterAnnotations(0));
+                    assertEquals(2, annotations.size());
+                    String first = annotations.get(0).getName();
+                    String second = annotations.get(1).getName();
+                    if (first.compareTo(second) > 0) {
+                        String temp = first;
+                        first = second;
+                        second = temp;
+                    }
+                    assertEquals("test.pkg.AnnotationTest.Annotation2", first);
+                    assertEquals("test.pkg.AnnotationTest.Annotation3", second);
+                }
+
+                return super.visitMethodInvocation(node);
+            }
+        });
+        assertTrue(found.get());
+    }
+
     public void testResolution() throws Exception {
+        @Language("JAVA")
         String source =
                 "package test.pkg;\n" +
                 "\n" +
@@ -269,6 +359,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "         private void client(int z) {\n" +
                 "             int x = z;\n" +
                 "             int y = x + 5;\n" +
+                "             {\n" +
+                "               int w = 5;\n" +
+                "             }\n" +
                 "             Inner inner = new Inner(null, null);\n" +
                 "             inner.myField = 6;\n" +
                 "             System.out.println(inner.myInts);\n" +
@@ -368,8 +461,8 @@ public class EcjParserTest extends AbstractCheckTest {
                 "              [Identifier File]\n" +
                 "                PROPERTY: name = File\n" +
                 "          [NormalTypeBody], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
-                "              [VariableDeclaration], type: float, resolved class: float \n" +
-                "                [VariableDefinition]\n" +
+                "              [VariableDeclaration], type: float, resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
+                "                [VariableDefinition], type: float, resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                    [KeywordModifier public]\n" +
@@ -380,14 +473,14 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: float, resolved class: float \n" +
                 "                      [Identifier float]\n" +
                 "                        PROPERTY: name = float\n" +
-                "                  [VariableDefinitionEntry], resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
+                "                  [VariableDefinitionEntry], type: float, resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier myField], resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
+                "                    varName: [Identifier myField], type: float, resolved field: myField test.pkg.TypeResolutionTest.Inner\n" +
                 "                      PROPERTY: name = myField\n" +
                 "                    [FloatingPointLiteral 5.0], type: float\n" +
                 "                      PROPERTY: value = 5f\n" +
-                "              [VariableDeclaration], type: int[], resolved class: int[] \n" +
-                "                [VariableDefinition]\n" +
+                "              [VariableDeclaration], type: int[], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
+                "                [VariableDefinition], type: int[], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                    [KeywordModifier public]\n" +
@@ -398,9 +491,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: int[], resolved class: int[] \n" +
                 "                      [Identifier int]\n" +
                 "                        PROPERTY: name = int\n" +
-                "                  [VariableDefinitionEntry], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
+                "                  [VariableDefinitionEntry], type: int[], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier myInts], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
+                "                    varName: [Identifier myInts], type: int[], resolved field: myInts test.pkg.TypeResolutionTest.Inner\n" +
                 "                      PROPERTY: name = myInts\n" +
                 "              [ConstructorDeclaration], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                [Modifiers], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
@@ -408,7 +501,7 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    PROPERTY: modifier = public\n" +
                 "                typeName: [Identifier Inner], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                  PROPERTY: name = Inner\n" +
-                "                parameter: [VariableDefinition], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                parameter: [VariableDefinition], type: java.io.File, resolved variable: dir java.io.File\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                  type: [TypeReference File], type: java.io.File, resolved class: java.io.File \n" +
@@ -417,11 +510,11 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: java.io.File, resolved class: java.io.File \n" +
                 "                      [Identifier File]\n" +
                 "                        PROPERTY: name = File\n" +
-                "                  [VariableDefinitionEntry], resolved variable: dir java.io.File\n" +
+                "                  [VariableDefinitionEntry], type: java.io.File, resolved variable: dir java.io.File\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier dir], resolved variable: dir java.io.File\n" +
+                "                    varName: [Identifier dir], type: java.io.File, resolved variable: dir java.io.File\n" +
                 "                      PROPERTY: name = dir\n" +
-                "                parameter: [VariableDefinition], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                parameter: [VariableDefinition], type: java.lang.String, resolved variable: name java.lang.String\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                  type: [TypeReference String], type: java.lang.String, resolved class: java.lang.String \n" +
@@ -430,9 +523,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: java.lang.String, resolved class: java.lang.String \n" +
                 "                      [Identifier String]\n" +
                 "                        PROPERTY: name = String\n" +
-                "                  [VariableDefinitionEntry], resolved variable: name java.lang.String\n" +
+                "                  [VariableDefinitionEntry], type: java.lang.String, resolved variable: name java.lang.String\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier name], resolved variable: name java.lang.String\n" +
+                "                    varName: [Identifier name], type: java.lang.String, resolved variable: name java.lang.String\n" +
                 "                      PROPERTY: name = name\n" +
                 "                [Block], type: void, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                    [SuperConstructorInvocation], resolved method: java.io.File java.io.File\n" +
@@ -454,7 +547,7 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                      PROPERTY: name = void\n" +
                 "                methodName: [Identifier call], type: void, resolved method: call test.pkg.TypeResolutionTest.Inner\n" +
                 "                  PROPERTY: name = call\n" +
-                "                parameter: [VariableDefinition], type: void, resolved method: call test.pkg.TypeResolutionTest.Inner\n" +
+                "                parameter: [VariableDefinition], type: int, resolved variable: arg1 int\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                  type: [TypeReference int], type: int, resolved class: int \n" +
@@ -463,11 +556,11 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: int, resolved class: int \n" +
                 "                      [Identifier int]\n" +
                 "                        PROPERTY: name = int\n" +
-                "                  [VariableDefinitionEntry], resolved variable: arg1 int\n" +
+                "                  [VariableDefinitionEntry], type: int, resolved variable: arg1 int\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier arg1], resolved variable: arg1 int\n" +
+                "                    varName: [Identifier arg1], type: int, resolved variable: arg1 int\n" +
                 "                      PROPERTY: name = arg1\n" +
-                "                parameter: [VariableDefinition], type: void, resolved method: call test.pkg.TypeResolutionTest.Inner\n" +
+                "                parameter: [VariableDefinition], type: double, resolved variable: arg2 double\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                  type: [TypeReference double], type: double, resolved class: double \n" +
@@ -476,13 +569,13 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: double, resolved class: double \n" +
                 "                      [Identifier double]\n" +
                 "                        PROPERTY: name = double\n" +
-                "                  [VariableDefinitionEntry], resolved variable: arg2 double\n" +
+                "                  [VariableDefinitionEntry], type: double, resolved variable: arg2 double\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier arg2], resolved variable: arg2 double\n" +
+                "                    varName: [Identifier arg2], type: double, resolved variable: arg2 double\n" +
                 "                      PROPERTY: name = arg2\n" +
                 "                [Block], type: void, resolved method: call test.pkg.TypeResolutionTest.Inner\n" +
-                "                    [VariableDeclaration], type: boolean, resolved class: boolean \n" +
-                "                      [VariableDefinition]\n" +
+                "                    [VariableDeclaration], type: boolean, resolved variable: x boolean\n" +
+                "                      [VariableDefinition], type: boolean, resolved variable: x boolean\n" +
                 "                        PROPERTY: varargs = false\n" +
                 "                        [Modifiers]\n" +
                 "                        type: [TypeReference boolean], type: boolean, resolved class: boolean \n" +
@@ -491,9 +584,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                          [TypeReferencePart], type: boolean, resolved class: boolean \n" +
                 "                            [Identifier boolean]\n" +
                 "                              PROPERTY: name = boolean\n" +
-                "                        [VariableDefinitionEntry], resolved variable: x boolean\n" +
+                "                        [VariableDefinitionEntry], type: boolean, resolved variable: x boolean\n" +
                 "                          PROPERTY: arrayDimensions = 0\n" +
-                "                          varName: [Identifier x], resolved variable: x boolean\n" +
+                "                          varName: [Identifier x], type: boolean, resolved variable: x boolean\n" +
                 "                            PROPERTY: name = x\n" +
                 "                          [MethodInvocation canRead], type: boolean, resolved method: canRead java.io.File\n" +
                 "                            operand: [Super], type: java.io.File\n" +
@@ -543,7 +636,7 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                      PROPERTY: name = void\n" +
                 "                methodName: [Identifier client], type: void, resolved method: client test.pkg.TypeResolutionTest.Other\n" +
                 "                  PROPERTY: name = client\n" +
-                "                parameter: [VariableDefinition], type: void, resolved method: client test.pkg.TypeResolutionTest.Other\n" +
+                "                parameter: [VariableDefinition], type: int, resolved variable: z int\n" +
                 "                  PROPERTY: varargs = false\n" +
                 "                  [Modifiers]\n" +
                 "                  type: [TypeReference int], type: int, resolved class: int \n" +
@@ -552,13 +645,13 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                    [TypeReferencePart], type: int, resolved class: int \n" +
                 "                      [Identifier int]\n" +
                 "                        PROPERTY: name = int\n" +
-                "                  [VariableDefinitionEntry], resolved variable: z int\n" +
+                "                  [VariableDefinitionEntry], type: int, resolved variable: z int\n" +
                 "                    PROPERTY: arrayDimensions = 0\n" +
-                "                    varName: [Identifier z], resolved variable: z int\n" +
+                "                    varName: [Identifier z], type: int, resolved variable: z int\n" +
                 "                      PROPERTY: name = z\n" +
                 "                [Block], type: void, resolved method: client test.pkg.TypeResolutionTest.Other\n" +
-                "                    [VariableDeclaration], type: int, resolved class: int \n" +
-                "                      [VariableDefinition]\n" +
+                "                    [VariableDeclaration], type: int, resolved variable: x int\n" +
+                "                      [VariableDefinition], type: int, resolved variable: x int\n" +
                 "                        PROPERTY: varargs = false\n" +
                 "                        [Modifiers]\n" +
                 "                        type: [TypeReference int], type: int, resolved class: int \n" +
@@ -567,15 +660,15 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                          [TypeReferencePart], type: int, resolved class: int \n" +
                 "                            [Identifier int]\n" +
                 "                              PROPERTY: name = int\n" +
-                "                        [VariableDefinitionEntry], resolved variable: x int\n" +
+                "                        [VariableDefinitionEntry], type: int, resolved variable: x int\n" +
                 "                          PROPERTY: arrayDimensions = 0\n" +
-                "                          varName: [Identifier x], resolved variable: x int\n" +
+                "                          varName: [Identifier x], type: int, resolved variable: x int\n" +
                 "                            PROPERTY: name = x\n" +
                 "                          [VariableReference], type: int, resolved variable: z int\n" +
                 "                            [Identifier z], type: int, resolved variable: z int\n" +
                 "                              PROPERTY: name = z\n" +
-                "                    [VariableDeclaration], type: int, resolved class: int \n" +
-                "                      [VariableDefinition]\n" +
+                "                    [VariableDeclaration], type: int, resolved variable: y int\n" +
+                "                      [VariableDefinition], type: int, resolved variable: y int\n" +
                 "                        PROPERTY: varargs = false\n" +
                 "                        [Modifiers]\n" +
                 "                        type: [TypeReference int], type: int, resolved class: int \n" +
@@ -584,9 +677,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                          [TypeReferencePart], type: int, resolved class: int \n" +
                 "                            [Identifier int]\n" +
                 "                              PROPERTY: name = int\n" +
-                "                        [VariableDefinitionEntry], resolved variable: y int\n" +
+                "                        [VariableDefinitionEntry], type: int, resolved variable: y int\n" +
                 "                          PROPERTY: arrayDimensions = 0\n" +
-                "                          varName: [Identifier y], resolved variable: y int\n" +
+                "                          varName: [Identifier y], type: int, resolved variable: y int\n" +
                 "                            PROPERTY: name = y\n" +
                 "                          [BinaryExpression +], type: int\n" +
                 "                            PROPERTY: operator = +\n" +
@@ -595,8 +688,25 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                                PROPERTY: name = x\n" +
                 "                            right: [IntegralLiteral 5], type: int\n" +
                 "                              PROPERTY: value = 5\n" +
-                "                    [VariableDeclaration], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
-                "                      [VariableDefinition]\n" +
+                "                    [Block]\n" +
+                "                        [VariableDeclaration], type: int, resolved variable: w int\n" +
+                "                          [VariableDefinition], type: int, resolved variable: w int\n" +
+                "                            PROPERTY: varargs = false\n" +
+                "                            [Modifiers]\n" +
+                "                            type: [TypeReference int], type: int, resolved class: int \n" +
+                "                              PROPERTY: WildcardKind = NONE\n" +
+                "                              PROPERTY: arrayDimensions = 0\n" +
+                "                              [TypeReferencePart], type: int, resolved class: int \n" +
+                "                                [Identifier int]\n" +
+                "                                  PROPERTY: name = int\n" +
+                "                            [VariableDefinitionEntry], type: int, resolved variable: w int\n" +
+                "                              PROPERTY: arrayDimensions = 0\n" +
+                "                              varName: [Identifier w], type: int, resolved variable: w int\n" +
+                "                                PROPERTY: name = w\n" +
+                "                              [IntegralLiteral 5], type: int\n" +
+                "                                PROPERTY: value = 5\n" +
+                "                    [VariableDeclaration], type: test.pkg.TypeResolutionTest.Inner, resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                      [VariableDefinition], type: test.pkg.TypeResolutionTest.Inner, resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                        PROPERTY: varargs = false\n" +
                 "                        [Modifiers]\n" +
                 "                        type: [TypeReference Inner], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
@@ -605,9 +715,9 @@ public class EcjParserTest extends AbstractCheckTest {
                 "                          [TypeReferencePart], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
                 "                            [Identifier Inner]\n" +
                 "                              PROPERTY: name = Inner\n" +
-                "                        [VariableDefinitionEntry], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                        [VariableDefinitionEntry], type: test.pkg.TypeResolutionTest.Inner, resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                          PROPERTY: arrayDimensions = 0\n" +
-                "                          varName: [Identifier inner], resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
+                "                          varName: [Identifier inner], type: test.pkg.TypeResolutionTest.Inner, resolved variable: inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                            PROPERTY: name = inner\n" +
                 "                          [ConstructorInvocation Inner], type: test.pkg.TypeResolutionTest.Inner, resolved method: test.pkg.TypeResolutionTest.Inner test.pkg.TypeResolutionTest.Inner\n" +
                 "                            type: [TypeReference Inner], type: test.pkg.TypeResolutionTest.Inner, resolved class: test.pkg.TypeResolutionTest.Inner \n" +
@@ -732,6 +842,111 @@ public class EcjParserTest extends AbstractCheckTest {
                 }));
     }
 
+    // Regression test for https://code.google.com/p/android/issues/detail?id=172268
+    // This is a reduced version of the in-the-wild occurrence that happened when lint processed
+    // Chromium for Android sources.
+    public void testTypeInformationIsNotClearedAfterCompilation() throws Exception {
+        // We need to generate lots of classes to overflow default Compiler's TypeSystem internal array
+        // of types to trigger ArrayIndexOutOfBoundsException. This array initially has 256 entries.
+        int innerClassesNumber = 256;
+        String innerClassWithFieldTemplate = ""
+                + "  private static class Inner%1$d {}\n"
+                + "  private final HashMap<Inner%1$d, Integer> mMap%1$d;";
+
+        StringBuilder innerClasses = new StringBuilder();
+        for (int i = 0; i < innerClassesNumber; ++i) {
+            innerClasses.append(String.format(Locale.US, innerClassWithFieldTemplate, i));
+            innerClasses.append('\n');
+        }
+
+        String accessorTemplate = ""
+                + "    for (Map.Entry<Inner%1$d, Integer> entry : mMap%1$d.entrySet()) {}";
+        StringBuilder accessors = new StringBuilder();
+        for (int i = 0; i < innerClassesNumber; ++i) {
+            accessors.append(String.format(Locale.US, accessorTemplate, i)).append('\n');
+        }
+        @SuppressWarnings({"OnDemandImport", "ClassNameDiffersFromFileName"})
+        @Language("JAVA")
+        String source = ""
+                + "import java.util.*;\n"
+                + "public class TypeInfoTest {\n"
+                + innerClasses.toString()
+                + "  public void doSomething() {\n"
+                + accessors.toString()
+                + "  }"
+                + "}\n";
+
+        final JavaContext context = LintUtilsTest.parse(source,
+                new File("src/test/pkg/TypeInfoTest.java"));
+        assertNotNull(context);
+
+        Node compilationUnit = context.getCompilationUnit();
+        assertNotNull(compilationUnit);
+
+        // null means OK
+        final AtomicReference<String> result = new AtomicReference<String>();
+
+        compilationUnit.accept(new ForwardingAstVisitor() {
+            @Override
+            public boolean visitMethodInvocation(MethodInvocation call) {
+                // Snapshot of SupportAnnotationDetector
+                try {
+                    ResolvedNode resolved = context.resolve(call);
+                    if (resolved instanceof ResolvedMethod) {
+                        ResolvedMethod method = (ResolvedMethod) resolved;
+                        method.getAnnotations();
+                        method.getContainingClass().getAnnotations();
+                    } else {
+                        // Most likely target SDK isn't supplied (via ANDROID_HOME or by some other
+                        // means). The test is meaningless then.
+                        result.compareAndSet(null,
+                                "Cannot get resolved method, is test setup correct?");
+                    }
+                } catch (RuntimeException e) {
+                    // Exception can be swallowed by some upper-level code so we cannot rely on
+                    // compilationUnit.accept to fail test
+                    result.compareAndSet(null, "Got an exception " + e);
+                }
+                return false;
+            }
+        });
+
+        String failMessage = result.get();
+        assertNull(failMessage, result.get());
+    }
+
+    public void testGetClassNamesWithoutSignatures() {
+        @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
+        @Language("JAVA")
+        String source = ""
+                + "package test.pkg;\n"
+                + "public abstract class Adapter<VH extends Object> {\n"
+                + "    public abstract void onBindViewHolder(VH holder, int position);\n"
+                + "}\n";
+        final JavaContext context = LintUtilsTest.parse(source,
+                new File("src/test/pkg/Adapter.java"));
+        assertNotNull(context);
+
+        Node compilationUnit = context.getCompilationUnit();
+        assertNotNull(compilationUnit);
+        final AtomicBoolean found = new AtomicBoolean();
+        compilationUnit.accept(new ForwardingAstVisitor() {
+            @Override
+            public boolean visitClassDeclaration(ClassDeclaration node) {
+                if (node.astName().astValue().startsWith("Adapter")) {
+                    found.set(true);
+                    ResolvedNode resolved = context.resolve(node);
+                    assertNotNull(resolved);
+                    ResolvedClass cls = (ResolvedClass) resolved;
+                    assertEquals("test.pkg.Adapter", cls.getName());
+                    assertEquals("Adapter", cls.getSimpleName());
+                }
+                return super.visitClassDeclaration(node);
+            }
+        });
+        assertTrue(found.get());
+    }
+
     @Override
     protected Detector getDetector() {
         return new SdCardDetector();
@@ -746,14 +961,45 @@ public class EcjParserTest extends AbstractCheckTest {
                 ClassPathInfo classPath = super.getClassPath(project);
                 // Insert fake classpath entries (non existent directories) to
                 // make sure the parser handles that gracefully. See issue 87740.
-                classPath.getLibraries().add(new File("nonexistent path"));
+                classPath.getLibraries(true).add(new File("nonexistent path"));
                 return classPath;
             }
         };
     }
 
+    public void testEnsureUnique() {
+        ResolvedAnnotation foo1 = createTestAnnotation("foo");
+        ResolvedAnnotation foo2 = createTestAnnotation("foo");
+        ResolvedAnnotation foo3 = createTestAnnotation("foo");
+        ResolvedAnnotation bar1 = createTestAnnotation("bar");
+        ResolvedAnnotation bar2 = createTestAnnotation("bar");
+
+        assertEquals("[]",
+                EcjParser.ensureUnique(Lists.<ResolvedAnnotation>newArrayList()).toString());
+        assertEquals("[foo, bar]",
+                EcjParser.ensureUnique(Lists.newArrayList(foo1, foo2, foo3, bar1)).toString());
+        assertEquals("[foo]",
+                EcjParser.ensureUnique(Lists.newArrayList(foo1, foo2)).toString());
+        assertEquals("[foo]",
+                EcjParser.ensureUnique(Lists.newArrayList(foo1, foo2, foo3)).toString());
+        assertEquals("[foo, bar]",
+                EcjParser.ensureUnique(Lists.newArrayList(foo1, foo2, foo3, bar1)).toString());
+        assertEquals("[bar, foo]",
+                EcjParser.ensureUnique(Lists.newArrayList(bar1, foo2, foo3)).toString());
+        assertEquals("[bar, foo]",
+                EcjParser.ensureUnique(Lists.newArrayList(bar1, bar2, foo2, foo3)).toString());
+    }
+
+    private ResolvedAnnotation createTestAnnotation(String name) {
+        ResolvedAnnotation annotation = mock(ResolvedAnnotation.class);
+        when(annotation.getName()).thenReturn(name);
+        when(annotation.toString()).thenReturn(name);
+        return annotation;
+    }
+
     public static class AstPrettyPrinter implements SourceFormatter {
 
+        @SuppressWarnings("StringBufferField") // Don't care about performance here
         private final StringBuilder mOutput = new StringBuilder(1000);
 
         private final JavaParser mResolver;
@@ -804,10 +1050,12 @@ public class EcjParserTest extends AbstractCheckTest {
 
             String typeDescription = "";
             String resolutionDescription = "";
+            @SuppressWarnings("ConstantConditions") // Hack for test pretty printer only
             JavaParser.TypeDescriptor t = mResolver.getType(null, node);
             if (t != null) {
                 typeDescription = ", type: " + t.getName();
             }
+            @SuppressWarnings("ConstantConditions") // Hack for test pretty printer only
             ResolvedNode resolved = mResolver.resolve(null, node);
             if (resolved != null) {
                 String c = "unknown";
@@ -821,7 +1069,10 @@ public class EcjParserTest extends AbstractCheckTest {
                 } else if (resolved instanceof ResolvedField) {
                     c = "field";
                     ResolvedField field = (ResolvedField) resolved;
-                    extra = field.getContainingClass().getName();
+                    ResolvedClass containingClass = field.getContainingClass();
+                    if (containingClass != null) {
+                        extra = containingClass.getName();
+                    }
                 } else if (resolved instanceof ResolvedVariable) {
                     c = "variable";
                     ResolvedVariable variable = (ResolvedVariable) resolved;

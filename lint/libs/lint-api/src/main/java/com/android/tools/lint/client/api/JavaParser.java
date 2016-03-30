@@ -20,20 +20,30 @@ import static com.android.SdkConstants.ATTR_VALUE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
 
 import java.util.Collections;
 import java.util.List;
 
+import lombok.ast.Catch;
+import lombok.ast.For;
 import lombok.ast.Identifier;
+import lombok.ast.If;
 import lombok.ast.Node;
+import lombok.ast.Return;
 import lombok.ast.StrictListAccessor;
+import lombok.ast.Switch;
+import lombok.ast.Throw;
 import lombok.ast.TypeReference;
 import lombok.ast.TypeReferencePart;
+import lombok.ast.While;
 
 /**
  * A wrapper for a Java parser. This allows tools integrating lint to map directly
@@ -85,11 +95,68 @@ public abstract class JavaParser {
      * Returns a {@link Location} for the given node
      *
      * @param context information about the file being parsed
-     * @param node the node to create a location for
+     * @param node    the node to create a location for
      * @return a location for the given node
      */
     @NonNull
     public abstract Location getLocation(@NonNull JavaContext context, @NonNull Node node);
+
+    /**
+     * Returns a {@link Location} for the given node range (from the starting offset of the first
+     * node to the ending offset of the second node).
+     *
+     * @param from      the AST node to get a starting location from
+     * @param fromDelta Offset delta to apply to the starting offset
+     * @param to        the AST node to get a ending location from
+     * @param toDelta   Offset delta to apply to the ending offset
+     * @return a location for the given node
+     */
+    @NonNull
+    public abstract Location getRangeLocation(
+            @NonNull JavaContext context,
+            @NonNull Node from,
+            int fromDelta,
+            @NonNull Node to,
+            int toDelta);
+
+    /**
+     * Returns a {@link Location} for the given node. This attempts to pick a shorter
+     * location range than the entire node; for a class or method for example, it picks
+     * the name node (if found). For statement constructs such as a {@code switch} statement
+     * it will highlight the keyword, etc.
+     *
+     * @param context information about the file being parsed
+     * @param node the node to create a location for
+     * @return a location for the given node
+     */
+    @NonNull
+    public Location getNameLocation(@NonNull JavaContext context, @NonNull Node node) {
+        Node nameNode = JavaContext.findNameNode(node);
+        if (nameNode != null) {
+            node = nameNode;
+        } else {
+            if (node instanceof Switch
+                    || node instanceof For
+                    || node instanceof If
+                    || node instanceof While
+                    || node instanceof Throw
+                    || node instanceof Return) {
+                // Lint doesn't want to highlight the entire statement/block associated
+                // with this node, it wants to just highlight the keyword.
+                Location location = getLocation(context, node);
+                Position start = location.getStart();
+                if (start != null) {
+                    // The Lombok classes happen to have the same length as the target keyword
+                    int length = node.getClass().getSimpleName().length();
+                    return Location.create(location.getFile(), start,
+                            new DefaultPosition(start.getLine(), start.getColumn() + length,
+                                    start.getOffset() + length));
+                }
+            }
+        }
+
+        return getLocation(context, node);
+    }
 
     /**
      * Creates a light-weight handle to a location for the given node. It can be
@@ -148,6 +215,19 @@ public abstract class JavaParser {
     }
 
     /**
+     * Returns the set of exception types handled by the given catch block.
+     * <p>
+     * This is a workaround for the fact that the Lombok AST API (and implementation)
+     * doesn't support multi-catch statements.
+     */
+    public List<TypeDescriptor> getCatchTypes(@NonNull JavaContext context,
+            @NonNull Catch catchBlock) {
+        TypeReference typeReference = catchBlock.astExceptionDeclaration().astTypeReference();
+        return Collections.<TypeDescriptor>singletonList(new DefaultTypeDescriptor(
+                typeReference.getTypeName()));
+    }
+
+    /**
      * Gets the type of the given node
      *
      * @param context information about the file being parsed
@@ -164,6 +244,19 @@ public abstract class JavaParser {
          * */
         @NonNull public abstract String getName();
 
+        /** Returns the simple name of this class */
+        @NonNull
+        public String getSimpleName() {
+            // This doesn't handle inner classes properly, so subclasses with more
+            // accurate type information will override to handle it correctly.
+            String name = getName();
+            int index = name.lastIndexOf('.');
+            if (index != -1) {
+                return name.substring(index + 1);
+            }
+            return name;
+        }
+
         /**
          * Returns the full signature of the type, which is normally the same as {@link #getName()}
          * but for arrays can include []'s, for generic methods can include generics parameters
@@ -171,7 +264,30 @@ public abstract class JavaParser {
          */
         @NonNull public abstract String getSignature();
 
+        /**
+         * Computes the internal class name of the given fully qualified class name.
+         * For example, it converts foo.bar.Foo.Bar into foo/bar/Foo$Bar.
+         * This should only be called for class types, not primitives.
+         *
+         * @return the internal class name
+         */
+        @NonNull public String getInternalName() {
+            return ClassContext.getInternalName(getName());
+        }
+
         public abstract boolean matchesName(@NonNull String name);
+
+        /**
+         * Returns true if the given TypeDescriptor represents an array
+         * @return true if this type represents an array
+         */
+        public abstract boolean isArray();
+
+        /**
+         * Returns true if the given TypeDescriptor represents a primitive
+         * @return true if this type represents a primitive
+         */
+        public abstract boolean isPrimitive();
 
         public abstract boolean matchesSignature(@NonNull String signature);
 
@@ -194,6 +310,10 @@ public abstract class JavaParser {
         @Override
         public abstract boolean equals(Object o);
 
+        @Override
+        public String toString() {
+            return getName();
+        }
     }
 
     /** Convenience implementation of {@link TypeDescriptor} */
@@ -220,6 +340,16 @@ public abstract class JavaParser {
         @Override
         public boolean matchesName(@NonNull String name) {
             return mName.equals(name);
+        }
+
+        @Override
+        public boolean isArray() {
+            return mName.endsWith("[]");
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return mName.indexOf('.') != -1;
         }
 
         @Override
@@ -306,6 +436,20 @@ public abstract class JavaParser {
         public boolean isInPackage(@NonNull String pkg, boolean includeSubPackages) {
             return getSignature().startsWith(pkg);
         }
+
+        /**
+         * Attempts to find the corresponding AST node, if possible. This won't work if for example
+         * the resolved node is from a binary (such as a compiled class in a .jar) or if the
+         * underlying parser doesn't support it.
+         * <p>
+         * Note that looking up the AST node can result in different instances for each lookup.
+         *
+         * @return an AST node, if possible.
+         */
+        @Nullable
+        public Node findAstNode() {
+            return null;
+        }
     }
 
     /** A resolved class declaration (class, interface, enumeration or annotation) */
@@ -315,7 +459,7 @@ public abstract class JavaParser {
         @NonNull
         public abstract String getName();
 
-        /** Returns the simple of this class */
+        /** Returns the simple name of this class */
         @NonNull
         public abstract String getSimpleName();
 
@@ -336,6 +480,9 @@ public abstract class JavaParser {
         @Nullable
         public abstract ResolvedClass getSuperClass();
 
+        @NonNull
+        public abstract Iterable<ResolvedClass> getInterfaces();
+
         @Nullable
         public abstract ResolvedClass getContainingClass();
 
@@ -346,12 +493,43 @@ public abstract class JavaParser {
         /**
          * Determines whether this class extends the given name. If strict is true,
          * it will not consider C extends C true.
+         * <p>
+         * The target must be a class; to check whether this class extends an interface,
+         * use {@link #isImplementing(String,boolean)} instead. If you're not sure, use
+         * {@link #isInheritingFrom(String, boolean)}.
          *
          * @param name the fully qualified class name
          * @param strict if true, do not consider a class to be extending itself
          * @return true if this class extends the given class
          */
         public abstract boolean isSubclassOf(@NonNull String name, boolean strict);
+
+        /**
+         * Determines whether this is implementing the given interface.
+         * <p>
+         * The target must be an interface; to check whether this class extends a class,
+         * use {@link #isSubclassOf(String, boolean)} instead. If you're not sure, use
+         * {@link #isInheritingFrom(String, boolean)}.
+         *
+         * @param name the fully qualified interface name
+         * @param strict if true, do not consider a class to be extending itself
+         * @return true if this class implements the given interface
+         */
+        public abstract boolean isImplementing(@NonNull String name, boolean strict);
+
+        /**
+         * Determines whether this class extends or implements the class of the given name.
+         * If strict is true, it will not consider C extends C true.
+         * <p>
+         * For performance reasons, if you know that the target is a class, consider using
+         * {@link #isSubclassOf(String, boolean)} instead, and if the target is an interface,
+         * consider using {@link #isImplementing(String,boolean)}.
+         *
+         * @param name the fully qualified class name
+         * @param strict if true, do not consider a class to be inheriting from itself
+         * @return true if this class extends or implements the given class
+         */
+        public abstract boolean isInheritingFrom(@NonNull String name, boolean strict);
 
         @NonNull
         public abstract Iterable<ResolvedMethod> getConstructors();
@@ -497,19 +675,26 @@ public abstract class JavaParser {
         @NonNull
         public abstract TypeDescriptor getType();
 
-        @NonNull
+        @Nullable
         public abstract ResolvedClass getContainingClass();
 
         @Nullable
         public abstract Object getValue();
 
+        @Nullable
         public String getContainingClassName() {
-            return getContainingClass().getName();
+            ResolvedClass containingClass = getContainingClass();
+            return containingClass != null ? containingClass.getName() : null;
         }
 
         @Override
         public boolean isInPackage(@NonNull String pkg, boolean includeSubPackages) {
-            String packageName = getContainingClass().getPackageName();
+            ResolvedClass containingClass = getContainingClass();
+            if (containingClass == null) {
+                return false;
+            }
+
+            String packageName = containingClass.getPackageName();
 
             //noinspection SimplifiableIfStatement
             if (pkg.equals(packageName)) {
@@ -579,6 +764,10 @@ public abstract class JavaParser {
 
     /** A package declaration */
     public abstract static class ResolvedPackage extends ResolvedNode {
+        /** Returns the parent package of this package, if any. */
+        @Nullable
+        public abstract ResolvedPackage getParentPackage();
+
         @NonNull
         @Override
         public Iterable<ResolvedAnnotation> getAnnotations() {

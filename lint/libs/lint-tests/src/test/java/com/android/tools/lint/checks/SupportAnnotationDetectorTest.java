@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.TAG_USES_PERMISSION;
+import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23;
+import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
 
 import com.android.tools.lint.ExternalAnnotationRepository;
@@ -417,6 +420,26 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 "src/android/support/annotation/DrawableRes.java")));
     }
 
+    // Temporarily disabled; TypedArray.getResourceId has now been annotated with @StyleRes
+    //public void testResourceTypesIssue182433() throws Exception {
+    //    // Regression test for https://code.google.com/p/android/issues/detail?id=182433
+    //    assertEquals("No warnings.",
+    //            lintProject(
+    //                    java("src/test/pkg/ResourceTypeTest.java", ""
+    //                            + "package test.pkg;\n"
+    //                            + "import android.app.Activity;\n"
+    //                            + "import android.content.res.TypedArray;\n"
+    //                            + "\n"
+    //                            + "@SuppressWarnings(\"unused\")\n"
+    //                            + "public class ResourceTypeTest extends Activity {\n"
+    //                            + "    public static void test(TypedArray typedArray) {\n"
+    //                            + "       typedArray.getResourceId(2 /* index */, 0 /* invalid drawableRes */);\n"
+    //                            + "    }\n"
+    //                            + "}\n"),
+    //                    mAnyResAnnotation
+    //            ));
+    //}
+
     @SuppressWarnings({"MethodMayBeStatic", "ResultOfObjectAllocationIgnored"})
     public void testConstructor() throws Exception {
         assertEquals(""
@@ -676,7 +699,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "    android:versionCode=\"1\"\n"
                 + "    android:versionName=\"1.0\" >\n"
                 + "\n"
-                + "    <uses-sdk android:minSdkVersion=\"14\" android:targetSdkVersion=\""
+                + "    <uses-sdk android:minSdkVersion=\"" + minSdk + "\" android:targetSdkVersion=\""
                 + targetSdk + "\" />\n"
                 + "\n"
                 + permissionBlock.toString()
@@ -695,7 +718,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "import android.content.Context;\n"
             + "import android.content.pm.PackageManager;\n"
             + "import android.location.LocationManager;\n"
-            + "\n"
+            + "import java.io.IOException;\n"
             + "import java.security.AccessControlException;\n"
             + "\n"
             + "public class RevokeTest {\n"
@@ -708,8 +731,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "        }\n"
             + "\n"
             + "        try {\n"
-            + "            // Ok: Security exception super class caught in one of the branches\n"
-            + "            locationManager.myMethod(provider); // OK\n"
+            + "            // You have to catch SecurityException explicitly, not parent\n"
+            + "            locationManager.myMethod(provider); // ERROR\n"
             + "        } catch (RuntimeException e) { // includes Security Exception\n"
             + "        }\n"
             + "\n"
@@ -724,8 +747,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "        }\n"
             + "\n"
             + "        try {\n"
-            + "            // Ok: Security exception super class caught in one of the branches\n"
-            + "            locationManager.myMethod(provider); // OK\n"
+            + "            // You have to catch SecurityException explicitly, not parent\n"
+            + "            locationManager.myMethod(provider); // ERROR\n"
             + "        } catch (Exception e) { // includes Security Exception\n"
             + "        }\n"
             + "\n"
@@ -759,7 +782,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "\n"
             + "    public static void test6(LocationManager locationManager, String provider)\n"
             + "            throws Exception { // includes Security Exception\n"
-            + "        locationManager.myMethod(provider); // OK\n"
+            + "        // You have to throw SecurityException explicitly, not parent\n"
+            + "        locationManager.myMethod(provider); // ERROR\n"
             + "    }\n"
             + "\n"
             + "    public static void test7(LocationManager locationManager, String provider, Context context)\n"
@@ -768,6 +792,23 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "            return;\n"
             + "        }\n"
             + "        locationManager.myMethod(provider); // OK: permission checked\n"
+            + "    }\n"
+            + "\n"
+            + "    public void test8(LocationManager locationManager, String provider) {\n"
+            + "          // Regression test for http://b.android.com/187204\n"
+            + "        try {\n"
+            + "            locationManager.myMethod(provider); // ERROR\n"
+            + "            mightThrow();\n"
+            + "        } catch (SecurityException | IOException se) { // OK: Checked in multi catch\n"
+            + "        }\n"
+            + "        try {\n"
+            + "            locationManager.myMethod(provider); // ERROR\n"
+            + "            mightThrow();\n"
+            + "        } catch (IOException | SecurityException se) { // OK: Checked in multi catch\n"
+            + "        }\n"
+            + "    }\n"
+            + "\n"
+            + "    public void mightThrow() throws IOException {\n"
             + "    }\n"
             + "\n"
             + "}\n");
@@ -796,19 +837,28 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
 
     public void testRevokePermissions() throws Exception {
         assertEquals(""
-                + "src/test/pkg/RevokeTest.java:44: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or handle a potential SecurityException [MissingPermission]\n"
+                + "src/test/pkg/RevokeTest.java:20: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
                 + "            locationManager.myMethod(provider); // ERROR\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/RevokeTest.java:50: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or handle a potential SecurityException [MissingPermission]\n"
+                + "src/test/pkg/RevokeTest.java:36: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
+                + "            locationManager.myMethod(provider); // ERROR\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RevokeTest.java:44: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
+                + "            locationManager.myMethod(provider); // ERROR\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RevokeTest.java:50: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
                 + "        locationManager.myMethod(provider); // ERROR: not caught\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/RevokeTest.java:55: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or handle a potential SecurityException [MissingPermission]\n"
+                + "src/test/pkg/RevokeTest.java:55: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
                 + "        locationManager.myMethod(provider); // ERROR: not caught by right type\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/RevokeTest.java:60: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or handle a potential SecurityException [MissingPermission]\n"
+                + "src/test/pkg/RevokeTest.java:60: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
                 + "        locationManager.myMethod(provider); // ERROR\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "4 errors, 0 warnings\n",
+                + "src/test/pkg/RevokeTest.java:71: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
+                + "        locationManager.myMethod(provider); // ERROR\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "7 errors, 0 warnings\n",
                 lintProject(
                         getManifestWithPermissions(23, "android.permission.ACCESS_FINE_LOCATION"),
                         mLocationManagerStub,
@@ -904,6 +954,38 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         mRequirePermissionAnnotation));
     }
 
+    public void testUsesPermissionSdk23() throws Exception {
+        TestFile manifest = getManifestWithPermissions(14,
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.BLUETOOTH");
+        String contents = manifest.getContents();
+        assertNotNull(contents);
+        String s = contents.replace(TAG_USES_PERMISSION, TAG_USES_PERMISSION_SDK_23);
+        manifest.withSource(s);
+        assertEquals("No warnings.",
+                lintProject(
+                        manifest,
+                        mPermissionTest,
+                        mComplexLocationManagerStub,
+                        mRequirePermissionAnnotation));
+    }
+
+    public void testUsesPermissionSdkM() throws Exception {
+        TestFile manifest = getManifestWithPermissions(14,
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.BLUETOOTH");
+        String contents = manifest.getContents();
+        assertNotNull(contents);
+        String s = contents.replace(TAG_USES_PERMISSION, TAG_USES_PERMISSION_SDK_M);
+        manifest.withSource(s);
+        assertEquals("No warnings.",
+                lintProject(
+                        manifest,
+                        mPermissionTest,
+                        mComplexLocationManagerStub,
+                        mRequirePermissionAnnotation));
+    }
+
     public void testPermissionAnnotation() throws Exception {
         assertEquals(""
                 + "src/test/pkg/LocationManager.java:24: Error: Missing permissions required by LocationManager.getLastKnownLocation: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION [MissingPermission]\n"
@@ -979,6 +1061,15 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         + "            protected void onPreExecute() {\n"
                         + "                publishProgress(); // ERROR\n"
                         + "                onProgressUpdate(); // OK\n"
+                        + "                // Suppressed via older Android Studio inspection id:\n"
+                        + "                //noinspection ResourceType\n"
+                        + "                publishProgress(); // SUPPRESSED\n"
+                        + "                // Suppressed via new lint id:\n"
+                        + "                //noinspection WrongThread\n"
+                        + "                publishProgress(); // SUPPRESSED\n"
+                        + "                // Suppressed via Studio inspection id:\n"
+                        + "                //noinspection AndroidLintWrongThread\n"
+                        + "                publishProgress(); // SUPPRESSED\n"
                         + "            }\n"
                         + "        };\n"
                         + "    }\n"
@@ -1139,7 +1230,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "        Intent intent = new Intent(Intent.ACTION_CALL);\n"
                                 + "        intent.setData(Uri.parse(\"tel:1234567890\"));\n"
                                 + "        // This one will only be flagged if we have framework metadata on Intent.ACTION_CALL\n"
-                                + "        activity.startActivity(intent);\n"
+                                // Too flaky
+                                + "        //activity.startActivity(intent);\n"
                                 + "    }\n"
                                 + "\n"
                                 + "    public static void activities2(Activity activity) {\n"
@@ -1259,5 +1351,351 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testMultipleProjects() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=182179
+        // 182179: Lint gives erroneous @StringDef errors in androidTests
+        assertEquals(""
+                        + "src/test/zpkg/SomeClassTest.java:10: Error: Must be one of: SomeClass.MY_CONSTANT [WrongConstant]\n"
+                        + "        SomeClass.doSomething(\"error\");\n"
+                        + "                              ~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
 
+                lintProject(
+                        getManifestWithPermissions(14, 23),
+                        java("src/test/pkg/SomeClass.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.support.annotation.StringDef;\n"
+                                + "import android.util.Log;\n"
+                                + "\n"
+                                + "import java.lang.annotation.Documented;\n"
+                                + "import java.lang.annotation.Retention;\n"
+                                + "import java.lang.annotation.RetentionPolicy;\n"
+                                + "\n"
+                                + "public class SomeClass {\n"
+                                + "\n"
+                                + "    public static final String MY_CONSTANT = \"foo\";\n"
+                                + "\n"
+                                + "    public static void doSomething(@MyTypeDef final String myString) {\n"
+                                + "        Log.v(\"tag\", myString);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "\n"
+                                + "    /**\n"
+                                + "     * Defines the possible values for state type.\n"
+                                + "     */\n"
+                                + "    @StringDef({MY_CONSTANT})\n"
+                                + "    @Documented\n"
+                                + "    @Retention(RetentionPolicy.SOURCE)\n"
+                                + "    public @interface MyTypeDef {\n"
+                                + "\n"
+                                + "    }\n"
+                                + "}"),
+                        // test.zpkg: alphabetically after test.pkg: We want to make sure
+                        // that the SomeClass source unit is disposed before we try to
+                        // process SomeClassTest and try to resolve its SomeClass.MY_CONSTANT
+                        // @IntDef reference
+                        java("src/test/zpkg/SomeClassTest.java", ""
+                                + "package test.zpkg;\n"
+                                + "\n"
+                                + "import test.pkg.SomeClass;\n"
+                                + "import junit.framework.TestCase;\n"
+                                + "\n"
+                                + "public class SomeClassTest extends TestCase {\n"
+                                + "\n"
+                                + "    public void testDoSomething() {\n"
+                                + "        SomeClass.doSomething(SomeClass.MY_CONSTANT);\n"
+                                + "        SomeClass.doSomething(\"error\");\n"
+                                + "    }\n"
+                                + "}"),
+                        copy("src/android/support/annotation/StringDef.java.txt",
+                                "src/android/support/annotation/StringDef.java")
+                ));
+    }
+
+    @SuppressWarnings({"InstantiationOfUtilityClass", "ResultOfObjectAllocationIgnored"})
+    public void testMultipleResourceTypes() throws Exception {
+        // Regression test for
+        //   https://code.google.com/p/android/issues/detail?id=187181
+        // Make sure that parameters which specify multiple resource types are handled
+        // correctly.
+        assertEquals(""
+                + "src/test/pkg/ResourceTypeTest.java:14: Error: Expected resource of type drawable or string [ResourceType]\n"
+                + "        new ResourceTypeTest(res, R.raw.my_raw_file); // ERROR\n"
+                + "                                  ~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/ResourceTypeTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.content.res.Resources;\n"
+                                + "import android.support.annotation.DrawableRes;\n"
+                                + "import android.support.annotation.StringRes;\n"
+                                + "\n"
+                                + "public class ResourceTypeTest {\n"
+                                + "    public ResourceTypeTest(Resources res, @DrawableRes @StringRes int id) {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static void test(Resources res) {\n"
+                                + "        new ResourceTypeTest(res, R.drawable.ic_announcement_24dp); // OK\n"
+                                + "        new ResourceTypeTest(res, R.string.action_settings); // OK\n"
+                                + "        new ResourceTypeTest(res, R.raw.my_raw_file); // ERROR\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static final class R {\n"
+                                + "        public static final class drawable {\n"
+                                + "            public static final int ic_announcement_24dp = 0x7f0a0000;\n"
+                                + "        }\n"
+                                + "        public static final class string {\n"
+                                + "            public static final int action_settings = 0x7f0a0001;\n"
+                                + "        }\n"
+                                + "        public static final class raw {\n"
+                                + "            public static final int my_raw_file = 0x7f0a0002;\n"
+                                + "        }\n"
+                                + "    }"
+                                + "}"),
+                        copy("src/android/support/annotation/DrawableRes.java.txt", "src/android/support/annotation/DrawableRes.java"),
+                        mStringResAnnotation
+                ));
+    }
+
+    @SuppressWarnings({"InstantiationOfUtilityClass", "ResultOfObjectAllocationIgnored"})
+    public void testAnyRes() throws Exception {
+        // Make sure error messages for @AnyRes are handled right since it's now an
+        // enum set containing all possible resource types
+        assertEquals(""
+                + "src/test/pkg/AnyResTest.java:14: Error: Expected resource identifier (R.type.name) [ResourceType]\n"
+                + "        new AnyResTest(res, 52); // ERROR\n"
+                + "                            ~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/AnyResTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.content.res.Resources;\n"
+                                + "import android.support.annotation.AnyRes;\n"
+                                + "\n"
+                                + "public class AnyResTest {\n"
+                                + "    public AnyResTest(Resources res, @AnyRes int id) {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static void test(Resources res) {\n"
+                                + "        new AnyResTest(res, R.drawable.ic_announcement_24dp); // OK\n"
+                                + "        new AnyResTest(res, R.string.action_settings); // OK\n"
+                                + "        new AnyResTest(res, R.raw.my_raw_file); // OK\n"
+                                + "        new AnyResTest(res, 52); // ERROR\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static final class R {\n"
+                                + "        public static final class drawable {\n"
+                                + "            public static final int ic_announcement_24dp = 0x7f0a0000;\n"
+                                + "        }\n"
+                                + "        public static final class string {\n"
+                                + "            public static final int action_settings = 0x7f0a0001;\n"
+                                + "        }\n"
+                                + "        public static final class raw {\n"
+                                + "            public static final int my_raw_file = 0x7f0a0002;\n"
+                                + "        }\n"
+                                + "    }"
+                                + "}"),
+                        copy("src/android/support/annotation/AnyRes.java.txt", "src/android/support/annotation/AnyRes.java")
+                ));
+    }
+
+    /**
+     * Test @IntDef when applied to multiple elements like arrays or varargs.
+     */
+    public void testIntDefMultiple() throws Exception {
+        assertEquals(""
+                + "src/test/pkg/IntDefMultiple.java:24: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
+                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/new int[]{VALUE_A, 0, VALUE_B}/**/); // ERROR;\n"
+                + "                                                                                   ~\n"
+                + "src/test/pkg/IntDefMultiple.java:31: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
+                + "        restrictedEllipsis(VALUE_A, /*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/, VALUE_B); // ERROR\n"
+                + "                                                                            ~\n"
+                + "src/test/pkg/IntDefMultiple.java:32: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
+                + "        restrictedEllipsis(/*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/); // ERROR\n"
+                + "                                                                   ~\n"
+                + "3 errors, 0 warnings\n",
+                lintProject(
+                        java("src/test/pkg/IntDefMultiple.java", ""
+                                + "package test.pkg;\n"
+                                + "import android.support.annotation.IntDef;\n"
+                                + "\n"
+                                + "public class IntDefMultiple {\n"
+                                + "    private static final int VALUE_A = 0;\n"
+                                + "    private static final int VALUE_B = 1;\n"
+                                + "\n"
+                                + "    private static final int[] VALID_ARRAY = {VALUE_A, VALUE_B};\n"
+                                + "    private static final int[] INVALID_ARRAY = {VALUE_A, 0, VALUE_B};\n"
+                                + "    private static final int[] INVALID_ARRAY2 = {10};\n"
+                                + "\n"
+                                + "    @IntDef({VALUE_A, VALUE_B})\n"
+                                + "    public @interface MyIntDef {}\n"
+                                + "\n"
+                                + "    @MyIntDef\n"
+                                + "    public int a = 0;\n"
+                                + "\n"
+                                + "    @MyIntDef\n"
+                                + "    public int[] b;\n"
+                                + "\n"
+                                + "    public void testCall() {\n"
+                                + "        restrictedArray(new int[]{VALUE_A}); // OK\n"
+                                + "        restrictedArray(new int[]{VALUE_A, VALUE_B}); // OK\n"
+                                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/new int[]{VALUE_A, 0, VALUE_B}/**/); // ERROR;\n"
+                                + "        restrictedArray(VALID_ARRAY); // OK\n"
+                                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/INVALID_ARRAY/**/); // ERROR\n"
+                                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/INVALID_ARRAY2/**/); // ERROR\n"
+                                + "\n"
+                                + "        restrictedEllipsis(VALUE_A); // OK\n"
+                                + "        restrictedEllipsis(VALUE_A, VALUE_B); // OK\n"
+                                + "        restrictedEllipsis(VALUE_A, /*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/, VALUE_B); // ERROR\n"
+                                + "        restrictedEllipsis(/*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/); // ERROR\n"
+                                + "        // Suppressed via older Android Studio inspection id:\n"
+                                + "        //noinspection ResourceType\n"
+                                + "        restrictedEllipsis(0); // SUPPRESSED\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private void restrictedEllipsis(@MyIntDef int... test) {}\n"
+                                + "\n"
+                                + "    private void restrictedArray(@MyIntDef int[] test) {}\n"
+                                + "}"),
+                        copy("src/android/support/annotation/IntDef.java.txt",
+                                "src/android/support/annotation/IntDef.java")));
+    }
+
+    /**
+     * Test @IntRange and @FloatRange support annotation applied to arrays and vargs.
+     */
+    public void testRangesMultiple() throws Exception {
+        assertEquals(""
+                + "src/test/pkg/RangesMultiple.java:22: Error: Value must be ≥ 10.0 (was 5.0) [Range]\n"
+                + "        varargsFloat(15.0f, 10.0f, /*Value must be ≥ 10.0 and ≤ 15.0 (was 5.0f)*/5.0f/**/); // ERROR\n"
+                + "                                                                                 ~~~~\n"
+                + "src/test/pkg/RangesMultiple.java:32: Error: Value must be ≤ 500 (was 510) [Range]\n"
+                + "        varargsInt(15, 10, /*Value must be ≥ 10 and ≤ 500 (was 510)*/510/**/); // ERROR\n"
+                + "                                                                     ~~~\n"
+                + "src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]\n"
+                + "        restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/new int[]{0, 500}/**/); // ERROR\n"
+                + "                                                           ~~~~~~~~~~~~~~~~~\n"
+                + "3 errors, 0 warnings\n",
+                lintProject(
+                        java("src/test/pkg/RangesMultiple.java", ""
+                                + "package test.pkg;\n"
+                                + "import android.support.annotation.FloatRange;\n"
+                                + "import android.support.annotation.IntRange;\n"
+                                + "\n"
+                                + "public class RangesMultiple {\n"
+                                + "    private static final float[] VALID_FLOAT_ARRAY = new float[] {10.0f, 12.0f, 15.0f};\n"
+                                + "    private static final float[] INVALID_FLOAT_ARRAY = new float[] {10.0f, 12.0f, 5.0f};\n"
+                                + "\n"
+                                + "    private static final int[] VALID_INT_ARRAY = new int[] {15, 120, 500};\n"
+                                + "    private static final int[] INVALID_INT_ARRAY = new int[] {15, 120, 5};\n"
+                                + "\n"
+                                + "    @FloatRange(from = 10.0, to = 15.0)\n"
+                                + "    public float[] a;\n"
+                                + "\n"
+                                + "    @IntRange(from = 10, to = 500)\n"
+                                + "    public int[] b;\n"
+                                + "\n"
+                                + "    public void testCall() {\n"
+                                + "        a = new float[2];\n"
+                                + "        a[0] = /*Value must be ≥ 10.0 and ≤ 15.0 (was 5f)*/5f/**/; // ERROR\n"
+                                + "        a[1] = 14f; // OK\n"
+                                + "        varargsFloat(15.0f, 10.0f, /*Value must be ≥ 10.0 and ≤ 15.0 (was 5.0f)*/5.0f/**/); // ERROR\n"
+                                + "        restrictedFloatArray(VALID_FLOAT_ARRAY); // OK\n"
+                                + "        restrictedFloatArray(/*Value must be ≥ 10.0 and ≤ 15.0*/INVALID_FLOAT_ARRAY/**/); // ERROR\n"
+                                + "        restrictedFloatArray(new float[]{10.5f, 14.5f}); // OK\n"
+                                + "        restrictedFloatArray(/*Value must be ≥ 10.0 and ≤ 15.0*/new float[]{12.0f, 500.0f}/**/); // ERROR\n"
+                                + "\n"
+                                + "\n"
+                                + "        b = new int[2];\n"
+                                + "        b[0] = /*Value must be ≥ 10 and ≤ 500 (was 5)*/5/**/; // ERROR\n"
+                                + "        b[1] = 100; // OK\n"
+                                + "        varargsInt(15, 10, /*Value must be ≥ 10 and ≤ 500 (was 510)*/510/**/); // ERROR\n"
+                                + "        restrictedIntArray(VALID_INT_ARRAY); // OK\n"
+                                + "        restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/INVALID_INT_ARRAY/**/); // ERROR\n"
+                                + "        restrictedIntArray(new int[]{50, 500}); // OK\n"
+                                + "        restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/new int[]{0, 500}/**/); // ERROR\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void restrictedIntArray(@IntRange(from = 10, to = 500) int[] a) {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void varargsInt(@IntRange(from = 10, to = 500) int... a) {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void varargsFloat(@FloatRange(from = 10.0, to = 15.0) float... a) {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void restrictedFloatArray(@FloatRange(from = 10.0, to = 15.0) float[] a) {\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "\n"),
+                        copy("src/android/support/annotation/IntRange.java.txt", "src/android/support/annotation/IntRange.java"),
+                        copy("src/android/support/annotation/FloatRange.java.txt", "src/android/support/annotation/FloatRange.java")));
+    }
+
+    public void testIntDefInBuilder() throws Exception {
+        // Ensure that we only check constants, not instance fields, when passing
+        // fields as arguments to typedef parameters.
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/Product.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.support.annotation.IntDef;\n"
+                                + "\n"
+                                + "import java.lang.annotation.Retention;\n"
+                                + "import java.lang.annotation.RetentionPolicy;\n"
+                                + "\n"
+                                + "public class Product {\n"
+                                + "    @IntDef({\n"
+                                + "         STATUS_AVAILABLE, STATUS_BACK_ORDER, STATUS_UNAVAILABLE\n"
+                                + "    })\n"
+                                + "    @Retention(RetentionPolicy.SOURCE)\n"
+                                + "    public @interface Status {\n"
+                                + "    }\n"
+                                + "    public static final int STATUS_AVAILABLE = 1;\n"
+                                + "    public static final int STATUS_BACK_ORDER = 2;\n"
+                                + "    public static final int STATUS_UNAVAILABLE = 3;\n"
+                                + "\n"
+                                + "    @Status\n"
+                                + "    private final int mStatus;\n"
+                                + "    private final String mName;\n"
+                                + "\n"
+                                + "    private Product(String name, @Status int status) {\n"
+                                + "        mName = name;\n"
+                                + "        mStatus = status;\n"
+                                + "    }\n"
+                                + "    public static class Builder {\n"
+                                + "        @Status\n"
+                                + "        private int mStatus;\n"
+                                + "        private final int mStatus2 = STATUS_AVAILABLE;\n"
+                                + "        private String mName;\n"
+                                + "\n"
+                                + "        public Builder(String name, @Status int status) {\n"
+                                + "            mName = name;\n"
+                                + "            mStatus = status;\n"
+                                + "        }\n"
+                                + "\n"
+                                + "        public Builder setStatus(@Status int status) {\n"
+                                + "            mStatus = status;\n"
+                                + "            return this;\n"
+                                + "        }\n"
+                                + "\n"
+                                + "        public Product build() {\n"
+                                + "            return new Product(mName, mStatus);\n"
+                                + "        }\n"
+                                + "\n"
+                                + "        public Product build2() {\n"
+                                + "            return new Product(mName, mStatus2);\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"),
+                        copy("src/android/support/annotation/IntDef.java.txt", "src/android/support/annotation/IntDef.java"))
+        );
+    }
 }
