@@ -24,6 +24,7 @@ import static com.android.SdkConstants.ATTR_CORE_APP;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.ATTR_SRC_COMPAT;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.TAG_LAYOUT;
@@ -37,6 +38,7 @@ import static com.android.resources.ResourceFolderType.INTERPOLATOR;
 import static com.android.resources.ResourceFolderType.LAYOUT;
 import static com.android.resources.ResourceFolderType.MENU;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -132,7 +134,7 @@ public class DetectMissingPrefix extends LayoutDetector {
             Element element = attribute.getOwnerElement();
             if (isCustomView(element) && context.getResourceFolderType() != null) {
                 return;
-            } else if (context.getResourceFolderType() == ResourceFolderType.LAYOUT) {
+            } else if (context.getResourceFolderType() == LAYOUT) {
                 // Data binding: These look like Android framework views but
                 // are data binding directives not in the Android namespace
                 Element root = element.getOwnerDocument().getDocumentElement();
@@ -157,8 +159,9 @@ public class DetectMissingPrefix extends LayoutDetector {
                     "Attribute is missing the Android namespace prefix");
         } else if (!ANDROID_URI.equals(uri)
                 && !TOOLS_URI.equals(uri)
-                && context.getResourceFolderType() == ResourceFolderType.LAYOUT
+                && context.getResourceFolderType() == LAYOUT
                 && !isCustomView(attribute.getOwnerElement())
+                && !isFragment(attribute.getOwnerElement())
                 && !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 // TODO: Consider not enforcing that the parent is a custom view
                 // too, though in that case we should filter out views that are
@@ -166,11 +169,17 @@ public class DetectMissingPrefix extends LayoutDetector {
                 // ....&& !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 && attribute.getOwnerElement().getParentNode().getNodeType() == Node.ELEMENT_NODE
                 && !isCustomView((Element) attribute.getOwnerElement().getParentNode())) {
-            if (context.getResourceFolderType() == ResourceFolderType.LAYOUT
+            if (context.getResourceFolderType() == LAYOUT
                     && AUTO_URI.equals(uri)) {
                 // Data binding: Can add attributes like onClickListener to buttons etc.
                 Element root = attribute.getOwnerDocument().getDocumentElement();
                 if (TAG_LAYOUT.equals(root.getTagName())) {
+                    return;
+                }
+
+                // Appcompat now encourages decorating standard views (like ImageView and
+                // ImageButton) with srcCompat in the app namespace
+                if (attribute.getLocalName().equals(ATTR_SRC_COMPAT)) {
                     return;
                 }
             }
@@ -180,6 +189,10 @@ public class DetectMissingPrefix extends LayoutDetector {
                     String.format("Unexpected namespace prefix \"%1$s\" found for tag `%2$s`",
                             attribute.getPrefix(), attribute.getOwnerElement().getTagName()));
         }
+    }
+
+    private static boolean isFragment(Element element) {
+        return SdkConstants.VIEW_FRAGMENT.equals(element.getTagName());
     }
 
     private static boolean isCustomView(Element element) {

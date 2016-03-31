@@ -51,6 +51,13 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
             lintFiles("res/layout/namespace2.xml"));
     }
 
+    public void testCustomAttributesOnFragment() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/fragment_custom_attrs.xml"));
+    }
+
     public void testManifest() throws Exception {
         assertEquals(
             "AndroidManifest.xml:4: Error: Attribute is missing the Android namespace prefix [MissingPrefix]\n" +
@@ -156,5 +163,25 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                         + "        </android.support.v7.widget.CardView>"
                         + "    </LinearLayout>\n"
                         + "</layout>")));
+    }
+
+    public void testAppCompat() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=201790
+        assertEquals("No warnings.",
+                lintProject(xml("res/layout/app_compat.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    android:orientation=\"vertical\">\n"
+                        + "\n"
+                        + "    <ImageButton\n"
+                        + "        android:id=\"@+id/vote_button\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        app:srcCompat=\"@mipmap/ic_launcher\" />\n"
+                        + "\n"
+                        + "</LinearLayout>")));
     }
 }

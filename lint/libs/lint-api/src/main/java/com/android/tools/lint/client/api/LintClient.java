@@ -87,10 +87,12 @@ public abstract class LintClient {
     private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";  //$NON-NLS-1$
 
     protected LintClient(@NonNull String clientName) {
+        //noinspection AssignmentToStaticFieldFromInstanceMethod
         sClientName = clientName;
     }
 
     protected LintClient() {
+        //noinspection AssignmentToStaticFieldFromInstanceMethod
         sClientName = "unknown";
     }
 
@@ -127,7 +129,7 @@ public abstract class LintClient {
             @NonNull Context context,
             @NonNull Issue issue,
             @NonNull Severity severity,
-            @Nullable Location location,
+            @NonNull Location location,
             @NonNull String message,
             @NonNull TextFormat format);
 
@@ -552,7 +554,7 @@ public abstract class LintClient {
                 File[] jars = libs.listFiles();
                 if (jars != null) {
                     for (File jar : jars) {
-                        if (LintUtils.endsWith(jar.getPath(), DOT_JAR)
+                        if (endsWith(jar.getPath(), DOT_JAR)
                                 && !libraries.contains(jar)) {
                             libraries.add(jar);
                         }
@@ -623,7 +625,7 @@ public abstract class LintClient {
      * projects are unique for a directory (in case we process a library project
      * before its including project for example)
      */
-    private Map<File, Project> mDirToProject;
+    protected Map<File, Project> mDirToProject;
 
     /**
      * Returns a project for the given directory. This should return the same
@@ -700,7 +702,7 @@ public abstract class LintClient {
         mDirToProject.put(canonicalDir, project);
     }
 
-    private Set<File> mProjectDirs = Sets.newHashSet();
+    protected Set<File> mProjectDirs = Sets.newHashSet();
 
     /**
      * Create a project for the given directory
@@ -828,7 +830,15 @@ public abstract class LintClient {
         // build tools, regardless of project metadata. In Gradle, this
         // method is overridden to use the actual build tools specified in the
         // project.
-        return sdk != null ? sdk.getLatestBuildTool(getRepositoryLogger()) : null;
+        if (sdk != null) {
+            IAndroidTarget compileTarget = getCompileTarget(project);
+            if (compileTarget != null) {
+                return compileTarget.getBuildToolInfo();
+            }
+            return sdk.getLatestBuildTool(getRepositoryLogger());
+        }
+
+        return null;
     }
 
     /**
@@ -1027,7 +1037,7 @@ public abstract class LintClient {
      * settings.
      *
      * @param url the URL to read
-     * @return a {@link java.net.URLConnection} or null
+     * @return a {@link URLConnection} or null
      * @throws IOException if any kind of IO exception occurs
      */
     @Nullable
@@ -1035,7 +1045,7 @@ public abstract class LintClient {
         return url.openConnection();
     }
 
-    /** Closes a connection previously returned by {@link #openConnection(java.net.URL)} */
+    /** Closes a connection previously returned by {@link #openConnection(URL)} */
     public void closeConnection(@NonNull URLConnection connection) throws IOException {
         if (connection instanceof HttpURLConnection) {
             ((HttpURLConnection)connection).disconnect();
@@ -1052,7 +1062,7 @@ public abstract class LintClient {
      */
     @SuppressWarnings("MethodMayBeStatic") // Intentionally instance method so it can be overridden
     public boolean isProjectDirectory(@NonNull File dir) {
-        return LintUtils.isManifestFolder(dir) || Project.isAospFrameworksProject(dir);
+        return LintUtils.isManifestFolder(dir) || Project.isAospFrameworksRelatedProject(dir);
     }
 
     /**

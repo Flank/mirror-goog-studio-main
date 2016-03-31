@@ -26,10 +26,13 @@ import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_SHRINK_MODE;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.PREFIX_ANDROID;
+import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_SAFE;
@@ -77,12 +80,12 @@ public class ResourceUsageModel {
     private static final int TYPICAL_RESOURCE_COUNT = 200;
 
     /** List of all known resources (parsed from R.java) */
-    private List<Resource> mResources = Lists.newArrayListWithExpectedSize(TYPICAL_RESOURCE_COUNT);
+    private final List<Resource> mResources = Lists.newArrayListWithExpectedSize(TYPICAL_RESOURCE_COUNT);
     /** Map from resource type to map from resource name to resource object */
-    private Map<ResourceType, Map<String, Resource>> mTypeToName =
+    private final Map<ResourceType, Map<String, Resource>> mTypeToName =
             Maps.newEnumMap(ResourceType.class);
     /** Map from R field value to corresponding resource */
-    private Map<Integer, Resource> mValueToResource =
+    private final Map<Integer, Resource> mValueToResource =
             Maps.newHashMapWithExpectedSize(TYPICAL_RESOURCE_COUNT);
 
     public static String getFieldName(Element element) {
@@ -801,26 +804,41 @@ public class ResourceUsageModel {
                     }
 
                     String value = attr.getValue();
-                    if (!(value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF))) {
+                    if (!(value.startsWith(PREFIX_RESOURCE_REF)
+                            || value.startsWith(PREFIX_THEME_REF))) {
                         continue;
                     }
                     ResourceUrl url = ResourceUrl.parse(value);
                     if (url != null && !url.framework) {
                         Resource resource;
                         if (url.create) {
-                            resource = declareResource(url.type, url.name, attr);
-                            if (!ATTR_ID.equals(attr.getLocalName()) || !ANDROID_URI.equals(attr.getNamespaceURI())) {
-                                // Declaring an id is not a reference to that id
-                                from.addReference(resource);
+                            boolean isId = ATTR_ID.equals(attr.getLocalName());
+                            if (isId && TAG_LAYOUT.equals(
+                                   element.getOwnerDocument().getDocumentElement().getTagName())) {
+                                // When using data binding (root <layout> tag) the id's will be
+                                // automatically bound (the binder will look through the layout
+                                // and find all the id's.)  Therefore, treat these as read for
+                                // now; longer term, it would be cool if we could track uses of
+                                // the binding field instead.
+                                markReachable(addResource(url.type, url.name, null));
+                            } else {
+                                resource = declareResource(url.type, url.name, attr);
+                                if (!isId || !ANDROID_URI.equals(attr.getNamespaceURI())) {
+                                    // Declaring an id is not a reference to that id
+                                    from.addReference(resource);
+                                }
                             }
                         } else {
                             resource = addResource(url.type, url.name, null);
                             from.addReference(resource);
                         }
-                    } else if (value.startsWith("@{")) {
+                    } else if (value.startsWith(PREFIX_BINDING_EXPR) ||
+                            value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)) {
                         // Data binding expression: there could be multiple references here
                         int length = value.length();
-                        int index = 2; // skip @{
+                        int index = value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)
+                                ? PREFIX_TWOWAY_BINDING_EXPR.length()
+                                : PREFIX_BINDING_EXPR.length();
                         while (true) {
                             index = value.indexOf('@', index);
                             if (index == -1) {
@@ -867,8 +885,8 @@ public class ResourceUsageModel {
                     NodeList children = node.getChildNodes();
                     for (int i = 0, n = children.getLength(); i < n; i++) {
                         Node child = children.item(i);
-                        if (child.getNodeType() == Element.TEXT_NODE
-                                || child.getNodeType() == Element.CDATA_SECTION_NODE) {
+                        if (child.getNodeType() == Node.TEXT_NODE
+                                || child.getNodeType() == Node.CDATA_SECTION_NODE) {
                             sb.append(child.getNodeValue());
                         }
                     }
@@ -1570,7 +1588,7 @@ public class ResourceUsageModel {
                             if (index > begin) {
                                 String name = s.substring(begin, index);
                                 Resource resource = addResource(type, name, null);
-                                ResourceUsageModel.markReachable(resource);
+                                markReachable(resource);
                             }
                         }
                         index--;
