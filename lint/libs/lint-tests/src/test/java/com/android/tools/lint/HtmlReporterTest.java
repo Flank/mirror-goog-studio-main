@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.ManifestDetector;
@@ -39,7 +40,7 @@ import java.util.List;
 public class HtmlReporterTest extends AbstractCheckTest {
     public void test() throws Exception {
         //noinspection ResultOfMethodCallIgnored
-        File projectDir = Files.createTempDir();
+        File projectDir = TestUtils.createTempDirDeletedOnExit();
         File buildDir = new File(projectDir, "build");
         File reportFile = new File(buildDir, "report");
         //noinspection ResultOfMethodCallIgnored
@@ -195,7 +196,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                     + "<br/>\n"
                     + "* The application cannot be translated to other languages by just adding new translations for existing string resources.<br/>\n"
                     + "<br/>\n"
-                    + "In Android Studio and Eclipse there are quickfixes to automatically extract this hardcoded string into a resource lookup.\n"
+                    + "There are quickfixes to automatically extract this hardcoded string into a resource lookup.\n"
                     + "</div>\n"
                     + "<br/><div class=\"moreinfo\">More info: </div><br/>To suppress this error, use the issue id \"HardcodedText\" as explained in the <a href=\"#SuppressInfo\">Suppressing Warnings and Errors</a> section.<br/>\n"
                     + "</div>\n"

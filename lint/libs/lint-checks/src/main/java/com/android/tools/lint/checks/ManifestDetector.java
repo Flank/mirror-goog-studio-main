@@ -47,7 +47,6 @@ import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildTypeContainer;
@@ -400,6 +399,8 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     /** Permission name of mock location permission */
     public static final String MOCK_LOCATION_PERMISSION =
             "android.permission.ACCESS_MOCK_LOCATION";   //$NON-NLS-1$
+    // Error message used by quick fix
+    public static final String MISSING_FULL_BACKUP_CONTENT_RESOURCE = "Missing `<full-backup-content>` resource";
 
     /** Constructs a new {@link ManifestDetector} check */
     public ManifestDetector() {
@@ -488,7 +489,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    @Nullable
+    @NonNull
     private Location getMainApplicationTagLocation(@NonNull Context context) {
         if (mApplicationTagHandle != null) {
             return mApplicationTagHandle.resolve();
@@ -499,7 +500,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             return Location.create(manifestFiles.get(0));
         }
 
-        return null;
+        return Location.NONE;
     }
 
     private static void checkDocumentElement(XmlContext context, Element element) {
@@ -841,7 +842,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                         && !resources.hasResourceItem(url.type, url.name)) {
                     Location location = context.getValueLocation(fullBackupNode);
                     context.report(ALLOW_BACKUP, fullBackupNode, location,
-                            "Missing `<full-backup-content>` resource");
+                            MISSING_FULL_BACKUP_CONTENT_RESOURCE);
                 }
             } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
                     && !context.getProject().isLibrary()

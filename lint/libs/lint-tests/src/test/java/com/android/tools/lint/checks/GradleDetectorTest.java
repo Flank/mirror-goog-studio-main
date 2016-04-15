@@ -43,6 +43,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
@@ -113,7 +114,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         if (mSdkDir == null) {
             // Make fake SDK "installation" such that we can predict the set
             // of Maven repositories discovered by this test
-            mSdkDir = Files.createTempDir();
+            mSdkDir = TestUtils.createTempDirDeletedOnExit();
 
             String[] paths = new String[]{
                     // Android repository
@@ -149,7 +150,10 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     "extras/google/m2repository/com/google/android/gms/play-services-wearable/5.0.77/play-services-wearable-5.0.77.aar",
                     "extras/google/m2repository/com/google/android/gms/play-services-wearable/6.1.11/play-services-wearable-6.1.11.aar",
                     "extras/google/m2repository/com/google/android/gms/play-services-wearable/6.1.71/play-services-wearable-6.1.71.aar",
-                    "extras/google/m2repository/com/google/android/support/wearable/1.0.0/wearable-1.0.0.aar"
+                    "extras/google/m2repository/com/google/android/support/wearable/1.0.0/wearable-1.0.0.aar",
+                    "extras/google/m2repository/com/google/android/wearable/wearable/1.0.0/wearable-1.0.0.aar",
+                    "extras/google//m2repository/com/google/android/support/wearable/1.2.0/wearable-1.2.0.aar",
+                    "extras/google//m2repository/com/google/android/support/wearable/1.3.0/wearable-1.3.0.aar"
             };
 
             for (String path : paths) {
@@ -238,10 +242,13 @@ public class GradleDetectorTest extends AbstractCheckTest {
             + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
             + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
             + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+            + "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n"
+            + "    compile 'com.google.android.support:wearable:1.2.0'\n"
+            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
             + "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
             + "    compile 'com.android.support:appcompat-v7:+'\n"
             + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "1 errors, 5 warnings\n",
+            + "1 errors, 6 warnings\n",
 
             lintProject("gradle/Dependencies.gradle=>build.gradle"));
     }
@@ -294,7 +301,10 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
                 + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 3 warnings\n",
+                + "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n"
+                + "    compile 'com.google.android.support:wearable:1.2.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n",
 
                 lintProject("gradle/Dependencies.gradle=>build.gradle"));
     }
@@ -595,7 +605,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     @Override
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @Nullable Location location, @NonNull String message) {
+            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
         if (issue == DEPENDENCY && message.startsWith("Using the appcompat library when ")) {
             // No data embedded in this specific message
             return;

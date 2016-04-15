@@ -357,6 +357,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         mColorResAnnotation
                 ));
     }
+
     public void testResourceType() throws Exception {
         assertEquals((SDK_ANNOTATIONS_AVAILABLE ? ""
                 + "src/p1/p2/Flow.java:13: Error: Expected resource of type drawable [ResourceType]\n"
@@ -380,7 +381,10 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/p1/p2/Flow.java:68: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        myMethod(z, null); // ERROR\n"
                 + "                 ~\n"
-                + (SDK_ANNOTATIONS_AVAILABLE ? "7 errors, 0 warnings\n" : "4 errors, 0 warnings\n"),
+                + "src/p1/p2/Flow.java:71: Error: Expected resource of type drawable [ResourceType]\n"
+                + "        myMethod(w, null); // ERROR\n"
+                + "                 ~\n"
+                + (SDK_ANNOTATIONS_AVAILABLE ? "8 errors, 0 warnings\n" : "5 errors, 0 warnings\n"),
 
                 lintProject(
                         copy("src/p1/p2/Flow.java.txt", "src/p1/p2/Flow.java"),
@@ -449,7 +453,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]\n"
                 + "        new ConstructorTest(1, 3);\n"
                 + "                               ~\n"
-                + "src/test/pkg/ConstructorTest.java:19: Error: Method test.pkg.ConstructorTest must be called from the UI thread, currently inferred thread is worker thread [WrongThread]\n"
+                + "src/test/pkg/ConstructorTest.java:19: Error: Constructor ConstructorTest must be called from the UI thread, currently inferred thread is worker thread [WrongThread]\n"
                 + "        new ConstructorTest(res, range);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "3 errors, 0 warnings\n",
@@ -535,24 +539,6 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "@SuppressWarnings(\"UnusedDeclaration\")\n"
                 + "public abstract class LocationManager {\n"
                 + "    @RequiresPermission(anyOf = {ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION})\n"
-                + "    public abstract Location myMethod(String provider);\n"
-                + "    public static class Location {\n"
-                + "    }\n"
-                + "}\n");
-
-        private final TestFile mComplexLocationManagerStub = java("src/android/location/LocationManager.java", ""
-                + "package android.location;\n"
-                + "\n"
-                + "import android.support.annotation.RequiresPermission;\n"
-                + "\n"
-                + "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n"
-                + "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n"
-                + "import static android.Manifest.permission.BLUETOOTH;\n"
-                + "import static android.Manifest.permission.READ_SMS;\n"
-                + "\n"
-                + "@SuppressWarnings(\"UnusedDeclaration\")\n"
-                + "public abstract class LocationManager {\n"
-                + "    @RequiresPermission(\"(\" + ACCESS_FINE_LOCATION + \"|| \" + ACCESS_COARSE_LOCATION + \") && (\" + BLUETOOTH + \" ^ \" + READ_SMS + \")\")\n"
                 + "    public abstract Location myMethod(String provider);\n"
                 + "    public static class Location {\n"
                 + "    }\n"
@@ -913,47 +899,6 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testComplexPermission1() throws Exception {
-        assertEquals(""
-                + "src/test/pkg/PermissionTest.java:7: Error: Missing permissions required by LocationManager.myMethod: android.permission.BLUETOOTH xor android.permission.READ_SMS [MissingPermission]\n"
-                + "        LocationManager.Location location = locationManager.myMethod(provider);\n"
-                + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(
-                        getManifestWithPermissions(14,
-                                "android.permission.ACCESS_FINE_LOCATION"),
-                        mPermissionTest,
-                        mComplexLocationManagerStub,
-                        mRequirePermissionAnnotation));
-    }
-
-    public void testComplexPermission2() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        getManifestWithPermissions(14,
-                                "android.permission.ACCESS_FINE_LOCATION",
-                                "android.permission.BLUETOOTH"),
-                        mPermissionTest,
-                        mComplexLocationManagerStub,
-                        mRequirePermissionAnnotation));
-    }
-
-    public void testComplexPermission3() throws Exception {
-        assertEquals(""
-                + "src/test/pkg/PermissionTest.java:7: Error: Missing permissions required by LocationManager.myMethod: android.permission.BLUETOOTH xor android.permission.READ_SMS [MissingPermission]\n"
-                + "        LocationManager.Location location = locationManager.myMethod(provider);\n"
-                + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(
-                        getManifestWithPermissions(14,
-                                "android.permission.ACCESS_FINE_LOCATION",
-                                "android.permission.BLUETOOTH",
-                                "android.permission.READ_SMS"),
-                        mPermissionTest,
-                        mComplexLocationManagerStub,
-                        mRequirePermissionAnnotation));
-    }
-
     public void testUsesPermissionSdk23() throws Exception {
         TestFile manifest = getManifestWithPermissions(14,
                 "android.permission.ACCESS_FINE_LOCATION",
@@ -966,7 +911,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 lintProject(
                         manifest,
                         mPermissionTest,
-                        mComplexLocationManagerStub,
+                        mLocationManagerStub,
                         mRequirePermissionAnnotation));
     }
 
@@ -982,7 +927,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 lintProject(
                         manifest,
                         mPermissionTest,
-                        mComplexLocationManagerStub,
+                        mLocationManagerStub,
                         mRequirePermissionAnnotation));
     }
 
@@ -1298,16 +1243,13 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
 
     public void testCombinedIntDefAndIntRange() throws Exception {
         assertEquals(""
-                        + "src/test/pkg/X.java:27: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG [WrongConstant]\n"
-                        + "        setDuration(UNRELATED); /// ERROR: Not right intdef, even if it's in the right number range\n"
-                        + "                    ~~~~~~~~~\n"
-                        + "src/test/pkg/X.java:28: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was -5) [WrongConstant]\n"
-                        + "        setDuration(-5); // ERROR (not right int def or value\n"
-                        + "                    ~~\n"
-                        + "src/test/pkg/X.java:29: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was 8) [WrongConstant]\n"
-                        + "        setDuration(8); // ERROR (not matching number range)\n"
-                        + "                    ~\n"
-                        + "3 errors, 0 warnings\n",
+                + "src/test/pkg/X.java:28: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was -5) [WrongConstant]\n"
+                + "        setDuration(-5); // ERROR (not right int def or value\n"
+                + "                    ~~\n"
+                + "src/test/pkg/X.java:29: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was 8) [WrongConstant]\n"
+                + "        setDuration(8); // ERROR (not matching number range)\n"
+                + "                    ~\n"
+                + "2 errors, 0 warnings\n",
                 lintProject(
                         getManifestWithPermissions(14, 23),
                         java("src/test/pkg/X.java", ""
@@ -1337,7 +1279,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "    }\n"
                                 + "\n"
                                 + "    public void test() {\n"
-                                + "        setDuration(UNRELATED); /// ERROR: Not right intdef, even if it's in the right number range\n"
+                                + "        setDuration(UNRELATED); /// OK within range\n"
                                 + "        setDuration(-5); // ERROR (not right int def or value\n"
                                 + "        setDuration(8); // ERROR (not matching number range)\n"
                                 + "        setDuration(8000); // OK (@IntRange applies)\n"
@@ -1674,6 +1616,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "        @Status\n"
                                 + "        private int mStatus;\n"
                                 + "        private final int mStatus2 = STATUS_AVAILABLE;\n"
+                                + "        @Status static final int DEFAULT_STATUS = Product.STATUS_UNAVAILABLE;\n"
                                 + "        private String mName;\n"
                                 + "\n"
                                 + "        public Builder(String name, @Status int status) {\n"
@@ -1693,9 +1636,100 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "        public Product build2() {\n"
                                 + "            return new Product(mName, mStatus2);\n"
                                 + "        }\n"
+                                + "\n"
+                                + "        public static Product build3() {\n"
+                                + "            return new Product(\"\", DEFAULT_STATUS);\n"
+                                + "        }\n"
                                 + "    }\n"
                                 + "}\n"),
                         copy("src/android/support/annotation/IntDef.java.txt", "src/android/support/annotation/IntDef.java"))
         );
+    }
+
+    public void testObtainStyledAttributes() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=201882
+        // obtainStyledAttributes normally expects a styleable but you can also supply a
+        // custom int array
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/ObtainTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.app.Activity;\n"
+                                + "import android.content.Context;\n"
+                                + "import android.content.res.TypedArray;\n"
+                                + "import android.graphics.Color;\n"
+                                + "import android.util.AttributeSet;\n"
+                                + "\n"
+                                + "public class ObtainTest {\n"
+                                + "    public static void test1(Activity activity, float[] foregroundHsv, float[] backgroundHsv) {\n"
+                                + "        TypedArray attributes = activity.obtainStyledAttributes(\n"
+                                + "                new int[] {\n"
+                                + "                        R.attr.setup_wizard_navbar_theme,\n"
+                                + "                        android.R.attr.colorForeground,\n"
+                                + "                        android.R.attr.colorBackground });\n"
+                                + "        Color.colorToHSV(attributes.getColor(1, 0), foregroundHsv);\n"
+                                + "        Color.colorToHSV(attributes.getColor(2, 0), backgroundHsv);\n"
+                                + "        attributes.recycle();\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static void test2(Context context, AttributeSet attrs, int defStyle) {\n"
+                                + "        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BezelImageView,\n"
+                                + "                defStyle, 0);\n"
+                                + "        a.getDrawable(R.styleable.BezelImageView_maskDrawable);\n"
+                                + "        a.recycle();\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void test(Context context, AttributeSet attrs) {\n"
+                                + "        int[] attrsArray = new int[] {\n"
+                                + "                android.R.attr.entries, // 0\n"
+                                + "                android.R.attr.labelFor\n"
+                                + "        };\n"
+                                + "        TypedArray ta = context.obtainStyledAttributes(attrs, attrsArray);\n"
+                                + "        if(null == ta) {\n"
+                                + "            return;\n"
+                                + "        }\n"
+                                + "        CharSequence[] entries = ta.getTextArray(0);\n"
+                                + "        CharSequence label = ta.getText(1);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static class R {\n"
+                                + "        public static class attr {\n"
+                                + "            public static final int setup_wizard_navbar_theme = 0x7f01003b;\n"
+                                + "        }\n"
+                                + "        public static class styleable {\n"
+                                + "            public static final int[] BezelImageView = {\n"
+                                + "                    0x7f01005d, 0x7f01005e, 0x7f01005f\n"
+                                + "            };\n"
+                                + "            public static final int BezelImageView_maskDrawable = 0;\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n")));
+    }
+
+    public void testAlias() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/FlagAlias.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.graphics.Canvas;\n"
+                                + "import android.graphics.RectF;\n"
+                                + "\n"
+                                + "@SuppressWarnings(\"unused\")\n"
+                                + "public class FlagAlias {\n"
+                                + "    private static final int CANVAS_SAVE_FLAGS =\n"
+                                + "            Canvas.CLIP_SAVE_FLAG |\n"
+                                + "                    Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |\n"
+                                + "                    Canvas.FULL_COLOR_LAYER_SAVE_FLAG;\n"
+                                + "    private RectF mBounds;\n"
+                                + "    private int mAlpha;\n"
+                                + "\n"
+                                + "\n"
+                                + "    public void draw(Canvas canvas) {\n"
+                                + "        canvas.saveLayerAlpha(mBounds, mAlpha, CANVAS_SAVE_FLAGS);\n"
+                                + "    }\n"
+                                + "}\n")
+                ));
     }
 }
