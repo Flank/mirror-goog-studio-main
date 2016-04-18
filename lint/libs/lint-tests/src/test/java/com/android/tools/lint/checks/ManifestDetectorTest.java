@@ -1263,6 +1263,8 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                             when(dependencies.getLibraries())
                                     .thenReturn(Collections.singleton(library));
                             AndroidArtifact artifact = mock(AndroidArtifact.class);
+                            when(artifact.getCompileDependencies()).thenReturn(dependencies);
+                            //noinspection deprecation
                             when(artifact.getDependencies()).thenReturn(dependencies);
                             Variant mockVariant = mock(Variant.class);
                             when(mockVariant.getMainArtifact()).thenReturn(artifact);
