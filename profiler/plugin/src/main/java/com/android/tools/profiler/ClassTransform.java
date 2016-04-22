@@ -35,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -51,8 +52,11 @@ abstract class ClassTransform extends Transform {
     @NonNull
     private final String mName;
 
-    public ClassTransform(String name) {
+    private final String[] mJarFilesToSkip;
+
+    public ClassTransform(String name, String[] jarFilesToSkip) {
         mName = name;
+        mJarFilesToSkip = jarFilesToSkip;
     }
 
     @NonNull
@@ -88,6 +92,16 @@ abstract class ClassTransform extends Transform {
         return String.format("%d_%s", number, name);
     }
 
+    //TODO Make this a regex, to cleanly support filtering.
+    private boolean isFileToSkip(File jarFile) {
+        for(String fileToSkip : mJarFilesToSkip) {
+            if (jarFile.getAbsolutePath().contains(fileToSkip)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws InterruptedException, IOException {
@@ -101,6 +115,12 @@ abstract class ClassTransform extends Transform {
                         Files.getNameWithoutExtension(inputJar.getName()));
                 File outputJar = invocation.getOutputProvider().getContentLocation(
                         name, jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
+
+                // Check if this is a file we should skip or not.
+                if (isFileToSkip(inputJar)) {
+                    FileUtils.copyFile(inputJar,outputJar);
+                    continue;
+                }
 
                 if (invocation.isIncremental()) {
                     switch (jarInput.getStatus()) {

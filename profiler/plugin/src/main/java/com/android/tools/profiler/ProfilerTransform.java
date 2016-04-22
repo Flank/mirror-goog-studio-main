@@ -18,6 +18,7 @@ package com.android.tools.profiler;
 
 import org.objectweb.asm.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,7 +26,7 @@ import java.io.OutputStream;
 public final class ProfilerTransform extends ClassTransform {
 
     public ProfilerTransform() {
-        super("profiler");
+        super("profiler", new String[] { "com.android.tools" + File.pathSeparator + "studio-profiler-lib" });
     }
 
     @Override
@@ -35,6 +36,7 @@ public final class ProfilerTransform extends ClassTransform {
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
         visitor = new NetworkingAdapter(visitor);
+        visitor = new EventAdapter(visitor);
 
         ClassReader cr = new ClassReader(in);
         cr.accept(visitor, 0);

@@ -15,11 +15,10 @@
  */
 package com.android.tools.profiler.support;
 
+import com.android.tools.profiler.support.profilers.EventProfiler;
 import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.NetworkProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
-
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +48,7 @@ public class ProfilerService {
 
     public ProfilerService() {
         mComponents = new ArrayList<ProfilerComponent>();
+        mComponents.add(new EventProfiler());
         mComponents.add(new NetworkProfiler());
         mComponents.add(new MemoryProfiler());
         nativeInitialize();
