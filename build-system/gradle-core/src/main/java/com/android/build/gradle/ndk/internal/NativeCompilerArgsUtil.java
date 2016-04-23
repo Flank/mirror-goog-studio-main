@@ -40,13 +40,16 @@ public final class NativeCompilerArgsUtil {
     public static List<String> transform(@NonNull Iterable<String> args) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String arg : args) {
-            String str = arg;
-            str = str.replace("\\", "\\\\").replace("\"", "\\\"");
-            if (WHITESPACE.matcher(str).find()) {
-                str = '\"' + str + '\"';
-            }
-            builder.add(str);
+            builder.add(transform(arg));
         }
         return builder.build();
+    }
+
+    public static String transform(@NonNull String arg) {
+        String str = arg.replace("\\", "\\\\").replace("\"", "\\\"");
+        if (WHITESPACE.matcher(str).find()) {
+            str = '\"' + str + '\"';
+        }
+        return str;
     }
 }

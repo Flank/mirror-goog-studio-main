@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.component
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.utils.FileUtils
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
@@ -102,7 +104,8 @@ include \$(BUILD_SHARED_LIBRARY)
     @Test
     void "check standalone lib properly creates library"() {
         // File a clang compiler.  Doesn't matter which one.
-        File compiler = new File(project.getNdkDir(), "ndk-build");
+        boolean isWindows = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
+        File compiler = new File(project.getNdkDir(), "ndk-build" + (isWindows ? ".cmd" : ""));
         GradleTestProject lib = project.getSubproject("lib")
         lib.buildFile << """
 apply plugin: "com.android.model.external"
@@ -111,7 +114,7 @@ model {
     nativeBuildConfig {
         libraries {
             create("foo") {
-                buildCommand "\\"${compiler.getPath()}\\" " +
+                buildCommand "\\"${FileUtils.toSystemIndependentPath(compiler.getPath())}\\" " +
                     "APP_BUILD_SCRIPT=Android.mk " +
                     "NDK_PROJECT_PATH=null " +
                     "NDK_OUT=build/intermediate " +
@@ -132,7 +135,7 @@ model {
             create("gcc") {
                 // Needs to be CCompilerExecutable instead of the more correct cCompilerExecutable,
                 // because of a stupid bug with Gradle.
-                CCompilerExecutable = "${compiler.getPath()}"
+                CCompilerExecutable = "${FileUtils.toSystemIndependentPath(compiler.getPath())}"
             }
         }
     }

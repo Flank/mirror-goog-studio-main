@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.component
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
+import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeFolder
@@ -173,8 +174,8 @@ model {
                         assertThat(cppSettings.compilerFlags).doesNotContain(expectedCppFlag)
                     }
                 }
-                assertThat(cSettings.compilerFlags).contains("-I" + project.file("src/main/headers"))
-                assertThat(cppSettings.compilerFlags).contains("-I" + project.file("src/main/headers"))
+                assertThat(cSettings.compilerFlags).contains(NativeCompilerArgsUtil.transform("-I" + project.file("src/main/headers")))
+                assertThat(cppSettings.compilerFlags).contains(NativeCompilerArgsUtil.transform("-I" + project.file("src/main/headers")))
             }
         }
     }

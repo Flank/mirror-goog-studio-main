@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.builder.model.NativeAndroidProject
@@ -35,6 +36,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  */
 @CompileStatic
 class ExternalNativeComponentPluginTest {
+
+    private final boolean isWindows =
+            SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -101,6 +105,8 @@ model {
 
     @Test
     public void "check configurations with multiple JSON data file"() {
+        File script = project.file(isWindows ? "generate_configs.cmd" : "generate_configs.sh");
+
         project.getBuildFile() << """
 apply plugin: 'com.android.model.external'
 
@@ -111,7 +117,7 @@ model {
                 file("config1.json"),
                 file("config2.json")
             ])
-            command "./generate_configs.sh"
+            command "${script.getAbsolutePath().replace("\\", "\\\\")}"
         }
         create {
             configs.addAll([
@@ -122,9 +128,7 @@ model {
     }
 }
 """
-        project.file("generate_configs.sh") << """
-echo '
-{
+        project.file("config1.json.template") << """{
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "foo-DEBUG" : {
@@ -142,9 +146,8 @@ echo '
             "cppCompilerExecutable" : "clang++"
         }
     }
-}' > config1.json
-echo '
-{
+}"""
+        project.file("config2.json.template") << """{
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "foo-RELEASE" : {
@@ -162,9 +165,13 @@ echo '
             "cppCompilerExecutable" : "clang++"
         }
     }
-}' > config2.json
+}"""
+        String copy = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS ? "copy" : "cp"
+        script << """
+${copy} ${project.file("config1.json.template")} ${project.file("config1.json")}
+${copy} ${project.file("config2.json.template")} ${project.file("config2.json")}
 """
-        project.file("generate_configs.sh").setExecutable(true)
+        script.setExecutable(true)
 
         project.file("config3.json") << """
 {

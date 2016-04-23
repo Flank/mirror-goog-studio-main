@@ -24,7 +24,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
@@ -418,7 +417,8 @@ public final class FileUtils {
         checkArgument(base.isDirectory(), "'%s' must be a directory.", base.getAbsolutePath());
         return Files.fileTreeTraverser()
                 .preOrderTraversal(base)
-                .filter(Predicates.compose(Predicates.contains(pattern), File::getPath))
+                .filter(file -> pattern.matcher(
+                        FileUtils.toSystemIndependentPath(file.getPath())).find())
                 .toList();
     }
 
@@ -429,7 +429,7 @@ public final class FileUtils {
         checkArgument(base.isDirectory(), "'%s' must be a directory.", base.getAbsolutePath());
         return Files.fileTreeTraverser()
                 .preOrderTraversal(base)
-                .filter(Predicates.compose(Predicates.equalTo(name), File::getName))
+                .filter(file -> name.equals(file.getName()))
                 .last();
     }
 
