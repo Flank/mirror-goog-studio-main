@@ -35,6 +35,7 @@ import com.android.sdklib.repository.NoPreviewRevision;
  * To query generic packages capabilities, rely on {@link #getType()} and the
  * {@code IPkgDesc.hasXxx()} methods provided by {@link IPkgDesc}.
  */
+@Deprecated
 public interface IPkgDescExtra extends IPkgDesc {
     /**
      * Returns an optional list of older paths for this extra package.

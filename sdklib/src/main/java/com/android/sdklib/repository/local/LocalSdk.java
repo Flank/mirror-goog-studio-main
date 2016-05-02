@@ -158,6 +158,7 @@ import java.util.*;
  * </ul>
  * @version 2 of the {@code SdkManager} class, essentially.
  */
+@Deprecated
 public class LocalSdk {
 
     /** Location of the SDK. Maybe null. Can be changed. */

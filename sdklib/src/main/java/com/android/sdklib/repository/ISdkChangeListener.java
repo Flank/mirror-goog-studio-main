@@ -22,6 +22,7 @@ package com.android.sdklib.repository;
  * This notifies when the SDK manager is first loading the SDK or before/after it installed
  * a package.
  */
+@Deprecated
 public interface ISdkChangeListener {
     /**
      * Invoked when the content of the SDK is being loaded by the SDK Manager UI

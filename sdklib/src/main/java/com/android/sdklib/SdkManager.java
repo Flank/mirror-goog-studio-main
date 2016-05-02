@@ -50,6 +50,7 @@ import java.util.TreeSet;
  * @see PlatformTarget
  * @see AddOnTarget
  */
+@Deprecated
 public class SdkManager {
 
     @SuppressWarnings("unused")

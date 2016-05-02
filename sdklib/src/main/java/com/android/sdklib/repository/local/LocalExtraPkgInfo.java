@@ -27,6 +27,7 @@ import com.android.sdklib.repository.descriptors.PkgDesc;
 import java.io.File;
 import java.util.Properties;
 
+@Deprecated
 public class LocalExtraPkgInfo extends LocalPkgInfo {
 
     @NonNull

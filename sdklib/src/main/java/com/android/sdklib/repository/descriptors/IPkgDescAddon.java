@@ -30,6 +30,7 @@ import com.android.annotations.NonNull;
  * To query generic packages capabilities, rely on {@link #getType()} and the
  * {@code IPkgDesc.hasXxx()} methods provided by {@link IPkgDesc}.
  */
+@Deprecated
 public interface IPkgDescAddon extends IPkgDesc {
 
     /**

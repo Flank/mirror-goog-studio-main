@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
  *
  *  @see FullRevision
  */
+@Deprecated
 public class NoPreviewRevision extends FullRevision {
 
     public NoPreviewRevision(int major) {

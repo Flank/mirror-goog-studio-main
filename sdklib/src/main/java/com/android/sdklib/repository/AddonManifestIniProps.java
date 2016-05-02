@@ -23,6 +23,7 @@ package com.android.sdklib.repository;
  * Once published we can't change them arbitrarily since various parts
  * of our build process depend on them.
  */
+@Deprecated
 public class AddonManifestIniProps {
 
     /**

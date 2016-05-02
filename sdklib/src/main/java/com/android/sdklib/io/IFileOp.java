@@ -31,6 +31,7 @@ import java.util.Properties;
  * <p/>
  * This makes it possible to override/mock/stub some file operations in unit tests.
  */
+@Deprecated
 public interface IFileOp {
 
     /**

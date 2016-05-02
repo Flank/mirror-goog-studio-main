@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  *
  *  @see MajorRevision
  */
+@Deprecated
 public class FullRevision implements Comparable<FullRevision> {
 
     public static final int MISSING_MAJOR_REV  = 0;

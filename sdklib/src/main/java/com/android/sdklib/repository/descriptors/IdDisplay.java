@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 /**
  * Immutable structure that represents a tuple (id-string  + display-string.)
  */
+@Deprecated
 public final class IdDisplay implements Comparable<IdDisplay> {
 
     private final String mId;

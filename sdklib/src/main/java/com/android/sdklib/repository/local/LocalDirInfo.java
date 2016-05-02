@@ -46,6 +46,7 @@ import java.util.zip.Adler32;
  * into a map and still call {@link Map#containsKey(Object)} with a File
  * object to check whether there's a corresponding DirInfo in the map.
  */
+@Deprecated
 class LocalDirInfo {
     @NonNull
     private final IFileOp mFileOp;

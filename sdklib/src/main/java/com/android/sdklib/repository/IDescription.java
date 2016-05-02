@@ -19,6 +19,7 @@ package com.android.sdklib.repository;
 /**
  * Interface for elements that can provide a description of themselves.
  */
+@Deprecated
 public interface IDescription {
 
     /**

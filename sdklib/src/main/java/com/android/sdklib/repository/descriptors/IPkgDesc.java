@@ -39,6 +39,7 @@ import java.io.File;
  * To query packages capabilities, rely on {@link #getType()} and the {@code IPkgDesc.hasXxx()}
  * methods provided by {@link IPkgDesc}.
  */
+@Deprecated
 public interface IPkgDesc extends Comparable<IPkgDesc>, IPkgCapabilities, IListDescription {
 
     /**

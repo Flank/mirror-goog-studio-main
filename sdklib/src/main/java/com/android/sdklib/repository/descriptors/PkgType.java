@@ -33,6 +33,7 @@ import java.util.EnumSet;
  * compatibility with the older {@link LocalSdkParser} class.
  * The integer bit values also indicate the natural ordering of the packages.
  */
+@Deprecated
 public enum PkgType implements IPkgCapabilities {
 
     // Boolean attributes below, in that order:
