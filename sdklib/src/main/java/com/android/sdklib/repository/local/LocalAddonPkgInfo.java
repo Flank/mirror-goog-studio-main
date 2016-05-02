@@ -45,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("MethodMayBeStatic")
+@Deprecated
 public class LocalAddonPkgInfo extends LocalPlatformPkgInfo {
 
     private static final Pattern PATTERN_LIB_DATA = Pattern.compile(

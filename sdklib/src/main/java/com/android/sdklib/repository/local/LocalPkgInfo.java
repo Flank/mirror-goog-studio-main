@@ -34,6 +34,7 @@ import java.util.Properties;
  * Instead please use the {@link LocalSdk} methods to parse and retrieve packages.
  * <p/>
  */
+@Deprecated
 public abstract class LocalPkgInfo
         implements IDescription, IListDescription, Comparable<LocalPkgInfo> {
 

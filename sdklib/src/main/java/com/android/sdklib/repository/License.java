@@ -31,6 +31,7 @@ import java.io.IOException;
 /**
  * License text, with an optional license XML reference.
  */
+@Deprecated
 public class License {
     private final String mLicense;
     private final String mLicenseRef;

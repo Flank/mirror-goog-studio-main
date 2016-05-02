@@ -35,6 +35,7 @@ import javax.xml.transform.stream.StreamSource;
 /**
  * Utilities related to the respository XSDs.
  */
+@Deprecated
 public class RepoXsdUtil {
 
     public static final String NODE_IMPORT = "import";

@@ -28,6 +28,7 @@ import com.android.sdklib.repository.MajorRevision;
  * Do not use this class directly.
  * To create an instance use {@link PkgDesc.Builder#newAddon} instead.
  */
+@Deprecated
 final class PkgDescAddon extends PkgDesc implements IPkgDescAddon {
 
     private final IdDisplay mAddonName;

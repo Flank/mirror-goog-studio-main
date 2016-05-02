@@ -26,6 +26,7 @@ import com.android.sdklib.repository.MajorRevision;
 /**
  * Implementation detail of {@link IPkgDescExtra} for extra packages.
  */
+@Deprecated
 public final class PkgDescExtra extends PkgDesc implements IPkgDescExtra {
 
     private final String[] mOldPaths;

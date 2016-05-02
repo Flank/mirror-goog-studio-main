@@ -33,6 +33,7 @@ import java.util.Properties;
 /**
  * Misc utilities to help extracting elements and attributes out of a repository XML document.
  */
+@Deprecated
 class PackageParserUtils {
   /**
    * Utility method to parse the {@link PkgProps#PKG_REVISION} property as a full

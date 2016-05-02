@@ -29,6 +29,7 @@ import com.android.sdklib.repository.MajorRevision;
  * @see PkgType
  * @see PkgDesc
  */
+@Deprecated
 public interface IPkgCapabilities {
 
     /**

@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
  * This is vital when referencing Gradle artifact numbers,
  * since versions x.y.0 and version x.y are not the same.
  */
+@Deprecated
 public class PreciseRevision extends FullRevision {
     private final int mPrecision;
 

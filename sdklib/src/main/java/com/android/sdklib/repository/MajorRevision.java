@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
  * provide minor, micro and preview revision numbers -- these are all
  * set to zero.
  */
+@Deprecated
 public class MajorRevision extends FullRevision {
 
     public MajorRevision(FullRevision fullRevision) {

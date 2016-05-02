@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 @SuppressWarnings("ConstantConditions")
+@Deprecated
 public class LocalPlatformPkgInfo extends LocalPkgInfo {
 
     public static final String PROP_VERSION_SDK      = "ro.build.version.sdk";      //$NON-NLS-1$

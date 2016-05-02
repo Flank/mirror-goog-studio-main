@@ -46,6 +46,7 @@ import java.util.Locale;
  * To query packages capabilities, rely on {@link #getType()} and the {@code PkgDesc.hasXxx()}
  * methods provided in the base {@link PkgDesc}.
  */
+@Deprecated
 public class PkgDesc implements IPkgDesc {
     public static final String PREVIEW_SUFFIX = "-preview";
     private final PkgType mType;

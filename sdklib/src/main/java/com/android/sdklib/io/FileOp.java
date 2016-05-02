@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
  * <p/>
  * This makes it possible to override/mock/stub some file operations in unit tests.
  */
+@Deprecated
 public class FileOp implements IFileOp {
 
     public static final File[] EMPTY_FILE_ARRAY = new File[0];

@@ -34,6 +34,7 @@ import java.util.Locale;
  * Describes a system image as used by an {@link IAndroidTarget}.
  * A system image has an installation path, a location type, a tag and an ABI type.
  */
+@Deprecated
 public class SystemImage implements ISystemImage {
 
     public static final IdDisplay DEFAULT_TAG = new IdDisplay("default",    //$NON-NLS-1$

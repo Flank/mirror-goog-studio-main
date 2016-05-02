@@ -27,6 +27,7 @@ import java.util.Properties;
 /**
  * Local package representing the Android NDK
  */
+@Deprecated
 public class LocalNdkPkgInfo extends LocalPkgInfo {
   @NonNull
   private final IPkgDesc mDesc;

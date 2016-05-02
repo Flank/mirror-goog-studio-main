@@ -30,6 +30,7 @@ import java.util.Properties;
  * The package itself has a major revision.
  * There should be only one for a given android platform version.
  */
+@Deprecated
 public class LocalSourcePkgInfo extends LocalPkgInfo {
 
     @NonNull
