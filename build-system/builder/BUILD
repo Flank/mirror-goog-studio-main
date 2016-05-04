@@ -25,6 +25,7 @@ maven_java_library(
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",
+        "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",

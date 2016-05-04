@@ -155,7 +155,7 @@ public class SignedJarApkCreator implements ApkCreator {
 
             mSignatureAlgorithm =
                     SignatureAlgorithm.fromKeyAlgorithm(mKey.getAlgorithm(), mMinSdkVersion);
-            mDigestAlgorithm = DigestAlgorithm.findBest(mMinSdkVersion, mSignatureAlgorithm);
+            mDigestAlgorithm = findBestDigestAlgorithm(mMinSdkVersion, mSignatureAlgorithm);
             mMessageDigest = MessageDigest.getInstance(mDigestAlgorithm.messageDigestName);
         }
     }
@@ -173,6 +173,31 @@ public class SignedJarApkCreator implements ApkCreator {
             }
 
             writeEntry(fis, entry);
+        }
+    }
+
+    /**
+     * Finds the best digest algorithm applicable for a given SDK.
+     *
+     * @param minSdk the minimum SDK
+     * @param signatureAlgorithm signature algorithm used
+     * @return the best algorithm found
+     */
+    @NonNull
+    private static DigestAlgorithm findBestDigestAlgorithm(
+            int minSdk,
+            @NonNull SignatureAlgorithm signatureAlgorithm) {
+        if (signatureAlgorithm == SignatureAlgorithm.RSA) {
+            // PKCS #7 RSA signatures with SHA-256 are supported only since API Level 18 (JB MR2).
+            return minSdk >= DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA
+                    ? DigestAlgorithm.SHA256 : DigestAlgorithm.SHA1;
+        } else {
+            // PKCS #7 ECDSA sigantures with SHA-256 are supported only since API Level 18 (JB MR2)
+            // but the signature generation code in this class generates ECDSA signatures which are
+            // only supported since API Level 21 (Android L).
+            // DSA signatures with SHA-256 are supported only since API Level 21 (Android L).
+            return minSdk >= DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS
+                    ? DigestAlgorithm.SHA256 : DigestAlgorithm.SHA1;
         }
     }
 

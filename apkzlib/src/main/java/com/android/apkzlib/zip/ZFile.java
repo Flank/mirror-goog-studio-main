@@ -22,7 +22,6 @@ import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
-import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -40,12 +39,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -810,7 +811,7 @@ public class ZFile implements Closeable {
     /**
      * Updates the file writing new entries and removing deleted entries. This will force
      * reopening the file as read/write if the file wasn't open in read/write mode.
-     * 
+     *
      * @throws IOException failed to update the file; this exception may have been thrown by
      * the compressor but only reported here
      */
@@ -2068,6 +2069,22 @@ public class ZFile implements Closeable {
     }
 
     /**
+     * Returns the current size (in bytes) of the underlying file.
+     *
+     * @throws IOException if an I/O error occurs
+     */
+    public long directSize() throws IOException {
+        /*
+         * Only force a reopen if the file is closed.
+         */
+        if (mRaf == null) {
+            reopenRw();
+            assert mRaf != null;
+        }
+        return mRaf.length();
+    }
+
+    /**
      * Directly reads data from the zip file. Invoking this method may force the zip to be reopened
      * in read/write mode.
      *
@@ -2081,16 +2098,29 @@ public class ZFile implements Closeable {
      */
     public int directRead(long offset, @Nonnull byte[] data, int start, int count)
             throws IOException {
-        Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkArgument(start >= 0, "start >= 0");
         Preconditions.checkArgument(count >= 0, "count >= 0");
-
-        if (data.length == 0) {
-            return 0;
-        }
-
         Preconditions.checkArgument(start <= data.length, "start > data.length");
         Preconditions.checkArgument(start + count <= data.length, "start + count > data.length");
+        return directRead(offset, ByteBuffer.wrap(data, start, count));
+    }
+
+    /**
+     * Directly reads data from the zip file. Invoking this method may force the zip to be reopened
+     * in read/write mode.
+     *
+     * @param offset the offset from which data should be read
+     * @param dest the output buffer to fill with data from the {@code offset}.
+     * @return how many bytes of data have been written or {@code -1} if there are no more bytes
+     * to be read
+     * @throws IOException failed to write the data
+     */
+    public int directRead(long offset, @Nonnull ByteBuffer dest) throws IOException {
+        Preconditions.checkArgument(offset >= 0, "offset < 0");
+
+        if (!dest.hasRemaining()) {
+            return 0;
+        }
 
         /*
          * Only force a reopen if the file is closed.
@@ -2101,7 +2131,7 @@ public class ZFile implements Closeable {
         }
 
         mRaf.seek(offset);
-        return mRaf.read(data, start, count);
+        return mRaf.getChannel().read(dest);
     }
 
     /**
@@ -2116,7 +2146,7 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Reads exactly @code data.length} bytes of data, failing if it was not possible to read all
+     * Reads exactly {@code data.length} bytes of data, failing if it was not possible to read all
      * the requested data.
      *
      * @param offset the offset at which to start reading
@@ -2124,11 +2154,42 @@ public class ZFile implements Closeable {
      * @throws IOException failed to read some data or there is not enough data to read
      */
     public void directFullyRead(long offset, @Nonnull byte[] data) throws IOException {
-        Preconditions.checkArgument(offset >= 0, "offset < 0");
-        Preconditions.checkNotNull(mRaf, "File is closed");
+        directFullyRead(offset, ByteBuffer.wrap(data));
+    }
 
-        mRaf.seek(offset);
-        RandomAccessFileUtils.fullyRead(mRaf, data);
+    /**
+     * Reads exactly {@code dest.remaining()} bytes of data, failing if it was not possible to read
+     * all the requested data.
+     *
+     * @param offset the offset at which to start reading
+     * @param dest the output buffer to fill with data
+     * @throws IOException failed to read some data or there is not enough data to read
+     */
+    public void directFullyRead(long offset, @Nonnull ByteBuffer dest) throws IOException {
+        Preconditions.checkArgument(offset >= 0, "offset < 0");
+
+        if (!dest.hasRemaining()) {
+            return;
+        }
+
+        /*
+         * Only force a reopen if the file is closed.
+         */
+        if (mRaf == null) {
+            reopenRw();
+            assert mRaf != null;
+        }
+
+        FileChannel fileChannel = mRaf.getChannel();
+        while (dest.hasRemaining()) {
+            fileChannel.position(offset);
+            int chunkSize = fileChannel.read(dest);
+            if (chunkSize == -1) {
+                throw new EOFException(
+                        "Failed to read " + dest.remaining() + " more bytes: premature EOF");
+            }
+            offset += chunkSize;
+        }
     }
 
     /**

@@ -30,7 +30,7 @@ and will change the zip file itself.
 <p>
 The {@link com.android.apkzlib.sign.ManifestGenerationExtension} extension will
 ensure the zip has a manifest file and is, therefore, a valid jar.
-The {@link com.android.apkzlib.sign.SignatureExtension} extension will
+The {@link com.android.apkzlib.sign.SigningExtension} extension will
 ensure the jar is signed.
 <p>
 The extension mechanism used is the one provided in the {@code zip} package (see
@@ -72,7 +72,7 @@ follows (if only the manifest generation extension was added to the {@code ZFile
     <li>The zip is finally written with an updated manifest.</li>
 </ol>
 <p>
-To generate a signed apk (v1), we need to add a second extension, the {@code SignatureExtension}.
+To generate a signed apk, we need to add a second extension, the {@code SigningExtension}.
 This extension will also register listeners with the {@code ZFile}.
 <p>
 In this case the flow would be (starting a bit earlier for clarity and assuming a package task
@@ -85,9 +85,9 @@ in the build process):
     <li>Package task registers the {@code ManifestGenerationExtension} with the {@code ZFile}.</li>
     <li>The {@code ManifestGenerationExtension} looks at the {@code ZFile} to see if there is valid
     manifest. No changes are done to the {@code ZFile}.</li>
-    <li>Package task creates a {@code SignatureExtension}.</li>
-    <li>Package task registers the {@code SignatureExtension} with the {@code ZFile}.</li>
-    <li>The {@code SignatureExtension} registers a {@code ZFileExtension} with the {@code ZFile}
+    <li>Package task creates a {@code SigningExtension}.</li>
+    <li>Package task registers the {@code SigningExtension} with the {@code ZFile}.</li>
+    <li>The {@code SigningExtension} registers a {@code ZFileExtension} with the {@code ZFile}
     and look at the {@code ZFile} to see if there is a valid signature file.</li>
     <li>If there are changes to the digital signature file needed, these are marked internally in
     the extension. If there are changes needed to the digests, the manifest is updated (by calling
@@ -100,7 +100,7 @@ in the build process):
     <li>For each file that is added (*), {@code ZFile} calls the added {@code ZFileExtension.added}
     method of all registered extensions.</li>
     <li>The {@code ManifestGenerationExtension} ignores added invocations.</li>
-    <li>The {@code SignatureExtension} computes the digest for the added file and stores them in
+    <li>The {@code SigningExtension} computes the digest for the added file and stores them in
     the manifest.<br>
     <em>(when all files are added to the apk, all digests are computed and the manifest is updated
     but only in memory; the apk file has not been touched; also note that {@code ZFile} has not
@@ -108,15 +108,15 @@ in the build process):
     <li>Package task calls {@code ZFile.update()} to update the apk.</li>
     <li>{@code ZFile} calls {@code before()} for all {@code ZFileExtensions} registered. This is
     done before anything is written. In this case both the {@code ManifestGenerationExtension} and
-    {@code SignatureExtension} are invoked.</li>
+    {@code SigningExtension} are invoked.</li>
     <li>The {@code ManifestGenerationExtension} will update the {@code ZFile} with the new manifest,
     unless nothing has changed, in which case it does nothing.</li>
-    <li>The {@code SignatureExtension} will add the SF file (unless nothing has changed), will
+    <li>The {@code SigningExtension} will add the SF file (unless nothing has changed), will
     compute the digital signature of the SF file and write it to the {@code ZFile}.<br>
     <em>(note that the order by which the {@code ManifestGenerationExtension} and
-    {@code SignatureExtension} are called is non-deterministic; however, this is not a problem
+    {@code SigningExtension} are called is non-deterministic; however, this is not a problem
     because the manifest is already computed by the {@code ManifestGenerationExtension} at this
-    time and the {@code SignatureExtension} will obtain the manifest data from the
+    time and the {@code SigningExtension} will obtain the manifest data from the
     {@code ManifestGenerationExtension} and not from the {@code ZFile}; this means that the
     {@code SF} file may be added to the {@code ZFile} before the {@code MF} file, but that is
     irrelevant.)</em></li>
@@ -124,9 +124,8 @@ in the build process):
     {@code ZFile.update()} method continues.</li>
     <li>{@code ZFile.update()} writes all changes and new entries to the zip file.</li>
     <li>{@code ZFile.update()} calls {@code ZFileExtension.entriesWritten()} for all
-    registered extensions. Both the {@code ManifestGenerationExtension} and
-    {@code SignatureExtension} ignore this notification -- but the {@code FullApkSignExtension} will
-    kick in at this point, if it has been created.</li>
+    registered extensions. {@code SigningExtension} will kick in at this point, if v2 signature
+    has changed.</li>
     <li>{@code ZFile} writes the central directory and EOCD.</li>
     <li>{@code ZFile.update()} returns control to the package task.</li>
     <li>The package task finishes.</li>
@@ -139,17 +138,15 @@ zip).</em>
 <p>
 If there are no changes to the {@code ZFile} made by the package task and the file's manifest and v1
 signatures are correct, neither the {@code ManifestGenerationExtension} nor the
-{@code SignatureExtension} will not do anything on the {@code beforeUpdate()} and the
+{@code SigningExtension} will not do anything on the {@code beforeUpdate()} and the
 {@code ZFile} won't even be open for writing.
 <p>
 This implementation provides perfect incremental updates.
 <p>
 Additionally, by adding/removing extensions we can configure what type of apk we want:
 <ul>
-    <li>No SignatureExtension &amp; No FullApkSignExtension ⇒ Aligned, unsigned apk.</li>
-    <li>Signature Extension &amp; No FullApkSignExtension ⇒ Aligned, v1 only signed apk.</li>
-    <li>Signature Extension &amp; FullApkSignExtension ⇒ Aligned, v1 &amp; v2 signed apk.</li>
-    <li>No Signature Extension &amp; FullApkSignExtension ⇒ Aligned, v2 only signed apk.</li>
+    <li>No SigningExtension ⇒ Aligned, unsigned apk.</li>
+    <li>SigningExtension ⇒ Aligned, signed apk.
 </ul>
 So, by configuring which extensions to add, the package task can decide what type of apk we want.
 */

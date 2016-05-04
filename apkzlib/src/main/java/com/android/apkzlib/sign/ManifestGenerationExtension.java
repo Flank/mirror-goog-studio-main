@@ -24,12 +24,10 @@ import com.android.apkzlib.zip.ZFile;
 import com.android.apkzlib.zip.ZFileExtension;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
-import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import javax.annotation.Nonnull;
@@ -56,12 +54,12 @@ public class ManifestGenerationExtension {
     /**
      * Name of META-INF directory.
      */
-    public static final String META_INF_DIR = "META-INF";
+    private static final String META_INF_DIR = "META-INF";
 
     /**
      * Name of the manifest file.
      */
-    public static final String MANIFEST_NAME = META_INF_DIR + "/MANIFEST.MF";
+    static final String MANIFEST_NAME = META_INF_DIR + "/MANIFEST.MF";
 
     /**
      * Who should be reported as the manifest builder.
@@ -242,105 +240,5 @@ public class ManifestGenerationExtension {
 
         mZFile.add(MANIFEST_NAME, new ByteArrayInputStream(mManifestBytes.get()));
         mDirty = false;
-    }
-
-    /**
-     * Obtains the {@link ZFile} this extension is associated with. This method can only be invoked
-     * after {@link #register(ZFile)} has been invoked.
-     *
-     * @return the {@link ZFile}
-     */
-    @Nonnull
-    public ZFile zFile() {
-        Preconditions.checkNotNull(mZFile, "mZFile == null");
-        return mZFile;
-    }
-
-    /**
-     * Obtains the stored entry in the {@link ZFile} that contains the manifest. This method can
-     * only be invoked after {@link #register(ZFile)} has been invoked.
-     *
-     * @return the entry, {@code null} if none
-     */
-    @Nullable
-    public StoredEntry manifestEntry() {
-        Preconditions.checkNotNull(mZFile, "mZFile == null");
-        return mZFile.get(MANIFEST_NAME);
-    }
-
-    /**
-     * Obtains an attribute of an entry.
-     *
-     * @param entryName the name of the entry
-     * @param attr the name of the attribute
-     * @return the attribute value or {@code null} if the entry does not have any attributes or
-     * if it doesn't have the specified attribute
-     */
-    @Nullable
-    public String getAttribute(@Nonnull String entryName, @Nonnull String attr) {
-        Attributes attrs = mManifest.getAttributes(entryName);
-        if (attrs == null) {
-            return null;
-        }
-
-        return attrs.getValue(attr);
-    }
-
-    /**
-     * Sets the value of an attribute of an entry. If this entry's attribute already has the given
-     * value, this method does nothing.
-     *
-     * @param entryName the name of the entry
-     * @param attr the name of the attribute
-     * @param value the attribute value
-     */
-    public void setAttribute(@Nonnull String entryName, @Nonnull String attr,
-            @Nonnull String value) {
-        Attributes attrs = mManifest.getAttributes(entryName);
-        if (attrs == null) {
-            attrs = new Attributes();
-            markDirty();
-            mManifest.getEntries().put(entryName, attrs);
-        }
-
-        String current = attrs.getValue(attr);
-        if (!value.equals(current)) {
-            attrs.putValue(attr, value);
-            markDirty();
-        }
-    }
-
-    /**
-     * Obtains the current manifest.
-     *
-     * @return a byte sequence representation of the manifest that is guaranteed not to change if
-     * the manifest is not modified
-     * @throws IOException failed to compute the manifest's byte representation
-     */
-    @Nonnull
-    public byte[] getManifestBytes() throws IOException {
-        return mManifestBytes.get();
-    }
-
-    /**
-     * Obtains all entries and all attributes they have in the manifest.
-     *
-     * @return a map that relates entry names to entry attributes
-     */
-    @Nonnull
-    public Map<String, Attributes> allEntries() {
-        return Maps.newHashMap(mManifest.getEntries());
-    }
-
-    /**
-     * Removes an entry from the manifest. If no entry exists with the given name, this operation
-     * does nothing.
-     *
-     * @param name the entry's name
-     */
-    public void removeEntry(@Nonnull String name) {
-        if (mManifest.getEntries().remove(name) != null) {
-            markDirty();
-        }
     }
 }
