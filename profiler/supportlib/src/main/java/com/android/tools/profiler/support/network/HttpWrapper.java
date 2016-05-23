@@ -15,16 +15,13 @@
  */
 package com.android.tools.profiler.support.network;
 
-import com.android.tools.profiler.support.network.HttpURLConnection$;
-import com.android.tools.profiler.support.network.HttpsURLConnection$;
-
-import javax.net.ssl.HttpsURLConnection;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -54,6 +51,7 @@ public final class HttpWrapper {
      *
      * url.openConnection() ⇒ HttpWrapper.wrapURLConnection(url.openConnection())
      */
+    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static URLConnection wrapURLConnection(URLConnection wrapped) {
         return wrapURLConnectionHelper(wrapped);
     }
@@ -63,6 +61,7 @@ public final class HttpWrapper {
      *
      * url.openStream() ⇒ HttpWrapper.wrapOpenStream(url)
      */
+    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static InputStream wrapOpenStream(URL url) throws IOException {
         return wrapURLConnectionHelper(url.openConnection()).getInputStream();
     }
@@ -72,6 +71,7 @@ public final class HttpWrapper {
      *
      * url.getContent() ⇒ HttpWrapper.wrapGetContent(url)
      */
+    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static Object wrapGetContent(URL url) throws IOException {
         return wrapURLConnectionHelper(url.openConnection()).getContent();
     }
@@ -81,6 +81,7 @@ public final class HttpWrapper {
      *
      * url.getContent(types) ⇒ HttpWrapper.wrapGetContent(url, types)
      */
+    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static Object wrapGetContent(URL url, Class[] types) throws IOException {
         return wrapURLConnectionHelper(url.openConnection()).getContent(types);
     }

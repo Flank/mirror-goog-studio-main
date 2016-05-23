@@ -16,7 +16,6 @@
 package com.android.tools.profiler.support.network;
 
 import android.util.Log;
-import com.android.tools.profiler.support.network.HttpConnectionTracker;
 
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
@@ -35,7 +34,7 @@ final class HttpTracker {
     /**
      * Wraps an InputStream to enable the network profiler capturing of response body
      */
-    static final class InputStreamTracker extends FilterInputStream {
+    private static final class InputStreamTracker extends FilterInputStream {
 
         private Connection myConnectionTracker;
         private boolean myFirstRead = true;
@@ -102,7 +101,7 @@ final class HttpTracker {
     /**
      * Wraps an OutputStream to enable the network profiler capturing of request body
      */
-    static final class OutputStreamTracker extends FilterOutputStream {
+    private static final class OutputStreamTracker extends FilterOutputStream {
 
         private Connection myConnectionTracker;
         private boolean myFirstWrite = true;
@@ -159,7 +158,7 @@ final class HttpTracker {
      * Note that the HTTP stacks using {@link HttpConnectionTracker} should not care or know about
      * the details of the implementation of the interface.
      */
-    static final class Connection implements HttpConnectionTracker {
+    private static final class Connection implements HttpConnectionTracker {
 
         private String myURL;
         private StackTraceElement[] myCallstack;

@@ -31,6 +31,8 @@ import java.util.Map;
  *
  * This class is instantiated through one of the {@link HttpWrapper} helper methods
  */
+// '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
+@SuppressWarnings("DollarSignInName")
 final class HttpURLConnection$ extends HttpURLConnection {
 
     private HttpURLConnection myWrapped;

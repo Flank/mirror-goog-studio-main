@@ -15,11 +15,6 @@
  */
 package com.android.tools.profiler.support.network;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSocketFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +26,11 @@ import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSocketFactory;
+
 
 /**
  * Wraps a {@link HttpsURLConnection} instance and delegates the method calls to the wrapped object,
@@ -38,6 +38,8 @@ import java.util.Map;
  *
  * This class is instantiated through one of the {@link HttpWrapper} helper methods
  */
+// '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
+@SuppressWarnings("DollarSignInName")
 final class HttpsURLConnection$ extends HttpsURLConnection {
 
     private HttpsURLConnection myWrapped;
