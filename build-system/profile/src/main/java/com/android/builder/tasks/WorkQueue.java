@@ -47,7 +47,7 @@ public class WorkQueue<T> implements Runnable {
     // List of working threads pumping from this queue.
     private final List<Thread> mWorkThreads = new ArrayList<>();
 
-    private final float mGrowthTriggerRation;
+    private final float mGrowthTriggerRatio;
     private final int mMWorkforceIncrement;
     private final AtomicInteger mThreadId = new AtomicInteger(0);
     private final QueueThreadContext<T> mQueueThreadContext;
@@ -84,7 +84,7 @@ public class WorkQueue<T> implements Runnable {
             @NonNull QueueThreadContext<T> queueThreadContext,
             @NonNull String queueName,
             int workforce) {
-        this(logger, queueThreadContext, queueName, workforce, Float.MAX_VALUE);
+        this(logger, queueThreadContext, queueName, workforce, 0);
     }
 
     /**
@@ -95,7 +95,8 @@ public class WorkQueue<T> implements Runnable {
      * @param queueName a meaningful descriptive name.
      * @param workforce the number of dedicated threads for this queue.
      * @param growthTriggerRatio the ratio between outstanding requests and worker threads that
-     *                           should trigger a growth in worker threads.
+     *                           should trigger a growth in worker threads; if {@code 0} no growth
+     *                           will happen beyond the initial thread creation
      */
     public WorkQueue(
             @NonNull ILogger logger,
@@ -106,7 +107,7 @@ public class WorkQueue<T> implements Runnable {
 
         this.mLogger = logger;
         this.mName = queueName;
-        this.mGrowthTriggerRation = growthTriggerRatio;
+        this.mGrowthTriggerRatio = growthTriggerRatio;
         this.mMWorkforceIncrement = workforce;
         this.mQueueThreadContext = queueThreadContext;
     }
@@ -125,7 +126,8 @@ public class WorkQueue<T> implements Runnable {
 
     private synchronized void checkWorkforce() {
         if (mWorkThreads.isEmpty()
-                || (mPendingJobs.size() / mWorkThreads.size() > mGrowthTriggerRation)) {
+                || ((mPendingJobs.size() / mWorkThreads.size() > mGrowthTriggerRatio)
+                        && mGrowthTriggerRatio > 0)) {
             verbose("Request to incrementing workforce from %1$d", mWorkThreads.size());
             if (mWorkThreads.size() >= MAX_WORKFORCE_SIZE) {
                 verbose("Already at max workforce %1$d, denied.", MAX_WORKFORCE_SIZE);
