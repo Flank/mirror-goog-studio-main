@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 public enum VariantType {
     DEFAULT(false),
     LIBRARY(true),
+    ATOM(true),
     ANDROID_TEST(
             "androidTest",
             "AndroidTest",
@@ -59,7 +60,7 @@ public enum VariantType {
     private final int mArtifactType;
     private final boolean exportsDataBindingClassList;
 
-    /** App or library variant. */
+    /** App, Library or Atom variant. */
     VariantType(boolean exportsDataBindingClassList) {
         this.mIsForTesting = false;
         this.mPrefix = "";
@@ -141,4 +142,5 @@ public enum VariantType {
     public boolean isExportDataBindingClassList() {
         return exportsDataBindingClassList;
     }
+
 }

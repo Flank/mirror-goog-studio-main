@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -808,6 +809,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
+    public File getPackageAtom() {
+        String atomName = getGlobalScope().getProjectBaseName() + ".atom";
+
+        return FileUtils.join(
+                getBaseBundleDir(), "atoms", "assets", atomName);
+    }
+
+    @NonNull
+    @Override
     public File getAaptFriendlyManifestOutputFile() {
         return FileUtils.join(getBaseBundleDir(), "aapt", "AndroidManifest.xml");
     }
@@ -850,9 +860,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBaseBundleDir() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                DIR_BUNDLES, getVariantConfiguration().getDirName());
+        return FileUtils.join(getGlobalScope().getIntermediatesDir(),
+                getVariantConfiguration().getType() == VariantType.ATOM ?
+                        DIR_ATOMBUNDLES : DIR_BUNDLES,
+                getDirName());
     }
 
     // Tasks getters/setters.

@@ -23,6 +23,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.tasks.GenerateAtomMetadata;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
@@ -60,6 +61,8 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     public PackageSplitAbi packageSplitAbiTask;
 
     public PackageAndroidArtifact packageAndroidArtifactTask;
+
+    public GenerateAtomMetadata generateAtomMetadataTask;
 
     public Task assembleTask;
 
@@ -148,6 +151,14 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     void setMultiOutput(boolean multiOutput) {
         this.multiOutput = multiOutput;
+    }
+
+    @Nullable
+    public File getAtomMetadataBaseFolder() {
+        if (generateAtomMetadataTask == null)
+            return null;
+        else
+            return generateAtomMetadataTask.getAtomMetadataBaseFolder();
     }
 
     @NonNull
