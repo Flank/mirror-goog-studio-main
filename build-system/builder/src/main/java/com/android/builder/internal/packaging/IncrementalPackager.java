@@ -311,19 +311,22 @@ public class IncrementalPackager implements Closeable {
         Predicate<File> isAtomMetadataFile = new Predicate<File>() {
             @Override
             public boolean apply(File input) {
-                return input.getName().equals("atom-metadata");
+                return input.getName().equals(SdkConstants.FN_ATOM_METADATA) ||
+                        input.getName().equals(SdkConstants.FN_INSTANTAPP_METADATA);
             }
         };
 
         updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(
-                Maps.filterKeys(
-                        files,
-                        Predicates.compose(
-                                isAtomMetadataFile,
-                                RelativeFile.EXTRACT_FILE
-                        )
-                )
-        ));
+                Maps.filterKeys(files, Predicates.compose(
+                        isAtomMetadataFile,
+                        RelativeFile.EXTRACT_FILE)))
+                .stream()
+                .map(pfu -> new PackagedFileUpdate(
+                        pfu.getSource(),
+                        "META-INF/" + pfu.getName(),
+                        pfu.getStatus()))
+                .collect(Collectors.toSet())
+        );
     }
 
     /**

@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.GenerateAtomMetadata;
+import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.PackageAtom;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -104,7 +105,7 @@ public class AtomTaskManager extends TaskManager {
                 new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        createMergeLibManifestsTask(tasks, variantScope);
+                        createMergeAppManifestsTask(tasks, variantScope);
                         return null;
                     }
                 });
@@ -133,7 +134,13 @@ public class AtomTaskManager extends TaskManager {
                 new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        createMergeResourcesTask(tasks, variantScope);
+                        basicCreateMergeResourcesTask(
+                                tasks,
+                                variantScope,
+                                "mergeAtom",
+                                null,
+                                true /*includeDependencies*/,
+                                true /*process9patch*/);
                         return null;
                     }
                 });
@@ -275,7 +282,7 @@ public class AtomTaskManager extends TaskManager {
             variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
         }
 
-        bundle.setDescription("Assembles a bundle containing the atoms in " +
+        bundle.setDescription("Assembles a bundle containing the atom in " +
                 variantConfig.getBaseName() + ".");
         bundle.setDestinationDir(
                 new File(getGlobalScope().getOutputsDir(), BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE));

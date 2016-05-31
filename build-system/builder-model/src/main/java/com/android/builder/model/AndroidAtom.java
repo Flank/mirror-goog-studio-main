@@ -46,4 +46,10 @@ public interface AndroidAtom extends AndroidBundle {
      */
     @NonNull
     File getAtomMetadataFile();
+
+    /**
+     * Returns the resource package file.
+     */
+    @NonNull
+    File getResourcePackageFile();
 }

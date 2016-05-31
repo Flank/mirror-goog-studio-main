@@ -16,23 +16,26 @@
 
 package com.android.build.gradle.internal.variant;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
+import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
+import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.util.Collection;
 
 /**
- * Output Data about a variant that generates an Atom file.
+ * Base output data for a variant that generates an IAPK file.
  */
-public class AtomVariantOutputData extends BaseVariantOutputData {
+public class InstantAppVariantOutputData extends BaseVariantOutputData {
 
-    AtomVariantOutputData(
+    public GenerateInstantAppMetadata generateInstantAppMetadataTask;
+
+    public InstantAppVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
             @NonNull Collection<FilterData> filters,
             @NonNull BaseVariantData variantData) {
@@ -41,21 +44,30 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
 
     @Override
     public void setOutputFile(@NonNull File file) {
-        if (packageAndroidArtifactTask != null) {
-            packageAndroidArtifactTask.setOutputFile(file);
-        }
+        packageAndroidArtifactTask.setOutputFile(file);
     }
 
     @Nullable
     @Override
     public File getOutputFile() {
-        return packageAndroidArtifactTask == null ? null : packageAndroidArtifactTask.getOutputFile();
+        return packageAndroidArtifactTask.getOutputFile();
+    }
+
+    @Nullable
+    @Override
+    public File getAtomMetadataBaseFolder() {
+        if (generateInstantAppMetadataTask == null)
+            return null;
+        return generateInstantAppMetadataTask.getInstantAppMetadataFolder();
     }
 
     @NonNull
     @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
-        return ImmutableList.of();
+        ImmutableList.Builder<ApkOutputFile> outputs = ImmutableList.builder();
+        // InstantApp only outputs one IAPK.
+        outputs.add(getMainOutputFile());
+        return outputs.build();
     }
 
     @Override
@@ -66,12 +78,4 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
     public String getVersionName() {
         return variantData.getVariantConfiguration().getVersionName();
     }
-
-    @NonNull
-    @Override
-    public File getProcessResourcePackageOutputFile() {
-        return new File(getScope().getVariantScope().getBaseBundleDir(),
-                "resources" + SdkConstants.DOT_RES);
-    }
-
 }

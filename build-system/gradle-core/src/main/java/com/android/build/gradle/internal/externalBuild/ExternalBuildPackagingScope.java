@@ -211,6 +211,12 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
+    public File getPackageInstantApp() {
+        return getMainOutputFile().getOutputFile();
+    }
+
+    @NonNull
+    @Override
     public File getAssetsDir() {
         return mVariantScope.getAssetsDir();
     }

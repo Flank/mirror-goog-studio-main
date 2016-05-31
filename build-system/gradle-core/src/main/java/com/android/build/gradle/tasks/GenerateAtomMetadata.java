@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -42,7 +43,7 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
 
     @TaskAction
     public void taskAction() throws FileNotFoundException {
-        File atomMetadataFile = new File(getAtomMetadataFolder(), "atom-metadata");
+        File atomMetadataFile = new File(getAtomMetadataFolder(), SdkConstants.FN_ATOM_METADATA);
 
         // Re-create the file.
         atomMetadataFile.delete();
@@ -60,17 +61,13 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
         }
     }
 
-    public File getAtomMetadataBaseFolder() {
-        return atomMetadataBaseFolder;
-    }
-
-    public void setAtomMetadataBaseFolder(File atomMetadataBaseFolder) {
-        this.atomMetadataBaseFolder = atomMetadataBaseFolder;
-    }
-
     @OutputDirectory
     public File getAtomMetadataFolder() {
-        return new File(getAtomMetadataBaseFolder(), "META-INF");
+        return atomMetadataFolder;
+    }
+
+    protected void setAtomMetadataFolder(File atomMetadataFolder) {
+        this.atomMetadataFolder = atomMetadataFolder;
     }
 
     @Input
@@ -109,7 +106,7 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
         this.atomDependencies = atomDependencies;
     }
 
-    private File atomMetadataBaseFolder;
+    private File atomMetadataFolder;
     private String atomVersion;
     private String atomName;
     private int substrateApiVersion;
@@ -144,9 +141,9 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
             generateAtomMetadata.setSubstrateApiVersion(5);
             generateAtomMetadata.setAtomName(scope.getGlobalScope().getProject().getName());
             generateAtomMetadata.setAtomVersion(variantOutputData.getVersionName());
-            generateAtomMetadata.setAtomMetadataBaseFolder(FileUtils.join(
+            generateAtomMetadata.setAtomMetadataFolder(FileUtils.join(
                     scope.getVariantScope().getBaseBundleDir(),
-                    "atom-metadata"));
+                    SdkConstants.FD_INSTANTAPP_METADATA));
             generateAtomMetadata.setVariantName(variantOutputData.getFullName());
             variantOutputData.generateAtomMetadataTask = generateAtomMetadata;
         }

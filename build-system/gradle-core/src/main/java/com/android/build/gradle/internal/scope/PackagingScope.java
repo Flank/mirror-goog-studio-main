@@ -127,6 +127,9 @@ public interface PackagingScope {
     File getPackageAtom();
 
     @NonNull
+    File getPackageInstantApp();
+
+    @NonNull
     File getInstantRunSplitApkOutputFolder();
 
     @Nullable

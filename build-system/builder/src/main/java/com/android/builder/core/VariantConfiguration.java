@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.internal.ClassFieldImpl;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
@@ -733,6 +734,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
+     * Returns the Android atom dependency graph, direct and transitive in a single flat list.
+     */
+    @NonNull
+    public List<AndroidAtom> getCompileAndroidAtoms() {
+        return mFlatCompileDependencies.getAtomDependencies();
+    }
+
+    /**
      * Returns all the library dependencies, direct and transitive in a single flat list.
      */
     @NonNull
@@ -1273,6 +1282,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
      * {@link com.android.ide.common.res2.AssetMerger}.
      *
+     * @param generatedAssetFolders a list of generated assets folder
+     * @param includeDependencies true to include the library dependencies asset folders
+     *
      * @return a list ResourceSet.
      */
     @NonNull
@@ -1465,6 +1477,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return shaderSets;
+    }
+
+    @NonNull
+    public List<File> getAtomsDirectories() {
+        ImmutableList.Builder atomDirectories = ImmutableList.builder();
+        for (AndroidAtom atom: mFlatCompileDependencies.getAtomDependencies()) {
+            atomDirectories.add(atom.getAtomFolder());
+        }
+        return atomDirectories.build();
     }
 
     public int getRenderscriptTarget() {

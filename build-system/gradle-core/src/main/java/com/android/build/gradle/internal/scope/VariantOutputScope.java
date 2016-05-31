@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.utils.StringHelper;
 
@@ -55,6 +57,8 @@ public class VariantOutputScope implements TransformVariantScope {
     private AndroidTask<?> shrinkResourcesTask;
 
     private AndroidTask<SplitZipAlign> splitZipAlignTask;
+
+    private AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask;
 
     public VariantOutputScope(
             @NonNull VariantScope variantScope,
@@ -132,9 +136,19 @@ public class VariantOutputScope implements TransformVariantScope {
     }
 
     @NonNull
+    public File getPackageInstantApp() {
+        String instantAppName = getGlobalScope().getProjectBaseName() + "-"
+                + variantOutputData.getBaseName() + SdkConstants.DOT_INSTANTAPP_PACKAGE;
+
+        return getGlobalScope().getProject().file(
+                getGlobalScope().getApkLocation() + "/" + instantAppName);
+    }
+
+    @NonNull
     public File getManifestOutputFile() {
         switch(variantScope.getVariantConfiguration().getType()) {
             case DEFAULT:
+            case INSTANTAPP:
                 return new File(getGlobalScope().getIntermediatesDir(),
                         "/manifests/full/"  + variantOutputData.getDirName()
                                 + "/AndroidManifest.xml");
@@ -160,8 +174,7 @@ public class VariantOutputScope implements TransformVariantScope {
 
     @NonNull
     public File getProcessResourcePackageOutputFile() {
-        return new File(getGlobalScope().getIntermediatesDir(),
-                "res/resources-" + variantOutputData.getBaseName() + ".ap_");
+        return variantOutputData.getProcessResourcePackageOutputFile();
     }
 
     @NonNull
@@ -235,6 +248,15 @@ public class VariantOutputScope implements TransformVariantScope {
     public void setSplitZipAlignTask(
             AndroidTask<SplitZipAlign> splitZipAlignTask) {
         this.splitZipAlignTask = splitZipAlignTask;
+    }
+
+    public AndroidTask<ProcessInstantAppResources> getProcessInstantAppResourcesTask() {
+        return processInstantAppResourcesTask;
+    }
+
+    public void setProcessInstantAppResourcesTask(
+            AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask) {
+        this.processInstantAppResourcesTask = processInstantAppResourcesTask;
     }
 
     @NonNull

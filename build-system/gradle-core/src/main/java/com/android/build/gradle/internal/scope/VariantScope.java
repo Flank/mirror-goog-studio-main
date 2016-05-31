@@ -36,6 +36,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.MergeAtoms;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -399,6 +400,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     ExternalNativeJsonGenerator getExternalNativeJsonGenerator();
     void setExternalNativeJsonGenerator(@NonNull ExternalNativeJsonGenerator generator);
+
+    @Nullable
+    AndroidTask<MergeAtoms> getMergeAtomsTask();
+    void setMergeAtomsTask(@NonNull AndroidTask<MergeAtoms> mergeAtomsTask);
 
     @NonNull
     Collection<NativeBuildConfigValue> getExternalNativeBuildConfigValues();
