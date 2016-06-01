@@ -17,6 +17,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.client.api.DefaultConfiguration.globToRegexp;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.ApiDetector;
@@ -36,6 +37,8 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class DefaultConfigurationTest extends AbstractCheckTest {
@@ -333,5 +336,72 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertFalse(Pattern.compile(globToRegexp("fo**o")).matcher("fo/abc/oa").matches());
         assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(o)b(").matches());
         assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(oaa)b/c/d(").matches());
+    }
+
+    // Tests for a structure that looks like a gradle project with
+    // multiple resource folders.
+    public void testResourcePathIgnore() throws Exception {
+        DefaultConfiguration configuration = getConfiguration(""
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<lint>\n"
+                + "  <issue id=\"ObsoleteLayoutParam\">\n"
+                + "      <ignore path=\"res/layout/onclick.xml\" />\n"
+                + "      <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
+                + "      <ignore path=\"res/layout-land\" />\n"
+                + "  </issue>\n"
+                + "</lint>");
+        File projectDir = getProjectDir(null,
+                "res/layout/onclick.xml=>src/main/res/layout/onclick.xml",
+                "res/layout/onclick.xml=>generated-res/layout-xlarge/activation.xml",
+                "res/layout/onclick.xml=>generated-res/layout-xlarge/activation2.xml",
+                "res/layout/onclick.xml=>generated-res/layout-land/foo.xml"
+        );
+        LintClient client = new TestLintClient() {
+            @Override
+            public List<File> getResourceFolders(@NonNull Project project) {
+                return Arrays.asList(
+                        new File(project.getDir(),
+                                "src" + File.separator + "main" + File.separator + "res"),
+                        new File(project.getDir(), "generated-res"));
+            }
+        };
+
+        Project project = Project.create(client, projectDir, projectDir);
+        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        // Main resource dir => src/main/res
+        File resourceDir = new File(projectDir, "src" + File.separator +
+                "main" + File.separator + "res");
+        File plainFile = new File(resourceDir, "layout" + File.separator + "onclick.xml");
+        assertTrue(plainFile.exists());
+
+        // Generated resource dir
+        File resourceDir2 = new File(projectDir, "generated-res");
+        File largeFile = new File(resourceDir2,
+                "layout-xlarge" + File.separator + "activation.xml");
+        assertTrue(largeFile.exists());
+        File windowsFile = new File(resourceDir2,
+                "layout-xlarge" + File.separator + "activation2.xml");
+        assertTrue(windowsFile.exists());
+
+        File landscapeFile = new File(resourceDir2, "layout-land" + File.separator + "foo.xml");
+        assertTrue(landscapeFile.exists());
+
+        Context plainContext = new Context(driver, project, project, plainFile);
+        Context largeContext = new Context(driver, project, project, largeFile);
+        Context windowsContext = new Context(driver, project, project, windowsFile);
+        Context landscapeContext = new Context(driver, project, project, landscapeFile);
+
+        Location landscapeLocation = Location.create(landscapeFile);
+
+        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
+                Location.create(plainFile), ""));
+        assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
+                Location.create(largeFile), ""));
+        assertTrue(configuration.isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE,
+                Location.create(windowsFile), ""));
+        // directory whitelist
+        assertTrue(configuration.isIgnored(landscapeContext, ObsoleteLayoutParamsDetector.ISSUE,
+                landscapeLocation, ""));
     }
 }
