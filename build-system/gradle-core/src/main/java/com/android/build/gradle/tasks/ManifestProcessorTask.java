@@ -17,6 +17,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -110,16 +111,16 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     }
 
     protected static void fillManifestList(
-            @NonNull AndroidLibrary androidLibrary,
+            @NonNull AndroidBundle androidBundle,
             @NonNull List<File> manifestList) {
         // we must exclude optional manifests as they must have a proper direct dependency to be
         // supported.
-        if (androidLibrary.isOptional()) {
+        if (androidBundle.isProvided()) {
             return;
         }
-        manifestList.add(androidLibrary.getManifest());
-        for (AndroidLibrary dependency : androidLibrary.getLibraryDependencies()) {
-            fillManifestList(dependency, manifestList);
+        manifestList.add(androidBundle.getManifest());
+        for (AndroidBundle bundle : androidBundle.getBundleDependencies()) {
+            fillManifestList(bundle, manifestList);
         }
     }
 

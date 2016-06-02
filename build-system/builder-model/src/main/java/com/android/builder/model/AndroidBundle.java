@@ -48,6 +48,14 @@ public interface AndroidBundle extends Library {
     File getFolder();
 
     /**
+     * Returns the list of direct bundle dependencies of this dependency. This includes both aars
+     * and atoms if they are present.
+     * The order is important.
+     */
+    @NonNull
+    List<? extends AndroidBundle> getBundleDependencies();
+
+    /**
      * Returns the list of direct library dependencies of this dependency.
      * The order is important.
      */

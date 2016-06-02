@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.internal.ClassFieldImpl;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
@@ -716,11 +717,19 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the Android library dependency graph
+     * Returns the Android library dependency graph, direct and transitive in a single flat list.
      */
     @NonNull
     public List<AndroidLibrary> getCompileAndroidLibraries() {
         return mFlatCompileDependencies.getAndroidDependencies();
+    }
+
+    /**
+     * Returns the Android bundle dependency graph, direct and transitive in a single flat list.
+     */
+    @NonNull
+    public List<AndroidBundle> getCompileAndroidBundles() {
+        return mFlatCompileDependencies.getBundleDependencies();
     }
 
     /**

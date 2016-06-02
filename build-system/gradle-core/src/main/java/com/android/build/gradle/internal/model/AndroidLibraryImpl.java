@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
@@ -116,6 +117,12 @@ public class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, S
     @Override
     public File getFolder() {
         return folder;
+    }
+
+    @NonNull
+    @Override
+    public List<? extends AndroidBundle> getBundleDependencies() {
+        return androidLibraries;
     }
 
     @NonNull
