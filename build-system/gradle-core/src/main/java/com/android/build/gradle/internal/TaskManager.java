@@ -325,6 +325,9 @@ public abstract class TaskManager {
      * Task.dependsOn.  This could be a Task or a BuildableModelElement (e.g. BinarySpec).
      */
     protected Collection<Object> getNdkBuildable(BaseVariantData variantData) {
+        if (variantData.ndkCompileTask== null) {
+            return Collections.emptyList();
+        }
         return Collections.singleton(variantData.ndkCompileTask);
     }
 
@@ -1223,6 +1226,11 @@ public abstract class TaskManager {
     }
 
     public void createNdkTasks(@NonNull VariantScope scope) {
+        if (ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
+                extension.getExternalNativeBuild())) {
+            return;
+        }
+
         final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
         NdkCompile ndkCompile = project.getTasks().create(
                 scope.getTaskName("compile", "Ndk"),
