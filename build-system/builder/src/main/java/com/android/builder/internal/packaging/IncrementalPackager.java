@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
  *     <li>Java resource files;
  *     <li>JNI libraries;
  *     <li>Dex files;
+ *     <li>Atom metadata files;</li>
  * </ul>
  *
  * <p>The {@code IncrementalPackager} class can create an APK from scratch and can incrementally
@@ -297,6 +298,32 @@ public class IncrementalPackager implements Closeable {
                         )
                 )
         );
+    }
+
+    /**
+     * Updates the atom metadata file.
+     *
+     * @param files the atom metadata folder.
+     * @throws IOException
+     */
+    public void updateAtomMetadata(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
+            throws IOException {
+        Predicate<File> isAtomMetadataFile = new Predicate<File>() {
+            @Override
+            public boolean apply(File input) {
+                return input.getName().equals("atom-metadata");
+            }
+        };
+
+        updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(
+                Maps.filterKeys(
+                        files,
+                        Predicates.compose(
+                                isAtomMetadataFile,
+                                RelativeFile.EXTRACT_FILE
+                        )
+                )
+        ));
     }
 
     /**

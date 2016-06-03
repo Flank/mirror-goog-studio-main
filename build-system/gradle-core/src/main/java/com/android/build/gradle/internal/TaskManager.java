@@ -209,6 +209,8 @@ public abstract class TaskManager {
 
     public static final String DIR_BUNDLES = "bundles";
 
+    public static final String DIR_ATOMBUNDLES = "atombundles";
+
     public static final String INSTALL_GROUP = "Install";
 
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;

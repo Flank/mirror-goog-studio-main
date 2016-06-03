@@ -2278,7 +2278,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns true if the variant output is a bundle.
      */
     public boolean isBundled() {
-        return mType == VariantType.LIBRARY;
+        return mType == VariantType.LIBRARY || mType == VariantType.ATOM;
     }
 
     @NonNull

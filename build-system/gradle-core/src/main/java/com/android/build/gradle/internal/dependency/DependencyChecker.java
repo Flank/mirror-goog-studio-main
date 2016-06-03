@@ -20,8 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.core.SyncIssueHandler;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.DependencyContainer;
-import com.android.builder.dependency.JarDependency;
-import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.SkippableLibrary;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
@@ -31,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.tools.ant.taskdefs.Java;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 
 import java.util.Collection;
@@ -253,12 +250,13 @@ public class DependencyChecker implements SyncIssueHandler {
                 }
             } else {
                 // no match, means this is a provided only dependency, which is only
-                // possibly if the variant is a library.
+                // possibly if the variant is a library or an atom.
                 // However we also mark as skipped dependency coming from app module that are
                 // tested with a separate module. So if the library is skipped, just ignore it.
                 if (!compileLib.isSkipped() &&
-                        (variantType != VariantType.LIBRARY && (testedVariantType != VariantType.LIBRARY
-                                || !variantType.isForTesting()))) {
+                        (variantType != VariantType.LIBRARY && variantType != VariantType.ATOM &&
+                                (testedVariantType != VariantType.LIBRARY
+                                        || !variantType.isForTesting()))) {
                     handleIssue(
                             resolvedCoordinates.toString(),
                             SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,

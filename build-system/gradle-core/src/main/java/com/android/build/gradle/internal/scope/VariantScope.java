@@ -262,6 +262,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getPackageSplitAbiOutputFiles();
 
     @NonNull
+    File getPackageAtom();
+
+    @NonNull
     File getAaptFriendlyManifestOutputFile();
 
     @NonNull
