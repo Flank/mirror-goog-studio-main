@@ -492,14 +492,7 @@ public class DependencyManager {
                         repositoryPaths.add(getRepositoryPath(dependency.getSelector()));
                     }
                 }
-
-                if (sdkHandler.shouldResetCache()) {
-                    sdkLibData.setCacheExpirationPeriod(0);
-                    sdkHandler.setResetCache(false);
-                } else {
-                    sdkLibData.setCacheExpirationPeriod(
-                            RepoManager.DEFAULT_EXPIRATION_PERIOD_MS);
-                }
+                sdkLibData.setNeedsCacheReset(sdkHandler.checkResetCache());
                 List<File> updatedRepositories = sdkHandler.getSdkLoader()
                         .updateRepositories(repositoryPaths, sdkLibData, logger);
 

@@ -72,7 +72,7 @@ public class AndroidGradleOptions {
 
     private static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
 
-    private static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
+    public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
     private static final String PROPERTY_SHARD_TESTS_BETWEEN_DEVICES =
             "android.androidTest.shardBetweenDevices";

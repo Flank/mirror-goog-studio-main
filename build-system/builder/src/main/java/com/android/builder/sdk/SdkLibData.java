@@ -29,9 +29,7 @@ public class SdkLibData {
     private Downloader mDownloader;
     private SettingsController mSettings;
     private boolean mUseSdkDownload = false;
-
-    //the expiration period in milliseconds for the cached remote and local repositories.
-    private long cacheExpirationPeriod = RepoManager.DEFAULT_EXPIRATION_PERIOD_MS;
+    private boolean needsCacheReset = true;
 
     private SdkLibData() {};
 
@@ -75,11 +73,17 @@ public class SdkLibData {
         return mSettings;
     }
 
-    public void setCacheExpirationPeriod(long cacheExpirationPeriod) {
-        this.cacheExpirationPeriod = cacheExpirationPeriod;
+    /**
+     * Sets the flag for resetting the local and remote repository cache. The cache should be
+     * refreshed at least one per build. Once it is reset, the {@code needsCacheReset} flag should
+     * be set to false.
+     * @param needsCacheReset
+     */
+    public void setNeedsCacheReset(boolean needsCacheReset) {
+        this.needsCacheReset = needsCacheReset;
     }
 
-    public long getCacheExpirationPeriod() {
-        return cacheExpirationPeriod;
+    public boolean needsCacheReset() {
+        return needsCacheReset;
     }
 }
