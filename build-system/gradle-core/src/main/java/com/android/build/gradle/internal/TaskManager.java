@@ -2228,6 +2228,7 @@ public abstract class TaskManager {
             } else {
                 // single output
                 variantOutputScope.setAssembleTask(variantScope.getAssembleTask());
+                variantOutputData.assembleTask = variantData.assembleVariantTask;
             }
 
             if (!signedApk && variantOutputData.packageSplitResourcesTask != null) {
