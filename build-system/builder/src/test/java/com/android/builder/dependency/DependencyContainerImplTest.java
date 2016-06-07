@@ -68,6 +68,7 @@ public class DependencyContainerImplTest {
         DependencyContainerImpl container = new DependencyContainerImpl(
                 ImmutableList.of(libraryModule),
                 ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableList.of());
 
         DependencyContainer flatContainer = container.flatten(null, null);
@@ -130,10 +131,12 @@ public class DependencyContainerImplTest {
         // graph, but not the lib.
         DependencyContainerImpl container = new DependencyContainerImpl(
                 ImmutableList.of(libraryModule),
+                ImmutableList.of(),
                 ImmutableList.of(randomLib),
                 ImmutableList.of());
 
         DependencyContainerImpl testedContainer = new DependencyContainerImpl(
+                ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(randomLib),
                 ImmutableList.of());
@@ -177,9 +180,11 @@ public class DependencyContainerImplTest {
         DependencyContainerImpl container = new DependencyContainerImpl(
                 ImmutableList.of(),
                 ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableList.of(localJar));
 
         DependencyContainerImpl testedContainer = new DependencyContainerImpl(
+                ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(localJar));
@@ -234,6 +239,7 @@ public class DependencyContainerImplTest {
 
         DependencyContainerImpl container = new DependencyContainerImpl(
                 ImmutableList.of(libraryModule, libraryModule2),
+                ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of());
 

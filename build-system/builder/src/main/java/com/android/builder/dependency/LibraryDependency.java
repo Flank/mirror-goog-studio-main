@@ -28,6 +28,7 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.Objects;
@@ -65,6 +66,12 @@ public class LibraryDependency extends AbstractBundleDependency implements Andro
                 requestedCoordinates,
                 resolvedCoordinates);
         this.mIsProvided = isProvided;
+    }
+
+    @Override
+    @NonNull
+    public List<? extends AndroidBundle> getBundleDependencies() {
+        return getLibraryDependencies();
     }
 
     @Override
