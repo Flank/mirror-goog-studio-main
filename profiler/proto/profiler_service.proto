@@ -22,9 +22,23 @@ option java_outer_classname = "ProfilerService";
 import "profiler.proto";
 
 service DeviceService {
+  // Gets current timestamp that used in the device's profiling data.
+  // A client may use this API to relate profiling data' timestamps to other
+  // clocks such as the desktop's calendar time.
+  // TODO(b/29223899): Add device's calendar time.
+  rpc GetTimes(TimesRequest) returns (TimesResponse) {
+  }
+
   // Gets version.
   rpc GetVersion(VersionRequest) returns (VersionResponse) {
   }
+}
+
+message TimesRequest {
+}
+
+message TimesResponse {
+  int64 timestamp = 1;
 }
 
 message VersionRequest {

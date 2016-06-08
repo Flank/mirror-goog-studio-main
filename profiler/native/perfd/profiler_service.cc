@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "profiler_service.h"
+#include "perfd/profiler_service.h"
 
-#include <grpc++/grpc++.h>
-
-#include "proto/profiler_service.grpc.pb.h"
 #include "utils/android_studio_version.h"
 
 using grpc::ServerContext;
 using grpc::Status;
 
 namespace profiler {
+
+Status ProfilerServiceImpl::GetTimes(
+    ServerContext* context, const profiler::proto::TimesRequest* request,
+    profiler::proto::TimesResponse* response) {
+  response->set_timestamp(clock_.GetCurrentTime());
+  return Status::OK;
+}
 
 Status ProfilerServiceImpl::GetVersion(
     ServerContext* context, const profiler::proto::VersionRequest* request,

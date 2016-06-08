@@ -22,6 +22,7 @@
 #include <grpc++/grpc++.h>
 
 #include "perfd/profiler_component.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
@@ -44,7 +45,13 @@ class Daemon {
   // be responsible for shutting down the server for this call to ever return.
   void RunServer(const std::string& server_address);
 
+  // Returns a const reference to the daemon's clock, which is used to produce
+  // all timestamps in the deamon.
+  const Clock& clock() const { return clock_; }
+
  private:
+  // Clock that timestamps profiling data.
+  SteadyClock clock_;
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
