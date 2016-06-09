@@ -16,32 +16,37 @@
 #ifndef TIME_VALUE_BUFFER_H_
 #define TIME_VALUE_BUFFER_H_
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <time.h>
 #include <vector>
-
-#include "timespec_math.h"
 
 namespace profiler {
 
 // Data per sample. The time field indicates a independent time point when
 // value is collected.
 template <typename T> struct TimeValue {
-  timespec time;
+  int64_t time;
   T value;
 };
 
 // Data holder class of time sequential collected information. For example,
 // traffic bytes sent and received information are repeated collected. It stores
 // data and provides query functionality.
+// TODO: Refactor name to ProfilerBuffer for profiler sampling data.
 template <typename T> class TimeValueBuffer {
  public:
-  TimeValueBuffer(size_t capacity)
-      : capacity_(capacity), values_(new TimeValue<T>[capacity_]) {}
+  TimeValueBuffer(size_t capacity, int pid = -1)
+      : capacity_(capacity), values_(new TimeValue<T>[capacity_]), pid_(pid) {}
 
   // Add sample value collected at a given time point.
+  // TODO: We are moving to int64_t from timespec, this method is not needed.
   void Add(T value, const timespec &sample_time) {
+    Add(value, 1e9 * sample_time.tv_sec + sample_time.tv_nsec);
+  }
+
+  void Add(T value, const int64_t sample_time) {
     std::lock_guard<std::mutex> lock(values_mutex_);
     size_t index = size_ < capacity_ ? size_ : start_;
     values_[index].time = sample_time;
@@ -54,15 +59,29 @@ template <typename T> class TimeValueBuffer {
   }
 
   // Returns data within the given range [time_from, time_to).
+  // TODO: We are moving to int64_t from timespec, this method is not needed.
   std::vector<TimeValue<T>> Get(const timespec &time_from,
                                 const timespec &time_to) {
+    int64_t from = 1e9 * time_from.tv_sec + time_from.tv_nsec;
+    int64_t to = 1e9 * time_to.tv_sec + time_to.tv_nsec;
     std::lock_guard<std::mutex> lock(values_mutex_);
     std::vector<TimeValue<T>> result;
     for (size_t i = 0; i < size_; i++) {
       size_t index = (start_ + i) % capacity_;
-      if (TimespecMath::Compare(values_[index].time, time_from) >= 0 &&
-          TimespecMath::Compare(values_[index].time, time_to) < 0) {
+      if (values_[index].time >= from && values_[index].time < to) {
         result.push_back(values_[index]);
+      }
+    }
+    return result;
+  }
+
+  std::vector<T> GetValues(const int64_t time_from, const int64_t time_to) {
+    std::lock_guard<std::mutex> lock(values_mutex_);
+    std::vector<T> result;
+    for (size_t i = 0; i < size_; i++) {
+      size_t index = (start_ + i) % capacity_;
+      if (values_[index].time >= time_from && values_[index].time < time_to) {
+        result.push_back(values_[index].value);
       }
     }
     return result;
@@ -81,9 +100,15 @@ template <typename T> class TimeValueBuffer {
     return result;
   }
 
+  // Returns app id that the profiler data buffer is for.
+  int pid() {
+    return pid_;
+  }
+
  private:
   // Indicates the maximum number of samples it can hold.
   const size_t capacity_;
+  const int pid_;
 
   // TODO: Temporarily uses dynamic array. It should change to circular buffer.
   std::unique_ptr<TimeValue<T>[]> values_;
@@ -92,6 +117,6 @@ template <typename T> class TimeValueBuffer {
   size_t start_ = 0;
 };
 
-}  // namespace profiler
+} // namespace profiler
 
 #endif // TIME_VALUE_BUFFER_H_

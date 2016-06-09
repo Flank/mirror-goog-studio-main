@@ -35,8 +35,10 @@ bool BashCommandRunner::RunAs(const string &parameters,
 bool BashCommandRunner::Run(const string &parameters, string *output) const {
   string cmd;
   cmd.append(executable_path_);
-  cmd.append(" ");
-  cmd.append(parameters);
+  if (!parameters.empty()) {
+    cmd.append(" ");
+    cmd.append(parameters);
+  }
   return RunAndReadOutput(cmd, output);
 }
 
