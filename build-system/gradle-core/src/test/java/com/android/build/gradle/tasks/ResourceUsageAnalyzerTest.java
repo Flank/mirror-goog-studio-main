@@ -1019,6 +1019,7 @@ public class ResourceUsageAnalyzerTest {
         // Comprehensive test
         String p = "prefix%s%%%n%c%x%d%o%b%h%f%e%a%g%C%X%5B%E%A%G";
         String s = String.format(p, "", 'c', 1, 1, 1, true, 1, 1f, 1f, 1f, 1f, 'c', 1, 1, 1f, 1f, 1f);
+        s = s.replaceAll("\r\n", "\n");
         assertTrue(s.matches(convertFormatStringToRegexp(p)));
     }
 
