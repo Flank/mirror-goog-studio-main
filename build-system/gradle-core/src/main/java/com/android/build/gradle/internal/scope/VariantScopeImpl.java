@@ -866,6 +866,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 getDirName());
     }
 
+    @NonNull
+    @Override
+    public File getAnnotationProcessorOutputDir() {
+        return FileUtils.join(
+                globalScope.getGeneratedDir(),
+                "source",
+                "apt",
+                getVariantConfiguration().getDirName());
+    }
+
     // Tasks getters/setters.
 
     @Override
