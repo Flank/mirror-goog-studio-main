@@ -16,6 +16,7 @@
 #ifndef PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 #define PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 
+#include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_profiler_service.h"
 #include "perfd/profiler_component.h"
@@ -24,18 +25,20 @@ namespace profiler {
 
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
-  NetworkProfilerComponent() = default;
+  explicit NetworkProfilerComponent(const std::string& root_path)
+      : internal_service_(root_path) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
 
   // Returns the service that talks to device clients (e.g., perfa).
-  grpc::Service* GetInternalService() override { return nullptr; }
+  grpc::Service* GetInternalService() override { return &internal_service_; }
 
  private:
   NetworkProfilerServiceImpl public_service_;
+  InternalNetworkServiceImpl internal_service_;
 };
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
+#endif  // PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_

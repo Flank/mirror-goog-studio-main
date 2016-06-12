@@ -1,6 +1,7 @@
 add_library(profiler_network
             connection_sampler.cc
             connectivity_sampler.cc
+            internal_network_service.cc
             network_collector.cc
             network_profiler_service.cc
             network_sampler.cc

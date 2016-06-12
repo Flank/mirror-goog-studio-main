@@ -17,20 +17,43 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <mutex>
 
 #include "utils/config.h"
 
-using namespace profiler;
-using namespace profiler::proto;
+namespace {
+using profiler::Perfa;
+using std::mutex;
 
-extern "C" void InitializePerfa() {
-  static Perfa* s_perfa = nullptr;
-  if (s_perfa == nullptr) s_perfa = new Perfa(kServerAddress);
+Perfa* perfa_ = nullptr;
+mutex perfa_mutex_;
+}
+
+namespace profiler {
+
+using proto::InternalNetworkService;
+using proto::PerfaControlRequest;
+using proto::PerfaService;
+using proto::ProfilerData;
+using proto::RegisterApplication;
+using std::lock_guard;
+using std::mutex;
+
+void Perfa::Initialize() {
+  lock_guard<mutex> guard(perfa_mutex_);
+  if (perfa_ == nullptr) perfa_ = new Perfa(kServerAddress);
+}
+
+Perfa& Perfa::Instance() {
+  Initialize();
+  return *perfa_;
 }
 
 Perfa::Perfa(const char* address) {
-  service_stub_ = PerfaService::NewStub(
-      grpc::CreateChannel(address, grpc::InsecureChannelCredentials()));
+  auto channel =
+      grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
+  service_stub_ = PerfaService::NewStub(channel);
+  network_stub_ = InternalNetworkService::NewStub(channel);
 
   // Open the control stream
   RegisterApplication app_data;
@@ -52,3 +75,5 @@ void Perfa::RunControlThread() {
 bool Perfa::WriteData(const ProfilerData& data) {
   return data_stream_->Write(data);
 }
+
+}  // namespace profiler

@@ -21,24 +21,31 @@
 
 #include <grpc++/grpc++.h>
 
+#include "proto/internal_network.grpc.pb.h"
 #include "proto/perfa_service.grpc.pb.h"
-
-// Function to create perfa after it have been loaded into the application
-// memory.
-extern "C" void InitializePerfa();
 
 namespace profiler {
 
 class Perfa {
  public:
-  Perfa(const char* address);
-
-  ~Perfa() = delete;  // TODO: Support destroying perfa.
+  static void Initialize();
+  // Grab the singleton instance of Perfa. This will initialize the class if
+  // necessary, but consider calling |Initialize| on your own first.
+  static Perfa& Instance();
 
   bool WriteData(const proto::ProfilerData& data);
 
+  const proto::InternalNetworkService::Stub& network_stub() {
+    return *network_stub_;
+  }
+
  private:
+  // Use Perfa::Initialize to initialize
+  explicit Perfa(const char* address);
+  ~Perfa() = delete;  // TODO: Support destroying perfa.
+
   std::unique_ptr<proto::PerfaService::Stub> service_stub_;
+  std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
 
   // TODO: Move this over to the StreamingRpcManager when it is ready
   std::thread control_thread_;

@@ -42,7 +42,7 @@ final class HttpTracker {
         private final ByteBatcher mByteBatcher = new ByteBatcher(new ByteBatcher.FlushReceiver() {
             @Override
             public void receive(byte[] bytes) {
-                reportBytes(myConnectionTracker.myURL, bytes);
+                reportBytes(myConnectionTracker.myId, bytes);
             }
         });
 
@@ -70,7 +70,7 @@ final class HttpTracker {
         public void close() throws IOException {
             super.close();
             mByteBatcher.flush();
-            onClose(myConnectionTracker.myURL);
+            onClose(myConnectionTracker.myId);
         }
 
         @Override
@@ -81,7 +81,7 @@ final class HttpTracker {
         @Override
         public int read() throws IOException {
             if (myFirstRead) {
-                onReadBegin(myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
 
@@ -93,7 +93,7 @@ final class HttpTracker {
         @Override
         public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
             if (myFirstRead) {
-                onReadBegin(myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
 
@@ -105,15 +105,15 @@ final class HttpTracker {
         @Override
         public long skip(long byteCount) throws IOException {
             if (myFirstRead) {
-                onReadBegin(myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
             return super.skip(byteCount);
         }
 
-        private native void onClose(String url);
-        private native void onReadBegin(String url);
-        private native void reportBytes(String url, byte[] bytes);
+        private native void onClose(long id);
+        private native void onReadBegin(long id);
+        private native void reportBytes(long id, byte[] bytes);
     }
 
     /**
@@ -132,7 +132,7 @@ final class HttpTracker {
         @Override
         public void close() throws IOException {
             super.close();
-            onClose(myConnectionTracker.myURL);
+            onClose(myConnectionTracker.myId);
         }
 
         @Override
@@ -143,7 +143,7 @@ final class HttpTracker {
         @Override
         public void write(byte[] buffer, int offset, int length) throws IOException {
             if (myFirstWrite) {
-                onWriteBegin(myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myId);
                 myFirstWrite = false;
             }
             super.write(buffer, offset, length);
@@ -152,7 +152,7 @@ final class HttpTracker {
         @Override
         public void write(int oneByte) throws IOException {
             if (myFirstWrite) {
-                onWriteBegin(myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myId);
                 myFirstWrite = false;
             }
             super.write(oneByte);
@@ -161,14 +161,14 @@ final class HttpTracker {
         @Override
         public void write(byte[] buffer) throws IOException {
             if (myFirstWrite) {
-                onWriteBegin(myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myId);
                 myFirstWrite = false;
             }
             write(buffer, 0, buffer.length);
         }
 
-        private native void onClose(String url);
-        private native void onWriteBegin(String url);
+        private native void onClose(long id);
+        private native void onWriteBegin(long id);
     }
 
 
@@ -181,34 +181,32 @@ final class HttpTracker {
      */
     private static final class Connection implements HttpConnectionTracker {
 
-        private String myURL;
-        private StackTraceElement[] myCallstack;
+        private long myId;
 
         private Connection(String url, StackTraceElement[] callstack) {
-            myURL = url;
-            myCallstack = callstack;
+            myId = nextId();
 
             StringBuilder s = new StringBuilder();
             for (StackTraceElement e : callstack) {
                 s.append(String.format("%s\n", e.toString()));
             }
 
-            onPreConnect(myURL, s.toString());
+            onPreConnect(myId, url, s.toString());
         }
 
         @Override
         public void disconnect() {
-            onDisconnect(myURL);
+            onDisconnect(myId);
         }
 
         @Override
         public void error(String status) {
-            onError(myURL, status);
+            onError(myId, status);
         }
 
         @Override
         public OutputStream trackRequestBody(OutputStream stream) {
-            onRequestBody(myURL);
+            onRequestBody(myId);
             return new OutputStreamTracker(stream, this);
         }
 
@@ -224,7 +222,7 @@ final class HttpTracker {
                 s.append("\n");
             }
 
-            onRequest(myURL, method, s.toString());
+            onRequest(myId, method, s.toString());
         }
 
         @Override
@@ -239,22 +237,23 @@ final class HttpTracker {
                 s.append("\n");
             }
 
-            onResponse(myURL, response, s.toString());
+            onResponse(myId, response, s.toString());
         }
 
         @Override
         public InputStream trackResponseBody(InputStream stream) {
-            onResponseBody(myURL);
+            onResponseBody(myId);
             return new InputStreamTracker(stream, this);
         }
 
-        private native void onPreConnect(String url, String stack);
-        private native void onRequestBody(String url);
-        private native void onRequest(String url, String method, String fields);
-        private native void onResponse(String url, String response, String fields);
-        private native void onResponseBody(String url);
-        private native void onDisconnect(String myURL);
-        private native void onError(String myURL, String status);
+        private native long nextId();
+        private native void onPreConnect(long id, String url, String stack);
+        private native void onRequestBody(long id);
+        private native void onRequest(long id, String method, String fields);
+        private native void onResponse(long id, String response, String fields);
+        private native void onResponseBody(long id);
+        private native void onDisconnect(long id);
+        private native void onError(long id, String status);
     }
 
     /**

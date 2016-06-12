@@ -1,5 +1,6 @@
 set(PROTO_FILES cpu_profiler_data.proto
                 cpu_profiler_service.proto
+                internal_network.proto
                 memory.proto
                 network.proto
                 perfa_service.proto
