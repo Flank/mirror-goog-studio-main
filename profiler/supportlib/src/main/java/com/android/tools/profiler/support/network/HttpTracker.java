@@ -15,6 +15,8 @@
  */
 package com.android.tools.profiler.support.network;
 
+import com.android.tools.profiler.support.util.ByteBatcher;
+
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -36,6 +38,13 @@ final class HttpTracker {
 
         private Connection myConnectionTracker;
         private boolean myFirstRead = true;
+
+        private final ByteBatcher mByteBatcher = new ByteBatcher(new ByteBatcher.FlushReceiver() {
+            @Override
+            public void receive(byte[] bytes) {
+                reportBytes(myConnectionTracker.myURL, bytes);
+            }
+        });
 
         InputStreamTracker(InputStream wrapped, Connection connectionTracker) {
             super(wrapped);
@@ -60,6 +69,7 @@ final class HttpTracker {
         @Override
         public void close() throws IOException {
             super.close();
+            mByteBatcher.flush();
             onClose(myConnectionTracker.myURL);
         }
 
@@ -72,10 +82,12 @@ final class HttpTracker {
         public int read() throws IOException {
             if (myFirstRead) {
                 onReadBegin(myConnectionTracker.myURL);
-
                 myFirstRead = false;
             }
-            return super.read();
+
+            int b = super.read();
+            mByteBatcher.addByte(b);
+            return b;
         }
 
         @Override
@@ -84,7 +96,10 @@ final class HttpTracker {
                 onReadBegin(myConnectionTracker.myURL);
                 myFirstRead = false;
             }
-            return super.read(buffer, byteOffset, byteCount);
+
+            int bytesRead = super.read(buffer, byteOffset, byteCount);
+            mByteBatcher.addBytes(buffer, byteOffset, bytesRead);
+            return bytesRead;
         }
 
         @Override
@@ -98,6 +113,7 @@ final class HttpTracker {
 
         private native void onClose(String url);
         private native void onReadBegin(String url);
+        private native void reportBytes(String url, byte[] bytes);
     }
 
     /**

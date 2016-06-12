@@ -22,6 +22,8 @@
 using profiler::Log;
 
 extern "C" {
+  // TODO: Create RAII classes for Java -> C++ access (JavaString, JavaBytes, etc.)
+
   JNIEXPORT void JNICALL
   Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onClose(
       JNIEnv *env, jobject thiz, jstring jurl)
@@ -37,6 +39,16 @@ extern "C" {
   {
     const char *url = env->GetStringUTFChars(jurl, NULL);
     Log::V("HTTP_ReadInput [%s]", url);
+    env->ReleaseStringUTFChars(jurl, url);
+  }
+
+  JNIEXPORT void JNICALL
+  Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
+      JNIEnv *env, jobject thiz, jstring jurl, jbyteArray jbytes)
+  {
+    const char *url = env->GetStringUTFChars(jurl, NULL);
+    jsize len = env->GetArrayLength(jbytes);
+    Log::V("HTTP_ResponseBytes (%d) [%s]", len, url);
     env->ReleaseStringUTFChars(jurl, url);
   }
 
