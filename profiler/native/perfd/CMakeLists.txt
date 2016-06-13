@@ -1,4 +1,5 @@
 add_executable(perfd
+               daemon.cc
                perfa_service.cc
                perfd.cc
                profiler_service.cc)
