@@ -32,7 +32,7 @@ class Clock {
   // Returns a monotonically increasing value. This value is meant for
   // comparing two relative times, as the time represented by time=0 is not
   // explicitly defined.
-  virtual uint64_t GetCurrentTime() const = 0;
+  virtual int64_t GetCurrentTime() const = 0;
   virtual ~Clock() = default;
 };
 
@@ -46,7 +46,7 @@ class Clock {
 // - is used by the Linux kernel to timestamp events (like in perfs)
 class SteadyClock final : public Clock {
  public:
-  virtual uint64_t GetCurrentTime() const override;
+  virtual int64_t GetCurrentTime() const override;
 };
 
 } // namespace profiler

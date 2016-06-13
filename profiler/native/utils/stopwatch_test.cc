@@ -25,22 +25,22 @@ using std::shared_ptr;
 class MockClock final : public Clock {
  public:
 
-  MockClock(uint64_t mockTime = 0) : mockTime_(mockTime) { }
+  MockClock(int64_t mockTime = 0) : mockTime_(mockTime) { }
 
-  virtual uint64_t GetCurrentTime() const override {
+  virtual int64_t GetCurrentTime() const override {
     return mockTime_;
   }
 
-  void SetCurrentTime(uint64_t time) {
+  void SetCurrentTime(int64_t time) {
     mockTime_ = time;
   }
 
-  void Elapse(uint64_t elapsed) {
+  void Elapse(int64_t elapsed) {
     mockTime_ += elapsed;
   }
 
  private:
-  uint64_t mockTime_;
+  int64_t mockTime_;
 };
 
 TEST(Stopwatch, GetElapsedTimeFromConstruction) {

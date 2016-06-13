@@ -81,8 +81,8 @@ void MemoryLevelsSampler::ParseMemoryLevels(const std::string& memory_info_strin
   char* temp_memory_info_ptr = delimited_memory_info.get();
   char* result;
 
-  uint32_t java_private = 0, native_private = 0, stack = 0,
-           graphics = 0, code = 0, other_private = 0;
+  int32_t java_private = 0, native_private = 0, stack = 0,
+          graphics = 0, code = 0, other_private = 0;
 
   // Version check.
   int version = ParseInt(&temp_memory_info_ptr, ",");

@@ -24,8 +24,8 @@ namespace profiler {
       const MemoryRequest* request,
       MemoryData* response) {
   int32_t app_id = request->app_id();
-  uint64_t start_time = request->start_time();
-  uint64_t end_time = request->end_time();
+  int64_t start_time = request->start_time();
+  int64_t end_time = request->end_time();
 
   response->mutable_profiler_data()->set_app_id(app_id);
   response->mutable_profiler_data()->set_end_timestamp(clock_.GetCurrentTime());
