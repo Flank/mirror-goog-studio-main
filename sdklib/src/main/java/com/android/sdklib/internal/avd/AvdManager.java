@@ -652,12 +652,20 @@ public class AvdManager {
 
     private String getAvdPid(@NonNull AvdInfo info) throws IOException {
         // this is a file on Unix, and a directory on Windows.
-        File f = new File(info.getDataFolderPath(), "userdata-qemu.img.lock");   //$NON-NLS-1$
+        File f = new File(info.getDataFolderPath(), "hardware-qemu.ini.lock");   //$NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
             f = new File(f, "pid");
         }
+        // This is an alternative identifier for Unix and Windows when the above one is missing.
+        File alternative = new File(info.getDataFolderPath(), "userdata-qemu.img.lock");
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            alternative = new File(alternative, "pid");
+        }
         if (mFop.exists(f)) {
             return mFop.toString(f, Charsets.UTF_8).trim();
+        }
+        if (mFop.exists(alternative)){
+            return mFop.toString(alternative, Charsets.UTF_8).trim();
         }
         return null;
     }
