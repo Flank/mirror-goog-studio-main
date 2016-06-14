@@ -33,3 +33,9 @@ artifacts {
 }
 // Linking "compileAndroid" to "build" will trigger it's build from IntelliJ, we don't want to do that just yet
 // build.dependsOn compileAndroid
+
+task clean(type: DefaultTask) {
+    doFirst {
+        file("$buildDir").deleteDir();
+    }
+}
