@@ -16,6 +16,7 @@
 #ifndef PERFD_GENERIC_COMPONENT_H_
 #define PERFD_GENERIC_COMPONENT_H_
 
+#include "perfd/daemon.h"
 #include "perfd/perfa_service.h"
 #include "perfd/profiler_component.h"
 #include "perfd/profiler_service.h"
@@ -24,15 +25,19 @@ namespace profiler {
 
 class GenericComponent final : public ProfilerComponent {
  public:
+  GenericComponent(const Daemon& daemon) : generic_public_service_(daemon) {}
+
   // Returns the service that talks to desktop clients (e.g., Studio).
-  grpc::Service* GetPublicService() override { return &generic_public_service; }
+  grpc::Service* GetPublicService() override {
+    return &generic_public_service_;
+  }
 
   // Returns the service that talks to device clients (e.g., perfa).
-  grpc::Service* GetInternalService() override { return &perfa_service; }
+  grpc::Service* GetInternalService() override { return &perfa_service_; }
 
  private:
-  ProfilerServiceImpl generic_public_service;
-  PerfaServiceImpl perfa_service;
+  ProfilerServiceImpl generic_public_service_;
+  PerfaServiceImpl perfa_service_;
 };
 
 }  // namespace profiler

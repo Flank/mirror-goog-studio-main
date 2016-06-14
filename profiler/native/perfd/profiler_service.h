@@ -18,15 +18,28 @@
 
 #include <grpc++/grpc++.h>
 
+#include "perfd/daemon.h"
 #include "proto/profiler_service.grpc.pb.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
 class ProfilerServiceImpl final
     : public profiler::proto::DeviceService::Service {
+ public:
+  ProfilerServiceImpl(const Daemon& daemon) : clock_(daemon.clock()) {}
+
+  grpc::Status GetTimes(grpc::ServerContext* context,
+                        const profiler::proto::TimesRequest* request,
+                        profiler::proto::TimesResponse* reply) override;
+
   grpc::Status GetVersion(grpc::ServerContext* context,
                           const profiler::proto::VersionRequest* request,
                           profiler::proto::VersionResponse* reply) override;
+
+ private:
+  // Clock knows about timestamps.
+  const Clock& clock_;
 };
 
 }  // namespace profiler

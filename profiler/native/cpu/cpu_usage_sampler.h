@@ -20,6 +20,7 @@
 #include <mutex>
 #include <unordered_set>
 
+#include "perfd/daemon.h"
 #include "proto/cpu_profiler_service.grpc.pb.h"
 #include "utils/clock.h"
 
@@ -30,7 +31,8 @@ class CpuCache;
 class CpuUsageSampler {
  public:
   // Creates a CPU usage data collector that saves data to |cpu_cache|.
-  CpuUsageSampler(CpuCache* cpu_cache) : cache_(*cpu_cache) {}
+  CpuUsageSampler(const Daemon& daemon, CpuCache* cpu_cache)
+      : clock_(daemon.clock()), cache_(*cpu_cache) {}
 
   // Starts collecting usage data for process with ID of |pid|, if not already.
   profiler::proto::CpuStartResponse::Status AddProcess(int32_t pid);
@@ -52,10 +54,10 @@ class CpuUsageSampler {
   // PIDs of app process that are being profiled.
   std::unordered_set<int32_t> pids_{};
   std::mutex pids_mutex_;
+  // Clock that timestamps sample data.
+  const Clock& clock_;
   // Cache where collected data will be saved.
   CpuCache& cache_;
-  // Clock that timestamps sample data.
-  profiler::SteadyClock clock_;
 };
 
 }  // namespace profiler

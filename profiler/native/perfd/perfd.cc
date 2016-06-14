@@ -22,10 +22,10 @@
 int main(int argc, char** argv) {
   profiler::Daemon daemon;
 
-  profiler::GenericComponent generic_component;
+  profiler::GenericComponent generic_component{daemon};
   daemon.RegisterComponent(&generic_component);
 
-  profiler::CpuProfilerComponent cpu_component;
+  profiler::CpuProfilerComponent cpu_component{daemon};
   daemon.RegisterComponent(&cpu_component);
 
   profiler::MemoryProfilerComponent memory_component;

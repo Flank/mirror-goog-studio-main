@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CLOCK_H_
-#define CLOCK_H_
+#ifndef UTILS_CLOCK_H_
+#define UTILS_CLOCK_H_
 
 #include <cstdint>
 
@@ -48,9 +48,10 @@ class Clock {
 // - is used by the Linux kernel to timestamp events (like in perfs)
 class SteadyClock final : public Clock {
  public:
+  // It is safe to be called from multiple threads simultaneously.
   virtual int64_t GetCurrentTime() const override;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
-#endif //CLOCK_H_
+#endif  // UTILS_CLOCK_H_
