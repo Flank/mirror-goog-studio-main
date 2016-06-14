@@ -345,6 +345,10 @@ public class DownloadCache {
         if (connection instanceof HttpURLConnection) {
             response = ((HttpURLConnection)connection).getResponseCode();
         }
+        else {
+            // Not an http connection, so just assume it worked.
+            response = 200;
+        }
         return Pair.of(result.getFirst(), response);
     }
 
