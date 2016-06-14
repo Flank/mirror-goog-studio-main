@@ -1195,6 +1195,7 @@ public abstract class TaskManager {
         scope.getVariantConfiguration().setEnableInstantRunOverride(false);
 
         scope.setExternalNativeJsonGenerator(ExternalNativeJsonGenerator.create(
+                project.getProjectDir(),
                 pathResolution.buildSystem,
                 pathResolution.makeFile,
                 androidBuilder,
