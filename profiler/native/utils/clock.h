@@ -20,13 +20,15 @@
 
 namespace profiler {
 
-// A mockable clock class for getting the current epoch time, in nanoseconds.
+// A mockable clock class for getting the current time, in nanoseconds.
 // Example:
 //  SteadyClock clock;
-//  Log(clock.GetCurrentTime())
+//  Log(clock.GetCurrentTime());
 //
-// Note: If you are more interested in the amount of time an operation took,
-// rather than absolute time, use Stopwatch instead.
+// * The meaning of what "now" is relative to is left as an implementation
+//   detail for subclasses to define and document.
+// * If you are more interested in the amount of time an operation took,
+//   rather than absolute time, use Stopwatch instead.
 class Clock {
  public:
   // Returns a monotonically increasing value. This value is meant for
