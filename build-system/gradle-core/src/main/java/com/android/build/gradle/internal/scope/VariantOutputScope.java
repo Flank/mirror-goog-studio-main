@@ -124,7 +124,7 @@ public class VariantOutputScope implements TransformVariantScope {
         boolean signedApk = apkVariantData.isSigned();
         String apkName = signedApk ?
                 getGlobalScope().getProjectBaseName() + "-" + variantOutputData.getBaseName()
-                        + (useOldPackaging? "-unaligned.apk" : ".apk"):
+                        + (useOldPackaging ? "-unaligned.apk" : ".apk"):
                 getGlobalScope().getProjectBaseName() + "-" + variantOutputData.getBaseName()
                         + "-unsigned.apk";
 

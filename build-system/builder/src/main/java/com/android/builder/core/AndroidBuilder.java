@@ -123,6 +123,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -144,7 +145,7 @@ import java.util.zip.ZipFile;
  * {@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
  * {@link #compileAllAidlFiles(List, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)}
  * {@link #getDexByteCodeConverter()}
- * {@link #oldPackageApk(String, Set, Collection, Collection, Set, boolean, SigningConfig, File, int)}
+ * {@link #oldPackageApk(String, Set, Collection, Collection, File, Set, boolean, SigningConfig, File, int)}
  *
  * Java compilation is not handled but the builder provides the boot classpath with
  * {@link #getBootClasspath(boolean)}.
@@ -1858,6 +1859,7 @@ public class AndroidBuilder {
      * @param dexFolders the folder(s) with the dex file(s).
      * @param javaResourcesLocations the processed Java resource folders and/or jars
      * @param jniLibsLocations the folders containing jni shared libraries
+     * @param assetsFolder the folder containing assets (null if no assets are to be packaged)
      * @param abiFilters optional ABI filter
      * @param jniDebugBuild whether the app should include jni debug data
      * @param signingConfig the signing configuration
@@ -1872,6 +1874,7 @@ public class AndroidBuilder {
             @NonNull Set<File> dexFolders,
             @NonNull Collection<File> javaResourcesLocations,
             @NonNull Collection<File> jniLibsLocations,
+            @Nullable File assetsFolder,
             @NonNull Set<String> abiFilters,
             boolean jniDebugBuild,
             @Nullable SigningConfig signingConfig,
@@ -1893,10 +1896,10 @@ public class AndroidBuilder {
             if (resourceLocation.isFile()) {
                 javaResourceArchiveMods.put(resourceLocation, FileModificationType.NEW);
             } else {
-                Set<RelativeFile> files = RelativeFiles.fromDirectory(resourceLocation,
-                        RelativeFiles.fromFilePredicate(Files.isFile()));
-                javaResourceMods.putAll(Maps.asMap(files,
-                        Functions.constant(FileModificationType.NEW)));
+                Set<RelativeFile> files =
+                        RelativeFiles.fromDirectory(resourceLocation, RelativeFiles.IS_FILE);
+                javaResourceMods.putAll(
+                        Maps.asMap(files, Functions.constant(FileModificationType.NEW)));
             }
         }
 
@@ -1914,6 +1917,10 @@ public class AndroidBuilder {
                         Functions.constant(FileModificationType.NEW)));
             }
         }
+
+        Set<RelativeFile> assets = assetsFolder == null
+                ? Collections.emptySet()
+                : RelativeFiles.fromDirectory(assetsFolder, RelativeFiles.IS_FILE);
 
         PrivateKey key;
         X509Certificate certificate;
@@ -1974,6 +1981,12 @@ public class AndroidBuilder {
                     jniArchiveMods.entrySet()) {
                 packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
                         resourceArchiveUpdate.getValue(), Predicates.not(nativeLibraryPredicate));
+            }
+
+            for (RelativeFile asset : assets) {
+                packager.addFile(
+                        asset.getFile(),
+                        SdkConstants.FD_ASSETS + "/" + asset.getOsIndependentRelativePath());
             }
         }
     }
