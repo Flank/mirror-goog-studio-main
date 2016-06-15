@@ -851,7 +851,7 @@ public abstract class BasePlugin {
         throw new StopExecutionException(message);
     }
 
-    private static SettingsController getSettingsController() {
+    private SettingsController getSettingsController() {
         return new SettingsController() {
             @Override
             public boolean getForceHttp() {
@@ -866,7 +866,7 @@ public abstract class BasePlugin {
             @Nullable
             @Override
             public Channel getChannel() {
-                return Channel.DEFAULT;
+                return AndroidGradleOptions.getSdkChannel(project);
             }
         };
     }
