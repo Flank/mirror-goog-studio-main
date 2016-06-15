@@ -17,34 +17,44 @@
 
 #include <unistd.h>
 
+#include "utils/stopwatch.h"
+
 namespace profiler {
 
 MemoryCollector::~MemoryCollector() {
-  StopCollector();
+  Stop();
 }
 
-void MemoryCollector::StartCollector() {
+void MemoryCollector::Start() {
   if (!is_running_.exchange(true)) {
-    CreateSamplers();
     server_thread_ = std::thread([this] { this->CollectorMain(); });
   }
 }
 
-void MemoryCollector::StopCollector() {
+void MemoryCollector::Stop() {
   if (is_running_.exchange(false)) {
     server_thread_.join();
   }
 }
 
 void MemoryCollector::CollectorMain() {
+  Stopwatch stopwatch;
   while (is_running_) {
-    usleep(kSleepUs);
+    int64_t start_time_ns = stopwatch.GetElapsed();
+
+    proto::MemoryData_MemorySample sample;
+    memory_levels_sampler_.GetProcessMemoryLevels(pid_, &sample);
+    sample.set_timestamp(clock_.GetCurrentTime());
+    memory_cache_.SaveMemorySample(sample);
+
+    int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
+    if (kSleepNs > elapsed_time_ns) {
+      int64_t sleep_time_us = (kSleepNs - elapsed_time_ns) / Clock::kUsToNs;
+      usleep(static_cast<uint64_t>(sleep_time_us));
+    }
   }
 
   is_running_.exchange(false);
-}
-
-void MemoryCollector::CreateSamplers() {
 }
 
 } // namespace profiler

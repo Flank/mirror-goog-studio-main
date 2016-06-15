@@ -23,9 +23,10 @@ namespace profiler {
 
 class MemoryLevelsSampler {
  public:
-  void GetProcessMemoryLevels(int pid);
+  void GetProcessMemoryLevels(int pid,
+      proto::MemoryData_MemorySample* sample);
   void ParseMemoryLevels(const std::string& memory_info_string,
-                         proto::MemoryData_MemorySample* sample);
+      proto::MemoryData_MemorySample* sample);
  private:
   int ParseInt(char** delimited_string, const char* delimiter);
 };

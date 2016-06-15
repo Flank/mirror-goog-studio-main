@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
   profiler::CpuProfilerComponent cpu_component{daemon};
   daemon.RegisterComponent(&cpu_component);
 
-  profiler::MemoryProfilerComponent memory_component;
+  profiler::MemoryProfilerComponent memory_component{daemon};
   daemon.RegisterComponent(&memory_component);
 
   daemon.RunServer(profiler::kServerAddress);
