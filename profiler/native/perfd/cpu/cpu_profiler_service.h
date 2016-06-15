@@ -50,6 +50,16 @@ class CpuProfilerServiceImpl final
       const profiler::proto::CpuStopRequest* request,
       profiler::proto::CpuStopResponse* response) override;
 
+  grpc::Status StartProfilingApp(
+      grpc::ServerContext* context,
+      const profiler::proto::CpuProfilingAppStartRequest* request,
+      profiler::proto::CpuProfilingAppStartResponse* response) override;
+
+  grpc::Status StopProfilingApp(
+      grpc::ServerContext* context,
+      const profiler::proto::CpuProfilingAppStopRequest* request,
+      profiler::proto::CpuProfilingAppStopResponse* response) override;
+
  private:
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;

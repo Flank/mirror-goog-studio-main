@@ -38,7 +38,14 @@ message TimesRequest {
 }
 
 message TimesResponse {
-  int64 timestamp = 1;
+
+  // What's used as timestamps in all profiler data (unless otherwise specified).
+  // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
+  int64 timestamp_ns = 1;
+
+  // The number of microseconds since the Epoch.
+  // (a.k.a: Timestamp from gettimeofday, us precision.)
+  int64 epoch_timestamp_us = 2;
 }
 
 message VersionRequest {
