@@ -17,9 +17,13 @@
 #define PERFD_NETWORK_INTERNAL_NETWORK_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <atomic>
 #include <string>
+#include <thread>
 
 #include "proto/internal_network.grpc.pb.h"
+
+#include "utils/fs/file_system.h"
 
 namespace profiler {
 
@@ -27,7 +31,7 @@ class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
   explicit InternalNetworkServiceImpl(const std::string &root_path);
-  ~InternalNetworkServiceImpl() override = default;
+  ~InternalNetworkServiceImpl() override;
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,
                                 const proto::HttpDataRequest *httpData,
@@ -40,6 +44,17 @@ class InternalNetworkServiceImpl final
   grpc::Status SendHttpEvent(grpc::ServerContext *context,
                              const proto::HttpEventRequest *httpEvent,
                              proto::EmptyNetworkReply *reply) override;
+
+ private:
+  // While running, periodically walks the cache and removes old files
+  void JanitorThread();
+
+  std::unique_ptr<FileSystem> fs_;
+  std::shared_ptr<Dir> cache_partial_;
+  std::shared_ptr<Dir> cache_complete_;
+
+  std::atomic_bool is_janitor_running_;
+  std::thread janitor_thread_;
 };
 
 }  // namespace profiler

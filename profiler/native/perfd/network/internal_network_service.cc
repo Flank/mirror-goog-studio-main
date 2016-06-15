@@ -16,17 +16,48 @@
 #include "internal_network_service.h"
 
 #include <grpc++/grpc++.h>
+#include <unistd.h>
 
+#include "utils/clock.h"
 #include "utils/log.h"
+#include "utils/stopwatch.h"
+
+namespace {
+using profiler::Clock;
+
+const int32_t kCacheLifetimeS = Clock::h_to_s(1);
+const int32_t kCleanupPeriodS = Clock::m_to_s(1);
+
+// Run thread much faster than cache cleanup periods, so we can interrupt on
+// short notice.
+const int32_t kSleepUs = Clock::ms_to_us(200);
+}
 
 namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
+using profiler::Stopwatch;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
     const std::string &root_path) {
-  // TODO: Create cache manager starting at root_path/cache/network
+  fs_.reset(new FileSystem(root_path + "/cache/network"));
+
+  // Since we're restarting perfd, nuke any leftover cache from a previous run
+  fs_->root()->Delete();
+  fs_->root()->Create();
+
+  cache_partial_ = fs_->root()->NewDir("partial");
+  cache_complete_ = fs_->root()->NewDir("complete");
+
+  is_janitor_running_ = true;
+  janitor_thread_ =
+      std::thread(&InternalNetworkServiceImpl::JanitorThread, this);
+}
+
+InternalNetworkServiceImpl::~InternalNetworkServiceImpl() {
+  is_janitor_running_ = false;
+  janitor_thread_.join();
 }
 
 Status InternalNetworkServiceImpl::RegisterHttpData(
@@ -39,17 +70,61 @@ Status InternalNetworkServiceImpl::RegisterHttpData(
 Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
                                              const proto::ChunkRequest *chunk,
                                              proto::EmptyNetworkReply *reply) {
-  Log::V("Chunk (id=%lld) [%u]", chunk->uid(),
-         (uint32_t)chunk->content().length());
+  std::stringstream filename;
+  filename << chunk->uid();
+
+  auto file = cache_partial_->GetOrNewFile(filename.str());
+  file->OpenForWrite();
+  file->Append(chunk->content());
+  file->Close();
+
   return Status::OK;
 }
 
 Status InternalNetworkServiceImpl::SendHttpEvent(
     ServerContext *context, const proto::HttpEventRequest *httpEvent,
     proto::EmptyNetworkReply *reply) {
-  Log::V("HttpEvent (id=%lld) [%d]", httpEvent->uid(),
-         (int32_t)httpEvent->event());
+  switch (httpEvent->event()) {
+    case proto::HttpEventRequest::DOWNLOAD_COMPLETED: {
+      // Since the download is finished, move from partial to complete
+      // TODO: Name the dest file based on a hash of the contents. For now, we
+      // don't have a hash function, so just keep the name.
+      std::stringstream filename;
+      filename << httpEvent->uid();
+      auto file_from = cache_partial_->GetFile(filename.str());
+      auto file_to = cache_complete_->GetFile(filename.str());
+      file_from->MoveContentsTo(file_to);
+    }
+
+    break;
+
+    case proto::HttpEventRequest::ABORTED: {
+      std::stringstream filename;
+      filename << httpEvent->uid();
+      cache_partial_->GetFile(filename.str())->Delete();
+    } break;
+
+    default:
+      Log::V("Unhandled http event (%d)", httpEvent->event());
+  }
+
   return Status::OK;
+}
+
+void InternalNetworkServiceImpl::JanitorThread() {
+  Stopwatch stopwatch;
+  while (is_janitor_running_) {
+    if (Clock::ns_to_s(stopwatch.GetElapsed()) >= kCleanupPeriodS) {
+      cache_complete_->WalkFiles([this](const FileStat &fstat) {
+        if (fstat.modify_age_s() > kCacheLifetimeS) {
+          cache_complete_->GetFile(fstat.rel_path())->Delete();
+        }
+      });
+      stopwatch.Start();
+    }
+
+    usleep(kSleepUs);
+  }
 }
 
 }  // namespace profiler

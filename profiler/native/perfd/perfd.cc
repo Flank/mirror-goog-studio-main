@@ -19,6 +19,7 @@
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
+#include "utils/fs/path.h"
 
 #include <string>
 
@@ -39,8 +40,7 @@ int main(int argc, char** argv) {
   // TODO: This is assuming argv[0] is a full path, but this may not be true.
   // We should consider getting the path a more foolproof way.
   string binary_path(argv[0]);
-  // TODO: Replace with utility method
-  string root_path = binary_path.substr(0, binary_path.find_last_of("/"));
+  string root_path = profiler::Path::StripLast(binary_path);
 
   profiler::NetworkProfilerComponent network_component{root_path};
   daemon.RegisterComponent(&network_component);
