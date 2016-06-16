@@ -15,8 +15,6 @@
  */
 package com.android.tools.profiler.support.network;
 
-import android.util.Log;
-
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -62,7 +60,7 @@ final class HttpTracker {
         @Override
         public void close() throws IOException {
             super.close();
-            Log.i("HTTP_CloseInput", myConnectionTracker.myURL);
+            onClose(myConnectionTracker.myURL);
         }
 
         @Override
@@ -73,7 +71,8 @@ final class HttpTracker {
         @Override
         public int read() throws IOException {
             if (myFirstRead) {
-                Log.i("HTTP_Read", myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myURL);
+
                 myFirstRead = false;
             }
             return super.read();
@@ -82,7 +81,7 @@ final class HttpTracker {
         @Override
         public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
             if (myFirstRead) {
-                Log.i("HTTP_Read", myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myURL);
                 myFirstRead = false;
             }
             return super.read(buffer, byteOffset, byteCount);
@@ -91,11 +90,14 @@ final class HttpTracker {
         @Override
         public long skip(long byteCount) throws IOException {
             if (myFirstRead) {
-                Log.i("HTTP_Read", myConnectionTracker.myURL);
+                onReadBegin(myConnectionTracker.myURL);
                 myFirstRead = false;
             }
             return super.skip(byteCount);
         }
+
+        private native void onClose(String url);
+        private native void onReadBegin(String url);
     }
 
     /**
@@ -114,7 +116,7 @@ final class HttpTracker {
         @Override
         public void close() throws IOException {
             super.close();
-            Log.i("HTTP_CloseOutput", myConnectionTracker.myURL);
+            onClose(myConnectionTracker.myURL);
         }
 
         @Override
@@ -125,7 +127,7 @@ final class HttpTracker {
         @Override
         public void write(byte[] buffer, int offset, int length) throws IOException {
             if (myFirstWrite) {
-                Log.i("HTTP_Write", myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myURL);
                 myFirstWrite = false;
             }
             super.write(buffer, offset, length);
@@ -134,7 +136,7 @@ final class HttpTracker {
         @Override
         public void write(int oneByte) throws IOException {
             if (myFirstWrite) {
-                Log.i("HTTP_Write", myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myURL);
                 myFirstWrite = false;
             }
             super.write(oneByte);
@@ -143,11 +145,14 @@ final class HttpTracker {
         @Override
         public void write(byte[] buffer) throws IOException {
             if (myFirstWrite) {
-                Log.i("HTTP_Write", myConnectionTracker.myURL);
+                onWriteBegin(myConnectionTracker.myURL);
                 myFirstWrite = false;
             }
             write(buffer, 0, buffer.length);
         }
+
+        private native void onClose(String url);
+        private native void onWriteBegin(String url);
     }
 
 
@@ -168,67 +173,72 @@ final class HttpTracker {
             myCallstack = callstack;
 
             StringBuilder s = new StringBuilder();
-            s.append(String.format("%s\n", myURL));
             for (StackTraceElement e : callstack) {
                 s.append(String.format("%s\n", e.toString()));
             }
 
-            Log.i("HTTP_PreConnect", s.toString());
+            onPreConnect(myURL, s.toString());
         }
 
         @Override
         public void disconnect() {
-            Log.i("HTTP_Disconnect", myURL);
+            onDisconnect(myURL);
         }
 
         @Override
         public void error(String status) {
-            Log.i("HTTP_Error", String.format("%s (%s)", myURL, status));
+            onError(myURL, status);
+        }
+
+        @Override
+        public OutputStream trackRequestBody(OutputStream stream) {
+            onRequestBody(myURL);
+            return new OutputStreamTracker(stream, this);
         }
 
         @Override
         public void trackRequest(String method, Map<String, List<String>> fields) {
 
             StringBuilder s = new StringBuilder();
-            s.append(String.format("%s (%s)\n", myURL, method));
             for (Map.Entry<String, List<String>> e : fields.entrySet()) {
-                s.append(String.format("    %s = ", e.getKey()));
+                s.append(String.format("%s = ", e.getKey()));
                 for (String val : e.getValue()) {
-                    s.append(String.format("%s ; ", val));
+                    s.append(String.format("%s; ", val));
                 }
                 s.append("\n");
             }
 
-            Log.i("HTTP_Request", s.toString());
+            onRequest(myURL, method, s.toString());
         }
 
         @Override
         public void trackResponse(String response, Map<String, List<String>> fields) {
 
             StringBuilder s = new StringBuilder();
-            s.append(String.format("%s (%s)\n", myURL, response));
             for (Map.Entry<String, List<String>> e : fields.entrySet()) {
                 s.append(String.format("%s = ", e.getKey()));
                 for (String val : e.getValue()) {
-                    s.append(String.format("%s ; ", val));
+                    s.append(String.format("%s; ", val));
                 }
                 s.append("\n");
             }
 
-            Log.i("HTTP_Response", s.toString());
+            onResponse(myURL, response, s.toString());
         }
 
         @Override
         public InputStream trackResponseBody(InputStream stream) {
-            Log.i("HTTP_GetResponseBody", myURL);
+            onResponseBody(myURL);
             return new InputStreamTracker(stream, this);
         }
 
-        @Override
-        public OutputStream trackRequestBody(OutputStream stream) {
-            Log.i("HTTP_GetRequestBody", myURL);
-            return new OutputStreamTracker(stream, this);
-        }
+        private native void onPreConnect(String url, String stack);
+        private native void onRequestBody(String url);
+        private native void onRequest(String url, String method, String fields);
+        private native void onResponse(String url, String response, String fields);
+        private native void onResponseBody(String url);
+        private native void onDisconnect(String myURL);
+        private native void onError(String myURL, String status);
     }
 
     /**
