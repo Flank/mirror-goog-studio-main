@@ -31,6 +31,7 @@ import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
+import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
@@ -286,7 +287,7 @@ public class DefaultSdkLoader implements SdkLoader {
      * results for each packages it tries to install.
      *
      * @param requestPackages the packages we want to install.
-     *  @param repoManager used for interacting with repository packages.
+     * @param repoManager used for interacting with repository packages.
      * @param downloader used to download packages.
      * @param progress a progress logger for messages.
      * @return a {@code Map} of all the packages we tried to install and the install result.
@@ -307,17 +308,20 @@ public class DefaultSdkLoader implements SdkLoader {
 
         Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
         for (RemotePackage p : remotePackages) {
+            progress.logInfo(
+                    "Checking the license for package "
+                            + p.getDisplayName()
+                            + " in "
+                            + repoManager.getLocalPath()
+                            + File.separator
+                            + License.LICENSE_DIR);
             if (p.getLicense() != null
                     && !p.getLicense()
                             .checkAccepted(repoManager.getLocalPath(), mSdkHandler.getFileOp())) {
-                progress.setText(
-                        "The license for package "
-                                + p.getDisplayName()
-                                + " was not accepted. "
-                                + "Please install this package through Android Studio SDK "
-                                + "Manager.");
+                progress.logWarning("License for package " + p.getDisplayName() + " not accepted.");
                 installResults.put(p, InstallResultType.LICENSE_FAIL);
             } else {
+                progress.logInfo("License for package " + p.getDisplayName() + " accepted.");
                 Installer installer =
                         SdkInstallerUtil.findBestInstallerFactory(p, mSdkHandler)
                                 .createInstaller(
