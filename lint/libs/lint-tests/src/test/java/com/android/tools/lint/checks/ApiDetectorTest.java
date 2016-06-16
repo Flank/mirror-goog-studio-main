@@ -1205,7 +1205,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("OnDemandImport")
-    public void testTypeAnnotations() throws Exception {
+    public void ignoredTestTypeAnnotations() throws Exception {
         if (createClient().getHighestKnownApiLevel() < 24) {
             // This test only works if you have at least Android N installed
             return;
