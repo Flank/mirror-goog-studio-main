@@ -5,6 +5,7 @@ add_library(profiler_memory
             memory_levels_sampler.cc)
 
 target_link_libraries(profiler_memory
+                      profiler_utils
                       profiler_protos)
 
 add_unit_test(perfd_memory_tests

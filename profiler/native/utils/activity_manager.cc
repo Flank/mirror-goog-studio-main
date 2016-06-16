@@ -1,4 +1,5 @@
 #include "activity_manager.h"
+#include <sstream>
 
 using std::string;
 
@@ -30,4 +31,12 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   parameters.append(app_package_name);
   return Run(parameters, error_string);
 }
+
+bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,
+                   std::string *error_string) const {
+  std::stringstream ss;
+  ss << "dumpheap " << pid << " " << file_path;
+  return Run(ss.str(), error_string);
+}
+
 }  // namespace profiler
