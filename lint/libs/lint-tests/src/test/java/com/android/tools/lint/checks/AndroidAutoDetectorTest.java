@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 
 import com.android.annotations.NonNull;
-import com.android.testutils.SdkTestCase;
+import com.android.tools.lint.checks.infrastructure.BaseLintDetectorTest;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -31,14 +31,14 @@ import java.util.Set;
 
 public class AndroidAutoDetectorTest extends AbstractCheckTest {
 
-    private final SdkTestCase.TestFile mValidAutomotiveDescriptor =
+    private final BaseLintDetectorTest.TestFile mValidAutomotiveDescriptor =
             xml("res/xml/automotive_app_desc.xml", ""
                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                     + "<automotiveApp>\n"
                     + "    <uses name=\"media\"/>\n"
                     + "</automotiveApp>\n");
 
-    private SdkTestCase.TestFile mValidAutoAndroidXml = xml(FN_ANDROID_MANIFEST_XML, ""
+    private BaseLintDetectorTest.TestFile mValidAutoAndroidXml = xml(FN_ANDROID_MANIFEST_XML, ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
             + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"

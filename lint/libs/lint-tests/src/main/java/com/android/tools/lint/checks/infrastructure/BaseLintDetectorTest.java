@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.testutils;
+package com.android.tools.lint.checks.infrastructure;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
 import junit.framework.TestCase;
 
@@ -39,12 +39,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Common test case for SDK unit tests. Contains a number of general utility methods
+ * Base test case for lint tests.
+ *
+ * <p>Contains a number of general utility methods
  * to help writing test cases, such as looking up a temporary directory, comparing golden
  * files, computing string diffs, etc.
  */
 @SuppressWarnings("javadoc")
-public abstract class SdkTestCase extends TestCase {
+public abstract class BaseLintDetectorTest extends TestCase {
     /** Update golden files if different from the actual results */
     private static final boolean UPDATE_DIFFERENT_FILES = false;
     /** Create golden files if missing */
@@ -161,7 +163,7 @@ public abstract class SdkTestCase extends TestCase {
 
     protected InputStream getTestResource(String relativePath, boolean expectExists) {
         String path = "testdata" + File.separator + relativePath; //$NON-NLS-1$
-        InputStream stream = SdkTestCase.class.getResourceAsStream(path);
+        InputStream stream = BaseLintDetectorTest.class.getResourceAsStream(path);
         if (!expectExists && stream == null) {
             return null;
         }

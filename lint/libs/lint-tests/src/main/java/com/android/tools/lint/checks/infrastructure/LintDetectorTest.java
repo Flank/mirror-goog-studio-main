@@ -36,7 +36,6 @@ import com.android.ide.common.res2.ResourceSet;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
-import com.android.testutils.SdkTestCase;
 import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.LintCliClient;
@@ -125,13 +124,13 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Test case for lint detectors.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
 @Beta
 @SuppressWarnings("javadoc")
-public abstract class LintDetectorTest extends SdkTestCase {
+public abstract class LintDetectorTest extends BaseLintDetectorTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
