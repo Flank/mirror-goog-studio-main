@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Maps;
 
@@ -70,6 +71,8 @@ public class AndroidGradleOptions {
     private static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
     private static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
+
+    private static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
     private static final String PROPERTY_SHARD_TESTS_BETWEEN_DEVICES =
             "android.androidTest.shardBetweenDevices";
@@ -386,6 +389,14 @@ public class AndroidGradleOptions {
 
     public static boolean isUserCacheEnabled(@NonNull Project project) {
         return getBoolean(project, PROPERTY_ENABLE_USER_CACHE, DEFAULT_ENABLE_USER_CACHE);
+    }
+
+    public static Channel getSdkChannel(@NonNull Project project) {
+        if (project.hasProperty(ANDROID_SDK_CHANNEL)) {
+            return Channel.create(getInteger(project, ANDROID_SDK_CHANNEL));
+        } else {
+            return Channel.DEFAULT;
+        }
     }
 
 
