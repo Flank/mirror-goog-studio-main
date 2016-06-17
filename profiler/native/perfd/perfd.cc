@@ -15,6 +15,7 @@
  */
 #include "cpu/cpu_profiler_component.h"
 #include "memory/memory_profiler_component.h"
+#include "network/network_profiler_component.h"
 #include "perfd/daemon.h"
 #include "perfd/generic_component.h"
 #include "utils/config.h"
@@ -30,6 +31,9 @@ int main(int argc, char** argv) {
 
   profiler::MemoryProfilerComponent memory_component;
   daemon.RegisterComponent(&memory_component);
+
+  profiler::NetworkProfilerComponent network_component;
+  daemon.RegisterComponent(&network_component);
 
   daemon.RunServer(profiler::kServerAddress);
   return 0;

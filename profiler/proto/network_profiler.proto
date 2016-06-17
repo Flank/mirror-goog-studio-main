@@ -19,6 +19,17 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "NetworkProfiler";
 
+import "profiler.proto";
+
+message NetworkProfilerData {
+  ProfilerData basic_info = 1;
+  oneof data {
+    TrafficData traffic_data = 2;
+    ConnectionData connection_data = 3;
+    ConnectivityData connectivity_data = 4;
+  }
+}
+
 message TrafficData {
   int64 bytes_sent = 1;
   int64 bytes_received = 2;
@@ -26,9 +37,77 @@ message TrafficData {
 
 message ConnectionData { int32 connection_number = 1; }
 
-message NetworkProfilerData {
-  oneof data {
-    TrafficData traffic_data = 1;
-    ConnectionData connection_data = 2;
+message ConnectivityData {
+  enum RadioState {
+    UNSPECIFIED = 0;
+    ACTIVE = 1;
+    IDLE = 2;
+    SLEEPING = 3;
   }
+
+  RadioState radio_state = 1;
+  int32 default_network_type = 2;
+}
+
+service NetworkProfilerService {
+  // Requests profiler data from the app with ID being |app_id|, in the time range
+  // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
+  // mathematically written as in interval (start_timestamp, end_timestamp].
+  rpc GetData(NetworkDataRequest) returns (NetworkDataResponse) {
+  }
+
+  // Starts collecting execution metrics of a running app, such as received and
+  // transmitted states. Does nothing if the app is already being monitored.
+  rpc StartMonitoringApp(NetworkStartRequest) returns (NetworkStartResponse) {
+  }
+
+  // Stops monitoring a running app. Does nothing if the app is not being
+  // monitored, or is not running.
+  rpc StopMonitoringApp(NetworkStopRequest) returns (NetworkStopResponse) {
+  }
+}
+
+message NetworkDataRequest {
+  enum SpecialValues {
+    // First enum value is required to be zero.
+    UNSPECIFIED = 0;
+    // app_id field special value, it means these data is applicable to any app.
+    ANY_APP = -1;
+  }
+  enum NetworkDataType {
+    // All types of network data are requested.
+    ALL = 0;
+    // Network transmitted and received bytes.
+    TRAFFIC = 1;
+    // Default network type (wifi or mobile) and radio power state.
+    CONNECTIVITY = 2;
+    // Number of open connections.
+    CONNECTIONS = 3;
+    // Payload.
+    PAYLOAD = 4;
+  }
+  int32 app_id = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+  NetworkDataType data_type = 4;
+}
+
+message NetworkDataResponse {
+  repeated NetworkProfilerData data = 1;
+}
+
+message NetworkStartRequest {
+  int32 app_id = 1;
+}
+
+// TODO: Dig more about network collector start response.
+message NetworkStartResponse {
+}
+
+message NetworkStopRequest {
+  int32 app_id = 1;
+}
+
+// TODO: Dig more about network collector stop response.
+message NetworkStopResponse {
 }

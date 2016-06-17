@@ -23,7 +23,7 @@ namespace profiler {
 
 // Utility methods for fetching standard network log files
 // TODO: Make this class instantiatable and mockable
-class NetworkFiles final {
+class NetworkConstants final {
  public:
   // Path of pid status file to get uid from pid.
   static std::string GetPidStatusFilePath(const int pid) {
@@ -46,8 +46,20 @@ class NetworkFiles final {
     }};
     return file_paths;
   }
+
+  // Dumpsys command that is relatively efficient to get radio power status.
+  static const std::string &GetRadioStatusCommand() {
+    static const std::string radio("dumpsys network_management");
+    return radio;
+  }
+
+  // Dumpsys command that is relatively efficient to get default network type.
+  static const std::string &GetDefaultNetworkTypeCommand() {
+    static const std::string default_type("dumpsys connectivity");
+    return default_type;
+  }
 };
 
 }  // namespace profiler
 
-#endif // NETWORK_NETWORK_FILES_H_
+#endif  // NETWORK_NETWORK_FILES_H_

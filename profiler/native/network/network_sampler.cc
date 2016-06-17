@@ -18,10 +18,10 @@
 #include "utils/file_reader.h"
 
 #include <fcntl.h>
-#include <sstream>
 #include <string.h>
-#include <string>
 #include <unistd.h>
+#include <sstream>
+#include <string>
 
 namespace profiler {
 
@@ -34,7 +34,7 @@ int NetworkSampler::GetUid(const std::string &data_file) {
 }
 
 bool NetworkSampler::GetUidString(const std::string &data_file,
-                                        std::string *uid_result) {
+                                  std::string *uid_result) {
   std::string content;
   FileReader::Read(data_file, &content);
 
@@ -45,7 +45,7 @@ bool NetworkSampler::GetUidString(const std::string &data_file,
   if (start != std::string::npos) {
     start += strlen(uid_prefix);
     start = content.find_first_not_of(" \t", start);
-    if (start != std::string::npos)  {
+    if (start != std::string::npos) {
       // Find the uid end position, which should be empty space or new line,
       // and check the uid value contains 0-9 only.
       size_t end = content.find_first_not_of("0123456789", start);
@@ -53,8 +53,7 @@ bool NetworkSampler::GetUidString(const std::string &data_file,
         if (end == std::string::npos) {
           uid_result->assign(content.c_str() + start);
           return true;
-        }
-        else if (end == content.find_first_of(" \t\n\f", start)) {
+        } else if (end == content.find_first_of(" \t\n\f", start)) {
           uid_result->assign(content, start, end - start);
           return true;
         }
@@ -64,4 +63,4 @@ bool NetworkSampler::GetUidString(const std::string &data_file,
   return false;
 }
 
-} // namespace profiler
+}  // namespace profiler

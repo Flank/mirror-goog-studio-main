@@ -16,9 +16,10 @@
 #ifndef NETWORK_NETWORK_COLLECTOR_H_
 #define NETWORK_NETWORK_COLLECTOR_H_
 
+#include "network/network_constants.h"
 #include "network/network_sampler.h"
-#include "network/network_files.h"
-#include "profiler_server/profiler_data_service.h"
+#include "proto/network_profiler.pb.h"
+#include "utils/time_value_buffer.h"
 
 #include <atomic>
 #include <memory>
@@ -27,18 +28,28 @@
 
 namespace profiler {
 
+typedef TimeValueBuffer<profiler::proto::NetworkProfilerData>
+    NetworkProfilerBuffer;
+
 // Class that runs in the background, continuously collecting network data
 class NetworkCollector final {
  public:
-  NetworkCollector(int pid, profiler_server::ProfilerDataService *service)
-      : pid_(pid), service_(service) {}
+  // Each collector for pid specific information, if pid is -1, it is device
+  // network information.
+  // TODO: Replace unique_ptr with pointer to make API simpler.
+  NetworkCollector(int pid, int sample_ms,
+                   const std::unique_ptr<NetworkProfilerBuffer> &buffer)
+      : pid_(pid), sample_us_(sample_ms * 1000), buffer_(buffer.get()) {}
   ~NetworkCollector();
 
   // Creates a thread that collects and saves network data continually.
-  void StartProfile();
+  void Start();
 
   // Stops collecting data and wait for thread exit.
-  void StopProfile();
+  void Stop();
+
+  // Return app id that this network collector is for, -1 if for any app.
+  int pid();
 
  private:
   // First reads app uid from file, then creates app network data samplers;
@@ -48,12 +59,12 @@ class NetworkCollector final {
   // Continually collects data on a background thread until stopped.
   void Collect();
 
-  static const int kSleepMicroseconds = 300 * 1000;
-
   // App pid.
   int pid_;
-  // Service to pass data to.
-  profiler_server::ProfilerDataService *service_;
+  // Sample frequency.
+  int sample_us_;
+  // Buffer that holds sample data so far.
+  NetworkProfilerBuffer *buffer_;
   // Thread that network profile operations run on.
   std::thread profiler_thread_;
   // True if profile operations is running, false otherwise.
@@ -64,4 +75,4 @@ class NetworkCollector final {
 
 }  // namespace profiler
 
-#endif // NETWORK_NETWORK_COLLECTOR_H_
+#endif  // NETWORK_NETWORK_COLLECTOR_H_
