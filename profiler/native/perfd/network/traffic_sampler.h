@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_TRAFFIC_SAMPLER_H_
-#define NETWORK_TRAFFIC_SAMPLER_H_
+#ifndef PERFD_NETWORK_TRAFFIC_SAMPLER_H_
+#define PERFD_NETWORK_TRAFFIC_SAMPLER_H_
 
-#include "network/network_sampler.h"
+#include "perfd/network/network_sampler.h"
 
 #include <string>
 
@@ -47,4 +47,4 @@ class TrafficSampler final : public NetworkSampler {
 
 }  // namespace profiler
 
-#endif // NETWORK_TRAFFIC_SAMPLER_H_
+#endif // PERFD_NETWORK_TRAFFIC_SAMPLER_H_

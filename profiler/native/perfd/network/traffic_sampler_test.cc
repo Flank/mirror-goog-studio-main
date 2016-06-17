@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "proto/network_profiler.pb.h"
-#include "network/traffic_sampler.h"
+#include "perfd/network/traffic_sampler.h"
 
 #include <gtest/gtest.h>
 

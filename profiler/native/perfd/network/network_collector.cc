@@ -18,9 +18,9 @@
 #include <cstdint>
 #include <unistd.h>
 
-#include "network/connection_sampler.h"
-#include "network/connectivity_sampler.h"
-#include "network/traffic_sampler.h"
+#include "perfd/network/connection_sampler.h"
+#include "perfd/network/connectivity_sampler.h"
+#include "perfd/network/traffic_sampler.h"
 #include "utils/clock.h"
 
 namespace profiler {

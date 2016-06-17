@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_NETWORK_FILES_H_
-#define NETWORK_NETWORK_FILES_H_
+#ifndef PERFD_NETWORK_NETWORK_FILES_H_
+#define PERFD_NETWORK_NETWORK_FILES_H_
 
 #include <string>
 #include <vector>
@@ -62,4 +62,4 @@ class NetworkConstants final {
 
 }  // namespace profiler
 
-#endif  // NETWORK_NETWORK_FILES_H_
+#endif // PERFD_NETWORK_NETWORK_FILES_H_
