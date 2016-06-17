@@ -1,18 +1,21 @@
-add_library(ProfilerNetwork
+add_library(profiler_network
             connection_sampler.cc
+            connectivity_sampler.cc
             network_collector.cc
+            network_profiler_service.cc
             network_sampler.cc
             traffic_sampler.cc)
 
-target_link_libraries(ProfilerNetwork
+target_link_libraries(profiler_network
                       ProfilerProtos
                       ProfilerUtils)
 
-add_unit_test(profiler-network-test
+add_unit_test(profiler_network_test
               connection_sampler_test.cc
+              connectivity_sampler_test.cc
               network_sampler_test.cc
               traffic_sampler_test.cc)
 
-target_link_libraries(profiler-network-test
-                      ProfilerNetwork
+target_link_libraries(profiler_network_test
+                      profiler_network
                       ${GTEST_LINK_LIBRARIES})

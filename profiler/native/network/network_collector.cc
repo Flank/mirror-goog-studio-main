@@ -15,24 +15,23 @@
  */
 #include "network_collector.h"
 
-#include "network/connection_sampler.h"
-#include "network/traffic_sampler.h"
-#include "proto/profiler.pb.h"
-#include "utils/stopwatch.h"
-
+#include <cstdint>
 #include <unistd.h>
 
-using profiler::Stopwatch;
+#include "network/connection_sampler.h"
+#include "network/connectivity_sampler.h"
+#include "network/traffic_sampler.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
 NetworkCollector::~NetworkCollector() {
   if (is_running_) {
-    StopProfile();
+    Stop();
   }
 }
 
-void NetworkCollector::StartProfile() {
+void NetworkCollector::Start() {
   if (samplers_.empty()) {
     CreateSamplers();
   }
@@ -41,35 +40,46 @@ void NetworkCollector::StartProfile() {
   }
 }
 
-void NetworkCollector::StopProfile() {
+void NetworkCollector::Stop() {
   if (is_running_.exchange(false)) {
     profiler_thread_.join();
   }
 }
 
 void NetworkCollector::Collect() {
-  Stopwatch stopwatch;
+  profiler::SteadyClock clock;
   while (is_running_.load()) {
     for (const auto &sampler : samplers_) {
-      profiler::proto::ProfilerData response;
-      sampler->GetData(response.mutable_network_data());
-      response.set_end_timestamp(stopwatch.GetElapsed());
-      service_->save(response);
+      profiler::proto::NetworkProfilerData response;
+      sampler->GetData(&response);
+      int64_t time = clock.GetCurrentTime();
+      response.mutable_basic_info()->set_app_id(pid_);
+      response.mutable_basic_info()->set_end_timestamp(time);
+      buffer_->Add(response, time);
     }
-    usleep(kSleepMicroseconds);
+    usleep(sample_us_);
   }
 }
 
 void NetworkCollector::CreateSamplers() {
   std::string uid;
   bool has_uid = NetworkSampler::GetUidString(
-      NetworkFiles::GetPidStatusFilePath(pid_), &uid);
+      NetworkConstants::GetPidStatusFilePath(pid_), &uid);
   if (has_uid) {
-    samplers_.emplace_back(
-        new TrafficSampler(uid, NetworkFiles::GetTrafficBytesFilePath()));
-    samplers_.emplace_back(new ConnectionSampler(
-        uid, NetworkFiles::GetConnectionFilePaths()));
+    // TODO: Define a centralized ANY_APP id.
+    if (pid_ == -1) {
+      samplers_.emplace_back(new ConnectivitySampler(
+          NetworkConstants::GetRadioStatusCommand(),
+          NetworkConstants::GetDefaultNetworkTypeCommand()));
+    } else {
+      samplers_.emplace_back(
+          new TrafficSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
+      samplers_.emplace_back(new ConnectionSampler(
+          uid, NetworkConstants::GetConnectionFilePaths()));
+    }
   }
 }
 
-} // profiler
+int NetworkCollector::pid() { return pid_; }
+
+}  // profiler
