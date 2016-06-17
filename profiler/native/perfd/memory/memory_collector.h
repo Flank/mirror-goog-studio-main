@@ -34,7 +34,7 @@ private:
 
 public:
   MemoryCollector(int32_t pid, const Clock& clock) :
-      clock_(clock), memory_cache_(kSamplesCount), pid_(pid) {}
+      memory_cache_(clock, kSamplesCount), pid_(pid) {}
   ~MemoryCollector();
 
   void Start();
@@ -42,7 +42,6 @@ public:
   MemoryCache* memory_cache() {return &memory_cache_;}
 
 private:
-  const Clock& clock_;
   MemoryCache memory_cache_;
   MemoryLevelsSampler memory_levels_sampler_;
   std::thread server_thread_;
