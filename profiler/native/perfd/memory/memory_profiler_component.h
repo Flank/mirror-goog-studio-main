@@ -16,6 +16,8 @@
 #ifndef MEMORY_PROFILER_COMPONENT_H_
 #define MEMORY_PROFILER_COMPONENT_H_
 
+#include <unordered_map>
+
 #include "memory_service.h"
 #include "perfd/profiler_component.h"
 
@@ -23,6 +25,8 @@ namespace profiler {
 
 class MemoryProfilerComponent final : public ProfilerComponent {
 public:
+  MemoryProfilerComponent(const Daemon& daemon) : public_service_(daemon.clock(), collectors_) {}
+
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
 
@@ -31,6 +35,9 @@ public:
 
 private:
   MemoryServiceImpl public_service_;
+
+  // Mapping pid->MemoryCollector.
+  std::unordered_map<int32_t, MemoryCollector> collectors_;
 };
 
 }  // namespace profiler

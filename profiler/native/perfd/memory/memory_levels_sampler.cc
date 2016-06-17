@@ -40,7 +40,7 @@ enum MemoryType {
 
 namespace profiler {
 
-void MemoryLevelsSampler::GetProcessMemoryLevels(int pid) {
+void MemoryLevelsSampler::GetProcessMemoryLevels(int pid, proto::MemoryData_MemorySample* sample) {
   char buffer[kBufferSize];
   char cmd[kCommandMaxLength];
   int num_written = snprintf(cmd, kCommandMaxLength, kDumpsysCommandFormat, pid);
@@ -70,8 +70,7 @@ void MemoryLevelsSampler::GetProcessMemoryLevels(int pid) {
     output += buffer;
   }
 
-  proto::MemoryData_MemorySample sample;
-  ParseMemoryLevels(output, &sample);
+  ParseMemoryLevels(output, sample);
 }
 
 void MemoryLevelsSampler::ParseMemoryLevels(const std::string& memory_info_string,

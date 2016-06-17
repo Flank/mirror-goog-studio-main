@@ -31,6 +31,12 @@ namespace profiler {
 //   rather than absolute time, use Stopwatch instead.
 class Clock {
  public:
+  const static int64_t kUsToNs = 1000;
+  const static int64_t kMsToUs = 1000;
+  const static int64_t kSToMs = 1000;
+  const static int64_t kSToUs = kSToMs * kMsToUs;
+  const static int64_t kSToNs = kSToUs * kUsToNs;
+
   // Returns a monotonically increasing value. This value is meant for
   // comparing two relative times, as the time represented by time=0 is not
   // explicitly defined.

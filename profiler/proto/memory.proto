@@ -19,10 +19,34 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "MemoryProfilerService";
 
-import "profiler.proto";
-
 service MemoryService {
+  rpc SetMemoryConfig(MemoryConfig) returns (MemoryStatus) {}
   rpc GetData(MemoryRequest) returns (MemoryData) {}
+}
+
+enum MemoryFeature {
+  UNSPECIFIED = 0;
+  MEMORY_LEVELS = 1;
+}
+
+message MemoryConfig {
+  message Option {
+    MemoryFeature feature = 1;
+    bool enabled = 2;
+  }
+
+  int32 app_id = 1;
+  repeated Option options = 2;
+}
+
+message MemoryStatus {
+  int64 status_timestamp = 2;
+}
+
+message MemoryRequest {
+  int32 app_id = 1;
+  int64 start_time = 2; // exclusive
+  int64 end_time = 3; // inclusive
 }
 
 message MemoryData {
@@ -48,14 +72,8 @@ message MemoryData {
     int32 instances_destroyed = 3;
   }
 
-  ProfilerData profiler_data = 1;
+  int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
   repeated InstanceCountSample instance_count_samples = 3;
   repeated GcSample gc_samples = 4;
-}
-
-message MemoryRequest {
-  int32 app_id = 1;
-  int64 start_time = 2;
-  int64 end_time = 3;
 }

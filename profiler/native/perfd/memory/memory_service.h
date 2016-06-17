@@ -17,8 +17,9 @@
 #define PROFILER_PERFD_MEMORY_MEMORY_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <unordered_map>
 
-#include "memory_data_cache.h"
+#include "memory_collector.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"
 
@@ -26,17 +27,23 @@ namespace profiler {
 
 class MemoryServiceImpl final : public ::profiler::proto::MemoryService::Service {
 public:
-  MemoryServiceImpl() = default;
+  MemoryServiceImpl(const Clock& clock, std::unordered_map<int32_t, MemoryCollector>& collectors) :
+      clock_(clock), collectors_(collectors) {}
   virtual ~MemoryServiceImpl() = default;
 
-  virtual ::grpc::Status GetData(
+  ::grpc::Status SetMemoryConfig(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::MemoryConfig* request,
+      ::profiler::proto::MemoryStatus* response) override;
+
+  ::grpc::Status GetData(
       ::grpc::ServerContext* context,
       const ::profiler::proto::MemoryRequest* request,
-      ::profiler::proto::MemoryData* response);
+      ::profiler::proto::MemoryData* response) override;
 
 private:
-  MemoryDataCache memory_data_cache_;
-  SteadyClock clock_;
+  const Clock& clock_;
+  std::unordered_map<int32_t, MemoryCollector>& collectors_;
 };
 
 }
