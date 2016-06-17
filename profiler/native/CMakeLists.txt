@@ -46,7 +46,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Add profiler components
-add_subdirectory(cpu)
 add_subdirectory(perfa)
 add_subdirectory(perfd)
 add_subdirectory(proto)

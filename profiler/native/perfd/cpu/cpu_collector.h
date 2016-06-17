@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CPU_CPU_COLLECTOR_H_
-#define CPU_CPU_COLLECTOR_H_
+#ifndef PERFD_CPU_CPU_COLLECTOR_H_
+#define PERFD_CPU_CPU_COLLECTOR_H_
 
 #include <atomic>
 #include <cstdint>
 #include <thread>
 
-#include "cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/cpu_usage_sampler.h"
 
 namespace profiler {
 
@@ -60,4 +60,4 @@ class CpuCollector {
 
 }  // namespace profiler
 
-#endif  // CPU_CPU_COLLECTOR_H_
+#endif  // PERFD_CPU_CPU_COLLECTOR_H_

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cpu_collector.h"
+#include "perfd/cpu/cpu_collector.h"
 
 #include <unistd.h>
 #include <atomic>

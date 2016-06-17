@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cpu_cache.h"
+#include "perfd/cpu/cpu_cache.h"
 
 #include <algorithm>
 #include <cstdint>

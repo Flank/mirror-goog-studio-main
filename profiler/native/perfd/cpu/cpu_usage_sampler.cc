@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "cpu/cpu_cache.h"
+#include "perfd/cpu/cpu_cache.h"
 #include "proto/cpu_profiler_data.pb.h"
 #include "proto/profiler.pb.h"
 #include "utils/file_reader.h"

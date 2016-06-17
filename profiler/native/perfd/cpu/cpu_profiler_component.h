@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CPU_CPU_PROFILER_COMPONENT_H_
-#define CPU_CPU_PROFILER_COMPONENT_H_
+#ifndef PERFD_CPU_CPU_PROFILER_COMPONENT_H_
+#define PERFD_CPU_CPU_PROFILER_COMPONENT_H_
 
-#include "cpu/cpu_cache.h"
-#include "cpu/cpu_collector.h"
-#include "cpu/cpu_profiler_service.h"
+#include "perfd/cpu/cpu_cache.h"
+#include "perfd/cpu/cpu_collector.h"
+#include "perfd/cpu/cpu_profiler_service.h"
 #include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
 
@@ -47,4 +47,4 @@ class CpuProfilerComponent final : public ProfilerComponent {
 
 }  // namespace profiler
 
-#endif  // CPU_CPU_PROFILER_COMPONENT_H_
+#endif  // PERFD_CPU_CPU_PROFILER_COMPONENT_H_
