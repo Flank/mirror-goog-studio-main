@@ -42,8 +42,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${GRPC_INCLUDE_DIR})
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors -std=c11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -std=c++11")
 
 # Add profiler components
 add_subdirectory(cpu)
