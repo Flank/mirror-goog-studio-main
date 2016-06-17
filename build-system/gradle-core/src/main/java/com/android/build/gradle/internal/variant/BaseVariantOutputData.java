@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.variant;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -29,6 +30,7 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 
@@ -158,7 +160,14 @@ public abstract class BaseVariantOutputData implements VariantOutput {
         if (generateAtomMetadataTask == null)
             return null;
         else
-            return generateAtomMetadataTask.getAtomMetadataBaseFolder();
+            return generateAtomMetadataTask.getAtomMetadataFolder();
+    }
+
+    @NonNull
+    public File getProcessResourcePackageOutputFile() {
+        return FileUtils.join(getScope().getGlobalScope().getIntermediatesDir(),
+                SdkConstants.FD_RES, "resources-" + getBaseName() + SdkConstants.DOT_RES);
+
     }
 
     @NonNull

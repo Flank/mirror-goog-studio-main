@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
@@ -50,6 +51,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.MergeAtoms;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -155,6 +157,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
+
+    private AndroidTask<MergeAtoms> mergeAtomsTask;
 
     @Nullable
     private ExternalNativeJsonGenerator externalNativeJsonGenerator;
@@ -806,10 +810,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getPackageAtom() {
-        String atomName = getGlobalScope().getProjectBaseName() + ".atom";
-
-        return FileUtils.join(
-                getBaseBundleDir(), "atoms", "assets", atomName);
+        String atomName = getGlobalScope().getProjectBaseName() + SdkConstants.DOT_ATOM;
+        return FileUtils.join(getBaseBundleDir(), SdkConstants.EXT_ATOM, atomName);
     }
 
     @NonNull
@@ -1201,6 +1203,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public AndroidTask<ExternalNativeBuildTask> getExternalNativeBuildTask() {
         return externalNativeBuild;
     }
+
+    @Nullable
+    @Override
+    public AndroidTask<MergeAtoms> getMergeAtomsTask() {
+        return mergeAtomsTask;
+    }
+
+    @Override
+    public void setMergeAtomsTask(@NonNull AndroidTask<MergeAtoms> mergeAtomsTask) {
+        this.mergeAtomsTask = mergeAtomsTask;
+    }
+
 
     @Override
     @NonNull

@@ -194,6 +194,12 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
+    public File getPackageInstantApp() {
+        return mVariantOutputScope.getPackageInstantApp();
+    }
+
+    @NonNull
+    @Override
     public File getAssetsDir() {
         return mVariantScope.getMergeAssetsOutputDir();
     }

@@ -16,6 +16,7 @@
 
 package com.android.builder.dependency;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidAtom;
@@ -98,13 +99,22 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
     @Override
     @NonNull
     public File getAtomFolder() {
-        return new File(getFolder(), "atoms");
+        return new File(getFolder(), SdkConstants.EXT_ATOM);
     }
 
     @Override
     @NonNull
     public File getAtomMetadataFile() {
-        return FileUtils.join(getFolder(), "atom-metadata", "META-INF", "atom-metadata");
+        return FileUtils.join(
+                getFolder(),
+                SdkConstants.FD_INSTANTAPP_METADATA,
+                SdkConstants.FN_ATOM_METADATA);
+    }
+
+    @Override
+    @NonNull
+    public File getResourcePackageFile() {
+        return new File(getFolder(), "resources.ap_");
     }
 
     @Override

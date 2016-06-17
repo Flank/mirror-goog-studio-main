@@ -25,6 +25,7 @@ package com.android.builder.profile;
  * 2000-3000    library related task creation
  * 3000-4000    Tasks related events.
  * 4000-5000    atom related task creation
+ * 5000-6000    instant app related task creation
  */
 public enum ExecutionType {
 
@@ -138,7 +139,12 @@ public enum ExecutionType {
     ATOM_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK(4013),
     ATOM_TASK_MANAGER_CREATE_POST_COMPILATION_TASK(4014),
     ATOM_TASK_MANAGER_CREATE_LINT_TASK(4015),
-    ATOM_TASK_MANAGER_CREATE_SHADER_TASK(4016);
+    ATOM_TASK_MANAGER_CREATE_SHADER_TASK(4016),
+
+    // InstantAppTaskManager per variant tasks.
+    INSTANTAPP_TASK_MANAGER_CREATE_MERGE_ATOMS_TASK(5000),
+    INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK(5001),
+    INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK(5002);
 
     int getId() {
         return id;

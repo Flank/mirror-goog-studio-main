@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
  */
 public enum VariantType {
     DEFAULT(false),
+    INSTANTAPP(false),
     LIBRARY(true),
     ATOM(true),
     ANDROID_TEST(

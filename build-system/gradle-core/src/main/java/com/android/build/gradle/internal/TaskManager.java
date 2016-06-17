@@ -103,6 +103,7 @@ import com.android.build.gradle.internal.transforms.NewShrinkerTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
+import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
@@ -523,13 +524,13 @@ public abstract class TaskManager {
     public void createMergeAppManifestsTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope) {
-        ApplicationVariantData appVariantData =
-                (ApplicationVariantData) variantScope.getVariantData();
-        Set<String> screenSizes = appVariantData.getCompatibleScreens();
+        AndroidArtifactVariantData<?> androidArtifactVariantData =
+                (AndroidArtifactVariantData) variantScope.getVariantData();
+        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated manifest
-        for (final BaseVariantOutputData vod : appVariantData.getOutputs()) {
+        for (final BaseVariantOutputData vod : androidArtifactVariantData.getOutputs()) {
             VariantOutputScope scope = vod.getScope();
 
             AndroidTask<CompatibleScreensManifest> csmTask = null;
