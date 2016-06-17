@@ -88,16 +88,19 @@ public interface SyncIssue {
     // Data contains STDERR which should be interpreted by Android Studio
     int TYPE_EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION = 17;
 
-    // data is dependency coordinate/path
-    int TYPE_JAR_DEPEND_ON_ATOM       = 18;
+    // Cannot use Java 8 Language features without Jack.
+    int TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES = 18;
 
     // data is dependency coordinate/path
-    int TYPE_AAR_DEPEND_ON_ATOM       = 19;
+    int TYPE_JAR_DEPEND_ON_ATOM       = 19;
 
     // data is dependency coordinate/path
-    int TYPE_ATOM_DEPENDENCY_PROVIDED = 20;
+    int TYPE_AAR_DEPEND_ON_ATOM       = 20;
 
-    int TYPE_MAX                      = 20; // increment when adding new types.
+    // data is dependency coordinate/path
+    int TYPE_ATOM_DEPENDENCY_PROVIDED = 21;
+
+    int TYPE_MAX                      = 21; // increment when adding new types.
 
     /**
      * Returns the severity of the issue.
