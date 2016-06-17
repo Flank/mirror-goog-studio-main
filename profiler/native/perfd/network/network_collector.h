@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_NETWORK_COLLECTOR_H_
-#define NETWORK_NETWORK_COLLECTOR_H_
+#ifndef PERFD_NETWORK_NETWORK_COLLECTOR_H_
+#define PERFD_NETWORK_NETWORK_COLLECTOR_H_
 
-#include "network/network_constants.h"
-#include "network/network_sampler.h"
+#include "perfd/network/network_constants.h"
+#include "perfd/network/network_sampler.h"
 #include "proto/network_profiler.pb.h"
 #include "utils/time_value_buffer.h"
 
@@ -75,4 +75,4 @@ class NetworkCollector final {
 
 }  // namespace profiler
 
-#endif  // NETWORK_NETWORK_COLLECTOR_H_
+#endif // PERFD_NETWORK_NETWORK_COLLECTOR_H_

@@ -13,3 +13,4 @@ target_link_libraries(perfd
 # Add perfd profiler components
 
 add_subdirectory(memory)
+add_subdirectory(network)

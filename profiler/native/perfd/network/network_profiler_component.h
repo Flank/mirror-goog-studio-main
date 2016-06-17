@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_NETWORK_PROFILER_COMPONENT_H_
-#define NETWORK_NETWORK_PROFILER_COMPONENT_H_
+#ifndef PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
+#define PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 
-#include "network/network_collector.h"
-#include "network/network_profiler_service.h"
+#include "perfd/network/network_collector.h"
+#include "perfd/network/network_profiler_service.h"
 #include "perfd/profiler_component.h"
 
 namespace profiler {
@@ -38,4 +38,4 @@ class NetworkProfilerComponent final : public ProfilerComponent {
 
 }  // namespace profiler
 
-#endif  // NETWORK_NETWORK_PROFILER_COMPONENT_H_
+#endif // PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
