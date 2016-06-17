@@ -16,30 +16,38 @@
 #ifndef MEMORY_COLLECTOR_H_
 #define MEMORY_COLLECTOR_H_
 
+#include "utils/clock.h"
+#include "memory_cache.h"
+#include "memory_levels_sampler.h"
 #include "proto/memory.grpc.pb.h"
 
 #include <atomic>
 #include <thread>
 
-#define MS_TO_US 1000
-
 namespace profiler {
 
 class MemoryCollector {
+private:
+  static const int64_t kSleepNs = 250 * Clock::kMsToUs * Clock::kUsToNs;
+  static const int64_t kSecondsToBuffer = 5;
+  static const int64_t kSamplesCount = 1 + kSecondsToBuffer * Clock::kSToNs / kSleepNs;
+
 public:
-  MemoryCollector(int pid) : pid_(pid) {}
+  MemoryCollector(int32_t pid, const Clock& clock) :
+      pid_(pid), clock_(clock), memory_cache_(kSamplesCount) {}
   ~MemoryCollector();
 
-  void StartCollector();
-  void StopCollector();
-  void CreateSamplers();
+  void Start();
+  void Stop();
+  MemoryCache* memory_cache() {return &memory_cache_;}
 
 private:
-  static const int kSleepUs = 300 * MS_TO_US;
-
+  const Clock& clock_;
+  MemoryCache memory_cache_;
+  MemoryLevelsSampler memory_levels_sampler_;
   std::thread server_thread_;
-  std::atomic_bool is_running_;
-  int pid_;
+  std::atomic_bool is_running_{false};
+  int32_t pid_;
 
   void CollectorMain();
 }; // MemoryCollector
