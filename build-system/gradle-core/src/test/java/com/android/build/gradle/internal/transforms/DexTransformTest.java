@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.repository.Revision;
+import com.android.utils.FileUtils;
 
 import org.junit.Test;
 
@@ -45,7 +46,7 @@ public class DexTransformTest {
         buildToolsRevision = Revision.parseRevision("23.0");
         key = DexTransform.getKey(inputFile, buildToolsRevision, false, true, false);
 
-        assertEquals("com.android.support/design/23.3.0/jars/classes.jar"
+        assertEquals(FileUtils.join("com.android.support", "design", "23.3.0", "jars", "classes.jar")
                 + "_build=23.0_jumbo=false_multidex=true_optimize=false", key);
 
         inputFile = new File("/Users/foo/MyApplication/app/build/intermediates/exploded-aar/"
@@ -53,8 +54,9 @@ public class DexTransformTest {
         buildToolsRevision = Revision.parseRevision("23");
         key = DexTransform.getKey(inputFile, buildToolsRevision, true, true, true);
 
-        assertEquals("com.android.support/support-v4/23.3.0/jars/libs/internal_impl-23.3.0.jar"
-                + "_build=23_jumbo=true_multidex=true_optimize=true", key);
+        assertEquals(FileUtils.join("com.android.support", "support-v4", "23.3.0", "jars", "libs",
+                "internal_impl-23.3.0.jar") + "_build=23_jumbo=true_multidex=true_optimize=true",
+                key);
 
         inputFile = new File("/Users/foo/MyApplication/app/build/intermediates/pre-dexed/debug/"
                 + "debug_283caf89dd7987cc2f3b325eb70525d5b717a7b5.jar");
