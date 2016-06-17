@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cpu/cpu_profiler_component.h"
-#include "memory/memory_profiler_component.h"
-#include "perfd/network/network_profiler_component.h"
+#include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
 #include "perfd/generic_component.h"
+#include "perfd/memory/memory_profiler_component.h"
+#include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
 
 int main(int argc, char** argv) {

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CPU_CPU_PROFILER_SERVICE_H_
-#define CPU_CPU_PROFILER_SERVICE_H_
+#ifndef PERFD_CPU_CPU_PROFILER_SERVICE_H_
+#define PERFD_CPU_CPU_PROFILER_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 
-#include "cpu/cpu_cache.h"
-#include "cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/cpu_cache.h"
+#include "perfd/cpu/cpu_usage_sampler.h"
 #include "proto/cpu_profiler_service.grpc.pb.h"
 
 namespace profiler {
@@ -55,4 +55,4 @@ class CpuProfilerServiceImpl final
 
 }  // namespace profiler
 
-#endif  // CPU_CPU_PROFILER_SERVICE_H_
+#endif  // PERFD_CPU_CPU_PROFILER_SERVICE_H_

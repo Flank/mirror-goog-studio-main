@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CPU_CPU_USAGE_SAMPLER_H_
-#define CPU_CPU_USAGE_SAMPLER_H_
+#ifndef PERFD_CPU_CPU_USAGE_SAMPLER_H_
+#define PERFD_CPU_CPU_USAGE_SAMPLER_H_
 
 #include <cstdint>
 #include <mutex>
@@ -62,4 +62,4 @@ class CpuUsageSampler {
 
 }  // namespace profiler
 
-#endif  // CPU_CPU_USAGE_SAMPLER_H_
+#endif  // PERFD_CPU_CPU_USAGE_SAMPLER_H_
