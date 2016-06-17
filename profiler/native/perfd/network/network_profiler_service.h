@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_NETWORK_PROFILER_SERVICE_H_
-#define NETWORK_NETWORK_PROFILER_SERVICE_H_
+#ifndef PERFD_NETWORK_NETWORK_PROFILER_SERVICE_H_
+#define PERFD_NETWORK_NETWORK_PROFILER_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 #include <memory>
 #include <vector>
 
-#include "network/network_collector.h"
+#include "perfd/network/network_collector.h"
 #include "proto/network_profiler.grpc.pb.h"
 #include "utils/time_value_buffer.h"
 
@@ -59,4 +59,4 @@ class NetworkProfilerServiceImpl final
 
 }  // namespace profiler
 
-#endif  // NETWORK_NETWORK_PROFILER_SERVICE_H_
+#endif // PERFD_NETWORK_NETWORK_PROFILER_SERVICE_H_

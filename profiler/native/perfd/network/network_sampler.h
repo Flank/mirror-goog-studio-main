@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_NETWORK_SAMPLER_H_
-#define NETWORK_NETWORK_SAMPLER_H_
+#ifndef PERFD_NETWORK_NETWORK_SAMPLER_H_
+#define PERFD_NETWORK_NETWORK_SAMPLER_H_
 
 #include "proto/network_profiler.pb.h"
 
@@ -44,4 +44,4 @@ class NetworkSampler {
 
 }  // namespace profiler
 
-#endif // NETWORK_NETWORK_SAMPLER_H_
+#endif // PERFD_NETWORK_NETWORK_SAMPLER_H_

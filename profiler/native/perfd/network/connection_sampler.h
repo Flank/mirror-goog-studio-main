@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NETWORK_CONNECTION_SAMPLER_H
-#define NETWORK_CONNECTION_SAMPLER_H
+#ifndef PERFD_NETWORK_CONNECTION_SAMPLER_H
+#define PERFD_NETWORK_CONNECTION_SAMPLER_H
 
-#include "network/network_sampler.h"
+#include "perfd/network/network_sampler.h"
 
 #include <string>
 #include <vector>
@@ -82,4 +82,4 @@ class ConnectionSampler final : public NetworkSampler {
 
 }  // namespace profiler
 
-#endif // NETWORK_CONNECTION_SAMPLER_H
+#endif // PERFD_NETWORK_CONNECTION_SAMPLER_H
