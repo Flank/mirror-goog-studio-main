@@ -330,8 +330,12 @@ model {
                         NativeModelHelper.getCFlags(model, artifact).get(project.file("src/main/jni"));
                 assertThat(cFlags).contains("-DTEST_C_FLAG");
                 assertThat(cFlags).contains("-gcc-toolchain");
-                // There is no C++ flags as there is no C++ source files.
-                assertThat(NativeModelHelper.getFlatCppFlags(model, artifact)).isEmpty()
+                assertThat(cFlags).doesNotContain("null");
+                List<String> cppFlags =
+                        NativeModelHelper.getCppFlags(model, artifact).get(project.file("src/main/jni"));
+                assertThat(cppFlags).contains("-DTEST_CPP_FLAG");
+                assertThat(cppFlags).contains("-gcc-toolchain");
+                assertThat(cppFlags).doesNotContain("null");
                 assertThat(artifact.getOutputFile()).exists();
             }
 

@@ -25,6 +25,7 @@ import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeFolder;
 import com.android.builder.model.NativeSettings;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 
 import java.io.File;
 import java.util.Collection;
@@ -75,24 +76,31 @@ public class NativeModelHelper {
     public static Map<File, List<String>> getCppFlags(
             @NonNull NativeAndroidProject project,
             @NonNull NativeArtifact artifact) {
-        return getFlags(project, artifact, "cpp");
+        return getFlags(project, artifact, "c++");
     }
 
     @NonNull
     private static Map<File, List<String>> getFlags(
             @NonNull NativeAndroidProject project,
             @NonNull NativeArtifact artifact,
-            @NonNull String extension) {
+            @NonNull String language) {
         Map<File, String> settingsMap = Maps.newHashMap();
 
         for (NativeFolder nativeFolder : artifact.getSourceFolders()) {
-            String setting = nativeFolder.getPerLanguageSettings().get(extension);
+            String setting = nativeFolder.getPerLanguageSettings().get(language);
             if (setting != null) {
                 settingsMap.put(nativeFolder.getFolderPath(), setting);
             }
         }
+
+        // Get extensions for the language.
+        List<String> extensions = project.getFileExtensions().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(language))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
         for (NativeFile nativeFile : artifact.getSourceFiles()) {
-            if (nativeFile.getFilePath().getName().endsWith("." + extension)) {
+            if (extensions.contains(Files.getFileExtension(nativeFile.getFilePath().getName()))) {
                 String setting = nativeFile.getSettingsName();
                 settingsMap.put(nativeFile.getFilePath(), setting);
             }
