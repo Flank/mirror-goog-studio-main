@@ -28,9 +28,9 @@ namespace profiler {
 
 class MemoryCollector {
 private:
-  static const int64_t kSleepNs = 250 * Clock::kMsToUs * Clock::kUsToNs;
+  static constexpr int64_t kSleepNs = Clock::ms_to_ns(250);
   static const int64_t kSecondsToBuffer = 5;
-  static const int64_t kSamplesCount = 1 + kSecondsToBuffer * Clock::kSToNs / kSleepNs;
+  static constexpr int64_t kSamplesCount = 1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
 
 public:
   MemoryCollector(int32_t pid, const Clock& clock) :

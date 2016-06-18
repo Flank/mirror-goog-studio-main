@@ -49,7 +49,7 @@ void MemoryCollector::CollectorMain() {
 
     int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
     if (kSleepNs > elapsed_time_ns) {
-      int64_t sleep_time_us = (kSleepNs - elapsed_time_ns) / Clock::kUsToNs;
+      int64_t sleep_time_us = Clock::ns_to_us(kSleepNs - elapsed_time_ns);
       usleep(static_cast<uint64_t>(sleep_time_us));
     }
   }
