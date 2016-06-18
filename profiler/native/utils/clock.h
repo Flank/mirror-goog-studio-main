@@ -31,11 +31,18 @@ namespace profiler {
 //   rather than absolute time, use Stopwatch instead.
 class Clock {
  public:
-  const static int64_t kUsToNs = 1000;
-  const static int64_t kMsToUs = 1000;
-  const static int64_t kSToMs = 1000;
-  const static int64_t kSToUs = kSToMs * kMsToUs;
-  const static int64_t kSToNs = kSToUs * kUsToNs;
+  static constexpr int64_t ns_to_us(int64_t ns) { return ns / 1000; }
+  static constexpr int64_t ns_to_ms(int64_t ns) { return ns_to_us(ns) / 1000; }
+  static constexpr int64_t ns_to_s(int64_t ns) { return ns_to_ms(ns) / 1000; }
+  static constexpr int64_t us_to_ns(int64_t us) { return us * 1000; }
+  static constexpr int64_t us_to_ms(int64_t us) { return us / 1000; }
+  static constexpr int64_t us_to_s(int64_t us) { return us_to_ms(us) / 1000; }
+  static constexpr int64_t ms_to_ns(int64_t ms) { return ms_to_us(ms) * 1000; }
+  static constexpr int64_t ms_to_us(int64_t ms) { return ms * 1000; }
+  static constexpr int64_t ms_to_s(int64_t ms) { return ms / 1000; }
+  static constexpr int64_t s_to_ns(int64_t s) { return s_to_us(s) * 1000; }
+  static constexpr int64_t s_to_us(int64_t s) { return s_to_ms(s) * 1000; }
+  static constexpr int64_t s_to_ms(int64_t s) { return s * 1000; }
 
   // Returns a monotonically increasing value. This value is meant for
   // comparing two relative times, as the time represented by time=0 is not
