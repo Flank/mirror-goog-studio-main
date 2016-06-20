@@ -19,7 +19,7 @@
 #include <string>
 
 #include "network_sampler.h"
-#include "proto/network_profiler.pb.h"
+#include "proto/network.pb.h"
 
 namespace profiler {
 

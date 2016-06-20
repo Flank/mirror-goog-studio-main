@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "connectivity_sampler.h"
-#include "proto/network_profiler.pb.h"
+#include "proto/network.pb.h"
 #include "utils/bash_command.h"
 
 #include <gtest/gtest.h>
