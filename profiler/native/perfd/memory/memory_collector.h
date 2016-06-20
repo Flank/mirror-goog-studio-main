@@ -34,7 +34,7 @@ private:
 
 public:
   MemoryCollector(int32_t pid, const Clock& clock) :
-      pid_(pid), clock_(clock), memory_cache_(kSamplesCount) {}
+      clock_(clock), memory_cache_(kSamplesCount), pid_(pid) {}
   ~MemoryCollector();
 
   void Start();

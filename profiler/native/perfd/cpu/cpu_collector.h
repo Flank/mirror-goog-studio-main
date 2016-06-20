@@ -32,7 +32,7 @@ class CpuCollector {
   // Creates a collector that will invoke |sampler| every |interval_in_us|
   // microseconds.
   CpuCollector(int64_t interval_in_us, CpuUsageSampler* sampler)
-      : sampling_interval_in_us_(interval_in_us), sampler_(*sampler) {}
+      : sampler_(*sampler), sampling_interval_in_us_(interval_in_us) {}
 
   ~CpuCollector();
 

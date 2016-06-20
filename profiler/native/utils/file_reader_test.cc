@@ -25,28 +25,28 @@ TEST(FindToken, TokenIsFirst) {
   size_t token_start = 0;
   bool is_found = FileReader::FindTokenPosition(kTestLine, 0, &token_start);
   EXPECT_TRUE(is_found);
-  EXPECT_EQ(0, token_start);
+  EXPECT_EQ(0u, token_start);
 }
 
 TEST(FindToken, TokenIsLast) {
   size_t token_start = 0;
   bool is_found = FileReader::FindTokenPosition(kTestLine, 4, &token_start);
   EXPECT_TRUE(is_found);
-  EXPECT_EQ(28, token_start);
+  EXPECT_EQ(28u, token_start);
 }
 
 TEST(FindToken, TokenIsMiddle) {
   size_t token_start = 0;
   bool is_found = FileReader::FindTokenPosition(kTestLine, 2, &token_start);
   EXPECT_TRUE(is_found);
-  EXPECT_EQ(16, token_start);
+  EXPECT_EQ(16u, token_start);
 }
 
 TEST(FindToken, TokenValueIsDuplicate) {
   size_t token_start = 0;
   bool is_found = FileReader::FindTokenPosition(kTestLine, 1, &token_start);
   EXPECT_TRUE(is_found);
-  EXPECT_EQ(8, token_start);
+  EXPECT_EQ(8u, token_start);
 }
 
 TEST(FindToken, TokenIndexTooLarge) {
@@ -83,13 +83,13 @@ TEST(CompareToken, TokenNotMatch) {
 TEST(Read, FileSizeIsSmallerThanPageSize) {
   std::string content;
   FileReader::Read("file_reader_small.txt", &content);
-  EXPECT_EQ(37, content.size());
+  EXPECT_EQ(37u, content.size());
 }
 
 TEST(Read, ReadFileSizeLargerThanBufferSize) {
   std::string content;
   FileReader::Read("file_reader_large.txt", &content);
-  EXPECT_EQ(5264, content.size());
+  EXPECT_EQ(5264u, content.size());
 }
 
 TEST(Read, ReadFileAbsent) {
@@ -100,7 +100,7 @@ TEST(Read, ReadFileAbsent) {
 TEST(ReadToLines, MultipleLineBreakChars) {
   std::vector<std::string> lines;
   FileReader::Read("file_reader_multiple_lines.txt", &lines);
-  EXPECT_EQ(2, lines.size());
+  EXPECT_EQ(2u, lines.size());
   EXPECT_EQ("It contains two lines.", lines.at(0));
   EXPECT_EQ("This is the second line.", lines.at(1));
 }

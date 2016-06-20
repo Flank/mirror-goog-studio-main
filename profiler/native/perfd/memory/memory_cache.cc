@@ -20,7 +20,7 @@ using ::profiler::proto::MemoryData;
 namespace profiler {
 
 MemoryCache::MemoryCache(int32_t samples_capacity) :
-    samples_capacity_(samples_capacity), put_memory_sample_index_(0), buffer_full_(false) {
+    put_memory_sample_index_(0), samples_capacity_(samples_capacity), buffer_full_(false) {
   memory_samples_ = new MemoryData::MemorySample[samples_capacity_];
 }
 
