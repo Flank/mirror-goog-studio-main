@@ -32,15 +32,15 @@ TEST(AddData, AddDataMoreThanCapacity) {
   TimeFloatBuffer buffer(2);
   buffer.GetSize();
   buffer.Add(10, t1);
-  EXPECT_EQ(1, buffer.GetSize());
+  EXPECT_EQ(1u, buffer.GetSize());
   EXPECT_EQ(10, buffer.Get(0).value);
 
   buffer.Add(20, t2);
-  EXPECT_EQ(2, buffer.GetSize());
+  EXPECT_EQ(2u, buffer.GetSize());
   EXPECT_EQ(20, buffer.Get(1).value);
 
   buffer.Add(30, t3);
-  EXPECT_EQ(2, buffer.GetSize());
+  EXPECT_EQ(2u, buffer.GetSize());
   EXPECT_EQ(20, buffer.Get(0).value);
   EXPECT_EQ(30, buffer.Get(1).value);
 }
@@ -48,7 +48,7 @@ TEST(AddData, AddDataMoreThanCapacity) {
 TEST(GetData, Empty) {
   TimeFloatBuffer buffer(3);
   std::vector<TimeFloat> values = buffer.Get(t1, t2);
-  EXPECT_EQ(0, values.size());
+  EXPECT_EQ(0u, values.size());
 }
 
 TEST(GetData, DataForQueryTimeRange) {
@@ -57,12 +57,12 @@ TEST(GetData, DataForQueryTimeRange) {
   buffer.Add(20, t2);
 
   std::vector<TimeFloat> values = buffer.Get(t1, t2);
-  EXPECT_EQ(1, values.size());
+  EXPECT_EQ(1u, values.size());
   EXPECT_EQ(10, values.at(0).value);
 
   values.clear();
   values = buffer.Get(t1, t3);
-  EXPECT_EQ(2, values.size());
+  EXPECT_EQ(2u, values.size());
   EXPECT_EQ(10, values.at(0).value);
   EXPECT_EQ(20, values.at(1).value);
 }
@@ -73,7 +73,7 @@ TEST(GetData, NoDataForQueryTimeRange) {
   buffer.Add(20, t2);
 
   std::vector<TimeFloat> values = buffer.Get(t3, t4);
-  EXPECT_EQ(0, values.size());
+  EXPECT_EQ(0u, values.size());
 }
 
 TEST(GetData, AddDataMoreThanCapacity) {
@@ -83,6 +83,6 @@ TEST(GetData, AddDataMoreThanCapacity) {
   buffer.Add(30, t3);
 
   std::vector<TimeFloat> values = buffer.Get(t1, t3);
-  EXPECT_EQ(1, values.size());
+  EXPECT_EQ(1u, values.size());
   EXPECT_EQ(20, values.at(0).value);
 }

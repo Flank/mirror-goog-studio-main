@@ -38,7 +38,7 @@ template <typename T> struct TimeValue {
 template <typename T> class TimeValueBuffer {
  public:
   TimeValueBuffer(size_t capacity, int pid = -1)
-      : capacity_(capacity), values_(new TimeValue<T>[capacity_]), pid_(pid) {}
+      : capacity_(capacity), pid_(pid), values_(new TimeValue<T>[capacity_]) {}
 
   // Add sample value collected at a given time point.
   // TODO: We are moving to int64_t from timespec, this method is not needed.
