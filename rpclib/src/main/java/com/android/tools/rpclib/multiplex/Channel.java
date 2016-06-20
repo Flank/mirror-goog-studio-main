@@ -52,8 +52,8 @@ public class Channel implements Closeable {
   public synchronized void close() throws IOException {
     if (!mIsClosed) {
       mIsClosed = true;
+      mPipeInputStream.getSource().close();
       mEventHandler.closeChannel(mId);
-      mInputStream.close();
       mOutputStream.close();
     }
   }
@@ -65,7 +65,7 @@ public class Channel implements Closeable {
   synchronized void closeNoEvent() throws IOException {
     if (!mIsClosed) {
       mIsClosed = true;
-      mInputStream.close();
+      mPipeInputStream.getSource().close();
       mOutputStream.close();
     }
   }

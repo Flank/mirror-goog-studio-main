@@ -38,6 +38,8 @@ public class Multiplexer {
   private final Channel.EventHandler mChannelEventHandler;
   private final Sender mSender;
   private final AtomicLong mNextChannelId;
+
+  @GuardedBy("mChannelMap") private boolean mReceiverThreadFinished;
   @GuardedBy("mChannelMap") private final Map<Long, Channel> mChannelMap;
 
   public Multiplexer(@NotNull InputStream in, @NotNull OutputStream out, int mtu,
@@ -65,6 +67,10 @@ public class Multiplexer {
     Channel channel = new Channel(id, mChannelEventHandler);
 
     synchronized (mChannelMap) {
+      if (mReceiverThreadFinished) {
+        throw new IllegalStateException("Receiver thread finished, cannot open new channel.");
+      }
+
       if (mChannelMap.isEmpty()) {
         mSender.begin(mEncoder);
       }
@@ -102,14 +108,19 @@ public class Multiplexer {
 
   private void closeAllChannels() {
     synchronized (mChannelMap) {
-      // we take an array copy, otherwise we will get ConcurrentModificationException as closing the channel will call deleteChannel
-      for (Channel c : mChannelMap.values().toArray(new Channel[mChannelMap.size()])) {
-        try {
-          c.close();
+      if (!mChannelMap.isEmpty()) {
+        // we take an array copy, otherwise we will get ConcurrentModificationException as closing the channel will call deleteChannel
+        for (Channel c : mChannelMap.values().toArray(new Channel[mChannelMap.size()])) {
+          try {
+            c.close();
+          }
+          catch (IOException ignored) {
+          }
         }
-        catch (IOException ignored) {}
+        mChannelMap.clear();
+        mSender.end();
       }
-      mChannelMap.clear();
+      mReceiverThreadFinished = true;
     }
   }
 

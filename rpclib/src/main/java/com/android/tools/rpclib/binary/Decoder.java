@@ -21,6 +21,7 @@ import gnu.trove.TIntObjectHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -49,7 +50,11 @@ public class Decoder {
   public void read(byte[] buf, int count) throws IOException {
     int off = 0;
     while (off < count) {
-      off += mInputStream.read(buf, off, count - off);
+      int readCount = mInputStream.read(buf, off, count - off);
+      if (readCount == -1) {
+        throw new EOFException("Decoder: End of stream while reading");
+      }
+      off += readCount;
     }
   }
 
