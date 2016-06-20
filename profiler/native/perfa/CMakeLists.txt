@@ -4,8 +4,8 @@ add_library(perfa SHARED
             perfa.cc)
 
 target_link_libraries(perfa
-                      ProfilerProtos
-                      ProfilerUtils)
+                      profiler_protos
+                      profiler_utils)
 
 if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   set_target_properties(perfa PROPERTIES
