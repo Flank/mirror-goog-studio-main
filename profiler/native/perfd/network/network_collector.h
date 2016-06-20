@@ -16,7 +16,6 @@
 #ifndef PERFD_NETWORK_NETWORK_COLLECTOR_H_
 #define PERFD_NETWORK_NETWORK_COLLECTOR_H_
 
-#include "perfd/network/network_constants.h"
 #include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
 #include "utils/time_value_buffer.h"

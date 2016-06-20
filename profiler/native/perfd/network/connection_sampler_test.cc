@@ -21,8 +21,8 @@
 using profiler::ConnectionSampler;
 
 TEST(GetConnectionData, TwoOpenConnectionsWithUidMatched) {
-  std::vector<std::string> file_names = {"open_connection_uid_matched1.txt",
-                                         "open_connection_uid_matched2.txt"};
+  const std::vector<const char*> file_names = {
+      "open_connection_uid_matched1.txt", "open_connection_uid_matched2.txt"};
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -31,7 +31,8 @@ TEST(GetConnectionData, TwoOpenConnectionsWithUidMatched) {
 }
 
 TEST(GetConnectionData, OpenConnectionWithUidUnmatched) {
-  std::vector<std::string> file_names = {"open_connection_uid_unmatched.txt"};
+  const std::vector<const char*> file_names = {
+      "open_connection_uid_unmatched.txt"};
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -40,7 +41,7 @@ TEST(GetConnectionData, OpenConnectionWithUidUnmatched) {
 }
 
 TEST(GetConnectionData, OpenConnectionListeningAllInterfaces) {
-  std::vector<std::string> file_names = {
+  const std::vector<const char*> file_names = {
       "open_connection_listening_all_interfaces.txt"};
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;

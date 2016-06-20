@@ -23,6 +23,10 @@
 #include <sstream>
 #include <string>
 
+namespace {
+const char *const kUidPrefix = "Uid:";
+}  // anonymous namespace
+
 namespace profiler {
 
 int NetworkSampler::GetUid(const std::string &data_file) {
@@ -38,12 +42,11 @@ bool NetworkSampler::GetUidString(const std::string &data_file,
   std::string content;
   FileReader::Read(data_file, &content);
 
-  const char *uid_prefix = "Uid:";
   // Find the uid value start position. It's supposed to be after the prefix,
   // also after empty spaces on the same line.
-  size_t start = content.find(uid_prefix);
+  size_t start = content.find(kUidPrefix);
   if (start != std::string::npos) {
-    start += strlen(uid_prefix);
+    start += strlen(kUidPrefix);
     start = content.find_first_not_of(" \t", start);
     if (start != std::string::npos) {
       // Find the uid end position, which should be empty space or new line,
