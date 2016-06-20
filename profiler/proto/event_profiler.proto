@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "EventProfiler";
+
+import "profiler.proto";
+
+service EventProfilerService {
+  // Requests profiler data from the app with ID being |app_id|, in the time range
+  // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
+  // mathematically written as in interval (start_timestamp, end_timestamp].
+  rpc GetData(EventDataRequest) returns (EventDataResponse) {
+  }
+}
+
+message EventProfilerData {
+  ProfilerData basic_info = 1;
+  oneof data {
+    SystemEventData system_data = 2;
+    FragmentEventData fragment_data = 3;
+    ActivityEventData activity_data = 4;
+  }
+}
+
+
+message SystemEventData {
+  // The structure of this may change as more events get populated from the supportlib.
+  enum TouchState {
+    UNSPECIFIED = 0;
+    // State when a user is touching the screen
+    DOWN = 1;
+    // State when a user lifts their touch
+    UP = 2;
+  }
+
+  TouchState touch_state = 1;
+}
+
+message ActivityEventData {
+  enum ActivityState {
+    UNSPECIFIED = 0;
+    // State when an activity gets created
+    CREATED = 1;
+    // Event to fire when an activity gets destroyed
+    DESTROYED = 2;
+    // TODO Flush this out to map the activity lifecycle.
+  }
+
+  string name = 1;
+  ActivityState activity_state = 2;
+
+  // Hash code to uniquely identify this activity.
+  int64 activity_hash = 3;
+}
+
+message FragmentEventData {
+
+  // The current state of a fragment.
+  enum FragmentState {
+    UNSPECIFIED = 0;
+    ACTIVATED = 1;
+    DISABLED = 2;
+  }
+  string name = 1;
+  FragmentState fragment_state = 2;
+
+  // Hash code to uniquely identify this fragment.
+  int64 fragment_hash = 3;
+}
+
+message EventDataRequest {
+  enum EventType {
+    UNSPECIFIED = 0;
+    // All types of data are requested.
+    ALL = 1;
+    // All system level events, touch, rotate, button presses ect...
+    SYSTEM_EVENTS = 2;
+    // All activity level events, created, activated, resumed, suspended ect...
+    ACTIVITY_EVENTS = 3;
+    // All fragment events
+    FRAGMENT_EVENTS = 4;
+  }
+  int32 app_id = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+  EventType data_type = 4;
+}
+
+message EventDataResponse {
+  repeated EventProfilerData data = 1;
+}
