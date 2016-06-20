@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "proto/network_profiler.pb.h"
+#include "proto/network.pb.h"
 #include "perfd/network/traffic_sampler.h"
 
 #include <gtest/gtest.h>

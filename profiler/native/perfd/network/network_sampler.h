@@ -16,7 +16,7 @@
 #ifndef PERFD_NETWORK_NETWORK_SAMPLER_H_
 #define PERFD_NETWORK_NETWORK_SAMPLER_H_
 
-#include "proto/network_profiler.pb.h"
+#include "proto/network.pb.h"
 
 #include <string>
 #include <vector>
