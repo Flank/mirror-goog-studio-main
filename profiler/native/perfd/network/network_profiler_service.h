@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "perfd/network/network_collector.h"
-#include "proto/network_profiler.grpc.pb.h"
+#include "proto/network.grpc.pb.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
