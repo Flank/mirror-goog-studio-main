@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Maps;
