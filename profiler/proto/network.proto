@@ -65,6 +65,18 @@ service NetworkProfilerService {
   // monitored, or is not running.
   rpc StopMonitoringApp(NetworkStopRequest) returns (NetworkStopResponse) {
   }
+
+  // Returns a list of HTTP requests active over some given time range. See the
+  // HttpRangeRequest message for more details.
+  // Note: HTTP requests may live across time ranges, so the same instances may
+  // be returned across multple calls to this rpc.
+  rpc GetHttpRange(HttpRangeRequest) returns (HttpRangeResponse) {
+  }
+
+  // Gets misc metadata about a http request, given its |conn_id| and a
+  // |HttpDetailsRequest::Type|. Use |GetHttpRange| to get this ids.
+  rpc GetHttpDetails(HttpDetailsRequest) returns (HttpDetailsResponse) {
+  }
 }
 
 message NetworkDataRequest {
@@ -83,8 +95,6 @@ message NetworkDataRequest {
     CONNECTIVITY = 2;
     // Number of open connections.
     CONNECTIONS = 3;
-    // Payload.
-    PAYLOAD = 4;
   }
   int32 app_id = 1;
   int64 start_timestamp = 2;
@@ -111,3 +121,121 @@ message NetworkStopRequest {
 // TODO: Dig more about network collector stop response.
 message NetworkStopResponse {
 }
+
+// Request to fetch all http connections that were alive between some time
+// range.
+//
+// Given a range [start, end] and requests a-f...
+//
+//              start            end
+// a: [===========|===============|=========...
+// b: [=======]   |               |
+// c:         [===|===]           |
+// d:             |   [=======]   |
+// e:             |           [===|===]
+// f:             |               |   [=======]
+//
+// Keep a, c, d, and e; exclude b and f
+//
+// The time range match is inclusive, so requests ending on time |start| and
+// requests starting on time |end| will be included in the results.
+message HttpRangeRequest {
+  int32 app_id = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+}
+
+// An HTTP connection represents the full lifetime of a single HTTP request /
+// response network communication.
+message HttpConnectionData {
+  // A unique identifer used to fetch any further details about this request.
+  // This id is guaranteed unique across all actively running apps.
+  int64 conn_id = 1;
+  // Always set. Time this network request was first opened.
+  int64 start_timestamp = 2;
+  // If not 0, time when the first byte was received. Always > start.
+  int64 downloading_timestamp = 3;
+  // If not 0, time when request was closed. Always > start.
+  int64 end_timestamp = 4;
+}
+
+message HttpRangeResponse {
+  repeated HttpConnectionData data = 1;
+}
+
+// Message for querying metadata about an HTTP connection (by ID). Note that if
+// the user queries details before they are ready, they will all be set to their
+// default values (e.g. 0, empty string, etc.).
+// TODO: Consider adding an error boolean if client queries at the wrong time.
+// Is it necessary / helpful?
+message HttpDetailsRequest {
+  enum Type {
+    UNSPECIFIED = 0;
+
+    // Metadata about a sent request. This data can be queried as soon as you
+    // have a connection ID to fetch it.
+    REQUEST = 1;
+
+    // Metadata about a received response. This data can be safely be queried
+    // for any connection that has its end_timestamp set to a non-zero value.
+    // (Otherwise, all the fields in the returned details will be empty)
+    // TODO: This detail type is not yet implemented.
+    RESPONSE = 2;
+
+    // Fetch a path to the request body which can then be fetched over adb.
+    // TODO: This detail type is not yet implemented.
+    REQUEST_BODY = 3;
+
+    // Fetch a handle to the response body which can be fetched over adb. This
+    // data can be safely queried for any connection that has its end_timestamp
+    // set to a non-zero value.
+    // TODO: Can this type be combined with RESPONSE? Will reponse details be
+    // available before this is ready, or only at the same time?
+    RESPONSE_BODY = 4;
+  }
+
+  int64 conn_id = 1;
+  Type type = 2;
+}
+
+message HttpDetailsResponse {
+  message Request {
+    string url = 1;
+    // The request's method, e.g. GET, PUT, POST, etc.
+    string method = 2;
+
+    // Key/value pairs associated with the request
+    string fields = 3;
+
+    // Code stack trace for where this request was generated
+    string trace = 4;
+  }
+
+  message Response {
+    // Response code, e.g. OK, 404, etc.
+    string code = 1;
+
+    // Key/value pairs associated with the response
+    string fields = 2;
+  }
+
+  message Body {
+    // An absolute path on a device which can be used to pull a file containing
+    // the contents of an http body down over adb. The filename will be a hash
+    // of the contents, and the same hash always indicates the same contents.
+    // This hash value calculation is independent of app, device, etc., and can
+    // always* be relied upon to indicate content equality.
+    // (*) with negligible probability of a collision
+    //
+    // Looks something like: "/data/local/tmp/perfd/cache/d652e629bcf87c998c614"
+    string file_path = 1;
+  }
+
+  oneof details {
+    Request request = 1;
+    Response response = 2;
+    Body request_body = 3;
+    Body response_body = 4;
+  }
+}
+

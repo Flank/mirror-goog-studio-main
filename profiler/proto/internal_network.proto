@@ -25,10 +25,10 @@ service InternalNetworkService {
 
 // HTTP request registration data, used to communicate with perfd that a new
 // request was just created. This also notifies the system that we are using a
-// UID value to represent this request from now on in future GRPC messages
-// associated with this request.
+// unique ID value to represent this request from now on in future GRPC messages
+// associated with this connection.
 message HttpDataRequest {
-  int64 uid = 1;
+  int64 conn_id = 1;
   int32 app_id = 2;
   string url = 3;
 }
@@ -43,7 +43,7 @@ message ChunkRequest {
     // This is a chunk of a response (downloaded) body
     RESPONSE = 2;
   }
-  int64 uid = 1;
+  int64 conn_id = 1;
   bytes content = 2;
   Type type = 3;
 }
@@ -61,7 +61,7 @@ message HttpEventRequest {
     ABORTED = 6;
   }
 
-  int64 uid = 1;
+  int64 conn_id = 1;
   int64 timestamp = 2;
   Event event = 3;
 }

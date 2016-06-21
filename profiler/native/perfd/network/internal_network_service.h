@@ -23,6 +23,7 @@
 
 #include "proto/internal_network.grpc.pb.h"
 
+#include "perfd/network/network_cache.h"
 #include "utils/fs/file_system.h"
 
 namespace profiler {
@@ -30,7 +31,8 @@ namespace profiler {
 class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
-  explicit InternalNetworkServiceImpl(const std::string &root_path);
+  InternalNetworkServiceImpl(const std::string &root_path,
+                             NetworkCache *network_cache);
   ~InternalNetworkServiceImpl() override;
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,
@@ -55,6 +57,8 @@ class InternalNetworkServiceImpl final
 
   std::atomic_bool is_janitor_running_;
   std::thread janitor_thread_;
+
+  NetworkCache &network_cache_;
 };
 
 }  // namespace profiler

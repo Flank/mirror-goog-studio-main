@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   string binary_path(argv[0]);
   string root_path = profiler::Path::StripLast(binary_path);
 
-  profiler::NetworkProfilerComponent network_component{root_path};
+  profiler::NetworkProfilerComponent network_component{daemon, root_path};
   daemon.RegisterComponent(&network_component);
 
   daemon.RunServer(profiler::kServerAddress);
