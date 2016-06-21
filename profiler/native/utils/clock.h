@@ -34,15 +34,33 @@ class Clock {
   static constexpr int64_t ns_to_us(int64_t ns) { return ns / 1000; }
   static constexpr int64_t ns_to_ms(int64_t ns) { return ns_to_us(ns) / 1000; }
   static constexpr int64_t ns_to_s(int64_t ns) { return ns_to_ms(ns) / 1000; }
+  static constexpr int64_t ns_to_m(int64_t ns) { return ns_to_s(ns) / 60; }
+  static constexpr int64_t ns_to_h(int64_t ns) { return ns_to_m(ns) / 60; }
   static constexpr int64_t us_to_ns(int64_t us) { return us * 1000; }
   static constexpr int64_t us_to_ms(int64_t us) { return us / 1000; }
   static constexpr int64_t us_to_s(int64_t us) { return us_to_ms(us) / 1000; }
+  static constexpr int64_t us_to_m(int64_t us) { return us_to_s(us) / 60; }
+  static constexpr int64_t us_to_h(int64_t us) { return us_to_m(us) / 60; }
   static constexpr int64_t ms_to_ns(int64_t ms) { return ms_to_us(ms) * 1000; }
   static constexpr int64_t ms_to_us(int64_t ms) { return ms * 1000; }
   static constexpr int64_t ms_to_s(int64_t ms) { return ms / 1000; }
+  static constexpr int64_t ms_to_m(int64_t ms) { return ms_to_s(ms) / 60; }
+  static constexpr int64_t ms_to_h(int64_t ms) { return ms_to_m(ms) / 60; }
   static constexpr int64_t s_to_ns(int64_t s) { return s_to_us(s) * 1000; }
   static constexpr int64_t s_to_us(int64_t s) { return s_to_ms(s) * 1000; }
   static constexpr int64_t s_to_ms(int64_t s) { return s * 1000; }
+  static constexpr int64_t s_to_m(int64_t s) { return s / 60; }
+  static constexpr int64_t s_to_h(int64_t s) { return s_to_m(s) / 60; }
+  static constexpr int64_t m_to_ns(int64_t m) { return m_to_us(m) * 1000; }
+  static constexpr int64_t m_to_us(int64_t m) { return m_to_ms(m) * 1000; }
+  static constexpr int64_t m_to_ms(int64_t m) { return m_to_s(m) * 1000; }
+  static constexpr int64_t m_to_s(int64_t m) { return m * 60; }
+  static constexpr int64_t m_to_h(int64_t m) { return m / 60; }
+  static constexpr int64_t h_to_ns(int64_t h) { return h_to_us(h) * 1000; }
+  static constexpr int64_t h_to_us(int64_t h) { return h_to_ms(h) * 1000; }
+  static constexpr int64_t h_to_ms(int64_t h) { return h_to_s(h) * 1000; }
+  static constexpr int64_t h_to_s(int64_t h) { return h_to_m(h) * 60; }
+  static constexpr int64_t h_to_m(int64_t h) { return h * 60; }
 
   // Returns a monotonically increasing value. This value is meant for
   // comparing two relative times, as the time represented by time=0 is not
