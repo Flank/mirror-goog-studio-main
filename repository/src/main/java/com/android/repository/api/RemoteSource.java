@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlTransient
 public abstract class RemoteSource implements RepositorySource {
 
-    private Collection<SchemaModule> mPermittedSchemaModules = null;
+    private Collection<SchemaModule<?>> mPermittedSchemaModules = null;
 
     // TODO: refactor into RepositorySource, along with the fetching logic that sets it.
     private String mFetchError;
@@ -44,7 +44,7 @@ public abstract class RemoteSource implements RepositorySource {
     /**
      * Sets the list of modules allowed to be used when parsing XML fetched from this source.
      */
-    public void setPermittedSchemaModules(@NonNull Collection<SchemaModule> modules) {
+    public void setPermittedSchemaModules(@NonNull Collection<SchemaModule<?>> modules) {
         mPermittedSchemaModules = modules;
     }
 
@@ -54,7 +54,7 @@ public abstract class RemoteSource implements RepositorySource {
      */
     @Override
     @NonNull
-    public Collection<SchemaModule> getPermittedModules() {
+    public Collection<SchemaModule<?>> getPermittedModules() {
         if (mPermittedSchemaModules == null) {
             throw new UnsupportedOperationException(
                     "Tried to fetch permitted modules before they were initialized");

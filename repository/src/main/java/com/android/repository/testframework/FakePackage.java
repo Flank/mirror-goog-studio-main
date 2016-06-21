@@ -105,8 +105,8 @@ public class FakePackage implements LocalPackage, RemotePackage {
     @NonNull
     @Override
     public TypeDetails getTypeDetails() {
-        return mDetails == null ? (TypeDetails) ((GenericFactory) RepoManager.getGenericModule()
-                .createLatestFactory()).createGenericDetailsType() : mDetails;
+        return mDetails == null ? (TypeDetails) RepoManager.getGenericModule()
+                .createLatestFactory().createGenericDetailsType() : mDetails;
     }
 
     @NonNull

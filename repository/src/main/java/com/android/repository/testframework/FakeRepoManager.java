@@ -55,7 +55,7 @@ public class FakeRepoManager extends RepoManager {
 
     @NonNull
     @Override
-    public Set<SchemaModule> getSchemaModules() {
+    public Set<SchemaModule<?>> getSchemaModules() {
         return Collections.emptySet();
     }
 

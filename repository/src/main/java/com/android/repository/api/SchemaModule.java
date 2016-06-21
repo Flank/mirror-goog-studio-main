@@ -19,14 +19,10 @@ package com.android.repository.api;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Maps;
 
-import java.io.File;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Represents a versioned set of generated classes corresponding to a versioned XML schema.
@@ -37,7 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * They can then be used for marshalling or unmarshalling XML documents by the repository framework.
  */
 @XmlTransient
-public class SchemaModule {
+public class SchemaModule<T> {
 
     /**
      * Map of XML namespaces to the SchemaModuleVersions making up this module.
@@ -47,7 +43,7 @@ public class SchemaModule {
     /**
      * Reference to the highest version found. Used by default when creating new objects.
      */
-    private final SchemaModuleVersion mLatestVersion;
+    private final SchemaModuleVersion<T> mLatestVersion;
 
     /**
      * Class used with {@link Class#getResourceAsStream(String)} to look up xsd resources.
@@ -63,21 +59,20 @@ public class SchemaModule {
      * @param resourceRoot A class instance used via {@link Class#getResource(String)} to read
      *                     the XSD file.
      */
-    public SchemaModule(@NonNull String ofPattern, @NonNull String xsdPattern,
-            @NonNull Class resourceRoot) {
+    public SchemaModule(@NonNull String ofPattern, @NonNull String xsdPattern, @NonNull Class resourceRoot) {
         if (!ofPattern.matches(".*%[0-9.$]*d.*") || !xsdPattern.matches(".*%[0-9.$]*d.*")) {
             assert false : "ofPattern and xsdPattern must contain a single %d parameter";
         }
-        SchemaModuleVersion version = null;
+        SchemaModuleVersion<T> version = null;
         for (int i = 1; ; i++) {
-            Class objectFactory;
+            Class<? extends T> objectFactory;
             try {
-                objectFactory = Class.forName(String.format(ofPattern, i));
+                objectFactory = (Class<? extends T>)Class.forName(String.format(ofPattern, i));
             } catch (ClassNotFoundException e) {
                 break;
             }
             String xsdLocation = String.format(xsdPattern, i);
-            version = new SchemaModuleVersion(objectFactory, xsdLocation);
+            version = new SchemaModuleVersion<T>(objectFactory, xsdLocation);
             mVersions.put(version.getNamespace(), version);
         }
         mLatestVersion = version;
@@ -89,13 +84,11 @@ public class SchemaModule {
      * Creates an {@code ObjectFactory} for the latest known version of this module.
      */
     @NonNull
-    public Object createLatestFactory() {
-        Class of = mLatestVersion.getObjectFactory();
+    public T createLatestFactory() {
+        Class<? extends T> of = mLatestVersion.getObjectFactory();
         try {
             return of.newInstance();
-        } catch (IllegalAccessException e) {
-            assert false : e;
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException e) {
             assert false : e;
         }
         return null;
@@ -143,9 +136,9 @@ public class SchemaModule {
      * Represents a single version of a schema, including a single XSD and a single
      * {@code ObjectFactory}.
      */
-    public class SchemaModuleVersion {
+    public class SchemaModuleVersion<R> {
 
-        private final Class mObjectFactory;
+        private final Class<? extends R> mObjectFactory;
         private final String mXsdLocation;
         private final String mNamespace;
 
@@ -154,9 +147,10 @@ public class SchemaModule {
          *                      version. Notably, the package containing this class must contain
          *                      a {@code package-info.java} with a {@link XmlSchema} annotation
          *                      giving the XML namespace of this schema.
-         * @param xsd The XSD file for this schema.
+         * @param xsdLocation The XSD file for this schema.
          */
-        public SchemaModuleVersion(@NonNull Class objectFactory, @NonNull String xsdLocation) {
+        public SchemaModuleVersion(@NonNull Class<? extends R> objectFactory,
+          @NonNull String xsdLocation) {
             mObjectFactory = objectFactory;
             mXsdLocation = xsdLocation;
             String namespace = objectFactory.getPackage().getAnnotation(XmlSchema.class)
@@ -170,7 +164,7 @@ public class SchemaModule {
          * Gets the {@code ObjectFactory} for this schema version.
          */
         @NonNull
-        public Class getObjectFactory() {
+        public Class<? extends R> getObjectFactory() {
             return mObjectFactory;
         }
 

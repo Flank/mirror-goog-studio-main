@@ -31,12 +31,10 @@ import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
@@ -280,8 +278,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                 repo.addLicense(license);
             }
 
-            CommonFactory factory = ((CommonFactory) RepoManager.getCommonModule()
-              .createLatestFactory());
+            CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
             SchemaModuleUtil.marshal(factory.generateRepository(repo),
                                      mRepoManager.getSchemaModules(), fos,
                                      mRepoManager.getResourceResolver(progress), progress);

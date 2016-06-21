@@ -22,6 +22,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.repository.impl.manager.RepoManagerImpl;
+import com.android.repository.impl.meta.CommonFactory;
+import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
@@ -105,10 +107,10 @@ public abstract class RepoManager {
     /**
      * The base {@link SchemaModule} that is created by {@code RepoManagerImpl} itself.
      */
-    private static SchemaModule sCommonModule;
+    private static SchemaModule<CommonFactory> sCommonModule;
     static {
         try {
-            sCommonModule = new SchemaModule(COMMON_OBJECT_FACTORY_PATTERN, COMMON_XSD_PATTERN,
+            sCommonModule = new SchemaModule<>(COMMON_OBJECT_FACTORY_PATTERN, COMMON_XSD_PATTERN,
                     RepoManager.class);
         }
         catch (Exception e) {
@@ -120,10 +122,10 @@ public abstract class RepoManager {
     /**
      * The {@link SchemaModule} that contains an implementation of {@link GenericType}.
      */
-    private static SchemaModule sGenericModule;
+    private static SchemaModule<GenericFactory> sGenericModule;
     static {
         try {
-            sGenericModule = new SchemaModule(GENERIC_OBJECT_FACTORY_PATTERN, GENERIC_XSD_PATTERN,
+            sGenericModule = new SchemaModule<>(GENERIC_OBJECT_FACTORY_PATTERN, GENERIC_XSD_PATTERN,
                     RepoManager.class);
         }
         catch (Exception e) {
@@ -152,14 +154,14 @@ public abstract class RepoManager {
      * by code within the RepoManager or unit tests.
      */
     @NonNull
-    public abstract Set<SchemaModule> getSchemaModules();
+    public abstract Set<SchemaModule<?>> getSchemaModules();
 
     /**
      * Gets the core {@link SchemaModule} created by the RepoManager itself. Contains the base
      * definition of repository, package, revision, etc.
      */
     @NonNull
-    public static SchemaModule getCommonModule() {
+    public static SchemaModule<CommonFactory> getCommonModule() {
         return sCommonModule;
     }
 
@@ -168,7 +170,7 @@ public abstract class RepoManager {
      * {@code typeDetails} type.
      */
     @NonNull
-    public static SchemaModule getGenericModule() {
+    public static SchemaModule<GenericFactory> getGenericModule() {
         return sGenericModule;
     }
 
@@ -287,12 +289,9 @@ public abstract class RepoManager {
     public final boolean loadSynchronously(long cacheExpirationMs, @NonNull final ProgressIndicator progress,
             @Nullable Downloader downloader, @Nullable SettingsController settings) {
         final AtomicBoolean result = new AtomicBoolean(true);
-        load(cacheExpirationMs, null, null, ImmutableList.<Runnable>of(new Runnable() {
-              @Override
-              public void run() {
-                result.set(false);
-              }
-          }), new DummyProgressRunner(progress), downloader, settings, true);
+        load(cacheExpirationMs, null, null, ImmutableList.of(
+                () -> result.set(false)), new DummyProgressRunner(progress),
+                downloader, settings, true);
 
         return result.get();
     }

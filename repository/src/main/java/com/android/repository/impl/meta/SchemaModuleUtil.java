@@ -22,7 +22,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.SchemaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -54,7 +53,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -72,7 +70,7 @@ public class SchemaModuleUtil {
 
     private static final Map<String, JAXBContext> CONTEXT_CACHE = Maps.newHashMap();
 
-    private static final Map<List<SchemaModule.SchemaModuleVersion>, Map<LSResourceResolver, Schema>>
+    private static final Map<List<SchemaModule<?>.SchemaModuleVersion<?>>, Map<LSResourceResolver, Schema>>
             SCHEMA_CACHE = Maps.newHashMap();
 
     /**
@@ -83,7 +81,7 @@ public class SchemaModuleUtil {
      */
     @Nullable
     public static LSResourceResolver createResourceResolver(
-            @NonNull final Set<SchemaModule> modules, @NonNull ProgressIndicator progress) {
+            @NonNull final Set<SchemaModule<?>> modules, @NonNull ProgressIndicator progress) {
         return new SchemaModuleResourceResolver(modules, progress);
     }
 
@@ -91,10 +89,10 @@ public class SchemaModuleUtil {
      * Creates a {@link JAXBContext} from the XSDs in the given {@link SchemaModule}s.
      */
     @NonNull
-    private static JAXBContext getContext(@NonNull Collection<SchemaModule> possibleModules) {
+    private static JAXBContext getContext(@NonNull Collection<SchemaModule<?>> possibleModules) {
         List<String> packages = Lists.newArrayList();
-        for (SchemaModule module : possibleModules) {
-            for (SchemaModule.SchemaModuleVersion version : module
+        for (SchemaModule<?> module : possibleModules) {
+            for (SchemaModule<?>.SchemaModuleVersion<?> version : module
                     .getNamespaceVersionMap().values()) {
                 packages.add(version.getObjectFactory().getPackage().getName());
             }
@@ -115,13 +113,13 @@ public class SchemaModuleUtil {
     /**
      * Creates a {@link Schema} from a collection of {@link SchemaModule}s, with a given
      * {@link LSResourceResolver} (probably obtained from
-     * {@link #createResourceResolver(Collection, ProgressIndicator)}. Any warnings or errors are
+     * {@link #createResourceResolver(Set, ProgressIndicator)}. Any warnings or errors are
      * logged to the given {@link ProgressIndicator}.
      */
     @VisibleForTesting
     @NonNull
     public static Schema getSchema(
-            final Collection<SchemaModule> possibleModules,
+            final Collection<SchemaModule<?>> possibleModules,
             @Nullable final LSResourceResolver resourceResolver, final ProgressIndicator progress) {
         SchemaFactory sf =
                 SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -147,9 +145,9 @@ public class SchemaModuleUtil {
         });
 
         List<StreamSource> sources = Lists.newArrayList();
-        List<SchemaModule.SchemaModuleVersion> key = Lists.newArrayList();
-        for (SchemaModule module : possibleModules) {
-            for (SchemaModule.SchemaModuleVersion version : module
+        List<SchemaModule<?>.SchemaModuleVersion<?>> key = Lists.newArrayList();
+        for (SchemaModule<?> module : possibleModules) {
+            for (SchemaModule<?>.SchemaModuleVersion<?> version : module
                     .getNamespaceVersionMap()
                     .values()) {
                 key.add(version);
@@ -189,7 +187,7 @@ public class SchemaModuleUtil {
      */
     @Nullable
     public static Object unmarshal(@NonNull InputStream xml,
-      @NonNull Collection<SchemaModule> possibleModules,
+      @NonNull Collection<SchemaModule<?>> possibleModules,
       @Nullable LSResourceResolver resourceResolver, boolean strict,
       @NonNull ProgressIndicator progress)
       throws JAXBException {
@@ -207,7 +205,7 @@ public class SchemaModuleUtil {
      * @param progress         For logging.
      */
     @NonNull
-    private static Unmarshaller setupUnmarshaller(@NonNull Collection<SchemaModule> possibleModules,
+    private static Unmarshaller setupUnmarshaller(@NonNull Collection<SchemaModule<?>> possibleModules,
             @Nullable LSResourceResolver resourceResolver, boolean strict,
             @NonNull ProgressIndicator progress) throws JAXBException {
         JAXBContext context = getContext(possibleModules);
@@ -230,7 +228,7 @@ public class SchemaModuleUtil {
      */
     @NonNull
     private static SAXSource setupSource(@NonNull InputStream xml,
-            @NonNull Collection<SchemaModule> possibleModules, boolean strict,
+            @NonNull Collection<SchemaModule<?>> possibleModules, boolean strict,
             @NonNull ProgressIndicator progress) throws JAXBException {
         SAXSource source = new SAXSource(new InputSource(xml));
         // Create the XMLFilter
@@ -243,11 +241,7 @@ public class SchemaModuleUtil {
         try {
             SAXParser sp = spf.newSAXParser();
             xr = sp.getXMLReader();
-        } catch (ParserConfigurationException e) {
-            // Shouldn't happen
-            progress.logError("Error setting up parser", e);
-            throw new JAXBException(e);
-        } catch (SAXException e) {
+        } catch (ParserConfigurationException | SAXException e) {
             // Shouldn't happen
             progress.logError("Error setting up parser", e);
             throw new JAXBException(e);
@@ -262,7 +256,7 @@ public class SchemaModuleUtil {
      * given {@link SchemaModule}s.
      */
     public static void marshal(@NonNull JAXBElement element,
-            @NonNull Collection<SchemaModule> possibleModules,
+            @NonNull Collection<SchemaModule<?>> possibleModules,
             @NonNull OutputStream out, @Nullable LSResourceResolver resourceResolver,
             @NonNull ProgressIndicator progress) {
         JAXBContext context = getContext(possibleModules);
@@ -273,9 +267,7 @@ public class SchemaModuleUtil {
             marshaller.setSchema(schema);
             marshaller.marshal(element, out);
             out.close();
-        } catch (JAXBException e) {
-            progress.logWarning("Error during marshal", e);
-        } catch (IOException e) {
+        } catch (JAXBException | IOException e) {
             progress.logWarning("Error during marshal", e);
         }
     }
@@ -287,25 +279,22 @@ public class SchemaModuleUtil {
     @NonNull
     private static ValidationEventHandler createValidationEventHandler(
             @NonNull final ProgressIndicator progress, final boolean strict) {
-        return new ValidationEventHandler() {
-            @Override
-            public boolean handleEvent(ValidationEvent event) {
-                //noinspection ThrowableResultOfMethodCallIgnored
-                if (event.getLinkedException() != null) {
-                    progress.logWarning(event.getMessage(), event.getLinkedException());
-                } else {
-                    progress.logWarning(event.getMessage());
-                }
-                return !strict;
+        return event -> {
+            //noinspection ThrowableResultOfMethodCallIgnored
+            if (event.getLinkedException() != null) {
+                progress.logWarning(event.getMessage(), event.getLinkedException());
+            } else {
+                progress.logWarning(event.getMessage());
             }
+            return !strict;
         };
     }
 
     private static class SchemaModuleResourceResolver implements LSResourceResolver {
-        private final Set<SchemaModule> mModules;
+        private final Set<SchemaModule<?>> mModules;
         private static DOMImplementationLS sLs;
 
-        public SchemaModuleResourceResolver(Set<SchemaModule> modules,
+        public SchemaModuleResourceResolver(Set<SchemaModule<?>> modules,
                 ProgressIndicator progress) {
             mModules = modules;
             initLs(progress);
@@ -326,8 +315,8 @@ public class SchemaModuleUtil {
         @Override
         public LSInput resolveResource(String type, String namespaceURI, String publicId,
                 String systemId, String baseURI) {
-            SchemaModule.SchemaModuleVersion version;
-            for (SchemaModule ext : mModules) {
+            SchemaModule<?>.SchemaModuleVersion<?> version;
+            for (SchemaModule<?> ext : mModules) {
                 version = ext.getNamespaceVersionMap().get(namespaceURI);
                 if (version != null) {
                     LSInput input = sLs.createLSInput();
@@ -363,15 +352,15 @@ public class SchemaModuleUtil {
      */
     private static class NamespaceFallbackFilter extends XMLFilterImpl {
 
-        private Map<String, SchemaModule> mPrefixMap = Maps.newHashMap();
+        private Map<String, SchemaModule<?>> mPrefixMap = Maps.newHashMap();
         private ProgressIndicator mProgress;
         private boolean mStrict;
         private Map<String, String> mNewToOldMap = Maps.newHashMap();
 
         public NamespaceFallbackFilter(
-                @NonNull Collection<SchemaModule> possibleModules, boolean strict,
+                @NonNull Collection<SchemaModule<?>> possibleModules, boolean strict,
                 @NonNull ProgressIndicator progress) {
-            for (SchemaModule module : possibleModules) {
+            for (SchemaModule<?> module : possibleModules) {
                 mPrefixMap.put(module.getNamespacePrefix(), module);
             }
             mProgress = progress;
@@ -387,7 +376,7 @@ public class SchemaModuleUtil {
                     String namespacePrefix = uri.substring(0, lastSlash);
                     try {
                         int version = Integer.parseInt(uri.substring(lastSlash));
-                        SchemaModule module = mPrefixMap.get(namespacePrefix);
+                        SchemaModule<?> module = mPrefixMap.get(namespacePrefix);
                         if (module != null && module.getNamespaceVersionMap().size() < version) {
                             String oldUri = module.getLatestNamespace().intern();
                             mProgress.logWarning("Mapping new ns " + uri + " to old ns " + oldUri);
