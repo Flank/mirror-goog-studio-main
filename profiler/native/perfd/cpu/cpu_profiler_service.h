@@ -20,6 +20,7 @@
 
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/thread_monitor.h"
 #include "proto/cpu_profiler_service.grpc.pb.h"
 
 namespace profiler {
@@ -28,8 +29,11 @@ namespace profiler {
 class CpuProfilerServiceImpl final
     : public profiler::proto::CpuProfilerService::Service {
  public:
-  CpuProfilerServiceImpl(CpuCache* cpu_cache, CpuUsageSampler* monitor)
-      : cache_(*cpu_cache), monitor_(*monitor) {}
+  CpuProfilerServiceImpl(CpuCache* cpu_cache, CpuUsageSampler* usage_sampler,
+                         ThreadMonitor* thread_monitor)
+      : cache_(*cpu_cache),
+        usage_sampler_(*usage_sampler),
+        thread_monitor_(*thread_monitor) {}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -49,8 +53,10 @@ class CpuProfilerServiceImpl final
  private:
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
-  // The monitor that samples CPU usage data and thread states.
-  CpuUsageSampler& monitor_;
+  // The monitor that samples CPU usage data.
+  CpuUsageSampler& usage_sampler_;
+  // The monitor that detects thread activities (i.e., state changes).
+  ThreadMonitor& thread_monitor_;
 };
 
 }  // namespace profiler

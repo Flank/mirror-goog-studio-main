@@ -50,7 +50,10 @@ Status CpuProfilerServiceImpl::GetData(ServerContext* context,
 grpc::Status CpuProfilerServiceImpl::StartMonitoringApp(
     ServerContext* context, const CpuStartRequest* request,
     CpuStartResponse* response) {
-  auto status = monitor_.AddProcess(request->app_id());
+  auto status = usage_sampler_.AddProcess(request->app_id());
+  if (status == CpuStartResponse::SUCCESS) {
+    status = thread_monitor_.AddProcess(request->app_id());
+  }
   response->set_status(status);
   return Status::OK;
 }
@@ -58,7 +61,10 @@ grpc::Status CpuProfilerServiceImpl::StartMonitoringApp(
 grpc::Status CpuProfilerServiceImpl::StopMonitoringApp(
     ServerContext* context, const CpuStopRequest* request,
     CpuStopResponse* response) {
-  auto status = monitor_.RemoveProcess(request->app_id());
+  auto status = usage_sampler_.RemoveProcess(request->app_id());
+  if (status == CpuStopResponse::SUCCESS) {
+    status = thread_monitor_.RemoveProcess(request->app_id());
+  }
   response->set_status(status);
   return Status::OK;
 }

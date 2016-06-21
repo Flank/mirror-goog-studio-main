@@ -57,11 +57,11 @@ message CpuUsageData {
 
 // Thread activities, which is essentially changes in thread states.
 message ThreadActivities {
-  repeated TheadActivity activities = 1;
+  repeated ThreadActivity activities = 1;
 }
 
 // A thread activity, which is essentially the change of a thread's state.
-message TheadActivity {
+message ThreadActivity {
   // TODO: Reduce the number of |State| values to exactly what we surface
   // to the user.
   enum State {

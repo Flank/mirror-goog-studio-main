@@ -41,7 +41,8 @@ void CpuCollector::Stop() {
 
 void CpuCollector::Collect() {
   while (is_running_.load()) {
-    sampler_.Sample();
+    usage_sampler_.Sample();
+    thread_monitor_.Monitor();
     usleep(sampling_interval_in_us_);
   }
 }
