@@ -5,12 +5,12 @@ add_library(profiler_memory
             memory_levels_sampler.cc)
 
 target_link_libraries(profiler_memory
-                      ProfilerProtos)
+                      profiler_protos)
 
 add_unit_test(perfd_memory_tests
               memory_levels_sampler_test.cc)
 
 target_link_libraries(perfd_memory_tests
                       profiler_memory
-                      ProfilerUtils
+                      profiler_utils
                       ${GTEST_LINK_LIBRARIES})

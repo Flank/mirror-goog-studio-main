@@ -5,5 +5,5 @@ add_library(profiler_cpu
             cpu_usage_sampler.cc)
 
 target_link_libraries(profiler_cpu
-                      ProfilerProtos
-                      ProfilerUtils)
+                      profiler_protos
+                      profiler_utils)

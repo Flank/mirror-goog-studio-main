@@ -7,8 +7,8 @@ add_library(profiler_network
             traffic_sampler.cc)
 
 target_link_libraries(profiler_network
-                      ProfilerProtos
-                      ProfilerUtils)
+                      profiler_protos
+                      profiler_utils)
 
 add_unit_test(profiler_network_test
               connection_sampler_test.cc
