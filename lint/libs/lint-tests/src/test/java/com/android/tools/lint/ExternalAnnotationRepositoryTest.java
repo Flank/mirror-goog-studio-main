@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.testutils.SdkTestCase;
+import com.android.tools.lint.checks.infrastructure.BaseLintDetectorTest;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.client.api.JavaParser.DefaultTypeDescriptor;
 import com.android.tools.lint.client.api.JavaParser.ResolvedAnnotation;
@@ -54,7 +54,7 @@ import lombok.ast.MethodDeclaration;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
 
-public class ExternalAnnotationRepositoryTest extends SdkTestCase {
+public class ExternalAnnotationRepositoryTest extends BaseLintDetectorTest {
 
     @Nullable
     private ExternalAnnotationRepository getSdkAnnotations() {
