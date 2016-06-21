@@ -18,14 +18,12 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.variant.InstantAppVariantOutputData;
-import com.android.builder.core.VariantConfiguration;
 import com.android.utils.FileUtils;
+import com.google.wireless.android.instantapps.iapk.InstantAppMetadataProto;
 
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
@@ -33,8 +31,8 @@ import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Task to generate the atom metadata for the instant app.
@@ -43,17 +41,19 @@ import java.io.PrintWriter;
 public class GenerateInstantAppMetadata extends DefaultAndroidTask {
 
     @TaskAction
-    public void taskAction() throws FileNotFoundException {
+    public void taskAction() throws IOException {
+        InstantAppMetadataProto.InstantAppMetadata.Builder instantAppMetadataBuilder =
+                InstantAppMetadataProto.InstantAppMetadata.newBuilder();
+        instantAppMetadataBuilder.setSubstrateApiVersion(getSubstrateApiVersion());
+
         File instantAppMetadataFile =
                 new File(getInstantAppMetadataFolder(), SdkConstants.FN_INSTANTAPP_METADATA);
 
         // Re-create the file.
         instantAppMetadataFile.delete();
-
-        // TODO: Add instantapp-metadata information in the proper format.
-        try (PrintWriter writer = new PrintWriter(instantAppMetadataFile)) {
-            writer.print(getSubstrateApiVersion() + "\n");
-            writer.close();
+        try (FileOutputStream outputStream = new FileOutputStream(instantAppMetadataFile)) {
+            instantAppMetadataBuilder.build().writeTo(outputStream);
+            outputStream.close();
         }
     }
 
