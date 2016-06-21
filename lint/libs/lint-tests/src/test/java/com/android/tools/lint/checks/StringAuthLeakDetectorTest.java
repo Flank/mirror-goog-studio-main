@@ -16,18 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.FD_JAVA;
-import static com.android.tools.lint.checks.StringAuthLeakDetector.AUTH_LEAK;
-
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @SuppressWarnings("javadoc")
 public class StringAuthLeakDetectorTest extends AbstractCheckTest {
