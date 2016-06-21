@@ -20,16 +20,16 @@ else()
     set(UTILS_SOURCES ${UTILS_SOURCES} log.cc)
 endif()
 
-add_library(ProfilerUtils
+add_library(profiler_utils
             ${UTILS_SOURCES})
 
-add_unit_test(profiler-utils-test
+add_unit_test(profiler_utils_test
               file_reader_test.cc
               clock_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
               timespec_math_test.cc)
 
-target_link_libraries(profiler-utils-test
-                      ProfilerUtils
+target_link_libraries(profiler_utils_test
+                      profiler_utils
                       ${GTEST_LINK_LIBRARIES})

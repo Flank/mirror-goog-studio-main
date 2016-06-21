@@ -40,6 +40,7 @@ compileJava {
 dependencies {
     provided files(androidJar)
     jni project(path: ":native", configuration: "perfa")
+    testCompile 'junit:junit:4.12'
 }
 
 sourceSets {

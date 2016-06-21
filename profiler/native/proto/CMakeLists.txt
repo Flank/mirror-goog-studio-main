@@ -27,8 +27,8 @@ if(ANDROID)
                         gnustl_static)
 endif()
 
-add_library(ProfilerProtos
+add_library(profiler_protos
             ${PROTO_DEPENDENCIES})
 
-target_link_libraries(ProfilerProtos
+target_link_libraries(profiler_protos
                       ${LINK_DEPENDENCIES})

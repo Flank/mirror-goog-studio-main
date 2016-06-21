@@ -8,7 +8,7 @@ target_link_libraries(perfd
                       profiler_cpu
                       profiler_memory
                       profiler_network
-                      ProfilerProtos)
+                      profiler_protos)
 
 # Add perfd profiler components
 
