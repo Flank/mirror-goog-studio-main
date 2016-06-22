@@ -119,6 +119,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(FontDetector.FONT_VALIDATION_WARNING);
         issues.add(FullBackupContentDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
+        issues.add(GetContentDescriptionOverrideDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
         issues.add(GradleDetector.BUNDLED_GMS);
