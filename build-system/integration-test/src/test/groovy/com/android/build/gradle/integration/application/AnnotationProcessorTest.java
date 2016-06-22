@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -211,6 +212,12 @@ public class AnnotationProcessorTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "dependencies {\n"
+                        + "    annotationProcessor project(':lib')\n"
+                        + "    compile project(':lib')\n"
+                        + "}\n");
         project.executeConnectedCheck();
     }
 }
