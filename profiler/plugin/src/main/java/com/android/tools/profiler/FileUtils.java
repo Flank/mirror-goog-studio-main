@@ -19,10 +19,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.FluentIterable;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 
 public final class FileUtils {
@@ -99,5 +105,15 @@ public final class FileUtils {
     @NonNull
     public static FluentIterable<File> getAllFiles(@NonNull File dir) {
         return Files.fileTreeTraverser().preOrderTraversal(dir).filter(Files.isFile());
+    }
+
+    public static void copyFile(@NonNull File input, @NonNull File output) throws
+    IOException {
+        Files.createParentDirs(output);
+        FileInputStream fis = new FileInputStream(input);
+        FileOutputStream fos = new FileOutputStream(output);
+        ByteStreams.copy(fis,fos);
+        fos.flush();
+        fos.close();
     }
 }
