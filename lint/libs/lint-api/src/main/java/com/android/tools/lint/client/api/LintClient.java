@@ -321,7 +321,10 @@ public abstract class LintClient {
 
     /**
      * Returns a suitable location for storing cache files. Note that the
-     * directory may not exist.
+     * directory may not exist. You can override the default location
+     * using {@code $ANDROID_SDK_CACHE_DIR} (though note that specific
+     * lint integrations may not honor that environment variable; for example,
+     * in Gradle the cache directory will <b>always</b> be build/intermediates/lint-cache/.)
      *
      * @param create if true, attempt to create the cache dir if it does not
      *            exist
@@ -331,6 +334,17 @@ public abstract class LintClient {
      */
     @Nullable
     public File getCacheDir(boolean create) {
+        String path = System.getenv("ANDROID_SDK_CACHE_DIR");
+        if (path != null) {
+            File dir = new File(path);
+            if (create && !dir.exists()) {
+                if (!dir.mkdirs()) {
+                    return null;
+                }
+            }
+            return dir;
+        }
+
         String home = System.getProperty("user.home");
         String relative = ".android" + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$
         File dir = new File(home, relative);
