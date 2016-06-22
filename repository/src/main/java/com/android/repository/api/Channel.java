@@ -41,8 +41,7 @@ public abstract class Channel implements Comparable<Channel> {
      */
     @NonNull
     public static Channel create(int id) {
-        return ((CommonFactory) RepoManager.getCommonModule()
-                .createLatestFactory()).createChannelType(id);
+        return RepoManager.getCommonModule().createLatestFactory().createChannelType(id);
     }
 
     /**

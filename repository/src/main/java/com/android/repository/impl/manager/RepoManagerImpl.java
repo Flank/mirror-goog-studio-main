@@ -69,7 +69,7 @@ public class RepoManagerImpl extends RepoManager {
     /**
      * The registered {@link SchemaModule}s.
      */
-    private final Set<SchemaModule> mModules = Sets.newHashSet();
+    private final Set<SchemaModule<?>> mModules = Sets.newHashSet();
 
     /**
      * The {@link FallbackLocalRepoLoader} to use when loading local packages.
@@ -272,7 +272,7 @@ public class RepoManagerImpl extends RepoManager {
 
     @Override
     @NonNull
-    public Set<SchemaModule> getSchemaModules() {
+    public Set<SchemaModule<?>> getSchemaModules() {
         return mModules;
     }
 
@@ -301,7 +301,7 @@ public class RepoManagerImpl extends RepoManager {
     @Override
     @Nullable
     public LSResourceResolver getResourceResolver(@NonNull ProgressIndicator progress) {
-        Set<SchemaModule> allModules = ImmutableSet.<SchemaModule>builder().addAll(
+        Set<SchemaModule<?>> allModules = ImmutableSet.<SchemaModule<?>>builder().addAll(
           getSchemaModules()).add(
           getCommonModule()).add(
           getGenericModule()).build();

@@ -31,7 +31,7 @@ public interface RepositorySource {
      * source.
      */
     @NonNull
-    Collection<SchemaModule> getPermittedModules();
+    Collection<SchemaModule<?>> getPermittedModules();
 
     /**
      * @return true if this source is enabled.

@@ -31,8 +31,7 @@ import java.util.Locale;
 public abstract class IdDisplay implements Comparable<IdDisplay> {
 
     public static IdDisplay create(@NonNull String id, @NonNull String display) {
-        SdkCommonFactory factory = (SdkCommonFactory) AndroidSdkHandler.getCommonModule()
-                .createLatestFactory();
+        SdkCommonFactory factory = AndroidSdkHandler.getCommonModule().createLatestFactory();
         IdDisplay result = factory.createIdDisplayType();
         result.setId(id);
         result.setDisplay(display);

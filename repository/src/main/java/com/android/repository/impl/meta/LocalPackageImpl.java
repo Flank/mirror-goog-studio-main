@@ -51,21 +51,21 @@ public abstract class LocalPackageImpl extends RepoPackageImpl implements LocalP
      * have a {@link RepoPackage} of unknown concrete type and want to marshal it using JAXB.
      */
     @NonNull
-    public static LocalPackageImpl create(@NonNull RepoPackage p) {
-        if (p instanceof LocalPackageImpl) {
-            return (LocalPackageImpl)p;
+    public static LocalPackageImpl create(@NonNull RepoPackage repoPackage) {
+        if (repoPackage instanceof LocalPackageImpl) {
+            return (LocalPackageImpl)repoPackage;
         }
-        CommonFactory f = (CommonFactory)RepoManager.getCommonModule().createLatestFactory();
-        LocalPackageImpl result = f.createLocalPackage();
-        result.setVersion(p.getVersion());
-        result.setLicense(p.getLicense());
-        result.setPath(p.getPath());
-        for (Dependency d : p.getAllDependencies()) {
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        LocalPackageImpl result = factory.createLocalPackage();
+        result.setVersion(repoPackage.getVersion());
+        result.setLicense(repoPackage.getLicense());
+        result.setPath(repoPackage.getPath());
+        for (Dependency d : repoPackage.getAllDependencies()) {
             result.addDependency(d);
         }
-        result.setObsolete(p.obsolete());
-        result.setTypeDetails(p.getTypeDetails());
-        result.setDisplayName(p.getDisplayName());
+        result.setObsolete(repoPackage.obsolete());
+        result.setTypeDetails(repoPackage.getTypeDetails());
+        result.setDisplayName(repoPackage.getDisplayName());
         return result;
     }
 

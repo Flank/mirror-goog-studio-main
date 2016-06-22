@@ -34,7 +34,7 @@ public class LicenseTest {
     @Test
     public void testAccept() {
         MockFileOp fop = new MockFileOp();
-        CommonFactory factory = (CommonFactory) RepoManager.getCommonModule().createLatestFactory();
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License l = factory.createLicenseType("my license", "lic1");
         License l2 = factory.createLicenseType("my license 2", "lic2");
         File root = new File("/sdk");
@@ -48,7 +48,7 @@ public class LicenseTest {
     @Test
     public void testMultiSameIdAccept() {
         MockFileOp fop = new MockFileOp();
-        CommonFactory factory = (CommonFactory) RepoManager.getCommonModule().createLatestFactory();
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License l = factory.createLicenseType("my license", "lic1");
         License l2 = factory.createLicenseType("my license 2", "lic1");
         File root = new File("/sdk");
@@ -68,7 +68,7 @@ public class LicenseTest {
     @Test
     public void testLicenseFile() {
         MockFileOp fop = new MockFileOp();
-        CommonFactory factory = (CommonFactory) RepoManager.getCommonModule().createLatestFactory();
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         License lic1 = factory.createLicenseType("my license", "lic1");
         License lic1a = factory.createLicenseType("my license rev 2", "lic1");
         License lic2 = factory.createLicenseType("my license 2", "lic2");

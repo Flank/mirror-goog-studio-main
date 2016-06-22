@@ -104,9 +104,8 @@ public class LocalRepoTest extends TestCase {
     public void testMarshalGeneric() throws Exception {
         RepoManager manager = new RepoManagerImpl(new MockFileOp());
 
-        CommonFactory factory = (CommonFactory)RepoManager.getCommonModule().createLatestFactory();
-        GenericFactory genericFactory = (GenericFactory) RepoManager.getGenericModule()
-                .createLatestFactory();
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        GenericFactory genericFactory = RepoManager.getGenericModule().createLatestFactory();
         Repository repo = factory.createRepositoryType();
         LocalPackageImpl p = factory.createLocalPackage();
         License license = factory.createLicenseType("some license text", "license1");
@@ -128,9 +127,8 @@ public class LocalRepoTest extends TestCase {
         repo.getLicense().add(license);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SchemaModuleUtil.marshal(
-                ((CommonFactory) RepoManager.getCommonModule().createLatestFactory())
-                        .generateRepository(repo),
-                ImmutableSet.of(manager.getGenericModule()), output,
+                RepoManager.getCommonModule().createLatestFactory().generateRepository(repo),
+                ImmutableSet.of(RepoManager.getGenericModule()), output,
                 manager.getResourceResolver(progress), progress);
         progress.assertNoErrorsOrWarnings();
 

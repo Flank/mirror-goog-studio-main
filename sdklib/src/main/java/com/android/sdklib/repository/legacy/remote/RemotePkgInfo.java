@@ -133,8 +133,7 @@ public abstract class RemotePkgInfo implements Comparable<RemotePkgInfo> {
             Node ref = usesLicense.getAttributes().getNamedItem(SdkRepoConstants.ATTR_REF);
             if (ref != null) {
                 String licenseRef = ref.getNodeValue();
-                CommonFactory f = (CommonFactory) RepoManager.getCommonModule()
-                        .createLatestFactory();
+                CommonFactory f = RepoManager.getCommonModule().createLatestFactory();
                 License l = f.createLicenseType();
                 l.setId(licenseRef);
                 l.setValue(licenses.get(licenseRef));

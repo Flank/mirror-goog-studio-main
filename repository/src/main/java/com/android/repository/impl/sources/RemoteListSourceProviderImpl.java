@@ -57,7 +57,7 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
      * The {@link SchemaModule} specifying the core schema for the downloaded list of sources. This
      * may be extended by the {@link SchemaModule} specified in the constructor.
      */
-    private static SchemaModule sAddonListModule = new SchemaModule(
+    private static SchemaModule<?> sAddonListModule = new SchemaModule(
             RemoteListSourceProviderImpl.class.getPackage().getName()
                     + ".generated.v%d.ObjectFactory", "repo-sites-common-%d.xsd",
             RepoManager.class);
@@ -70,8 +70,8 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
     /**
      * The {@link SchemaModule}s that are allowed to be used, depending on the type of the source.
      */
-    private final Map<Class<? extends RepositorySource>, Collection<SchemaModule>>
-            mAllowedModules;
+    private final Map<Class<? extends RepositorySource>,
+            Collection<SchemaModule<?>>> mAllowedModules;
 
     /**
      * An extension to the core {@link SchemaModule}.
@@ -95,7 +95,7 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
      */
     public RemoteListSourceProviderImpl(@NonNull String url, @Nullable SchemaModule sourceListModule,
             @NonNull Map<Class<? extends RepositorySource>,
-                         Collection<SchemaModule>> permittedSchemaModules)
+                         Collection<SchemaModule<?>>> permittedSchemaModules)
             throws URISyntaxException {
         mUrl = url;
         mAllowedModules = permittedSchemaModules;
@@ -162,7 +162,7 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
     @NonNull
     private List<RepositorySource> parse(@NonNull InputStream xml,
             @NonNull ProgressIndicator progress, @NonNull URL url) {
-        Set<SchemaModule> schemas = Sets.newHashSet(sAddonListModule);
+        Set<SchemaModule<?>> schemas = Sets.newHashSet(sAddonListModule);
         if (mSourceListModule != null) {
             schemas.add(mSourceListModule);
         }

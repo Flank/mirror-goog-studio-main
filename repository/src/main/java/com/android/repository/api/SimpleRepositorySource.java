@@ -46,7 +46,7 @@ public class SimpleRepositorySource implements RepositorySource {
      * The {@link SchemaModule}s allowed to be used when parsing the xml downloaded from
      * this source.
      */
-    private final Collection<SchemaModule> mAllowedModules;
+    private final Collection<SchemaModule<?>> mAllowedModules;
 
     /**
      * Any error that occurred when fetching this source.
@@ -71,7 +71,7 @@ public class SimpleRepositorySource implements RepositorySource {
     public SimpleRepositorySource(@NonNull String url,
                                   @Nullable String displayName,
                                   boolean enabled,
-                                  @NonNull Collection<SchemaModule> allowedModules,
+                                  @NonNull Collection<SchemaModule<?>> allowedModules,
                                   @NonNull RepositorySourceProvider provider) {
         mProvider = provider;
         mUrl = url.trim();
@@ -83,7 +83,7 @@ public class SimpleRepositorySource implements RepositorySource {
 
     @Override
     @NonNull
-    public Collection<SchemaModule> getPermittedModules() {
+    public Collection<SchemaModule<?>> getPermittedModules() {
         return mAllowedModules;
     }
 

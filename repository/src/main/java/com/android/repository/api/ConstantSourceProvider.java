@@ -32,7 +32,7 @@ public class ConstantSourceProvider implements RepositorySourceProvider {
     private final RepositorySource mSource;
 
     public ConstantSourceProvider(@NonNull String url, @NonNull String uiName,
-            @NonNull Collection<SchemaModule> permittedSchemaModules) {
+            @NonNull Collection<SchemaModule<?>> permittedSchemaModules) {
         // TODO: persist enabled state (this isn't done currently either). Probably it will be
         //       in the file that stores locally-added sites.
         mSource = new SimpleRepositorySource(url, uiName, true, permittedSchemaModules, this);

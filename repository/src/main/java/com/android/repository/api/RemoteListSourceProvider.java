@@ -46,7 +46,7 @@ public abstract class RemoteListSourceProvider implements RepositorySourceProvid
     public static RemoteListSourceProvider create(@NonNull String url,
             @Nullable SchemaModule sourceListModule,
             @NonNull Map<Class<? extends RepositorySource>,
-                    Collection<SchemaModule>> permittedSchemaModules)
+                    Collection<SchemaModule<?>>> permittedSchemaModules)
             throws URISyntaxException {
         return new RemoteListSourceProviderImpl(url, sourceListModule, permittedSchemaModules);
     }

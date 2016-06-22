@@ -81,6 +81,10 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
         return mSource;
     }
 
+    /**
+     * Gets the actual {@link ChannelRef}. Probably you actually want {@link #getChannel()}.
+     */
+    @Nullable
     protected abstract ChannelRef getChannelRef();
 
     @NonNull
@@ -109,7 +113,10 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
         setChannelRef(cr);
     }
 
-    public abstract void setChannelRef(ChannelRef cr);
+    /**
+     * Sets the actual {@link ChannelRef}. Probably you actually want {@link #setChannel(Channel)}.
+     */
+    protected abstract void setChannelRef(@Nullable ChannelRef cr);
 
     /**
      * Creates a {@link RemotePackageImpl} from an arbitrary {@link RemotePackage}. Useful if you
@@ -117,28 +124,28 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
      * Note that only the compatible archive (if any) will be included.
      */
     @NonNull
-    public static RemotePackageImpl create(@NonNull RemotePackage p) {
-        CommonFactory f = (CommonFactory)RepoManager.getCommonModule().createLatestFactory();
-        RemotePackageImpl result = f.createRemotePackage();
-        result.setVersion(p.getVersion());
-        result.setLicense(p.getLicense());
-        result.setPath(p.getPath());
-        for (Dependency d : p.getAllDependencies()) {
+    public static RemotePackageImpl create(@NonNull RemotePackage remotePackage) {
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        RemotePackageImpl result = factory.createRemotePackage();
+        result.setVersion(remotePackage.getVersion());
+        result.setLicense(remotePackage.getLicense());
+        result.setPath(remotePackage.getPath());
+        for (Dependency d : remotePackage.getAllDependencies()) {
             result.addDependency(d);
         }
-        result.setObsolete(p.obsolete());
-        result.setTypeDetails(p.getTypeDetails());
-        result.setDisplayName(p.getDisplayName());
-        result.setSource(p.getSource());
-        result.setChannel(p.getChannel());
-        Archive archive = p.getArchive();
+        result.setObsolete(remotePackage.obsolete());
+        result.setTypeDetails(remotePackage.getTypeDetails());
+        result.setDisplayName(remotePackage.getDisplayName());
+        result.setSource(remotePackage.getSource());
+        result.setChannel(remotePackage.getChannel());
+        Archive archive = remotePackage.getArchive();
         if (archive != null) {
             result.addArchive(archive);
         }
         return result;
     }
 
-    public void addArchive(Archive archive) {
+    public void addArchive(@NonNull Archive archive) {
         Archives archives = getArchives();
         if (archives == null) {
             archives = createFactory().createArchivesType();
