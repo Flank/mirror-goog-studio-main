@@ -57,7 +57,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
 
     private static final Object LOCK = new Object();
 
-    private final Collection<SchemaModule> mAllowedModules;
+    private final Collection<SchemaModule<?>> mAllowedModules;
 
     private final FileOp mFop;
 
@@ -73,7 +73,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
      *                       should probably be {@link FileOpImpl}.
      */
     public LocalSourceProvider(@NonNull File location,
-            @NonNull Collection<SchemaModule> allowedModules, @NonNull FileOp fop) {
+            @NonNull Collection<SchemaModule<?>> allowedModules, @NonNull FileOp fop) {
         mAllowedModules = allowedModules;
         mLocation = location;
         mFop = fop;
@@ -137,11 +137,10 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                     progress.logWarning(
                             "File " + mLocation.getAbsolutePath() + " could not be loaded.");
                 }
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | IOException e) {
                 progress.logWarning("Failed to parse user addon file at " + mLocation, e);
-            } catch (IOException e) {
-                progress.logWarning("Failed to parse user addon file at " + mLocation, e);
-            } finally {
+            }
+            finally {
                 if (fis != null) {
                     try {
                         fis.close();

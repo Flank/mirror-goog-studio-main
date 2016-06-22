@@ -39,7 +39,10 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.legacy.LegacyLocalRepoLoader;
 import com.android.sdklib.repository.legacy.LegacyRemoteRepoLoader;
+import com.android.sdklib.repository.meta.AddonFactory;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.sdklib.repository.meta.RepoFactory;
+import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.android.sdklib.repository.meta.SysImgFactory;
 import com.android.sdklib.repository.sources.RemoteSiteType;
 import com.android.sdklib.repository.targets.AndroidTargetManager;
@@ -56,8 +59,8 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.Optional;
+import java.util.function.Function;
 
 
 /**
@@ -69,28 +72,28 @@ public final class AndroidSdkHandler {
     /**
      * Schema module containing the package type information to be used in addon repos.
      */
-    private static final SchemaModule ADDON_MODULE = new SchemaModule(
+    private static final SchemaModule<AddonFactory> ADDON_MODULE = new SchemaModule<>(
             "com.android.sdklib.repository.generated.addon.v%d.ObjectFactory",
             "sdk-addon-%02d.xsd", AndroidSdkHandler.class);
 
     /**
      * Schema module containing the package type information to be used in the primary repo.
      */
-    private static final SchemaModule REPOSITORY_MODULE = new SchemaModule(
+    private static final SchemaModule<RepoFactory> REPOSITORY_MODULE = new SchemaModule<>(
             "com.android.sdklib.repository.generated.repository.v%d.ObjectFactory",
             "sdk-repository-%02d.xsd", AndroidSdkHandler.class);
 
     /**
      * Schema module containing the package type information to be used in system image repos.
      */
-    private static final SchemaModule SYS_IMG_MODULE = new SchemaModule(
+    private static final SchemaModule<SysImgFactory> SYS_IMG_MODULE = new SchemaModule<>(
             "com.android.sdklib.repository.generated.sysimg.v%d.ObjectFactory",
             "sdk-sys-img-%02d.xsd", AndroidSdkHandler.class);
 
     /**
      * Common schema module used by the other sdk-specific modules.
      */
-    private static final SchemaModule COMMON_MODULE = new SchemaModule(
+    private static final SchemaModule<SdkCommonFactory> COMMON_MODULE = new SchemaModule<>(
             "com.android.sdklib.repository.generated.common.v%d.ObjectFactory",
             "sdk-common-%02d.xsd", AndroidSdkHandler.class);
 
@@ -276,7 +279,7 @@ public final class AndroidSdkHandler {
         if (mSystemImageManager == null) {
             getSdkManager(progress);
             mSystemImageManager = new SystemImageManager(mRepoManager,
-              (SysImgFactory) getSysImgModule().createLatestFactory(), mFop);
+                    getSysImgModule().createLatestFactory(), mFop);
         }
         return mSystemImageManager;
     }
@@ -440,7 +443,7 @@ public final class AndroidSdkHandler {
      * sdk-common-XX.xsd.
      */
     @NonNull
-    public static SchemaModule getCommonModule() {
+    public static SchemaModule<SdkCommonFactory> getCommonModule() {
         return COMMON_MODULE;
     }
 
@@ -449,7 +452,7 @@ public final class AndroidSdkHandler {
      * See sdk-addon-XX.xsd.
      */
     @NonNull
-    public static SchemaModule getAddonModule() {
+    public static SchemaModule<AddonFactory> getAddonModule() {
         return ADDON_MODULE;
     }
 
@@ -458,7 +461,7 @@ public final class AndroidSdkHandler {
      * Repository} (containin platforms etc.). See sdk-repository-XX.xsd.
      */
     @NonNull
-    public static SchemaModule getRepositoryModule() {
+    public static SchemaModule<RepoFactory> getRepositoryModule() {
         return REPOSITORY_MODULE;
     }
 
@@ -467,7 +470,7 @@ public final class AndroidSdkHandler {
      * Repository}s. See sdk-sys-img-XX.xsd.
      */
     @NonNull
-    public static SchemaModule getSysImgModule() {
+    public static SchemaModule<SysImgFactory> getSysImgModule() {
         return SYS_IMG_MODULE;
     }
 
@@ -531,14 +534,15 @@ public final class AndroidSdkHandler {
          */
         public RepoConfig(@NonNull ProgressIndicator progress) {
             // Schema module for the list of update sites we download
-            SchemaModule addonListModule = new SchemaModule(
+            SchemaModule<?> addonListModule = new SchemaModule<>(
                     "com.android.sdklib.repository.sources.generated.v%d.ObjectFactory",
                     "sdk-sites-list-%d.xsd", RemoteSiteType.class);
 
             try {
                 // Specify what modules are allowed to be used by what sites.
-                Map<Class<? extends RepositorySource>, Collection<SchemaModule>> siteTypes
-                        = ImmutableMap.<Class<? extends RepositorySource>, Collection<SchemaModule>>builder()
+                Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> siteTypes =
+                        ImmutableMap.<Class<? extends RepositorySource>,
+                                Collection<SchemaModule<?>>>builder()
                         .put(RemoteSiteType.AddonSiteType.class, ImmutableSet.of(ADDON_MODULE))
                         .put(RemoteSiteType.SysImgSiteType.class,
                                 ImmutableSet.of(SYS_IMG_MODULE)).build();

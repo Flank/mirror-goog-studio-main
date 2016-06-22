@@ -339,9 +339,8 @@ public class DeviceManagerTest extends SdkManagerTestCase {
         try {
             File location = getSdkHandler().getLocation();
             FakePackage p = new FakePackage("dummy", new Revision(1), null);
-            SchemaModule module = AndroidSdkHandler.getAddonModule();
-            DetailsTypes.AddonDetailsType details = ((AddonFactory) module.createLatestFactory())
-                    .createAddonDetailsType();
+            DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
+                    .createLatestFactory().createAddonDetailsType();
             details.setApiLevel(22);
             details.setVendor(SystemImage.DEFAULT_TAG);
             p.setTypeDetails((TypeDetails)details);

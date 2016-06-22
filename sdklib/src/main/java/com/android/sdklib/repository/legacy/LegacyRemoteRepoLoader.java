@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -214,7 +213,7 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
         @NonNull
         @Override
         public CommonFactory createFactory() {
-            return (CommonFactory) AndroidSdkHandler.getCommonModule().createLatestFactory();
+            return RepoManager.getCommonModule().createLatestFactory();
         }
 
         @NonNull
@@ -269,8 +268,7 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
             for (com.android.sdklib.repository.legacy.remote.internal.archives.Archive archive : mWrapped
                     .getArchives()) {
                 if (archive.isCompatible()) {
-                    CommonFactory f = (CommonFactory) RepoManager.getCommonModule()
-                            .createLatestFactory();
+                    CommonFactory f = RepoManager.getCommonModule().createLatestFactory();
                     Archive arch = f.createArchiveType();
                     Archive.CompleteType complete = f.createCompleteType();
                     complete.setChecksum(archive.getChecksum());

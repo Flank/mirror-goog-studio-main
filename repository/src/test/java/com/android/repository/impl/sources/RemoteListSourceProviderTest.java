@@ -48,7 +48,7 @@ public class RemoteListSourceProviderTest extends TestCase {
     public void testSimple() throws Exception {
         MockFileOp fop = new MockFileOp();
 
-        Map<Class<? extends RepositorySource>, Collection<SchemaModule>> permittedModules =
+        Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));
@@ -76,7 +76,7 @@ public class RemoteListSourceProviderTest extends TestCase {
     public void testCache() throws Exception {
         MockFileOp fop = new MockFileOp();
 
-        Map<Class<? extends RepositorySource>, Collection<SchemaModule>> permittedModules =
+        Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));
@@ -132,7 +132,7 @@ public class RemoteListSourceProviderTest extends TestCase {
     public void testForceRefresh() throws Exception {
         MockFileOp fop = new MockFileOp();
 
-        Map<Class<? extends RepositorySource>, Collection<SchemaModule>> permittedModules =
+        Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> permittedModules =
                 Maps.newHashMap();
         permittedModules.put(RemoteListSourceProvider.GenericSite.class,
                 ImmutableList.of(RepoManager.getCommonModule()));

@@ -230,7 +230,7 @@ public class InstallerUtil {
         if (!fop.exists(packageRoot) || !fop.isDirectory(packageRoot)) {
             throw new IllegalArgumentException("packageRoot must exist and be a directory.");
         }
-        CommonFactory factory = (CommonFactory) RepoManager.getCommonModule().createLatestFactory();
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         // Create the package.xml
         Repository repo = factory.createRepositoryType();
         License l = p.getLicense();
@@ -246,14 +246,11 @@ public class InstallerUtil {
     public static void writeRepoXml(@NonNull RepoManager manager,
             @NonNull Repository repo, @NonNull File packageXml, @NonNull FileOp fop,
             @NonNull ProgressIndicator progress) throws IOException {
-        OutputStream fos = fop.newFileOutputStream(packageXml);
-        JAXBElement<Repository> element = ((CommonFactory) RepoManager.getCommonModule()
-                .createLatestFactory()).generateRepository(repo);
-        try {
+        JAXBElement<Repository> element = RepoManager.getCommonModule().createLatestFactory().
+                generateRepository(repo);
+        try (OutputStream fos = fop.newFileOutputStream(packageXml)) {
             SchemaModuleUtil.marshal(element, manager.getSchemaModules(), fos,
                     manager.getResourceResolver(progress), progress);
-        } finally {
-            fos.close();
         }
     }
 

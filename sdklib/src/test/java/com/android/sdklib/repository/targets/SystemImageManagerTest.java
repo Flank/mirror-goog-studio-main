@@ -19,7 +19,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.meta.SysImgFactory;
 import com.google.common.collect.Sets;
 
 import junit.framework.TestCase;
@@ -47,7 +46,7 @@ public class SystemImageManagerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         SystemImageManager mgr = new SystemImageManager(handler.getSdkManager(progress),
-                (SysImgFactory)AndroidSdkHandler.getSysImgModule().createLatestFactory(), fop);
+                AndroidSdkHandler.getSysImgModule().createLatestFactory(), fop);
         Set<SystemImage> images = Sets.newTreeSet(mgr.getImages());
         progress.assertNoErrorsOrWarnings();
         assertEquals(5, images.size());
