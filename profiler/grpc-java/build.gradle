@@ -73,3 +73,10 @@ artifacts {
 
     archives sourcesJar
 }
+
+def runtime = "$rootDir/../../../out/studio/runtime/"
+task copy(type: Copy, dependsOn: jarjarLibs) {
+    from           jarjarLibs.outputs
+    destinationDir file(runtime)
+}
+build.dependsOn copy
