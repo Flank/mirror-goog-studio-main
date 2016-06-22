@@ -23,5 +23,6 @@ fi
 
 perfd_install_path="/data/local/tmp/perfd/"
 echo "Installing perfd onto device: $perfd_install_path"
+adb shell mkdir -p $perfd_install_path
 adb push $perfd_path $perfd_install_path && adb shell $perfd_install_path/perfd
 
