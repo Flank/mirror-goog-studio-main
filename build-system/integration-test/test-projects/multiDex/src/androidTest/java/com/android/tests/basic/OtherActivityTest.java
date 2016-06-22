@@ -4,21 +4,22 @@ import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.TextView;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+public class OtherActivityTest extends ActivityInstrumentationTestCase2<OtherActivity> {
 
     private TextView mTextView;
 
     /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
+     * Creates an {@link ActivityInstrumentationTestCase2} that tests the
+     * {@link OtherActivity} activity.
      */
-    public MainTest() {
-        super(Main.class);
+    public OtherActivityTest() {
+        super(OtherActivity.class);
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        final Main a = getActivity();
+        final OtherActivity a = getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
