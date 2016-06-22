@@ -14,15 +14,18 @@
  * limitations under the License.
  *
  */
-#include <string.h>
 #include <jni.h>
+#include <string.h>
 
+#include "perfa/perfa.h"
 #include "utils/log.h"
 
 using profiler::Log;
+using profiler::Perfa;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_ProfilerService_nativeInitialize( JNIEnv* env, jobject thiz )
-{
+Java_com_android_tools_profiler_support_ProfilerService_nativeInitialize(
+    JNIEnv* env, jobject thiz) {
   Log::V("Initializing advanced profiling.");
+  Perfa::Initialize();
 }

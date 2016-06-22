@@ -22,6 +22,7 @@
 namespace profiler {
 
 // Class to read file and perform related tokenize util functions.
+// TODO: Integrate into utils/fs/file.h?
 class FileReader {
  public:
   // Real whole file and split it into lines.

@@ -14,134 +14,156 @@
  * limitations under the License.
  *
  */
-#include <string.h>
 #include <jni.h>
+#include <string.h>
+#include <unistd.h>
 
+#include "perfa/perfa.h"
+#include "utils/clock.h"
 #include "utils/log.h"
 
+#include <atomic>
+
+using grpc::ClientContext;
+using profiler::SteadyClock;
 using profiler::Log;
+using profiler::Perfa;
+using profiler::proto::ChunkRequest;
+using profiler::proto::HttpDataRequest;
+using profiler::proto::HttpEventRequest;
+using profiler::proto::EmptyNetworkReply;
+
+namespace {
+std::atomic_int id_generator_(1);
+
+void SendHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
+  auto net_stub = Perfa::Instance().network_stub();
+
+  SteadyClock clock;
+  ClientContext ctx;
+  HttpEventRequest httpEvent;
+  EmptyNetworkReply reply;
+
+  httpEvent.set_uid(uid);
+  httpEvent.set_timestamp(clock.GetCurrentTime());
+  httpEvent.set_event(event);
+
+  net_stub.SendHttpEvent(&ctx, httpEvent, &reply);
+}
+}
 
 extern "C" {
-  // TODO: Create RAII classes for Java -> C++ access (JavaString, JavaBytes, etc.)
+// TODO: Create RAII classes for Java -> C++ access (JavaString, JavaBytes,
+// etc.)
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onClose(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_CloseInput [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+JNIEXPORT jlong JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_nextId(
+    JNIEnv *env, jobject thiz) {
+  int32_t app_id = getpid();
+  int32_t local_id = id_generator_++;
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onReadBegin(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_ReadInput [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  int64_t uid = app_id;
+  uid <<= 32;
+  uid |= local_id;
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
-      JNIEnv *env, jobject thiz, jstring jurl, jbyteArray jbytes)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    jsize len = env->GetArrayLength(jbytes);
-    Log::V("HTTP_ResponseBytes (%d) [%s]", len, url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  return uid;
+}
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onClose(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_CloseOutput [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onClose(
+    JNIEnv *env, jobject thiz, jlong juid) {
+  SendHttpEvent(juid, HttpEventRequest::DOWNLOAD_COMPLETED);
+}
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onWriteBegin(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_WriteOutput [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onReadBegin(
+    JNIEnv *env, jobject thiz, jlong juid) {
+  SendHttpEvent(juid, HttpEventRequest::DOWNLOAD_STARTED);
+}
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPreConnect(
-      JNIEnv *env, jobject thiz, jstring jurl, jstring jstack)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    const char *stack = env->GetStringUTFChars(jstack, NULL);
-    Log::V("HTTP_PreConnect [%s]\n%s", url, stack);
-    env->ReleaseStringUTFChars(jstack, stack);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
+    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
+  auto net_stub = Perfa::Instance().network_stub();
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequestBody(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_RequestBody [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  ClientContext ctx;
+  ChunkRequest chunk;
+  EmptyNetworkReply response;
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
-      JNIEnv *env, jobject thiz, jstring jurl, jstring jmethod, jstring jfields)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    const char *method = env->GetStringUTFChars(jmethod, NULL);
-    const char *fields = env->GetStringUTFChars(jfields, NULL);
-    Log::V("HTTP_Request (%s) [%s]\n%s", method, url, fields);
-    env->ReleaseStringUTFChars(jfields, fields);
-    env->ReleaseStringUTFChars(jmethod, method);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  int len = env->GetArrayLength(jbytes);
+  char *bytes = new char[len];
+  env->GetByteArrayRegion(jbytes, 0, len, reinterpret_cast<jbyte *>(bytes));
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponse(
-      JNIEnv *env, jobject thiz, jstring jurl, jstring jresponse, jstring jfields)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    const char *response = env->GetStringUTFChars(jresponse, NULL);
-    const char *fields = env->GetStringUTFChars(jfields, NULL);
-    Log::V("HTTP_Response (%s) [%s]\n%s", response, url, fields);
-    env->ReleaseStringUTFChars(jfields, fields);
-    env->ReleaseStringUTFChars(jresponse, response);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  chunk.set_uid(juid);
+  std::string byte_str(bytes, len);
+  chunk.set_content(byte_str);
+  chunk.set_type(ChunkRequest::RESPONSE);
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponseBody(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_ResponseBody [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  net_stub.SendChunk(&ctx, chunk, &response);
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onDisconnect(
-      JNIEnv *env, jobject thiz, jstring jurl)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    Log::V("HTTP_Disconnect [%s]", url);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+  delete[] bytes;
+}
 
-  JNIEXPORT void JNICALL
-  Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onError(
-      JNIEnv *env, jobject thiz, jstring jurl, jstring jstatus)
-  {
-    const char *url = env->GetStringUTFChars(jurl, NULL);
-    const char *status = env->GetStringUTFChars(jstatus, NULL);
-    Log::V("HTTP_Error [%s]\n%s", url, status);
-    env->ReleaseStringUTFChars(jstatus, status);
-    env->ReleaseStringUTFChars(jurl, url);
-  }
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onClose(
+    JNIEnv *env, jobject thiz, jlong juid) {}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onWriteBegin(
+    JNIEnv *env, jobject thiz, jlong juid) {
+  // TODO: Report request body upload started
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPreConnect(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jurl, jstring jstack) {
+  const char *url = env->GetStringUTFChars(jurl, NULL);
+  const char *stack = env->GetStringUTFChars(jstack, NULL);
+
+  auto net_stub = Perfa::Instance().network_stub();
+  ClientContext ctx;
+  HttpDataRequest httpData;
+  EmptyNetworkReply reply;
+  httpData.set_uid(juid);
+  httpData.set_app_id(getpid());
+  httpData.set_url(url);
+  net_stub.RegisterHttpData(&ctx, httpData, &reply);
+
+  SendHttpEvent(juid, HttpEventRequest::CREATED);
+
+  env->ReleaseStringUTFChars(jstack, stack);
+  env->ReleaseStringUTFChars(jurl, url);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequestBody(
+    JNIEnv *env, jobject thiz, jlong juid) {
+  // TODO: Report request body upload bytes
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields) {
+  // TODO: Report request code and fields
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponse(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
+  // TODO: Report reponse code and fields
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponseBody(
+    JNIEnv *env, jobject thiz, jlong juid) {}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onDisconnect(
+    JNIEnv *env, jobject thiz, jlong juid) {}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onError(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jstatus) {
+  SendHttpEvent(juid, HttpEventRequest::ABORTED);
+}
 };

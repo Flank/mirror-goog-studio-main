@@ -6,7 +6,12 @@ set(UTILS_SOURCES
     package_manager.cc
     profiler_file.cc
     stopwatch.cc
-    token.cc)
+    token.cc
+    fs/dir.cc
+    fs/disk.cc
+    fs/file.cc
+    fs/file_system.cc
+    fs/path.cc)
 
 if (CMAKE_HOST_APPLE AND NOT ANDROID)
     set(UTILS_SOURCES ${UTILS_SOURCES} clock.mac.cc)
@@ -28,7 +33,8 @@ add_unit_test(profiler_utils_test
               clock_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
-              timespec_math_test.cc)
+              timespec_math_test.cc
+              fs/file_system_test.cc)
 
 target_link_libraries(profiler_utils_test
                       profiler_utils
