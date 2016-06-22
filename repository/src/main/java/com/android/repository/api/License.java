@@ -44,8 +44,7 @@ public abstract class License {
     /**
      * The name of the directory used to store tokens indicating approval of licenses.
      */
-    @VisibleForTesting
-    static final String LICENSE_DIR = "licenses";
+    public static final String LICENSE_DIR = "licenses";
 
     /**
      * Gets the ID of this license, used to refer to it from within a {@link RepoPackage}.
