@@ -19,31 +19,29 @@ using ::profiler::proto::MemoryData;
 
 namespace profiler {
 
-MemoryCache::MemoryCache(int32_t samples_capacity) :
+MemoryCache::MemoryCache(const Clock& clock, int32_t samples_capacity) :
+    memory_samples_(new MemoryData::MemorySample[samples_capacity]), clock_(clock),
     put_memory_sample_index_(0), samples_capacity_(samples_capacity), buffer_full_(false) {
-  memory_samples_ = new MemoryData::MemorySample[samples_capacity_];
-}
-
-MemoryCache::~MemoryCache() {
-  delete[] memory_samples_;
-  memory_samples_ = nullptr;
 }
 
 void MemoryCache::SaveMemorySample(const MemoryData::MemorySample& sample) {
   std::lock_guard<std::mutex> lock(memory_samples_mutex_);
 
   memory_samples_[put_memory_sample_index_].CopyFrom(sample);
+  memory_samples_[put_memory_sample_index_].set_timestamp(clock_.GetCurrentTime());
   put_memory_sample_index_ = IncrementSampleIndex(put_memory_sample_index_);
   if (put_memory_sample_index_ == 0) buffer_full_ = true; // Check if we have wrapped.
 }
 
 void MemoryCache::SaveInstanceCountSample(const MemoryData::InstanceCountSample& sample) {
+  std::lock_guard<std::mutex> lock(memory_samples_mutex_);
 }
 
 void MemoryCache::SaveGcSample(const MemoryData::GcSample& sample) {
+  std::lock_guard<std::mutex> lock(memory_samples_mutex_);
 }
 
-void MemoryCache::LoadMemorySamples(
+void MemoryCache::LoadMemoryData(
     int64_t start_time_exl, int64_t end_time_inc, MemoryData* response) {
   std::lock_guard<std::mutex> lock(memory_samples_mutex_);
 
@@ -58,22 +56,18 @@ void MemoryCache::LoadMemorySamples(
     i = 0;
   }
 
+  int64_t end_timestamp = -1;
   do {
     int64_t timestamp = memory_samples_[i].timestamp();
     // TODO add optimization to skip past already-queried entries if the array gets large.
     if (timestamp > start_time_exl && timestamp <= end_time_inc) {
       response->add_mem_samples()->CopyFrom(memory_samples_[i]);
+      end_timestamp = std::max(timestamp, end_timestamp);
     }
     i = IncrementSampleIndex(i);
   } while (i != put_memory_sample_index_);
-}
 
-void MemoryCache::LoadInstanceCountSamples(
-    int64_t start_time_exl, int64_t end_time_inc, MemoryData* response) {
-}
-
-void MemoryCache::LoadGcSamples(
-    int64_t start_time_exl, int64_t end_time_inc, MemoryData* response) {
+  response->set_end_timestamp(end_timestamp);
 }
 
 int32_t MemoryCache::IncrementSampleIndex(int32_t index) {

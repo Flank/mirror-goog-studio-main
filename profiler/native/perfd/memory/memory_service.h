@@ -27,8 +27,8 @@ namespace profiler {
 
 class MemoryServiceImpl final : public ::profiler::proto::MemoryService::Service {
 public:
-  MemoryServiceImpl(const Clock& clock, std::unordered_map<int32_t, MemoryCollector>& collectors) :
-      clock_(clock), collectors_(collectors) {}
+  MemoryServiceImpl(const Clock& clock, std::unordered_map<int32_t, MemoryCollector>* collectors) :
+      clock_(clock), collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
 
   ::grpc::Status SetMemoryConfig(

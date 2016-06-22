@@ -27,23 +27,19 @@ namespace profiler {
 // Class to provide memory data saving interface, this is an empty definition.
 class MemoryCache {
 public:
-  MemoryCache(int32_t samples_count);
-  ~MemoryCache();
+  explicit MemoryCache(const Clock& clock, int32_t samples_capacity);
 
-  virtual void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
-  virtual void SaveInstanceCountSample(const proto::MemoryData::InstanceCountSample& sample);
-  virtual void SaveGcSample(const proto::MemoryData::GcSample& sample);
+  void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
+  void SaveInstanceCountSample(const proto::MemoryData::InstanceCountSample& sample);
+  void SaveGcSample(const proto::MemoryData::GcSample& sample);
 
-  virtual void LoadMemorySamples(int64_t start_time_exl, int64_t end_time_inc,
-      proto::MemoryData* response);
-  virtual void LoadInstanceCountSamples(int64_t start_time_exl, int64_t end_time_inc,
-      proto::MemoryData* response);
-  virtual void LoadGcSamples(int64_t start_time_exl, int64_t end_time_inc,
+  void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
       proto::MemoryData* response);
 
 private:
-  proto::MemoryData_MemorySample* memory_samples_;
+  std::unique_ptr<proto::MemoryData_MemorySample[]> memory_samples_;
   std::mutex memory_samples_mutex_;
+  const Clock& clock_;
   int32_t put_memory_sample_index_;
   int32_t samples_capacity_;
   bool buffer_full_;

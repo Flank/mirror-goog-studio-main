@@ -25,7 +25,7 @@ namespace profiler {
 
 class MemoryProfilerComponent final : public ProfilerComponent {
 public:
-  MemoryProfilerComponent(const Daemon& daemon) : public_service_(daemon.clock(), collectors_) {}
+  MemoryProfilerComponent(const Daemon& daemon) : public_service_(daemon.clock(), &collectors_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

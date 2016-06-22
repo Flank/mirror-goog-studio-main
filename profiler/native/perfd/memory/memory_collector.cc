@@ -44,7 +44,6 @@ void MemoryCollector::CollectorMain() {
 
     proto::MemoryData_MemorySample sample;
     memory_levels_sampler_.GetProcessMemoryLevels(pid_, &sample);
-    sample.set_timestamp(clock_.GetCurrentTime());
     memory_cache_.SaveMemorySample(sample);
 
     int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;

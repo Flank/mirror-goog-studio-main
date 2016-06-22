@@ -66,21 +66,13 @@ namespace profiler {
       ::grpc::ServerContext* context,
       const MemoryRequest* request,
       MemoryData* response) {
-  int64_t current_time = clock_.GetCurrentTime();
-
-  int32_t app_id = request->app_id();
-  int64_t start_time = request->start_time();
-  int64_t end_time = request->end_time();
-
-  response->set_end_timestamp(std::min(current_time, end_time));
-  auto result = collectors_.find(app_id);
+  auto result = collectors_.find(request->app_id());
   if (result == collectors_.end()) {
     return ::grpc::Status(::grpc::StatusCode::NOT_FOUND, "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->LoadMemorySamples(start_time, end_time, response);
-  result->second.memory_cache()->LoadInstanceCountSamples(start_time, end_time, response);
-  result->second.memory_cache()->LoadGcSamples(start_time, end_time, response);
+  result->second.memory_cache()->LoadMemoryData(
+      request->start_time(), request->end_time(), response);
 
   return ::grpc::Status::OK;
 }
