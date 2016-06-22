@@ -37,17 +37,12 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.GenerateAtomMetadata;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.PackageAtom;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.profile.ExecutionType;
-import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -101,112 +96,38 @@ public class AtomTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createMergeAppManifestsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
-
+        createMergeAppManifestsTask(tasks, variantScope);
         // Add a task to create the res values
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createGenerateResValuesTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createGenerateResValuesTask(tasks, variantScope);
 
         // Add a task to compile renderscript files.
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createRenderscriptTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createRenderscriptTask(tasks, variantScope);
 
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        basicCreateMergeResourcesTask(
-                                tasks,
-                                variantScope,
-                                "mergeAtom",
-                                null,
-                                true /*includeDependencies*/,
-                                true /*process9patch*/);
-                        return null;
-                    }
-                });
+        basicCreateMergeResourcesTask(
+                tasks,
+                variantScope,
+                "mergeAtom",
+                null,
+                true /*includeDependencies*/,
+                true /*process9patch*/);
 
         // Add a task to merge the assets folders
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeAssetsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createMergeAssetsTask(tasks, variantScope);
 
         // Add a task to create the BuildConfig class
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createBuildConfigTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createBuildConfigTask(tasks, variantScope);
+        // Add a task to generate resource source files, directing the location
+        // of the r.txt file to be directly in the bundle.
+        createApkProcessResTask(tasks, variantScope);
 
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        // Add a task to generate resource source files, directing the location
-                        // of the r.txt file to be directly in the bundle.
-                        createApkProcessResTask(tasks, variantScope);
+        // process java resources
+        createProcessJavaResTasks(tasks, variantScope);
+        createAidlTask(tasks, variantScope);
 
-                        // process java resources
-                        createProcessJavaResTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_AIDL_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createAidlTask(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_SHADER_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createShaderTask(tasks, variantScope);
-                        return null;
-                    }
-                });
-
+        createShaderTask(tasks, variantScope);
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_NDK_TASK,
-                    new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() {
-                            createNdkTasks(variantScope);
-                            return null;
-                        }
-                    });
+            createNdkTasks(variantScope);
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
@@ -217,63 +138,34 @@ public class AtomTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add a task to merge the jni libs folders
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeJniLibFoldersTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createMergeJniLibFoldersTasks(tasks, variantScope);
 
         // Add a compile task
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_COMPILE_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        CoreJackOptions jackOptions =
-                                variantData.getVariantConfiguration().getJackOptions();
-                        AndroidTask<? extends JavaCompile> javacTask =
-                                createJavacTask(tasks, variantScope);
+        CoreJackOptions jackOptions =
+                variantData.getVariantConfiguration().getJackOptions();
+        AndroidTask<? extends JavaCompile> javacTask =
+                createJavacTask(tasks, variantScope);
 
-                        if (jackOptions.isEnabled()) {
-                            AndroidTask<TransformTask> jackTask =
-                                    createJackTask(tasks, variantScope, true /*compileJavaSource*/);
-                            setJavaCompilerTask(jackTask, tasks, variantScope);
-                        } else {
-                            addJavacClassesStream(variantScope);
-                            setJavaCompilerTask(javacTask, tasks, variantScope);
-                            getAndroidTasks().create(tasks,
-                                    new AndroidJarTask.JarClassesConfigAction(variantScope));
-                            createPostCompilationTasks(tasks, variantScope);
-                        }
-                        return null;
-                    }
-                });
+        if (jackOptions.isEnabled()) {
+            AndroidTask<TransformTask> jackTask =
+                    createJackTask(tasks, variantScope, true /*compileJavaSource*/);
+            setJavaCompilerTask(jackTask, tasks, variantScope);
+        } else {
+            addJavacClassesStream(variantScope);
+            setJavaCompilerTask(javacTask, tasks, variantScope);
+            getAndroidTasks().create(tasks,
+                    new AndroidJarTask.JarClassesConfigAction(variantScope));
+            createPostCompilationTasks(tasks, variantScope);
+        }
 
         // Add data binding tasks if enabled
         if (extension.getDataBinding().isEnabled()) {
             createDataBindingTasks(tasks, variantScope);
         }
 
-        ThreadRecorder.get().record(
-                ExecutionType.ATOM_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                new Recorder.Block<Sync>() {
-                    @Override
-                    public Sync call() throws Exception {
-                        createAtomPackagingTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createAtomPackagingTasks(tasks, variantScope);
 
-        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_LINT_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createLintTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createLintTasks(tasks, variantScope);
 
         final Zip bundle = project.getTasks().create(
                 variantScope.getTaskName("bundle", "Atom"), Zip.class);

@@ -34,13 +34,8 @@ import com.android.build.gradle.tasks.MergeAtoms;
 import com.android.build.gradle.tasks.PackageInstantApp;
 import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.profile.ExecutionType;
-import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 
 import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.Sync;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -84,33 +79,12 @@ public class InstantAppTaskManager extends TaskManager {
         createCheckManifestTask(tasks, variantScope);
 
         // Add a task to merge the asset folders.
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_MERGE_ATOMS_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeAtomsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createMergeAtomsTask(tasks, variantScope);
 
         // Add a task to get the AndroidManifest from the atom.
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createInstantAppProcessResTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createInstantAppProcessResTask(tasks, variantScope);
 
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                new Recorder.Block<Sync>() {
-                    @Override
-                    public Sync call() throws Exception {
-                        createInstantAppPackagingTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+        createInstantAppPackagingTasks(tasks, variantScope);
     }
 
     private void createMergeAtomsTask(
