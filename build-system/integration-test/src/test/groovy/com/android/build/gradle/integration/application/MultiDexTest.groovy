@@ -88,7 +88,8 @@ class MultiDexTest {
         def expected = [
                 "com/android/tests/basic/Used",
                 "com/android/tests/basic/DeadCode",
-                "com/android/tests/basic/Main"
+                "com/android/tests/basic/Main",
+                "com/android/tests/basic/OtherActivity"
         ]
 
         if (JavaVersion.current().isJava8Compatible()) {
@@ -147,7 +148,9 @@ class MultiDexTest {
 
         assertMainDexListContains(
                 "minified",
-                [ "com/android/tests/basic/Used", "com/android/tests/basic/Main"])
+                [ "com/android/tests/basic/Used",
+                  "com/android/tests/basic/Main",
+                  "com/android/tests/basic/OtherActivity"])
 
         commonApkChecks("minified")
 
