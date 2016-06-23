@@ -26,7 +26,7 @@ import java.io.OutputStream;
 public final class ProfilerTransform extends ClassTransform {
 
     public ProfilerTransform() {
-        super("profiler", new String[] { "com.android.tools" + File.pathSeparator + "studio-profiler-lib" });
+        super("profiler", new String[] { "com.android.tools" + File.separator + "studio-profiler-lib" });
     }
 
     @Override
