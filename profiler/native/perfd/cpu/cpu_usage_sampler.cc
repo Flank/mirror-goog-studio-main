@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cpu_usage_sampler.h"
+#include "perfd/cpu/cpu_usage_sampler.h"
 
 #include <fcntl.h>
 #include <inttypes.h>
@@ -43,33 +43,33 @@ using std::string;
 using std::vector;
 
 namespace {
-// Entity knowing the time unit (used by /proc/* files) in milliseconds.
-class TimeUnitInMillis {
- public:
-  TimeUnitInMillis() : time_unit_in_millis_(-1) {
-    int64_t user_hz = sysconf(_SC_CLK_TCK);
-    // TODO: Handle other USER_HZ values.
-    if (user_hz == 100) {
-      time_unit_in_millis_ = 10;
-    } else if (user_hz == 1000) {
-      time_unit_in_millis_ = 1;
-    }
+
+// Absolute path of system stat file.
+const char* const kProcStatFilename = "/proc/stat";
+
+// Returns how many milliseconds is a time unit used in /proc/* files.
+int64_t GetTimeUnitInMilliseconds() {
+  int64_t user_hz = sysconf(_SC_CLK_TCK);
+  // TODO: Handle other USER_HZ values.
+  if (user_hz == 100) {
+    return 10;
+  } else if (user_hz == 1000) {
+    return 1;
   }
+  return -1;
+}
 
-  // Returns the operating system's time unit in milliseconds.
-  int64_t get() const { return time_unit_in_millis_; }
-
- private:
-  int64_t time_unit_in_millis_;
-};
-const TimeUnitInMillis time_unit_in_millis;
-
-const char* const proc_stat_filename = "/proc/stat";
+// Returns how many milliseconds is a time unit used in /proc/* files.
+// This function is more efficient than GetTimeUnitInMilliseconds().
+int64_t TimeUnitInMilliseconds() {
+  static const int64_t kTimeUnitInMilliseconds = GetTimeUnitInMilliseconds();
+  return kTimeUnitInMilliseconds;
+}
 
 // Reads /proc/stat file. Returns true on success.
 // TODO: Mock this file on non-Linux platforms.
 bool ReadProcStat(string* content) {
-  return FileReader::Read(proc_stat_filename, content);
+  return FileReader::Read(kProcStatFilename, content);
 }
 
 // Parses /proc/stat content in |content| and calculates
@@ -92,9 +92,9 @@ bool ParseProcStatForUsageData(const string& content, CpuUsageData* data) {
              &guest, &guest_nice) == 10) {
     int64_t load = user + nice + system + iowait + irq + softirq + steal +
                    guest + guest_nice;
-    data->set_system_cpu_time_in_millisec(load * time_unit_in_millis.get());
+    data->set_system_cpu_time_in_millisec(load * TimeUnitInMilliseconds());
     int64_t elapsed = load + idle;
-    data->set_elapsed_time_in_millisec(elapsed * time_unit_in_millis.get());
+    data->set_elapsed_time_in_millisec(elapsed * TimeUnitInMilliseconds());
     return true;
   }
   return false;
@@ -166,7 +166,7 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
     int64_t cstime = atol(tokens[14].c_str());
     int64_t usage_in_time_units = utime + stime + cutime + cstime;
     data->set_app_cpu_time_in_millisec(usage_in_time_units *
-                                       time_unit_in_millis.get());
+                                       TimeUnitInMilliseconds());
     return true;
   }
   return false;
@@ -193,6 +193,7 @@ bool CollectProcessUsageData(int32_t pid, CpuUsageData* data) {
 
 namespace profiler {
 
+// TODO: Returns a failure if there is no such a running process.
 CpuStartResponse::Status CpuUsageSampler::AddProcess(int32_t pid) {
   std::lock_guard<std::mutex> lock(pids_mutex_);
   pids_.insert(pid);

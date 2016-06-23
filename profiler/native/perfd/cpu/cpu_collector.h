@@ -21,18 +21,19 @@
 #include <thread>
 
 #include "perfd/cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/thread_monitor.h"
 
 namespace profiler {
 
-class CpuCache;
-class CpuUsageSampler;
-
 class CpuCollector {
  public:
-  // Creates a collector that will invoke |sampler| every |interval_in_us|
-  // microseconds.
-  CpuCollector(int64_t interval_in_us, CpuUsageSampler* sampler)
-      : sampler_(*sampler), sampling_interval_in_us_(interval_in_us) {}
+  // Creates a collector that will invoke |usage_sampler| and |thread_monitor|
+  // every |interval_in_us| microseconds.
+  CpuCollector(int64_t interval_in_us, CpuUsageSampler* usage_sampler,
+               ThreadMonitor* thread_monitor)
+      : usage_sampler_(*usage_sampler),
+        thread_monitor_(*thread_monitor),
+        sampling_interval_in_us_(interval_in_us) {}
 
   ~CpuCollector();
 
@@ -53,7 +54,9 @@ class CpuCollector {
   // True if sampling operations is running.
   std::atomic_bool is_running_{false};
   // Holder of sampler operations.
-  CpuUsageSampler& sampler_;
+  CpuUsageSampler& usage_sampler_;
+  // Monitor of thread activities.
+  ThreadMonitor& thread_monitor_;
   // Sampling window size in microseconds.
   int64_t sampling_interval_in_us_;
 };
