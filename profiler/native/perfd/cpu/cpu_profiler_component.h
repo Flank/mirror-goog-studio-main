@@ -19,6 +19,7 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_collector.h"
 #include "perfd/cpu/cpu_profiler_service.h"
+#include "perfd/cpu/thread_monitor.h"
 #include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
 
@@ -27,7 +28,8 @@ namespace profiler {
 class CpuProfilerComponent final : public ProfilerComponent {
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  CpuProfilerComponent(const Daemon& daemon) : data_sampler_(daemon, &cache_) {
+  CpuProfilerComponent(const Daemon& daemon)
+      : usage_sampler_(daemon, &cache_), thread_monitor_(daemon, &cache_) {
     collector_.Start();
   }
 
@@ -39,10 +41,12 @@ class CpuProfilerComponent final : public ProfilerComponent {
 
  private:
   CpuCache cache_;
-  CpuUsageSampler data_sampler_;
+  CpuUsageSampler usage_sampler_;
+  ThreadMonitor thread_monitor_;
   // Sampling interval is 100000 microseconds, which equals to 0.1 second.
-  CpuCollector collector_{100000, &data_sampler_};
-  CpuProfilerServiceImpl public_service_{&cache_, &data_sampler_};
+  CpuCollector collector_{100000, &usage_sampler_, &thread_monitor_};
+  CpuProfilerServiceImpl public_service_{&cache_, &usage_sampler_,
+                                         &thread_monitor_};
 };
 
 }  // namespace profiler
