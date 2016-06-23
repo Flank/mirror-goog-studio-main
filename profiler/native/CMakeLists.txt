@@ -44,8 +44,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 
 set(WARNING_FLAGS "-Wall -Werror")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} -Wfatal-errors -std=c11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -Wfatal-errors -std=c++11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} -std=c11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -std=c++11")
 
 # Add profiler components
 add_subdirectory(perfa)
