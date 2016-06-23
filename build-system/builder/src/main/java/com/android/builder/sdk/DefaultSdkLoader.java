@@ -26,12 +26,14 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
 import com.android.repository.api.License;
+import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
@@ -132,8 +134,9 @@ public class DefaultSdkLoader implements SdkLoader {
             if (target == null || buildToolInfo == null) {
                 Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
                 RepoManager repoManager = mSdkHandler.getSdkManager(progress);
+                checkNeedsCacheReset(repoManager, sdkLibData);
                 repoManager.loadSynchronously(
-                        sdkLibData.getCacheExpirationPeriod(), progress, downloader, settings);
+                        RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, progress, downloader, settings);
 
                 if (buildToolInfo == null) {
                     installResults.putAll(
@@ -169,6 +172,17 @@ public class DefaultSdkLoader implements SdkLoader {
         }
 
         return new TargetInfo(target, buildToolInfo);
+    }
+
+    /**
+     * Checks whether the {@link RepoManager} needs to have its local and remote packages cache
+     * reset and invalidates them if they do.
+     */
+    private void checkNeedsCacheReset(RepoManager repoManager, SdkLibData sdkLibData) {
+        if (sdkLibData.needsCacheReset()) {
+            repoManager.markInvalid();
+            sdkLibData.setNeedsCacheReset(false);
+        }
     }
 
     /**
@@ -393,9 +407,9 @@ public class DefaultSdkLoader implements SdkLoader {
         Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
         ProgressIndicator progress = getNewDownloadProgress();
         RepoManager repoManager = mSdkHandler.getSdkManager(progress);
-
+        checkNeedsCacheReset(repoManager, sdkLibData);
         repoManager.loadSynchronously(
-                sdkLibData.getCacheExpirationPeriod(),
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
                 new LoggerProgressIndicatorWrapper(logger),
                 sdkLibData.getDownloader(),
                 sdkLibData.getSettings());
@@ -495,6 +509,50 @@ public class DefaultSdkLoader implements SdkLoader {
         }
 
         return repositoriesBuilder.build();
+    }
+
+    @Override
+    @Nullable
+    public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId) {
+        ProgressIndicator progress =
+                new LoggerProgressIndicatorWrapper(new StdLogger(StdLogger.Level.WARNING));
+        RepoManager repoManager = mSdkHandler.getSdkManager(progress);
+        repoManager.loadSynchronously(0, progress, null, null);
+        LocalPackage localSdkToolPackage =
+                mSdkHandler.getLatestLocalPackageForPrefix(packageId, true, progress);
+        if (localSdkToolPackage == null) {
+            if (!sdkLibData.useSdkDownload()) {
+                // If we are offline and we haven't found a local package for the SDK Tool
+                // return null.
+                return null;
+            }
+            checkNeedsCacheReset(repoManager, sdkLibData);
+            repoManager.loadSynchronously(
+                    RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                    progress,
+                    sdkLibData.getDownloader(),
+                    sdkLibData.getSettings());
+
+            RemotePackage sdkToolPackage =
+                    mSdkHandler.getLatestRemotePackageForPrefix(packageId, true, progress);
+            if (sdkToolPackage == null) {
+                // If we haven't found the SDK Tool package remotely or locally return null.
+                return null;
+            } else {
+                Map<RemotePackage, InstallResultType> installResults =
+                        installRemotePackages(
+                                ImmutableList.of(sdkToolPackage),
+                                repoManager,
+                                sdkLibData.getDownloader(),
+                                getNewDownloadProgress());
+
+                checkResults(installResults);
+                repoManager.loadSynchronously(0, progress, null, null);
+                localSdkToolPackage =
+                        mSdkHandler.getLatestLocalPackageForPrefix(packageId, true, progress);
+            }
+        }
+        return localSdkToolPackage.getLocation();
     }
 
     /**

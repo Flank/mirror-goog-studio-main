@@ -25,7 +25,7 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.category.OnlineTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -57,6 +57,26 @@ import java.util.Set;
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 @Category(OnlineTests.class)
 public class SdkDownloadGradleTest {
+
+    private static String cmakeLists = "cmake_minimum_required(VERSION 3.4.1)"
+            + System.lineSeparator()
+            + "file(GLOB SRC src/main/cpp/hello-jni.cpp)"
+            + System.lineSeparator()
+            + "set(CMAKE_VERBOSE_MAKEFILE ON)"
+            + System.lineSeparator()
+            + "add_library(hello-jni SHARED ${SRC})"
+            + System.lineSeparator()
+            + "target_link_libraries(hello-jni log)";
+
+    private static String androidMk = "LOCAL_PATH := $(call my-dir)"
+            + System.lineSeparator()
+            + "include $(CLEAR_VARS)"
+            + System.lineSeparator()
+            + "LOCAL_MODULE    := hello-jni"
+            + System.lineSeparator()
+            + "LOCAL_SRC_FILES := hello-jni.cpp"
+            + System.lineSeparator()
+            + "include $(BUILD_SHARED_LIBRARY)";
     private static final String OLD_BUILD_TOOLS = "19.1.0";
     private static final String NEW_BUILD_TOOLS = "23.0.1";
     private static final String OLD_PLATFORM = "22";
@@ -65,16 +85,24 @@ public class SdkDownloadGradleTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .fromTestApp(HelloWorldJniApp.builder()
+                            .withNativeDir("cpp")
+                            .useCppSource(true)
+                            .build())
                     .addGradleProperties(AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD + "=true")
+                    .addGradleProperties(AndroidGradleOptions.ANDROID_SDK_CHANNEL +"=3")
                     .create();
 
     private File mSdkHome;
-
     private File licenseFile;
+    private File previewLicenseFile;
 
     @Before
     public void setUp() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator() + "apply plugin: 'com.android.application'");
+
         // TODO: Set System property {@code AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY}.
         mSdkHome = project.file("local-sdk-for-test");
         FileUtils.mkdirs(mSdkHome);
@@ -82,13 +110,22 @@ public class SdkDownloadGradleTest {
         File licensesFolder = new File(mSdkHome, "licenses");
         FileUtils.mkdirs(licensesFolder);
         licenseFile = new File(licensesFolder, "android-sdk-license");
+        previewLicenseFile = new File(licensesFolder, "android-sdk-preview-license");
 
         String licensesHash =
                 "e6b7c2ab7fa2298c15165e9583d0acf0b04a2232"
                         + System.lineSeparator()
                         + "8933bad161af4178b1185d1a37fbf41ea5269c55";
 
+        String previewLicenseHash =
+                "84831b9409646a918e30573bab4c9c91346d8abd"
+                        + System.lineSeparator()
+                        + "79120722343a6f314e0719f863036c702b0e6b2a";
+
+
         Files.write(licenseFile.toPath(), licensesHash.getBytes(StandardCharsets.UTF_8));
+        Files.write(
+                previewLicenseFile.toPath(), previewLicenseHash.getBytes(StandardCharsets.UTF_8));
         TestFileUtils.appendToFile(
                 project.getLocalProp(),
                 System.lineSeparator()
@@ -187,6 +224,59 @@ public class SdkDownloadGradleTest {
         File addonTarget =
                 FileUtils.join(mSdkHome, SdkConstants.FD_ADDONS, "addon-google_apis-google-23");
         assertThat(addonTarget).isDirectory();
+    }
+
+
+    @Test
+    public void checkCmakeDownloading() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + OLD_PLATFORM
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + OLD_BUILD_TOOLS
+                        + "\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+
+        Files.write(project.file("CMakeLists.txt").toPath(),
+                cmakeLists.getBytes(StandardCharsets.UTF_8));
+
+        project.executor().run("assembleDebug");
+
+        File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
+        assertThat(cmakeDirectory).isDirectory();
+
+        File cmakeExecutable =
+                FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE, SdkConstants.FD_OUTPUT, "cmake");
+        assertThat(cmakeExecutable).exists();
+    }
+
+    @Test
+    public void checkCmakeMissingLicense() throws Exception {
+        previewLicenseFile.delete();
+        licenseFile.delete();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + OLD_PLATFORM
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + OLD_BUILD_TOOLS
+                        + "\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+
+        Files.write(project.file("CMakeLists.txt").toPath(),
+                cmakeLists.getBytes(StandardCharsets.UTF_8));
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+
+        assertThat(result.getStderr()).contains("not accepted the license agreements");
+        assertThat(result.getStderr()).contains("CMake");
     }
 
     @Test

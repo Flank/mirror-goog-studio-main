@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
@@ -33,6 +34,10 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.LocalPackage;
+import com.android.repository.api.ProgressIndicator;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -40,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import org.apache.tools.ant.taskdefs.Move;
+import org.apache.tools.ant.taskdefs.Local;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -380,6 +386,14 @@ public abstract class ExternalNativeJsonGenerator {
                 CoreExternalNativeCmakeOptions options =
                         variantConfig.getExternalNativeBuildOptions()
                                 .getExternalNativeCmakeOptions();
+                // Install Cmake if it's not there.
+                ProgressIndicator progress = new ConsoleProgressIndicator();
+                AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
+                LocalPackage cmakePackage =
+                        sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, true, progress);
+                if (cmakePackage == null) {
+                    sdkHandler.installCMake();
+                }
                 return new CmakeExternalNativeJsonGenerator(
                         sdkHandler.getSdkFolder(),
                         variantData.getName(),

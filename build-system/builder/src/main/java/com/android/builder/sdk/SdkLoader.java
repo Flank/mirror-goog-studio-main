@@ -86,4 +86,15 @@ public interface SdkLoader {
             @NonNull List<String> repositoryPaths,
             @NonNull SdkLibData sdkLibData,
             @NonNull ILogger logger);
+
+    /**
+     * Installs an Android Sdk Tool if it's not already installed.
+     *
+     * @param sdkLibData contains all the components for downloading.
+     * @param packageId the package/id path of the required Tool component.
+     * @return a {@code File} representing the locations to the directory where the Tool component
+     *         is installed or null if we haven't managed to find such a component.
+     **/
+    @Nullable
+    File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId);
 }

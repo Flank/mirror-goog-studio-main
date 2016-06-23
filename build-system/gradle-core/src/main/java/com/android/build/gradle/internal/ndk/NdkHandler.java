@@ -62,7 +62,7 @@ public class NdkHandler {
         this.platformVersion = platformVersion;
         ndkDirectory = findNdkDirectory(projectDir);
 
-        if (ndkDirectory == null) {
+        if (ndkDirectory == null || !ndkDirectory.exists()) {
             ndkInfo = null;
         } else {
             Revision revision = findRevision();

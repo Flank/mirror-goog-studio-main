@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
@@ -72,14 +73,6 @@ public class SdkHandler {
     private File ndkFolder;
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
-
-    /**
-     * This boolean starts at true to ensure that if the build fails to find some SDK components
-     * and we want to download these components, we reset the cache for local and remote
-     * repositories at least once, by having the expiration time set to 0 milliseconds. Once we have
-     * reset it once, we can go back to the default cache expiration period.
-     */
-    private boolean resetCache = true;
 
     public static void setTestSdkFolder(File testSdkFolder) {
         sTestSdkFolder = testSdkFolder;
@@ -137,12 +130,6 @@ public class SdkHandler {
         SdkInfo sdkInfo = sdkLoader.getSdkInfo(logger);
 
         TargetInfo targetInfo;
-        if (resetCache) {
-            sdkLibData.setCacheExpirationPeriod(0);
-            resetCache = false;
-        } else {
-            sdkLibData.setCacheExpirationPeriod(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS);
-        }
         targetInfo = sdkLoader.getTargetInfo(
                 targetHash,
                 buildToolRevision,
@@ -293,12 +280,11 @@ public class SdkHandler {
         this.sdkLibData = sdkLibData;
     }
 
-    public boolean shouldResetCache() {
-        return resetCache;
-    }
-
-    public void setResetCache(boolean resetCache) {
-        this.resetCache = resetCache;
+    /**
+     * Installs CMake.
+     */
+    public void installCMake() {
+        sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE);
     }
 
     public void addLocalRepositories(Project project) {
@@ -315,5 +301,13 @@ public class SdkHandler {
             project.getRepositories().remove(mavenRepository);
             project.getRepositories().addFirst(mavenRepository);
         }
+    }
+
+    /**
+     * This method checks if the cache of the local and remote repositories has been already reset
+     * this build.
+     */
+    public boolean checkResetCache() {
+        return sdkLibData.needsCacheReset();
     }
 }

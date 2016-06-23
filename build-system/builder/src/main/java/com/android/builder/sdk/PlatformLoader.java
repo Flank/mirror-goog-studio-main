@@ -25,7 +25,10 @@ import static com.android.SdkConstants.FN_ZIPALIGN;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.internal.FakeAndroidTarget;
+import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.repository.Revision;
@@ -127,6 +130,15 @@ public class PlatformLoader implements SdkLoader {
             @NonNull SdkLibData sdkLibData,
             @NonNull ILogger logger) {
         return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    @Nullable
+    public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId) {
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        progress.logWarning("Installing missing SDK components is not supported when building"
+                + "using an SDK from platfrom prebuilds.");
+        return null;
     }
 
     private PlatformLoader(@NonNull File treeLocation) {
