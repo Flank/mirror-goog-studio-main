@@ -18,5 +18,6 @@
     <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="project-test-lib" />
     <orderEntry type="library" name="truth" level="project" />
+    <orderEntry type="module" module-name="analytics-protos" />
   </component>
 </module>
