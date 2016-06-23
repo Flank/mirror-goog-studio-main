@@ -67,7 +67,11 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
             Class activityThreadClass = Class.forName("android.app.ActivityThread");
             Application app = (Application) activityThreadClass.getMethod("currentApplication")
                     .invoke(null);
-            app.registerActivityLifecycleCallbacks(this);
+            if(app != null) {
+                app.registerActivityLifecycleCallbacks(this);
+            } else {
+                Log.e(ProfilerService.STUDIO_PROFILER, "Failed to capture application");
+            }
         } catch (ClassNotFoundException ex) {
             Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get ActivityThread class");
 
