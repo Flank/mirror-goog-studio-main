@@ -1157,10 +1157,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return mIncrementalCheck != null;
         }
 
+
+        @Nullable
+        protected String getProjectResourceLibraryName() {
+            return null;
+        }
+
         @Nullable
         @Override
-        public AbstractResourceRepository getProjectResources(Project project,
-                boolean includeDependencies) {
+        public AbstractResourceRepository getResourceRepository(Project project,
+                boolean includeDependencies, boolean includeLibraries) {
             if (mIncrementalCheck == null) {
                 return null;
             }
@@ -1169,7 +1175,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
             ResourceMerger merger = new ResourceMerger(0);
 
-            ResourceSet resourceSet = new ResourceSet(getName(), null) {
+            ResourceSet resourceSet = new ResourceSet(getName(), getProjectResourceLibraryName()) {
                 @Override
                 protected void checkItems() throws DuplicateDataException {
                     // No checking in ProjectResources; duplicates can happen, but
@@ -1207,12 +1213,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
 
                     for (List<ResourceItem> list : lists) {
-                        Collections.sort(list, new Comparator<ResourceItem>() {
-                            @Override
-                            public int compare(ResourceItem o1, ResourceItem o2) {
-                                return o1.getKey().compareTo(o2.getKey());
-                            }
-                        });
+                        Collections.sort(list, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
                     }
 
                     // Store back in list multi map in new sorted order
