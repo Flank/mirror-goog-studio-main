@@ -15,13 +15,14 @@ if(HOST_BUILD_DIR)
 endif()
 
 # Set ROOT dir for every third party dependency
-set(GRPC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/grpc-grpc)
-set(PROTOBUF_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/protobuf)
-set(BORINGSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/boringssl/src)
-set(GMOCK_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/gmock)
-set(GTEST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/gtest)
-set(ZLIB_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/zlib/src)
-set(NANOPB_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/nanopb-c)
+set(EXTERNAL_ROOT_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external)
+set(BORINGSSL_ROOT_DIR ${EXTERNAL_ROOT_DIR}/boringssl/src)
+set(GMOCK_ROOT_DIR     ${EXTERNAL_ROOT_DIR}/gmock)
+set(GRPC_ROOT_DIR      ${EXTERNAL_ROOT_DIR}/grpc-grpc)
+set(GTEST_ROOT_DIR     ${EXTERNAL_ROOT_DIR}/gtest)
+set(NANOPB_ROOT_DIR    ${EXTERNAL_ROOT_DIR}/nanopb-c)
+set(PROTOBUF_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/protobuf)
+set(ZLIB_ROOT_DIR      ${EXTERNAL_ROOT_DIR}/zlib/src)
 
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(protobuf_WITH_ZLIB OFF CACHE BOOL "Build with zlib support") # Tell protobuf to not try to find zlib
