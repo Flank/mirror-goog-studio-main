@@ -56,7 +56,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         //TODO Verify the order of this is fixed, can this happen before the users onActivityCreated, or is it always
         // after?
         Window window = activity.getWindow();
-        if (!window.getCallback().getClass().isInstance(WindowProfilerCallback.class)) {
+        if(!WindowProfilerCallback.class.isInstance(window.getCallback())) {
             window.setCallback(new WindowProfilerCallback(window.getCallback()));
         }
     }
