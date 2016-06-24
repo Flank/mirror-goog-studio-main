@@ -41,6 +41,11 @@ public:
       const ::profiler::proto::MemoryRequest* request,
       ::profiler::proto::MemoryData* response) override;
 
+  ::grpc::Status TriggerHeapDump(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::HeapDumpRequest* request,
+      ::profiler::proto::HeapDumpResponse* response) override;
+
 private:
   const Clock& clock_;
   std::unordered_map<int32_t, MemoryCollector>& collectors_;

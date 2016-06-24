@@ -22,6 +22,7 @@
 #include "proto/memory.grpc.pb.h"
 
 #include <atomic>
+#include <string>
 #include <thread>
 
 namespace profiler {
@@ -31,24 +32,30 @@ private:
   static constexpr int64_t kSleepNs = Clock::ms_to_ns(250);
   static const int64_t kSecondsToBuffer = 5;
   static constexpr int64_t kSamplesCount = 1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
+  static const int64_t kUnfinishedTimestamp = -1;  // Indicates that a heap dump is in progress.
 
 public:
   MemoryCollector(int32_t pid, const Clock& clock) :
-      memory_cache_(clock, kSamplesCount), pid_(pid) {}
+      memory_cache_(clock, kSamplesCount), clock_(clock), pid_(pid) {}
   ~MemoryCollector();
 
   void Start();
   void Stop();
+  bool TriggerHeapDump();
   MemoryCache* memory_cache() {return &memory_cache_;}
 
 private:
   MemoryCache memory_cache_;
   MemoryLevelsSampler memory_levels_sampler_;
+  const Clock& clock_;
   std::thread server_thread_;
+  std::thread heap_dump_thread_;
   std::atomic_bool is_running_{false};
+  std::atomic_bool is_heap_dump_running_{false};
   int32_t pid_;
 
   void CollectorMain();
+  void HeapDumpMain(const std::string& file_path);
 }; // MemoryCollector
 
 } // namespace profiler

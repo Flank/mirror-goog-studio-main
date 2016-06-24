@@ -47,6 +47,10 @@ bool BashCommandRunner::RunAndReadOutput(const string &cmd,
   Log::I("Running '%s'.\n", cmd.c_str());
   char buffer[1024];
   FILE *pipe = popen(cmd.c_str(), "r");
+  if (pipe == nullptr) {
+    return false;
+  }
+
   while (!feof(pipe)) {
     if (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
       output->append(buffer);

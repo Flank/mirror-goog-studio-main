@@ -15,8 +15,11 @@
  */
 #include "memory_collector.h"
 
+#include <sstream>
 #include <unistd.h>
 
+#include "utils/activity_manager.h"
+#include "utils/log.h"
 #include "utils/stopwatch.h"
 
 namespace profiler {
@@ -34,6 +37,10 @@ void MemoryCollector::Start() {
 void MemoryCollector::Stop() {
   if (is_running_.exchange(false)) {
     server_thread_.join();
+  }
+
+  if (heap_dump_thread_.joinable()) {
+    heap_dump_thread_.join();
   }
 }
 
@@ -56,4 +63,46 @@ void MemoryCollector::CollectorMain() {
   is_running_.exchange(false);
 }
 
+bool MemoryCollector::TriggerHeapDump() {
+  if (is_heap_dump_running_) {
+    Log::V("An heap dump operation is already in progress.");
+    return false;
+  }
+
+  if (!is_heap_dump_running_.exchange(true)) {
+    int64_t request_time = clock_.GetCurrentTime();
+    std::stringstream ss;
+    ss << "/data/local/tmp/" << pid_ << "_" << request_time << ".hprof";
+    std::string dump_file_path = ss.str();
+
+    proto::MemoryData_HeapDumpSample sample;
+    sample.set_start_time(request_time);
+    sample.set_end_time(kUnfinishedTimestamp);
+    sample.set_file_path(dump_file_path);
+
+    if (!memory_cache_.StartHeapDumpSample(sample)) {
+      Log::V("StartHeapDumpSample failed.");
+      return false;
+    }
+
+    if (heap_dump_thread_.joinable()) {
+      heap_dump_thread_.join();
+    }
+    heap_dump_thread_ = std::thread([this, dump_file_path]{ this->HeapDumpMain(dump_file_path); });
+  }
+
+  return true;
+}
+
+void MemoryCollector::HeapDumpMain(const std::string& file_path) {
+  std::string unusedOutput;
+  ActivityManager am;
+
+  bool result = am.TriggerHeapDump(pid_, file_path, &unusedOutput);
+  if (!memory_cache_.EndHeapDumpSample(clock_.GetCurrentTime(), result)) {
+    Log::V("EndHeapDumpSample failed.");
+  }
+
+  is_heap_dump_running_.exchange(false);
+}
 } // namespace profiler
