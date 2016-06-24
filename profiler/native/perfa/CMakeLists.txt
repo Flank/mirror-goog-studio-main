@@ -1,5 +1,6 @@
 add_library(perfa SHARED
             support/profiler_service.cc
+            support/event_passthrough.cc
             support/http_tracker.cc
             perfa.cc)
 

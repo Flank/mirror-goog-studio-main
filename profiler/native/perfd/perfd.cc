@@ -15,6 +15,7 @@
  */
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
+#include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
@@ -36,6 +37,9 @@ int main(int argc, char** argv) {
 
   profiler::MemoryProfilerComponent memory_component{daemon};
   daemon.RegisterComponent(&memory_component);
+
+  profiler::EventProfilerComponent event_component{};
+  daemon.RegisterComponent(&event_component);
 
   // TODO: This is assuming argv[0] is a full path, but this may not be true.
   // We should consider getting the path a more foolproof way.

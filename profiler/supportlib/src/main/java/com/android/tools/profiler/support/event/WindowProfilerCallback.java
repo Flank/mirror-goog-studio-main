@@ -16,8 +16,6 @@
 
 package com.android.tools.profiler.support.event;
 
-import com.android.tools.profiler.support.ProfilerService;
-
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
@@ -35,13 +33,16 @@ import android.view.accessibility.AccessibilityEvent;
  * KeyEvents, and general window operations for us to report back to the Android Studio.
  */
 // TODO Have the Window profiler class send events back to Android studio.
-public class WindowProfilerCallback implements Window.Callback {
+public final class WindowProfilerCallback implements Window.Callback {
 
     private final Window.Callback myRedirectCallback;
 
     public WindowProfilerCallback(Window.Callback redirectCallback) {
         myRedirectCallback = redirectCallback;
     }
+
+    // Native function to send touch event states via RPC to perfd.
+    private native void sendTouchEvent(int state);
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
@@ -61,6 +62,7 @@ public class WindowProfilerCallback implements Window.Callback {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent motionEvent) {
+        sendTouchEvent(motionEvent.getAction());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchTouchEvent(motionEvent);
         }
