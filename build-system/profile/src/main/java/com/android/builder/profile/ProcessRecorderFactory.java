@@ -37,7 +37,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -174,17 +173,7 @@ public class ProcessRecorderFactory {
 
     private static void initializeAnalytics(@NonNull ILogger logger,
             @NonNull ScheduledExecutorService eventLoop) {
-        AnalyticsSettings settings;
-        try {
-            settings = AnalyticsSettings.loadSettings();
-            if (settings == null) {
-                settings = AnalyticsSettings.newAnalyticsSettings();
-            }
-        } catch (IOException e) {
-            logger.error(e, "Could not initialize analytics, treating as opt-out.");
-            settings = new AnalyticsSettings();
-            settings.setHasOptedIn(false);
-        }
+        AnalyticsSettings settings = AnalyticsSettings.getInstance(logger);
         UsageTracker.initialize(settings, eventLoop);
         UsageTracker tracker = UsageTracker.getInstance();
         tracker.setMaxJournalTime(10, TimeUnit.MINUTES);
