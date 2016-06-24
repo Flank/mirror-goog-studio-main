@@ -1,4 +1,4 @@
-set(PREBUILTS "${CMAKE_CURRENT_LIST_DIR}/../../../../../prebuilts")
+set(PREBUILTS "${CMAKE_CURRENT_LIST_DIR}/../../../../../../prebuilts")
 set(STL "${PREBUILTS}/gcc/linux-x86/host/x86_64-linux-glibc2.15-4.8")
 
 set(JDK "${PREBUILTS}/studio/jdk/linux")
