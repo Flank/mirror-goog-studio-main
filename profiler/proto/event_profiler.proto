@@ -38,18 +38,20 @@ message EventProfilerData {
   }
 }
 
-
+// TODO: Add support for KeyEvents, and ButtonEvents. The current setup allows
+// for only touch.
 message SystemEventData {
-  // The structure of this may change as more events get populated from the supportlib.
-  enum TouchState {
+  // Each system event message is associated with one event type.
+  enum SystemEventType {
     UNSPECIFIED = 0;
-    // State when a user is touching the screen
-    DOWN = 1;
-    // State when a user lifts their touch
-    UP = 2;
+    TOUCH = 1;
   }
 
-  TouchState touch_state = 1;
+  SystemEventType type = 1;
+  // This field stores actions triggered by an event. Actions are
+  // defined in MotionEvent.java.
+  // https://developer.android.com/reference/android/view/MotionEvent.html
+  int32 action_id = 2;
 }
 
 message ActivityEventData {
@@ -59,7 +61,7 @@ message ActivityEventData {
     CREATED = 1;
     // Event to fire when an activity gets destroyed
     DESTROYED = 2;
-    // TODO Flush this out to map the activity lifecycle.
+    // TODO: Flush this out to map the activity lifecycle.
   }
 
   string name = 1;
@@ -70,7 +72,6 @@ message ActivityEventData {
 }
 
 message FragmentEventData {
-
   // The current state of a fragment.
   enum FragmentState {
     UNSPECIFIED = 0;
