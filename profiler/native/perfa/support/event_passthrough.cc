@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+#include <jni.h>
+
+#include "perfa/perfa.h"
+#include "utils/clock.h"
+
+using grpc::ClientContext;
+using profiler::SteadyClock;
+using profiler::Perfa;
+using profiler::proto::EventProfilerData;
+using profiler::proto::SystemEventData;
+using profiler::proto::ProfilerData;
+using profiler::proto::EmptyEventResponse;
+
+namespace {
+
+void SendSystemEvent(const SystemEventData& event) {
+  auto event_stub = Perfa::Instance().event_stub();
+  SteadyClock clock;
+  EventProfilerData data;
+  ClientContext context;
+  EmptyEventResponse response;
+
+  ProfilerData* profiler_data = data.mutable_basic_info();
+  profiler_data->set_end_timestamp(clock.GetCurrentTime());
+  data.mutable_system_data()->CopyFrom(event);
+  event_stub.SendEvent(&context, data, &response);
+  // TODO: Handle response codes.
+}
+}
+
+extern "C" {
+// TODO: Create figure out how to autogenerate this class, to avoid typo errors.
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(
+    JNIEnv* env, jobject thiz, jint jstate) {
+  SystemEventData event;
+  event.set_type(SystemEventData::TOUCH);
+  event.set_action_id((int)jstate);
+  SendSystemEvent(event);
+}
+};

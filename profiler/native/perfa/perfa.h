@@ -21,6 +21,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "proto/internal_event.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
 #include "proto/perfa_service.grpc.pb.h"
 
@@ -39,6 +40,8 @@ class Perfa {
     return *network_stub_;
   }
 
+  const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
+
  private:
   // Use Perfa::Initialize to initialize
   explicit Perfa(const char* address);
@@ -46,6 +49,7 @@ class Perfa {
 
   std::unique_ptr<proto::PerfaService::Stub> service_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
+  std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
 
   // TODO: Move this over to the StreamingRpcManager when it is ready
   std::thread control_thread_;
