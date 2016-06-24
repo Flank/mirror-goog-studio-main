@@ -32,6 +32,7 @@ mutex perfa_mutex_;
 namespace profiler {
 
 using proto::InternalNetworkService;
+using proto::InternalEventService;
 using proto::PerfaControlRequest;
 using proto::PerfaService;
 using proto::ProfilerData;
@@ -54,6 +55,7 @@ Perfa::Perfa(const char* address) {
       grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
   service_stub_ = PerfaService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
+  event_stub_ = InternalEventService::NewStub(channel);
 
   // Open the control stream
   RegisterApplication app_data;

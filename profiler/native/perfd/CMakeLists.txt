@@ -6,6 +6,7 @@ add_executable(perfd
 
 target_link_libraries(perfd
                       profiler_cpu
+                      profiler_event
                       profiler_memory
                       profiler_network
                       profiler_protos
@@ -14,5 +15,6 @@ target_link_libraries(perfd
 # Add perfd profiler components
 
 add_subdirectory(cpu)
+add_subdirectory(event)
 add_subdirectory(memory)
 add_subdirectory(network)

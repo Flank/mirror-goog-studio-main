@@ -1,5 +1,7 @@
 set(PROTO_FILES cpu_profiler_data.proto
                 cpu_profiler_service.proto
+                event_profiler.proto
+                internal_event.proto
                 internal_network.proto
                 memory.proto
                 network.proto
