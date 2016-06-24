@@ -45,6 +45,9 @@ class ActivityManager : public BashCommandRunner {
   // and populate error_string.
   bool StopProfiling(const std::string &app_package_name,
                      std::string *error_string) const;
+
+  bool TriggerHeapDump(int pid, const std::string &file_path,
+                       std::string *error_string) const;
 };
 }  // namespace profiler
 

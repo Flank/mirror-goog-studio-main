@@ -17,7 +17,9 @@
 #define MEMORY_CACHE_H_
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
 
 #include "proto/memory.pb.h"
 #include "utils/clock.h"
@@ -32,17 +34,26 @@ public:
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveInstanceCountSample(const proto::MemoryData::InstanceCountSample& sample);
   void SaveGcSample(const proto::MemoryData::GcSample& sample);
+  bool StartHeapDumpSample(const proto::MemoryData::HeapDumpSample& sample);
+  bool EndHeapDumpSample(int64_t end_time, bool success);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
+      proto::MemoryData* response);
+  void LoadHeapDumpData(int64_t start_time_exl, int64_t end_time_inc,
       proto::MemoryData* response);
 
 private:
   std::unique_ptr<proto::MemoryData_MemorySample[]> memory_samples_;
+  std::unique_ptr<proto::MemoryData_HeapDumpSample[]> heap_dump_samples_;
   std::mutex memory_samples_mutex_;
+  std::mutex heap_dump_samples_mutex_;
   const Clock& clock_;
   int32_t put_memory_sample_index_;
+  int32_t put_heap_dump_sample_index_;
   int32_t samples_capacity_;
-  bool buffer_full_;
+  bool memory_samples_buffer_full_;
+  bool heap_dump_samples_buffer_full_;
+  bool has_unfinished_heap_dump_sample_;
 
   int32_t IncrementSampleIndex(int32_t index);
 };

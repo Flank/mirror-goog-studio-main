@@ -68,11 +68,37 @@ namespace profiler {
       MemoryData* response) {
   auto result = collectors_.find(request->app_id());
   if (result == collectors_.end()) {
-    return ::grpc::Status(::grpc::StatusCode::NOT_FOUND, "The memory collector for the specified pid has not been started yet.");
+    return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
+                          "The memory collector for the specified pid has not been started yet.");
   }
 
   result->second.memory_cache()->LoadMemoryData(
       request->start_time(), request->end_time(), response);
+
+  result->second.memory_cache()->LoadHeapDumpData(
+      request->start_time(), request->end_time(), response);
+
+  return ::grpc::Status::OK;
+}
+
+::grpc::Status MemoryServiceImpl::TriggerHeapDump(
+      ::grpc::ServerContext* context,
+      const HeapDumpRequest* request,
+      HeapDumpResponse* response) {
+  int32_t app_id = request->app_id();
+
+  auto result = collectors_.find(app_id);
+  if (result == collectors_.end()) {
+    response->set_status(HeapDumpResponse::FAILURE_UNKNOWN);
+    return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
+                          "The memory collector for the specified pid has not been started yet.");
+  }
+
+  if ((result->second).TriggerHeapDump()) {
+    response->set_status(HeapDumpResponse::SUCCESS);
+  } else {
+    response->set_status(HeapDumpResponse::IN_PROGRESS);
+  }
 
   return ::grpc::Status::OK;
 }
