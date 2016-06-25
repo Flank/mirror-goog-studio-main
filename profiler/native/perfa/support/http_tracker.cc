@@ -19,15 +19,18 @@
 #include <unistd.h>
 
 #include "perfa/perfa.h"
+#include "perfa/support/jni_types.h"
 #include "utils/clock.h"
 #include "utils/log.h"
 
 #include <atomic>
 
 using grpc::ClientContext;
-using profiler::SteadyClock;
+using profiler::JByteArrayWrapper;
+using profiler::JStringWrapper;
 using profiler::Log;
 using profiler::Perfa;
+using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;
 using profiler::proto::HttpDataRequest;
 using profiler::proto::HttpEventRequest;
@@ -53,8 +56,6 @@ void SendHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
 }
 
 extern "C" {
-// TODO: Create RAII classes for Java -> C++ access (JavaString, JavaBytes,
-// etc.)
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_nextId(
@@ -90,18 +91,13 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
   ChunkRequest chunk;
   EmptyNetworkReply response;
 
-  int len = env->GetArrayLength(jbytes);
-  char *bytes = new char[len];
-  env->GetByteArrayRegion(jbytes, 0, len, reinterpret_cast<jbyte *>(bytes));
+  JByteArrayWrapper bytes(env, jbytes);
 
   chunk.set_conn_id(juid);
-  std::string byte_str(bytes, len);
-  chunk.set_content(byte_str);
+  chunk.set_content(bytes.get());
   chunk.set_type(ChunkRequest::RESPONSE);
 
   net_stub.SendChunk(&ctx, chunk, &response);
-
-  delete[] bytes;
 }
 
 JNIEXPORT void JNICALL
@@ -117,8 +113,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPreConnect(
     JNIEnv *env, jobject thiz, jlong juid, jstring jurl, jstring jstack) {
-  const char *url = env->GetStringUTFChars(jurl, NULL);
-  const char *stack = env->GetStringUTFChars(jstack, NULL);
+  JStringWrapper url(env, jurl);
+  JStringWrapper stack(env, jstack); // TODO: Send this to perfd
 
   auto net_stub = Perfa::Instance().network_stub();
   ClientContext ctx;
@@ -126,13 +122,10 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
   EmptyNetworkReply reply;
   httpData.set_conn_id(juid);
   httpData.set_app_id(getpid());
-  httpData.set_url(url);
+  httpData.set_url(url.get());
   net_stub.RegisterHttpData(&ctx, httpData, &reply);
 
   SendHttpEvent(juid, HttpEventRequest::CREATED);
-
-  env->ReleaseStringUTFChars(jstack, stack);
-  env->ReleaseStringUTFChars(jurl, url);
 }
 
 JNIEXPORT void JNICALL
