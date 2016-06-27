@@ -16,7 +16,7 @@
 syntax = "proto3";
 
 package profiler.proto;
-import "event_profiler.proto";
+import "event.proto";
 
 service InternalEventService {
   // Simple RPC service to send data to perfd. As events fire are triggered from

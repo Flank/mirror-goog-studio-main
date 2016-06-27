@@ -44,6 +44,17 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         initialize();
     }
 
+    // Native activity functions to send activity events to perfd.
+    // TODO: Revisit how we expose enum state to native. This is consistent with
+    // other profiler components, however we may want to expose the proto enum to java.
+    private native void sendActivityCreated(String name, int hashCode);
+    private native void sendActivityStarted(String name, int hashCode);
+    private native void sendActivityResumed(String name, int hashCode);
+    private native void sendActivityPaused(String name, int hashCode);
+    private native void sendActivityStopped(String name, int hashCode);
+    private native void sendActivitySaved(String name, int hashCode);
+    private native void sendActivityDestroyed(String name, int hashCode);
+
     /**
      * This class handles updating the callback for any activities that are activated or created. We
      * construct a new wrapper around the callback because an application can have multiple
@@ -141,6 +152,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     public void onActivityCreated(Activity activity, Bundle bundle) {
         overrideFragmentManager(activity);
         updateCallback(activity);
+        sendActivityCreated(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
@@ -148,30 +160,36 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // The user can override any of these functions and call setCallback, as such we need to update the callback
         // at each entry point.
         updateCallback(activity);
+        sendActivityStarted(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
         myActivities.add(activity);
         updateCallback(activity);
+        sendActivityResumed(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
         myActivities.remove(activity);
+        sendActivityPaused(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
     public void onActivityStopped(Activity activity) {
         myActivities.remove(activity);
+        sendActivityStopped(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+        sendActivitySaved(activity.getLocalClassName(), activity.hashCode());
     }
 
     @Override
     public void onActivityDestroyed(Activity activity) {
+        sendActivityDestroyed(activity.getLocalClassName(), activity.hashCode());
     }
 
     /**

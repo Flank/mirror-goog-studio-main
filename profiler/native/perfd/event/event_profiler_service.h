@@ -19,7 +19,7 @@
 #include <grpc++/grpc++.h>
 
 #include "perfd/event/event_cache.h"
-#include "proto/event_profiler.grpc.pb.h"
+#include "proto/event.grpc.pb.h"
 
 namespace profiler {
 
