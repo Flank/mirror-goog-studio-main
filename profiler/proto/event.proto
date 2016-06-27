@@ -59,8 +59,13 @@ message ActivityEventData {
     UNSPECIFIED = 0;
     // State when an activity gets created
     CREATED = 1;
+    STARTED = 2;
+    RESUMED = 3;
+    PAUSED = 4;
+    STOPPED = 5;
+    SAVED = 6;
     // Event to fire when an activity gets destroyed
-    DESTROYED = 2;
+    DESTROYED = 7;
     // TODO: Flush this out to map the activity lifecycle.
   }
 
@@ -68,7 +73,7 @@ message ActivityEventData {
   ActivityState activity_state = 2;
 
   // Hash code to uniquely identify this activity.
-  int64 activity_hash = 3;
+  int32 activity_hash = 3;
 }
 
 message FragmentEventData {
@@ -82,7 +87,7 @@ message FragmentEventData {
   FragmentState fragment_state = 2;
 
   // Hash code to uniquely identify this fragment.
-  int64 fragment_hash = 3;
+  int32 fragment_hash = 3;
 }
 
 message EventDataRequest {
