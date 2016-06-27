@@ -15,11 +15,12 @@
  */
 #include "network_collector.h"
 
-#include <cstdint>
 #include <unistd.h>
+#include <cstdint>
 
 #include "perfd/network/connection_sampler.h"
 #include "perfd/network/connectivity_sampler.h"
+#include "perfd/network/network_constants.h"
 #include "perfd/network/traffic_sampler.h"
 #include "utils/clock.h"
 
@@ -63,19 +64,21 @@ void NetworkCollector::Collect() {
 
 void NetworkCollector::CreateSamplers() {
   std::string uid;
+  // TODO: It should use interface INetworkConstants from constructor.
+  NetworkConstants network_constants;
   bool has_uid = NetworkSampler::GetUidString(
-      NetworkConstants::GetPidStatusFilePath(pid_), &uid);
+      network_constants.GetPidStatusFilePath(pid_), &uid);
   if (has_uid) {
     // TODO: Define a centralized ANY_APP id.
     if (pid_ == -1) {
       samplers_.emplace_back(new ConnectivitySampler(
-          NetworkConstants::GetRadioStatusCommand(),
-          NetworkConstants::GetDefaultNetworkTypeCommand()));
+          network_constants.GetRadioStatusCommand(),
+          network_constants.GetDefaultNetworkTypeCommand()));
     } else {
       samplers_.emplace_back(
-          new TrafficSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
+          new TrafficSampler(uid, network_constants.GetTrafficBytesFilePath()));
       samplers_.emplace_back(new ConnectionSampler(
-          uid, NetworkConstants::GetConnectionFilePaths()));
+          uid, network_constants.GetConnectionFilePaths()));
     }
   }
 }

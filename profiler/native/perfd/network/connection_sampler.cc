@@ -21,7 +21,7 @@ namespace profiler {
 
 void ConnectionSampler::GetData(profiler::proto::NetworkProfilerData *data) {
   int connection_number = 0;
-  for (const std::string &file_name : kConnectionFiles) {
+  for (auto &file_name : kConnectionFiles) {
     connection_number += ReadConnectionNumber(kUid, file_name);
   }
   data->mutable_connection_data()->set_connection_number(connection_number);
@@ -107,4 +107,4 @@ bool ConnectionSampler::EatSpace(const std::string &connection,
   return has_empty_space;
 }
 
-} // namespace profiler
+}  // namespace profiler

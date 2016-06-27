@@ -13,53 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_NETWORK_NETWORK_FILES_H_
-#define PERFD_NETWORK_NETWORK_FILES_H_
+#ifndef PERFD_NETWORK_NETWORK_CONSTANTS_H_
+#define PERFD_NETWORK_NETWORK_CONSTANTS_H_
 
 #include <string>
 #include <vector>
 
 namespace profiler {
 
-// Utility methods for fetching standard network log files
-// TODO: Make this class instantiatable and mockable
-class NetworkConstants final {
+// Utility methods for fetching standard network commands and log files.
+// The file paths may be constants or may be dynamically computed.
+class NetworkConstantsInterface {
  public:
+  virtual ~NetworkConstantsInterface() = default;
   // Path of pid status file to get uid from pid.
-  static std::string GetPidStatusFilePath(const int pid) {
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "/proc/%d/status", pid);
-    return buffer;
-  }
-
+  virtual std::string GetPidStatusFilePath(const int pid) = 0;
   // Path of file that contains all apps' sent and received bytes.
-  static const std::string &GetTrafficBytesFilePath() {
-    static const std::string file_path("/proc/net/xt_qtaguid/stats");
-    return file_path;
-  }
-
+  virtual const char* const GetTrafficBytesFilePath() = 0;
   // Path of files that contains all apps' open connection numbers.
-  static const std::vector<std::string> &GetConnectionFilePaths() {
-    static const std::vector<std::string> file_paths{{
-        "/proc/net/tcp6", "/proc/net/udp6", "/proc/net/raw6", "/proc/net/tcp",
-        "/proc/net/udp", "/proc/net/raw",
-    }};
-    return file_paths;
-  }
-
+  virtual std::vector<const char*> GetConnectionFilePaths() = 0;
   // Dumpsys command that is relatively efficient to get radio power status.
-  static const std::string &GetRadioStatusCommand() {
-    static const std::string radio("dumpsys network_management");
-    return radio;
-  }
-
+  virtual const char* const GetRadioStatusCommand() = 0;
   // Dumpsys command that is relatively efficient to get default network type.
-  static const std::string &GetDefaultNetworkTypeCommand() {
-    static const std::string default_type("dumpsys connectivity");
-    return default_type;
-  }
+  virtual const char* const GetDefaultNetworkTypeCommand() = 0;
+};
+
+class NetworkConstants final : public NetworkConstantsInterface {
+ public:
+  std::string GetPidStatusFilePath(const int pid) override;
+  const char* const GetTrafficBytesFilePath() override;
+  std::vector<const char*> GetConnectionFilePaths() override;
+  const char* const GetRadioStatusCommand() override;
+  const char* const GetDefaultNetworkTypeCommand() override;
 };
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_NETWORK_FILES_H_
+#endif  // PERFD_NETWORK_NETWORK_CONSTANTS_H_

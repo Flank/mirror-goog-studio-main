@@ -17,6 +17,10 @@
 
 #include "utils/bash_command.h"
 
+namespace {
+const char* const kDefaultNetworkLabel = "Active default network: ";
+} // anonymous namespace
+
 namespace profiler {
 
 void ConnectivitySampler::GetData(profiler::proto::NetworkProfilerData* data) {
@@ -51,12 +55,10 @@ ConnectivitySampler::NetworkType ConnectivitySampler::GetDefaultNetworkType() {
 
   // Find the line contains id of the selected default network, for example,
   // "Active default network: 100".
-  // TODO: Move to anonymous namespace for local usages.
-  const char* const default_network_label = "Active default network: ";
   std::string network_id;
-  size_t start = line.find(default_network_label);
+  size_t start = line.find(kDefaultNetworkLabel);
   if (start != std::string::npos) {
-    start += strlen(default_network_label);
+    start += strlen(kDefaultNetworkLabel);
     network_id =
         line.substr(start, line.find_first_of(" \n\r\f", start) - start);
   }

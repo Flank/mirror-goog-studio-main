@@ -28,7 +28,7 @@ namespace profiler {
 class ConnectionSampler final : public NetworkSampler {
  public:
   ConnectionSampler(const std::string &uid,
-                          const std::vector<std::string> &files)
+                    const std::vector<const char*> &files)
       : kUid(uid), kConnectionFiles(files) {}
 
   // Read system file to get the number of open connections, and store data in
@@ -77,9 +77,9 @@ class ConnectionSampler final : public NetworkSampler {
 
   // List of files containing open connection data; for example /proc/net/tcp6.
   // Those files contain multiple apps' information.
-  const std::vector<std::string> kConnectionFiles;
+  const std::vector<const char*> kConnectionFiles;
 };
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_CONNECTION_SAMPLER_H
+#endif  // PERFD_NETWORK_CONNECTION_SAMPLER_H
