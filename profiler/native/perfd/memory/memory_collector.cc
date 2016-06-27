@@ -15,8 +15,8 @@
  */
 #include "memory_collector.h"
 
-#include <sstream>
 #include <unistd.h>
+#include <sstream>
 
 #include "utils/activity_manager.h"
 #include "utils/log.h"
@@ -24,9 +24,7 @@
 
 namespace profiler {
 
-MemoryCollector::~MemoryCollector() {
-  Stop();
-}
+MemoryCollector::~MemoryCollector() { Stop(); }
 
 void MemoryCollector::Start() {
   if (!is_running_.exchange(true)) {
@@ -88,7 +86,8 @@ bool MemoryCollector::TriggerHeapDump() {
     if (heap_dump_thread_.joinable()) {
       heap_dump_thread_.join();
     }
-    heap_dump_thread_ = std::thread([this, dump_file_path]{ this->HeapDumpMain(dump_file_path); });
+    heap_dump_thread_ = std::thread(
+        [this, dump_file_path] { this->HeapDumpMain(dump_file_path); });
   }
 
   return true;
@@ -105,4 +104,4 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
 
   is_heap_dump_running_.exchange(false);
 }
-} // namespace profiler
+}  // namespace profiler

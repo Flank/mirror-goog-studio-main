@@ -20,6 +20,8 @@ import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.NetworkProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
 
+import android.os.Debug;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,15 @@ public class ProfilerService {
     private final List<ProfilerComponent> mComponents;
 
     static {
+        /**
+         * Force the GC to run because Debug.startAllocCounting() is being called after the
+         * application has already started. If GC isn't called, then it's very possible that
+         * the subsequent GC of surplus live objects can cause the free count to exceed the
+         * alloc count. Obviously, allocations in other threads can still cause phenomenon,
+         * but at a much lower rate.
+         */
+        Runtime.getRuntime().gc();
+        Debug.startAllocCounting();
         System.loadLibrary("perfa");
     }
 
@@ -47,11 +58,14 @@ public class ProfilerService {
     }
 
     public ProfilerService() {
+        nativeInitialize();
+
         mComponents = new ArrayList<ProfilerComponent>();
         mComponents.add(new EventProfiler());
         mComponents.add(new NetworkProfiler());
         mComponents.add(new MemoryProfiler());
-        nativeInitialize();
+
+        // TODO handle shutdown properly
     }
 
     public native void nativeInitialize();

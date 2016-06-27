@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "proto/memory.pb.h"
 #include "memory_levels_sampler.h"
+#include "proto/memory.pb.h"
 #include "utils/file_reader.h"
 
 #include <gtest/gtest.h>
@@ -27,7 +27,8 @@ TEST(ParseMemoryLevels, MemoryDataVersion3Valid) {
   profiler::proto::MemoryData_MemorySample sample;
   sampler.ParseMemoryLevels(content, &sample);
 
-  // The following values are obtained from the same dumpsys that generated the test data file.
+  // The following values are obtained from the same dumpsys that generated the
+  // test data file.
   EXPECT_EQ(9336, sample.total_mem());
   EXPECT_EQ(2092, sample.java_mem());
   EXPECT_EQ(3496, sample.native_mem());
@@ -45,7 +46,8 @@ TEST(ParseMemoryLevels, MemoryDataVersion4Valid) {
   profiler::proto::MemoryData_MemorySample sample;
   sampler.ParseMemoryLevels(content, &sample);
 
-  // The following values are obtained from the same dumpsys that generated the test data file.
+  // The following values are obtained from the same dumpsys that generated the
+  // test data file.
   EXPECT_EQ(9684, sample.total_mem());
   EXPECT_EQ(2588, sample.java_mem());
   EXPECT_EQ(3844, sample.native_mem());

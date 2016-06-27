@@ -31,6 +31,7 @@ mutex perfa_mutex_;
 
 namespace profiler {
 
+using proto::InternalMemoryService;
 using proto::InternalNetworkService;
 using proto::InternalEventService;
 using proto::PerfaControlRequest;
@@ -54,6 +55,7 @@ Perfa::Perfa(const char* address) {
   auto channel =
       grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
   service_stub_ = PerfaService::NewStub(channel);
+  memory_stub_ = InternalMemoryService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
   event_stub_ = InternalEventService::NewStub(channel);
 
