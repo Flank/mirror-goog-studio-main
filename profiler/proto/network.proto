@@ -46,7 +46,13 @@ message ConnectivityData {
   }
 
   RadioState radio_state = 1;
-  int32 default_network_type = 2;
+
+  enum NetworkType {
+    INVALID = 0;
+    MOBILE = 1;
+    WIFI = 2;
+  }
+  NetworkType default_network_type = 2;
 }
 
 service NetworkProfilerService {

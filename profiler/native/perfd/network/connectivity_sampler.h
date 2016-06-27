@@ -30,22 +30,13 @@ class ConnectivitySampler final : public NetworkSampler {
       : radio_state_command_(radio_state_command),
         network_type_command_(network_type_command) {}
 
-  enum NetworkType {
-    // Value is consistent with |ConnectivityManager#TYPE_MOBILE|.
-    MOBILE = 0,
-    // Value is consistent with |ConnectivityManager#TYPE_WIFI|.
-    WIFI = 1,
-    // Value for failing to find the network type.
-    INVALID = -1,
-  };
-
   void GetData(profiler::proto::NetworkProfilerData *data) override;
 
  private:
-  profiler::proto::ConnectivityData::RadioState GetRadioState();
+  proto::ConnectivityData::RadioState GetRadioState();
 
   // Returns the selected default network type.
-  NetworkType GetDefaultNetworkType();
+  proto::ConnectivityData::NetworkType GetDefaultNetworkType();
 
   const std::string radio_state_command_;
   const std::string network_type_command_;
