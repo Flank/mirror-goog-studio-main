@@ -72,9 +72,6 @@ namespace profiler {
   result->second.memory_cache()->LoadMemoryData(request->start_time(),
                                                 request->end_time(), response);
 
-  result->second.memory_cache()->LoadHeapDumpData(
-      request->start_time(), request->end_time(), response);
-
   return ::grpc::Status::OK;
 }
 

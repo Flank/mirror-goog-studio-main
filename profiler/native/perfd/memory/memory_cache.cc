@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "memory_cache.h"
+
+#include <algorithm>
+
 #include "utils/log.h"
 
 using ::profiler::proto::MemoryData;
@@ -104,6 +107,7 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                                  MemoryData* response) {
   std::lock_guard<std::mutex> memory_lock(memory_samples_mutex_);
   std::lock_guard<std::mutex> vm_stats_lock(vm_stats_samples_mutex_);
+  std::lock_guard<std::mutex> lock(heap_dump_samples_mutex_);
 
   int64_t end_timestamp = -1;
   if (put_memory_sample_index_ > 0 || memory_samples_buffer_full_) {
@@ -131,25 +135,25 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
       i = IncrementSampleIndex(i);
     } while (i != put_vm_stats_sample_index_);
   }
-  response->set_end_timestamp(end_timestamp);
-}
 
-void MemoryCache::LoadHeapDumpData(int64_t start_time_exl, int64_t end_time_inc,
-                                   MemoryData* response) {
-  std::lock_guard<std::mutex> lock(heap_dump_samples_mutex_);
-
-  if (put_heap_dump_sample_index_ == 0) {
-    return;  // Cache is empty.
+  if (put_heap_dump_sample_index_ > 0 || heap_dump_samples_buffer_full_) {
+    int32_t i =
+        heap_dump_samples_buffer_full_ ? put_heap_dump_sample_index_ : 0;
+    do {
+      int64_t start_time = heap_dump_samples_[i].start_time();
+      int64_t end_time = heap_dump_samples_[i].end_time();
+      // Include heap dump samples that have started/ended between
+      // start_time_exl and end_time_inc
+      if ((start_time > start_time_exl && start_time <= end_time_inc) ||
+          (end_time > start_time_exl && end_time <= end_time_inc)) {
+        response->add_heap_dump_samples()->CopyFrom(heap_dump_samples_[i]);
+        end_timestamp = std::max({start_time, end_time, end_timestamp});
+      }
+      i = IncrementSampleIndex(i);
+    } while (i != put_heap_dump_sample_index_);
   }
 
-  int32_t i = heap_dump_samples_buffer_full_ ? put_heap_dump_sample_index_ : 0;
-  do {
-    int64_t start_time = heap_dump_samples_[i].start_time();
-    if (start_time > start_time_exl && start_time <= end_time_inc) {
-      response->add_heap_dump_samples()->CopyFrom(heap_dump_samples_[i]);
-    }
-    i = IncrementSampleIndex(i);
-  } while (i != put_memory_sample_index_);
+  response->set_end_timestamp(end_timestamp);
 }
 
 int MemoryCache::IncrementSampleIndex(int32_t index) {
