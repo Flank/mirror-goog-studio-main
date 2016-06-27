@@ -68,13 +68,13 @@ public class PipeInputStream extends InputStream {
             n += item.read(b, off + n, len - n);
             if (item.remaining() == 0) {
               mQueue.removeFirst();
-            }
-            else {
+            } else {
               mSemaphore.release();
             }
           }
           else {
             closed = true;
+            mSemaphore.release();
           }
         }
       }
