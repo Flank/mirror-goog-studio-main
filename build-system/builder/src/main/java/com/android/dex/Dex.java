@@ -109,6 +109,17 @@ public final class Dex {
             } else {
                 throw new DexException("Expected " + DexFormat.DEX_IN_JAR_NAME + " in " + file);
             }
+        } else if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.getName().endsWith(".dex")) {
+                        loadFrom(new FileInputStream(f));
+                    }
+                }
+            } else {
+                throw new DexException("Unable to read .dex files from " + file.getAbsolutePath());
+            }
         } else if (file.getName().endsWith(".dex")) {
             loadFrom(new FileInputStream(file));
         } else {
