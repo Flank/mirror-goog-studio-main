@@ -22,29 +22,40 @@
 namespace profiler {
 
 // Utility methods for fetching standard network commands and log files.
-// The file paths may be constants or may be dynamically computed.
-class NetworkConstantsInterface {
+class NetworkConstants final {
  public:
-  virtual ~NetworkConstantsInterface() = default;
   // Path of pid status file to get uid from pid.
-  virtual std::string GetPidStatusFilePath(const int pid) = 0;
-  // Path of file that contains all apps' sent and received bytes.
-  virtual const char* const GetTrafficBytesFilePath() = 0;
-  // Path of files that contains all apps' open connection numbers.
-  virtual std::vector<const char*> GetConnectionFilePaths() = 0;
-  // Dumpsys command that is relatively efficient to get radio power status.
-  virtual const char* const GetRadioStatusCommand() = 0;
-  // Dumpsys command that is relatively efficient to get default network type.
-  virtual const char* const GetDefaultNetworkTypeCommand() = 0;
-};
+  static std::string GetPidStatusFilePath(const int pid) {
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "/proc/%d/status", pid);
+    return buffer;
+  }
 
-class NetworkConstants final : public NetworkConstantsInterface {
- public:
-  std::string GetPidStatusFilePath(const int pid) override;
-  const char* const GetTrafficBytesFilePath() override;
-  std::vector<const char*> GetConnectionFilePaths() override;
-  const char* const GetRadioStatusCommand() override;
-  const char* const GetDefaultNetworkTypeCommand() override;
+  // Path of file that contains all apps' sent and received bytes.
+  static const char *const GetTrafficBytesFilePath() {
+    return "/proc/net/xt_qtaguid/stats";
+  }
+
+  // Path of files that contains all apps' open connection numbers.
+  static std::vector<std::string> GetConnectionFilePaths() {
+    const char *file_paths[] = {
+        "/proc/net/tcp6", "/proc/net/udp6", "/proc/net/raw6",
+        "/proc/net/tcp",  "/proc/net/udp",  "/proc/net/raw",
+    };
+    const int len = sizeof(file_paths) / sizeof(const char *);
+
+    return std::vector<std::string>(file_paths, file_paths + len);
+  }
+
+  // Dumpsys command that is relatively efficient to get radio power status.
+  static const char *const GetRadioStatusCommand() {
+    return "dumpsys network_management";
+  }
+
+  // Dumpsys command that is relatively efficient to get default network type.
+  static const char *GetDefaultNetworkTypeCommand() {
+    return "dumpsys connectivity";
+  }
 };
 
 }  // namespace profiler
