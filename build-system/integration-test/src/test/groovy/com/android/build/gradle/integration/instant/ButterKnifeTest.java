@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
+import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -131,12 +132,14 @@ public class ButterKnifeTest {
     @Test
     @Category(DeviceTests.class)
     public void hotSwap_device() throws Exception {
+        IDevice device = adb.getDevice(AndroidVersionMatcher.atLeast(23));
+
         HotSwapTester.run(
                 project,
                 "com.example.bk",
                 "Activ",
                 "butterknife",
-                adb,
+                device,
                 logcat,
                 new HotSwapTester.Steps() {
                     @Override
