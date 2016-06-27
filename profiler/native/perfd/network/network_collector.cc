@@ -63,23 +63,24 @@ void NetworkCollector::Collect() {
 }
 
 void NetworkCollector::CreateSamplers() {
-  std::string uid;
-  // TODO: It should use interface INetworkConstants from constructor.
+  // TODO: Define a centralized ANY_APP id.
+  // TODO: This class will be replaced by a follow up CL soon.
   NetworkConstants network_constants;
+  if (pid_ == -1) {
+    samplers_.emplace_back(new ConnectivitySampler(
+        network_constants.GetRadioStatusCommand(),
+        network_constants.GetDefaultNetworkTypeCommand()));
+    return;
+  }
+
+  std::string uid;
   bool has_uid = NetworkSampler::GetUidString(
       network_constants.GetPidStatusFilePath(pid_), &uid);
   if (has_uid) {
-    // TODO: Define a centralized ANY_APP id.
-    if (pid_ == -1) {
-      samplers_.emplace_back(new ConnectivitySampler(
-          network_constants.GetRadioStatusCommand(),
-          network_constants.GetDefaultNetworkTypeCommand()));
-    } else {
-      samplers_.emplace_back(
-          new TrafficSampler(uid, network_constants.GetTrafficBytesFilePath()));
-      samplers_.emplace_back(new ConnectionSampler(
-          uid, network_constants.GetConnectionFilePaths()));
-    }
+    samplers_.emplace_back(
+        new TrafficSampler(uid, network_constants.GetTrafficBytesFilePath()));
+    samplers_.emplace_back(
+        new ConnectionSampler(uid, network_constants.GetConnectionFilePaths()));
   }
 }
 
