@@ -51,6 +51,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
@@ -383,11 +384,17 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testComputeResourceName() {
-        assertEquals("", computeResourceName("", ""));
-        assertEquals("foo", computeResourceName("", "foo"));
-        assertEquals("foo", computeResourceName("foo", ""));
-        assertEquals("prefix_name", computeResourceName("prefix_", "name"));
-        assertEquals("prefixName", computeResourceName("prefix", "name"));
+        assertEquals("", computeResourceName("", "", null));
+        assertEquals("foo", computeResourceName("", "foo", null));
+        assertEquals("foo", computeResourceName("foo", "", null));
+        assertEquals("prefix_name", computeResourceName("prefix_", "name", null));
+        assertEquals("prefixName", computeResourceName("prefix", "name", null));
+        assertEquals("PrefixName", computeResourceName("prefix", "Name", null));
+        assertEquals("PrefixName", computeResourceName("prefix_", "Name", null));
+        assertEquals("MyPrefixName", computeResourceName("myPrefix", "Name", null));
+        assertEquals("my_prefix_name", computeResourceName("myPrefix", "name", ResourceFolderType.LAYOUT));
+        assertEquals("UnitTestPrefixContentFrame", computeResourceName("unit_test_prefix_", "ContentFrame", ResourceFolderType.VALUES));
+        assertEquals("MyPrefixMyStyle", computeResourceName("myPrefix_", "MyStyle", ResourceFolderType.VALUES));
     }
 
     public static Node getCompilationUnit(@Language("JAVA") String javaSource) {

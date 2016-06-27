@@ -31,8 +31,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * Tip: To execute just this test after modifying the annotations extraction code:
  * <pre>
  *     $ cd tools
- *     $ ./gradlew :base:int:test --tests com.android.build.gradle.integration.application.ExtractAnnotationTest
- *     $ ./gradlew  -D:base:integration-test:test.single=com.android.build.gradle.integration.application.ExtractAnnotationTest
+ *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=ExtractAnnotationTest
  * </pre>
  */
 @CompileStatic

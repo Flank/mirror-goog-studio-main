@@ -798,6 +798,27 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testStringsWithDots() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=214189
+
+        mEnableIds = false;
+        assertEquals("No warnings.",
+
+                lintProject(
+                        xml("res/values/strings.xml", ""
+                                + "<resources>\n"
+                                + "    <string name=\"foo.bar.your_name\">Your Name</string>\n"
+                                + "</resources>\n"),
+                        java("test/my/pkg/MyTest.java", ""
+                                + "package my.pkg;\n"
+                                + "class MyTest {\n"
+                                + "    public void test() {\n"
+                                + "        System.out.println(R.string.foo_bar_your_name);\n"
+                                + "    }\n"
+                                + "}\n")
+                ));
+    }
+
     @Override
     protected TestLintClient createClient() {
         if (!getName().startsWith("testDynamicResources")) {

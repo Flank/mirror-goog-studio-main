@@ -27,6 +27,12 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 /**
  * Assemble tests for privateResources.
+ * <p>
+ * Tip: To execute just this test after modifying the annotations extraction code:
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=PrivateResourceTest
+ * </pre>
  */
 @CompileStatic
 class PrivateResourceTest {
@@ -48,7 +54,7 @@ class PrivateResourceTest {
     @Test
     void "check private resources"() {
         String expected = """\
-style My_Theme
+style Mylib_My_Theme
 string mylib_app_name
 string mylib_public_string
 string mylib_shared_name

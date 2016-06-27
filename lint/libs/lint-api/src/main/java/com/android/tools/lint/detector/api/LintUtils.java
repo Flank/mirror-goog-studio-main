@@ -34,6 +34,8 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.UTF_8;
 import static com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER;
 import static com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX;
+import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
+import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE;
@@ -103,6 +105,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -1117,9 +1120,43 @@ public class LintUtils {
 
     /** Computes a suggested name given a resource prefix and resource name */
     public static String computeResourceName(@NonNull String prefix, @NonNull String name) {
+        return computeResourceName(prefix, name, null);
+    }
+
+    /** Computes a suggested name given a resource prefix and resource name */
+    public static String computeResourceName(@NonNull String prefix, @NonNull String name,
+            @Nullable ResourceFolderType folderType) {
         if (prefix.isEmpty()) {
             return name;
-        } else if (name.isEmpty()) {
+        }
+
+        // Regardless of the prefix, if creating a file based resource such as a layout,
+        // the name must be lower-case only
+        if (folderType != null && folderType != ResourceFolderType.VALUES) {
+            name = name.toLowerCase(Locale.ROOT);
+            String underlined = camelCaseToUnderlines(prefix);
+            if (!prefix.equals(underlined)) {
+                if (!underlined.endsWith("_")) {
+                    underlined = underlined + "_";
+                }
+                prefix = underlined;
+            }
+        }
+
+        // If prefix is "myPrefix" and then name is "MyStyle", we should construct MyPrefixMyStyle
+        if (!name.isEmpty() && Character.isUpperCase(name.charAt(0))) {
+            if (prefix.indexOf('_') != -1) {
+                prefix = underlinesToCamelCase(prefix);
+            }
+            prefix = Character.toUpperCase(prefix.charAt(0)) + prefix.substring(1);
+            // and if the prefix is myPrefix_ we should still construct MyPrefixMyStyle, not
+            // MyPrefix_MyStyle
+            if (prefix.endsWith("_")) {
+                prefix = prefix.substring(0, prefix.length() - 1);
+            }
+        }
+
+        if (name.isEmpty()) {
             return prefix;
         } else if (prefix.endsWith("_")) {
             return prefix + name;
@@ -1127,7 +1164,6 @@ public class LintUtils {
             return prefix + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         }
     }
-
 
     /**
      * Convert an {@link com.android.builder.model.ApiVersion} to a {@link
