@@ -57,6 +57,17 @@ public class HotSwapTester {
             @NonNull Logcat logcat,
             @NonNull Steps steps)  throws Exception {
         IDevice device = adb.getDevice(thatUsesArt());
+        run(project, packageName, activityName, logTag, device, logcat, steps);
+    }
+
+    public static void run(
+            @NonNull GradleTestProject project,
+            @NonNull String packageName,
+            @NonNull String activityName,
+            @NonNull String logTag,
+            @NonNull IDevice device,
+            @NonNull Logcat logcat,
+            @NonNull Steps steps)  throws Exception {
         try (Closeable ignored = new UninstallOnClose(device, packageName)) {
             logcat.start(device, logTag);
 
