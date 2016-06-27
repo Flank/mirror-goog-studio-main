@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "perfd/network/network_cache.h"
 #include "perfd/network/network_collector.h"
 #include "proto/network.grpc.pb.h"
 #include "utils/time_value_buffer.h"
@@ -30,7 +31,7 @@ namespace profiler {
 class NetworkProfilerServiceImpl final
     : public proto::NetworkProfilerService::Service {
  public:
-  NetworkProfilerServiceImpl();
+  NetworkProfilerServiceImpl(NetworkCache *network_cache);
 
   grpc::Status GetData(grpc::ServerContext *context,
                        const proto::NetworkDataRequest *request,
@@ -44,6 +45,14 @@ class NetworkProfilerServiceImpl final
                                  const proto::NetworkStopRequest *request,
                                  proto::NetworkStopResponse *response) override;
 
+  grpc::Status GetHttpRange(grpc::ServerContext *context,
+                            const proto::HttpRangeRequest *httpRange,
+                            proto::HttpRangeResponse *response) override;
+
+  grpc::Status GetHttpDetails(grpc::ServerContext *context,
+                              const proto::HttpDetailsRequest *httpDetails,
+                              proto::HttpDetailsResponse *response) override;
+
  private:
   // Start sampling data for device network information (pid == -1), or sampling
   // data for a given app.
@@ -55,8 +64,10 @@ class NetworkProfilerServiceImpl final
   // TODO: The vectors may need mutex.
   std::vector<std::unique_ptr<NetworkProfilerBuffer>> buffers_;
   std::vector<std::unique_ptr<NetworkCollector>> collectors_;
+
+  NetworkCache &network_cache_;
 };
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_NETWORK_PROFILER_SERVICE_H_
+#endif  // PERFD_NETWORK_NETWORK_PROFILER_SERVICE_H_

@@ -37,10 +37,10 @@ namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::Stopwatch;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    const std::string &root_path) {
+    const std::string &root_path, NetworkCache *network_cache)
+    : network_cache_(*network_cache) {
   fs_.reset(new FileSystem(root_path + "/cache/network"));
 
   // Since we're restarting perfd, nuke any leftover cache from a previous run
@@ -63,7 +63,9 @@ InternalNetworkServiceImpl::~InternalNetworkServiceImpl() {
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
     proto::EmptyNetworkReply *reply) {
-  Log::V("HttpData (id=%lld) [%s]", httpData->uid(), httpData->url().c_str());
+  auto details =
+      network_cache_.AddConnection(httpData->conn_id(), httpData->app_id());
+  details->request.url = httpData->url();
   return Status::OK;
 }
 
@@ -71,7 +73,7 @@ Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
                                              const proto::ChunkRequest *chunk,
                                              proto::EmptyNetworkReply *reply) {
   std::stringstream filename;
-  filename << chunk->uid();
+  filename << chunk->conn_id();
 
   auto file = cache_partial_->GetOrNewFile(filename.str());
   file->OpenForWrite();
@@ -85,23 +87,38 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     ServerContext *context, const proto::HttpEventRequest *httpEvent,
     proto::EmptyNetworkReply *reply) {
   switch (httpEvent->event()) {
+    case proto::HttpEventRequest::DOWNLOAD_STARTED: {
+      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      details->downloading_timestamp = httpEvent->timestamp();
+    }
+
+    break;
+
     case proto::HttpEventRequest::DOWNLOAD_COMPLETED: {
       // Since the download is finished, move from partial to complete
       // TODO: Name the dest file based on a hash of the contents. For now, we
       // don't have a hash function, so just keep the name.
       std::stringstream filename;
-      filename << httpEvent->uid();
+      filename << httpEvent->conn_id();
       auto file_from = cache_partial_->GetFile(filename.str());
       auto file_to = cache_complete_->GetFile(filename.str());
       file_from->MoveContentsTo(file_to);
+
+      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      details->response.body_path = file_to->path();
+      details->end_timestamp = httpEvent->timestamp();
     }
 
     break;
 
     case proto::HttpEventRequest::ABORTED: {
       std::stringstream filename;
-      filename << httpEvent->uid();
+      filename << httpEvent->conn_id();
       cache_partial_->GetFile(filename.str())->Delete();
+
+      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      details->end_timestamp = httpEvent->timestamp();
+      // TODO: Somehow mark the connection as aborted?
     } break;
 
     default:

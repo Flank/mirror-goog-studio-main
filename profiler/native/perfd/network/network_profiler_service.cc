@@ -15,14 +15,29 @@
  */
 #include "network_profiler_service.h"
 
-using grpc::ServerContext;
-using grpc::Status;
-using profiler::proto::NetworkDataRequest;
-using profiler::proto::NetworkProfilerData;
+#include "utils/log.h"
 
 namespace profiler {
 
-NetworkProfilerServiceImpl::NetworkProfilerServiceImpl() { StartCollector(-1); }
+using grpc::ServerContext;
+using grpc::Status;
+using profiler::proto::HttpConnectionData;
+using profiler::proto::HttpDetailsRequest;
+using profiler::proto::HttpDetailsResponse;
+using profiler::proto::HttpDetailsResponse_Body;
+using profiler::proto::HttpDetailsResponse_Request;
+using profiler::proto::HttpDetailsResponse_Response;
+using profiler::proto::HttpRangeRequest;
+using profiler::proto::HttpRangeResponse;
+using profiler::proto::NetworkDataRequest;
+using profiler::proto::NetworkProfilerData;
+using profiler::Log;
+
+NetworkProfilerServiceImpl::NetworkProfilerServiceImpl(
+    NetworkCache *network_cache)
+    : network_cache_(*network_cache) {
+  StartCollector(-1);
+}
 
 grpc::Status
 NetworkProfilerServiceImpl::GetData(grpc::ServerContext *context,
@@ -82,6 +97,68 @@ grpc::Status NetworkProfilerServiceImpl::StopMonitoringApp(
       break;
     }
   }
+  return Status::OK;
+}
+
+grpc::Status NetworkProfilerServiceImpl::GetHttpRange(
+    grpc::ServerContext *context, const HttpRangeRequest *httpRange,
+    HttpRangeResponse *response) {
+  auto range =
+      network_cache_.GetRange(httpRange->app_id(), httpRange->start_timestamp(),
+                              httpRange->end_timestamp());
+
+  for (const auto &conn : range) {
+    HttpConnectionData *data = response->add_data();
+    data->set_conn_id(conn.id);
+    data->set_start_timestamp(conn.start_timestamp);
+    data->set_downloading_timestamp(conn.downloading_timestamp);
+    data->set_end_timestamp(conn.end_timestamp);
+  }
+
+  return Status::OK;
+}
+
+grpc::Status NetworkProfilerServiceImpl::GetHttpDetails(
+    grpc::ServerContext *context, const HttpDetailsRequest *httpDetails,
+    HttpDetailsResponse *response) {
+  ConnectionDetails *conn = network_cache_.GetDetails(httpDetails->conn_id());
+  HttpDetailsRequest::Type type = httpDetails->type();
+  if (conn != nullptr && type != HttpDetailsRequest::UNSPECIFIED) {
+    switch (type) {
+      case HttpDetailsRequest::REQUEST: {
+        auto request_details = response->mutable_request();
+        request_details->set_url(conn->request.url);
+        request_details->set_method(conn->request.method);
+        request_details->set_fields(conn->request.fields);
+        request_details->set_trace(conn->request.trace);
+      } break;
+
+      case HttpDetailsRequest::RESPONSE: {
+        auto response_details = response->mutable_response();
+        response_details->set_code(conn->response.code);
+        response_details->set_fields(conn->response.fields);
+      } break;
+
+      case HttpDetailsRequest::REQUEST_BODY: {
+        if (conn->request.body_path != "") {
+          auto body_details = response->mutable_request_body();
+          body_details->set_file_path(conn->request.body_path);
+        }
+      } break;
+
+      case HttpDetailsRequest::RESPONSE_BODY: {
+        if (conn->response.body_path != "") {
+          auto body_details = response->mutable_response_body();
+          body_details->set_file_path(conn->response.body_path);
+        }
+      } break;
+
+      default:
+        Log::V("Unhandled details type (%d)", type);
+        break;
+    }
+  }
+
   return Status::OK;
 }
 
