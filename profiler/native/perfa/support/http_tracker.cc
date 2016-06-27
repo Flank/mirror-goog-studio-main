@@ -44,7 +44,7 @@ void SendHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
   HttpEventRequest httpEvent;
   EmptyNetworkReply reply;
 
-  httpEvent.set_uid(uid);
+  httpEvent.set_conn_id(uid);
   httpEvent.set_timestamp(clock.GetCurrentTime());
   httpEvent.set_event(event);
 
@@ -94,7 +94,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
   char *bytes = new char[len];
   env->GetByteArrayRegion(jbytes, 0, len, reinterpret_cast<jbyte *>(bytes));
 
-  chunk.set_uid(juid);
+  chunk.set_conn_id(juid);
   std::string byte_str(bytes, len);
   chunk.set_content(byte_str);
   chunk.set_type(ChunkRequest::RESPONSE);
@@ -124,7 +124,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
   ClientContext ctx;
   HttpDataRequest httpData;
   EmptyNetworkReply reply;
-  httpData.set_uid(juid);
+  httpData.set_conn_id(juid);
   httpData.set_app_id(getpid());
   httpData.set_url(url);
   net_stub.RegisterHttpData(&ctx, httpData, &reply);
