@@ -36,7 +36,8 @@ TEST(ConnectivitySampler, RadioSleeping) {
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(3, data.connectivity_data().radio_state());
+  EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
+            data.connectivity_data().radio_state());
 }
 
 TEST(ConnectivitySampler, NoRadioState) {
@@ -44,7 +45,8 @@ TEST(ConnectivitySampler, NoRadioState) {
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(0, data.connectivity_data().radio_state());
+  EXPECT_EQ(profiler::proto::ConnectivityData::UNSPECIFIED,
+            data.connectivity_data().radio_state());
 }
 
 TEST(ConnectivitySampler, NoNetworkTypeId) {
@@ -52,7 +54,8 @@ TEST(ConnectivitySampler, NoNetworkTypeId) {
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(-1, data.connectivity_data().default_network_type());
+  EXPECT_EQ(profiler::proto::ConnectivityData::INVALID,
+            data.connectivity_data().default_network_type());
 }
 
 TEST(ConnectivitySampler, NetworkTypeWifi) {
@@ -60,7 +63,8 @@ TEST(ConnectivitySampler, NetworkTypeWifi) {
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(1, data.connectivity_data().default_network_type());
+  EXPECT_EQ(profiler::proto::ConnectivityData::WIFI,
+            data.connectivity_data().default_network_type());
 }
 
 TEST(ConnectivitySampler, NetworkTypeMobile) {
@@ -68,5 +72,6 @@ TEST(ConnectivitySampler, NetworkTypeMobile) {
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(0, data.connectivity_data().default_network_type());
+  EXPECT_EQ(profiler::proto::ConnectivityData::MOBILE,
+            data.connectivity_data().default_network_type());
 }
