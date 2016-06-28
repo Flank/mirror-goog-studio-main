@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PROFILER_PERFD_MEMORY_MEMORY_SERVICE_H_
-#define PROFILER_PERFD_MEMORY_MEMORY_SERVICE_H_
+#ifndef PERFD_MEMORY_MEMORY_SERVICE_H_
+#define PERFD_MEMORY_MEMORY_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 #include <unordered_map>
@@ -25,10 +25,12 @@
 
 namespace profiler {
 
-class MemoryServiceImpl final : public ::profiler::proto::MemoryService::Service {
-public:
-  MemoryServiceImpl(const Clock& clock, std::unordered_map<int32_t, MemoryCollector>* collectors) :
-      clock_(clock), collectors_(*collectors) {}
+class MemoryServiceImpl final
+    : public ::profiler::proto::MemoryService::Service {
+ public:
+  MemoryServiceImpl(const Clock& clock,
+                    std::unordered_map<int32_t, MemoryCollector>* collectors)
+      : clock_(clock), collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
 
   ::grpc::Status SetMemoryConfig(
@@ -36,21 +38,20 @@ public:
       const ::profiler::proto::MemoryConfig* request,
       ::profiler::proto::MemoryStatus* response) override;
 
-  ::grpc::Status GetData(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::MemoryRequest* request,
-      ::profiler::proto::MemoryData* response) override;
+  ::grpc::Status GetData(::grpc::ServerContext* context,
+                         const ::profiler::proto::MemoryRequest* request,
+                         ::profiler::proto::MemoryData* response) override;
 
   ::grpc::Status TriggerHeapDump(
       ::grpc::ServerContext* context,
       const ::profiler::proto::HeapDumpRequest* request,
       ::profiler::proto::HeapDumpResponse* response) override;
 
-private:
+ private:
   const Clock& clock_;
-  std::unordered_map<int32_t, MemoryCollector>& collectors_;
+  std::unordered_map<int32_t, MemoryCollector>&
+      collectors_;  // maps pid to MemoryCollector
 };
-
 }
 
-#endif // PROFILER_PERFD_MEMORY_MEMORY_SERVICE_H_
+#endif  // PERFD_MEMORY_MEMORY_SERVICE_H_

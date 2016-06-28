@@ -16,7 +16,15 @@
 
 package com.android.tools.profiler.support.profilers;
 
+import com.android.tools.profiler.support.memory.VmStatsSampler;
 
 public class MemoryProfiler implements ProfilerComponent {
-    //TODO: Decide whether we need a Java side for memory profiling.
+
+    VmStatsSampler mVmStatsSampler;
+
+    public MemoryProfiler() {
+        mVmStatsSampler = new VmStatsSampler();
+        mVmStatsSampler.start();
+        // TODO handle shutdown properly
+    }
 }
