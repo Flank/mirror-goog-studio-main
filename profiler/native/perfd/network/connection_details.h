@@ -69,17 +69,17 @@ struct ConnectionDetails final {
   };
 
   // ID that can identify this connection globally across all active apps
-  int64_t id;
+  int64_t id = 0;
   // The ID of the app that created this connection
-  int32_t app_id;
+  int32_t app_id = 0;
   // Time when this connection was created. This should always be set.
-  int64_t start_timestamp;
+  int64_t start_timestamp = 0;
   // Time when the server responded back with the first byte (and downloading
   // the complete response has begun). This value will be 0 until then.
-  int64_t downloading_timestamp;
+  int64_t downloading_timestamp = 0;
   // Time when the connection was closed (either completed or aborted). This
   // value will be 0 until then.
-  int64_t end_timestamp;
+  int64_t end_timestamp = 0;
 
   Request request;
   Response response;
