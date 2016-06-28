@@ -80,8 +80,8 @@ std::shared_ptr<File> Dir::DoGetFile(const std::string &path) const {
   return fs_->FileFor(path_ + "/" + path);
 }
 
-void Dir::WalkFiles(std::function<void(const FileStat &)> callback) {
-  fs_->disk()->WalkFiles(path_, callback);
+void Dir::Walk(std::function<void(const PathStat &)> callback) const {
+  fs_->disk()->WalkDir(path_, callback);
 }
 
 bool Dir::HandleCreate() { return fs_->disk()->NewDir(path_); }

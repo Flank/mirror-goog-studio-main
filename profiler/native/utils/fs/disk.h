@@ -18,15 +18,34 @@
 
 #include <cstdio>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace profiler {
 
-class FileStat {
+class PathStat {
  public:
-  FileStat(const std::string &rel_path, int32_t modify_age_s)
-      : rel_path_(rel_path), modify_age_s_(modify_age_s) {}
+  enum class Type {
+    FILE,
+    DIR,
+  };
+
+  PathStat(Type type, const std::string &root, const std::string &full_path,
+           int32_t modification_age_s)
+      : type_(type),
+        full_path_(full_path),
+        modification_age_s_(modification_age_s) {
+    rel_path_ = full_path.substr(root.length() + 1);
+  }
+
+  Type type() const { return type_; }
+
+  // Returns the full path of this file.
+  // e.g. if walking /root/dir/ and coming across /root/dir/subdir/file.txt,
+  // full_path will be "/root/dir/subdir/file.txt"
+  const std::string &full_path() const { return full_path_; }
 
   // Returns the path of this file, relative to the directory being walked.
   // e.g. if walking /root/dir/ and coming across /root/dir/subdir/file.txt,
@@ -34,11 +53,13 @@ class FileStat {
   const std::string &rel_path() const { return rel_path_; }
 
   // Returns the time, in seconds, since this file was last modified
-  int32_t modify_age_s() const { return modify_age_s_; }
+  int32_t modification_age() const { return modification_age_s_; }
 
  private:
+  Type type_;
+  std::string full_path_;
   std::string rel_path_;
-  int32_t modify_age_s_;
+  int32_t modification_age_s_;
 };
 
 // An interface to various disk utility methods. Used by FileSystem to carry out
@@ -70,18 +91,20 @@ class Disk {
   // directory don't already exist; the caller should ensure they do.
   virtual bool NewFile(const std::string &fpath) = 0;
 
-  // Return the time passed, in seconds, since the target file was modified.
-  virtual int32_t ModifyAge(const std::string &fpath) const = 0;
+  // Return the time passed, in seconds, since the target path was modified.
+  virtual int32_t GetModificationAge(const std::string &path) const = 0;
 
   // Update the target file's modified timestamp. Caller should ensure the file
   // exists. This method does NOT create a file if it doesn't already exist.
   virtual void Touch(const std::string &fpath) = 0;
 
-  // Given a path to a directory, walk all files in it, triggering the callback
-  // for each file.
+  // Given a path to a directory, walk over its contents, triggering the
+  // callback for each file. The callback will be triggered in an order where
+  // the paths can be safely deleted (i.e. children first).
   // TODO: This should be done using an iterator, not a lambda
-  virtual void WalkFiles(const std::string &path,
-                         std::function<void(const FileStat &)> callback) = 0;
+  virtual void WalkDir(
+      const std::string &dpath,
+      std::function<void(const PathStat &)> callback) const = 0;
 
   // Read a file's contents all in one pass. This will return the empty string
   // if the file at the target path is in write mode.
@@ -127,10 +150,10 @@ class CDisk final : public Disk {
   bool HasFile(const std::string &path) const override;
   bool NewDir(const std::string &path) override;
   bool NewFile(const std::string &path) override;
-  int32_t ModifyAge(const std::string &path) const override;
+  int32_t GetModificationAge(const std::string &path) const override;
   void Touch(const std::string &path) override;
-  void WalkFiles(const std::string &path,
-                 std::function<void(const FileStat &)> callback) override;
+  void WalkDir(const std::string &dpath,
+               std::function<void(const PathStat &)> callback) const override;
   std::string GetFileContents(const std::string &path) const override;
   bool MoveFile(const std::string &path_from,
                 const std::string &path_to) override;

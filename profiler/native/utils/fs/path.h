@@ -52,6 +52,9 @@ class Path {
   // Returns the name of this directory or file (the tail end of the path)
   const std::string &name() const { return name_; }
 
+  // Returns the time, in seconds, since this path was last modified
+  int32_t GetModificationAge() const;
+
   // Create this file or directory, if a file or directory is not already there.
   // Any missing parent directories will automatically be created to parent this
   // entry.

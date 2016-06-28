@@ -20,12 +20,12 @@
 #include <memory>
 #include <string>
 
+#include "utils/fs/disk.h"
 #include "utils/fs/path.h"
 
 namespace profiler {
 
 class File;
-class FileStat;
 class FileSystem;
 
 // A handle to a directory location. The directory may or may not exist; use
@@ -69,8 +69,9 @@ class Dir final : public Path {
   std::shared_ptr<File> GetOrNewFile(const std::string &path);
 
   // Walk each file in this directory, triggering a callback for each file
-  // visited.
-  void WalkFiles(std::function<void(const FileStat &)> callback);
+  // visited. The callback will be triggered in an order where the paths can
+  // safely be deleted (i.e. children first).
+  void Walk(std::function<void(const PathStat &)>) const;
 
  protected:
   // Don't create directly. Use |GetDir| or |NewDir| from a parent directory
