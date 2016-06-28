@@ -280,6 +280,35 @@ public class SdkDownloadGradleTest {
     }
 
     @Test
+    public void checkNdkDownloading() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + OLD_PLATFORM
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + OLD_BUILD_TOOLS
+                        + "\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.ndkBuild.path \"src/main/cpp/Android.mk\"");
+
+        TestFileUtils.appendToFile(
+                project.getLocalProp(), System.lineSeparator() + "ndk.dir=/dummy");
+
+        Files.write(project.file("src/main/cpp/Android.mk").toPath(),
+                androidMk.getBytes(StandardCharsets.UTF_8));
+
+        project.executor().run("assembleDebug");
+
+        File ndkBundle = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        assertThat(ndkBundle).isDirectory();
+
+        File ndkBuild = FileUtils.join(mSdkHome, SdkConstants.FD_NDK, "ndk-build");
+        assertThat(ndkBuild).exists();
+    }
+
+    @Test
     public void checkDependencies_androidRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

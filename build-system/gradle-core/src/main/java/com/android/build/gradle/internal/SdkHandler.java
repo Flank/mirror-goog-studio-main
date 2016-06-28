@@ -281,6 +281,13 @@ public class SdkHandler {
     }
 
     /**
+     * Installs the NDK.
+     */
+    public void installNdk() {
+        ndkFolder = sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
+    }
+
+    /**
      * Installs CMake.
      */
     public void installCMake() {
