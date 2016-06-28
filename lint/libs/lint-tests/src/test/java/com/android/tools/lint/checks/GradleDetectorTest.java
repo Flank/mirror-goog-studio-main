@@ -620,6 +620,30 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "}\n")));
     }
 
+    public void testOldFabric() throws Exception {
+        // This version of Fabric created a unique string for every build which results in
+        // Hotswaps getting disabled due to resource changes
+        mEnabled = Collections.singleton(DEPENDENCY);
+        assertEquals(""
+                + "build.gradle:3: Warning: Use Fabric Gradle plugin version 1.21.6 or later to improve Instant Run performance (was 1.21.2) [GradleDependency]\n"
+                + "    classpath 'io.fabric.tools:gradle:1.21.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:4: Warning: Use Fabric Gradle plugin version 1.21.6 or later to improve Instant Run performance (was 1.20.0) [GradleDependency]\n"
+                + "    classpath 'io.fabric.tools:gradle:1.20.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
+
+                lintProject(source("build.gradle", ""
+                        + "buildscript {\n"
+                        + "  dependencies {\n"
+                        + "    classpath 'io.fabric.tools:gradle:1.21.2'\n" // Not OK
+                        + "    classpath 'io.fabric.tools:gradle:1.20.0'\n" // Old
+                        + "    classpath 'io.fabric.tools:gradle:1.22.0'\n" // OK
+                        + "    classpath 'io.fabric.tools:gradle:1.+'\n" // OK
+                        + "  }\n"
+                        + "}\n")));
+    }
+
     @Override
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
             @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
