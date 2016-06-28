@@ -1,4 +1,5 @@
 add_library(perfa SHARED
+            support/vm_stats_sampler.cc
             support/profiler_service.cc
             support/event_passthrough.cc
             support/http_tracker.cc

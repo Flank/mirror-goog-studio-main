@@ -22,6 +22,7 @@
 #include <grpc++/grpc++.h>
 
 #include "proto/internal_event.grpc.pb.h"
+#include "proto/internal_memory.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
 #include "proto/perfa_service.grpc.pb.h"
 
@@ -36,6 +37,10 @@ class Perfa {
 
   bool WriteData(const proto::ProfilerData& data);
 
+  const proto::InternalMemoryService::Stub& memory_stub() {
+    return *memory_stub_;
+  }
+
   const proto::InternalNetworkService::Stub& network_stub() {
     return *network_stub_;
   }
@@ -48,6 +53,7 @@ class Perfa {
   ~Perfa() = delete;  // TODO: Support destroying perfa.
 
   std::unique_ptr<proto::PerfaService::Stub> service_stub_;
+  std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
 

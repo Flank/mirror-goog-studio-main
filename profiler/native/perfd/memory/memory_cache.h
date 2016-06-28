@@ -28,36 +28,42 @@ namespace profiler {
 
 // Class to provide memory data saving interface, this is an empty definition.
 class MemoryCache {
-public:
+ public:
   explicit MemoryCache(const Clock& clock, int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
-  void SaveInstanceCountSample(const proto::MemoryData::InstanceCountSample& sample);
-  void SaveGcSample(const proto::MemoryData::GcSample& sample);
+  void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
   bool StartHeapDumpSample(const proto::MemoryData::HeapDumpSample& sample);
   bool EndHeapDumpSample(int64_t end_time, bool success);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
-      proto::MemoryData* response);
+                      proto::MemoryData* response);
   void LoadHeapDumpData(int64_t start_time_exl, int64_t end_time_inc,
-      proto::MemoryData* response);
+                        proto::MemoryData* response);
 
-private:
-  std::unique_ptr<proto::MemoryData_MemorySample[]> memory_samples_;
-  std::unique_ptr<proto::MemoryData_HeapDumpSample[]> heap_dump_samples_;
-  std::mutex memory_samples_mutex_;
-  std::mutex heap_dump_samples_mutex_;
+ private:
   const Clock& clock_;
+
+  std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;
+  std::unique_ptr<proto::MemoryData::VmStatsSample[]> vm_stats_samples_;
+  std::unique_ptr<proto::MemoryData::HeapDumpSample[]> heap_dump_samples_;
+  std::mutex memory_samples_mutex_;
+  std::mutex vm_stats_samples_mutex_;
+  std::mutex heap_dump_samples_mutex_;
+
   int32_t put_memory_sample_index_;
+  int32_t put_vm_stats_sample_index_;
   int32_t put_heap_dump_sample_index_;
   int32_t samples_capacity_;
+
   bool memory_samples_buffer_full_;
+  bool vm_stats_samples_buffer_full_;
   bool heap_dump_samples_buffer_full_;
   bool has_unfinished_heap_dump_sample_;
 
   int32_t IncrementSampleIndex(int32_t index);
 };
 
-} // namespace profiler
+}  // namespace profiler
 
-#endif // MEMORY_CACHE_H_
+#endif  // MEMORY_CACHE_H_

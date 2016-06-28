@@ -1,4 +1,5 @@
 add_library(profiler_memory
+            internal_memory_service.cc
             memory_cache.cc
             memory_collector.cc
             memory_service.cc

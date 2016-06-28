@@ -62,15 +62,11 @@ message MemoryData {
     int64 total_mem = 8;
   }
 
-  message InstanceCountSample {
+  message VmStatsSample {
     int64 timestamp = 1;
-    int32 java_instance_count = 2;
-  }
-
-  message GcSample {
-    int64 timestamp = 1;
-    int32 instances_created = 2;
-    int32 instances_destroyed = 3;
+    int32 java_allocation_count = 2;
+    int32 java_free_count = 3;
+    int32 gc_count = 4;
   }
 
   message HeapDumpSample {
@@ -82,9 +78,8 @@ message MemoryData {
 
   int64 end_timestamp = 1; // end timestamp after which values are yet to be queried for
   repeated MemorySample mem_samples = 2;
-  repeated InstanceCountSample instance_count_samples = 3;
-  repeated GcSample gc_samples = 4;
-  repeated HeapDumpSample heap_dump_samples = 5;
+  repeated VmStatsSample vm_stats_samples = 3;
+  repeated HeapDumpSample heap_dump_samples = 4;
 }
 
 message HeapDumpRequest {
