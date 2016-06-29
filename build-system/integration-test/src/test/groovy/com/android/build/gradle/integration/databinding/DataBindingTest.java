@@ -42,24 +42,25 @@ import java.util.List;
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 
-    @Parameterized.Parameters(name="library={0},forExperimentalPlugin={1},withoutAdapters={2}")
+    @Parameterized.Parameters(name="library={0},forExperimentalPlugin={1},withoutAdapters={2},jack={3}")
     public static Collection<Object[]> getParameters() {
         List<Object[]> options = new ArrayList<>();
-        for (int i = 0 ; i < 8; i ++) {
+        for (int i = 0 ; i < 16; i ++) {
             options.add(new Object[]{
-                (i & 1) != 0, (i & 2) != 0, (i & 4) != 0
+                (i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0
             });
         }
         return options;
     }
     private final boolean myWithoutAdapters;
     private final boolean myLibrary;
+    private final boolean myUseJack;
     private final String buildFile;
 
-    public DataBindingTest(boolean library, boolean forExperimentalPlugin, boolean withoutAdapters) {
+    public DataBindingTest(boolean library, boolean forExperimentalPlugin, boolean withoutAdapters,
+            boolean useJack) {
         myWithoutAdapters = withoutAdapters;
         myLibrary = library;
-
         List<String> options = new ArrayList<>();
         if (library) {
             options.add("library");
@@ -70,9 +71,13 @@ public class DataBindingTest {
         if (forExperimentalPlugin) {
             options.add("forexperimental");
         }
+        myUseJack = useJack;
         project = GradleTestProject.builder()
                 .fromTestProject("databinding")
                 .useExperimentalGradleVersion(forExperimentalPlugin)
+                .withJack(myUseJack)
+                .withBuildToolsVersion(
+                        useJack ? GradleTestProject.UPCOMING_BUILD_TOOL_VERSION : null)
                 .create();
         buildFile = options.isEmpty()
                 ? null
@@ -83,8 +88,8 @@ public class DataBindingTest {
     public final GradleTestProject project;
 
     @Before
-    public void skipOnJack() throws Exception {
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
+    public void skipLibraryJack() {
+        Assume.assumeTrue(!myUseJack || !myLibrary);
     }
 
     @Test

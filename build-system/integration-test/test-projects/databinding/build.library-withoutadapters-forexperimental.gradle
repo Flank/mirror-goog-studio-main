@@ -22,7 +22,7 @@ apply from: "../commonLocalRepo.gradle"
 
 model {
     android {
-        compileSdkVersion = 23
+        compileSdkVersion = rootProject.latestCompileSdk
         buildToolsVersion = rootProject.buildToolsVersion
     }
 

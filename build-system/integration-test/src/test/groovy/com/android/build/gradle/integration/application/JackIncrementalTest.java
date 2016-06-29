@@ -83,6 +83,5 @@ public class JackIncrementalTest {
                 + "android.compileOptions.incremental false\n");
         project.execute("clean", "assembleDebug");
         assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug")).doesNotExist();
-
     }
 }
