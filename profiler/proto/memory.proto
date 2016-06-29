@@ -20,9 +20,12 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "MemoryProfilerService";
 
 service MemoryService {
-  rpc SetMemoryConfig(MemoryConfig) returns (MemoryStatus) {}
-  rpc GetData(MemoryRequest) returns (MemoryData) {}
-  rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {}
+  rpc SetMemoryConfig(MemoryConfig) returns (MemoryStatus) {
+  }
+  rpc GetData(MemoryRequest) returns (MemoryData) {
+  }
+  rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {
+  }
 }
 
 enum MemoryFeature {
@@ -46,8 +49,8 @@ message MemoryStatus {
 
 message MemoryRequest {
   int32 app_id = 1;
-  int64 start_time = 2; // exclusive
-  int64 end_time = 3; // inclusive
+  int64 start_time = 2;  // exclusive
+  int64 end_time = 3;    // inclusive
 }
 
 message MemoryData {
@@ -69,6 +72,14 @@ message MemoryData {
     int32 gc_count = 4;
   }
 
+  // A HeapDumpSample is returned if either the start_time or end_time falls
+  // within the MemoryRequest time window.
+  // e.g. A sample can be returned across multiple requests:
+  // 1. When a heap dump is first triggered with start_time specified.
+  // 2. When the heap dump completes/fails with end_time specified.
+  //
+  // It is the responsibility of the requester to dedupe a completed sample if
+  // there was an unfinished sample that was previously sent.
   message HeapDumpSample {
     int64 start_time = 1;
     int64 end_time = 2;
@@ -76,7 +87,8 @@ message MemoryData {
     string file_path = 4;
   }
 
-  int64 end_timestamp = 1; // end timestamp after which values are yet to be queried for
+  // end timestamp after which values are yet to be queried for
+  int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
   repeated VmStatsSample vm_stats_samples = 3;
   repeated HeapDumpSample heap_dump_samples = 4;
@@ -96,4 +108,3 @@ message HeapDumpResponse {
   }
   Status status = 1;
 }
-
