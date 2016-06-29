@@ -67,7 +67,7 @@ class NetworkCollector final {
   // Thread that network profile operations run on.
   std::thread profiler_thread_;
   // True if profile operations is running, false otherwise.
-  std::atomic_bool is_running_;
+  std::atomic_bool is_running_{false};
   // Vector to hold data collectors which may need some steps to create.
   std::vector<std::unique_ptr<NetworkSampler>> samplers_;
 };
