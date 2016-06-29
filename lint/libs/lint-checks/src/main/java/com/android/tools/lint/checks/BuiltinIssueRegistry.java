@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 275;
+    static final int INITIAL_CAPACITY = 276;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -105,6 +105,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
         issues.add(ExtraTextDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
+        issues.add(FirebaseAnalyticsDetector.INVALID_EVENT_NAME);
         issues.add(FullBackupContentDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
@@ -339,7 +340,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 80;
+                initialSize += 81;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 15;
             } else if (scope.contains(Scope.MANIFEST)) {
