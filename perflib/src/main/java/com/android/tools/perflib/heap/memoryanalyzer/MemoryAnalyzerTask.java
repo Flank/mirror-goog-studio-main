@@ -35,6 +35,6 @@ public abstract class MemoryAnalyzerTask implements AnalyzerTask {
         }
     }
 
-    abstract List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
-            @NonNull Snapshot snapshot);
+    protected abstract List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
+                                                         @NonNull Snapshot snapshot);
 }
