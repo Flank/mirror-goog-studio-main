@@ -57,7 +57,7 @@ NetworkProfilerServiceImpl::GetData(grpc::ServerContext *context,
                           "Network data for specific pid not found.");
   }
 
-  proto::NetworkDataRequest_NetworkDataType type = request->data_type();
+  proto::NetworkDataRequest::Type type = request->type();
   int64_t start_time = request->start_timestamp();
   int64_t end_time = request->end_timestamp();
   for (auto &value : found_buffer->GetValues(start_time, end_time)) {
