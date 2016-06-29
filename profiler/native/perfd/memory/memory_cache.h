@@ -38,8 +38,6 @@ class MemoryCache {
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
-  void LoadHeapDumpData(int64_t start_time_exl, int64_t end_time_inc,
-                        proto::MemoryData* response);
 
  private:
   const Clock& clock_;
