@@ -44,7 +44,6 @@ bool BashCommandRunner::Run(const string &parameters, string *output) const {
 
 bool BashCommandRunner::RunAndReadOutput(const string &cmd,
                                          string *output) const {
-  Log::I("Running '%s'.\n", cmd.c_str());
   char buffer[1024];
   FILE *pipe = popen(cmd.c_str(), "r");
   if (pipe == nullptr) {
