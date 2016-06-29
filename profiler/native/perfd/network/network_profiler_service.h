@@ -54,15 +54,18 @@ class NetworkProfilerServiceImpl final
                               proto::HttpDetailsResponse *response) override;
 
  private:
-  // Start sampling data for device network information (pid == -1), or sampling
-  // data for a given app.
-  void StartCollector(int pid);
+  // Start sampling data for device network information.
+  void StartDeviceCollector();
+  // Start sampling data for a given app (non-zero |pid|).
+  void StartAppCollector(int32_t pid);
+  void StartCollectorFor(NetworkProfilerBuffer *buffer, int32_t sample_rate_ms);
 
   // Max number of profiler data instances that a buffer can hold.
   static const int kBufferCapacity = 10 * 60 * 10;
 
   // TODO: The vectors may need mutex.
-  std::vector<std::unique_ptr<NetworkProfilerBuffer>> buffers_;
+  std::unique_ptr<NetworkProfilerBuffer> device_buffer_;
+  std::vector<std::unique_ptr<NetworkProfilerBuffer>> app_buffers_;
   std::vector<std::unique_ptr<NetworkCollector>> collectors_;
 
   NetworkCache &network_cache_;

@@ -95,10 +95,12 @@ message NetworkDataRequest {
   enum Type {
     // All types of network data are requested.
     ALL = 0;
-    // Network transmitted and received bytes.
-    TRAFFIC = 1;
     // Default network type (wifi or mobile) and radio power state.
-    CONNECTIVITY = 2;
+    // This data is device-wide and the same values will be returned across all
+    // valid |app_id| values.
+    CONNECTIVITY = 1;
+    // Network transmitted and received bytes.
+    TRAFFIC = 2;
     // Number of open connections.
     CONNECTIONS = 3;
   }
