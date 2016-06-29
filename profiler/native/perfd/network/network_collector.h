@@ -35,10 +35,8 @@ class NetworkCollector final {
  public:
   // Each collector for pid specific information, if pid is -1, it is device
   // network information.
-  // TODO: Replace unique_ptr with pointer to make API simpler.
-  NetworkCollector(int pid, int sample_ms,
-                   const std::unique_ptr<NetworkProfilerBuffer> &buffer)
-      : pid_(pid), sample_us_(sample_ms * 1000), buffer_(buffer.get()) {}
+  NetworkCollector(int pid, int sample_ms, NetworkProfilerBuffer* buffer)
+      : pid_(pid), sample_us_(sample_ms * 1000), buffer_(*buffer) {}
   ~NetworkCollector();
 
   // Creates a thread that collects and saves network data continually.
@@ -63,7 +61,7 @@ class NetworkCollector final {
   // Sample frequency.
   int sample_us_;
   // Buffer that holds sample data so far.
-  NetworkProfilerBuffer *buffer_;
+  NetworkProfilerBuffer& buffer_;
   // Thread that network profile operations run on.
   std::thread profiler_thread_;
   // True if profile operations is running, false otherwise.
@@ -74,4 +72,4 @@ class NetworkCollector final {
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_NETWORK_COLLECTOR_H_
+#endif  // PERFD_NETWORK_NETWORK_COLLECTOR_H_
