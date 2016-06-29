@@ -92,7 +92,7 @@ message NetworkDataRequest {
     // app_id field special value, it means these data is applicable to any app.
     ANY_APP = -1;
   }
-  enum NetworkDataType {
+  enum Type {
     // All types of network data are requested.
     ALL = 0;
     // Network transmitted and received bytes.
@@ -105,7 +105,7 @@ message NetworkDataRequest {
   int32 app_id = 1;
   int64 start_timestamp = 2;
   int64 end_timestamp = 3;
-  NetworkDataType data_type = 4;
+  Type type = 4;
 }
 
 message NetworkDataResponse {
