@@ -32,8 +32,8 @@ import java.util.Set;
 public class DuplicatedStringsAnalyzerTask extends MemoryAnalyzerTask {
 
     @Override
-    List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
-            @NonNull Snapshot snapshot) {
+    protected List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
+                                                @NonNull Snapshot snapshot) {
         List<AnalysisResultEntry> results = new ArrayList<AnalysisResultEntry>();
 
         HashMultimap<String, ClassInstance> stringIndex = HashMultimap.create();
