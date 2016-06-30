@@ -43,9 +43,11 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     // Native function to send touch event states via RPC to perfd.
     private native void sendTouchEvent(int state);
+    private native void sendKeyEvent(int state);
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
+        sendKeyEvent(keyEvent.getAction());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchKeyEvent(keyEvent);
         }
