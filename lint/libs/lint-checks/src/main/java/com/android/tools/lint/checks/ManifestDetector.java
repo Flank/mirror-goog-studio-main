@@ -43,6 +43,7 @@ import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
+import static com.android.tools.lint.checks.GradleDetector.GMS_GROUP_ID;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
@@ -63,6 +64,8 @@ import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceUrl;
+import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -699,9 +702,11 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                     return;
                 }
                 // Ensure that the play-services-wearable version dependency is >= 8.2.0
-                Variant variant = context.getMainProject().getCurrentVariant();
+                Project project = context.getMainProject();
+                Variant variant = project.getCurrentVariant();
                 if (variant != null) {
-                    Dependencies dependencies = variant.getMainArtifact().getDependencies();
+                    Dependencies dependencies = GradleDetector.getCompileDependencies(
+                            variant.getMainArtifact(), project.getGradleModelVersion());
                     for (AndroidLibrary library : dependencies.getLibraries()) {
                         if (hasWearableGmsDependency(library)) {
                             context.report(WEARABLE_BIND_LISTENER,
@@ -714,18 +719,19 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 }
                 // It's possible they are using an older version of play services so
                 // check the build version and report an error if compileSdkVersion >= 24
-                if (context.getMainProject().getBuildSdk() >= 24) {
+                if (project.getBuildSdk() >= 24) {
                     File sdkHome = context.getClient().getSdkHome();
+                    FileOp fileOp = FileOpUtils.create();
                     File repository =
-                            SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true);
+                            SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true, fileOp);
                     String message = "The `com.google.android.gms.wearable.BIND_LISTENER`" +
                             " action is deprecated. Please upgrade to the latest version" +
                             " of play-services-wearable 8.2.0 or later";
                     if (repository != null) {
                         GradleCoordinate max = MavenRepositories
-                                .getHighestInstalledVersion("com.google.android.gms", //$NON-NLS-1$
+                                .getHighestInstalledVersion(GMS_GROUP_ID,
                                         "play-services-wearable", //$NON-NLS-1$
-                                        repository, null, false);
+                                        repository, null, false, fileOp);
                         if (max != null
                                 && COMPARE_PLUS_HIGHER.compare(max, MIN_WEARABLE_GMS_VERSION) > 0) {
                             message = String.format(
@@ -982,11 +988,11 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
     // Method to check if the app has a gms wearable dependency that
     // matches the specific criteria i.e >= MIN_WEARABLE_GMS_VERSION
-    private boolean hasWearableGmsDependency(AndroidLibrary library) {
+    private static boolean hasWearableGmsDependency(AndroidLibrary library) {
         MavenCoordinates mc = library.getResolvedCoordinates();
         if (mc != null
-            && mc.getArtifactId().equals("play-services-wearable") //$NON-NLS-1$
-            && mc.getGroupId().equals("com.google.android.gms")) { //$NON-NLS-1$
+                && mc.getGroupId().equals(GMS_GROUP_ID)
+                && mc.getArtifactId().equals("play-services-wearable")) { //$NON-NLS-1$
             GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
             if (COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0) {
                 return true;
