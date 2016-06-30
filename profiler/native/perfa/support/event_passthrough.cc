@@ -23,6 +23,7 @@ using grpc::ClientContext;
 using profiler::SteadyClock;
 using profiler::Perfa;
 using profiler::proto::ActivityEventData;
+using profiler::proto::FragmentEventData;
 using profiler::proto::EventProfilerData;
 using profiler::proto::SystemEventData;
 using profiler::proto::ProfilerData;
@@ -62,6 +63,19 @@ void SendActivityEvent(JNIEnv* env, const jstring& name,
   activity->set_activity_hash(hash);
   SendData(&data);
 }
+
+void SendFragmentEvent(JNIEnv* env, const jstring& name,
+                       const FragmentEventData::FragmentState& state,
+                       int hash) {
+  const char* nativeString = env->GetStringUTFChars(name, 0);
+  EventProfilerData data;
+  FragmentEventData* fragment = data.mutable_fragment_data();
+  fragment->set_name(nativeString);
+  fragment->set_fragment_state(state);
+  fragment->set_fragment_hash(hash);
+  SendData(&data);
+}
+
 }
 
 extern "C" {
@@ -72,6 +86,15 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
     JNIEnv* env, jobject thiz, jint jstate) {
   SystemEventData event;
   event.set_type(SystemEventData::TOUCH);
+  event.set_action_id((int)jstate);
+  SendSystemEvent(event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendKeyEvent(
+    JNIEnv* env, jobject thiz, jint jstate) {
+  SystemEventData event;
+  event.set_type(SystemEventData::KEY);
   event.set_action_id((int)jstate);
   SendSystemEvent(event);
 }
@@ -117,4 +140,16 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivitySave
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
   SendActivityEvent(env, jname, ActivityEventData::SAVED, jhash);
 }
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
+    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
+  SendFragmentEvent(env, jname, FragmentEventData::ADDED, jhash);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemoved(
+    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
+  SendFragmentEvent(env, jname, FragmentEventData::REMOVED, jhash);
+}
+
 };

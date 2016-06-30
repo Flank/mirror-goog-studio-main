@@ -45,6 +45,7 @@ message SystemEventData {
   enum SystemEventType {
     UNSPECIFIED = 0;
     TOUCH = 1;
+    KEY = 2;
   }
 
   SystemEventType type = 1;
@@ -80,8 +81,8 @@ message FragmentEventData {
   // The current state of a fragment.
   enum FragmentState {
     UNSPECIFIED = 0;
-    ACTIVATED = 1;
-    DISABLED = 2;
+    ADDED = 1;
+    REMOVED = 2;
   }
   string name = 1;
   FragmentState fragment_state = 2;
