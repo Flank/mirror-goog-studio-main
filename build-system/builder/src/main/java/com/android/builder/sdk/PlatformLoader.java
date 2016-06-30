@@ -134,7 +134,7 @@ public class PlatformLoader implements SdkLoader {
     public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         progress.logWarning("Installing missing SDK components is not supported when building"
-                + "using an SDK from platfrom prebuilds.");
+                + " using an SDK from platfrom prebuilds.");
         return null;
     }
 
