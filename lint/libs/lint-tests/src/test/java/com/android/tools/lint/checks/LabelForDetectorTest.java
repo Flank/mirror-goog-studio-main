@@ -27,13 +27,13 @@ public class LabelForDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-        "res/layout/labelfor.xml:54: Warning: No label views point to this text field with an android:labelFor=\"@+id/@+id/editText2\" attribute [LabelFor]\n" +
+        "res/layout/labelfor.xml:54: Warning: No label views point to this text field with an android:labelFor=\"@+id/editText2\" attribute [LabelFor]\n" +
         "    <EditText\n" +
         "    ^\n" +
-        "res/layout/labelfor.xml:61: Warning: No label views point to this text field with an android:labelFor=\"@+id/@+id/autoCompleteTextView2\" attribute [LabelFor]\n" +
+        "res/layout/labelfor.xml:61: Warning: No label views point to this text field with an android:labelFor=\"@+id/autoCompleteTextView2\" attribute [LabelFor]\n" +
         "    <AutoCompleteTextView\n" +
         "    ^\n" +
-        "res/layout/labelfor.xml:68: Warning: No label views point to this text field with an android:labelFor=\"@+id/@+id/multiAutoCompleteTextView2\" attribute [LabelFor]\n" +
+        "res/layout/labelfor.xml:68: Warning: No label views point to this text field with an android:labelFor=\"@+id/multiAutoCompleteTextView2\" attribute [LabelFor]\n" +
         "    <MultiAutoCompleteTextView\n" +
         "    ^\n" +
         "0 errors, 3 warnings\n",
