@@ -50,6 +50,7 @@ public class VmTraceData {
     private final VmClockType mVmClockType;
     private final String mVm;
     private final Map<String, String> mTraceProperties;
+    private final long mStartTimeUs;
 
     /** Map from method id to method info. */
     private final Map<Long,MethodInfo> mMethods;
@@ -64,6 +65,7 @@ public class VmTraceData {
         mVm = b.mVm;
         mTraceProperties = b.mProperties;
         mMethods = b.mMethods;
+        mStartTimeUs = b.mStartTimeUs;
 
         mThreadInfo = Maps.newHashMapWithExpectedSize(b.mThreads.size());
         for (int i = 0; i < b.mThreads.size(); i++) {
@@ -138,6 +140,10 @@ public class VmTraceData {
         return mMethods.get(methodId);
     }
 
+    public long getStartTimeUs() {
+        return mStartTimeUs;
+    }
+
     /** Returns the duration of this call as a percentage of the duration of the top level call. */
     public double getDurationPercentage(Call call, ThreadInfo thread, ClockType clockType,
             boolean inclusiveTime) {
@@ -208,6 +214,7 @@ public class VmTraceData {
         private static final boolean DEBUG = false;
 
         private int mVersion;
+        private long mStartTimeUs;
         private boolean mDataFileOverflow;
         private VmClockType mVmClockType = VmClockType.THREAD_CPU;
         private String mVm = "";
@@ -309,6 +316,10 @@ public class VmTraceData {
             }
 
             return new VmTraceData(this);
+        }
+
+        public void setStartTimeUs(long startTimeUs) {
+            mStartTimeUs =  startTimeUs;
         }
     }
 }

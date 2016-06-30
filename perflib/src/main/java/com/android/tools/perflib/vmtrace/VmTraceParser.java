@@ -359,7 +359,8 @@ public class VmTraceParser {
         int offsetToData = buffer.getShort() - 16;
 
         // read startWhen
-        buffer.getLong();
+        mTraceDataBuilder.setStartTimeUs(buffer.getLong());
+
 
         // read record size
         int recordSize;
