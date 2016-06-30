@@ -19,6 +19,9 @@
 #include <atomic>
 #include <thread>
 
+#include "utils/clock.h"
+#include "utils/stopwatch.h"
+
 namespace profiler {
 
 CpuCollector::~CpuCollector() {
@@ -40,10 +43,17 @@ void CpuCollector::Stop() {
 }
 
 void CpuCollector::Collect() {
+  Stopwatch stopwatch;
   while (is_running_.load()) {
+    stopwatch.Start();
     usage_sampler_.Sample();
     thread_monitor_.Monitor();
-    usleep(sampling_interval_in_us_);
+    int64_t elapsed_time_us = Clock::ns_to_us(stopwatch.GetElapsed());
+    if (sampling_interval_in_us_ > elapsed_time_us) {
+      usleep(sampling_interval_in_us_ - elapsed_time_us);
+    } else {
+      // Do not sleep. Read data for the next round immediately.
+    }
   }
 }
 
