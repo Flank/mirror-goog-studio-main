@@ -5,6 +5,20 @@ if [[ "$PWD" != */tools/base/profiler ]]; then
     exit
 fi
 
+if [[ -z "$ANDROID_HOME" ]]; then
+    echo "You must define the ANDROID_HOME enviroment variable"
+    echo "This ensures we use the same adb binary that Studio uses"
+    exit
+fi
+
+adb_exe=$ANDROID_HOME/platform-tools/adb
+
+if [[ ! -e $adb_exe ]]; then
+    echo "adb binary not found at: $adb_exe"
+    echo "Verify ANDROID_HOME?"
+    exit
+fi
+
 host=$1
 
 if [[ -z "$host" ]]; then
@@ -23,6 +37,6 @@ fi
 
 perfd_install_path="/data/local/tmp/perfd/"
 echo "Installing perfd onto device: $perfd_install_path"
-adb shell mkdir -p $perfd_install_path
-adb push $perfd_path $perfd_install_path && adb shell $perfd_install_path/perfd
+"$adb_exe" shell mkdir -p $perfd_install_path
+"$adb_exe" push $perfd_path $perfd_install_path && "$adb_exe" shell $perfd_install_path/perfd
 
