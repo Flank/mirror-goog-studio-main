@@ -54,6 +54,8 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private native void sendActivityStopped(String name, int hashCode);
     private native void sendActivitySaved(String name, int hashCode);
     private native void sendActivityDestroyed(String name, int hashCode);
+    private native void sendFragmentAdded(String name, int hashCode);
+    private native void sendFragmentRemoved(String name, int hashCode);
 
     /**
      * This class handles updating the callback for any activities that are activated or created. We
@@ -200,20 +202,27 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
      * @param <E> This value should either be android.app.Fragment, or android.support.v4.app.Fragment.
      */
     // TODO Have fragment events get sent back to Android Studio
-    private static class FragmentList<E> extends ArrayList<E> {
+    private class FragmentList<E> extends ArrayList<E> {
 
         @Override
         public boolean add(E fragment) {
+            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
             return super.add(fragment);
         }
 
         @Override
         public void add(int index, E fragment) {
+            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
             super.add(index, fragment);
         }
 
         @Override
         public E set(int index, E fragment) {
+            if (fragment == null) {
+                sendFragmentRemoved(get(index).getClass().getName(), get(index).hashCode());
+            } else {
+                sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
+            }
             return super.set(index, fragment);
         }
     }
