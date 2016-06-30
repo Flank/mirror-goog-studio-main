@@ -37,9 +37,10 @@ public class Call {
      * In this model, they are stored as integers, but the getters for all of these time values
      * convert them into longs.
      */
-    private final int mEntryThreadTime;
     private final int mEntryGlobalTime;
     private final int mExitGlobalTime;
+
+    private final int mEntryThreadTime;
     private final int mExitThreadTime;
 
     private final long mInclusiveThreadTimeInCallees;

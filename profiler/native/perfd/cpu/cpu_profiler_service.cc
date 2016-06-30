@@ -15,20 +15,23 @@
  */
 #include "perfd/cpu/cpu_profiler_service.h"
 
-#include <grpc++/grpc++.h>
-#include <vector>
-
 #include "proto/cpu_profiler_data.grpc.pb.h"
+#include "utils/activity_manager.h"
 
 using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
 using profiler::proto::CpuProfilerData;
+using profiler::proto::CpuProfilingAppStartRequest;
+using profiler::proto::CpuProfilingAppStartResponse;
+using profiler::proto::CpuProfilingAppStopRequest;
+using profiler::proto::CpuProfilingAppStopResponse;
 using profiler::proto::CpuStartRequest;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopRequest;
 using profiler::proto::CpuStopResponse;
+using std::string;
 using std::vector;
 
 namespace profiler {
@@ -66,6 +69,45 @@ grpc::Status CpuProfilerServiceImpl::StopMonitoringApp(
     status = thread_monitor_.RemoveProcess(request->app_id());
   }
   response->set_status(status);
+  return Status::OK;
+}
+
+grpc::Status CpuProfilerServiceImpl::StartProfilingApp(
+    ServerContext* context, const CpuProfilingAppStartRequest* request,
+    CpuProfilingAppStartResponse* response) {
+  // TODO: Move the activity manager to the daemon.
+  // It should be shared with everything in perfd.
+  ActivityManager am;
+  string trace_path;
+  string error;
+  auto mode = ActivityManager::SAMPLING;
+  if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
+    mode = ActivityManager::INSTRUMENTED;
+  }
+  bool success =
+      am.StartProfiling(mode, request->app_pkg_name(), &trace_path, &error);
+  if (success) {
+    response->set_trace_filename(trace_path);
+    response->set_status(CpuProfilingAppStartResponse::SUCCESS);
+  } else {
+    response->set_status(CpuProfilingAppStartResponse::FAILURE);
+    response->set_error_message(error);
+  }
+  return Status::OK;
+}
+
+grpc::Status CpuProfilerServiceImpl::StopProfilingApp(
+    ServerContext* context, const CpuProfilingAppStopRequest* request,
+    CpuProfilingAppStopResponse* response) {
+  ActivityManager am;
+  string error;
+  bool success = am.StopProfiling(request->app_pkg_name(), &error);
+  if (success) {
+    response->set_status(CpuProfilingAppStopResponse::SUCCESS);
+  } else {
+    response->set_status(CpuProfilingAppStopResponse::FAILURE);
+    response->set_error_message(error);
+  }
   return Status::OK;
 }
 

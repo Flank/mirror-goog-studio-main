@@ -33,11 +33,10 @@ class ActivityManager : public BashCommandRunner {
   // code instrumentation.
   // Returns true is profiling started successfully. Otherwise false
   // and populate error_string.
-  // TODO(sanglardf): Add support for INSTRUMENTED mode, only SAMPLING
-  // is supported.
+  // |trace_path| is populated with absolute path where trace is being recorded.
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
-                      std::string *error_string) const;
+                      std::string *trace_path, std::string *error_string) const;
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
   // no-op.
@@ -48,6 +47,13 @@ class ActivityManager : public BashCommandRunner {
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;
+
+ private:
+  // Returns the absolute path where a profiling trace file should be
+  // saved for a given |app_package_name|. App does not have to be up
+  // and running for this method to succeed.
+  // Generated path is unique (based on app package name and timestamp).
+  std::string GenerateTracePath(const std::string &app_package_name) const;
 };
 }  // namespace profiler
 

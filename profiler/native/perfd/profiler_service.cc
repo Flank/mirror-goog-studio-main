@@ -15,6 +15,8 @@
  */
 #include "perfd/profiler_service.h"
 
+#include <sys/time.h>
+
 #include "utils/android_studio_version.h"
 
 using grpc::ServerContext;
@@ -25,7 +27,13 @@ namespace profiler {
 Status ProfilerServiceImpl::GetTimes(
     ServerContext* context, const profiler::proto::TimesRequest* request,
     profiler::proto::TimesResponse* response) {
-  response->set_timestamp(clock_.GetCurrentTime());
+  response->set_timestamp_ns(clock_.GetCurrentTime());
+
+  // TODO: Move this to utils.
+  timeval time;
+  gettimeofday(&time, NULL);
+  int64_t t = time.tv_sec * 1000000 + time.tv_usec;
+  response->set_epoch_timestamp_us(t);
   return Status::OK;
 }
 
