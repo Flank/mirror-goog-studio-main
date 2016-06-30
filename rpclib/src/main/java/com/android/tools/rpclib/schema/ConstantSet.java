@@ -21,12 +21,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public final class ConstantSet {
-  private Type mType;
-  private Constant[] mEntries;
+  private final Type mType;
+  private final Constant[] mEntries;
   private HashMap<Object, List<Constant>> byValue;
   private HashMap<String, List<Constant>> byStrValue;
 
@@ -38,6 +39,11 @@ public final class ConstantSet {
 
   public static ConstantSet lookup(Type type) {
     return mRegistry.get(type);
+  }
+
+  @Override
+  public String toString() {
+    return mType + " " + Arrays.asList(mEntries).toString();
   }
 
   // Constructs a default-initialized {@link ConstantSet}.

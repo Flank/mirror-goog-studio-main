@@ -102,7 +102,7 @@ public class Rpc {
                     // Not an error, don't log.
                 }
                 catch (Exception e) {
-                    log.error(e);
+                    log.error("error in Rpc.listen", e);
                 }
             }
         }, EXECUTOR);
