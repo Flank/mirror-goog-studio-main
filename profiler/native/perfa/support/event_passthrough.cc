@@ -17,6 +17,7 @@
 #include <jni.h>
 
 #include "perfa/perfa.h"
+#include "perfa/support/jni_types.h"
 #include "utils/clock.h"
 
 using grpc::ClientContext;
@@ -28,6 +29,7 @@ using profiler::proto::EventProfilerData;
 using profiler::proto::SystemEventData;
 using profiler::proto::ProfilerData;
 using profiler::proto::EmptyEventResponse;
+using profiler::JStringWrapper;
 
 namespace {
 
@@ -52,13 +54,15 @@ void SendSystemEvent(const SystemEventData& event) {
   SendData(&data);
 }
 
+// TODO: Combine activity and fragment protos, fragments are a subset of
+// activity.
 void SendActivityEvent(JNIEnv* env, const jstring& name,
                        const ActivityEventData::ActivityState& state,
                        int hash) {
-  const char* nativeString = env->GetStringUTFChars(name, 0);
+  JStringWrapper activity_name(env, name);
   EventProfilerData data;
   ActivityEventData* activity = data.mutable_activity_data();
-  activity->set_name(nativeString);
+  activity->set_name(activity_name.get());
   activity->set_activity_state(state);
   activity->set_activity_hash(hash);
   SendData(&data);
@@ -67,15 +71,14 @@ void SendActivityEvent(JNIEnv* env, const jstring& name,
 void SendFragmentEvent(JNIEnv* env, const jstring& name,
                        const FragmentEventData::FragmentState& state,
                        int hash) {
-  const char* nativeString = env->GetStringUTFChars(name, 0);
+  JStringWrapper fragment_name(env, name);
   EventProfilerData data;
   FragmentEventData* fragment = data.mutable_fragment_data();
-  fragment->set_name(nativeString);
+  fragment->set_name(fragment_name.get());
   fragment->set_fragment_state(state);
   fragment->set_fragment_hash(hash);
   SendData(&data);
 }
-
 }
 
 extern "C" {
@@ -152,4 +155,12 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemo
   SendFragmentEvent(env, jname, FragmentEventData::REMOVED, jhash);
 }
 
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEvent(
+    JNIEnv* env, jobject thiz, jint jstate) {
+  SystemEventData event;
+  event.set_type(SystemEventData::ROTATION);
+  event.set_action_id((int)jstate);
+  SendSystemEvent(event);
+}
 };
