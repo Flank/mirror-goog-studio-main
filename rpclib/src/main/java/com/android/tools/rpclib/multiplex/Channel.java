@@ -49,12 +49,31 @@ public class Channel implements Closeable {
   }
 
   @Override
-  public synchronized void close() throws IOException {
+  public synchronized void close() {
     if (!mIsClosed) {
       mIsClosed = true;
-      mPipeInputStream.getSource().close();
-      mEventHandler.closeChannel(mId);
-      mOutputStream.close();
+      try {
+        // this actually sends an event into the channel / socket
+        // so we need to do it first before we start shutting things down
+        mEventHandler.closeChannel(mId);
+      }
+      catch (IOException ex) {
+        // ignored
+      }
+      try {
+        // shuts down the internal threads
+        mPipeInputStream.getSource().close();
+      }
+      catch (IOException ex) {
+        // ignored
+      }
+      try {
+        // not sure if this is needed as this just calls back to close the channel
+        mOutputStream.close();
+      }
+      catch (IOException ex) {
+        // ignored
+      }
     }
   }
 
@@ -62,11 +81,23 @@ public class Channel implements Closeable {
     mPipeInputStream.getSource().write(data);
   }
 
-  synchronized void closeNoEvent() throws IOException {
+  synchronized void closeNoEvent() {
     if (!mIsClosed) {
       mIsClosed = true;
-      mPipeInputStream.getSource().close();
-      mOutputStream.close();
+      try {
+        // shuts down the internal threads
+        mPipeInputStream.getSource().close();
+      }
+      catch (IOException ex) {
+        // ignored
+      }
+      try {
+        // not sure if this is needed as this just calls back to close the channel
+        mOutputStream.close();
+      }
+      catch (IOException ex) {
+        // ignored
+      }
     }
   }
 
