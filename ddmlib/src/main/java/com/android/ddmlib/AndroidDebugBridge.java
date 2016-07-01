@@ -847,7 +847,7 @@ public final class AndroidDebugBridge {
         int status = -1;
 
         String[] command = getAdbLaunchCommand("start-server");
-        String commandString = Joiner.on(',').join(command);
+        String commandString = Joiner.on(' ').join(command);
         try {
             Log.d(DDMS, String.format("Launching '%1$s' to ensure ADB is running.", commandString));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -925,7 +925,7 @@ public final class AndroidDebugBridge {
             // we'll return false;
         }
 
-        String commandString = Joiner.on(',').join(command);
+        String commandString = Joiner.on(' ').join(command);
         if (status != 0) {
             Log.w(DDMS, String.format("'%1$s' failed -- run manually if necessary", commandString));
             return false;
