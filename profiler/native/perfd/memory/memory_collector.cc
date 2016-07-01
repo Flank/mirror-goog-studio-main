@@ -103,7 +103,7 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   // Wait for heap dump file write to finish.
   int64_t prev_size = -1;
   int64_t curr_size = FileReader::GetFileSize(file_path);
-  while (prev_size != curr_size || curr_size == 0) {
+  while (prev_size != curr_size) {
     usleep(static_cast<uint64_t>(Clock::ns_to_us(kSleepNs)));
     prev_size = curr_size;
     curr_size = FileReader::GetFileSize(file_path);
