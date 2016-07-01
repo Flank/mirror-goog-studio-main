@@ -51,9 +51,6 @@ class FileReader {
   static bool CompareToken(const std::string &line, const std::string &token,
                            const int token_index);
 
-  // Returns size of file as specified in file_path.
-  static int64_t GetFileSize(const std::string &file_path);
-
  private:
   // Single system call buffer size.
   // TODO: Make the buffer size configurable in a constructor.
