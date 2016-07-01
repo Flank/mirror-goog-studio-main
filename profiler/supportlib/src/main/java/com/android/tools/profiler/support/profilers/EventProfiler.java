@@ -37,8 +37,10 @@ import java.util.Set;
  */
 public class EventProfiler implements ProfilerComponent, Application.ActivityLifecycleCallbacks {
 
+    private static final int UNINITIALIZED_ROTATION = -1;
     private Set<Activity> myActivities = new HashSet<Activity>();
     private Class mSupportLibFragment;
+    private int myCurrentRotation = UNINITIALIZED_ROTATION;
 
     public EventProfiler() {
         initialize();
@@ -56,6 +58,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private native void sendActivityDestroyed(String name, int hashCode);
     private native void sendFragmentAdded(String name, int hashCode);
     private native void sendFragmentRemoved(String name, int hashCode);
+    private native void sendRotationEvent(int rotationValue);
 
     /**
      * This class handles updating the callback for any activities that are activated or created. We
@@ -72,6 +75,21 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         if(!WindowProfilerCallback.class.isInstance(window.getCallback())) {
             window.setCallback(new WindowProfilerCallback(window.getCallback()));
         }
+    }
+
+    /**
+     * Function to send rotation event, this function is called each time an activity is resumed.
+     * Given there is no orientation changed callback we set the orientation on the first activity
+     * we get, then only send an event if the orientation changes. This works because activities get
+     * saved and resumed when the screen is rotated.
+     */
+    private void sendRotationEventIfNeeded(Activity activity) {
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        int rotation = display.getRotation();
+        if (myCurrentRotation != rotation && myCurrentRotation != UNINITIALIZED_ROTATION) {
+            sendRotationEvent(rotation);
+        }
+        myCurrentRotation = rotation;
     }
 
     private void initialize() {
@@ -169,6 +187,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     public void onActivityResumed(Activity activity) {
         myActivities.add(activity);
         updateCallback(activity);
+        sendRotationEventIfNeeded(activity);
         sendActivityResumed(activity.getLocalClassName(), activity.hashCode());
     }
 

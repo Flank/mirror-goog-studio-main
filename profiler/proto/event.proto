@@ -46,6 +46,7 @@ message SystemEventData {
     UNSPECIFIED = 0;
     TOUCH = 1;
     KEY = 2;
+    ROTATION = 3;
   }
 
   SystemEventType type = 1;
