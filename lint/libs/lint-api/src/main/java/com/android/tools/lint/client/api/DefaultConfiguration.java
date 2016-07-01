@@ -44,6 +44,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,6 +57,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of a {@link Configuration} which reads and writes
@@ -65,6 +68,7 @@ import java.util.regex.PatternSyntaxException;
  */
 @Beta
 public class DefaultConfiguration extends Configuration {
+
     private final LintClient mClient;
     /** Default name of the configuration file */
     public static final String CONFIG_FILE_NAME = "lint.xml"; //$NON-NLS-1$
@@ -84,6 +88,9 @@ public class DefaultConfiguration extends Configuration {
     private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
     @NonNull
     private static final String VALUE_ALL = "all"; //$NON-NLS-1$
+
+    private static final String RES_PATH_START = "res/"; //$NON-NLS-1$
+    private static final int RES_PATH_START_LEN = RES_PATH_START.length();
 
     private final Configuration mParent;
     private final Project mProject;
@@ -173,6 +180,32 @@ public class DefaultConfiguration extends Configuration {
                 // Also allow a prefix
                 if (relativePath.startsWith(suppressedPath)) {
                     return true;
+                }
+            }
+            // A project can have multiple resources folders. The code before this
+            // only checks for paths relative to project root (which doesn't work for paths such as
+            // res/layout/foo.xml defined in lint.xml - when using gradle where the
+            // resource directory points to src/main/res)
+            // Here we check if any of the suppressed paths are relative to the resource folders
+            // of a project.
+            Set<Path> suppressedPathSet = paths.stream()
+              .filter(p -> p.startsWith(RES_PATH_START))
+              .map(p -> Paths.get(p.substring(RES_PATH_START_LEN)))
+              .collect(Collectors.toSet());
+
+            if (!suppressedPathSet.isEmpty()) {
+                Path toCheck = file.toPath();
+                // Is it relative to any of the resource folders?
+                for (File resDir : context.getProject().getResourceFolders()) {
+                    Path path = resDir.toPath();
+                    Path relative = path.relativize(toCheck);
+                    if (suppressedPathSet.contains(relative)) {
+                        return true;
+                    }
+                    // Allow suppress the relativePath if it is a prefix
+                    if (suppressedPathSet.stream().anyMatch(relative::startsWith)) {
+                        return true;
+                    }
                 }
             }
         }
