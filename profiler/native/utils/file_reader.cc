@@ -17,12 +17,11 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <fstream>
 #include <sstream>
 
 namespace profiler {
 
-bool FileReader::Read(const std::string &file_path,
+bool FileReader::Read(const std::string& file_path,
                       std::vector<std::string> *lines) {
   std::string content;
   if (Read(file_path, &content)) {
@@ -76,13 +75,6 @@ bool FileReader::CompareToken(const std::string &line, const std::string &token,
   size_t start_pos = 0;
   bool is_found = FindTokenPosition(line, token_index, &start_pos);
   return is_found && !line.compare(start_pos, token.length(), token);
-}
-
-int64_t FileReader::GetFileSize(const std::string &file_path) {
-  std::ifstream stream(file_path, std::ifstream::binary | std::ifstream::ate);
-  int size = stream.tellg();
-  stream.close();
-  return size;
 }
 
 }  // namespace profiler
