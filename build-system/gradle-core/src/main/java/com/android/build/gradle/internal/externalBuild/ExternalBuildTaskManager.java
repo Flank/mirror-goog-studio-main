@@ -183,7 +183,7 @@ class ExternalBuildTaskManager {
                         externalBuildContext.getAndroidBuilder(),
                         project.getLogger(),
                         variantScope.getInstantRunBuildContext(),
-                        AndroidGradleOptions.isUserCacheEnabled(
+                        AndroidGradleOptions.getUserCache(
                                 variantScope.getGlobalScope().getProject()));
 
         transformManager.addTransform(tasks, variantScope, dexTransform);
