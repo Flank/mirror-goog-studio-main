@@ -111,11 +111,7 @@ public class Multiplexer {
       if (!mChannelMap.isEmpty()) {
         // we take an array copy, otherwise we will get ConcurrentModificationException as closing the channel will call deleteChannel
         for (Channel c : mChannelMap.values().toArray(new Channel[mChannelMap.size()])) {
-          try {
-            c.close();
-          }
-          catch (IOException ignored) {
-          }
+          c.close();
         }
         mChannelMap.clear();
         mSender.end();
