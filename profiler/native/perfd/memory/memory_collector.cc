@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include "utils/activity_manager.h"
+#include "utils/trace.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
 
@@ -45,12 +46,14 @@ void MemoryCollector::Stop() {
 void MemoryCollector::CollectorMain() {
   Stopwatch stopwatch;
   while (is_running_) {
+    Trace::Begin("MEM:Collect");
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     proto::MemoryData_MemorySample sample;
     memory_levels_sampler_.GetProcessMemoryLevels(pid_, &sample);
     memory_cache_.SaveMemorySample(sample);
 
+    Trace::End();
     int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
     if (kSleepNs > elapsed_time_ns) {
       int64_t sleep_time_us = Clock::ns_to_us(kSleepNs - elapsed_time_ns);

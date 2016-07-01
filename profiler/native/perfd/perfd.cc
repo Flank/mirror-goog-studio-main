@@ -19,6 +19,7 @@
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
+#include "utils/trace.h"
 #include "utils/config.h"
 #include "utils/fs/path.h"
 
@@ -27,6 +28,7 @@
 int main(int argc, char** argv) {
   using std::string;
 
+  profiler::Trace::Init();
   profiler::Daemon daemon;
 
   profiler::GenericComponent generic_component{daemon};

@@ -18,6 +18,7 @@
 #include <sys/time.h>
 
 #include "utils/android_studio_version.h"
+#include "utils/trace.h"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -27,8 +28,9 @@ namespace profiler {
 Status ProfilerServiceImpl::GetTimes(
     ServerContext* context, const profiler::proto::TimesRequest* request,
     profiler::proto::TimesResponse* response) {
-  response->set_timestamp_ns(clock_.GetCurrentTime());
+  Trace trace("PRO:GetTimes");
 
+  response->set_timestamp_ns(clock_.GetCurrentTime());
   // TODO: Move this to utils.
   timeval time;
   gettimeofday(&time, NULL);

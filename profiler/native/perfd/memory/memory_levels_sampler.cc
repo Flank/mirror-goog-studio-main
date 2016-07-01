@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <memory>
 
+#include "utils/trace.h"
+
 namespace {
 // dumpsys meminfo command that returns a comma-delimited string within calling
 // process.
@@ -43,6 +45,7 @@ namespace profiler {
 
 void MemoryLevelsSampler::GetProcessMemoryLevels(
     int pid, proto::MemoryData_MemorySample* sample) {
+  Trace trace("MEM:GetProcessMemoryLevels");
   char buffer[kBufferSize];
   char cmd[kCommandMaxLength];
   int num_written =
@@ -51,6 +54,8 @@ void MemoryLevelsSampler::GetProcessMemoryLevels(
     return;  // TODO error handling.
   }
 
+  // TODO: Use BashCommand object which provide central access point to
+  // popen and also shows traces in systrace.
   std::string output = "";
   std::unique_ptr<FILE, int (*)(FILE*)> mem_info_file(popen(cmd, "r"), pclose);
   if (!mem_info_file) {
@@ -82,6 +87,7 @@ void MemoryLevelsSampler::GetProcessMemoryLevels(
 void MemoryLevelsSampler::ParseMemoryLevels(
     const std::string& memory_info_string,
     proto::MemoryData_MemorySample* sample) {
+  Trace trace("MEM:ParseMemoryLevels");
   std::unique_ptr<char, void (*)(void*)> delimited_memory_info(
       strdup(memory_info_string.c_str()), std::free);
   char* temp_memory_info_ptr = delimited_memory_info.get();

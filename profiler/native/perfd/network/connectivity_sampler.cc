@@ -15,6 +15,7 @@
  */
 #include "connectivity_sampler.h"
 
+#include "utils/trace.h"
 #include "utils/bash_command.h"
 
 namespace {

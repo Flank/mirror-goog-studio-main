@@ -22,6 +22,7 @@
 #include "perfd/network/connectivity_sampler.h"
 #include "perfd/network/network_constants.h"
 #include "perfd/network/traffic_sampler.h"
+#include "utils/trace.h"
 #include "utils/clock.h"
 
 namespace profiler {
@@ -50,6 +51,7 @@ void NetworkCollector::Stop() {
 void NetworkCollector::Collect() {
   profiler::SteadyClock clock;
   while (is_running_.load()) {
+    Trace::Begin("NET:Collect");
     for (const auto &sampler : samplers_) {
       profiler::proto::NetworkProfilerData response;
       sampler->GetData(&response);
@@ -58,6 +60,7 @@ void NetworkCollector::Collect() {
       response.mutable_basic_info()->set_end_timestamp(time);
       buffer_.Add(response, time);
     }
+    Trace::End();
     usleep(sample_us_);
   }
 }

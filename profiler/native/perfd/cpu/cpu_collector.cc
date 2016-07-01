@@ -19,6 +19,7 @@
 #include <atomic>
 #include <thread>
 
+#include "utils/trace.h"
 #include "utils/clock.h"
 #include "utils/stopwatch.h"
 
@@ -45,10 +46,12 @@ void CpuCollector::Stop() {
 void CpuCollector::Collect() {
   Stopwatch stopwatch;
   while (is_running_.load()) {
+    Trace::Begin("CPU:Collect");
     stopwatch.Start();
     usage_sampler_.Sample();
     thread_monitor_.Monitor();
     int64_t elapsed_time_us = Clock::ns_to_us(stopwatch.GetElapsed());
+    Trace::End();
     if (sampling_interval_in_us_ > elapsed_time_us) {
       usleep(sampling_interval_in_us_ - elapsed_time_us);
     } else {
