@@ -19,7 +19,6 @@
 #include <sstream>
 
 #include "utils/activity_manager.h"
-#include "utils/file_reader.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
 
@@ -99,16 +98,6 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   ActivityManager am;
 
   bool result = am.TriggerHeapDump(pid_, file_path, &unusedOutput);
-
-  // Wait for heap dump file write to finish.
-  int64_t prev_size = -1;
-  int64_t curr_size = FileReader::GetFileSize(file_path);
-  while (prev_size != curr_size) {
-    usleep(static_cast<uint64_t>(Clock::ns_to_us(kSleepNs)));
-    prev_size = curr_size;
-    curr_size = FileReader::GetFileSize(file_path);
-  }
-
   if (!memory_cache_.EndHeapDumpSample(clock_.GetCurrentTime(), result)) {
     Log::V("EndHeapDumpSample failed.");
   }
