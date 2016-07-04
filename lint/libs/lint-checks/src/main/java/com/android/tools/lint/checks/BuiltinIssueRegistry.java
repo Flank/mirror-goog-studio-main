@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 280;
+    static final int INITIAL_CAPACITY = 281;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -184,6 +184,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestDetector.USES_SDK);
         issues.add(ManifestDetector.WEARABLE_BIND_LISTENER);
         issues.add(ManifestDetector.WRONG_PARENT);
+        issues.add(ManifestPermissionAttributeDetector.ISSUE);
         issues.add(ManifestResourceDetector.ISSUE);
         issues.add(ManifestTypoDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
@@ -349,7 +350,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 15;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 39;
+                initialSize += 40;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 5;
             }
