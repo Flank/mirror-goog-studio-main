@@ -150,18 +150,16 @@ public class NdkHandler {
         File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
 
         if (localProperties.isFile()) {
-
             Properties properties = readProperties(localProperties);
             String ndkDirProp = properties.getProperty("ndk.dir");
             if (ndkDirProp != null) {
                 return new File(ndkDirProp);
             }
+        }
 
-        } else {
-            String envVar = System.getenv("ANDROID_NDK_HOME");
-            if (envVar != null) {
+        String envVar = System.getenv("ANDROID_NDK_HOME");
+        if (envVar != null) {
                 return new File(envVar);
-            }
         }
         return null;
     }
