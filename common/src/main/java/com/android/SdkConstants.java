@@ -1316,6 +1316,12 @@ public final class SdkConstants {
 
     /** Extension of the Application package Files, i.e. "apk". */
     public static final String EXT_ANDROID_PACKAGE = "apk"; //$NON-NLS-1$
+    /** Extension for Instant App atoms. */
+    public static final String EXT_ATOM = "atom"; //$NON-NLS-1$
+    /** Extension for Instant App package files */
+    public static final String EXT_INSTANT_APP_PACKAGE = "iapk"; //$NON-NLS-1$
+    /** Extension for Android archive files */
+    public static final String EXT_AAR = "aar"; //$NON-NLS-1$
     /** Extension of java files, i.e. "java" */
     public static final String EXT_JAVA = "java"; //$NON-NLS-1$
     /** Extension of compiled java files, i.e. "class" */
@@ -1348,8 +1354,6 @@ public final class SdkConstants {
     public static final String EXT_RES = "ap_"; //$NON-NLS-1$
     /** Extension for pre-processable images. Right now pngs */
     public static final String EXT_PNG = "png"; //$NON-NLS-1$
-    /** Extension for Android archive files */
-    public static final String EXT_AAR = "aar"; //$NON-NLS-1$
     /** Extension for Java heap dumps. */
     public static final String EXT_HPROF = "hprof"; //$NON-NLS-1$
 
