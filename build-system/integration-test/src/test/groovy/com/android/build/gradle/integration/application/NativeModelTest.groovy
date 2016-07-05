@@ -410,10 +410,12 @@ class NativeModelTest {
             originalTimeStamp = newTimeStamp;
         }
 
+        String originalFileHash = FileUtils.sha1(jsonFile);
+
         // Replace flags in the build file and check that JSON is regenerated
         project.buildFile.text = project.buildFile.text.replace("-DTEST_", "-DTEST_CHANGED_");
         nativeProject = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(getHighestResolutionTimeStamp(jsonFile)).isGreaterThan(originalTimeStamp);
+        assertThat(FileUtils.sha1(jsonFile)).isNotEqualTo(originalFileHash);
 
         // Check that the newly written flags are there.
         if (config.isCpp) {
