@@ -19,6 +19,7 @@ package com.android.build.gradle;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.internal.utils.FileCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -97,6 +98,8 @@ public class AndroidGradleOptions {
 
     private static final String OLD_OVERRIDE_PATH_CHECK_PROPERTY =
             "com.android.build.gradle.overridePathCheck";
+
+    private static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
@@ -327,9 +330,23 @@ public class AndroidGradleOptions {
         return getString(project, AndroidProject.PROPERTY_VERSION_NAME);
     }
 
+    @NonNull
+    public static InstantRunApiLevelMode getInstantRunApiLevelMode(@NonNull Project project) {
+        String valueName = getString(project, INSTANT_RUN_API_LEVEL_PROPERTY);
+        if (valueName != null) {
+            try {
+                return InstantRunApiLevelMode.valueOf(valueName);
+            } catch (IllegalArgumentException ignored) {
+                // Return the default value below.
+            }
+        }
+
+        return InstantRunApiLevelMode.COMPILE_SDK;
+    }
+
     @Nullable
     private static String getString(@NonNull Project project, String propertyName) {
-        return project.hasProperty(propertyName) ? (String) project.property(propertyName) : null;
+        return project.hasProperty(propertyName) ? project.property(propertyName).toString() : null;
     }
 
     @Nullable
