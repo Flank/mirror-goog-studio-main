@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.ide.common.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 
@@ -59,6 +60,11 @@ public class BuildInfoLoaderTask extends BaseTask {
                 instantRunBuildContext.loadFromXmlFile(buildInfoFile);
             } else {
                 instantRunBuildContext.setVerifierResult(InstantRunVerifierStatus.INITIAL_BUILD);
+            }
+            long token = instantRunBuildContext.getSecretToken();
+            if (token == 0) {
+                token = PackagingUtils.computeApplicationHash(getProject().getBuildDir());
+                instantRunBuildContext.setSecretToken(token);
             }
             // check for the presence of a temporary buildInfoFile and if it exists, merge its
             // artifacts into the current build.
