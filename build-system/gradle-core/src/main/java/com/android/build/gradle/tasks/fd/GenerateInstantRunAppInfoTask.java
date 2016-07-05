@@ -94,6 +94,11 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         return usingMultiApks;
     }
 
+    @Input
+    public long getSecretToken() {
+        return instantRunBuildcontext.getSecretToken();
+    }
+
     boolean usingMultiApks;
     InstantRunBuildContext instantRunBuildcontext;
 
@@ -140,15 +145,8 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
                     }
 
                     if (!applicationId.isEmpty()) {
-                        File buildDir = getProject().getBuildDir();
-                        long token = instantRunBuildcontext.getSecretToken();
-                        if (token == 0) {
-                            token = PackagingUtils.computeApplicationHash(buildDir);
-                            instantRunBuildcontext.setSecretToken(token);
-                        }
-
                         // Must be *after* extractLibrary() to replace dummy version
-                        writeAppInfoClass(applicationId, applicationClass, token);
+                        writeAppInfoClass(applicationId, applicationClass, getSecretToken());
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException e) {

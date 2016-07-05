@@ -56,14 +56,13 @@ public class InstantRunChangeDeviceTest {
     @Parameterized.Parameters(name = "from {0} to {1}, {2}")
     public static Collection<Object[]> scenarios() {
         // Test all change combinations (plus packaging modes).
-        // We want (BuildTarget x BuildTarget) \ id(BuildTarget)
+        // We want (BuildTarget x BuildTarget) (i.e. including id(BuildTarget))
         return Sets.cartesianProduct(
                         ImmutableList.of(
                                 buildTargetsToTest,
                                 buildTargetsToTest,
                                 EnumSet.allOf(Packaging.class)))
                 .stream()
-                .filter(fromTo -> fromTo.get(0) != fromTo.get(1))
                 .map(fromTo -> Iterables.toArray(fromTo, Object.class))
                 .collect(Collectors.toList());
     }
@@ -132,6 +131,7 @@ public class InstantRunChangeDeviceTest {
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo buildContext = InstantRunTestUtils.loadContext(instantRunModel);
+            assertThat(buildContext.getSecretToken()).isNotEqualTo(0);
             assertThat(buildContext.getTimeStamp()).isNotEqualTo(startBuildId);
             checkApk(buildContext, secondBuild);
         }
