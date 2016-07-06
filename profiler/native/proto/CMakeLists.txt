@@ -1,4 +1,5 @@
 set(PROTO_FILES cpu.proto
+                energy.proto
                 event.proto
                 internal_event.proto
                 internal_memory.proto
