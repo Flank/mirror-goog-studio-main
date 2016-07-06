@@ -22,14 +22,12 @@ import android.view.WindowManager;
 
 /**
  * Contains methods for tracking window wake locks.
- * TODO 1. Replace logging with sending data to perfa.
  */
 public class WindowWakeLockTracker {
-    public static final String TAG = WindowWakeLockTracker.class.getSimpleName();
 
     public static void wrapAddFlags(Window window, int flags) {
         if (containsFlagKeepScreenOn(flags)) {
-            Log.i(TAG, "Window wakelock acquired.");
+            onWindowWakeLockAcquired();
         }
         window.addFlags(flags);
     }
@@ -37,9 +35,9 @@ public class WindowWakeLockTracker {
     public static void wrapSetFlags(Window window, int flags, int mask) {
         if (containsFlagKeepScreenOn(mask)) {
             if (containsFlagKeepScreenOn(flags)) {
-                Log.i(TAG, "Window wakelock acquired.");
+                onWindowWakeLockAcquired();
             } else {
-                Log.i(TAG, "Window wakelock released.");
+                onWindowWakeLockReleased();
             }
         }
         window.setFlags(flags, mask);
@@ -47,7 +45,7 @@ public class WindowWakeLockTracker {
 
     public static void wrapClearFlags(Window window, int flags) {
         if (containsFlagKeepScreenOn(flags)) {
-            Log.i(TAG, "Window wakelock released.");
+            onWindowWakeLockReleased();
         }
         window.clearFlags(flags);
     }
@@ -55,4 +53,8 @@ public class WindowWakeLockTracker {
     private static boolean containsFlagKeepScreenOn(int flags) {
         return ((flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) > 0);
     }
+
+    private static native void onWindowWakeLockAcquired();
+
+    private static native void onWindowWakeLockReleased();
 }

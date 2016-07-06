@@ -67,7 +67,7 @@ TEST(VerifyRequiredHeading, ReturnsFalseForIncorrectUid) {
 }
 
 TEST(ParseStatTokens, ParsesAndSavedTokensCorrectly) {
-  profiler::proto::EnergyDataResponse::EnergySample sample;
+  profiler::proto::EnergySample sample;
   string cpu_stat_tokens{"cpu,100,200,300"};
   Tokenizer tokenizer(cpu_stat_tokens, ",");
 

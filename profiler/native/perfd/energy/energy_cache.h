@@ -19,38 +19,48 @@
 #include <mutex>
 
 #include "proto/energy.pb.h"
+#include "proto/internal_energy.pb.h"
 
 namespace profiler {
 
 // Stores energy samples and loads stored samples into an EnergyDataResponse
 // proto.
 // This cache will store up to a number of samples determined by
-// samples_capacity. Upon reaching capacity old samples will be discarded in
+// samples_size. Upon reaching capacity old samples will be discarded in
 // favor of new ones.
 class EnergyCache final {
  public:
-  explicit EnergyCache(int32_t samples_capacity)
-      : samples_capacity_(samples_capacity),
-        samples_(
-            new proto::EnergyDataResponse::EnergySample[samples_capacity]){};
+  explicit EnergyCache(int32_t samples_size)
+      : samples_size_(samples_size),
+        energy_samples_(new proto::EnergySample[samples_size]),
+        wake_lock_events_(new proto::WakeLockEvent[samples_size]){};
 
-  void SaveEnergySample(const proto::EnergyDataResponse::EnergySample& sample);
+  void SaveEnergySample(const proto::EnergySample& sample);
+
+  void SaveWakeLockEvent(const proto::WakeLockEvent& event);
 
   // Note that this function will not clobber any previously added samples to
   // the EnergyDataResponse, it will add the new samples instead.
   void LoadEnergyData(int64_t start_time_excl, int64_t end_time_incl,
                       proto::EnergyDataResponse* response);
 
+  // Note that this function will not clobber any previously added events to
+  // the WakeLockDataResponse, it will add the new events instead.
+  virtual void LoadWakeLockData(int64_t start_time_excl, int64_t end_time_incl,
+                                proto::WakeLockDataResponse* response);
+
  private:
-  int32_t samples_capacity_;
   // TODO replace with circular buffer class when it becomes available.
-  int32_t samples_head_{0};
+  int32_t energy_samples_head_{0};
+  int32_t wake_lock_samples_head_{0};
   int32_t samples_size_{0};
-  std::unique_ptr<proto::EnergyDataResponse::EnergySample[]> samples_;
-  std::mutex samples_mutex_;
+  std::unique_ptr<proto::EnergySample[]> energy_samples_;
+  std::unique_ptr<proto::WakeLockEvent[]> wake_lock_events_;
+  std::mutex energy_samples_mutex_;
+  std::mutex wake_lock_events_mutex_;
 
   // Returns an index bounded by the size of the circular buffer.
-  int32_t ToValidIndex(int32_t current_index) const;
+  int32_t GetNextValidIndex(int32_t current_index) const;
 };
 
 }  // namespace profiler

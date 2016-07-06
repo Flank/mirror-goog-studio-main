@@ -17,22 +17,34 @@ syntax = "proto3";
 
 package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
-option java_outer_classname = "EnergyProfilerService";
+option java_outer_classname = "EnergyProfiler";
 
 service EnergyService {
   // Requests energy data sampled between |start_time_excl| and |end_time_incl|
   // for app specified by |app_id|. Note it is possible for the returned
-  // EnergyDataResponse to have have zero energy samples depending on the time range
-  // specified.
-  rpc GetData(EnergyDataRequest) returns (EnergyDataResponse) {}
+  // EnergyDataResponse to have have zero energy samples depending on the time
+  // range specified.
+  rpc GetEnergyData(EnergyDataRequest) returns (EnergyDataResponse) {
+  }
+
+  // Requests wake lock data between |start_time_excl| and |end_time_incl|
+  // for app specified by |app_id|. Note it is possible for the returned
+  // WakeLockDataResponse to have have zero wake lock events depending on the
+  // time range specified.
+  rpc GetWakeLockData(WakeLockDataRequest) returns (WakeLockDataResponse) {
+  }
 
   // Starts energy data collection for app specified by |app_id|. Returns a
   // device |timestamp| of when the collection started.
-  rpc StartCollection(StartEnergyCollectionRequest) returns (EnergyCollectionStatusResponse) {}
+  rpc StartCollection(StartEnergyCollectionRequest)
+      returns (EnergyCollectionStatusResponse) {
+  }
 
   // Stops energy stats collection for the given |app_id|. Returns a device
   // |timestamp| of when the collection stopped.
-  rpc StopCollection(StopEnergyCollectionRequest) returns (EnergyCollectionStatusResponse) {}
+  rpc StopCollection(StopEnergyCollectionRequest)
+      returns (EnergyCollectionStatusResponse) {
+  }
 }
 
 message EnergyDataRequest {
@@ -42,19 +54,51 @@ message EnergyDataRequest {
 }
 
 message EnergyDataResponse {
-  // Contains power usages of each system component.
-  message EnergySample {
-    int64 timestamp = 1;                // When this sample was taken.
-    int32 screen_power_usage = 2;       // (touch)screen.
-    int32 cpu_system_power_usage = 3;   // System cpu time.
-    int32 cpu_user_power_usage = 4;     // User cpu time.
-    int32 cell_network_power_usage = 5; // Cellular mobile network / radio.
-    int32 wifi_network_power_usage = 6; // Wifi network.
+  int32 app_id = 1;
+  repeated EnergySample energy_samples = 2;
+}
+
+// Contains power usages of each system component.
+message EnergySample {
+  int64 timestamp = 1;               // When this sample was taken.
+  int32 screen_power_usage = 2;      // (touch)screen.
+  int32 cpu_system_power_usage = 3;  // System cpu time.
+  int32 cpu_user_power_usage = 4;    // User cpu time.
+  int32 cell_network_power_usage = 5;  // Cellular mobile network / radio.
+  int32 wifi_network_power_usage = 6;  // Wifi network.
+}
+
+message WakeLockDataRequest {
+  int32 app_id = 1;
+  int64 start_time_excl = 2;
+  int64 end_time_incl = 3;
+}
+
+message WakeLockDataResponse {
+  int32 app_id = 1;
+  repeated WakeLockEvent wake_lock_events = 2;
+}
+
+// An event related to the use of wake locks.
+message WakeLockEvent {
+  // Type of wake lock this event refers to.
+  enum WakeLockType {
+    WINDOW = 0;
+    PM = 1;
   }
 
-  int32 app_id = 1;
-  int64 latest_sample_timestamp = 2;    //  Timestamp of the latest returned energy sample.
-  repeated EnergySample energy_samples = 3;
+  // The action performed on/by wake lock.
+  enum WakeLockAction {
+    CREATED = 0;
+    ACQUIRED = 1;
+    RELEASED_MANUAL = 2;
+    RELEASED_AUTOMATIC = 3;
+  }
+
+  int64 timestamp = 1;
+  WakeLockType type = 2;
+  WakeLockAction action = 3;
+  string name = 4;
 }
 
 message StartEnergyCollectionRequest {

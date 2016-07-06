@@ -65,8 +65,8 @@ const bool EnergyUsageSampler::VerifyRequiredHeading(
           tokenizer->GetNextToken(&log_type) && log_type.compare("l") == 0);
 }
 
-const void EnergyUsageSampler::ParseStatTokens(
-    Tokenizer* tokenizer, proto::EnergyDataResponse_EnergySample* sample) {
+const void EnergyUsageSampler::ParseStatTokens(Tokenizer* tokenizer,
+                                               proto::EnergySample* sample) {
   std::string category;
   tokenizer->GetNextToken(&category);
 
@@ -141,7 +141,7 @@ const void EnergyUsageSampler::ParseStatTokens(
 }
 
 const void EnergyUsageSampler::GetProcessEnergyUsage(
-    const int pid, proto::EnergyDataResponse_EnergySample* sample) {
+    const int pid, proto::EnergySample* sample) {
   std::unique_ptr<FILE, int (*)(FILE*)> dump_file(
       popen(kDumpsysBatterystatsCommand, "r"), pclose);
 

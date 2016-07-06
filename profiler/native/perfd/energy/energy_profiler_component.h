@@ -17,6 +17,7 @@
 #define ENERGY_PROFILER_COMPONENT_H_
 
 #include "energy_service.h"
+#include "internal_energy_service.h"
 #include "perfd/profiler_component.h"
 
 namespace profiler {
@@ -24,16 +25,23 @@ namespace profiler {
 class EnergyProfilerComponent final : public ProfilerComponent {
  public:
   explicit EnergyProfilerComponent(const Daemon& daemon)
-      : public_service_(daemon.clock()) {}
+      : energy_cache_(kSamplesCount),
+        public_service_(daemon.clock(), &energy_cache_),
+        internal_service_(&energy_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
 
   // Returns the service that talks to device clients (e.g., perfa).
-  grpc::Service* GetInternalService() override { return nullptr; }
+  grpc::Service* GetInternalService() override { return &internal_service_; }
 
  private:
+  // 25 because it's not too big but still gets the job done. Rather arbitrary.
+  static constexpr int32_t kSamplesCount = 25;
+
+  EnergyCache energy_cache_;
   EnergyServiceImpl public_service_;
+  InternalEnergyServiceImpl internal_service_;
 };
 
 }  // namespace profiler

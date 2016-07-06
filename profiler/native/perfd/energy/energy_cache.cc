@@ -16,48 +16,68 @@
 #include "energy_cache.h"
 
 using profiler::proto::EnergyDataResponse;
+using profiler::proto::EnergySample;
+using profiler::proto::WakeLockDataResponse;
+using profiler::proto::WakeLockEvent;
 
 namespace profiler {
 
-void EnergyCache::SaveEnergySample(
-    const EnergyDataResponse::EnergySample& sample) {
-  std::lock_guard<std::mutex> lock(samples_mutex_);
-  int save_index;
-  if (samples_size_ < samples_capacity_) {
-    save_index = ToValidIndex(samples_head_ + samples_size_);
-    samples_size_++;
-  } else {
-    save_index = samples_head_;
-    samples_head_ = ToValidIndex(samples_head_ + 1);
-  }
-  samples_[save_index].CopyFrom(sample);
+void EnergyCache::SaveEnergySample(const EnergySample& sample) {
+  std::lock_guard<std::mutex> lock(energy_samples_mutex_);
+  energy_samples_head_ = GetNextValidIndex(energy_samples_head_);
+  energy_samples_[energy_samples_head_].CopyFrom(sample);
+}
+
+void EnergyCache::SaveWakeLockEvent(const WakeLockEvent& event) {
+  std::lock_guard<std::mutex> lock(wake_lock_events_mutex_);
+  wake_lock_samples_head_ = GetNextValidIndex(wake_lock_samples_head_);
+  wake_lock_events_[wake_lock_samples_head_].CopyFrom(event);
 }
 
 void EnergyCache::LoadEnergyData(int64_t start_time_excl, int64_t end_time_incl,
                                  EnergyDataResponse* response) {
-  std::lock_guard<std::mutex> lock(samples_mutex_);
+  std::lock_guard<std::mutex> sample_lock(energy_samples_mutex_);
 
-  int64_t latest_sample_timestamp = 0;
-  for (int32_t i = 0; i < samples_size_; ++i) {
-    EnergyDataResponse::EnergySample& sample =
-        samples_[ToValidIndex(samples_head_ + i)];
+  // Can we gurantee the samples be in monotonically increasing timestamp?
+  // If so we can optimize this by stopping the moment we hit out later than
+  // the end time.
 
-    // Can we guarantee the samples be in monotonically increasing timestamp?
-    // If so we can optimize this by stopping the moment we hit out later than
-    // the end time.
+  // Load energy samples.
+  int32_t iteration_index = energy_samples_head_;
+  do {
+    iteration_index = GetNextValidIndex(iteration_index);
+    EnergySample& sample = energy_samples_[iteration_index];
+
     if (sample.timestamp() > start_time_excl &&
         sample.timestamp() <= end_time_incl) {
-      if (sample.timestamp() > latest_sample_timestamp) {
-        latest_sample_timestamp = sample.timestamp();
-      }
-      response->add_energy_samples()->CopyFrom(sample);
+      response->add_energy_samples()->CopyFrom(
+          energy_samples_[iteration_index]);
     }
-  }
-  response->set_latest_sample_timestamp(latest_sample_timestamp);
+  } while (iteration_index != energy_samples_head_);
 }
 
-int32_t EnergyCache::ToValidIndex(int32_t current_index) const {
-  return current_index % samples_capacity_;
+void EnergyCache::LoadWakeLockData(int64_t start_time_excl,
+                                   int64_t end_time_incl,
+                                   WakeLockDataResponse* response) {
+  std::lock_guard<std::mutex> event_lock(wake_lock_events_mutex_);
+
+  // Load wake lock events.
+  int32_t iteration_index = wake_lock_samples_head_;
+  do {
+    iteration_index = GetNextValidIndex(iteration_index);
+    WakeLockEvent& event = wake_lock_events_[iteration_index];
+
+    if (event.timestamp() > start_time_excl &&
+        event.timestamp() <= end_time_incl) {
+      response->add_wake_lock_events()->CopyFrom(
+          wake_lock_events_[iteration_index]);
+    }
+
+  } while (iteration_index != wake_lock_samples_head_);
+}
+
+int32_t EnergyCache::GetNextValidIndex(int32_t current_index) const {
+  return (current_index + 1) % samples_size_;
 }
 
 }  // namespace profiler
