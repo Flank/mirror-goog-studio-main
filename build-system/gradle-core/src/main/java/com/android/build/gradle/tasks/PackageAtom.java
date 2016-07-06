@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.builder.packaging.NativeLibrariesPackagingMode;
 
 import org.gradle.api.tasks.ParallelizableTask;
 
@@ -34,8 +35,9 @@ public class PackageAtom extends PackageAndroidArtifact {
 
     public static class ConfigAction extends PackageAndroidArtifact.ConfigAction<PackageAtom> {
 
-        public ConfigAction(@NonNull PackagingScope packagingscope) {
-            super(packagingscope, null);
+        public ConfigAction(
+                @NonNull PackagingScope packagingscope) {
+            super(packagingscope, null, NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED);
         }
 
         @Override

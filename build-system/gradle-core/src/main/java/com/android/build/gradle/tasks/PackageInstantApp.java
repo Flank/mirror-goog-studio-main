@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import com.android.builder.packaging.NativeLibrariesPackagingMode;
 
 import org.gradle.api.tasks.ParallelizableTask;
 
@@ -33,8 +34,9 @@ public class PackageInstantApp extends PackageAndroidArtifact implements FileSup
     public static class ConfigAction
             extends PackageAndroidArtifact.ConfigAction<PackageInstantApp> {
 
-        public ConfigAction(@NonNull PackagingScope packagingscope) {
-            super(packagingscope, null);
+        public ConfigAction(
+                @NonNull PackagingScope packagingscope) {
+            super(packagingscope, null, NativeLibrariesPackagingMode.COMPRESSED);
         }
 
         @Override
