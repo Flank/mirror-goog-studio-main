@@ -25,4 +25,4 @@ int64_t SteadyClock::GetCurrentTime() const {
   return 1e9 * time.tv_sec + time.tv_nsec;
 }
 
-} // namespace profiler
+}  // namespace profiler

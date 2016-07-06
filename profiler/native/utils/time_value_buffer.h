@@ -16,17 +16,18 @@
 #ifndef TIME_VALUE_BUFFER_H_
 #define TIME_VALUE_BUFFER_H_
 
+#include <time.h>
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <time.h>
 #include <vector>
 
 namespace profiler {
 
 // Data per sample. The time field indicates a independent time point when
 // value is collected.
-template <typename T> struct TimeValue {
+template <typename T>
+struct TimeValue {
   int64_t time;
   T value;
 };
@@ -35,7 +36,8 @@ template <typename T> struct TimeValue {
 // traffic bytes sent and received information are repeated collected. It stores
 // data and provides query functionality.
 // TODO: Refactor name to ProfilerBuffer for profiler sampling data.
-template <typename T> class TimeValueBuffer {
+template <typename T>
+class TimeValueBuffer {
  public:
   TimeValueBuffer(size_t capacity, int pid = -1)
       : capacity_(capacity), pid_(pid), values_(new TimeValue<T>[capacity_]) {}
@@ -101,9 +103,7 @@ template <typename T> class TimeValueBuffer {
   }
 
   // Returns app id that the profiler data buffer is for.
-  int pid() {
-    return pid_;
-  }
+  int pid() { return pid_; }
 
  private:
   // Indicates the maximum number of samples it can hold.
@@ -117,6 +117,6 @@ template <typename T> class TimeValueBuffer {
   size_t start_ = 0;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
-#endif // TIME_VALUE_BUFFER_H_
+#endif  // TIME_VALUE_BUFFER_H_

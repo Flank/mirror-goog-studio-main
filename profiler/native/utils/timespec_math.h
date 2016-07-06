@@ -72,4 +72,4 @@ class TimespecMath {
 
 }  // namespace profiler
 
-#endif // TIMESPEC_MATH_H_
+#endif  // TIMESPEC_MATH_H_

@@ -7,7 +7,6 @@
 #include "profiler_file.h"
 #include "utils/log.h"
 
-
 using std::string;
 using profiler::Log;
 
@@ -28,12 +27,12 @@ bool Installer::Install(const string &src_path, string *error_string) const {
   ProfilerFile dst = ProfilerFile(dst_path);
   if (dst.Exists()) {
     Log::I("'%s' executable is already installed (found at '%s').\n",
-        app_package_name_.c_str(), dst_path.c_str());
+           app_package_name_.c_str(), dst_path.c_str());
     return true;
   }
 
   Log::I("'%s' executable requires installation (missing from '%s').\n",
-      app_package_name_.c_str(), dst_path.c_str());
+         app_package_name_.c_str(), dst_path.c_str());
   // We need to copy sampler to the app folder.
 
   ProfilerFile src(src_path);

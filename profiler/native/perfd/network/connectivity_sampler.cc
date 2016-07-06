@@ -19,7 +19,7 @@
 
 namespace {
 const char* const kDefaultNetworkLabel = "Active default network: ";
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace profiler {
 
@@ -67,7 +67,7 @@ ConnectivitySampler::GetDefaultNetworkType() {
   }
   for (const char c : network_id) {
     if (!std::isdigit(c)) {
-    return proto::ConnectivityData::INVALID;
+      return proto::ConnectivityData::INVALID;
     }
   }
 

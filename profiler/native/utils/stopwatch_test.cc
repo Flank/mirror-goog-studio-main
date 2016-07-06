@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "clock.h"
 #include "stopwatch.h"
+#include "clock.h"
 
 #include <gtest/gtest.h>
 
@@ -24,20 +24,13 @@ using std::shared_ptr;
 
 class MockClock final : public Clock {
  public:
+  MockClock(int64_t mockTime = 0) : mockTime_(mockTime) {}
 
-  MockClock(int64_t mockTime = 0) : mockTime_(mockTime) { }
+  virtual int64_t GetCurrentTime() const override { return mockTime_; }
 
-  virtual int64_t GetCurrentTime() const override {
-    return mockTime_;
-  }
+  void SetCurrentTime(int64_t time) { mockTime_ = time; }
 
-  void SetCurrentTime(int64_t time) {
-    mockTime_ = time;
-  }
-
-  void Elapse(int64_t elapsed) {
-    mockTime_ += elapsed;
-  }
+  void Elapse(int64_t elapsed) { mockTime_ += elapsed; }
 
  private:
   int64_t mockTime_;
