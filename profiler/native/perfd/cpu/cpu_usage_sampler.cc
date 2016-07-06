@@ -48,6 +48,8 @@ namespace {
 const char* const kProcStatFilename = "/proc/stat";
 
 // Returns how many milliseconds is a time unit used in /proc/* files.
+// This function is designed to be called by TimeUnitInMilliseconds() only.
+// This function is almost always less efficient than TimeUnitInMilliseconds().
 int64_t GetTimeUnitInMilliseconds() {
   int64_t user_hz = sysconf(_SC_CLK_TCK);
   // TODO: Handle other USER_HZ values.
@@ -60,7 +62,7 @@ int64_t GetTimeUnitInMilliseconds() {
 }
 
 // Returns how many milliseconds is a time unit used in /proc/* files.
-// This function is more efficient than GetTimeUnitInMilliseconds().
+// This function is usually more efficient than GetTimeUnitInMilliseconds().
 int64_t TimeUnitInMilliseconds() {
   static const int64_t kTimeUnitInMilliseconds = GetTimeUnitInMilliseconds();
   return kTimeUnitInMilliseconds;
