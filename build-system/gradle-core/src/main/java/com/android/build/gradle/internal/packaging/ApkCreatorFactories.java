@@ -23,7 +23,6 @@ import com.android.builder.internal.packaging.zip.ZFileOptions;
 import com.android.builder.internal.packaging.zip.compress.BestAndDefaultDeflateExecutorCompressor;
 import com.android.builder.internal.packaging.zip.compress.DeflateExecutionCompressor;
 import com.android.builder.packaging.ApkCreatorFactory;
-import com.android.builder.signing.SignedJarApkCreatorFactory;
 
 import org.gradle.api.Project;
 
