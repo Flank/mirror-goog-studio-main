@@ -28,8 +28,6 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
-import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.packaging.NativeLibrariesPackagingMode;
 import com.android.utils.StringHelper;
 
 import org.gradle.api.DefaultTask;
@@ -264,18 +262,5 @@ public class VariantOutputScope implements TransformVariantScope {
     @NonNull
     public ApkOutputFile getMainOutputFile() {
         return getVariantOutputData().getMainOutputFile();
-    }
-
-    public NativeLibrariesPackagingMode getNativeLibrariesPackagingMode() {
-        DefaultManifestParser parser = new DefaultManifestParser(getManifestOutputFile());
-        Boolean extractNativeLibs = parser.getExtractNativeLibs();
-
-        // The default is "true", so we only package *.so files differently if the user explicitly
-        // set this to "false".
-        if (Boolean.FALSE.equals(extractNativeLibs)) {
-            return NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED;
-        } else {
-            return NativeLibrariesPackagingMode.COMPRESSED;
-        }
     }
 }
