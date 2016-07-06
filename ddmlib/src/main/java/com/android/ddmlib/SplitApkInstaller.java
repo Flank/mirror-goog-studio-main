@@ -187,7 +187,7 @@ public class SplitApkInstaller {
                         "Cannot do a partial install without knowing the application id");
             }
 
-            sb.append("-r ");
+            sb.append("-p ");
             sb.append(applicationId);
             sb.append(' ');
         }
