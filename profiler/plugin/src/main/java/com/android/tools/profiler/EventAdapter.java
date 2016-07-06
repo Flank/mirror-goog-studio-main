@@ -29,9 +29,19 @@ final class EventAdapter extends ClassVisitor implements Opcodes {
     private static final String SET_CALLBACK_DESCRIPTOR = "(Landroid/view/Window$Callback;)V";
     private static final String GET_CALLBACK_DESCRIPTOR = "()Landroid/view/Window$Callback;";
     private static final String WRAPPER_CLASS = "com/android/tools/profiler/support/event/EventWrapper";
-
+    private static final String ANDROID_SUPPORT_LIB = "android/support/";
+    private String mCurrentClassName;
     EventAdapter(ClassVisitor classVisitor) {
         super(ASM5, classVisitor);
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName,
+            String[] interfaces) {
+        if (cv != null) {
+            mCurrentClassName = name;
+            cv.visit(version, access, name, signature, superName, interfaces);
+        }
     }
 
     @Override
@@ -39,6 +49,13 @@ final class EventAdapter extends ClassVisitor implements Opcodes {
             String[] exceptions) {
 
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+
+        // Don't instrument the support library else we will corrupt the stack due to introducing
+        // a symbol into a library that doesn't have the support lib as a reference.
+        if (mCurrentClassName.startsWith(ANDROID_SUPPORT_LIB)) {
+            return mv;
+        }
+
         return (mv != null) ? new MethodAdapter(mv) : null;
     }
 
