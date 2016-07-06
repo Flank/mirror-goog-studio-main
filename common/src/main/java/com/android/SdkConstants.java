@@ -1316,12 +1316,12 @@ public final class SdkConstants {
 
     /** Extension of the Application package Files, i.e. "apk". */
     public static final String EXT_ANDROID_PACKAGE = "apk"; //$NON-NLS-1$
-    /** Extension for Instant App atoms. */
-    public static final String EXT_ATOM = "atom"; //$NON-NLS-1$
-    /** Extension for Instant App package files */
-    public static final String EXT_INSTANT_APP_PACKAGE = "iapk"; //$NON-NLS-1$
+    /** Extension of the InstantApp package Files, i.e. "iapk". */
+    public static final String EXT_INSTANTAPP_PACKAGE = "iapk"; //$NON-NLS-1$
     /** Extension for Android archive files */
     public static final String EXT_AAR = "aar"; //$NON-NLS-1$
+    /** Extension for Android atom files. */
+    public static final String EXT_ATOM = "atom"; //$NON-NLS-1$
     /** Extension of java files, i.e. "java" */
     public static final String EXT_JAVA = "java"; //$NON-NLS-1$
     /** Extension of compiled java files, i.e. "class" */
@@ -1361,6 +1361,12 @@ public final class SdkConstants {
 
     /** Dot-Extension of the Application package Files, i.e. ".apk". */
     public static final String DOT_ANDROID_PACKAGE = DOT + EXT_ANDROID_PACKAGE;
+    /** Dot-Extension of the InstantApp package Files, i.e. ".iapk". */
+    public static final String DOT_INSTANTAPP_PACKAGE = DOT + EXT_INSTANTAPP_PACKAGE;
+    /** Dot-Extension for Android archive files */
+    public static final String DOT_AAR = DOT + EXT_AAR; //$NON-NLS-1$
+    /** Dot-Extension for Android atom files. */
+    public static final String DOT_ATOM = DOT + EXT_ATOM; //$NON-NLS-1$
     /** Dot-Extension of aidl files, i.e. ".aidl" */
     public static final String DOT_AIDL = DOT + EXT_AIDL;
     /** Dot-Extension of renderscript files, i.e. ".rs" */
@@ -1387,8 +1393,6 @@ public final class SdkConstants {
     public static final String DOT_FTL = ".ftl"; //$NON-NLS-1$
     /** Dot-Extension of text files, i.e. ".txt" */
     public static final String DOT_TXT = ".txt"; //$NON-NLS-1$
-    /** Dot-Extension for Android archive files */
-    public static final String DOT_AAR = DOT + EXT_AAR; //$NON-NLS-1$
     /** Dot-Extension for Java heap dumps. */
     public static final String DOT_HPROF = DOT + EXT_HPROF; //$NON-NLS-1$
 
