@@ -44,4 +44,4 @@ class ConnectivitySampler final : public NetworkSampler {
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_CONNECTIVITY_SAMPLER_H_
+#endif  // PERFD_NETWORK_CONNECTIVITY_SAMPLER_H_

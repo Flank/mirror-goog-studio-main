@@ -47,4 +47,4 @@ class TrafficSampler final : public NetworkSampler {
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_TRAFFIC_SAMPLER_H_
+#endif  // PERFD_NETWORK_TRAFFIC_SAMPLER_H_

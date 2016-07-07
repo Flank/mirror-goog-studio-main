@@ -22,4 +22,4 @@ const char* const kServerAddress = "127.0.0.1:12389";
 
 }  // namespace profiler
 
-#endif // UTILS_CONFIG_H_
+#endif  // UTILS_CONFIG_H_

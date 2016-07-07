@@ -53,12 +53,10 @@ void Log::E(const char *fmt, ...) {
   va_end(args);
 }
 
-void Log::Handle(const char level, const char *fmt,
-                    va_list args) {
+void Log::Handle(const char level, const char *fmt, va_list args) {
   printf("%s[%c]: ", kTag, level);
   printf(fmt, args);
   printf("\n");
 }
 
-
-} // namespace profiler
+}  // namespace profiler

@@ -44,4 +44,4 @@ class NetworkSampler {
 
 }  // namespace profiler
 
-#endif // PERFD_NETWORK_NETWORK_SAMPLER_H_
+#endif  // PERFD_NETWORK_NETWORK_SAMPLER_H_

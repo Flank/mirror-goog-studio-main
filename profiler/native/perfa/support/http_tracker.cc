@@ -114,7 +114,7 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPreConnect(
     JNIEnv *env, jobject thiz, jlong juid, jstring jurl, jstring jstack) {
   JStringWrapper url(env, jurl);
-  JStringWrapper stack(env, jstack); // TODO: Send this to perfd
+  JStringWrapper stack(env, jstack);  // TODO: Send this to perfd
 
   auto net_stub = Perfa::Instance().network_stub();
   ClientContext ctx;
