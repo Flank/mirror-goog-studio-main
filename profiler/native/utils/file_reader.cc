@@ -21,7 +21,7 @@
 
 namespace profiler {
 
-bool FileReader::Read(const std::string& file_path,
+bool FileReader::Read(const std::string &file_path,
                       std::vector<std::string> *lines) {
   std::string content;
   if (Read(file_path, &content)) {

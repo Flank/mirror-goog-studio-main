@@ -54,4 +54,4 @@ void Log::E(const char *fmt, ...) {
   va_end(args);
 }
 
-} // namespace profiler
+}  // namespace profiler

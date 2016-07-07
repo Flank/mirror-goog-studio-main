@@ -26,24 +26,19 @@ namespace profiler {
 class Log {
  public:
   // Log a message at the verbose level
-  static void V(const char *msg, ...)
-      __attribute__ ((format(printf, 1, 2)));
+  static void V(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
   // Log a message at the debug level
-  static void D(const char *msg, ...)
-      __attribute__ ((format(printf, 1, 2)));
+  static void D(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
   // Log a message at the info level
-  static void I(const char *msg, ...)
-      __attribute__ ((format(printf, 1, 2)));
+  static void I(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
   // Log a message at the warning level
-  static void W(const char *msg, ...)
-      __attribute__ ((format(printf, 1, 2)));
+  static void W(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
   // Log a message at the error level
-  static void E(const char *msg, ...)
-      __attribute__ ((format(printf, 1, 2)));
+  static void E(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
  private:
   static void Handle(const char level, const char *fmt, va_list args);
@@ -51,6 +46,6 @@ class Log {
   static constexpr const char *const kTag = "StudioProfiler";
 };
 
-} // namespace profiler
+}  // namespace profiler
 
-#endif //UTILS_LOG_H_
+#endif  // UTILS_LOG_H_

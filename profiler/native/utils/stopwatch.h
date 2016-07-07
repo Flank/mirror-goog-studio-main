@@ -47,12 +47,12 @@ class Stopwatch final {
   // Returns number of nanoseconds elapsed since either the stopwatch was
   // created or since the last call to Start was made.
   int64_t GetElapsed() const;
- private:
 
+ private:
   std::shared_ptr<Clock> clock_;
   int64_t start_time_;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
-#endif //STOPWATCH_H_
+#endif  // STOPWATCH_H_

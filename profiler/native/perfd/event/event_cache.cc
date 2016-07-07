@@ -41,7 +41,7 @@ void EventCache::GetData(int64_t start_time, int64_t end_time,
                          EventDataResponse* response) {
   lock_guard<std::mutex> lock(cache_mutex_);
   // TODO: Binary Search to find the start index, and end index.
-  for (const auto& data : cache_ ) {
+  for (const auto& data : cache_) {
     int64_t time = data.basic_info().end_timestamp();
     if (time > start_time && time <= end_time) {
       EventProfilerData* out_data = response->add_data();
