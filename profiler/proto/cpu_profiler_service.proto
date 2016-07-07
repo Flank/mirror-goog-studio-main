@@ -36,8 +36,7 @@ service CpuProfilerService {
   rpc StopMonitoringApp(CpuStopRequest) returns (CpuStopResponse) {
   }
 
-  // Starts recording app stacktraces of a running app. Reset data collected
-  // if called without a call to Stop first.
+  // Starts recording app stacktraces of a running app.
   // Does nothing if the app is already being profiled.
   rpc StartProfilingApp(CpuProfilingAppStartRequest) returns (CpuProfilingAppStartResponse) {
 
