@@ -32,17 +32,17 @@ class JByteArrayWrapper {
     int len = env->GetArrayLength(jbytes);
     char bytes[len];
     env->GetByteArrayRegion(jbytes, 0, len, reinterpret_cast<jbyte *>(bytes));
-    byte_str_.reset(new std::string(bytes, len));
+    byte_str_.assign(bytes, len);
   }
 
   // Note: Although this is technically returning a string, this really is more
   // of a vector<byte> array; however, we return std::string as an optimization
   // because that's how gRPC represents a byte array. Since this "string"
   // represents binary data, it can contain 0's inside of it.
-  const std::string &get() const { return *byte_str_; }
+  const std::string &get() const { return byte_str_; }
 
  private:
-  std::unique_ptr<std::string> byte_str_;
+  std::string byte_str_;
 };
 
 // Wrap a jstring, exposing it as a std::string
@@ -50,14 +50,14 @@ class JStringWrapper {
  public:
   JStringWrapper(JNIEnv *env, const jstring &jstr) {
     const char *c_str = env->GetStringUTFChars(jstr, NULL);
-    str_.reset(new std::string(c_str));
+    str_ = c_str;
     env->ReleaseStringUTFChars(jstr, c_str);
   }
 
-  const std::string &get() const { return *str_; }
+  const std::string &get() const { return str_; }
 
  private:
-  std::unique_ptr<std::string> str_;
+  std::string str_;
 };
 
 }  // namespace profiler
