@@ -21,16 +21,15 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "proto/cpu_profiler_service.grpc.pb.h"
+#include "proto/cpu.grpc.pb.h"
 
 namespace profiler {
 
 // CPU profiler specific service for desktop clients (e.g., Android Studio).
-class CpuProfilerServiceImpl final
-    : public profiler::proto::CpuProfilerService::Service {
+class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
-  CpuProfilerServiceImpl(CpuCache* cpu_cache, CpuUsageSampler* usage_sampler,
-                         ThreadMonitor* thread_monitor)
+  CpuServiceImpl(CpuCache* cpu_cache, CpuUsageSampler* usage_sampler,
+                 ThreadMonitor* thread_monitor)
       : cache_(*cpu_cache),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor) {}

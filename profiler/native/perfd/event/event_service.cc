@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/event/event_profiler_service.h"
+#include "perfd/event/event_service.h"
 
 #include <grpc++/grpc++.h>
 #include <vector>
@@ -27,12 +27,11 @@ using profiler::proto::EventDataResponse;
 using std::vector;
 
 namespace profiler {
-EventProfilerServiceImpl::EventProfilerServiceImpl(EventCache& cache)
-    : cache_(cache) {}
+EventServiceImpl::EventServiceImpl(EventCache& cache) : cache_(cache) {}
 
-Status EventProfilerServiceImpl::GetData(ServerContext* context,
-                                         const EventDataRequest* request,
-                                         EventDataResponse* response) {
+Status EventServiceImpl::GetData(ServerContext* context,
+                                 const EventDataRequest* request,
+                                 EventDataResponse* response) {
   Status status = Status::OK;
   int64_t startTime = request->start_timestamp();
   int64_t endTime = request->end_timestamp();

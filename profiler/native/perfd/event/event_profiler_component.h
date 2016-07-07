@@ -16,7 +16,7 @@
 #ifndef PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 #define PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 
-#include "perfd/event/event_profiler_service.h"
+#include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
 
@@ -34,7 +34,7 @@ class EventProfilerComponent final : public ProfilerComponent {
 
  private:
   EventCache cache_;
-  EventProfilerServiceImpl public_service_{cache_};
+  EventServiceImpl public_service_{cache_};
   InternalEventServiceImpl internal_service_{cache_};
 };
 

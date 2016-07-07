@@ -21,7 +21,7 @@
 #include <unordered_set>
 
 #include "perfd/daemon.h"
-#include "proto/cpu_profiler_service.grpc.pb.h"
+#include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/cpu/cpu_profiler_service.h"
+#include "perfd/cpu/cpu_service.h"
 
-#include "proto/cpu_profiler_data.grpc.pb.h"
 #include "utils/activity_manager.h"
 
 using grpc::ServerContext;
@@ -36,9 +35,9 @@ using std::vector;
 
 namespace profiler {
 
-Status CpuProfilerServiceImpl::GetData(ServerContext* context,
-                                       const CpuDataRequest* request,
-                                       CpuDataResponse* response) {
+Status CpuServiceImpl::GetData(ServerContext* context,
+                               const CpuDataRequest* request,
+                               CpuDataResponse* response) {
   int64_t id_in_request = request->app_id();
   int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? CpuCache::kAnyApp
                                                          : id_in_request);
@@ -50,9 +49,9 @@ Status CpuProfilerServiceImpl::GetData(ServerContext* context,
   return Status::OK;
 }
 
-grpc::Status CpuProfilerServiceImpl::StartMonitoringApp(
-    ServerContext* context, const CpuStartRequest* request,
-    CpuStartResponse* response) {
+grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
+                                                const CpuStartRequest* request,
+                                                CpuStartResponse* response) {
   auto status = usage_sampler_.AddProcess(request->app_id());
   if (status == CpuStartResponse::SUCCESS) {
     status = thread_monitor_.AddProcess(request->app_id());
@@ -61,9 +60,9 @@ grpc::Status CpuProfilerServiceImpl::StartMonitoringApp(
   return Status::OK;
 }
 
-grpc::Status CpuProfilerServiceImpl::StopMonitoringApp(
-    ServerContext* context, const CpuStopRequest* request,
-    CpuStopResponse* response) {
+grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
+                                               const CpuStopRequest* request,
+                                               CpuStopResponse* response) {
   auto status = usage_sampler_.RemoveProcess(request->app_id());
   if (status == CpuStopResponse::SUCCESS) {
     status = thread_monitor_.RemoveProcess(request->app_id());
@@ -72,7 +71,7 @@ grpc::Status CpuProfilerServiceImpl::StopMonitoringApp(
   return Status::OK;
 }
 
-grpc::Status CpuProfilerServiceImpl::StartProfilingApp(
+grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
   // TODO: Move the activity manager to the daemon.
@@ -96,7 +95,7 @@ grpc::Status CpuProfilerServiceImpl::StartProfilingApp(
   return Status::OK;
 }
 
-grpc::Status CpuProfilerServiceImpl::StopProfilingApp(
+grpc::Status CpuServiceImpl::StopProfilingApp(
     ServerContext* context, const CpuProfilingAppStopRequest* request,
     CpuProfilingAppStopResponse* response) {
   ActivityManager am;
