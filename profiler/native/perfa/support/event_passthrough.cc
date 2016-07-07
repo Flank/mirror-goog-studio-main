@@ -17,7 +17,7 @@
 #include <jni.h>
 
 #include "perfa/perfa.h"
-#include "perfa/support/jni_types.h"
+#include "perfa/support/jni_wrappers.h"
 #include "utils/clock.h"
 
 using grpc::ClientContext;
