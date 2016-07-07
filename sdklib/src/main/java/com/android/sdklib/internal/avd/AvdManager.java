@@ -57,9 +57,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
@@ -769,7 +767,7 @@ public class AvdManager {
 
             File userdataDest = new File(avdFolder, USERDATA_IMG);
 
-            copyImageFile(userdataSrc, userdataDest);
+            mFop.copyFile(userdataSrc, userdataDest);
 
             if (!mFop.exists(userdataDest)) {
                 log.warning(null, "Unable to create '%1$s' file in the AVD folder.",
@@ -805,7 +803,7 @@ public class AvdManager {
                         return null;
                     }
 
-                    copyImageFile(snapshotBlank, snapshotDest);
+                    mFop.copyFile(snapshotBlank, snapshotDest);
                 }
                 values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
             }
@@ -1059,28 +1057,6 @@ public class AvdManager {
         }
 
         return null;
-    }
-
-    /**
-     * Copy the nominated file to the given destination.
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private void copyImageFile(@NonNull File source, @NonNull File destination)
-            throws FileNotFoundException, IOException {
-
-        InputStream fis = mFop.newFileInputStream(source);
-        OutputStream fos = mFop.newFileOutputStream(destination);
-
-        byte[] buffer = new byte[4096];
-        int count;
-        while ((count = fis.read(buffer)) != -1) {
-            fos.write(buffer, 0, count);
-        }
-
-        fos.close();
-        fis.close();
     }
 
     /**
