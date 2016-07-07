@@ -143,6 +143,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     public Collection<File> getJavaResourceFiles() {
         return javaResourceFiles;
     }
+
     @InputFiles
     @Optional
     public Collection<File> getJniFolders() {
@@ -158,6 +159,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     private File atomMetadataFolder;
 
     @InputFiles
+    @Optional
     public Set<File> getDexFolders() {
         return dexFolders;
     }
@@ -206,7 +208,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     protected DexPackagingPolicy dexPackagingPolicy;
 
     protected File manifest;
+
     protected AaptOptions aaptOptions;
+
+    protected InstantRunBuildContext.FileType instantRunFileType =
+            InstantRunBuildContext.FileType.MAIN;
 
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
@@ -511,8 +517,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         // Mark this APK production, this will eventually be saved when instant-run is enabled.
         // this might get overridden if the apk is signed/aligned.
         try {
-            instantRunContext.addChangedFile(InstantRunBuildContext.FileType.MAIN,
-                    getOutputFile());
+            instantRunContext.addChangedFile(instantRunFileType, getOutputFile());
         } catch (IOException e) {
             throw new BuildException(e.getMessage(), e);
         }
@@ -1110,7 +1115,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     // ----- ConfigAction -----
 
-    public abstract static class ConfigAction<T extends  PackageAndroidArtifact> implements TaskConfigAction<T> {
+    public abstract static class ConfigAction<T extends PackageAndroidArtifact>
+            implements TaskConfigAction<T> {
 
         protected final PackagingScope packagingScope;
         protected final DexPackagingPolicy dexPackagingPolicy;
