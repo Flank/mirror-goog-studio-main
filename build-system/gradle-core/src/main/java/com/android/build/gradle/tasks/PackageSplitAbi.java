@@ -265,7 +265,8 @@ public class PackageSplitAbi extends SplitRelatedTask {
 
     @Input
     public Collection<String> getNoCompressExtensions() {
-        return MoreObjects.firstNonNull(aaptOptions.getNoCompress(), Collections.emptyList());
+        return MoreObjects.<Collection<String>>firstNonNull(
+                aaptOptions.getNoCompress(), Collections.emptyList());
     }
 
     // ----- ConfigAction -----
