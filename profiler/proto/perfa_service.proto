@@ -21,18 +21,6 @@ option java_outer_classname = "Perfa";
 
 import "profiler.proto";
 
-// TODO: Add more data to this object what can be sent during initialization
-message RegisterApplication {
-  int64 pid = 1;
-}
-
-// TODO: Fill it in with the data required to control perfa
-message PerfaControlRequest {
-}
-
-message DataStreamResponse {
-}
-
 service PerfaService {
   // Register a new agent in perfd and open a stream where perfd can send
   // control requests to the agent.
@@ -43,4 +31,16 @@ service PerfaService {
   // independent way.
   rpc DataStream(stream ProfilerData) returns (DataStreamResponse) {
   }
+}
+
+// TODO: Add more data to this object what can be sent during initialization
+message RegisterApplication {
+  int64 pid = 1;
+}
+
+// TODO: Fill it in with the data required to control perfa
+message PerfaControlRequest {
+}
+
+message DataStreamResponse {
 }

@@ -5,9 +5,9 @@ add_library(profiler_network
             network_cache.cc
             network_collector.cc
             network_constants.cc
-            network_profiler_service.cc
             network_sampler.cc
-            traffic_sampler.cc)
+            traffic_sampler.cc
+            network_service.cc)
 
 target_link_libraries(profiler_network
                       profiler_protos

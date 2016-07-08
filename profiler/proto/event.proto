@@ -21,7 +21,7 @@ option java_outer_classname = "EventProfiler";
 
 import "profiler.proto";
 
-service EventProfilerService {
+service EventService {
   // Requests profiler data from the app with ID being |app_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
