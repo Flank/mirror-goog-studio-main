@@ -54,6 +54,10 @@ Path::Path(FileSystem *fs, const std::string &path)
   name_ = path.substr(last_slash + 1);
 }
 
+int32_t Path::GetModificationAge() const {
+  return fs_->disk()->GetModificationAge(path_);
+}
+
 bool Path::Create() {
   if (fs_->disk()->HasDir(path_) || fs_->disk()->HasFile(path_)) {
     return false;

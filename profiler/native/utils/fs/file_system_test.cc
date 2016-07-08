@@ -24,9 +24,9 @@ using namespace std;
 using profiler::Dir;
 using profiler::Disk;
 using profiler::File;
-using profiler::FileStat;
 using profiler::FileSystem;
 using profiler::Path;
+using profiler::PathStat;
 
 // A VERY simple in-memory disk system, useful for confirming that FileSystem
 // operations worked.
@@ -43,6 +43,7 @@ class FakeDisk final : public Disk {
 
   bool NewDir(const string &dpath) override {
     dirs_.insert(dpath);
+    Touch(dpath);
     return true;
   }
 
@@ -52,26 +53,39 @@ class FakeDisk final : public Disk {
     return true;
   }
 
-  int32_t ModifyAge(const string &fpath) const override {
-    if (HasFile(fpath)) {
-      return current_time_s_ - files_[fpath].timestamp_s;
+  int32_t GetModificationAge(const string &path) const override {
+    auto it = timestamps_.find(path);
+    if (it != timestamps_.end()) {
+      return current_time_s_ - it->second;
     } else {
       return 0;
     }
   }
 
-  void Touch(const string &fpath) override {
-    files_[fpath].timestamp_s = current_time_s_;
+  void Touch(const string &path) override {
+    timestamps_[path] = current_time_s_;
   }
 
-  void WalkFiles(const std::string &dpath,
-                 std::function<void(const FileStat &)> callback) override {
-    for (auto it = files_.begin(); it != files_.end(); it++) {
-      if (it->first.compare(0, dpath.length(), dpath) == 0) {
-        std::string rel_path = it->first.substr(dpath.length() + 1);
-        int32_t modify_age_s = current_time_s_ - it->second.timestamp_s;
-        callback(FileStat(rel_path, modify_age_s));
+  void WalkDir(const string &dpath,
+               function<void(const PathStat &)> callback) const override {
+    vector<string> paths;
+    for (const auto &file_entry : files_) {
+      if (file_entry.first.compare(0, dpath.length(), dpath) == 0) {
+        paths.push_back(file_entry.first);
       }
+    }
+    for (const auto &dir : dirs_) {
+      if (dir != dpath && dir.compare(0, dpath.length(), dpath) == 0) {
+        paths.push_back(dir);
+      }
+    }
+
+    for (const auto &full_path : paths) {
+      int32_t modification_age_s = GetModificationAge(full_path);
+      PathStat::Type type =
+          HasDir(full_path) ? PathStat::Type::DIR : PathStat::Type::FILE;
+
+      callback(PathStat(type, dpath, full_path, modification_age_s));
     }
   }
 
@@ -106,6 +120,7 @@ class FakeDisk final : public Disk {
   }
 
   bool RmDir(const string &dpath) override {
+    timestamps_.erase(dpath);
     if (dirs_.erase(dpath) == 1) {
       // Deleting a directory should also delete all contents
       {
@@ -136,7 +151,10 @@ class FakeDisk final : public Disk {
     }
   }
 
-  bool RmFile(const string &fpath) override { return files_.erase(fpath) == 1; }
+  bool RmFile(const string &fpath) override {
+    timestamps_.erase(fpath);
+    return files_.erase(fpath) == 1;
+  }
 
   void SetCurrentTime(int32_t time) { current_time_s_ = time; }
 
@@ -145,11 +163,11 @@ class FakeDisk final : public Disk {
    public:
     string contents;
     bool in_write_mode;
-    int32_t timestamp_s;
   };
 
   mutable set<string> dirs_;
   mutable map<string, FileData> files_;
+  mutable map<string, int32_t> timestamps_;
   int32_t current_time_s_;
 };
 
@@ -357,29 +375,29 @@ TEST(FileSystem, ConstAccessAllowsReadOnlyView) {
   EXPECT_TRUE(cfs->root()->GetFile("a/b/c/d.txt")->Exists());
 }
 
-TEST(FileSystem, TouchUpdatesModifyAge) {
+TEST(FileSystem, TouchUpdatesModificationAge) {
   auto disk = make_shared<FakeDisk>();
   disk->SetCurrentTime(100);
   FileSystem fs(disk, "/mock/root");
   auto f = fs.root()->NewFile("file.txt");
 
-  EXPECT_EQ(f->ModifyAge(), 0);
+  EXPECT_EQ(f->GetModificationAge(), 0);
 
   disk->SetCurrentTime(200);
-  EXPECT_EQ(f->ModifyAge(), 100);
+  EXPECT_EQ(f->GetModificationAge(), 100);
 
   f->Touch();
-  EXPECT_EQ(f->ModifyAge(), 0);
+  EXPECT_EQ(f->GetModificationAge(), 0);
 }
 
-TEST(FileSystem, NonExistantFilesAlwaysHaveZeroModifyAge) {
+TEST(FileSystem, NonExistantFilesAlwaysHaveZeroModificationAge) {
   auto disk = make_shared<FakeDisk>();
   disk->SetCurrentTime(100);
   FileSystem fs(disk, "/mock/root");
   auto f = fs.root()->GetFile("file.txt");
-  EXPECT_EQ(f->ModifyAge(), 0);
+  EXPECT_EQ(f->GetModificationAge(), 0);
   disk->SetCurrentTime(200);
-  EXPECT_EQ(f->ModifyAge(), 0);
+  EXPECT_EQ(f->GetModificationAge(), 0);
 }
 
 TEST(FileSystem, WalkDirectoriesWorks) {
@@ -390,10 +408,9 @@ TEST(FileSystem, WalkDirectoriesWorks) {
   d->NewFile("f2");
   d->NewFile("a/b/c/f3");
 
-  int file_count = 0;
-  d->WalkFiles([&file_count](const FileStat &fstat) { ++file_count; });
-
-  EXPECT_EQ(file_count, 3);
+  int path_count = 0;
+  d->Walk([&path_count](const PathStat &pstat) { ++path_count; });
+  EXPECT_EQ(path_count, 6);
 }
 
 TEST(FileSystem, ConstWalkDirectoriesWorks) {
@@ -407,10 +424,9 @@ TEST(FileSystem, ConstWalkDirectoriesWorks) {
   const FileSystem *cfs = &fs;
   auto cd = cfs->root()->GetDir("d");
 
-  int file_count = 0;
-  cd->WalkFiles([&file_count](const FileStat &fstat) { ++file_count; });
-
-  EXPECT_EQ(file_count, 3);
+  int path_count = 0;
+  cd->Walk([&path_count](const PathStat &pstat) { ++path_count; });
+  EXPECT_EQ(path_count, 6);
 }
 
 TEST(FileSystem, WalkDirectoriesReportsCorrectStats) {
@@ -422,10 +438,13 @@ TEST(FileSystem, WalkDirectoriesReportsCorrectStats) {
   disk->SetCurrentTime(350);
 
   int file_count = 0;
-  b->WalkFiles([&file_count](const FileStat &fstat) {
-    ++file_count;
-    EXPECT_EQ(fstat.rel_path(), "c/d/e/f.txt");
-    EXPECT_EQ(fstat.modify_age_s(), 250);
+  b->Walk([&file_count](const PathStat &pstat) {
+    if (pstat.type() == PathStat::Type::FILE) {
+      ++file_count;
+      EXPECT_EQ(pstat.rel_path(), "c/d/e/f.txt");
+      EXPECT_EQ(pstat.full_path(), "/mock/root/a/b/c/d/e/f.txt");
+      EXPECT_EQ(pstat.modification_age(), 250);
+    }
   });
 
   EXPECT_EQ(file_count, 1);

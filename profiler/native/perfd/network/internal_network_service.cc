@@ -132,9 +132,10 @@ void InternalNetworkServiceImpl::JanitorThread() {
   Stopwatch stopwatch;
   while (is_janitor_running_) {
     if (Clock::ns_to_s(stopwatch.GetElapsed()) >= kCleanupPeriodS) {
-      cache_complete_->WalkFiles([this](const FileStat &fstat) {
-        if (fstat.modify_age_s() > kCacheLifetimeS) {
-          cache_complete_->GetFile(fstat.rel_path())->Delete();
+      cache_complete_->Walk([this](const PathStat &pstat) {
+        if (pstat.type() == PathStat::Type::FILE &&
+            pstat.modification_age() > kCacheLifetimeS) {
+          cache_complete_->GetFile(pstat.rel_path())->Delete();
         }
       });
       stopwatch.Start();

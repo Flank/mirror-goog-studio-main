@@ -36,9 +36,6 @@ class File final : public Path {
 
   bool Exists() const override;
 
-  // Returns the time, in seconds, since this file was last modified
-  int32_t ModifyAge() const;
-
   // Update the timestamp of this file. If the file does not exist, this method
   // does NOT create it. Instead, use |Create| if that's your intention.
   void Touch();
