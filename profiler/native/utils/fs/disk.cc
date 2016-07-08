@@ -24,42 +24,49 @@
 
 namespace {
 
-// Given a root directory path, walk all of its children and file callbacks for
-// each entry visited. Children files will be walked BEFORE their parent
-// directory. The root directory will NOT be included in the triggered
-// callbacks.
-//
-// The callbacks will be triggered with the absolute path to the file or
-// directory visited.
-void Walk(const std::string &dpath_root,
-          std::function<void(const char *)> file_callback,
-          std::function<void(const char *)> dir_callback) {
-  FTS *fts;
+using profiler::Disk;
+using profiler::PathStat;
+using std::function;
+using std::string;
+using std::unique_ptr;
 
-  char **dir_args = new char *[2];
-  dir_args[0] = new char[dpath_root.length() + 1];
-  strcpy(dir_args[0], dpath_root.c_str());
-  dir_args[1] = NULL;
+// Use the FTS (file traversal) API to walk the contents of the specified
+// directory path. Triggers the callback in child-first order.
+void FtsWalk(const Disk *disk, const string &dpath,
+             function<void(const PathStat &)> callback) {
+  unique_ptr<char[]> root_path(new char[dpath.length() + 1]);
+  strcpy(root_path.get(), dpath.c_str());
+  char *dir_args[2];
+  dir_args[0] = root_path.get();
+  dir_args[1] = nullptr;
   int open_options = FTS_PHYSICAL | FTS_NOCHDIR;
-  if ((fts = fts_open(dir_args, open_options, NULL)) != NULL) {
+  FTS *fts = nullptr;
+  if ((fts = fts_open(dir_args, open_options, nullptr)) != nullptr) {
     while (auto f = fts_read(fts)) {
+      bool valid = false;
+      PathStat::Type type;
+      const char *fts_path = f->fts_path;
       switch (f->fts_info) {
         case FTS_DP: {
-          if (dpath_root != f->fts_path) {
-            dir_callback(f->fts_path);
+          if (dpath != f->fts_path) {
+            type = PathStat::Type::DIR;
+            valid = true;
           }
         } break;
         case FTS_F: {
-          file_callback(f->fts_path);
+          type = PathStat::Type::FILE;
+          valid = true;
         } break;
+      }
+      if (valid) {
+        std::string full_path(fts_path);
+        callback(PathStat(type, dpath, full_path,
+                          disk->GetModificationAge(full_path)));
       }
     }
 
     fts_close(fts);
   }
-
-  delete[] dir_args[0];
-  delete[] dir_args;
 }
 }
 
@@ -106,7 +113,7 @@ bool CDisk::NewFile(const std::string &fpath) {
   return false;
 }
 
-int32_t CDisk::ModifyAge(const std::string &fpath) const {
+int32_t CDisk::GetModificationAge(const std::string &fpath) const {
   struct stat s;
   int result = stat(fpath.c_str(), &s);
   if (result == 0) {
@@ -118,19 +125,11 @@ int32_t CDisk::ModifyAge(const std::string &fpath) const {
   }
 }
 
-void CDisk::Touch(const std::string &fpath) { utime(fpath.c_str(), NULL); }
+void CDisk::Touch(const std::string &path) { utime(path.c_str(), NULL); }
 
-void CDisk::WalkFiles(const std::string &dpath,
-                      std::function<void(const FileStat &)> callback) {
-  Walk(dpath,
-       [this, &dpath, callback](const char *path) {
-         std::string full_path(path);
-         std::string rel_path = full_path.substr(dpath.length() + 1);
-
-         FileStat fstat(rel_path, ModifyAge(full_path));
-         callback(fstat);
-       },
-       [](const char *path) {});
+void CDisk::WalkDir(const std::string &dpath,
+                    std::function<void(const PathStat &)> callback) const {
+  return FtsWalk(this, dpath, callback);
 }
 
 std::string CDisk::GetFileContents(const std::string &fpath) const {
@@ -186,8 +185,8 @@ void CDisk::Close(const std::string &fpath) {
 }
 
 bool CDisk::RmDir(const std::string &dpath) {
-  Walk(dpath, [this](const char *path) { RmFile(path); },
-       [](const char *path) { remove(path); });
+  FtsWalk(this, dpath,
+          [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); });
   return remove(dpath.c_str());
 }
 

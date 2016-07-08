@@ -25,8 +25,6 @@ File::~File() { Close(); }
 
 bool File::Exists() const { return fs_->disk()->HasFile(path_); }
 
-int32_t File::ModifyAge() const { return fs_->disk()->ModifyAge(path_); }
-
 void File::Touch() {
   if (Exists()) {
     fs_->disk()->Touch(path_);
