@@ -44,6 +44,7 @@ import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
 import com.android.sdklib.BuildToolInfo;
+import com.android.utils.StringHelper;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -261,7 +262,16 @@ public class JackTransform extends Transform {
                         globalScope.getExtension().getDexOptions().getOptimize(), !isDebuggable));
         options.setMultiDex(config.isMultiDexEnabled());
         options.setMinSdkVersion(config.getMinSdkVersion().getApiLevel());
-        options.setIncrementalDir(scope.getIncrementalDir(getName()));
+        if (!Boolean.FALSE.equals(
+                globalScope.getExtension().getCompileOptions().getIncremental())) {
+            String taskName = StringHelper.combineAsCamelCase(
+                    ImmutableList.of(
+                            "transformJackWith",
+                            getName(),
+                            "for",
+                            scope.getFullVariantName()));
+            options.setIncrementalDir(scope.getIncrementalDir(taskName));
+        }
         options.setOutputFile(scope.getJackClassesZip());
         options.setResourceDirectories(ImmutableList.of(scope.getJavaResourcesDestinationDir()));
 
