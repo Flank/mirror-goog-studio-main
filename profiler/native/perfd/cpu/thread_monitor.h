@@ -23,8 +23,8 @@
 
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/daemon.h"
-#include "proto/cpu_profiler_data.pb.h"
-#include "proto/cpu_profiler_service.grpc.pb.h"
+#include "proto/cpu.grpc.pb.h"
+#include "proto/cpu.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {

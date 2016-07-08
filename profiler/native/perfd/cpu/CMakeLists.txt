@@ -1,7 +1,7 @@
 add_library(profiler_cpu
             cpu_cache.cc
-            cpu_profiler_service.cc
             cpu_collector.cc
+            cpu_service.cc
             cpu_usage_sampler.cc
             thread_monitor.cc)
 

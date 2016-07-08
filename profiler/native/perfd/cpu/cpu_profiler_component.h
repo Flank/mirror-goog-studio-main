@@ -18,7 +18,7 @@
 
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_collector.h"
-#include "perfd/cpu/cpu_profiler_service.h"
+#include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
@@ -49,7 +49,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
   ThreadMonitor thread_monitor_;
   CpuCollector collector_{kDefaultCollectionIntervalUs, &usage_sampler_,
                           &thread_monitor_};
-  CpuProfilerServiceImpl public_service_{&cache_, &usage_sampler_,
+  CpuServiceImpl public_service_{&cache_, &usage_sampler_,
                                          &thread_monitor_};
 };
 

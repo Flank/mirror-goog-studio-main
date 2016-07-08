@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "network_profiler_service.h"
+#include "network_service.h"
 
 #include "utils/log.h"
 
@@ -41,13 +41,12 @@ static const int32_t kDeviceSampleRateMs = 400;
 static const int32_t kAppSampleRateMs = 200;
 }
 
-NetworkProfilerServiceImpl::NetworkProfilerServiceImpl(
-    NetworkCache *network_cache)
+NetworkServiceImpl::NetworkServiceImpl(NetworkCache *network_cache)
     : network_cache_(*network_cache) {
   StartDeviceCollector();
 }
 
-grpc::Status NetworkProfilerServiceImpl::GetData(
+grpc::Status NetworkServiceImpl::GetData(
     grpc::ServerContext *context, const proto::NetworkDataRequest *request,
     proto::NetworkDataResponse *response) {
   int pid = request->app_id();
@@ -87,14 +86,14 @@ grpc::Status NetworkProfilerServiceImpl::GetData(
   return Status::OK;
 }
 
-grpc::Status NetworkProfilerServiceImpl::StartMonitoringApp(
+grpc::Status NetworkServiceImpl::StartMonitoringApp(
     grpc::ServerContext *context, const proto::NetworkStartRequest *request,
     proto::NetworkStartResponse *response) {
   StartAppCollector(request->app_id());
   return Status::OK;
 }
 
-grpc::Status NetworkProfilerServiceImpl::StopMonitoringApp(
+grpc::Status NetworkServiceImpl::StopMonitoringApp(
     grpc::ServerContext *context, const proto::NetworkStopRequest *request,
     proto::NetworkStopResponse *response) {
   int pid = request->app_id();
@@ -114,9 +113,9 @@ grpc::Status NetworkProfilerServiceImpl::StopMonitoringApp(
   return Status::OK;
 }
 
-grpc::Status NetworkProfilerServiceImpl::GetHttpRange(
-    grpc::ServerContext *context, const HttpRangeRequest *httpRange,
-    HttpRangeResponse *response) {
+grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
+                                              const HttpRangeRequest *httpRange,
+                                              HttpRangeResponse *response) {
   auto range =
       network_cache_.GetRange(httpRange->app_id(), httpRange->start_timestamp(),
                               httpRange->end_timestamp());
@@ -132,7 +131,7 @@ grpc::Status NetworkProfilerServiceImpl::GetHttpRange(
   return Status::OK;
 }
 
-grpc::Status NetworkProfilerServiceImpl::GetHttpDetails(
+grpc::Status NetworkServiceImpl::GetHttpDetails(
     grpc::ServerContext *context, const HttpDetailsRequest *httpDetails,
     HttpDetailsResponse *response) {
   ConnectionDetails *conn = network_cache_.GetDetails(httpDetails->conn_id());
@@ -176,21 +175,21 @@ grpc::Status NetworkProfilerServiceImpl::GetHttpDetails(
   return Status::OK;
 }
 
-void NetworkProfilerServiceImpl::StartDeviceCollector() {
+void NetworkServiceImpl::StartDeviceCollector() {
   auto *buffer = new NetworkProfilerBuffer(kBufferCapacity,
                                            proto::NetworkDataRequest::ANY_APP);
   device_buffer_.reset(buffer);
   StartCollectorFor(buffer, kDeviceSampleRateMs);
 }
 
-void NetworkProfilerServiceImpl::StartAppCollector(int pid) {
+void NetworkServiceImpl::StartAppCollector(int pid) {
   auto *buffer = new NetworkProfilerBuffer(kBufferCapacity, pid);
   app_buffers_.emplace_back(buffer);
   StartCollectorFor(buffer, kAppSampleRateMs);
 }
 
-void NetworkProfilerServiceImpl::StartCollectorFor(
-    NetworkProfilerBuffer *buffer, int32_t sample_rate_ms) {
+void NetworkServiceImpl::StartCollectorFor(NetworkProfilerBuffer *buffer,
+                                           int32_t sample_rate_ms) {
   auto *collector = new NetworkCollector(buffer->pid(), sample_rate_ms, buffer);
   collectors_.emplace_back(collector);
   collector->Start();

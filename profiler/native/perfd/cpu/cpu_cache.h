@@ -21,7 +21,7 @@
 #include <mutex>
 #include <vector>
 
-#include "proto/cpu_profiler_data.pb.h"
+#include "proto/cpu.pb.h"
 
 namespace profiler {
 

@@ -1,5 +1,4 @@
-set(PROTO_FILES cpu_profiler_data.proto
-                cpu_profiler_service.proto
+set(PROTO_FILES cpu.proto
                 event.proto
                 internal_event.proto
                 internal_memory.proto

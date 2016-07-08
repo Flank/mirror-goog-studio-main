@@ -19,7 +19,7 @@
 #include "perfd/daemon.h"
 #include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
-#include "perfd/network/network_profiler_service.h"
+#include "perfd/network/network_service.h"
 #include "perfd/profiler_component.h"
 
 namespace profiler {
@@ -39,7 +39,7 @@ class NetworkProfilerComponent final : public ProfilerComponent {
 
  private:
   NetworkCache network_cache_;
-  NetworkProfilerServiceImpl public_service_;
+  NetworkServiceImpl public_service_;
   InternalNetworkServiceImpl internal_service_;
 };
 
