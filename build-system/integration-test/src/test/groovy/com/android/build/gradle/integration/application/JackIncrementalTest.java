@@ -71,10 +71,18 @@ public class JackIncrementalTest {
 
         project.execute("assembleDebug");
 
-        assertThat(project.file("build/intermediates/incremental/jack")).isDirectory();
+        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug")).isDirectory();
 
         assertThat(classesDex).isNewerThan(classesDexTimestamp);
         assertThat(androidJar).wasModifiedAt(androidJarTimestamp);
     }
 
+    @Test
+    public void checkDisablingIncrementalCompile() throws IOException {
+        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
+                + "android.compileOptions.incremental false\n");
+        project.execute("clean", "assembleDebug");
+        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug")).doesNotExist();
+
+    }
 }
