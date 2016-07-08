@@ -146,10 +146,12 @@ assert(!from->Exists() && to->Exists());
 ### Delete files that haven't been modified in an hour
 
 ```c++
+const int EXPIRATION_SECS = 3600; // 1 hour
 auto d = fs.root()->GetDir("trash");
-d->WalkFiles([&d](const FileStat &fstat) {
-  if (fstat->modify_age_s() > 3600) {
-    d->GetFile(fstat.rel_path())->Delete();
+d->Walk([d](const PathStat &pstat) {
+  if (pstat->type() == PathStat::Type::FILE &&
+      pstat->modification_age() >= EXPIRATION_SECS) {
+    d->GetFile(pstat.rel_path())->Delete();
   }
 });
 ```
