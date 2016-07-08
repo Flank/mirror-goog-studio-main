@@ -181,14 +181,18 @@ public abstract class AbstractShrinkerTest {
         assertThat(innerClasses).isEmpty();
     }
 
-    protected void assertMembersLeft(String className, String... members) throws IOException {
+    protected void assertMembersLeft(String className, String... expectedMembers) throws IOException {
+        assertThat(getMembers(className)).containsExactlyElementsIn(Arrays.asList(expectedMembers));
+    }
+
+    protected Set<String> getMembers(String className) throws IOException {
         File outFile = getOutputClassFile(className);
 
         assertTrue(
                 String.format("Class %s does not exist in output.", className),
                 outFile.exists());
 
-        assertThat(getMembers(outFile)).containsExactlyElementsIn(Arrays.asList(members));
+        return getMembers(outFile);
     }
 
     @NonNull

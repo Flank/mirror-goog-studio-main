@@ -19,14 +19,14 @@ package com.android.build.gradle.shrinker;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Tests for {@link FullRunShrinker}.
@@ -1332,6 +1332,23 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("Main", "main:()V", "transform:(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[B)[B");
         assertImplements("Main", "java/lang/instrument/ClassFileTransformer");
         mExpectedWarnings = 1;
+    }
+
+    @Test
+    public void duplicateClasses() throws Exception {
+        Files.write(
+                TestClasses.classWithEmptyMethods("Foo", "a:()V"),
+                new File(mTestPackageDir, "Foo1.class"));
+
+        Files.write(
+                TestClasses.classWithEmptyMethods("Foo", "b:()V"),
+                new File(mTestPackageDir, "Foo2.class"));
+
+        run("Foo", "a:()V", "b:()V");
+
+        // Either 'a' or 'b'.
+        Set<String> members = getMembers("Foo");
+        Truth.assertThat(members).hasSize(1);
     }
 
     private void run(String className, String... methods) throws IOException {
