@@ -19,26 +19,22 @@ package com.android.builder.testing.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * Encapsulation of the device configuration obtained from "shell am get-config" command.
  */
 public interface DeviceConfig {
 
-    enum Catetory {
+    enum Category {
         CONFIG, ABI
     }
 
     @NonNull
-    Optional<String> getValue(Catetory catetory);
+    Optional<String> getValue(Category category);
 
     @NonNull
     List<String> getAbis();
@@ -54,13 +50,13 @@ public interface DeviceConfig {
         private static class Values {
 
             @NonNull
-            private final Catetory mCatetory;
+            private final Category myCategory;
 
             @NonNull
             private final String value;
 
-            private Values(@NonNull Catetory catetory, @NonNull String value) {
-                mCatetory = catetory;
+            private Values(@NonNull Category category, @NonNull String value) {
+                myCategory = category;
                 this.value = value;
             }
         }
@@ -68,10 +64,10 @@ public interface DeviceConfig {
         public static DeviceConfig parse(Collection<String> lines) {
             ImmutableList.Builder<Values> valuesBuilder = ImmutableList.builder();
             for (String line : lines) {
-                for (Catetory catetory : Catetory.values()) {
-                    String key = catetory.name().toLowerCase(Locale.US) + ": ";
+                for (Category category : Category.values()) {
+                    String key = category.name().toLowerCase(Locale.US) + ": ";
                     if (line.startsWith(key)) {
-                        valuesBuilder.add(new Values(catetory, line.substring(key.length())));
+                        valuesBuilder.add(new Values(category, line.substring(key.length())));
                     }
                 }
             }
@@ -80,20 +76,20 @@ public interface DeviceConfig {
 
                 @Override
                 @NonNull
-                public Optional<String> getValue(Catetory catetory) {
+                public Optional<String> getValue(Category category) {
                     for (Values value : values) {
-                        if (value.mCatetory.equals(catetory)) {
+                        if (value.myCategory.equals(category)) {
                             return Optional.of(value.value);
                         }
                     }
-                    return Optional.absent();
+                    return Optional.empty();
                 }
 
                 @Override
                 @NonNull
                 public List<String> getAbis() {
                     ImmutableList.Builder<String> abiBuilder = ImmutableList.builder();
-                    Optional<String> abis = getValue(Catetory.ABI);
+                    Optional<String> abis = getValue(Category.ABI);
                     if (abis.isPresent()) {
                         StringTokenizer stringTokenizer = new StringTokenizer(abis.get(), ",");
                         while (stringTokenizer.hasMoreElements()) {
@@ -107,7 +103,7 @@ public interface DeviceConfig {
                 @NonNull
                 public String getConfigForAllAbis() {
                     StringBuilder completeConfig = new StringBuilder();
-                    Optional<String> config = getValue(Catetory.CONFIG);
+                    Optional<String> config = getValue(Category.CONFIG);
                     List<String> abis = getAbis();
                     if (abis.isEmpty() && config.isPresent()) {
                         completeConfig.append(config.get());
@@ -125,7 +121,7 @@ public interface DeviceConfig {
                 @NonNull
                 public String getConfigFor(@Nullable String abi) {
                     StringBuilder completeConfig = new StringBuilder();
-                    Optional<String> config = getValue(Catetory.CONFIG);
+                    Optional<String> config = getValue(Category.CONFIG);
                     if (config.isPresent()) {
                         completeConfig.append(config.get());
                         if (!Strings.isNullOrEmpty(abi)) {
