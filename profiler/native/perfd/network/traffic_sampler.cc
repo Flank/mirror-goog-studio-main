@@ -16,6 +16,7 @@
 #include "traffic_sampler.h"
 
 #include "utils/file_reader.h"
+#include "utils/tokenizer.h"
 
 #include <cstdlib>
 
@@ -26,24 +27,22 @@ void TrafficSampler::GetData(profiler::proto::NetworkProfilerData *data) {
   int64_t bytes_received = 0;
 
   std::vector<std::string> lines;
-  FileReader::Read(kFile, &lines);
+  FileReader::Read(file_, &lines);
 
   for (const std::string &line : lines) {
-    if (FileReader::CompareToken(line, kUid, kUidTokenIndex)) {
-      size_t receive_token_start = 0;
-      if (!FileReader::FindTokenPosition(line, kReceiveBytesTokenIndex,
-                                         &receive_token_start)) {
-        continue;
+    Tokenizer t(line);
+    // Line, broken into tokens, with tokens we care about |highlighted|:
+    // idx iface acct_tag_hex |uid| cnt_set |rx_bytes| rx_packets |tx_bytes|
+    std::string uid_str;
+    if (t.EatTokens(3) && t.GetNextToken(&uid_str) && uid_str == uid_) {
+      std::string rx_str;
+      std::string tx_str;
+      if (t.EatTokens(1) && t.GetNextToken(&rx_str) && t.EatTokens(1) &&
+          t.GetNextToken(&tx_str)) {
+        // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
+        bytes_sent += atol(tx_str.c_str());
+        bytes_received += atol(rx_str.c_str());
       }
-      size_t send_token_start = receive_token_start;
-      if (!FileReader::FindTokenPosition(
-              line, kSendBytesTokenIndex - kReceiveBytesTokenIndex,
-              &send_token_start)) {
-        continue;
-      }
-
-      bytes_sent += strtoll(&line[send_token_start], nullptr, 10);
-      bytes_received += strtoll(&line[receive_token_start], nullptr, 10);
     }
   }
 
