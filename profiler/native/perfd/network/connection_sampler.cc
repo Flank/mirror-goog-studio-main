@@ -40,12 +40,13 @@ bool IsValidHeading(Tokenizer *t) {
 // If successful, the IP address is consumed; otherwise, the tokenizer will
 // be left wherever it failed and you shouldn't continue to use it.
 bool IsAllZerosIpAddress(Tokenizer *t) {
-  // TODO: This logic ignores the {4} part of the regex, do we need to be
-  // stricter?
   char separator;
-  return (t->EatNextToken(Tokenizer::IsOneOf("0")) &&
-          t->GetNextChar(&separator) && separator == ':' &&
-          t->EatNextToken(Tokenizer::IsAlphaNum));
+  std::string port;
+  if (t->EatNextToken(Tokenizer::IsOneOf("0")) && t->GetNextChar(&separator) &&
+      separator == ':' && t->GetNextToken(Tokenizer::IsAlphaNum, &port)) {
+    return port.size() == 4;
+  }
+  return false;
 }
 
 // Returns whether the tokenizer is pointing at a line which represents a

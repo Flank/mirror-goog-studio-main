@@ -19,6 +19,7 @@
 #include <cctype>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -36,9 +37,9 @@ namespace profiler {
 // Lambda support is provided for more refined parsing:
 //    Tokenizer t("123+321=444");
 //    string token;
-//    t.GetNextToken(&token, Tokenizer::IsDigit); // 123
+//    t.GetNextToken(Tokenizer::IsDigit, &token); // 123
 //    t.EatNextChar();                            // Skip over +
-//    t.GetNextToken(&token, Tokenizer::IsDigit); // 321
+//    t.GetNextToken(Tokenizer::IsDigit, &token); // 321
 //    ...
 //
 // Like the string class, this class handles bytes independently of the encoding
@@ -53,14 +54,27 @@ class Tokenizer final {
   static bool IsUpper(char c) { return isupper(c) != 0; }
   static bool IsWhitespace(char c) { return strchr(kWhitespace, c) != nullptr; }
   // Creates a testing function which can be used with |GetNextToken|
-  // e.g. GetNextToken(&token, Tokenizer::IsOneOf("abc"));
+  // e.g. GetNextToken(Tokenizer::IsOneOf("abc"), &token);
   static std::function<bool(char)> IsOneOf(const char *chars) {
     return [chars](char c) { return strchr(chars, c) != nullptr; };
   }
 
-  // Returns the tokens by splitting |input| string by |delimiters|.
-  static std::vector<std::string> GetTokens(const std::string &input,
-                                            const std::string &delimiters);
+  // Returns a list of tokens by splitting |input| by |delimiters|.
+  //
+  // When |start_token_index| is specified, we keep eat tokens for that amount,
+  // result includes only tokens following if any; otherwise, no token is eaten.
+  // For example, |input| = "first second", |start_token_index| = 1, |delimiter|
+  // = " ", then token "first" is eaten and result is {"second"}.
+  //
+  // If |max_token_count| is specified, at most first |max_token_count| of
+  // tokens are returned; otherwise, it does not limit how many tokens in
+  // result.
+  // For example, |input| = "first second", |start_token_index| = 0, |delimiter|
+  // = " ", |max_token_count| = 1, then result is {"first"}.
+  static std::vector<std::string> GetTokens(
+      const std::string &input, const std::string &delimiters,
+      const int32_t start_token_index = 0,
+      const int32_t max_token_count = std::numeric_limits<int32_t>::max());
 
   // Create a tokenizer that wraps an input string. By default, it will use
   // whitespace as a delimiter, but you can instead optionally specify a string
@@ -88,8 +102,8 @@ class Tokenizer final {
   // pull out the token (which, here, does not rely on delimiters, but is the
   // longest substring where the |is_valid_char| function returns true on each
   // character).
-  bool GetNextToken(std::string *token,
-                    std::function<bool(char)> is_valid_char);
+  bool GetNextToken(std::function<bool(char)> is_valid_char,
+                    std::string *token);
 
   // Get the next character in the input text and return true, unless we're
   // already at the end of the text, at which point false will be returned and
@@ -111,11 +125,11 @@ class Tokenizer final {
   // Convenience method for calling |GetNextToken| when you don't care about the
   // token result.
   bool EatNextToken(std::function<bool(char)> is_valid_char) {
-    return GetNextToken(nullptr, is_valid_char);
+    return GetNextToken(is_valid_char, nullptr);
   }
 
   // Convenience method for calling |GetNextChar| when you don't care about the
-  // character result.
+  // char result.
   bool EatNextChar() { return GetNextChar(nullptr); }
 
   // Skip over |token_count| number of tokens, returning true if it could skip

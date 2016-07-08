@@ -20,13 +20,19 @@ using std::string;
 
 namespace profiler {
 
-vector<string> Tokenizer::GetTokens(const string &input,
-                                    const string &delimiters) {
+std::vector<std::string> Tokenizer::GetTokens(const std::string &input,
+                                              const std::string &delimiters,
+                                              const int32_t start_token_index,
+                                              const int32_t max_token_count) {
   vector<string> tokens{};
-  string token;
   Tokenizer tokenizer(input, delimiters);
-  while (tokenizer.GetNextToken(&token)) {
-    tokens.push_back(token);
+  if (tokenizer.EatTokens(start_token_index)) {
+    std::string token;
+    int32_t count = 0;
+    while (count < max_token_count && tokenizer.GetNextToken(&token)) {
+      tokens.push_back(token);
+      count++;
+    }
   }
   return tokens;
 }
@@ -34,7 +40,7 @@ vector<string> Tokenizer::GetTokens(const string &input,
 bool Tokenizer::GetNextToken(std::string *token) {
   EatDelimiters();
   return GetNextToken(
-      token, [this](char c) { return delimiters_.find(c) == string::npos; });
+      [this](char c) { return delimiters_.find(c) == string::npos; }, token);
 }
 
 bool Tokenizer::EatTokens(int32_t token_count) {
@@ -48,8 +54,8 @@ bool Tokenizer::EatTokens(int32_t token_count) {
   return true;
 }
 
-bool Tokenizer::GetNextToken(std::string *token,
-                             std::function<bool(char)> is_valid_char) {
+bool Tokenizer::GetNextToken(std::function<bool(char)> is_valid_char,
+                             std::string *token) {
   size_t start = index_;
   while (index_ < input_.size() && is_valid_char(input_[index_])) {
     index_++;
