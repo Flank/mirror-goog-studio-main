@@ -21,6 +21,7 @@
 #include "utils/activity_manager.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
+#include "utils/thread_name.h"
 
 namespace profiler {
 
@@ -43,6 +44,8 @@ void MemoryCollector::Stop() {
 }
 
 void MemoryCollector::CollectorMain() {
+  SetThreadName("MemCollector");
+
   Stopwatch stopwatch;
   while (is_running_) {
     int64_t start_time_ns = stopwatch.GetElapsed();
@@ -94,6 +97,8 @@ bool MemoryCollector::TriggerHeapDump() {
 }
 
 void MemoryCollector::HeapDumpMain(const std::string& file_path) {
+  SetThreadName("HeapDump");
+
   std::string unusedOutput;
   ActivityManager am;
 
