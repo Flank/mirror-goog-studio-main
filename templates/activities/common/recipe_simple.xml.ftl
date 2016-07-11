@@ -11,6 +11,4 @@
 <#if (isNewProject!false) && !(excludeMenu!false)>
     <#include "recipe_simple_menu.xml.ftl" />
 </#if>
-
-    <#include "recipe_simple_dimens.xml" />
 </recipe>
