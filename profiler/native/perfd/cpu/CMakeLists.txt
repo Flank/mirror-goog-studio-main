@@ -3,6 +3,7 @@ add_library(profiler_cpu
             cpu_collector.cc
             cpu_service.cc
             cpu_usage_sampler.cc
+            simpleperf_manager.cc
             thread_monitor.cc)
 
 target_link_libraries(profiler_cpu

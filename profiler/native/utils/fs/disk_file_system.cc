@@ -130,15 +130,17 @@ string DiskFileSystem::GetFileContents(const string &fpath) const {
     return "";
   }
 
-  fseek(file, 0, SEEK_END);
-  size_t size = ftell(file);
-  rewind(file);
-
-  unique_ptr<char> buffer(new char[size]);
-  fread(buffer.get(), sizeof(char), size, file);
-  string contents(buffer.get());
-
-  return contents;
+  // This API is used to read /proc/ where all files have size 0.
+  // Therefore, we cannot use fseek to determine the size of the file
+  // and have to rely on feof.
+  string content;
+  char buffer[1024];
+  while (!feof(file)) {
+    size_t read = fread(buffer, sizeof(char), sizeof(buffer), file);
+    content.append(buffer, read);
+  }
+  fclose(file);
+  return content;
 }
 
 bool DiskFileSystem::MoveFile(const string &fpath_from,

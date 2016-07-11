@@ -1,14 +1,16 @@
 #include "package_manager.h"
 
+#include "utils/log.h"
+#include "utils/trace.h"
+
 #include <cstring>
 #include <sstream>
 
 using std::string;
 
 namespace {
-const string kPackagePrefix = "package:";
-const string kPM_EXEC = "/system/bin/pm";
-const string kDIR_KEY = "dataDir=";
+const char *kPackagePrefix = "package:";
+const char *kPM_EXEC = "/system/bin/pm";
 }
 
 namespace profiler {
@@ -16,6 +18,7 @@ PackageManager::PackageManager() : BashCommandRunner(kPM_EXEC) {}
 
 bool PackageManager::GetAppBaseFolder(const string &package_name, string *path,
                                       string *error_string) const {
+  Trace trace("PackageManager::GetAppBaseFolder");
   string parameters;
   parameters.append("path ");
   parameters.append(package_name);
@@ -38,31 +41,30 @@ bool PackageManager::GetAppBaseFolder(const string &package_name, string *path,
   }
 
   // Remove prefix and prefix.
-  *path = path->substr(kPackagePrefix.size(), path->find_last_of("/"));
+  *path = path->substr(strlen(kPackagePrefix), path->find_last_of("/"));
   return true;
 }
 
 bool PackageManager::GetAppDataPath(const string &package_name, string *path,
                                     string *error_string) const {
+  Trace trace("PackageManager::GetAppDataPath");
+
+  BashCommandRunner pwd("pwd");
   string parameters;
-  parameters.append("dump ");
-  parameters.append(package_name);
-  bool success = Run(parameters, error_string);
+  std::string output;
+  bool success = pwd.RunAs(parameters, package_name, &output);
   if (!success) {
+    string msg = "Unable to retrieve App Data Path";
+    *error_string = msg;
+    Log::E("%s", msg.c_str());
     return false;
   }
 
-  std::string output;
-  std::istringstream stream(output);
-  string line;
-  while (std::getline(stream, line)) {
-    if (line.find(kDIR_KEY) != string::npos) {
-      *path = line.substr(line.find(kDIR_KEY) + kDIR_KEY.length());
-      return true;
-    }
-  }
+  // Remove the CR at the end of the line.
+  output.pop_back();
 
-  *error_string = "Could not find key '" + kDIR_KEY + "'";
-  return false;
+  *path = output;
+  Log::D("GetAddDataPath %s", output.c_str());
+  return true;
 }
 }  // namespace profiler

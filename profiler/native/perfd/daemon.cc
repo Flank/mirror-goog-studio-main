@@ -42,5 +42,4 @@ void Daemon::RunServer(const string& server_address) {
   std::cout << "Server listening on " << server_address << std::endl;
   server->Wait();
 }
-
 }  // namespace profiler
