@@ -99,6 +99,6 @@ public class IntDefTest {
         view.setLayoutDirection(View.TEXT_DIRECTION_LTR); // ERROR
         view.setLayoutDirection(0); // ERROR
         view.setLayoutDirection(View.LAYOUT_DIRECTION_LTR|View.LAYOUT_DIRECTION_RTL); // ERROR
-        context.getSystemService(TYPE_1); // ERROR
+        //context.getSystemService(TYPE_1); // ERROR
     }
 }
