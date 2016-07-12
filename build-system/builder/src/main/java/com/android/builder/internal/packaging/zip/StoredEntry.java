@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.google.common.primitives.Ints;
 
 import java.io.IOException;
@@ -318,14 +317,8 @@ public class StoredEntry {
      */
     @NonNull
     public byte[] read() throws IOException {
-        InputStream is = open();
-        boolean threw = true;
-        try {
-            byte[] r = ByteStreams.toByteArray(is);
-            threw = false;
-            return r;
-        } finally {
-            Closeables.close(is, threw);
+        try (InputStream is = open()) {
+            return ByteStreams.toByteArray(is);
         }
     }
 
