@@ -227,10 +227,16 @@ class CentralDirectory {
 
         for (int i = 0; i < count; i++) {
             try {
-                directory.readEntry(bytes);
+                directory.readEntry(bytes, file);
             } catch (IOException e) {
-                throw new IOException("Failed to read directory entry index " + i + " (total "
-                        + "directory bytes read: " + bytes.position() + ").", e);
+                throw new IOException(
+                        "Failed to read directory entry index "
+                                + i
+                                + " (total "
+                                + "directory bytes read: "
+                                + bytes.position()
+                                + ").",
+                        e);
             }
         }
 
@@ -250,7 +256,8 @@ class CentralDirectory {
         CentralDirectory directory = new CentralDirectory(file);
         for (StoredEntry entry : entries) {
             CentralDirectoryHeader cdr = entry.getCentralDirectoryHeader();
-            Preconditions.checkArgument(!directory.mEntries.containsKey(cdr.getName()),
+            Preconditions.checkArgument(
+                    !directory.mEntries.containsKey(cdr.getName()),
                     "Duplicate filename");
             directory.mEntries.put(cdr.getName(), entry);
         }
@@ -264,10 +271,11 @@ class CentralDirectory {
      * @param bytes the central directory's data, positioned starting at the beginning of the next
      * entry to read; when finished, the buffer's position will be at the first byte after the
      * entry
+     * @param file the file this entry belongs to
      * @throws IOException failed to read the directory entry, either because of an I/O error,
      * because it is corrupt or contains unsupported features
      */
-    private void readEntry(@NonNull ByteBuffer bytes) throws IOException {
+    private void readEntry(@NonNull ByteBuffer bytes, @NonNull ZFile file) throws IOException {
         F_SIGNATURE.verify(bytes);
         long madeBy = F_MADE_BY.read(bytes);
 
@@ -339,8 +347,13 @@ class CentralDirectory {
         ListenableFuture<CentralDirectoryHeaderCompressInfo> compressInfo =
                 Futures.immediateFuture(new CentralDirectoryHeaderCompressInfo(method,
                         compressedSize, versionNeededToExtract));
-        CentralDirectoryHeader centralDirectoryHeader = new CentralDirectoryHeader(fileName,
-                uncompressedSize, compressInfo, flags);
+        CentralDirectoryHeader centralDirectoryHeader =
+                new CentralDirectoryHeader(
+                        fileName,
+                        uncompressedSize,
+                        compressInfo,
+                        flags,
+                        file);
         centralDirectoryHeader.setMadeBy(madeBy);
         centralDirectoryHeader.setLastModTime(lastModTime);
         centralDirectoryHeader.setLastModDate(lastModDate);
@@ -348,7 +361,7 @@ class CentralDirectory {
         centralDirectoryHeader.setInternalAttributes(internalAttributes);
         centralDirectoryHeader.setExternalAttributes(externalAttributes);
         centralDirectoryHeader.setOffset(entryOffset);
-        centralDirectoryHeader.setExtraField(extraField);
+        centralDirectoryHeader.setExtraFieldNoNotify(new ExtraField(extraField));
         centralDirectoryHeader.setComment(fileCommentField);
 
         StoredEntry entry;
@@ -413,7 +426,8 @@ class CentralDirectory {
             cdhs[idx] = entry.getCentralDirectoryHeader();
             compressInfos[idx] = cdhs[idx].getCompressionInfoWithWait();
             encodedFileNames[idx] = cdhs[idx].getEncodedFileName();
-            extraFields[idx] = cdhs[idx].getExtraField();
+            extraFields[idx] = new byte[cdhs[idx].getExtraField().size()];
+            cdhs[idx].getExtraField().write(ByteBuffer.wrap(extraFields[idx]));
             comments[idx] = cdhs[idx].getComment();
 
             total += F_OFFSET.endOffset() + encodedFileNames[idx].length
@@ -444,7 +458,7 @@ class CentralDirectory {
             F_UNCOMPRESSED_SIZE.write(out, cdhs[idx].getUncompressedSize());
 
             F_FILE_NAME_LENGTH.write(out, cdhs[idx].getEncodedFileName().length);
-            F_EXTRA_FIELD_LENGTH.write(out, cdhs[idx].getExtraField().length);
+            F_EXTRA_FIELD_LENGTH.write(out, cdhs[idx].getExtraField().size());
             F_COMMENT_LENGTH.write(out, cdhs[idx].getComment().length);
             F_DISK_NUMBER_START.write(out);
             F_INTERNAL_ATTRIBUTES.write(out, cdhs[idx].getInternalAttributes());

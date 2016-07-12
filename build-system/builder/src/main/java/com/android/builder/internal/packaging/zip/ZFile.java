@@ -28,6 +28,7 @@ import com.android.builder.internal.utils.IOExceptionRunnable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -49,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -220,11 +222,6 @@ public class ZFile implements Closeable {
      * Minimum size for the extra field.
      */
     private static final int MINIMUM_EXTRA_FIELD_SIZE = 6;
-
-    /**
-     * Header ID for field with zip alignment.
-     */
-    private static final int ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID = 0xd935;
 
     /**
      * Maximum size of the extra field.
@@ -861,12 +858,13 @@ public class ZFile implements Closeable {
                     continue;
                 }
 
-                int localExtraSize =
-                        storedEntry.getLocalExtra().length + Ints.checkedCast(before.getSize());
-
                 /*
-                 * Sorting or packing should have ensured this never happens.
+                 * We have free space before the current entry. However, we do know that it can
+                 * be covered by the extra field, because both sortZipContents() and
+                 * packIfNecessary() guarantee it.
                  */
+                int localExtraSize =
+                        storedEntry.getLocalExtra().size() + Ints.checkedCast(before.getSize());
                 Verify.verify(localExtraSize <= MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE);
 
                 /*
@@ -877,12 +875,38 @@ public class ZFile implements Closeable {
                 long newStart = before.getStart();
                 long newSize = entry.getSize() + before.getSize();
 
+                /*
+                 * Remove the entry.
+                 */
                 String name = storedEntry.getCentralDirectoryHeader().getName();
                 mMap.remove(entry);
                 Verify.verify(entry == mEntries.remove(name));
 
-                storedEntry.setLocalExtra(
-                        makeExtraAlignmentBlock(localExtraSize, chooseAlignment(storedEntry)));
+                /*
+                 * Make a list will all existing segments in the entry's extra field, but remove
+                 * the alignment field, if it exists. Also, sum the size of all kept extra field
+                 * segments.
+                 */
+                List<ExtraField.Segment> extraFieldSegments = new ArrayList<>();
+                int newExtraFieldSize =
+                        storedEntry.getLocalExtra().getSegments().stream()
+                        .filter(s -> s.getHeaderId()
+                                != ExtraField.ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID)
+                        .peek(extraFieldSegments::add)
+                        .map(ExtraField.Segment::size)
+                        .reduce(0, Integer::sum);
+
+                int spaceToFill =
+                        Ints.checkedCast(
+                            before.getSize()
+                                    + storedEntry.getLocalExtra().size()
+                                    - newExtraFieldSize);
+
+                extraFieldSegments.add(
+                        new ExtraField.AlignmentSegment(chooseAlignment(storedEntry),spaceToFill));
+
+                storedEntry.setLocalExtraNoNotify(
+                        new ExtraField(ImmutableList.copyOf(extraFieldSegments)));
                 mEntries.put(name, mMap.add(newStart, newStart + newSize, storedEntry));
 
                 /*
@@ -971,6 +995,10 @@ public class ZFile implements Closeable {
      * {@link #MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE} if {@link #mCoverEmptySpaceUsingExtraField}
      * is set to {@code true}.
      *
+     * <p>Essentially, this makes sure we can cover any empty space with the extra field, given
+     * that the local extra field is limited to {@link #MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE}. If
+     * an entry is too far from the previous one, it is removed and re-added.
+     *
      * @throws IOException failed to repack
      */
     private void packIfNecessary() throws IOException {
@@ -992,7 +1020,7 @@ public class ZFile implements Closeable {
             }
 
             int localExtraSize =
-                    storedEntry.getLocalExtra().length + Ints.checkedCast(before.getSize());
+                    storedEntry.getLocalExtra().size() + Ints.checkedCast(before.getSize());
             if (localExtraSize > MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE) {
                 /*
                  * This entry is too far from the previous one. Remove it and re-add it to the
@@ -1024,6 +1052,30 @@ public class ZFile implements Closeable {
         FileUseMapEntry<StoredEntry> positioned = positionInFile(entry);
         mEntries.put(name, positioned);
         mDirty = true;
+    }
+
+    /**
+     * Invoked from {@link StoredEntry} when entry has changed in a way that forces the local
+     * header to be rewritten
+     *
+     * @param entry the entry that changed
+     * @param resized was the local header resized?
+     * @throws IOException failed to load the entry into memory
+     */
+    void localHeaderChanged(@NonNull StoredEntry entry, boolean resized) throws IOException {
+        mDirty = true;
+
+        if (resized) {
+            reAdd(entry);
+        }
+    }
+
+    /**
+     * Invoked when the central directory has changed and needs to be rewritten.
+     */
+    void centralDirectoryChanged() {
+        mDirty = true;
+        deleteDirectoryAndEocd();
     }
 
     /**
@@ -1390,8 +1442,13 @@ public class ZFile implements Closeable {
 
         SettableFuture<CentralDirectoryHeaderCompressInfo> compressInfo =
                 SettableFuture.create();
-        CentralDirectoryHeader newFileData = new CentralDirectoryHeader(name,
-                source.size(), compressInfo, GPFlags.make(encodeWithUtf8));
+        CentralDirectoryHeader newFileData =
+                new CentralDirectoryHeader(
+                        name,
+                        source.size(),
+                        compressInfo,
+                        GPFlags.make(encodeWithUtf8),
+                        this);
         newFileData.setCrc32(crc32);
 
         /*
@@ -2252,33 +2309,5 @@ public class ZFile implements Closeable {
     @NonNull
     public File getFile() {
         return mFile;
-    }
-
-    /**
-     * Creates the extra field block to fill in {@code blockSize} bytes.
-     *
-     * @param blockSize the block size to fill as an extra field
-     * @param alignment the alignment that is being used for the file
-     * @return the extra field block
-     * @throws IOException failed to write the extra block
-     */
-    @NonNull
-    private static byte[] makeExtraAlignmentBlock(int blockSize, int alignment) throws IOException {
-        Preconditions.checkArgument(
-                blockSize >= MINIMUM_EXTRA_FIELD_SIZE,
-                "blockSize (" + blockSize + ") < MINIMUM_EXTRA_FIELD_SIZE");
-
-        byte[] data = new byte[blockSize];
-        ByteBuffer buffer = ByteBuffer.wrap(data);
-
-        LittleEndianUtils.writeUnsigned2Le(buffer, ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID);
-        LittleEndianUtils.writeUnsigned2Le(buffer, blockSize - 4);
-        LittleEndianUtils.writeUnsigned2Le(buffer, alignment);
-
-        /*
-         * The rest is left filled with zeroes.
-         */
-
-        return data;
     }
 }

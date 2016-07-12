@@ -81,10 +81,10 @@ public class CentralDirectoryHeader implements Cloneable {
 
     /**
      * Extra data field contents. This field follows a specific structure according to the
-     * specification, but we don't use its contents.
+     * specification.
      */
     @NonNull
-    private byte[] mExtraField;
+    private ExtraField mExtraField;
 
     /**
      * File comment.
@@ -120,18 +120,26 @@ public class CentralDirectoryHeader implements Cloneable {
     private Future<CentralDirectoryHeaderCompressInfo> mCompressInfo;
 
     /**
+     * The file this header belongs to.
+     */
+    @NonNull
+    private final ZFile mFile;
+
+    /**
      * Creates data for a file.
      *
      * @param name the file name
      * @param uncompressedSize the uncompressed file size
      * @param compressInfo computation that defines the compression information
      * @param flags flags used in the entry
+     * @param zFile the file this header belongs to
      */
     CentralDirectoryHeader(
             @NonNull String name,
             long uncompressedSize,
             @NonNull Future<CentralDirectoryHeaderCompressInfo> compressInfo,
-            @NonNull GPFlags flags) {
+            @NonNull GPFlags flags,
+            @NonNull ZFile zFile) {
         mName = name;
         mUncompressedSize = uncompressedSize;
         mCrc32 = 0;
@@ -144,13 +152,14 @@ public class CentralDirectoryHeader implements Cloneable {
         mGpBit = flags;
         mLastModTime = MsDosDateTimeUtils.packCurrentTime();
         mLastModDate = MsDosDateTimeUtils.packCurrentDate();
-        mExtraField = new byte[0];
+        mExtraField = new ExtraField();
         mComment = new byte[0];
         mInternalAttributes = 0;
         mExternalAttributes = 0;
         mOffset = -1;
         mEncodedFileName = EncodeUtils.encode(name, mGpBit);
         mCompressInfo = compressInfo;
+        mFile = zFile;
     }
 
     /**
@@ -186,7 +195,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param crc32 the CRC 32
      */
-    public void setCrc32(long crc32) {
+    void setCrc32(long crc32) {
         mCrc32 = crc32;
     }
 
@@ -204,7 +213,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param madeBy the code
      */
-    public void setMadeBy(long madeBy) {
+    void setMadeBy(long madeBy) {
         mMadeBy = madeBy;
     }
 
@@ -234,7 +243,7 @@ public class CentralDirectoryHeader implements Cloneable {
      * @param lastModTime the last modification time in MS-DOS format (see
      * {@link MsDosDateTimeUtils#packTime(long)})
      */
-    public void setLastModTime(long lastModTime) {
+    void setLastModTime(long lastModTime) {
         mLastModTime = lastModTime;
     }
 
@@ -254,7 +263,7 @@ public class CentralDirectoryHeader implements Cloneable {
      * @param lastModDate the last modification date in MS-DOS format (see
      * {@link MsDosDateTimeUtils#packDate(long)})
      */
-    public void setLastModDate(long lastModDate) {
+    void setLastModDate(long lastModDate) {
         mLastModDate = lastModDate;
     }
 
@@ -264,7 +273,7 @@ public class CentralDirectoryHeader implements Cloneable {
      * @return the data (returns an empty array if there is none)
      */
     @NonNull
-    public byte[] getExtraField() {
+    public ExtraField getExtraField() {
         return mExtraField;
     }
 
@@ -273,7 +282,18 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param extraField the data to set
      */
-    public void setExtraField(@NonNull byte[] extraField) {
+    public void setExtraField(@NonNull ExtraField extraField) {
+        setExtraFieldNoNotify(extraField);
+        mFile.centralDirectoryChanged();
+    }
+
+    /**
+     * Sets the data in the extra field, but does not notify {@link ZFile}. This method is invoked
+     * when the {@link ZFile} knows the extra field is being set.
+     *
+     * @param extraField the data to set
+     */
+    void setExtraFieldNoNotify(@NonNull ExtraField extraField) {
         mExtraField = extraField;
     }
 
@@ -292,7 +312,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param comment the comment
      */
-    public void setComment(@NonNull byte[] comment) {
+    void setComment(@NonNull byte[] comment) {
         mComment = comment;
     }
 
@@ -310,7 +330,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param internalAttributes the entry's internal attributes
      */
-    public void setInternalAttributes(long internalAttributes) {
+    void setInternalAttributes(long internalAttributes) {
         mInternalAttributes = internalAttributes;
     }
 
@@ -328,7 +348,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param externalAttributes the entry's external attributes
      */
-    public void setExternalAttributes(long externalAttributes) {
+    void setExternalAttributes(long externalAttributes) {
         mExternalAttributes = externalAttributes;
     }
 
@@ -347,7 +367,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param offset the offset or {@code -1} if the file is new and has no data in the zip yet
      */
-    public void setOffset(long offset) {
+    void setOffset(long offset) {
         mOffset = offset;
     }
 
@@ -363,7 +383,7 @@ public class CentralDirectoryHeader implements Cloneable {
     /**
      * Resets the deferred CRC flag in the GP flags.
      */
-    public void resetDeferredCrc() {
+    void resetDeferredCrc() {
         /*
          * We actually create a new set of flags. Since the only information we care about is the
          * UTF-8 encoding, we'll just create a brand new object.
@@ -374,7 +394,7 @@ public class CentralDirectoryHeader implements Cloneable {
     @Override
     protected CentralDirectoryHeader clone() throws CloneNotSupportedException {
         CentralDirectoryHeader cdr = (CentralDirectoryHeader) super.clone();
-        cdr.mExtraField = Arrays.copyOf(mExtraField, mExtraField.length);
+        cdr.mExtraField = mExtraField;
         cdr.mComment = Arrays.copyOf(mComment, mComment.length);
         cdr.mEncodedFileName = Arrays.copyOf(mEncodedFileName, mEncodedFileName.length);
         return cdr;
