@@ -33,7 +33,11 @@ import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.SdkLoader;
 import com.android.builder.sdk.TargetInfo;
 import com.android.repository.Revision;
+import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.LocalPackage;
+import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -139,6 +143,16 @@ public class SdkHandler {
         androidBuilder.setSdkInfo(sdkInfo);
         androidBuilder.setTargetInfo(targetInfo);
         androidBuilder.setLibraryRequests(usedLibraries);
+
+        // Check if platform-tools are installed. We check here because realistically, all projects
+        // should have platform-tools in order to build.
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(getSdkFolder());
+        LocalPackage platformToolsPackage =
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_PLATFORM_TOOLS, true, progress);
+        if (platformToolsPackage == null) {
+            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+        }
         logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
