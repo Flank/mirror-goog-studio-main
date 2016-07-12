@@ -111,26 +111,35 @@ public class InstantRunTaskManager {
         assert verifierTask!= null;
         verifierTask.dependsOn(tasks, preTask);
 
-        NoChangesVerifierTransform jniLibsVerifierTransform = new NoChangesVerifierTransform(
-                variantScope,
-                ImmutableSet.of(QualifiedContent.DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS),
-                resMergingScopes, InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
-        AndroidTask<TransformTask> jniLibsVerifierTask =
+        NoChangesVerifierTransform javaResourcesVerifierTransform =
+                new NoChangesVerifierTransform(
+                        "javaResourcesVerifier",
+                        variantScope,
+                        ImmutableSet.of(
+                                QualifiedContent.DefaultContentType.RESOURCES,
+                                ExtendedContentType.NATIVE_LIBS),
+                        resMergingScopes,
+                        InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
+
+        AndroidTask<TransformTask> javaResourcesVerifierTask =
                 transformManager.addTransform(
                         tasks,
                         transformVariantScope,
-                        jniLibsVerifierTransform);
-        assert jniLibsVerifierTask!=null;
-        jniLibsVerifierTask.dependsOn(tasks, verifierTask);
+                        javaResourcesVerifierTransform);
+        assert javaResourcesVerifierTask != null;
+
+        javaResourcesVerifierTask.dependsOn(tasks, verifierTask);
 
         InstantRunTransform instantRunTransform = new InstantRunTransform(variantScope);
         AndroidTask<TransformTask> instantRunTask = transformManager
                 .addTransform(tasks, transformVariantScope, instantRunTransform);
-        assert instantRunTask!=null;
+        assert instantRunTask != null;
+        instantRunTask.dependsOn(tasks, buildInfoLoaderTask, verifierTask, javaResourcesVerifierTask);
 
         if (addResourceVerifier) {
             NoChangesVerifierTransform dependenciesVerifierTransform =
                     new NoChangesVerifierTransform(
+                            "dependenciesVerifier",
                             variantScope,
                             ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                             Sets.immutableEnumSet(
@@ -148,7 +157,6 @@ public class InstantRunTaskManager {
             instantRunTask.dependsOn(tasks, dependenciesVerifierTask);
         }
 
-        instantRunTask.dependsOn(tasks, buildInfoLoaderTask, verifierTask, jniLibsVerifierTask);
 
         AndroidTask<FastDeployRuntimeExtractorTask> extractorTask = androidTasks.create(
                 tasks, new FastDeployRuntimeExtractorTask.ConfigAction(variantScope));

@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.pipeline;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.Iterables;
 
@@ -708,4 +708,34 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(syncIssue.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
     }
 
+    @Test
+    public void testTaskName() throws Exception {
+        Transform transform;
+
+        transform =
+                TestTransform.builder()
+                        .setInputTypes(DefaultContentType.CLASSES)
+                        .setName("Enhancer")
+                        .build();
+        assertThat(TransformManager.getTaskNamePrefix(transform))
+                .isEqualTo("transformClassesWithEnhancerFor");
+
+        transform =
+                TestTransform.builder()
+                        .setInputTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .setName("verifier")
+                        .build();
+        assertThat(TransformManager.getTaskNamePrefix(transform))
+                .isEqualTo("transformClassesAndResourcesWithVerifierFor");
+
+        transform =
+                TestTransform.builder()
+                        .setInputTypes(
+                                ExtendedContentType.CLASSES_ENHANCED,
+                                ExtendedContentType.NATIVE_LIBS)
+                        .setName("fooBar")
+                        .build();
+        assertThat(TransformManager.getTaskNamePrefix(transform))
+                .isEqualTo("transformClassesEnhancedAndNativeLibsWithFooBarFor");
+    }
 }
