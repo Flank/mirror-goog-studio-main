@@ -240,6 +240,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getLayoutFolderOutputForDataBinding();
 
     @NonNull
+    File getBuildFolderForDataBindingCompiler();
+
+    @NonNull
     File getGeneratedClassListOutputFileForDataBinding();
 
     @NonNull

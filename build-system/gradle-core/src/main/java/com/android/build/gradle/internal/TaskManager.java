@@ -41,8 +41,11 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
+import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
+import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
+import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -90,6 +93,7 @@ import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportDependencyJarsTransform;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
 import com.android.build.gradle.internal.test.TestDataImpl;
@@ -165,6 +169,7 @@ import com.android.repository.Revision;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.StringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -1060,7 +1065,6 @@ public abstract class TaskManager {
         MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
                 variantScope.getGlobalScope().getExtension().getPackagingOptions(),
                 mergeScopes, DefaultContentType.RESOURCES, "mergeJavaRes");
-
         variantScope.setMergeJavaResourcesTask(
                 transformManager.addTransform(tasks, variantScope, mergeTransform));
     }
@@ -2035,7 +2039,13 @@ public abstract class TaskManager {
                             .setDependency(scope.getTestedVariantData().getScope().getJavaCompilerTask().getName())
                             .build());
         }
-
+        AndroidTask<TransformTask> exportJarsForDataBindingTask = null;
+        if (extension.getDataBinding().isEnabled()) {
+            exportJarsForDataBindingTask = scope.getTransformManager()
+                    .addTransform(
+                            tasks, scope, new DataBindingExportDependencyJarsTransform(scope)
+                    );
+        }
         // ----- Create PreDex tasks for libraries -----
         JackPreDexTransform preDexPackagedTransform = new JackPreDexTransform(
                 androidBuilder,
@@ -2044,7 +2054,9 @@ public abstract class TaskManager {
                 true);
         AndroidTask<TransformTask> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
-
+        if (exportJarsForDataBindingTask != null) {
+            packageTask.dependsOn(tasks, exportJarsForDataBindingTask);
+        }
         AndroidTask jacocoTask = getJacocoAgentTask(tasks);
         if (jacocoTask != null) {
             packageTask.dependsOn(tasks,
@@ -2099,11 +2111,31 @@ public abstract class TaskManager {
     }
 
     protected void createDataBindingTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        if (scope.getVariantConfiguration().getJackOptions().isEnabled()) {
-            androidBuilder.getErrorReporter().handleSyncError(
-                    scope.getVariantConfiguration().getFullName(),
-                    SyncIssue.TYPE_JACK_IS_NOT_SUPPORTED,
-                    "Data Binding does not support Jack builds yet");
+        boolean isJack = Boolean.TRUE.equals(
+                scope.getVariantConfiguration().getJackOptions().isEnabled());
+        if (isJack) {
+            getLogger().warn("Using Data Binding with Jack compiler is an experimental feature.");
+        }
+        CoreJavaCompileOptions javaCompileOptions = scope.getVariantData().getVariantConfiguration()
+                .getJavaCompileOptions();
+        CoreAnnotationProcessorOptions processorOptions = javaCompileOptions
+                .getAnnotationProcessorOptions();
+        if (processorOptions instanceof AnnotationProcessorOptions) {
+            AnnotationProcessorOptions ots = (AnnotationProcessorOptions) processorOptions;
+            // specify data binding only if another class is specified
+            if (!ots.getClassNames().isEmpty()
+                    && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
+                ots.className(DataBindingBuilder.PROCESSOR_NAME);
+            }
+            // TODO eventually javac path will use this as well.
+            if (isJack) {
+                ots.argument(DataBindingBuilder.BUILD_FOLDER_NAME,
+                        scope.getBuildFolderForDataBindingCompiler().getAbsolutePath());
+            }
+        } else {
+            getLogger().error("Cannot setup data binding for %s because java compiler options"
+                    + " is not an instance of AnnotationProcessorOptions", processorOptions);
+            return;
         }
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
@@ -2850,13 +2882,14 @@ public abstract class TaskManager {
         if (!options.isEnabled()) {
             return;
         }
-        String version = Objects.firstNonNull(options.getVersion(),
+        String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
         project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
                 + dataBindingBuilder.getLibraryVersion(version));
         project.getDependencies().add("compile", SdkConstants.DATA_BINDING_BASELIB_ARTIFACT + ":"
                 + dataBindingBuilder.getBaseLibraryVersion(version));
-        project.getDependencies().add("provided",
+        // TODO load config name from source sets
+        project.getDependencies().add("annotationProcessor",
                 SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
                 version);
         if (options.getAddDefaultAdapters()) {

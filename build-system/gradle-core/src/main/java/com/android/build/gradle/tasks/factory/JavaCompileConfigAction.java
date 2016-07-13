@@ -143,8 +143,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         GlobalScope globalScope = scope.getGlobalScope();
         Project project = scope.getGlobalScope().getProject();
 
-        boolean incremental;
-
         CoreAnnotationProcessorOptions annotationProcessorOptions =
                 scope.getVariantConfiguration().getJavaCompileOptions()
                         .getAnnotationProcessorOptions();
@@ -157,55 +155,9 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                                 .resolveAndGetAnnotationProcessorClassPath(
                                         annotationProcessorOptions.getIncludeCompileClasspath(),
                                         scope.getGlobalScope().getAndroidBuilder().getErrorReporter()));
-        if (compileOptions.getIncremental() != null) {
-            incremental = compileOptions.getIncremental();
-            LOG.info("Incremental flag set to %1$b in DSL", incremental);
-        } else {
-            if (globalScope.getExtension().getDataBinding().isEnabled()
-                    || !processorPath.isEmpty()
-                    || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
-                    || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
-                incremental = false;
-                LOG.info("Incremental Java compilation disabled in variant %1$s "
-                                + "as you are using an incompatible plugin",
-                        scope.getVariantConfiguration().getFullName());
-            } else {
-                // For now, default to true, unless the use uses several source folders,
-                // in that case, we cannot guarantee that the incremental java works fine.
 
-                // some source folders may be configured but do not exist, in that case, don't
-                // use as valid source folders to determine whether or not we should turn on
-                // incremental compilation.
-                List<File> sourceFolders = new ArrayList<File>();
-                for (ConfigurableFileTree sourceFolder
-                        : scope.getVariantData().getUserJavaSources()) {
-
-                    if (sourceFolder.getDir().exists()) {
-                        sourceFolders.add(sourceFolder.getDir());
-                    }
-                }
-                incremental = sourceFolders.size() == 1;
-                if (sourceFolders.size() > 1) {
-                    LOG.info("Incremental Java compilation disabled in variant %1$s "
-                            + "as you are using %2$d source folders : %3$s",
-                            scope.getVariantConfiguration().getFullName(),
-                            sourceFolders.size(), Joiner.on(',').join(sourceFolders));
-                }
-            }
-        }
-
-        if (AndroidGradleOptions.isJavaCompileIncrementalPropertySet(project)) {
-            scope.getGlobalScope().getAndroidBuilder().getErrorReporter().handleSyncError(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    String.format(
-                            "The %s property has been replaced by a DSL property. Please add the "
-                                    + "following to your build.gradle instead:\n"
-                                    + "android {\n"
-                                    + "  compileOptions.incremental = false\n"
-                                    + "}",
-                            AndroidGradleOptions.PROPERTY_INCREMENTAL_JAVA_COMPILE));
-        }
+        boolean incremental = AbstractCompilesUtil.isIncremental(project, scope, compileOptions,
+                processorPath, LOG);
 
         if (incremental) {
             LOG.info("Using incremental javac compilation.");

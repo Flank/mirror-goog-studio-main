@@ -28,6 +28,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.CompileOptions;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
@@ -45,6 +46,7 @@ import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.StringHelper;
+import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -57,6 +59,7 @@ import org.gradle.api.file.ConfigurableFileTree;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +92,8 @@ import java.util.Set;
  * </ul>
  */
 public class JackTransform extends Transform {
+    private static final ILogger LOG = LoggerWrapper.getLogger(JackTransform.class);
+
     private Project project;
 
     private AndroidBuilder androidBuilder;
@@ -262,8 +267,27 @@ public class JackTransform extends Transform {
                         globalScope.getExtension().getDexOptions().getOptimize(), !isDebuggable));
         options.setMultiDex(config.isMultiDexEnabled());
         options.setMinSdkVersion(config.getMinSdkVersion().getApiLevel());
-        if (!Boolean.FALSE.equals(
-                globalScope.getExtension().getCompileOptions().getIncremental())) {
+        options.setOutputFile(scope.getJackClassesZip());
+        options.setResourceDirectories(ImmutableList.of(scope.getJavaResourcesDestinationDir()));
+
+        CoreAnnotationProcessorOptions annotationProcessorOptions =
+                config.getJavaCompileOptions().getAnnotationProcessorOptions();
+        checkNotNull(annotationProcessorOptions.getIncludeCompileClasspath());
+        ArrayList<File> processorPath = Lists.newArrayList(
+                scope.getVariantData().getVariantDependency()
+                        .resolveAndGetAnnotationProcessorClassPath(
+                                annotationProcessorOptions.getIncludeCompileClasspath(),
+                                androidBuilder.getErrorReporter()));
+        options.setAnnotationProcessorClassPath(processorPath);
+        options.setAnnotationProcessorNames(annotationProcessorOptions.getClassNames());
+        options.setAnnotationProcessorOptions(annotationProcessorOptions.getArguments());
+        options.setAnnotationProcessorOutputDirectory(scope.getAnnotationProcessorOutputDir());
+        options.setEcjOptionFile(scope.getJackEcjOptionsFile());
+        options.setAdditionalParameters(config.getJackOptions().getAdditionalParameters());
+        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
+        boolean incremental = AbstractCompilesUtil
+                .isIncremental(project, scope, compileOptions, processorPath, LOG);
+        if (incremental) {
             String taskName = StringHelper.combineAsCamelCase(
                     ImmutableList.of(
                             "transformJackWith",
@@ -272,23 +296,7 @@ public class JackTransform extends Transform {
                             scope.getFullVariantName()));
             options.setIncrementalDir(scope.getIncrementalDir(taskName));
         }
-        options.setOutputFile(scope.getJackClassesZip());
-        options.setResourceDirectories(ImmutableList.of(scope.getJavaResourcesDestinationDir()));
 
-        CoreAnnotationProcessorOptions annotationProcessorOptions =
-                config.getJavaCompileOptions().getAnnotationProcessorOptions();
-        checkNotNull(annotationProcessorOptions.getIncludeCompileClasspath());
-        options.setAnnotationProcessorClassPath(
-                Lists.newArrayList(
-                        scope.getVariantData().getVariantDependency()
-                                .resolveAndGetAnnotationProcessorClassPath(
-                                        annotationProcessorOptions.getIncludeCompileClasspath(),
-                                        androidBuilder.getErrorReporter())));
-        options.setAnnotationProcessorNames(annotationProcessorOptions.getClassNames());
-        options.setAnnotationProcessorOptions(annotationProcessorOptions.getArguments());
-        options.setAnnotationProcessorOutputDirectory(scope.getAnnotationProcessorOutputDir());
-        options.setEcjOptionFile(scope.getJackEcjOptionsFile());
-        options.setAdditionalParameters(config.getJackOptions().getAdditionalParameters());
 
         jackInProcess = config.getJackOptions().isJackInProcess();
 
@@ -325,7 +333,7 @@ public class JackTransform extends Transform {
         }
         options.setJarJarRuleFiles(jarJarRuleFiles.build());
 
-        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
+
         AbstractCompilesUtil.setDefaultJavaVersion(
                 compileOptions,
                 scope.getGlobalScope().getExtension().getCompileSdkVersion(),

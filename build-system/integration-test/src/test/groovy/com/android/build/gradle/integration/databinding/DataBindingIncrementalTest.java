@@ -26,8 +26,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.io.Files;
 
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +35,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,25 +59,25 @@ public class DataBindingIncrementalTest {
     private static final String ACTIVITY_MAIN_JAVA
             = "src/main/java/android/databinding/testapp/MainActivity.java";
 
-    private final boolean experimental;
-
-    @Parameterized.Parameters(name = "experimental_{0}")
-    public static List<Boolean> parameters() {
-        return Arrays.asList(true, false);
+    @Parameterized.Parameters(name = "experimental_{0} useJack_{1}")
+    public static List<Object[]> parameters() {
+        List<Object[]> options = new ArrayList<>();
+        for (int i = 0 ; i < 4; i ++) {
+            options.add(new Object[]{
+                    (i & 1) != 0, (i & 2) != 0
+            });
+        }
+        return options;
     }
 
-    public DataBindingIncrementalTest(boolean experimental) {
-        this.experimental = experimental;
+    public DataBindingIncrementalTest(boolean experimental, boolean useJack) {
         project = GradleTestProject.builder()
                 .fromTestProject("databindingIncremental")
                 .useExperimentalGradleVersion(experimental)
+                .withJack(useJack)
+                .withBuildToolsVersion(
+                        useJack ? GradleTestProject.UPCOMING_BUILD_TOOL_VERSION : null)
                 .create();
-    }
-
-    @Before
-    public void skipOnJack() throws Exception {
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
-        project.setBuildFile(experimental ? "build.forexperimental.gradle" : null);
     }
 
     @Test
