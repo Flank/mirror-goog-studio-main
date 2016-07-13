@@ -28,7 +28,7 @@ public class AnalysisReport {
     private Set<Listener> mListeners = new HashSet<Listener>();
 
     @NonNull
-    private List<AnalysisResultEntry> mAnalysisResults = new ArrayList<AnalysisResultEntry>();
+    private List<AnalysisResultEntry<?>> mAnalysisResults = new ArrayList<AnalysisResultEntry<?>>();
 
     // volatile so other threads can see the updated value, but this is not intrinsically
     // thread-safe. This is mainly useful for the UI to know that the analysis is complete and
@@ -43,7 +43,7 @@ public class AnalysisReport {
      * will want to get called on the same thread as {@link #addResultListeners(Set)} and {@link
      * #setCompleted()}.
      */
-    public void addAnalysisResultEntries(@NonNull List<AnalysisResultEntry> entries) {
+    public void addAnalysisResultEntries(@NonNull List<AnalysisResultEntry<?>> entries) {
         mAnalysisResults.addAll(entries);
         for (Listener listener : mListeners) {
             listener.onResultsAdded(entries);
@@ -90,7 +90,7 @@ public class AnalysisReport {
 
     public interface Listener {
 
-        void onResultsAdded(@NonNull List<AnalysisResultEntry> entries);
+        void onResultsAdded(@NonNull List<AnalysisResultEntry<?>> entries);
 
         void onAnalysisComplete();
 

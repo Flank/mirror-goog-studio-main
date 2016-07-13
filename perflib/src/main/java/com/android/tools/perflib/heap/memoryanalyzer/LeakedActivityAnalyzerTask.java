@@ -36,7 +36,7 @@ import java.util.List;
 public class LeakedActivityAnalyzerTask extends MemoryAnalyzerTask {
 
     @Override
-    protected List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
+    protected List<AnalysisResultEntry<?>> analyze(@NonNull Configuration configuration,
                                                 @NonNull Snapshot snapshot) {
         List<Instance> leakingInstances = new ArrayList<Instance>();
 
@@ -67,7 +67,7 @@ public class LeakedActivityAnalyzerTask extends MemoryAnalyzerTask {
             }
         }
 
-        List<AnalysisResultEntry> results = new ArrayList<AnalysisResultEntry>(
+        List<AnalysisResultEntry<?>> results = new ArrayList<AnalysisResultEntry<?>>(
                 leakingInstances.size());
         for (Instance instance : leakingInstances) {
             results.add(new LeakedActivityEntry(instance.getClassObj().getClassName(),
