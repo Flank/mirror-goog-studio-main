@@ -4,7 +4,6 @@ add_library(profiler_network
             internal_network_service.cc
             network_cache.cc
             network_collector.cc
-            network_constants.cc
             network_sampler.cc
             traffic_sampler.cc
             network_service.cc)

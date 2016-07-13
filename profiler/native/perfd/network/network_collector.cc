@@ -65,22 +65,21 @@ void NetworkCollector::Collect() {
 void NetworkCollector::CreateSamplers() {
   // TODO: Define a centralized ANY_APP id.
   // TODO: This class will be replaced by a follow up CL soon.
-  NetworkConstants network_constants;
   if (pid_ == -1) {
     samplers_.emplace_back(new ConnectivitySampler(
-        network_constants.GetRadioStatusCommand(),
-        network_constants.GetDefaultNetworkTypeCommand()));
+        NetworkConstants::GetRadioStatusCommand(),
+        NetworkConstants::GetDefaultNetworkTypeCommand()));
     return;
   }
 
   std::string uid;
   bool has_uid = NetworkSampler::GetUidString(
-      network_constants.GetPidStatusFilePath(pid_), &uid);
+      NetworkConstants::GetPidStatusFilePath(pid_), &uid);
   if (has_uid) {
     samplers_.emplace_back(
-        new TrafficSampler(uid, network_constants.GetTrafficBytesFilePath()));
+        new TrafficSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
     samplers_.emplace_back(
-        new ConnectionSampler(uid, network_constants.GetConnectionFilePaths()));
+        new ConnectionSampler(uid, NetworkConstants::GetConnectionFilePaths()));
   }
 }
 
