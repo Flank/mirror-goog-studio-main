@@ -137,6 +137,8 @@ public class GradleTestProject implements TestRule {
         @Nullable
         private String targetGradleVersion;
         private boolean useJack = USE_JACK;
+        @Nullable
+        private String buildToolsVersion;
         private boolean useMinify = false;
         @NonNull
         private List<String> gradleProperties = Lists.newArrayList();
@@ -159,7 +161,8 @@ public class GradleTestProject implements TestRule {
                     sdkDir,
                     ndkDir,
                     gradleProperties,
-                    heapSize);
+                    heapSize,
+                    buildToolsVersion);
         }
 
         /**
@@ -273,6 +276,11 @@ public class GradleTestProject implements TestRule {
             return this;
         }
 
+        public Builder withBuildToolsVersion(String buildToolsVersion) {
+            this.buildToolsVersion = buildToolsVersion;
+            return this;
+        }
+
         public Builder withMinify(boolean useMinify) {
             this.useMinify = useMinify;
             return this;
@@ -296,7 +304,6 @@ public class GradleTestProject implements TestRule {
     private final File ndkDir;
     private final File sdkDir;
 
-
     private final Collection<String> gradleProperties;
 
     @Nullable
@@ -306,6 +313,8 @@ public class GradleTestProject implements TestRule {
 
     private final boolean useJack;
     private final boolean minifyEnabled;
+    @Nullable
+    private final String buildToolsVersion;
 
     @Nullable
     private String heapSize;
@@ -324,7 +333,8 @@ public class GradleTestProject implements TestRule {
             @Nullable File sdkDir,
             @Nullable File ndkDir,
             @NonNull Collection<String> gradleProperties,
-            @Nullable String heapSize) {
+            @Nullable String heapSize,
+            @Nullable String buildToolsVersion) {
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
         outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
         testDir = null;
@@ -338,6 +348,7 @@ public class GradleTestProject implements TestRule {
         this.ndkDir = ndkDir;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
+        this.buildToolsVersion = buildToolsVersion;
         openConnections = Lists.newArrayList();
         rootProject = this;
     }
@@ -366,6 +377,7 @@ public class GradleTestProject implements TestRule {
         minifyEnabled = false;
         useJack = false;
         openConnections = null;
+        buildToolsVersion = null;
         this.rootProject = rootProject;
     }
 
@@ -875,4 +887,8 @@ public class GradleTestProject implements TestRule {
         return localProp;
     }
 
+    @Nullable
+    public String getBuildToolsVersion() {
+        return buildToolsVersion;
+    }
 }

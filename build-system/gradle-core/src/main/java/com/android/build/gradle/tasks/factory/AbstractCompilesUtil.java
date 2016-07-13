@@ -16,13 +16,26 @@
 
 package com.android.build.gradle.tasks.factory;
 
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.CompileOptions;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.model.SyncIssue;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
 
 import org.gradle.api.JavaVersion;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Common code for configuring {@link AbstractCompile} instances.
@@ -80,5 +93,60 @@ public class AbstractCompilesUtil {
         }
 
         compileOptions.setDefaultJavaVersion(javaVersionToUse);
+    }
+
+    public static boolean isIncremental(Project project, VariantScope variantScope,
+            CompileOptions compileOptions, Collection<File> processorPath, ILogger log) {
+        boolean incremental;
+        if (compileOptions.getIncremental() != null) {
+            incremental = compileOptions.getIncremental();
+            log.info("Incremental flag set to %1$b in DSL", incremental);
+        } else {
+            if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
+                    || !processorPath.isEmpty()
+                    || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
+                    || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+                incremental = false;
+                log.info("Incremental Java compilation disabled in variant %1$s "
+                                + "as you are using an incompatible plugin",
+                        variantScope.getVariantConfiguration().getFullName());
+            } else {
+                // For now, default to true, unless the use uses several source folders,
+                // in that case, we cannot guarantee that the incremental java works fine.
+
+                // some source folders may be configured but do not exist, in that case, don't
+                // use as valid source folders to determine whether or not we should turn on
+                // incremental compilation.
+                List<File> sourceFolders = new ArrayList<File>();
+                for (ConfigurableFileTree sourceFolder
+                        : variantScope.getVariantData().getUserJavaSources()) {
+
+                    if (sourceFolder.getDir().exists()) {
+                        sourceFolders.add(sourceFolder.getDir());
+                    }
+                }
+                incremental = sourceFolders.size() == 1;
+                if (sourceFolders.size() > 1) {
+                    log.info("Incremental Java compilation disabled in variant %1$s "
+                                    + "as you are using %2$d source folders : %3$s",
+                            variantScope.getVariantConfiguration().getFullName(),
+                            sourceFolders.size(), Joiner.on(',').join(sourceFolders));
+                }
+            }
+        }
+
+        if (AndroidGradleOptions.isJavaCompileIncrementalPropertySet(project)) {
+            variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter().handleSyncError(
+                    null,
+                    SyncIssue.TYPE_GENERIC,
+                    String.format(
+                            "The %s property has been replaced by a DSL property. Please add the "
+                                    + "following to your build.gradle instead:\n"
+                                    + "android {\n"
+                                    + "  compileOptions.incremental = false\n"
+                                    + "}",
+                            AndroidGradleOptions.PROPERTY_INCREMENTAL_JAVA_COMPILE));
+        }
+        return incremental;
     }
 }

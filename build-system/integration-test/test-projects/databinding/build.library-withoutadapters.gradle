@@ -20,7 +20,7 @@ apply plugin: 'com.android.library'
 apply from: "../commonLocalRepo.gradle"
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     dataBinding {
         enabled = true
