@@ -146,6 +146,10 @@ public class SdkDownloadGradleTest {
                 FileUtils.join(realAndroidHome, SdkConstants.FD_BUILD_TOOLS, OLD_BUILD_TOOLS),
                 FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
 
+        FileUtils.copyDirectoryToDirectory(
+                FileUtils.join(realAndroidHome, SdkConstants.FD_PLATFORM_TOOLS),
+                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS));
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 19");
     }
@@ -226,6 +230,31 @@ public class SdkDownloadGradleTest {
         assertThat(addonTarget).isDirectory();
     }
 
+    /**
+     * Tests that the platform tools were automatically downloaded, when they weren't already
+     * installed.
+     */
+
+    @Test
+    public void checkPlatformToolsDownloading() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + OLD_PLATFORM
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + OLD_BUILD_TOOLS
+                        + "\"");
+
+        // Delete the platform-tools folder from the set-up.
+        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS));
+
+        project.executor().run("assembleDebug");
+
+        File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
+        assertThat(platformTools).isDirectory();
+    }
 
     @Test
     public void checkCmakeDownloading() throws Exception {
@@ -248,10 +277,6 @@ public class SdkDownloadGradleTest {
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
-
-        File cmakeExecutable =
-                FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE, SdkConstants.FD_OUTPUT, "cmake");
-        assertThat(cmakeExecutable).exists();
     }
 
     @Test
@@ -363,7 +388,7 @@ public class SdkDownloadGradleTest {
                         + OLD_BUILD_TOOLS
                         + "\""
                         + System.lineSeparator()
-                        + "dependencies { compile 'com.android.support.constraint:constraint-layout-solver:1.0.0-alpha3' }");
+                        + "dependencies { compile 'com.android.support.constraint:constraint-layout-solver:1.0.0-alpha4' }");
 
         project.executor().run("assembleDebug");
 
@@ -371,7 +396,7 @@ public class SdkDownloadGradleTest {
                 SdkMavenRepository.ANDROID,
                 "com.android.support.constraint",
                 "constraint-layout-solver",
-                "1.0.0-alpha3");
+                "1.0.0-alpha4");
 
         assertThat(SdkMavenRepository.GOOGLE.isInstalled(mSdkHome, FileOpUtils.create())).isFalse();
         assertThat(SdkMavenRepository.ANDROID.isInstalled(mSdkHome, FileOpUtils.create()))
