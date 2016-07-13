@@ -29,7 +29,7 @@ class ConnectionSampler final : public NetworkSampler {
  public:
   ConnectionSampler(const std::string &uid,
                     const std::vector<const char *> &files)
-      : kUid(uid), kConnectionFiles(files) {}
+      : files_(files), uid_(uid) {}
 
   // Read system file to get the number of open connections, and store data in
   // given {@code NetworkProfilerData}.
@@ -37,33 +37,7 @@ class ConnectionSampler final : public NetworkSampler {
 
  private:
   // Returns open connection number that is read from a given file.
-  int ReadConnectionNumber(const std::string &uid, const std::string &file);
-
-  // Returns whether the connection line is for local interface listening.
-  // In other words, both remote and local ip addresses are all zeros and the
-  // connection state is listening ('0A'). For example, here is a connection
-  // when the return value is TRUE: " 01: 00000000000000000000000000000000:13B4
-  // 00000000000000000000000000000000:0000 0A ...".
-  bool IsLocalInterface(const std::string &connection);
-
-  // Returns whether the next token starting at the current iterator position is
-  // a valid heading which is the same as regex "\s*[0-9]+:". The parameter
-  // iterator {@code it} is modified to be at the first char after heading. For
-  // example, here is a line returns TRUE: "01:".
-  bool IsValidHeading(const std::string &connection,
-                      std::string::const_iterator *it);
-
-  // Returns whether the next token starting at the current iterator position is
-  // an ip address of all zeros, which is the same as regex "0+:[0-9A-Za-z]{4}".
-  // The parameter iterator {@code it} is modified to be at the first character
-  // after all zeros ip.
-  bool IsAllZerosIpAddress(const std::string &connection,
-                           std::string::const_iterator *it);
-
-  // Returns whether the next token starting at the current iterator position is
-  // a empty space, and jump parameter {@code it} to the first character that is
-  // not empty space.
-  bool EatSpace(const std::string &connection, std::string::const_iterator *it);
+  int ReadConnectionNumber(const std::string &file);
 
   // Index indicates the location of app uid(unique id), in the connection
   // system files. One open connection is listed as a line in file. Tokens
@@ -72,12 +46,12 @@ class ConnectionSampler final : public NetworkSampler {
   // Index of Uid token "20555" is 7.
   static const int kUidTokenIndex = 7;
 
-  // App uid for parsing file to get app information.
-  const std::string kUid;
-
   // List of files containing open connection data; for example /proc/net/tcp6.
   // Those files contain multiple apps' information.
-  const std::vector<const char *> kConnectionFiles;
+  const std::vector<const char *> files_;
+
+  // App uid for parsing file to get app information.
+  const std::string uid_;
 };
 
 }  // namespace profiler

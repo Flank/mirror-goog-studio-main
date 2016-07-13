@@ -31,7 +31,7 @@
 #include "proto/cpu.pb.h"
 #include "proto/profiler.pb.h"
 #include "utils/file_reader.h"
-#include "utils/token.h"
+#include "utils/tokenizer.h"
 
 using profiler::proto::CpuProfilerData;
 using profiler::proto::CpuStartResponse;
@@ -39,6 +39,7 @@ using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
 using profiler::proto::ProfilerData;
 using profiler::FileReader;
+using profiler::Tokenizer;
 using std::string;
 using std::vector;
 
@@ -159,7 +160,7 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
   // Each token after the right parenthesis is a field, either a charactor or a
   // number. The first token is field #3.
   vector<string> tokens =
-      profiler::GetTokens(content.substr(right_parentheses + 1), " \n");
+      Tokenizer::GetTokens(content.substr(right_parentheses + 1), " \n");
   if (tokens.size() >= 15) {
     // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
     int64_t utime = atol(tokens[11].c_str());

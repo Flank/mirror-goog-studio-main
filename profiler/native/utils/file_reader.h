@@ -37,20 +37,6 @@ class FileReader {
   // files such as /proc.stat in Android/Linux.
   static bool Read(const std::string &file_path, std::string *content);
 
-  // Returns true if the needed token is found, false otherwise. Tokens are
-  // separated by whitespace in given line. token_index does not indicate the
-  // character index but indicates the whitespace separated token index.
-  // For example, we are looking for the second token from line
-  // "Today is Thursday.", the second token "is" exists. But if we specify
-  // 4 as the token_index, the needed token is not found.
-  static bool FindTokenPosition(const std::string &line, const int token_index,
-                                size_t *token_start);
-
-  // Returns true if line contains a substring that is the same as token, and
-  // the substring is at given whitespace-separated index token_index.
-  static bool CompareToken(const std::string &line, const std::string &token,
-                           const int token_index);
-
  private:
   // Single system call buffer size.
   // TODO: Make the buffer size configurable in a constructor.
