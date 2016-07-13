@@ -53,28 +53,4 @@ bool FileReader::Read(const std::string &file_path, std::string *content) {
   return true;
 }
 
-bool FileReader::FindTokenPosition(const std::string &line,
-                                   const int token_index, size_t *token_start) {
-  int index = -1;
-  size_t token_end;
-  while (*token_start < line.size()) {
-    token_end = line.find_first_of(" \t\r\n\f", *token_start);
-    if (token_end == std::string::npos) {
-      token_end = line.size();
-    }
-    if (token_end != *token_start && ++index == token_index) {
-      return true;
-    }
-    *token_start = token_end + 1;
-  }
-  return false;
-}
-
-bool FileReader::CompareToken(const std::string &line, const std::string &token,
-                              const int token_index) {
-  size_t start_pos = 0;
-  bool is_found = FindTokenPosition(line, token_index, &start_pos);
-  return is_found && !line.compare(start_pos, token.length(), token);
-}
-
 }  // namespace profiler

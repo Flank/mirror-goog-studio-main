@@ -27,22 +27,18 @@ namespace profiler {
 class TrafficSampler final : public NetworkSampler {
  public:
   TrafficSampler(const std::string &uid, const std::string &file)
-      : kUid(uid), kFile(file) {}
+      : uid_(uid), file_(file) {}
 
   // Reads traffic bytes sent and received, and store data in given {@code
   // NetworkProfilerData}.
   void GetData(profiler::proto::NetworkProfilerData *data) override;
 
  private:
-  static const int kUidTokenIndex = 3;
-  static const int kSendBytesTokenIndex = 7;
-  static const int kReceiveBytesTokenIndex = 5;
-
   // App uid for parsing file to get app's traffic information.
-  const std::string kUid;
+  const std::string uid_;
 
   // Traffic file path.
-  const std::string kFile;
+  const std::string file_;
 };
 
 }  // namespace profiler

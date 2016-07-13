@@ -16,95 +16,97 @@
 #include "connection_sampler.h"
 
 #include "utils/file_reader.h"
+#include "utils/tokenizer.h"
 
-namespace profiler {
+namespace {
 
-void ConnectionSampler::GetData(profiler::proto::NetworkProfilerData *data) {
-  int connection_number = 0;
-  for (auto &file_name : kConnectionFiles) {
-    connection_number += ReadConnectionNumber(kUid, file_name);
-  }
-  data->mutable_connection_data()->set_connection_number(connection_number);
+using profiler::Tokenizer;
+
+// Returns whether the next token is a valid heading which is the same as
+// regex "[0-9]+:". For example, a valid heading is "01:"
+//
+// If successful, the heading token is consumed; otherwise, the tokenizer will
+// be left wherever it failed and you shouldn't continue to use it.
+bool IsValidHeading(Tokenizer *t) {
+  char separator;
+  return (t->EatNextToken(Tokenizer::IsDigit) && t->GetNextChar(&separator) &&
+          separator == ':');
 }
 
-int ConnectionSampler::ReadConnectionNumber(const std::string &uid,
-                                            const std::string &file) {
-  std::vector<std::string> lines;
-  FileReader::Read(file, &lines);
-
-  int result = 0;
-  for (const std::string &line : lines) {
-    if (!IsLocalInterface(line) &&
-        FileReader::CompareToken(line, uid, kUidTokenIndex)) {
-      result++;
-    }
-  }
-  return result;
+// Returns whether the next token is an ip address of all zeros, which is the
+// same as regex "0+:[0-9A-Za-z]{4}". For example, an all zeros IP address is
+// "00000000000000000:A12B"
+//
+// If successful, the IP address is consumed; otherwise, the tokenizer will
+// be left wherever it failed and you shouldn't continue to use it.
+bool IsAllZerosIpAddress(Tokenizer *t) {
+  // TODO: This logic ignores the {4} part of the regex, do we need to be
+  // stricter?
+  char separator;
+  return (t->EatNextToken(Tokenizer::IsOneOf("0")) &&
+          t->GetNextChar(&separator) && separator == ':' &&
+          t->EatNextToken(Tokenizer::IsAlphaNum));
 }
 
-bool ConnectionSampler::IsLocalInterface(const std::string &connection) {
-  std::string::const_iterator it = connection.begin();
+// Returns whether the tokenizer is pointing at a line which represents a
+// local interface, which we identify when both remote and local ip addresses
+// are all zeroes and the connection status is listening ('0A').
+//
+// For example, this represents a local interface connection:
+// " 01: 00000000000000000000000000000000:13B4
+// 00000000000000000000000000000000:0000 0A ...".
+//
+// If successful, the tokenizer will be moved to right after the status code
+// (the fourth token in the line); otherwise, the tokenizer will be left
+// wherever it failed and you shouldn't continue to use it.
+bool IsLocalInterface(Tokenizer *t) {
   // It's possible to have empty space in the beginning, for example, " 1:" has
   // empty space and "100:" does not have empty space.
-  EatSpace(connection, &it);
-  bool match =
-      IsValidHeading(connection, &it) && EatSpace(connection, &it) &&
-      IsAllZerosIpAddress(connection, &it) && EatSpace(connection, &it) &&
-      IsAllZerosIpAddress(connection, &it) && EatSpace(connection, &it);
-  if (match) {
-    if ((connection.end() - it > 2) && (*it) == '0') {
-      it++;
-      return (*it) == 'A' || (*it) == 'a';
-    }
-  }
-  return false;
-}
+  t->EatWhile(Tokenizer::IsWhitespace);
+  bool match = IsValidHeading(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
+               IsAllZerosIpAddress(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
+               IsAllZerosIpAddress(t) && t->EatWhile(Tokenizer::IsWhitespace);
 
-bool ConnectionSampler::IsValidHeading(const std::string &connection,
-                                       std::string::const_iterator *it) {
-  if (*it != connection.end() && isdigit(**it)) {
-    (*it)++;
-    while (*it != connection.end() && isdigit(**it)) {
-      (*it)++;
-    }
-    if (*it != connection.end() && **it == ':') {
-      (*it)++;
+  if (match) {
+    char c;
+    if (t->GetNextChar(&c) && c == '0' && t->GetNextChar(&c) &&
+        (c == 'A' || c == 'a')) {
       return true;
     }
   }
   return false;
 }
-
-bool ConnectionSampler::IsAllZerosIpAddress(const std::string &connection,
-                                            std::string::const_iterator *it) {
-  if (*it != connection.end() && **it == '0') {
-    (*it)++;
-    while (*it != connection.end() && **it == '0') {
-      (*it)++;
-    }
-    if (*it != connection.end() && **it == ':') {
-      (*it)++;
-      int count = 0;
-      while ((*it != connection.end()) && (isdigit(**it) || isalpha(**it))) {
-        count++;
-        (*it)++;
-      }
-      return count == 4;
-    }
-  }
-  return false;
 }
 
-bool ConnectionSampler::EatSpace(const std::string &connection,
-                                 std::string::const_iterator *it) {
-  bool has_empty_space = false;
-  while (*it != connection.end() && isspace(**it)) {
-    (*it)++;
-    if (!has_empty_space) {
-      has_empty_space = true;
+namespace profiler {
+
+using std::string;
+using std::vector;
+
+void ConnectionSampler::GetData(profiler::proto::NetworkProfilerData *data) {
+  int connection_number = 0;
+  for (auto &file_name : files_) {
+    connection_number += ReadConnectionNumber(file_name);
+  }
+  data->mutable_connection_data()->set_connection_number(connection_number);
+}
+
+int ConnectionSampler::ReadConnectionNumber(const string &file) {
+  vector<string> lines;
+  FileReader::Read(file, &lines);
+
+  int count = 0;
+  for (const string &line : lines) {
+    Tokenizer t(line);
+    if (!IsLocalInterface(&t)) {
+      t.set_index(0);
+      string uid;
+      if (t.EatTokens(kUidTokenIndex) && t.GetNextToken(&uid) && uid == uid_) {
+        count++;
+      }
     }
   }
-  return has_empty_space;
+  return count;
 }
 
 }  // namespace profiler

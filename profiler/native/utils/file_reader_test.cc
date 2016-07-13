@@ -19,67 +19,6 @@
 
 using profiler::FileReader;
 
-const std::string kTestLine("Twinkle Twinkle Little star !");
-
-TEST(FindToken, TokenIsFirst) {
-  size_t token_start = 0;
-  bool is_found = FileReader::FindTokenPosition(kTestLine, 0, &token_start);
-  EXPECT_TRUE(is_found);
-  EXPECT_EQ(0u, token_start);
-}
-
-TEST(FindToken, TokenIsLast) {
-  size_t token_start = 0;
-  bool is_found = FileReader::FindTokenPosition(kTestLine, 4, &token_start);
-  EXPECT_TRUE(is_found);
-  EXPECT_EQ(28u, token_start);
-}
-
-TEST(FindToken, TokenIsMiddle) {
-  size_t token_start = 0;
-  bool is_found = FileReader::FindTokenPosition(kTestLine, 2, &token_start);
-  EXPECT_TRUE(is_found);
-  EXPECT_EQ(16u, token_start);
-}
-
-TEST(FindToken, TokenValueIsDuplicate) {
-  size_t token_start = 0;
-  bool is_found = FileReader::FindTokenPosition(kTestLine, 1, &token_start);
-  EXPECT_TRUE(is_found);
-  EXPECT_EQ(8u, token_start);
-}
-
-TEST(FindToken, TokenIndexTooLarge) {
-  size_t token_start = 7;
-  bool is_found = FileReader::FindTokenPosition(kTestLine, 6, &token_start);
-  EXPECT_FALSE(is_found);
-}
-
-TEST(FindToken, LineEmptyAndStartPositionIsPositive) {
-  size_t token_start = 1;
-  std::string empty_line = "";
-  bool is_found = FileReader::FindTokenPosition(empty_line, 0, &token_start);
-  EXPECT_FALSE(is_found);
-}
-
-TEST(CompareToken, TokenMatches) {
-  std::string token("Little");
-  bool matches = FileReader::CompareToken(kTestLine, token, 2);
-  EXPECT_TRUE(matches);
-}
-
-TEST(CompareToken, TokenIndexTooLarge) {
-  std::string token("Little");
-  bool matches = FileReader::CompareToken(kTestLine, token, 4);
-  EXPECT_FALSE(matches);
-}
-
-TEST(CompareToken, TokenNotMatch) {
-  std::string token("Large");
-  bool matches = FileReader::CompareToken(kTestLine, token, 2);
-  EXPECT_FALSE(matches);
-}
-
 TEST(Read, FileSizeIsSmallerThanPageSize) {
   std::string content;
   FileReader::Read("file_reader_small.txt", &content);

@@ -6,7 +6,7 @@ set(UTILS_SOURCES
     package_manager.cc
     profiler_file.cc
     stopwatch.cc
-    token.cc
+    tokenizer.cc
     fs/dir.cc
     fs/disk.cc
     fs/file.cc
@@ -34,6 +34,7 @@ add_unit_test(profiler_utils_test
               stopwatch_test.cc
               time_value_buffer_test.cc
               timespec_math_test.cc
+              tokenizer_test.cc
               fs/file_system_test.cc)
 
 target_link_libraries(profiler_utils_test
