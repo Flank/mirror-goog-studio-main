@@ -130,9 +130,10 @@ class ExternalBuildTaskManager {
         ExtractJarsTransform extractJarsTransform = new ExtractJarsTransform(
                 ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                 ImmutableSet.of(QualifiedContent.Scope.PROJECT));
-        AndroidTask<TransformTask> extractJarsTask = transformManager
-                .addTransform(tasks, variantScope, extractJarsTransform);
-        assert extractJarsTask != null;
+        AndroidTask<TransformTask> extractJarsTask =
+                transformManager
+                        .addTransform(tasks, variantScope, extractJarsTransform)
+                        .orElseThrow(TransformManager.taskMissing(extractJarsTransform));
 
         InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(project.getLogger(),
                 variantScope, transformManager, androidTasks, tasks);

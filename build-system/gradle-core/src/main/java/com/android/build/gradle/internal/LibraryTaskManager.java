@@ -79,6 +79,7 @@ import android.databinding.tool.DataBindingBuilder;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -368,10 +369,13 @@ public class LibraryTaskManager extends TaskManager {
 
         ThreadRecorder.get().record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
+                projectPath,
+                variantName,
+                new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        TransformManager transformManager = variantScope.getTransformManager();
+                        TransformManager transformManager =
+                                variantScope.getTransformManager();
 
                         // ----- Code Coverage first -----
                         if (instrumented) {
@@ -381,27 +385,34 @@ public class LibraryTaskManager extends TaskManager {
                         // ----- External Transforms -----
                         // apply all the external transforms.
                         List<Transform> customTransforms = extension.getTransforms();
-                        List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
+                        List<List<Object>> customTransformsDependencies =
+                                extension.getTransformsDependencies();
 
-                        for (int i = 0, count = customTransforms.size() ; i < count ; i++) {
+                        for (int i = 0, count = customTransforms.size(); i < count; i++) {
                             Transform transform = customTransforms.get(i);
 
                             // Check the transform only applies to supported scopes for libraries:
                             // We cannot transform scopes that are not packaged in the library
                             // itself.
-                            Sets.SetView<Scope> difference = Sets.difference(transform.getScopes(),
-                                    TransformManager.SCOPE_FULL_LIBRARY);
+                            Sets.SetView<Scope> difference =
+                                    Sets.difference(
+                                            transform.getScopes(),
+                                            TransformManager.SCOPE_FULL_LIBRARY);
                             if (!difference.isEmpty()) {
                                 String scopes = difference.toString();
                                 androidBuilder.getErrorReporter().handleSyncError(
                                         "",
                                         SyncIssue.TYPE_GENERIC,
-                                        String.format("Transforms with scopes '%s' cannot be applied to library projects.",
+                                        String.format(
+                                                "Transforms with scopes '%s' cannot be applied"
+                                                        + "to library projects.",
                                                 scopes));
                             }
 
-                            AndroidTask<TransformTask> task = transformManager
-                                    .addTransform(tasks, variantScope, transform);
+                            AndroidTask<TransformTask> task =
+                                    transformManager
+                                            .addTransform(tasks, variantScope, transform)
+                                            .orElse(null);
                             if (task != null) {
                                 List<Object> deps = customTransformsDependencies.get(i);
                                 if (!deps.isEmpty()) {
@@ -431,26 +442,36 @@ public class LibraryTaskManager extends TaskManager {
                             throw new BuildException("Failed to read manifest", null);
                         }
 
-                        LibraryJarTransform transform = new LibraryJarTransform(
-                                new File(variantBundleDir, FN_CLASSES_JAR),
-                                new File(variantBundleDir, LIBS_FOLDER),
-                                packageName,
-                                getExtension().getPackageBuildConfig());
+                        LibraryJarTransform transform =
+                                new LibraryJarTransform(
+                                        new File(variantBundleDir, FN_CLASSES_JAR),
+                                        new File(variantBundleDir, LIBS_FOLDER),
+                                        packageName,
+                                        getExtension().getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
 
-                        AndroidTask<TransformTask> jarPackagingTask = transformManager
-                                .addTransform(tasks, variantScope, transform);
+                        Optional<AndroidTask<TransformTask>> jarPackagingTask =
+                                transformManager.addTransform(
+                                        tasks, variantScope, transform);
                         if (!generateSourcesOnly) {
-                            bundle.dependsOn(jarPackagingTask.getName());
+                            AndroidTask<TransformTask> jarPackagingTransformTask =
+                                    jarPackagingTask.orElseThrow(
+                                            TransformManager.taskMissing(transform));
+                            bundle.dependsOn(jarPackagingTransformTask.getName());
                         }
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle.
-                        LibraryJniLibsTransform jniTransform = new LibraryJniLibsTransform(
-                                new File(variantBundleDir, FD_JNI));
-                        AndroidTask<TransformTask> jniPackagingTask = transformManager
-                                .addTransform(tasks, variantScope, jniTransform);
+                        LibraryJniLibsTransform jniTransform =
+                                new LibraryJniLibsTransform(
+                                        new File(variantBundleDir, FD_JNI));
+                        Optional<AndroidTask<TransformTask>> jniPackagingTask =
+                                transformManager.addTransform(
+                                        tasks, variantScope, jniTransform);
                         if (!generateSourcesOnly) {
-                            bundle.dependsOn(jniPackagingTask.getName());
+                            AndroidTask<TransformTask> jniPackagingTransformTask =
+                                    jniPackagingTask.orElseThrow(
+                                            TransformManager.taskMissing(jniTransform));
+                            bundle.dependsOn(jniPackagingTransformTask.getName());
                         }
                         return null;
                     }
