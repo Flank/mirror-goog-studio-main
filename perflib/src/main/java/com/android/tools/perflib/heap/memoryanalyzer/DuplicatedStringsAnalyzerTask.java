@@ -32,9 +32,9 @@ import java.util.Set;
 public class DuplicatedStringsAnalyzerTask extends MemoryAnalyzerTask {
 
     @Override
-    protected List<AnalysisResultEntry> analyze(@NonNull Configuration configuration,
-                                                @NonNull Snapshot snapshot) {
-        List<AnalysisResultEntry> results = new ArrayList<AnalysisResultEntry>();
+    protected List<AnalysisResultEntry<?>> analyze(@NonNull Configuration configuration,
+                                                   @NonNull Snapshot snapshot) {
+        List<AnalysisResultEntry<?>> results = new ArrayList<AnalysisResultEntry<?>>();
 
         HashMultimap<String, ClassInstance> stringIndex = HashMultimap.create();
         ClassObj stringClass = snapshot.findClass("java.lang.String");
