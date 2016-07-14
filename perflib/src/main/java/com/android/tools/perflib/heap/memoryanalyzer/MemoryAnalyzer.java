@@ -44,7 +44,7 @@ public class MemoryAnalyzer extends Analyzer {
 
     private AnalysisReport mOutstandingReport;
 
-    private ListenableFuture<List<List<AnalysisResultEntry>>> mRunningAnalyzers;
+    private ListenableFuture<List<List<AnalysisResultEntry<?>>>> mRunningAnalyzers;
 
     private volatile boolean mCancelAnalysis = false;
 
@@ -94,8 +94,8 @@ public class MemoryAnalyzer extends Analyzer {
         mOutstandingReport = new AnalysisReport();
         mOutstandingReport.addResultListeners(listeners);
 
-        List<ListenableFutureTask<List<AnalysisResultEntry>>> futuresList
-                = new ArrayList<ListenableFutureTask<List<AnalysisResultEntry>>>();
+        List<ListenableFutureTask<List<AnalysisResultEntry<?>>>> futuresList
+                = new ArrayList<ListenableFutureTask<List<AnalysisResultEntry<?>>>>();
 
         for (final Capture capture : captureGroup.getCaptures()) {
             if (accept(capture)) {
@@ -115,10 +115,10 @@ public class MemoryAnalyzer extends Analyzer {
                         = new MemoryAnalyzerTask.Configuration(heapsToUse);
 
                 for (final MemoryAnalyzerTask task : mTasks) {
-                    final ListenableFutureTask<List<AnalysisResultEntry>> futureTask =
-                            ListenableFutureTask.create(new Callable<List<AnalysisResultEntry>>() {
+                    final ListenableFutureTask<List<AnalysisResultEntry<?>>> futureTask =
+                            ListenableFutureTask.create(new Callable<List<AnalysisResultEntry<?>>>() {
                                 @Override
-                                public List<AnalysisResultEntry> call() throws Exception {
+                                public List<AnalysisResultEntry<?>> call() throws Exception {
                                     if (mCancelAnalysis) {
                                         return null;
                                     }
@@ -127,9 +127,9 @@ public class MemoryAnalyzer extends Analyzer {
                                 }
                             });
                     Futures.addCallback(futureTask,
-                            new FutureCallback<List<AnalysisResultEntry>>() {
+                            new FutureCallback<List<AnalysisResultEntry<?>>>() {
                                 @Override
-                                public void onSuccess(List<AnalysisResultEntry> result) {
+                                public void onSuccess(List<AnalysisResultEntry<?>> result) {
                                     if (mCancelAnalysis) {
                                         return;
                                     }
@@ -150,9 +150,9 @@ public class MemoryAnalyzer extends Analyzer {
 
         mRunningAnalyzers = Futures.allAsList(futuresList);
         Futures.addCallback(mRunningAnalyzers,
-                new FutureCallback<List<List<AnalysisResultEntry>>>() {
+                new FutureCallback<List<List<AnalysisResultEntry<?>>>>() {
                     @Override
-                    public void onSuccess(@Nullable List<List<AnalysisResultEntry>> result) {
+                    public void onSuccess(@Nullable List<List<AnalysisResultEntry<?>>> result) {
                         mAnalysisComplete = true;
                         mOutstandingReport.setCompleted();
                     }
