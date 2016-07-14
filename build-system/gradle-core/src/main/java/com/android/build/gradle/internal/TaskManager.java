@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.OutputFile.DENSITY;
+import static com.android.build.gradle.internal.pipeline.TransformManager.taskMissing;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -201,6 +201,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -1066,7 +1067,7 @@ public abstract class TaskManager {
                 variantScope.getGlobalScope().getExtension().getPackagingOptions(),
                 mergeScopes, DefaultContentType.RESOURCES, "mergeJavaRes");
         variantScope.setMergeJavaResourcesTask(
-                transformManager.addTransform(tasks, variantScope, mergeTransform));
+                transformManager.addTransform(tasks, variantScope, mergeTransform).orElse(null));
     }
 
     public void createAidlTask(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
@@ -1782,8 +1783,8 @@ public abstract class TaskManager {
 
         for (int i = 0, count = customTransforms.size() ; i < count ; i++) {
             Transform transform = customTransforms.get(i);
-            AndroidTask<TransformTask> task = transformManager
-                    .addTransform(tasks, variantScope, transform);
+            AndroidTask<TransformTask> task =
+                    transformManager.addTransform(tasks, variantScope, transform).orElse(null);
             // task could be null if the transform is invalid.
             if (task != null) {
                 List<Object> deps = customTransformsDependencies.get(i);
@@ -1849,7 +1850,9 @@ public abstract class TaskManager {
                 JarMergingTransform jarMergingTransform = new JarMergingTransform(
                         TransformManager.SCOPE_FULL_PROJECT);
                 variantScope.addColdSwapBuildTask(
-                        transformManager.addTransform(tasks, variantScope, jarMergingTransform));
+                        transformManager
+                                .addTransform(tasks, variantScope, jarMergingTransform)
+                                .orElseThrow(taskMissing(jarMergingTransform)));
             }
 
             // ----------
@@ -1871,8 +1874,10 @@ public abstract class TaskManager {
             MultiDexTransform multiDexTransform = new MultiDexTransform(
                     variantScope,
                     null);
-            multiDexClassListTask = transformManager.addTransform(
-                    tasks, variantScope, multiDexTransform);
+            multiDexClassListTask =
+                    transformManager
+                            .addTransform(tasks, variantScope, multiDexTransform)
+                            .orElseThrow(taskMissing(multiDexTransform));
             multiDexClassListTask.optionalDependsOn(tasks, manifestKeepListTask);
             variantScope.addColdSwapBuildTask(multiDexClassListTask);
         }
@@ -1895,8 +1900,10 @@ public abstract class TaskManager {
                 getLogger(),
                 variantScope.getInstantRunBuildContext(),
                 AndroidGradleOptions.getUserCache(variantScope.getGlobalScope().getProject()));
-        AndroidTask<TransformTask> dexTask = transformManager.addTransform(
-                tasks, variantScope, dexTransform);
+        AndroidTask<TransformTask> dexTask =
+                transformManager
+                        .addTransform(tasks, variantScope, dexTransform)
+                        .orElseThrow(taskMissing(dexTransform));
         // need to manually make dex task depend on MultiDexTransform since there's no stream
         // consumption making this automatic
         dexTask.optionalDependsOn(tasks, multiDexClassListTask);
@@ -1946,8 +1953,10 @@ public abstract class TaskManager {
         ExtractJarsTransform extractJarsTransform = new ExtractJarsTransform(
                 ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.SUB_PROJECTS));
-        AndroidTask<TransformTask> extractJarsTask = transformManager
-                .addTransform(tasks, variantScope, extractJarsTransform);
+        AndroidTask<TransformTask> extractJarsTask =
+                transformManager
+                        .addTransform(tasks, variantScope, extractJarsTransform)
+                        .orElse(null);
 
         InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(getLogger(),
                 variantScope,
@@ -2018,8 +2027,12 @@ public abstract class TaskManager {
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope) {
 
-        AndroidTask<?> task = variantScope.getTransformManager().addTransform(taskFactory,
-                variantScope, new JacocoTransform(project.getConfigurations()));
+        JacocoTransform jacocoTransform = new JacocoTransform(project.getConfigurations());
+        AndroidTask<?> task =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(taskFactory, variantScope, jacocoTransform)
+                        .orElseThrow(taskMissing(jacocoTransform));
 
         AndroidTask<Copy> agentTask = getJacocoAgentTask(taskFactory);
         task.dependsOn(taskFactory, agentTask);
@@ -2041,10 +2054,13 @@ public abstract class TaskManager {
         }
         AndroidTask<TransformTask> exportJarsForDataBindingTask = null;
         if (extension.getDataBinding().isEnabled()) {
-            exportJarsForDataBindingTask = scope.getTransformManager()
-                    .addTransform(
-                            tasks, scope, new DataBindingExportDependencyJarsTransform(scope)
-                    );
+            exportJarsForDataBindingTask =
+                    scope.getTransformManager()
+                            .addTransform(
+                                    tasks,
+                                    scope,
+                                    new DataBindingExportDependencyJarsTransform(scope))
+                            .orElse(null);
         }
         // ----- Create PreDex tasks for libraries -----
         JackPreDexTransform preDexPackagedTransform = new JackPreDexTransform(
@@ -2052,17 +2068,24 @@ public abstract class TaskManager {
                 globalScope.getExtension().getDexOptions().getJavaMaxHeapSize(),
                 scope.getVariantConfiguration().getJackOptions(),
                 true);
-        AndroidTask<TransformTask> packageTask =
+        Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
         if (exportJarsForDataBindingTask != null) {
-            packageTask.dependsOn(tasks, exportJarsForDataBindingTask);
+            packageTask
+                    .orElseThrow(taskMissing(preDexPackagedTransform))
+                    .dependsOn(tasks, exportJarsForDataBindingTask);
         }
         AndroidTask jacocoTask = getJacocoAgentTask(tasks);
         if (jacocoTask != null) {
-            packageTask.dependsOn(tasks,
-                    scope.getVariantData().getVariantDependency().getPackageConfiguration()
-                            .getBuildDependencies(),
-                    jacocoTask);
+            packageTask
+                    .orElseThrow(taskMissing(preDexPackagedTransform))
+                    .dependsOn(
+                            tasks,
+                            scope.getVariantData()
+                                    .getVariantDependency()
+                                    .getPackageConfiguration()
+                                    .getBuildDependencies(),
+                            jacocoTask);
         }
 
         JackPreDexTransform preDexRuntimeTransform = new JackPreDexTransform(
@@ -2075,25 +2098,32 @@ public abstract class TaskManager {
         // ----- Create Jack Task -----
         JackTransform jackTransform = new JackTransform(scope, isDebugLog(), compileJavaSources);
         scope.getVariantData().jackTransform = jackTransform;
-        final AndroidTask<TransformTask> jackTask = scope.getTransformManager().addTransform(
-                tasks, scope, jackTransform,
+        TransformTask.ConfigActionCallback<JackTransform> jackTransformCallback =
                 (transform, task) -> {
                     scope.getVariantData().javaCompilerTask = task;
 
-                    scope.getVariantData().mappingFileProviderTask = new FileSupplier() {
-                        @NonNull
-                        @Override
-                        public Task getTask() {
-                            return task;
-                        }
+                    scope.getVariantData().mappingFileProviderTask =
+                            new FileSupplier() {
+                                @NonNull
+                                @Override
+                                public Task getTask() {
+                                    return task;
+                                }
 
-                        @Override
-                        public File get() {
-                            return transform.getMappingFile();
-                        }
-                    };
-
-                });
+                                @Override
+                                public File get() {
+                                    return transform.getMappingFile();
+                                }
+                            };
+                };
+        final AndroidTask<TransformTask> jackTask =
+                scope.getTransformManager()
+                        .addTransform(
+                                tasks,
+                                scope,
+                                jackTransform,
+                                jackTransformCallback)
+                        .orElse(null);
 
         if (jackTask == null) {
             // Error adding JackTransform. A SyncIssue was already emitted at this point.
@@ -2630,25 +2660,32 @@ public abstract class TaskManager {
             }
         }
 
-        AndroidTask<?> task = variantScope.getTransformManager().addTransform(taskFactory,
-                variantScope, transform,
+        TransformTask.ConfigActionCallback<ProGuardTransform> proGuardTransformCallback =
                 (proGuardTransform, proGuardTask) ->
-                        variantData.mappingFileProviderTask = new FileSupplier() {
-                            @NonNull
-                            @Override
-                            public Task getTask() {
-                        return proGuardTask;
-                    }
+                        variantData.mappingFileProviderTask =
+                                new FileSupplier() {
+                                    @NonNull
+                                    @Override
+                                    public Task getTask() {
+                                        return proGuardTask;
+                                    }
 
-                            @Override
-                            public File get() {
-                        return proGuardTransform.getMappingFile();
-                    }
-                        });
+                                    @Override
+                                    public File get() {
+                                        return proGuardTransform.getMappingFile();
+                                    }
+                                };
+        Optional<AndroidTask<TransformTask>> task =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(
+                                taskFactory,
+                                variantScope,
+                                transform,
+                                proGuardTransformCallback);
 
         if (mappingConfiguration != null) {
-            verifyNotNull(task);
-            task.dependsOn(taskFactory, mappingConfiguration);
+            task.orElseThrow(taskMissing(transform)).dependsOn(taskFactory, mappingConfiguration);
         }
     }
 
@@ -2707,8 +2744,10 @@ public abstract class TaskManager {
                     variantOutputScope.getShrinkedResourcesFile(),
                     androidBuilder,
                     logger);
-            AndroidTask<TransformTask> shrinkTask = scope.getTransformManager()
-                    .addTransform(taskFactory, variantOutputScope, shrinkResTransform);
+            AndroidTask<TransformTask> shrinkTask =
+                    scope.getTransformManager()
+                            .addTransform(taskFactory, variantOutputScope, shrinkResTransform)
+                            .orElse(null);
             // need to record this task since the package task will not depend
             // on it through the transform manager.
             variantOutputScope.setShrinkResourcesTask(shrinkTask);

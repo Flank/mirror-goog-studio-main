@@ -50,7 +50,9 @@ import org.gradle.api.logging.Logging;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -118,6 +120,16 @@ public class TransformManager extends FilterableStreamCollection {
 
     }
 
+    /**
+     * If a task must be created for transform, use this in combination with {@link Optional}
+     * returned by the {@link #addTransform(TaskFactory, TransformVariantScope, Transform)} in order
+     * to throw exception with a meaningful message if task is missing.
+     */
+    @NonNull
+    public static Supplier<RuntimeException> taskMissing(@NonNull Transform t) {
+        return () -> new RuntimeException("Task missing for transform " + t.getName());
+    }
+
     @NonNull
     public AndroidTaskRegistry getTaskRegistry() {
         return taskRegistry;
@@ -140,10 +152,11 @@ public class TransformManager extends FilterableStreamCollection {
      * @param scope the current scope
      * @param transform the transform to add
      * @param <T> the type of the transform
-     * @return the AndroidTask for the given transform task or null if it cannot be created.
+     * @return {@code Optional<AndroidTask<Transform>>} containing the AndroidTask if it was able to
+     *     create it
      */
-    @Nullable
-    public <T extends Transform> AndroidTask<TransformTask> addTransform(
+    @NonNull
+    public <T extends Transform> Optional<AndroidTask<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform) {
@@ -164,10 +177,11 @@ public class TransformManager extends FilterableStreamCollection {
      * @param transform the transform to add
      * @param callback a callback that is run when the task is actually configured
      * @param <T> the type of the transform
-     * @return the AndroidTask for the given transform task or null if it cannot be created.
+     * @return {@code Optional<AndroidTask<Transform>>} containing the AndroidTask for the given
+     *     transform task if it was able to create it
      */
-    @Nullable
-    public <T extends Transform> AndroidTask<TransformTask> addTransform(
+    @NonNull
+    public <T extends Transform> Optional<AndroidTask<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform,
@@ -176,7 +190,7 @@ public class TransformManager extends FilterableStreamCollection {
         if (!validateTransform(transform)) {
             // validate either throws an exception, or records the problem during sync
             // so it's safe to just return null here.
-            return null;
+            return Optional.empty();
         }
 
         List<TransformStream> inputStreams = Lists.newArrayList();
@@ -203,7 +217,7 @@ public class TransformManager extends FilterableStreamCollection {
                             transform.getName(), scope.getFullVariantName(),
                             transform.getScopes(), transform.getReferencedScopes(),
                             transform.getInputTypes()));
-            return null;
+            return Optional.empty();
         }
 
         //noinspection PointlessBooleanExpression
@@ -243,7 +257,7 @@ public class TransformManager extends FilterableStreamCollection {
             task.dependsOn(taskFactory, s.getDependencies());
         }
 
-        return task;
+        return Optional.ofNullable(task);
     }
 
     @Override
