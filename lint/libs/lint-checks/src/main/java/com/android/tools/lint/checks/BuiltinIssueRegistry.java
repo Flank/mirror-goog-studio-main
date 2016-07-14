@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 263;
+    static final int INITIAL_CAPACITY = 264;
 
     static {
         List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
@@ -45,6 +45,12 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AndroidAutoDetector.MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH);
         issues.add(AndroidAutoDetector.MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE);
         issues.add(AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH);
+        issues.add(AndroidTvDetector.IMPLIED_TOUCHSCREEN_HARDWARE);
+        issues.add(AndroidTvDetector.MISSING_BANNER);
+        issues.add(AndroidTvDetector.MISSING_LEANBACK_LAUNCHER);
+        issues.add(AndroidTvDetector.MISSING_LEANBACK_SUPPORT);
+        issues.add(AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
+        issues.add(AndroidTvDetector.UNSUPPORTED_TV_HARDWARE);
         issues.add(AnnotationDetector.ANNOTATION_USAGE);
         issues.add(AnnotationDetector.FLAG_STYLE);
         issues.add(AnnotationDetector.INSIDE_METHOD);
@@ -264,11 +270,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TooManyViewsDetector.TOO_MANY);
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
-        issues.add(AndroidTvDetector.MISSING_LEANBACK_LAUNCHER);
-        issues.add(AndroidTvDetector.MISSING_LEANBACK_SUPPORT);
-        issues.add(AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
-        issues.add(AndroidTvDetector.UNSUPPORTED_TV_HARDWARE);
-        issues.add(AndroidTvDetector.MISSING_BANNER);
         issues.add(TypoDetector.ISSUE);
         issues.add(TypographyDetector.DASHES);
         issues.add(TypographyDetector.ELLIPSIS);
@@ -332,7 +333,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 15;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 38;
+                initialSize += 39;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 5;
             }
