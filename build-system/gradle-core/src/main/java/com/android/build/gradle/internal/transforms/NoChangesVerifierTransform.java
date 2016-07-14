@@ -28,8 +28,6 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -42,6 +40,8 @@ import java.util.Set;
 public class NoChangesVerifierTransform extends Transform {
 
     @NonNull
+    private final String name;
+    @NonNull
     private final InstantRunVariantScope variantScope;
     @NonNull
     private final Set<ContentType> inputTypes;
@@ -51,10 +51,12 @@ public class NoChangesVerifierTransform extends Transform {
     private final InstantRunVerifierStatus failureStatus;
 
     public NoChangesVerifierTransform(
+            @NonNull String name,
             @NonNull InstantRunVariantScope variantScope,
             @NonNull Set<ContentType> inputTypes,
             @NonNull Set<Scope> mergeScopes,
             @NonNull InstantRunVerifierStatus failureStatus) {
+        this.name = name;
         this.variantScope = variantScope;
         this.inputTypes = inputTypes;
         this.mergeScopes = mergeScopes;
@@ -64,7 +66,7 @@ public class NoChangesVerifierTransform extends Transform {
     @NonNull
     @Override
     public String getName() {
-        return "javaResourcesVerifier";
+        return name;
     }
 
     @NonNull

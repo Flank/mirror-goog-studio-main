@@ -23,6 +23,7 @@ import static com.android.utils.StringHelper.capitalize;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -37,6 +38,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -47,10 +49,9 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Manages the transforms for a variant.
@@ -251,20 +252,23 @@ public class TransformManager extends FilterableStreamCollection {
         return streams;
     }
 
+    @VisibleForTesting
     @NonNull
-    private static String getTaskNamePrefix(@NonNull Transform transform) {
+    static String getTaskNamePrefix(@NonNull Transform transform) {
         StringBuilder sb = new StringBuilder(100);
         sb.append("transform");
 
-        Iterator<ContentType> iterator = transform.getInputTypes().iterator();
-        // there's always at least one
-        sb.append(capitalize(iterator.next().name().toLowerCase(Locale.getDefault())));
-        while (iterator.hasNext()) {
-            sb.append("And").append(capitalize(
-                    iterator.next().name().toLowerCase(Locale.getDefault())));
-        }
-
-        sb.append("With").append(capitalize(transform.getName())).append("For");
+        sb.append(
+                transform.getInputTypes()
+                        .stream()
+                        .map(inputType ->
+                                CaseFormat.UPPER_UNDERSCORE.to(
+                                        CaseFormat.UPPER_CAMEL, inputType.name()))
+                        .sorted() // Keep the order stable.
+                        .collect(Collectors.joining("And")))
+                .append("With")
+                .append(capitalize(transform.getName()))
+                .append("For");
 
         return sb.toString();
     }
