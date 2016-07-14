@@ -256,17 +256,22 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      */
     private void processChangedClassFile(
             @NonNull File file,
-            @NonNull final Collection<PostProcessingData.UnresolvedReference<T>> unresolvedReferences,
-            @NonNull final Collection<T> classesToWrite)
-            throws IOException, IncrementalRunImpossibleException {
-        ClassReader classReader = new ClassReader(Files.toByteArray(file));
+            @NonNull Collection<PostProcessingData.UnresolvedReference<T>> unresolvedReferences,
+            @NonNull Collection<T> classesToWrite)
+            throws IncrementalRunImpossibleException {
+        try {
+            ClassReader classReader = new ClassReader(Files.toByteArray(file));
+            IncrementalRunVisitor<T> visitor =
+                    new IncrementalRunVisitor<>(mGraph, classesToWrite, unresolvedReferences);
 
-        IncrementalRunVisitor<T> visitor =
-                new IncrementalRunVisitor<>(mGraph, classesToWrite, unresolvedReferences);
+            DependencyRemoverVisitor<T> remover = new DependencyRemoverVisitor<>(mGraph, visitor);
 
-        DependencyRemoverVisitor<T> remover = new DependencyRemoverVisitor<>(mGraph, visitor);
-
-        classReader.accept(remover, 0);
+            classReader.accept(remover, 0);
+        } catch (IncrementalRunImpossibleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to process " + file.getAbsolutePath(), e);
+        }
     }
 
     @Override
