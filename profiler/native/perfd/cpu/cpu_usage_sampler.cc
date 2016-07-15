@@ -157,16 +157,16 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
   int32_t pid_from_file = atoi(content.substr(0, left_parentheses - 1).c_str());
   if (pid_from_file != pid) return false;
 
-  // Each token after the right parenthesis is a field, either a charactor or a
+  // Each token after the right parenthesis is a field, either a character or a
   // number. The first token is field #3.
   vector<string> tokens =
-      Tokenizer::GetTokens(content.substr(right_parentheses + 1), " \n");
-  if (tokens.size() >= 15) {
+      Tokenizer::GetTokens(content.substr(right_parentheses + 1), " \n", 11, 4);
+  if (tokens.size() == 4) {
     // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
-    int64_t utime = atol(tokens[11].c_str());
-    int64_t stime = atol(tokens[12].c_str());
-    int64_t cutime = atol(tokens[13].c_str());
-    int64_t cstime = atol(tokens[14].c_str());
+    int64_t utime = atol(tokens[0].c_str());
+    int64_t stime = atol(tokens[1].c_str());
+    int64_t cutime = atol(tokens[2].c_str());
+    int64_t cstime = atol(tokens[3].c_str());
     int64_t usage_in_time_units = utime + stime + cutime + cstime;
     data->set_app_cpu_time_in_millisec(usage_in_time_units *
                                        TimeUnitInMilliseconds());

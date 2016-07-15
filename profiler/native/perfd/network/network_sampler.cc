@@ -16,16 +16,13 @@
 #include "network_sampler.h"
 
 #include "utils/file_reader.h"
+#include "utils/tokenizer.h"
 
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <sstream>
 #include <string>
-
-namespace {
-const char *const kUidPrefix = "Uid:";
-}  // anonymous namespace
 
 namespace profiler {
 
@@ -44,23 +41,21 @@ bool NetworkSampler::GetUidString(const std::string &data_file,
 
   // Find the uid value start position. It's supposed to be after the prefix,
   // also after empty spaces on the same line.
+  static const char *const kUidPrefix = "Uid:";
   size_t start = content.find(kUidPrefix);
   if (start != std::string::npos) {
-    start += strlen(kUidPrefix);
-    start = content.find_first_not_of(" \t", start);
-    if (start != std::string::npos) {
-      // Find the uid end position, which should be empty space or new line,
-      // and check the uid value contains 0-9 only.
-      size_t end = content.find_first_not_of("0123456789", start);
-      if (start != end) {
-        if (end == std::string::npos) {
-          uid_result->assign(content.c_str() + start);
-          return true;
-        } else if (end == content.find_first_of(" \t\n\f", start)) {
-          uid_result->assign(content, start, end - start);
-          return true;
-        }
-      }
+    // Find the uid end position, which should be empty space or new line,
+    // and check the uid value contains 0-9 only.
+    Tokenizer tokenizer(content, " \t");
+    tokenizer.set_index(start + strlen(kUidPrefix));
+    tokenizer.EatDelimiters();
+    std::string uid;
+    char next_char;
+    if (tokenizer.GetNextToken(Tokenizer::IsDigit, &uid) &&
+        tokenizer.GetNextChar(&next_char) &&
+        Tokenizer::IsWhitespace(next_char)) {
+      uid_result->assign(uid);
+      return true;
     }
   }
   return false;
