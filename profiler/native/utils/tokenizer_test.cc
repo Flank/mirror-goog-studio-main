@@ -56,6 +56,29 @@ TEST(Tokenizer, GetTokens_ConsecutiveDelimitersAreRemoved) {
   }
 }
 
+TEST(Tokenizer, GetTokens_StartsInTheMiddle) {
+  string input("first second three four");
+  vector<string> tokens = Tokenizer::GetTokens(input, " ", 1);
+  EXPECT_EQ(3u, tokens.size());
+  EXPECT_EQ("second", tokens[0]);
+  EXPECT_EQ("three", tokens[1]);
+  EXPECT_EQ("four", tokens[2]);
+}
+
+TEST(Tokenizer, GetTokens_StartsAtLastTokenExpectEmptyResult) {
+  string input("first second");
+  vector<string> tokens = Tokenizer::GetTokens(input, " ", 2);
+  EXPECT_EQ(0, tokens.size());
+}
+
+TEST(Tokenizer, GetTokens_MaxTwoTokensAreSpecified) {
+  string input("first second three four five");
+  vector<string> tokens = Tokenizer::GetTokens(input, " ", 1, 2);
+  EXPECT_EQ(2u, tokens.size());
+  EXPECT_EQ("second", tokens[0]);
+  EXPECT_EQ("three", tokens[1]);
+}
+
 TEST(Tokenizer, GetNextToken_GetFirstTokenWorks) {
   string input("first second");
   Tokenizer t(input);
@@ -114,9 +137,9 @@ TEST(Tokenizer, GetNextToken_LambdaAllowsCustomTokenRetrieval) {
   string input("ABC123ABC");
   Tokenizer t(input);
   string token;
-  EXPECT_TRUE(t.GetNextToken(&token, Tokenizer::IsAlpha));
+  EXPECT_TRUE(t.GetNextToken(Tokenizer::IsAlpha, &token));
   EXPECT_EQ(token, "ABC");
-  EXPECT_TRUE(t.GetNextToken(&token, Tokenizer::IsDigit));
+  EXPECT_TRUE(t.GetNextToken(Tokenizer::IsDigit, &token));
   EXPECT_EQ(token, "123");
 }
 
