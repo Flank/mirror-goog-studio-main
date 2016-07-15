@@ -23,12 +23,19 @@ host=$1
 
 if [[ -z "$host" ]]; then
     script_name=`basename $0`;
-    echo "Usage: $script_name <host>"
-    echo "Run again and specify <host>, one of: armeabi-v7a, arm64-v8a, x86"
+    echo "Usage: $script_name <host> [<build-type>]"
+    echo "Run again and specify the required arguments:"
+    echo "<host>:       Required, one of: armeabi-v7a, arm64-v8a, x86"
+    echo "<build-type>: Optional, one of: debug, release (default: release)"
     exit
 fi
 
-perfd_path="../../../out/studio/native/out/$host/perfd"
+build_type=$2
+if [[ -z "$build_type" ]]; then
+    build_type="release"
+fi
+
+perfd_path="../../../out/studio/native/out/$build_type/$host/perfd"
 if [[ ! -e $perfd_path ]]; then
     echo "Perfd binary not found at: $perfd_path"
     echo "Verify host, perhaps rebuild perfd? (see profiler/native/README.md)"

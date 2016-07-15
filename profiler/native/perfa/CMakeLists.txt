@@ -9,7 +9,5 @@ target_link_libraries(perfa
                       profiler_protos
                       profiler_utils)
 
-if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  set_target_properties(perfa PROPERTIES
-                        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif()
+install(FILES $<TARGET_FILE:perfa>
+        DESTINATION .)

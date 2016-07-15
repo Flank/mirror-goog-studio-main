@@ -14,8 +14,8 @@ if((NOT CMAKE_CROSSCOMPILING) AND (NOT HOST_BUILD_DIR))
 endif()
 
 if(HOST_BUILD_DIR)
-  set(PROTOBUF_PROTOC_EXECUTABLE ${HOST_BUILD_DIR}/protoc)
-  set(GRPC_CPP_PLUGIN_PATH ${HOST_BUILD_DIR}/grpc_cpp_plugin)
+  set(PROTOBUF_PROTOC_EXECUTABLE ${HOST_BUILD_DIR}/grpc/third_party/protobuf/protoc)
+  set(GRPC_CPP_PLUGIN_PATH ${HOST_BUILD_DIR}/grpc/grpc_cpp_plugin)
 endif()
 
 # Enables systrace output
