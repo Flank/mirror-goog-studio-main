@@ -19,7 +19,10 @@
 
 namespace profiler {
 
-File::File(FileSystem *fs, const std::string &path) : Path(fs, path) {}
+using std::shared_ptr;
+using std::string;
+
+File::File(FileSystem *fs, const string &abs_path) : Path(fs, abs_path) {}
 
 File::~File() { Close(); }
 
@@ -31,7 +34,7 @@ void File::Touch() {
   }
 }
 
-std::string File::Contents() const {
+string File::Contents() const {
   if (Exists() && !IsOpenForWrite()) {
     return fs_->disk()->GetFileContents(path_);
   } else {
@@ -39,7 +42,7 @@ std::string File::Contents() const {
   }
 }
 
-bool File::MoveContentsTo(std::shared_ptr<File> dest) {
+bool File::MoveContentsTo(shared_ptr<File> dest) {
   if (!Exists()) {
     return false;
   }
@@ -65,7 +68,7 @@ void File::OpenForWrite() {
   }
 }
 
-void File::Append(const std::string &str) {
+void File::Append(const string &str) {
   if (IsOpenForWrite()) {
     fs_->disk()->Append(path_, str);
   }

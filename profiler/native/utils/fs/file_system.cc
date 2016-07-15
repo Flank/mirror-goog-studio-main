@@ -17,27 +17,31 @@
 
 namespace profiler {
 
-FileSystem::FileSystem(const std::string &root_path)
-    : FileSystem(std::make_shared<CDisk>(), root_path) {}
+using std::make_shared;
+using std::shared_ptr;
+using std::string;
 
-FileSystem::FileSystem(std::shared_ptr<Disk> disk, const std::string &root_path)
+FileSystem::FileSystem(const string &root_path)
+    : FileSystem(make_shared<CDisk>(), root_path) {}
+
+FileSystem::FileSystem(shared_ptr<Disk> disk, const string &root_path)
     : disk_(disk) {
   root_ = DirFor(root_path);
   root_->CreateDirsRecursively(root_path);
 }
 
-std::shared_ptr<Dir> FileSystem::DirFor(const std::string &path) {
-  std::string path_standard = Path::Standardize(path);
+shared_ptr<Dir> FileSystem::DirFor(const string &abs_path) {
+  string path_standard = Path::Standardize(abs_path);
 
   // Can't use make_shared; must create Dir directly because of friend access
-  return std::shared_ptr<Dir>(new Dir(this, path_standard));
+  return shared_ptr<Dir>(new Dir(this, path_standard));
 }
 
-std::shared_ptr<File> FileSystem::FileFor(const std::string &path) {
-  std::string path_standard = Path::Standardize(path);
+shared_ptr<File> FileSystem::FileFor(const string &abs_path) {
+  string path_standard = Path::Standardize(abs_path);
 
   // Can't use make_shared; must create File directly because of friend access
-  return std::shared_ptr<File>(new File(this, path_standard));
+  return shared_ptr<File>(new File(this, path_standard));
 }
 
 }  // namespace profiler

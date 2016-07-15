@@ -15,18 +15,23 @@
  */
 #include "utils/fs/file_system.h"
 
-#include <map>
 #include <set>
+#include <unordered_map>
 
 #include <gtest/gtest.h>
 
-using namespace std;
 using profiler::Dir;
 using profiler::Disk;
 using profiler::File;
 using profiler::FileSystem;
 using profiler::Path;
 using profiler::PathStat;
+using std::function;
+using std::make_shared;
+using std::unordered_map;
+using std::set;
+using std::string;
+using std::vector;
 
 // A VERY simple in-memory disk system, useful for confirming that FileSystem
 // operations worked.
@@ -166,8 +171,8 @@ class FakeDisk final : public Disk {
   };
 
   mutable set<string> dirs_;
-  mutable map<string, FileData> files_;
-  mutable map<string, int32_t> timestamps_;
+  mutable unordered_map<string, FileData> files_;
+  mutable unordered_map<string, int32_t> timestamps_;
   int32_t current_time_s_;
 };
 

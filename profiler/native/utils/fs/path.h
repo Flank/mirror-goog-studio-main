@@ -73,12 +73,12 @@ class Path {
   std::shared_ptr<Dir> Up();
 
  protected:
-  Path(FileSystem *fs, const std::string &path);
+  Path(FileSystem *fs, const std::string &abs_path);
 
   // Normally, directory creation is limited to within the file system under
   // root. However, this internal method works directly with the underlying
   // disk and ignores that restriction.
-  bool CreateDirsRecursively(const std::string &path);
+  bool CreateDirsRecursively(const std::string &abs_path);
 
   // Delegate dir/file creation to subclass
   virtual bool HandleCreate() = 0;

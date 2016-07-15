@@ -59,7 +59,7 @@ void FtsWalk(const Disk *disk, const string &dpath,
         } break;
       }
       if (valid) {
-        std::string full_path(fts_path);
+        string full_path(fts_path);
         callback(PathStat(type, dpath, full_path,
                           disk->GetModificationAge(full_path)));
       }
@@ -88,7 +88,7 @@ bool CDisk::HasDir(const std::string &dpath) const {
   }
 }
 
-bool CDisk::HasFile(const std::string &fpath) const {
+bool CDisk::HasFile(const string &fpath) const {
   struct stat s;
   int result = stat(fpath.c_str(), &s);
   if (result == 0) {
@@ -98,13 +98,13 @@ bool CDisk::HasFile(const std::string &fpath) const {
   }
 }
 
-bool CDisk::NewDir(const std::string &dpath) {
+bool CDisk::NewDir(const string &dpath) {
   // TODO: Restrictive permissions should be good enough for now, but consider
   // allowing this to be configurable
   return mkdir(dpath.c_str(), 0700) == 0;
 }
 
-bool CDisk::NewFile(const std::string &fpath) {
+bool CDisk::NewFile(const string &fpath) {
   FILE *file = fopen(fpath.c_str(), "wb");
   if (file != nullptr) {
     fclose(file);
@@ -113,7 +113,7 @@ bool CDisk::NewFile(const std::string &fpath) {
   return false;
 }
 
-int32_t CDisk::GetModificationAge(const std::string &fpath) const {
+int32_t CDisk::GetModificationAge(const string &fpath) const {
   struct stat s;
   int result = stat(fpath.c_str(), &s);
   if (result == 0) {
@@ -125,14 +125,14 @@ int32_t CDisk::GetModificationAge(const std::string &fpath) const {
   }
 }
 
-void CDisk::Touch(const std::string &path) { utime(path.c_str(), NULL); }
+void CDisk::Touch(const string &path) { utime(path.c_str(), NULL); }
 
-void CDisk::WalkDir(const std::string &dpath,
-                    std::function<void(const PathStat &)> callback) const {
+void CDisk::WalkDir(const string &dpath,
+                    function<void(const PathStat &)> callback) const {
   return FtsWalk(this, dpath, callback);
 }
 
-std::string CDisk::GetFileContents(const std::string &fpath) const {
+string CDisk::GetFileContents(const string &fpath) const {
   FILE *file = fopen(fpath.c_str(), "rb");
   if (file == nullptr) {
     return "";
@@ -142,30 +142,29 @@ std::string CDisk::GetFileContents(const std::string &fpath) const {
   size_t size = ftell(file);
   rewind(file);
 
-  std::unique_ptr<char> buffer(new char[size]);
+  unique_ptr<char> buffer(new char[size]);
   fread(buffer.get(), sizeof(char), size, file);
-  std::string contents(buffer.get());
+  string contents(buffer.get());
 
   return contents;
 }
 
-bool CDisk::MoveFile(const std::string &fpath_from,
-                     const std::string &fpath_to) {
+bool CDisk::MoveFile(const string &fpath_from, const string &fpath_to) {
   return rename(fpath_from.c_str(), fpath_to.c_str());
 }
 
-bool CDisk::IsOpenForWrite(const std::string &fpath) const {
+bool CDisk::IsOpenForWrite(const string &fpath) const {
   return open_files_.find(fpath) != open_files_.end();
 }
 
-void CDisk::OpenForWrite(const std::string &fpath) {
+void CDisk::OpenForWrite(const string &fpath) {
   FILE *file = fopen(fpath.c_str(), "ab");
   if (file != nullptr) {
     open_files_[fpath] = file;
   }
 }
 
-bool CDisk::Append(const std::string &fpath, const std::string &str) {
+bool CDisk::Append(const string &fpath, const string &str) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {
     FILE *file = it->second;
@@ -175,7 +174,7 @@ bool CDisk::Append(const std::string &fpath, const std::string &str) {
   return false;
 }
 
-void CDisk::Close(const std::string &fpath) {
+void CDisk::Close(const string &fpath) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {
     FILE *file = it->second;
@@ -184,13 +183,13 @@ void CDisk::Close(const std::string &fpath) {
   }
 }
 
-bool CDisk::RmDir(const std::string &dpath) {
+bool CDisk::RmDir(const string &dpath) {
   FtsWalk(this, dpath,
           [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); });
   return remove(dpath.c_str());
 }
 
-bool CDisk::RmFile(const std::string &fpath) {
+bool CDisk::RmFile(const string &fpath) {
   Close(fpath);
   return remove(fpath.c_str()) == 0;
 }

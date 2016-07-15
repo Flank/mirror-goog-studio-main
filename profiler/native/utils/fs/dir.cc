@@ -18,7 +18,11 @@
 
 namespace profiler {
 
-Dir::Dir(FileSystem *fs, const std::string &path) : Path(fs, path) {}
+using std::function;
+using std::shared_ptr;
+using std::string;
+
+Dir::Dir(FileSystem *fs, const string &abs_path) : Path(fs, abs_path) {}
 
 bool Dir::Exists() const { return fs_->disk()->HasDir(path_); }
 
@@ -26,61 +30,57 @@ bool Dir::IsAncestorOf(const Path &path) const {
   return path.path().compare(0, path_.length(), path_) == 0;
 }
 
-std::shared_ptr<Dir> Dir::GetDir(const std::string &path) {
-  return DoGetDir(path);
+shared_ptr<Dir> Dir::GetDir(const string &rel_path) {
+  return DoGetDir(rel_path);
 }
 
-const std::shared_ptr<Dir> Dir::GetDir(const std::string &path) const {
-  return DoGetDir(path);
+const shared_ptr<Dir> Dir::GetDir(const string &rel_path) const {
+  return DoGetDir(rel_path);
 }
 
-std::shared_ptr<Dir> Dir::NewDir(const std::string &path) {
-  auto dir = GetDir(path);
+shared_ptr<Dir> Dir::NewDir(const string &rel_path) {
+  auto dir = GetDir(rel_path);
   dir->Delete();
   dir->Create();
   return dir;
 }
 
-std::shared_ptr<Dir> Dir::GetOrNewDir(const std::string &path) {
-  auto dir = GetDir(path);
-  if (!dir->Exists()) {
-    dir->Create();
-  }
+shared_ptr<Dir> Dir::GetOrNewDir(const string &rel_path) {
+  auto dir = GetDir(rel_path);
+  dir->Create();
   return dir;
 }
 
-std::shared_ptr<File> Dir::GetFile(const std::string &path) {
-  return DoGetFile(path);
+shared_ptr<File> Dir::GetFile(const string &rel_path) {
+  return DoGetFile(rel_path);
 }
 
-const std::shared_ptr<File> Dir::GetFile(const std::string &path) const {
-  return DoGetFile(path);
+const shared_ptr<File> Dir::GetFile(const string &rel_path) const {
+  return DoGetFile(rel_path);
 }
 
-std::shared_ptr<File> Dir::NewFile(const std::string &path) {
-  auto file = GetFile(path);
+shared_ptr<File> Dir::NewFile(const string &rel_path) {
+  auto file = GetFile(rel_path);
   file->Delete();
   file->Create();
   return file;
 }
 
-std::shared_ptr<File> Dir::GetOrNewFile(const std::string &path) {
-  auto file = GetFile(path);
-  if (!file->Exists()) {
-    file->Create();
-  }
+shared_ptr<File> Dir::GetOrNewFile(const string &rel_path) {
+  auto file = GetFile(rel_path);
+  file->Create();
   return file;
 }
 
-std::shared_ptr<Dir> Dir::DoGetDir(const std::string &path) const {
-  return fs_->DirFor(path_ + "/" + path);
+shared_ptr<Dir> Dir::DoGetDir(const string &rel_path) const {
+  return fs_->DirFor(path_ + "/" + rel_path);
 }
 
-std::shared_ptr<File> Dir::DoGetFile(const std::string &path) const {
-  return fs_->FileFor(path_ + "/" + path);
+shared_ptr<File> Dir::DoGetFile(const string &rel_path) const {
+  return fs_->FileFor(path_ + "/" + rel_path);
 }
 
-void Dir::Walk(std::function<void(const PathStat &)> callback) const {
+void Dir::Walk(function<void(const PathStat &)> callback) const {
   fs_->disk()->WalkDir(path_, callback);
 }
 
