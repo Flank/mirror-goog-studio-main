@@ -355,10 +355,12 @@ class SigningTest {
     }
 
     private void checkOnDevice(IDevice device) {
+        device.uninstallPackage("com.example.helloworld")
+        device.uninstallPackage("com.example.helloworld.test")
         project.executor()
                 .withPackaging(packaging)
                 .withArgument(Adb.getInjectToDeviceProviderProperty(device))
-                .run("uninstallAll", GradleTestProject.DEVICE_TEST_TASK)
+                .run(GradleTestProject.DEVICE_TEST_TASK)
     }
 
     @Test
