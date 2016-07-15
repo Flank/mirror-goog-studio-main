@@ -68,7 +68,7 @@ TEST(Tokenizer, GetTokens_StartsInTheMiddle) {
 TEST(Tokenizer, GetTokens_StartsAtLastTokenExpectEmptyResult) {
   string input("first second");
   vector<string> tokens = Tokenizer::GetTokens(input, " ", 2);
-  EXPECT_EQ(0, tokens.size());
+  EXPECT_EQ(0u, tokens.size());
 }
 
 TEST(Tokenizer, GetTokens_MaxTwoTokensAreSpecified) {
