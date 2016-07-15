@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.component
 
 import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
@@ -25,6 +26,7 @@ import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -42,6 +44,9 @@ class NdkComponentVariantTest {
             .fromTestApp(new HelloWorldJniApp())
             .useExperimentalGradleVersion(true)
             .create()
+
+    @Rule
+    public Adb adb = new Adb();
 
     @BeforeClass
     public static void setUp() {
@@ -146,6 +151,7 @@ model {
     @Test
     @Category(DeviceTests.class)
     public void connectedAndroidTest() {
+        adb.exclusiveAccess();
         if (GradleTestProject.DEVICE_PROVIDER_NAME.equals(BuilderConstants.CONNECTED)) {
             Collection<String> abis = DeviceHelper.getDeviceAbis()
             if (abis.contains("x86")) {
