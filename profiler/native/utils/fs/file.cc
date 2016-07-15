@@ -26,17 +26,17 @@ File::File(FileSystem *fs, const string &abs_path) : Path(fs, abs_path) {}
 
 File::~File() { Close(); }
 
-bool File::Exists() const { return fs_->disk()->HasFile(path_); }
+bool File::Exists() const { return fs_->HasFile(path_); }
 
 void File::Touch() {
   if (Exists()) {
-    fs_->disk()->Touch(path_);
+    fs_->Touch(path_);
   }
 }
 
 string File::Contents() const {
   if (Exists() && !IsOpenForWrite()) {
-    return fs_->disk()->GetFileContents(path_);
+    return fs_->GetFileContents(path_);
   } else {
     return "";
   }
@@ -57,30 +57,30 @@ bool File::MoveContentsTo(shared_ptr<File> dest) {
   }
 
   dest->Delete();
-  return fs_->disk()->MoveFile(path_, dest->path());
+  return fs_->MoveFile(path_, dest->path());
 }
 
-bool File::IsOpenForWrite() const { return fs_->disk()->IsOpenForWrite(path_); }
+bool File::IsOpenForWrite() const { return fs_->IsOpenForWrite(path_); }
 
 void File::OpenForWrite() {
   if (Exists()) {
-    fs_->disk()->OpenForWrite(path_);
+    fs_->OpenForWrite(path_);
   }
 }
 
 void File::Append(const string &str) {
   if (IsOpenForWrite()) {
-    fs_->disk()->Append(path_, str);
+    fs_->Append(path_, str);
   }
 }
 
 void File::Close() {
   if (IsOpenForWrite()) {
-    fs_->disk()->Close(path_);
+    fs_->Close(path_);
   }
 }
 
-bool File::HandleCreate() { return fs_->disk()->NewFile(path_); }
+bool File::HandleCreate() { return fs_->CreateFile(path_); }
 
-bool File::HandleDelete() { return fs_->disk()->RmFile(path_); }
+bool File::HandleDelete() { return fs_->DeleteFile(path_); }
 }

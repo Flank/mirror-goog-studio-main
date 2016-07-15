@@ -22,63 +22,170 @@
 #include <string>
 
 #include "utils/fs/dir.h"
-#include "utils/fs/disk.h"
 #include "utils/fs/file.h"
 
 namespace profiler {
 
+// Data class which holds lightweight metadata for a target file or directory
+// path, which can be used to construct a |File| or |Dir| object if needed.
+class PathStat {
+ public:
+  enum class Type {
+    FILE,
+    DIR,
+  };
+
+  PathStat(Type type, const std::string &root, const std::string &full_path,
+           int32_t modification_age_s)
+      : type_(type),
+        full_path_(full_path),
+        modification_age_s_(modification_age_s) {
+    rel_path_ = full_path.substr(root.length() + 1);
+  }
+
+  Type type() const { return type_; }
+
+  // Returns the full path of this file.
+  // e.g. if walking /root/dir/ and coming across /root/dir/subdir/file.txt,
+  // full_path will be "/root/dir/subdir/file.txt"
+  const std::string &full_path() const { return full_path_; }
+
+  // Returns the path of this file, relative to the directory being walked.
+  // e.g. if walking /root/dir/ and coming across /root/dir/subdir/file.txt,
+  // rel_path will be "subdir/file.txt"
+  const std::string &rel_path() const { return rel_path_; }
+
+  // Returns the time, in seconds, since this file was last modified
+  int32_t modification_age() const { return modification_age_s_; }
+
+ private:
+  Type type_;
+  std::string full_path_;
+  std::string rel_path_;
+  int32_t modification_age_s_;
+};
+
 // A mockable file system providing basic file operations
 // Example:
-//  FileSystem fs("/tmp/myapp/");
+//  // Declaring a file system instance
+//  DiskFileSystem fs;
+//  auto root = fs.GetOrNewDir("/path/to/app");
 //
 //  // Reading files
-//  auto settings = fs.root()->GetFile(".appsettings");
-//  assert(settings->Exists());
-//  auto contents = settings->Contents();
+//  auto settings = root->GetOrNewFile(".appsettings");
+//  string contents = settings->Contents();
 //  ...
 //
 //  // Working with directories
-//  auto cache = fs.root()->GetDir("cache")->Delete();
-//  fs.root()->NewDir("cache/images");
-//  fs.root()->NewDir("cache/movies");
-//  // Creating subdirs should recreate parent cache dir
+//  auto cache = root->GetDir("cache")->Delete(); // Delete old cache
+//  root->NewDir("cache/images");
+//  root->NewDir("cache/movies");
+//  // Creating subdirs should automatically create parent dir
 //  assert(cache->Exists());
 //
 //  // Editing files
-//  auto cache_lock = cache->NewFile("cache.lock");
-//  ... write files into the cache ...
-//  cache_lock->Delete();
-//  auto log = fs.root()->GetFile("logs/cache.log");
-//  *log << "Cache modified at " << clock.GetCurrentTime() << endl;
+//  auto log_file = root->GetOrNewFile("logs/cache.log");
+//  *log_file << "Cache modified at " << clock.GetCurrentTime() << endl;
 //
 // The FileSystem class is NOT thread safe so be careful when modifying
 // directories and files across threads.
-class FileSystem final {
-  // Expose access to |DirFor|, |FileFor|, and |disk| methods
+class FileSystem {
+  // Expose access to protected utility methods
   friend File;
   friend Dir;
   friend Path;
 
  public:
-  explicit FileSystem(const std::string &root_path);
-  FileSystem(std::shared_ptr<Disk> disk, const std::string &root_path);
+  virtual ~FileSystem() = default;
 
-  ~FileSystem() = default;
+  // Fetch a directory handle for the specified path.
+  std::shared_ptr<Dir> GetDir(const std::string &abs_path);
 
-  std::shared_ptr<Dir> root() { return root_; }
-  const std::shared_ptr<Dir> root() const { return root_; }
+  // Fetch a directory handle for the specified path, ensuring it is created.
+  // If a directory already exists here it will be overwritten.
+  std::shared_ptr<Dir> NewDir(const std::string &abs_path);
 
- private:
-  std::shared_ptr<Disk> disk() { return disk_; }
-  const std::shared_ptr<Disk> disk() const { return disk_; }
+  // Fetch a directory handle for the specified path, creating it only if it
+  // does not already exist.
+  std::shared_ptr<Dir> GetOrNewDir(const std::string &abs_path);
 
-  // Returns a directory handle for the specified path
-  std::shared_ptr<Dir> DirFor(const std::string &abs_path);
-  // Returns a file handle for the specified path
-  std::shared_ptr<File> FileFor(const std::string &abs_path);
+  // Fetch a file handle for the specified path.
+  std::shared_ptr<File> GetFile(const std::string &abs_path);
 
-  std::shared_ptr<Disk> disk_;
-  std::shared_ptr<Dir> root_;
+  // Fetch a file handle for the specified path, ensuring it is created. If a
+  // file already exists here it will be overwritten.
+  std::shared_ptr<File> NewFile(const std::string &abs_path);
+
+  // Fetch a file handle for the specified path, creating it only if it does not
+  // already exist.
+  std::shared_ptr<File> GetOrNewFile(const std::string &abs_path);
+
+ protected:
+  virtual bool HasDir(const std::string &dpath) const = 0;
+
+  virtual bool HasFile(const std::string &fpath) const = 0;
+
+  // Create a new directory. A directory should not already exist at this
+  // location when this method is called.
+  //
+  // This method will fail if the necessary parent directories to create this
+  // directory don't already exist; the caller should ensure they do.
+  virtual bool CreateDir(const std::string &dpath) = 0;
+
+  // Create a new file. A file should not already exist at this location when
+  // this method is called.
+  //
+  // This method will fail if the necessary parent directories to create this
+  // directory don't already exist; the caller should ensure they do.
+  virtual bool CreateFile(const std::string &fpath) = 0;
+
+  // Return the time passed, in seconds, since the target path was modified.
+  virtual int32_t GetModificationAge(const std::string &path) const = 0;
+
+  // Update the target file's modified timestamp. Caller should ensure the file
+  // exists. This method does NOT create a file if it doesn't already exist.
+  virtual void Touch(const std::string &fpath) = 0;
+
+  // Given a path to a directory, walk over its contents, triggering the
+  // callback for each file. The callback will be triggered in an order where
+  // the paths can be safely deleted (i.e. children first).
+  // TODO: This should be done using an iterator, not a lambda
+  virtual void WalkDir(
+      const std::string &dpath,
+      std::function<void(const PathStat &)> callback) const = 0;
+
+  // Read a file's contents all in one pass. This will return the empty string
+  // if the file at the target path is in write mode.
+  virtual std::string GetFileContents(const std::string &fpath) const = 0;
+
+  // Move the file from the first path to the second path. The caller should
+  // ensure the first file is not in write mode and that the second file either
+  // doesn't exist or is also not in write mode. The caller should also not
+  // call this method with the same path for both arguments.
+  virtual bool MoveFile(const std::string &fpath_from,
+                        const std::string &fpath_to) = 0;
+
+  // Returns true if the file is in write mode. See also |OpenWriteMode| and
+  // |Close|
+  virtual bool IsOpenForWrite(const std::string &fpath) const = 0;
+
+  // Put a file into write mode. The file stays in write mode until |Close| is
+  // called.
+  virtual void OpenForWrite(const std::string &fpath) = 0;
+
+  // Append text to the end of the file at the specified path. This should not
+  // be called if the file is not already in write mode.
+  virtual bool Append(const std::string &fpath, const std::string &str) = 0;
+
+  // Indication that user is done writing to a file after calling
+  // |OpenWriteMode|.
+  virtual void Close(const std::string &fpath) = 0;
+
+  // Remove a directory and all of its contents recursively.
+  virtual bool DeleteDir(const std::string &dpath) = 0;
+
+  // Remove a file.
+  virtual bool DeleteFile(const std::string &fpath) = 0;
 };
 
 }  // namespace profiler

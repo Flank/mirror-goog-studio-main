@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "disk.h"
+#include "utils/fs/disk_file_system.h"
 
 #include <fts.h>
 #include <string.h>
@@ -22,18 +22,69 @@
 #include <utime.h>
 #include <memory>
 
-namespace {
+namespace profiler {
 
-using profiler::Disk;
-using profiler::PathStat;
 using std::function;
 using std::string;
 using std::unique_ptr;
 
-// Use the FTS (file traversal) API to walk the contents of the specified
-// directory path. Triggers the callback in child-first order.
-void FtsWalk(const Disk *disk, const string &dpath,
-             function<void(const PathStat &)> callback) {
+DiskFileSystem::~DiskFileSystem() {
+  for (auto it = open_files_.begin(); it != open_files_.end(); it++) {
+    fclose(it->second);
+  }
+}
+
+bool DiskFileSystem::HasDir(const std::string &dpath) const {
+  struct stat s;
+  int result = stat(dpath.c_str(), &s);
+  if (result == 0) {
+    return S_ISDIR(s.st_mode) != 0;
+  } else {
+    return false;
+  }
+}
+
+bool DiskFileSystem::HasFile(const string &fpath) const {
+  struct stat s;
+  int result = stat(fpath.c_str(), &s);
+  if (result == 0) {
+    return S_ISREG(s.st_mode) != 0;
+  } else {
+    return false;
+  }
+}
+
+bool DiskFileSystem::CreateDir(const string &dpath) {
+  // TODO: Restrictive permissions should be good enough for now, but consider
+  // allowing this to be configurable
+  return mkdir(dpath.c_str(), 0700) == 0;
+}
+
+bool DiskFileSystem::CreateFile(const string &fpath) {
+  FILE *file = fopen(fpath.c_str(), "wb");
+  if (file != nullptr) {
+    fclose(file);
+    return true;
+  }
+  return false;
+}
+
+int32_t DiskFileSystem::GetModificationAge(const string &fpath) const {
+  struct stat s;
+  int result = stat(fpath.c_str(), &s);
+  if (result == 0) {
+    time_t now;
+    time(&now);
+    return difftime(now, s.st_mtime);
+  } else {
+    return 0;
+  }
+}
+
+void DiskFileSystem::Touch(const string &path) { utime(path.c_str(), NULL); }
+
+void DiskFileSystem::WalkDir(const string &dpath,
+                             function<void(const PathStat &)> callback) const {
   unique_ptr<char[]> root_path(new char[dpath.length() + 1]);
   strcpy(root_path.get(), dpath.c_str());
   char *dir_args[2];
@@ -60,79 +111,16 @@ void FtsWalk(const Disk *disk, const string &dpath,
       }
       if (valid) {
         string full_path(fts_path);
-        callback(PathStat(type, dpath, full_path,
-                          disk->GetModificationAge(full_path)));
+        callback(
+            PathStat(type, dpath, full_path, GetModificationAge(full_path)));
       }
     }
 
     fts_close(fts);
   }
 }
-}
 
-namespace profiler {
-
-CDisk::~CDisk() {
-  for (auto it = open_files_.begin(); it != open_files_.end(); it++) {
-    fclose(it->second);
-  }
-}
-
-bool CDisk::HasDir(const std::string &dpath) const {
-  struct stat s;
-  int result = stat(dpath.c_str(), &s);
-  if (result == 0) {
-    return S_ISDIR(s.st_mode) != 0;
-  } else {
-    return false;
-  }
-}
-
-bool CDisk::HasFile(const string &fpath) const {
-  struct stat s;
-  int result = stat(fpath.c_str(), &s);
-  if (result == 0) {
-    return S_ISREG(s.st_mode) != 0;
-  } else {
-    return false;
-  }
-}
-
-bool CDisk::NewDir(const string &dpath) {
-  // TODO: Restrictive permissions should be good enough for now, but consider
-  // allowing this to be configurable
-  return mkdir(dpath.c_str(), 0700) == 0;
-}
-
-bool CDisk::NewFile(const string &fpath) {
-  FILE *file = fopen(fpath.c_str(), "wb");
-  if (file != nullptr) {
-    fclose(file);
-    return true;
-  }
-  return false;
-}
-
-int32_t CDisk::GetModificationAge(const string &fpath) const {
-  struct stat s;
-  int result = stat(fpath.c_str(), &s);
-  if (result == 0) {
-    time_t now;
-    time(&now);
-    return difftime(now, s.st_mtime);
-  } else {
-    return 0;
-  }
-}
-
-void CDisk::Touch(const string &path) { utime(path.c_str(), NULL); }
-
-void CDisk::WalkDir(const string &dpath,
-                    function<void(const PathStat &)> callback) const {
-  return FtsWalk(this, dpath, callback);
-}
-
-string CDisk::GetFileContents(const string &fpath) const {
+string DiskFileSystem::GetFileContents(const string &fpath) const {
   FILE *file = fopen(fpath.c_str(), "rb");
   if (file == nullptr) {
     return "";
@@ -149,22 +137,23 @@ string CDisk::GetFileContents(const string &fpath) const {
   return contents;
 }
 
-bool CDisk::MoveFile(const string &fpath_from, const string &fpath_to) {
+bool DiskFileSystem::MoveFile(const string &fpath_from,
+                              const string &fpath_to) {
   return rename(fpath_from.c_str(), fpath_to.c_str());
 }
 
-bool CDisk::IsOpenForWrite(const string &fpath) const {
+bool DiskFileSystem::IsOpenForWrite(const string &fpath) const {
   return open_files_.find(fpath) != open_files_.end();
 }
 
-void CDisk::OpenForWrite(const string &fpath) {
+void DiskFileSystem::OpenForWrite(const string &fpath) {
   FILE *file = fopen(fpath.c_str(), "ab");
   if (file != nullptr) {
     open_files_[fpath] = file;
   }
 }
 
-bool CDisk::Append(const string &fpath, const string &str) {
+bool DiskFileSystem::Append(const string &fpath, const string &str) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {
     FILE *file = it->second;
@@ -174,7 +163,7 @@ bool CDisk::Append(const string &fpath, const string &str) {
   return false;
 }
 
-void CDisk::Close(const string &fpath) {
+void DiskFileSystem::Close(const string &fpath) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {
     FILE *file = it->second;
@@ -183,13 +172,13 @@ void CDisk::Close(const string &fpath) {
   }
 }
 
-bool CDisk::RmDir(const string &dpath) {
-  FtsWalk(this, dpath,
+bool DiskFileSystem::DeleteDir(const string &dpath) {
+  WalkDir(dpath,
           [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); });
   return remove(dpath.c_str());
 }
 
-bool CDisk::RmFile(const string &fpath) {
+bool DiskFileSystem::DeleteFile(const string &fpath) {
   Close(fpath);
   return remove(fpath.c_str()) == 0;
 }

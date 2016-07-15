@@ -24,11 +24,7 @@ using std::string;
 
 Dir::Dir(FileSystem *fs, const string &abs_path) : Path(fs, abs_path) {}
 
-bool Dir::Exists() const { return fs_->disk()->HasDir(path_); }
-
-bool Dir::IsAncestorOf(const Path &path) const {
-  return path.path().compare(0, path_.length(), path_) == 0;
-}
+bool Dir::Exists() const { return fs_->HasDir(path_); }
 
 shared_ptr<Dir> Dir::GetDir(const string &rel_path) {
   return DoGetDir(rel_path);
@@ -39,16 +35,11 @@ const shared_ptr<Dir> Dir::GetDir(const string &rel_path) const {
 }
 
 shared_ptr<Dir> Dir::NewDir(const string &rel_path) {
-  auto dir = GetDir(rel_path);
-  dir->Delete();
-  dir->Create();
-  return dir;
+  return fs_->NewDir(Path::Append(path_, rel_path));
 }
 
 shared_ptr<Dir> Dir::GetOrNewDir(const string &rel_path) {
-  auto dir = GetDir(rel_path);
-  dir->Create();
-  return dir;
+  return fs_->GetOrNewDir(Path::Append(path_, rel_path));
 }
 
 shared_ptr<File> Dir::GetFile(const string &rel_path) {
@@ -60,31 +51,26 @@ const shared_ptr<File> Dir::GetFile(const string &rel_path) const {
 }
 
 shared_ptr<File> Dir::NewFile(const string &rel_path) {
-  auto file = GetFile(rel_path);
-  file->Delete();
-  file->Create();
-  return file;
+  return fs_->NewFile(Path::Append(path_, rel_path));
 }
 
 shared_ptr<File> Dir::GetOrNewFile(const string &rel_path) {
-  auto file = GetFile(rel_path);
-  file->Create();
-  return file;
+  return fs_->GetOrNewFile(Path::Append(path_, rel_path));
 }
 
 shared_ptr<Dir> Dir::DoGetDir(const string &rel_path) const {
-  return fs_->DirFor(path_ + "/" + rel_path);
+  return fs_->GetDir(Path::Append(path_, rel_path));
 }
 
 shared_ptr<File> Dir::DoGetFile(const string &rel_path) const {
-  return fs_->FileFor(path_ + "/" + rel_path);
+  return fs_->GetFile(Path::Append(path_, rel_path));
 }
 
 void Dir::Walk(function<void(const PathStat &)> callback) const {
-  fs_->disk()->WalkDir(path_, callback);
+  fs_->WalkDir(path_, callback);
 }
 
-bool Dir::HandleCreate() { return fs_->disk()->NewDir(path_); }
+bool Dir::HandleCreate() { return fs_->CreateDir(path_); }
 
-bool Dir::HandleDelete() { return fs_->disk()->RmDir(path_); }
+bool Dir::HandleDelete() { return fs_->DeleteDir(path_); }
 }
