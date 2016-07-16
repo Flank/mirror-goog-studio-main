@@ -24,26 +24,24 @@ import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AtomPublishArtifact;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
-import com.android.build.gradle.internal.variant.AtomVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.tasks.AndroidJarTask;
+import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.GenerateAtomMetadata;
-import com.android.build.gradle.tasks.PackageAtom;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.VariantConfiguration;
+import com.android.builder.model.SyncIssue;
 
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -96,19 +94,18 @@ public class AtomTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        createMergeAppManifestsTask(tasks, variantScope);
+        createMergeLibManifestsTask(tasks, variantScope);
         // Add a task to create the res values
         createGenerateResValuesTask(tasks, variantScope);
 
         // Add a task to compile renderscript files.
         createRenderscriptTask(tasks, variantScope);
 
-        basicCreateMergeResourcesTask(
+        // Create a merge task to merge the resources from this atom and its dependencies. This
+        // will get packaged in the atombundle.
+        createMergeResourcesTask(
                 tasks,
                 variantScope,
-                "mergeAtom",
-                null,
-                true /*includeDependencies*/,
                 true /*process9patch*/);
 
         // Add a task to merge the assets folders
@@ -116,15 +113,24 @@ public class AtomTaskManager extends TaskManager {
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(tasks, variantScope);
-        // Add a task to generate resource source files, directing the location
-        // of the r.txt file to be directly in the bundle.
-        createApkProcessResTask(tasks, variantScope);
+
+        if (variantScope.getVariantConfiguration().getPackageDependencies().getBaseAtom() == null) {
+            // If this is the base atom, compile the .ap_ that will get packaged in the atombundle.
+            createApkProcessResTask(tasks, variantScope);
+        } else {
+            // If this is not the base atom, add a task to generate the resource source files,
+            // directing the location of the r.txt file to be directly in the atombundle.
+            createProcessResTask(tasks, variantScope, variantBundleDir,
+                    false /*generateResourcePackage*/);
+        }
 
         // process java resources
         createProcessJavaResTasks(tasks, variantScope);
+
         createAidlTask(tasks, variantScope);
 
         createShaderTask(tasks, variantScope);
+
         // Add NDK tasks
         if (!isComponentModelPlugin) {
             createNdkTasks(variantScope);
@@ -141,20 +147,42 @@ public class AtomTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(tasks, variantScope);
 
         // Add a compile task
-        CoreJackOptions jackOptions =
-                variantData.getVariantConfiguration().getJackOptions();
+        // First, build the .class files with javac and compile the jar.
         AndroidTask<? extends JavaCompile> javacTask =
                 createJavacTask(tasks, variantScope);
+        addJavacClassesStream(variantScope);
+        setJavaCompilerTask(javacTask, tasks, variantScope);
+        getAndroidTasks().create(tasks,
+                new AndroidJarTask.JarClassesConfigAction(variantScope));
 
+        // Then, build the dex with jack if enabled.
+        // TODO: This means recompiling everything twice if jack is enabled.
+        CoreJackOptions jackOptions =
+                variantData.getVariantConfiguration().getJackOptions();
         if (jackOptions.isEnabled()) {
             AndroidTask<TransformTask> jackTask =
                     createJackTask(tasks, variantScope, true /*compileJavaSource*/);
             setJavaCompilerTask(jackTask, tasks, variantScope);
         } else {
-            addJavacClassesStream(variantScope);
-            setJavaCompilerTask(javacTask, tasks, variantScope);
-            getAndroidTasks().create(tasks,
-                    new AndroidJarTask.JarClassesConfigAction(variantScope));
+            // Prevent the use of java 1.8 without jack, which would otherwise cause an
+            // internal javac error.
+            if(variantScope.getGlobalScope().getExtension().getCompileOptions()
+                    .getTargetCompatibility().isJava8Compatible()) {
+                // Only warn for users of retrolambda and dexguard
+                if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
+                        || project.getPlugins().hasPlugin("dexguard")) {
+                    getLogger().warn("Jack is disabled, but one of the plugins you "
+                            + "are using supports Java 8 language features.");
+                } else {
+                    androidBuilder.getErrorReporter().handleSyncError(
+                            variantScope.getVariantConfiguration().getFullName(),
+                            SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
+                            "Jack is required to support java 8 language features. "
+                                    + "Either enable Jack or remove "
+                                    + "sourceCompatibility JavaVersion.VERSION_1_8."
+                    );
+                }
+            }
             createPostCompilationTasks(tasks, variantScope);
         }
 
@@ -163,81 +191,72 @@ public class AtomTaskManager extends TaskManager {
             createDataBindingTasks(tasks, variantScope);
         }
 
-        createAtomPackagingTasks(tasks, variantScope);
+        createStripNativeLibraryTask(tasks, variantScope);
+
+        createAtomBundlingTasks(tasks, variantScope);
 
         createLintTasks(tasks, variantScope);
+    }
 
-        final Zip bundle = project.getTasks().create(
-                variantScope.getTaskName("bundle", "Atom"), Zip.class);
-        for (final BaseVariantOutputData variantOutputData : variantData.getOutputs()) {
-            bundle.dependsOn(variantOutputData.packageAndroidArtifactTask);
-            variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
-        }
+    private void createAtomBundlingTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull final VariantScope variantScope) {
+        final AtomVariantData variantData = (AtomVariantData) variantScope.getVariantData();
+        final TransformManager transformManager = variantScope.getTransformManager();
 
-        bundle.setDescription("Assembles a bundle containing the atom in " +
-                variantConfig.getBaseName() + ".");
-        bundle.setDestinationDir(
-                new File(getGlobalScope().getOutputsDir(), BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE));
-        bundle.setArchiveName(getGlobalScope().getProjectBaseName()
-                + "-" + variantConfig.getBaseName()
-                + "." + BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE);
-        bundle.setExtension(BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE);
-        bundle.from(variantBundleDir);
+        // Get the single output.
+        final VariantOutputScope variantOutputScope = variantData.getOutputs().get(0).getScope();
+        variantOutputScope.setAssembleTask(variantScope.getAssembleTask());
 
-        variantScope.getAssembleTask().dependsOn(tasks, bundle);
+        // Create the task to generate the atom metadata.
+        AndroidTask<GenerateAtomMetadata> generateAtomMetadata =
+                getAndroidTasks().create(tasks,
+                        new GenerateAtomMetadata.ConfigAction(variantOutputScope));
 
+        // Create the bundle task.
+        AndroidTask<BundleAtom> bundleAtom =
+                getAndroidTasks().create(tasks,
+                        new BundleAtom.ConfigAction(variantScope));
+        variantOutputScope.getVariantOutputData().bundleAtomTask = bundleAtom.get(tasks);
+
+        bundleAtom.dependsOn(tasks, generateAtomMetadata);
+        bundleAtom.dependsOn(tasks, variantScope.getMergeAssetsTask());
+        bundleAtom.dependsOn(tasks, variantOutputScope.getProcessResourcesTask());
+        bundleAtom.dependsOn(tasks, variantData.binaryFileProviderTask);
+
+        bundleAtom.optionalDependsOn(
+                tasks,
+                variantOutputScope.getShrinkResourcesTask(),
+                // TODO: When Jack is converted, add activeDexTask to VariantScope.
+                variantOutputScope.getVariantScope().getJavaCompilerTask(),
+                // TODO: Remove when Jack is converted to AndroidTask.
+                variantData.javaCompilerTask);
+
+        // TODO Optimize to avoid creating too many actions
+        transformManager.getStreams(StreamFilter.RESOURCES)
+                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
+        // TODO Optimize to avoid creating too many actions
+        transformManager.getStreams(StreamFilter.DEX)
+                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
+        // TODO Optimize to avoid creating too many actions
+        transformManager.getStreams(StreamFilter.NATIVE_LIBS)
+                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
+
+        variantScope.getAssembleTask().dependsOn(tasks, bundleAtom);
+
+        VariantConfiguration variantConfig = variantScope.getVariantConfiguration();
         if (getExtension().getDefaultPublishConfig().equals(variantConfig.getFullName())) {
             VariantHelper.setupDefaultConfig(project,
                     variantData.getVariantDependency().getPackageConfiguration());
 
             // add the artifact that will be published
-            project.getArtifacts().add("default", bundle);
+            bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add("default",
+                    new AtomPublishArtifact(
+                            getGlobalScope().getProjectBaseName(),
+                            null,
+                            packageTask)));
 
             getAssembleDefault().dependsOn(variantScope.getAssembleTask().getName());
-        }
-
-    }
-
-    private void createAtomPackagingTasks(
-            @NonNull TaskFactory tasks,
-            @NonNull final VariantScope variantScope) {
-        final AtomVariantData variantData = (AtomVariantData) variantScope.getVariantData();
-
-        // loop on all outputs. The only difference will be the name of the task, and location
-        // of the generated data.
-        for (final AtomVariantOutputData variantOutputData : variantData.getOutputs()) {
-            final VariantOutputScope variantOutputScope = variantOutputData.getScope();
-
-            AndroidTask<GenerateAtomMetadata> generateAtomMetadata =
-                    getAndroidTasks().create(tasks,
-                            new GenerateAtomMetadata.ConfigAction(variantOutputScope));
-
-            DefaultGradlePackagingScope packagingScope =
-                    new DefaultGradlePackagingScope(variantOutputScope);
-            AndroidTask<PackageAtom> packageAtom =
-                    getAndroidTasks().create(tasks,
-                            new PackageAtom.ConfigAction(packagingScope));
-
-            packageAtom.configure(
-                    tasks,
-                    task -> variantOutputData.packageAndroidArtifactTask = task);
-
-            TransformManager transformManager = variantScope.getTransformManager();
-
-            for (TransformStream stream : transformManager.getStreams(StreamFilter.DEX)) {
-                // TODO Optimize to avoid creating too many actions
-                packageAtom.dependsOn(tasks, stream.getDependencies());
-            }
-
-            for (TransformStream stream : transformManager.getStreams(StreamFilter.RESOURCES)) {
-                // TODO Optimize to avoid creating too many actions
-                packageAtom.dependsOn(tasks, stream.getDependencies());
-            }
-            for (TransformStream stream : transformManager.getStreams(StreamFilter.NATIVE_LIBS)) {
-                // TODO Optimize to avoid creating too many actions
-                packageAtom.dependsOn(tasks, stream.getDependencies());
-            }
-            packageAtom.dependsOn(tasks, generateAtomMetadata);
         }
     }
 

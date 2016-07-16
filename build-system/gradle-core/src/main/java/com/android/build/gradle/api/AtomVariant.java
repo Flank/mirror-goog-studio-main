@@ -21,6 +21,6 @@ import com.android.build.gradle.internal.api.TestedVariant;
 /**
  * An Atom Build variant and all its public data.
  */
-public interface AtomVariant extends BaseVariant, AndroidArtifactVariant, TestedVariant {
+public interface AtomVariant extends BaseVariant, VersionedVariant, TestedVariant {
 
 }

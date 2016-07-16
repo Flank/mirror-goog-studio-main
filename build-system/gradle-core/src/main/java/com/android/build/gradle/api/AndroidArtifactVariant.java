@@ -25,7 +25,7 @@ import java.util.Set;
 /**
  * A Build variant for a generic android artifact.
  */
-public interface AndroidArtifactVariant {
+public interface AndroidArtifactVariant extends VersionedVariant {
 
     /**
      * Returns the {@link SigningConfig} for this build variant,
@@ -38,20 +38,6 @@ public interface AndroidArtifactVariant {
      * Returns true if this variant has the information it needs to create a signed APK.
      */
     boolean isSigningReady();
-
-    /**
-     * Returns the variant versionCode. If the value is not found, then 1 is returned as this
-     * is the implicit value that the platform would use.
-     *
-     * If not output define its own variant override then this is used for all outputs.
-     */
-    int getVersionCode();
-
-    /**
-     * Returns the variant versionName or null if none found.
-     */
-    @Nullable
-    String getVersionName();
 
     /**
      * Returns the compatible screens for the variant.

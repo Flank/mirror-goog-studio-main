@@ -28,7 +28,6 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -50,8 +49,6 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.SdkLibData;
-import com.android.repository.api.RepoManager;
-import com.android.repository.api.RepoPackage;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -137,7 +134,6 @@ public class DependencyManager {
             addDependencyToPrepareTask(tasks, androidAtom, prepareDependenciesTask,
                     variantData.getScope().getPreBuildTask());
         }
-
 
         for (AndroidLibrary androidLibrary : variantDeps.getPackageDependencies().getAndroidDependencies()) {
             addDependencyToPrepareTask(tasks, androidLibrary, prepareDependenciesTask,
@@ -629,8 +625,6 @@ public class DependencyManager {
         }
     }
 
-
-
     /**
      * Collects the resolved artifacts and returns a configuration which contains them. If the
      * configuration has unresolved dependencies we check that we have the latest version of the
@@ -968,6 +962,12 @@ public class DependencyManager {
                             alreadyFoundAtoms.put(moduleVersion, atomsForThisModule);
                         }
 
+                        // if this is a package scope, then skip the dependencies.
+                        if (scopeType == ScopeType.PACKAGE) {
+                            recursiveLibSkip(nestedLibraries);
+                            recursiveJavaSkip(nestedJars);
+                        }
+
                         String path = computeArtifactPath(moduleVersion, artifact);
                         String name = computeArtifactName(moduleVersion, artifact);
 
@@ -985,6 +985,7 @@ public class DependencyManager {
                                 nestedLibraries,
                                 nestedAtoms,
                                 nestedJars,
+                                moduleVersion.getName(), /* atomName */
                                 name,
                                 artifact.getClassifier(),
                                 gradlePath,

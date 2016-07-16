@@ -39,7 +39,6 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.tasks.BooleanLatch;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.NamedDomainObjectContainer;
@@ -171,39 +170,6 @@ public class AtomVariantFactory implements VariantFactory {
                                 "applicationIdSuffix is set to '" + applicationIdSuffix +
                                 "' in flavor '" + productFlavor.getProductFlavor().getName() + "'.");
             }
-        }
-
-        // Jack is not supported in Atom project.
-        for (BuildTypeData buildType: model.getBuildTypes().values()) {
-            if (Boolean.TRUE.equals(buildType.getBuildType().getJackOptions().isEnabled())) {
-                errorReporter.handleSyncError(
-                        buildType.getBuildType().getName(),
-                        SyncIssue.TYPE_GENERIC,
-                        "Atom projects cannot enable Jack. " +
-                                "Jack is enabled in buildType '" + buildType.getBuildType().getName() +
-                                "'.");
-            }
-        }
-
-        for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
-            if (Boolean.TRUE.equals(
-                    productFlavor.getProductFlavor().getJackOptions().isEnabled())) {
-                errorReporter.handleSyncError(
-                        productFlavor.getProductFlavor().getName(),
-                        SyncIssue.TYPE_GENERIC,
-                        "Atom projects cannot enable Jack. " +
-                                "Jack is enabled in productFlavor '" +
-                                productFlavor.getProductFlavor().getName() + "'.");
-            }
-        }
-
-        if (Boolean.TRUE.equals(
-                model.getDefaultConfig().getProductFlavor().getJackOptions().isEnabled())) {
-            errorReporter.handleSyncError(
-                    model.getDefaultConfig().getProductFlavor().getName(),
-                    SyncIssue.TYPE_GENERIC,
-                    "Atom projects cannot enable Jack. " +
-                            "Jack is enabled in default config.");
         }
 
         // Atoms have a minimum API level of 16 (Jelly Bean).

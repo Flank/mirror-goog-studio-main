@@ -22,7 +22,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
-import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;

@@ -15,20 +15,21 @@
  */
 package com.android.builder.dependency;
 
+import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_AIDL;
-import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_JARS;
+import static com.android.SdkConstants.FD_JNI;
+import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
-import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_LINT_JAR;
+import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static com.android.SdkConstants.LIBS_FOLDER;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.MoreObjects;
@@ -96,12 +97,6 @@ public final class LibraryDependency extends AbstractBundleDependency implements
     }
 
     @Override
-    @NonNull
-    public List<? extends AndroidBundle> getBundleDependencies() {
-        return getLibraryDependencies();
-    }
-
-    @Override
     public boolean isProvided() {
         return mIsProvided;
     }
@@ -110,10 +105,10 @@ public final class LibraryDependency extends AbstractBundleDependency implements
     @Override
     public List<File> getLocalJars() {
         List<File> localJars = Lists.newArrayList();
-        File[] jarList = new File(getJarsRootFolder(), LIBS_FOLDER).listFiles();
+        File[] jarList = new File(getJarsRootFolder(), FD_NATIVE_LIBS).listFiles();
         if (jarList != null) {
             for (File jars : jarList) {
-                if (jars.isFile() && jars.getName().endsWith(".jar")) {
+                if (jars.isFile() && jars.getName().endsWith(DOT_JAR)) {
                     localJars.add(jars);
                 }
             }
@@ -130,20 +125,8 @@ public final class LibraryDependency extends AbstractBundleDependency implements
 
     @Override
     @NonNull
-    public File getResFolder() {
-        return new File(getFolder(), FD_RES);
-    }
-
-    @Override
-    @NonNull
-    public File getAssetsFolder() {
-        return new File(getFolder(), FD_ASSETS);
-    }
-
-    @Override
-    @NonNull
     public File getJniFolder() {
-        return new File(getFolder(), "jni");
+        return new File(getFolder(), FD_JNI);
     }
 
     @Override
@@ -167,7 +150,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
     @Override
     @NonNull
     public File getLintJar() {
-        return new File(getJarsRootFolder(), "lint.jar");
+        return new File(getJarsRootFolder(), FN_LINT_JAR);
     }
 
     @Override

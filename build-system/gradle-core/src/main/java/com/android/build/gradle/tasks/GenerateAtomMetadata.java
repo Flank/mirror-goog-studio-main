@@ -16,23 +16,29 @@
 
 package com.android.build.gradle.tasks;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.FD_INSTANTAPP_METADATA;
+import static com.android.SdkConstants.FN_ATOM_METADATA;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.variant.AtomVariantOutputData;
+import com.android.builder.dependency.DependencyContainer;
+import com.android.builder.model.AndroidAtom;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.wireless.android.instantapps.iapk.AtomDependencyProto;
 import com.google.wireless.android.instantapps.iapk.AtomMetadataProto;
 
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Set;
@@ -50,14 +56,22 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
         atomMetadataBuilder.setAtomName(getAtomName());
         atomMetadataBuilder.setAtomVersionName(getAtomVersion());
 
-        for (String atomDependency : getAtomDependencies()) {
-            AtomDependencyProto.AtomDependency.Builder atomDependencyBuilder =
-                    AtomDependencyProto.AtomDependency.newBuilder();
-            atomDependencyBuilder.setAtomName(atomDependency);
-            atomMetadataBuilder.addAtomDependency(atomDependencyBuilder);
+        for (File atomDependencyFile : getAtomMetadataDependency()) {
+            try (FileInputStream inputStream = new FileInputStream(atomDependencyFile)) {
+                AtomMetadataProto.AtomMetadata atomMetadataDependency =
+                        AtomMetadataProto.AtomMetadata.parseFrom(inputStream);
+
+                AtomDependencyProto.AtomDependency.Builder atomDependencyBuilder =
+                        AtomDependencyProto.AtomDependency.newBuilder();
+                atomDependencyBuilder.setAtomName(atomMetadataDependency.getAtomName());
+                atomDependencyBuilder.setAtomVersionName(atomMetadataDependency.getAtomVersionName());
+                atomMetadataBuilder.addAtomDependency(atomDependencyBuilder);
+
+                inputStream.close();
+            }
         }
 
-        File atomMetadataFile = new File(getAtomMetadataFolder(), SdkConstants.FN_ATOM_METADATA);
+        File atomMetadataFile = new File(getAtomMetadataFolder(), FN_ATOM_METADATA);
 
         // Re-create the file.
         atomMetadataFile.delete();
@@ -94,19 +108,19 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
         this.atomName = atomName;
     }
 
-    @Input
-    public Set<String> getAtomDependencies() {
-        return atomDependencies;
+    @InputFiles
+    public Set<File> getAtomMetadataDependency() {
+        return atomMetadataDependency;
     }
 
-    public void setAtomDependencies(Set<String> atomDependencies) {
-        this.atomDependencies = atomDependencies;
+    public void setAtomMetadataDependency(Set<File> atomMetadataDependency) {
+        this.atomMetadataDependency = atomMetadataDependency;
     }
 
     private File atomMetadataFolder;
     private String atomVersion;
     private String atomName;
-    private Set<String> atomDependencies;
+    private Set<File> atomMetadataDependency;
 
     public static class ConfigAction implements TaskConfigAction<GenerateAtomMetadata> {
 
@@ -117,7 +131,7 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
         @Override
         @NonNull
         public String getName() {
-            return scope.getTaskName("generate", "AtomMetadata");
+            return scope.getTaskName("generate", "Metadata");
         }
 
         @Override
@@ -131,13 +145,19 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
             AtomVariantOutputData variantOutputData = (AtomVariantOutputData) scope
                     .getVariantOutputData();
 
-            // TODO: Set atom dependencies, with version names.
-            generateAtomMetadata.setAtomDependencies(ImmutableSet.of());
+            DependencyContainer dependencyContainer =
+                    scope.getVariantScope().getVariantConfiguration().getPackageDependencies();
+            ImmutableSet.Builder<File> atomMetadataBuilder = ImmutableSet.builder();
+            for (AndroidAtom atom : dependencyContainer.getAtomDependencies()) {
+                atomMetadataBuilder.add(atom.getAtomMetadataFile());
+            }
+            generateAtomMetadata.setAtomMetadataDependency(atomMetadataBuilder.build());
+
             generateAtomMetadata.setAtomName(scope.getGlobalScope().getProject().getName());
             generateAtomMetadata.setAtomVersion(variantOutputData.getVersionName());
             generateAtomMetadata.setAtomMetadataFolder(FileUtils.join(
                     scope.getVariantScope().getBaseBundleDir(),
-                    SdkConstants.FD_INSTANTAPP_METADATA));
+                    FD_INSTANTAPP_METADATA));
             generateAtomMetadata.setVariantName(variantOutputData.getFullName());
             variantOutputData.generateAtomMetadataTask = generateAtomMetadata;
         }

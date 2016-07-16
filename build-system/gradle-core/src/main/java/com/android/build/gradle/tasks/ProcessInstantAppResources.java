@@ -16,92 +16,184 @@
 
 package com.android.build.gradle.tasks;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
+import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.model.AndroidAtom;
+import com.android.ide.common.blame.MergingLog;
+import com.android.ide.common.blame.MergingLogRewriter;
+import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
+import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableSet;
 
-import org.apache.commons.io.IOUtils;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
+import java.util.Set;
 
 /**
  * A task to process InstantApp resources.
  */
 @ParallelizableTask
-public class ProcessInstantAppResources extends DefaultAndroidTask {
+public class ProcessInstantAppResources extends IncrementalTask {
 
-    @TaskAction
-    public void taskAction() throws IOException, BuildException {
-        // Find the stream for the manifest in the atom resource package.
-        byte[] manifestStream = null;
-        try (ZipFile zipFile = new ZipFile(getAtomResourcePackage())) {
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            while(entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                if (!entry.isDirectory() && entry.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
-                    InputStream inputStream = zipFile.getInputStream(entry);
-                    manifestStream = IOUtils.toByteArray(inputStream);
-                    inputStream.close();
-                    zipFile.close();
-                    break;
-                }
-            }
-            zipFile.close();
+    @Override
+    public void doFullTaskAction() throws IOException {
+        AndroidBuilder builder = getBuilder();
+        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+        ProcessOutputHandler processOutputHandler = new ParsingProcessOutputHandler(
+                new ToolOutputParser(new AaptOutputParser(), getILogger()),
+                new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+
+        try {
+            Aapt aapt = AaptGradleFactory.make(
+                    getBuilder(),
+                    processOutputHandler,
+                    true,
+                    true,
+                    variantScope.getGlobalScope().getProject(),
+                    VariantType.INSTANTAPP,
+                    FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
+                    aaptOptions.getCruncherProcesses());
+
+            AaptPackageConfig.Builder config = new AaptPackageConfig.Builder()
+                    .setManifestFile(getManifestFile())
+                    .setOptions(getAaptOptions())
+                    .setResourceOutputApk(getOutputResourcePackage())
+                    .setVariantType(getType())
+                    .setDebuggable(getDebuggable())
+                    .setPseudoLocalize(getPseudoLocalesEnabled())
+                    .setBaseFeature(getBaseAtomResourcePackage())
+                    .setPreviousFeatures(getAtomResourcePackages());
+
+            builder.processResources(aapt, config, true);
+        } catch (IOException | InterruptedException | ProcessException e) {
+            throw new RuntimeException(e);
         }
 
-        if (manifestStream == null) {
-            getLogger().error("AndroidManifest.xml not found in atom resource package.");
-            throw new BuildException("AndroidManifest.xml not found in atom resource package.", null);
-        }
-
-        // Write the Manifest to the output resource package.
-        getOutputResourcePackage().delete();
-        try (ZipOutputStream zipOutputStream =
-                     new ZipOutputStream(new FileOutputStream(getOutputResourcePackage()))) {
-            zipOutputStream.putNextEntry(new ZipEntry(SdkConstants.ANDROID_MANIFEST_XML));
-            zipOutputStream.write(manifestStream, 0, manifestStream.length);
-            zipOutputStream.closeEntry();
-            zipOutputStream.close();
-        }
     }
 
+    @NonNull
     @InputFile
-    public File getAtomResourcePackage() {
-        return atomResourcePackage;
+    public File getManifestFile() {
+        return manifestFile;
     }
 
-    public void setAtomResourcePackage(File atomResourcePackage) {
-        this.atomResourcePackage = atomResourcePackage;
+    public void setManifestFile(@NonNull File manifestFile) {
+        this.manifestFile = manifestFile;
     }
 
+    @NonNull
+    @InputFiles
+    public Set<File> getAtomResourcePackages() {
+        return atomResourcePackages;
+    }
+
+    public void setAtomResourcePackages(@NonNull Set<File> atomResourcePackages) {
+        this.atomResourcePackages = atomResourcePackages;
+    }
+
+    @NonNull
+    @InputFile
+    public File getBaseAtomResourcePackage() {
+        return baseAtomResourcePackage;
+    }
+
+    public void setBaseAtomResourcePackage(@NonNull File baseAtomResourcePackage) {
+        this.baseAtomResourcePackage = baseAtomResourcePackage;
+    }
+
+    @NonNull
+    @Input
+    public VariantType getType() {
+        return type;
+    }
+
+    public void setType(VariantType type) {
+        this.type = type;
+    }
+
+    @Input
+    public boolean getDebuggable() {
+        return debuggable;
+    }
+
+    public void setDebuggable(boolean debuggable) {
+        this.debuggable = debuggable;
+    }
+
+    @Input
+    public boolean getPseudoLocalesEnabled() {
+        return pseudoLocalesEnabled;
+    }
+
+    public void setPseudoLocalesEnabled(boolean pseudoLocalesEnabled) {
+        this.pseudoLocalesEnabled = pseudoLocalesEnabled;
+    }
+
+    @Nested
+    public AaptOptions getAaptOptions() {
+        return aaptOptions;
+    }
+
+    public void setAaptOptions(AaptOptions aaptOptions) {
+        this.aaptOptions = aaptOptions;
+    }
+
+    @NonNull
     @OutputFile
     public File getOutputResourcePackage() {
         return outputResourcePackage;
     }
 
-    public void setOutputResourcePackage(File outputResourcePackage) {
+    public void setOutputResourcePackage(@NonNull File outputResourcePackage) {
         this.outputResourcePackage = outputResourcePackage;
     }
 
-    private File atomResourcePackage;
+    @NonNull
+    @OutputDirectory
+    public File getMergeBlameLogFolder() {
+        return mergeBlameLogFolder;
+    }
+
+    public void setMergeBlameLogFolder(@NonNull File mergeBlameLogFolder) {
+        this.mergeBlameLogFolder = mergeBlameLogFolder;
+    }
+
+
+    private File manifestFile;
+    private Set<File> atomResourcePackages;
+    private File baseAtomResourcePackage;
+    private VariantType type;
+    private boolean debuggable;
+    private boolean pseudoLocalesEnabled;
+    private AaptOptions aaptOptions;
     private File outputResourcePackage;
+    private File mergeBlameLogFolder;
+    private VariantScope variantScope;
 
     public static class ConfigAction implements TaskConfigAction<ProcessInstantAppResources> {
 
@@ -127,16 +219,39 @@ public class ProcessInstantAppResources extends DefaultAndroidTask {
             final GradleVariantConfiguration config =
                     scope.getVariantScope().getVariantConfiguration();
 
+            processInstantAppResources.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processInstantAppResources.setVariantName(config.getFullName());
-            List<? extends AndroidAtom> atoms =
-                scope.getVariantScope().getVariantConfiguration().getCompileAndroidAtoms();
-            // TODO: Remove this once we support multiple atoms.
-            if (atoms.size() != 1) {
-                processInstantAppResources.getLogger().error("Instant apps do not support multiple atoms.");
-                throw new BuildException("Instant apps do not support multiple atoms.", null);
+            processInstantAppResources.variantScope = scope.getVariantScope();
+            processInstantAppResources.setIncrementalFolder(
+                    scope.getVariantScope().getIncrementalDir(getName()));
+
+            ConventionMappingHelper.map(processInstantAppResources, "manifestFile",
+                    scope.getVariantOutputData().manifestProcessorTask::getOutputFile);
+
+            processInstantAppResources.setType(config.getType());
+            processInstantAppResources.setDebuggable(config.getBuildType().isDebuggable());
+            processInstantAppResources.setAaptOptions(scope.getGlobalScope().getExtension().getAaptOptions());
+            processInstantAppResources.setPseudoLocalesEnabled(
+                    config.getBuildType().isPseudoLocalesEnabled());
+            processInstantAppResources.setMergeBlameLogFolder(
+                    scope.getVariantScope().getResourceBlameLogDir());
+
+            AndroidAtom baseAtom = config.getPackageDependencies().getBaseAtom();
+            if (baseAtom == null) {
+                processInstantAppResources.getLogger().error(
+                        "Instant apps need at least one atom.");
+                throw new BuildException("Instant apps need at least one atom.", null);
             }
-            processInstantAppResources.setAtomResourcePackage(
-                    atoms.get(0).getResourcePackageFile());
+            processInstantAppResources.setBaseAtomResourcePackage(baseAtom.getResourcePackage());
+
+            List<AndroidAtom> androidAtoms = config.getFlatAndroidAtomsDependencies();
+            ImmutableSet.Builder<File> builder = ImmutableSet.builder();
+            for (AndroidAtom atom : androidAtoms) {
+                if (atom != baseAtom)
+                    builder.add(scope.getProcessResourcePackageOutputFile(atom));
+            }
+            processInstantAppResources.setAtomResourcePackages(builder.build());
+
             processInstantAppResources.setOutputResourcePackage(
                     scope.getProcessResourcePackageOutputFile());
         }

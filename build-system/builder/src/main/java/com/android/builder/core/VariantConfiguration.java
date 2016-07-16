@@ -720,7 +720,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the compile Android libraries, direct and transitive in a single flat list.
+     * Returns all the compile Android library dependencies, direct and transitive in a single
+     * flat list.
      */
     @NonNull
     public List<AndroidLibrary> getFlatCompileAndroidLibraries() {
@@ -728,23 +729,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the Android bundle dependency graph, direct and transitive in a single flat list.
+     * Returns all the Android atom dependencies, direct and transitive in a single flat list.
+     * Since atoms can never be provided dependencies, the compile and package dependencies are the
+     * same for atoms.
      */
     @NonNull
-    public List<AndroidBundle> getCompileAndroidBundles() {
-        return mFlatCompileDependencies.getBundleDependencies();
+    public List<AndroidAtom> getFlatAndroidAtomsDependencies() {
+        return mFlatPackageDependencies.getAtomDependencies();
     }
 
     /**
-     * Returns the Android atom dependency graph, direct and transitive in a single flat list.
-     */
-    @NonNull
-    public List<AndroidAtom> getCompileAndroidAtoms() {
-        return mFlatCompileDependencies.getAtomDependencies();
-    }
-
-    /**
-     * Returns all the library dependencies, direct and transitive in a single flat list.
+     * Returns all the package library dependencies, direct and transitive in a single flat list.
      */
     @NonNull
     public List<AndroidLibrary> getFlatPackageAndroidLibraries() {
@@ -1026,6 +1021,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                     mDefaultSourceProvider.getManifestFile().getAbsolutePath()));
         }
         return packageName;
+    }
+
+    /**
+     * Reads the split name from the manifest.
+     */
+    @Nullable
+    public String getSplitFromManifest() {
+        return getManifestAttributeSupplier().getSplit();
     }
 
     @Nullable
@@ -1542,15 +1545,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return shaderSets;
     }
 
-    @NonNull
-    public List<File> getAtomsDirectories() {
-        ImmutableList.Builder atomDirectories = ImmutableList.builder();
-        for (AndroidAtom atom: mFlatCompileDependencies.getAtomDependencies()) {
-            atomDirectories.add(atom.getAtomFolder());
-        }
-        return atomDirectories.build();
-    }
-
     public int getRenderscriptTarget() {
         ProductFlavor mergedFlavor = getMergedFlavor();
 
@@ -1657,6 +1651,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         Set<File> classpath = Sets.newHashSetWithExpectedSize(
                 mFlatCompileDependencies.getJarDependencies().size() +
+                        mFlatCompileDependencies.getAtomDependencies().size() +
                         mFlatCompileDependencies.getLocalDependencies().size() +
                         mFlatCompileDependencies.getAndroidDependencies().size());
 
@@ -1665,6 +1660,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             for (File jarFile : android.getLocalJars()) {
                 classpath.add(jarFile);
             }
+        }
+
+        for (AndroidAtom atom : mFlatCompileDependencies.getAtomDependencies()) {
+            classpath.add(atom.getJarFile());
         }
 
         for (JavaLibrary javaLibrary : mFlatCompileDependencies.getJarDependencies()) {

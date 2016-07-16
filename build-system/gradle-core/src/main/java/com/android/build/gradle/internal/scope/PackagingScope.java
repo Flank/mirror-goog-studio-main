@@ -120,17 +120,17 @@ public interface PackagingScope {
     @NonNull
     Project getProject();
 
+    /**
+     * Returns the output package file.
+     */
     @NonNull
-    File getOutputApk();
+    File getOutputPackage();
 
+    /**
+     * Returns the intermediate APK file.
+     */
     @NonNull
     File getIntermediateApk();
-
-    @NonNull
-    File getPackageAtom();
-
-    @NonNull
-    File getPackageInstantApp();
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();

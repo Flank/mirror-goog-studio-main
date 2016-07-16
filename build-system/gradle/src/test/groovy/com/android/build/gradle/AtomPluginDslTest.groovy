@@ -299,11 +299,11 @@ class AtomPluginDslTest  extends BaseTest {
             assertEquals(
                     "target compatibility for ${version}",
                     expectedLanguageLevel.toString(),
-                    project.compileReleaseJavaWithJavac.targetCompatibility)
+                    project.compileReleaseAtomJavaWithJavac.targetCompatibility)
             assertEquals(
                     "source compatibility for ${version}",
                     expectedLanguageLevel.toString(),
-                    project.compileReleaseJavaWithJavac.sourceCompatibility)
+                    project.compileReleaseAtomJavaWithJavac.sourceCompatibility)
         }
 
         for (useJack in [true, false]) {
@@ -344,10 +344,10 @@ class AtomPluginDslTest  extends BaseTest {
 
         assertEquals(
                 JavaVersion.VERSION_1_6.toString(),
-                project.compileReleaseJavaWithJavac.targetCompatibility)
+                project.compileReleaseAtomJavaWithJavac.targetCompatibility)
         assertEquals(
                 JavaVersion.VERSION_1_6.toString(),
-                project.compileReleaseJavaWithJavac.sourceCompatibility)
+                project.compileReleaseAtomJavaWithJavac.sourceCompatibility)
     }
 
 
@@ -390,7 +390,7 @@ class AtomPluginDslTest  extends BaseTest {
 
             assertNotNull(atomVariantOutput.processManifest)
             assertNotNull(atomVariantOutput.processResources)
-            assertNotNull(atomVariantOutput.packageAtom)
+            assertNotNull(atomVariantOutput.bundleAtom)
         }
     }
 

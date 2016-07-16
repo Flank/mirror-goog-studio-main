@@ -16,6 +16,8 @@
 
 package com.android.builder.dependency;
 
+import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 
 import com.android.annotations.NonNull;
@@ -36,8 +38,6 @@ import java.util.List;
  * bundle project structure.
  */
 public abstract class AbstractBundleDependency implements AndroidBundle {
-
-    public static final String FN_PROGUARD_TXT = "proguard.txt";
 
     @NonNull
     private final File mBundle;
@@ -154,6 +154,18 @@ public abstract class AbstractBundleDependency implements AndroidBundle {
     @NonNull
     public File getManifest() {
         return new File(mBundleFolder, FN_ANDROID_MANIFEST_XML);
+    }
+
+    @Override
+    @NonNull
+    public File getResFolder() {
+        return new File(getFolder(), FD_RES);
+    }
+
+    @Override
+    @NonNull
+    public File getAssetsFolder() {
+        return new File(getFolder(), FD_ASSETS);
     }
 
     @Override

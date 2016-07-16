@@ -15,7 +15,9 @@
  */
 package com.android.build.gradle.tasks;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.builder.model.AndroidBundle;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;

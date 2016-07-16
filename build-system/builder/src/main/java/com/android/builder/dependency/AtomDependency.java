@@ -16,11 +16,18 @@
 
 package com.android.builder.dependency;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.DOT_RES;
+import static com.android.SdkConstants.FD_DEX;
+import static com.android.SdkConstants.FD_INSTANTAPP_METADATA;
+import static com.android.SdkConstants.FD_JAVA_RES;
+import static com.android.SdkConstants.FD_NATIVE_LIBS;
+import static com.android.SdkConstants.FN_ATOM_METADATA;
+import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_RES_BASE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.MavenCoordinates;
 import com.android.utils.FileUtils;
 import com.google.common.base.Objects;
@@ -39,7 +46,7 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
     private final List<AtomDependency> mAtomDependencies;
 
     @NonNull
-    private final List<AndroidBundle> mBundleDependencies;
+    private final String mAtomName;
 
     public AtomDependency(
             @NonNull File bundle,
@@ -47,6 +54,7 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
             @NonNull List<LibraryDependency> androidDependencies,
             @NonNull List<AtomDependency> atomDependencies,
             @NonNull Collection<JarDependency> jarDependencies,
+            @NonNull String atomName,
             @Nullable String name,
             @Nullable String variantName,
             @Nullable String projectPath,
@@ -61,17 +69,14 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
                 variantName,
                 requestedCoordinates,
                 resolvedCoordinates);
+        this.mAtomName = atomName;
         this.mAtomDependencies = ImmutableList.copyOf(atomDependencies);
-        this.mBundleDependencies = ImmutableList.<AndroidBundle>builder()
-                .addAll(androidDependencies)
-                .addAll(atomDependencies)
-                .build();
     }
 
-    @Override
     @NonNull
-    public List<? extends AndroidBundle> getBundleDependencies() {
-        return mBundleDependencies;
+    @Override
+    public String getAtomName() {
+        return mAtomName;
     }
 
     @Override
@@ -93,13 +98,13 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
     @Override
     @NonNull
     public File getJarFile() {
-        return new File(getFolder(), "classes.jar");
+        return new File(getFolder(), FN_CLASSES_JAR);
     }
 
     @Override
     @NonNull
-    public File getAtomFolder() {
-        return new File(getFolder(), SdkConstants.EXT_ATOM);
+    public File getDexFolder() {
+        return new File(getFolder(), FD_DEX);
     }
 
     @Override
@@ -107,14 +112,26 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
     public File getAtomMetadataFile() {
         return FileUtils.join(
                 getFolder(),
-                SdkConstants.FD_INSTANTAPP_METADATA,
-                SdkConstants.FN_ATOM_METADATA);
+                FD_INSTANTAPP_METADATA,
+                FN_ATOM_METADATA);
     }
 
-    @Override
     @NonNull
-    public File getResourcePackageFile() {
-        return new File(getFolder(), "resources.ap_");
+    @Override
+    public File getLibFolder() {
+        return new File(getFolder(), FD_NATIVE_LIBS);
+    }
+
+    @NonNull
+    @Override
+    public File getJavaResFolder() {
+        return new File(getFolder(), FD_JAVA_RES);
+    }
+
+    @NonNull
+    @Override
+    public File getResourcePackage() {
+        return new File(getFolder(), FN_RES_BASE + DOT_RES);
     }
 
     @Override
@@ -129,20 +146,23 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
             return false;
         }
         AtomDependency that = (AtomDependency) o;
-        return Objects.equal(mAtomDependencies, that.mAtomDependencies);
+        return Objects.equal(mAtomDependencies, that.mAtomDependencies) &&
+                Objects.equal(mAtomName, that.mAtomName);
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(
                 super.hashCode(),
-                mAtomDependencies);
+                mAtomDependencies,
+                mAtomName);
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("mAtomDependencies", mAtomDependencies)
+                .add("mAtomName", mAtomName)
                 .add("super", super.toString())
                 .toString();
     }

@@ -149,7 +149,7 @@ public class MergeManifests extends ManifestProcessorTask {
             return Collections.emptyList();
         }
 
-        List<File> files = Lists.newArrayListWithCapacity(bundles.size() * 2);
+        List<File> files = Lists.newArrayListWithCapacity(bundles.size());
         for (AndroidBundle androidBundle : bundles) {
             if (!androidBundle.isProvided())
                 files.add(androidBundle.getManifest());
@@ -282,7 +282,8 @@ public class MergeManifests extends ManifestProcessorTask {
                         @Override
                         public List<AndroidBundle> call() throws Exception {
                             List<AndroidBundle> manifests = Lists.newArrayList(
-                                    config.getCompileAndroidBundles());
+                                    config.getFlatCompileAndroidLibraries());
+                            manifests.addAll(config.getFlatAndroidAtomsDependencies());
 
                             if (scope.getVariantScope().getMicroApkTask() != null &&
                                     variantData.getVariantConfiguration().getBuildType().
@@ -382,12 +383,6 @@ public class MergeManifests extends ManifestProcessorTask {
 
             @NonNull
             @Override
-            public List<? extends AndroidBundle> getBundleDependencies() {
-                return ImmutableList.of();
-            }
-
-            @NonNull
-            @Override
             public List<? extends AndroidLibrary> getLibraryDependencies() {
                 return ImmutableList.of();
             }
@@ -440,6 +435,12 @@ public class MergeManifests extends ManifestProcessorTask {
                 throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
             }
 
+            @NonNull
+            @Override
+            public File getResFolder() {
+                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
+            }
+
             @Nullable
             @Override
             public MavenCoordinates getRequestedCoordinates() {
@@ -449,6 +450,12 @@ public class MergeManifests extends ManifestProcessorTask {
             @NonNull
             @Override
             public MavenCoordinates getResolvedCoordinates() {
+                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
+            }
+
+            @NonNull
+            @Override
+            public File getAssetsFolder() {
                 throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
             }
         }

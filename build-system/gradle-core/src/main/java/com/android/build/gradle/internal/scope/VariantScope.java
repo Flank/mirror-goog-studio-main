@@ -36,12 +36,12 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
-import com.android.build.gradle.tasks.MergeAtoms;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 
 import org.gradle.api.DefaultTask;
@@ -104,9 +104,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getDexOutputFolder();
 
+    @NonNull
+    File getDexOutputFolder(@NonNull AndroidAtom androidAtom);
+
     @Nullable
     BaseVariantData getTestedVariantData();
-
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();
@@ -116,6 +118,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getJavaOutputDir();
+
+    @NonNull
+    File getJavaOutputDir(@NonNull AndroidAtom androidAtom);
 
     @NonNull
     Iterable<File> getJavaOutputs();
@@ -167,6 +172,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
+    File getResourceBlameLogDir(@NonNull AndroidAtom androidAtom);
+
+    @NonNull
     File getMergeAssetsOutputDir();
 
     @NonNull
@@ -201,6 +209,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getRClassSourceOutputDir();
+
+    @NonNull
+    File getRClassSourceOutputDir(@NonNull AndroidAtom androidAtom);
 
     @NonNull
     File getAidlSourceOutputDir();
@@ -266,7 +277,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getPackageSplitAbiOutputFiles();
 
     @NonNull
-    File getPackageAtom();
+    File getPackageAtom(@NonNull AndroidAtom androidAtom);
 
     @NonNull
     File getAaptFriendlyManifestOutputFile();
@@ -288,6 +299,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAnnotationProcessorOutputDir();
+
+    @NonNull
+    File getMainJarOutputDir();
 
     AndroidTask<DefaultTask> getAssembleTask();
 
@@ -403,10 +417,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     ExternalNativeJsonGenerator getExternalNativeJsonGenerator();
     void setExternalNativeJsonGenerator(@NonNull ExternalNativeJsonGenerator generator);
-
-    @Nullable
-    AndroidTask<MergeAtoms> getMergeAtomsTask();
-    void setMergeAtomsTask(@NonNull AndroidTask<MergeAtoms> mergeAtomsTask);
 
     @NonNull
     Collection<NativeBuildConfigValue> getExternalNativeBuildConfigValues();

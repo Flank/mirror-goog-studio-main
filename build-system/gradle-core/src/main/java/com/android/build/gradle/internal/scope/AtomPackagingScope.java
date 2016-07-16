@@ -22,12 +22,14 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
+import com.android.utils.StringHelper;
+import com.google.common.collect.ImmutableSet;
 
 import org.gradle.api.Project;
 
@@ -35,213 +37,212 @@ import java.io.File;
 import java.util.Set;
 
 /**
- * Implementation of {@link PackagingScope} which delegates to *Scope objects available during
- * normal Gradle builds.
+ * Packaging scope for an atom.
  */
-public class DefaultGradlePackagingScope implements PackagingScope {
+public class AtomPackagingScope implements PackagingScope {
 
-    private final VariantOutputScope mVariantOutputScope;
-    private final VariantScope mVariantScope;
-    private final GlobalScope mGlobalScope;
+    protected final VariantOutputScope variantOutputScope;
+    protected final VariantScope variantScope;
+    protected final GlobalScope globalScope;
+    protected final AndroidAtom androidAtom;
 
-    public DefaultGradlePackagingScope(@NonNull VariantOutputScope variantOutputScope) {
-        mVariantOutputScope = variantOutputScope;
-        mVariantScope = mVariantOutputScope.getVariantScope();
-        mGlobalScope = mVariantScope.getGlobalScope();
+    public AtomPackagingScope(@NonNull VariantOutputScope variantOutputScope,
+            @NonNull AndroidAtom androidAtom) {
+        this.variantOutputScope = variantOutputScope;
+        this.variantScope = variantOutputScope.getVariantScope();
+        this.globalScope = variantScope.getGlobalScope();
+        this.androidAtom = androidAtom;
     }
 
     @NonNull
     @Override
     public AndroidBuilder getAndroidBuilder() {
-        return mGlobalScope.getAndroidBuilder();
+        return globalScope.getAndroidBuilder();
     }
 
     @NonNull
     @Override
     public File getFinalResourcesFile() {
-        return mVariantOutputScope.getFinalResourcesFile();
+        return variantOutputScope.getProcessResourcePackageOutputFile(androidAtom);
     }
 
     @NonNull
     @Override
     public String getFullVariantName() {
-        return mVariantScope.getFullVariantName();
+        return variantScope.getFullVariantName();
     }
 
     @NonNull
     @Override
     public ApiVersion getMinSdkVersion() {
-        return mVariantScope.getMinSdkVersion();
+        return variantScope.getMinSdkVersion();
     }
 
     @NonNull
     @Override
     public InstantRunBuildContext getInstantRunBuildContext() {
-        return mVariantScope.getInstantRunBuildContext();
+        return variantScope.getInstantRunBuildContext();
     }
 
     @NonNull
     @Override
     public File getInstantRunSupportDir() {
-        return mVariantScope.getInstantRunSupportDir();
+        return variantScope.getInstantRunSupportDir();
     }
 
     @NonNull
     @Override
     public File getIncrementalDir(@NonNull String name) {
-        return mVariantScope.getIncrementalDir(name);
+        return variantScope.getIncrementalDir(name);
     }
 
     @NonNull
     @Override
     public Set<File> getDexFolders() {
-        return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.DEX)
-                .keySet();
+        return ImmutableSet.of(variantScope.getDexOutputFolder(androidAtom));
     }
 
     @NonNull
     @Override
     public Set<File> getJavaResources() {
-        return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.RESOURCES)
-                .keySet();
-    }
-
-    @NonNull
-    @Override
-    public Set<File> getJniFolders() {
-        return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.NATIVE_LIBS)
-                .keySet();
-    }
-
-    @NonNull
-    @Override
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return mVariantScope.getVariantData().getSplitHandlingPolicy();
-    }
-
-    @NonNull
-    @Override
-    public Set<String> getAbiFilters() {
-        return mGlobalScope.getExtension().getSplits().getAbiFilters();
-    }
-
-    @NonNull
-    @Override
-    public ApkOutputFile getMainOutputFile() {
-        return mVariantOutputScope.getMainOutputFile();
-    }
-
-    @Nullable
-    @Override
-    public Set<String> getSupportedAbis() {
-        return mVariantScope.getVariantConfiguration().getSupportedAbis();
-    }
-
-    @Override
-    public boolean isDebuggable() {
-        return mVariantScope.getVariantConfiguration().getBuildType().isDebuggable();
-    }
-
-    @Override
-    public boolean isJniDebuggable() {
-        return mVariantScope.getVariantConfiguration().getBuildType().isJniDebuggable();
-    }
-
-    @Nullable
-    @Override
-    public CoreSigningConfig getSigningConfig() {
-        return mVariantScope.getVariantConfiguration().getSigningConfig();
-    }
-
-    @NonNull
-    @Override
-    public PackagingOptions getPackagingOptions() {
-        return mGlobalScope.getExtension().getPackagingOptions();
-    }
-
-    @NonNull
-    @Override
-    public String getTaskName(@NonNull String name) {
-        return mVariantOutputScope.getTaskName(name);
-    }
-
-    @NonNull
-    @Override
-    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return mVariantOutputScope.getTaskName(prefix, suffix);
-    }
-
-    @NonNull
-    @Override
-    public Project getProject() {
-        return mGlobalScope.getProject();
-    }
-
-    @NonNull
-    @Override
-    public File getOutputPackage() {
-        return mVariantOutputScope.getFinalPackage();
-    }
-
-    @NonNull
-    @Override
-    public File getIntermediateApk() {
-        return mVariantOutputScope.getIntermediateApk();
+        return ImmutableSet.of(androidAtom.getJavaResFolder());
     }
 
     @NonNull
     @Override
     public File getAssetsDir() {
-        return mVariantScope.getMergeAssetsOutputDir();
+        return androidAtom.getAssetsFolder();
+    }
+
+    @NonNull
+    @Override
+    public Set<File> getJniFolders() {
+        return ImmutableSet.of(androidAtom.getLibFolder());
+    }
+
+    @NonNull
+    @Override
+    public SplitHandlingPolicy getSplitHandlingPolicy() {
+        return SplitHandlingPolicy.PRE_21_POLICY;
+    }
+
+    @NonNull
+    @Override
+    public Set<String> getAbiFilters() {
+        return ImmutableSet.of();
+    }
+
+    @NonNull
+    @Override
+    public ApkOutputFile getMainOutputFile() {
+        return variantOutputScope.getMainOutputFile();
+    }
+
+    @Nullable
+    @Override
+    public Set<String> getSupportedAbis() {
+        return null;
+    }
+
+    @Override
+    public boolean isDebuggable() {
+        return variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+    }
+
+    @Override
+    public boolean isJniDebuggable() {
+        return variantScope.getVariantConfiguration().getBuildType().isJniDebuggable();
+    }
+
+    @Nullable
+    @Override
+    public CoreSigningConfig getSigningConfig() {
+        return variantScope.getVariantConfiguration().getSigningConfig();
+    }
+
+    @NonNull
+    @Override
+    public PackagingOptions getPackagingOptions() {
+        return globalScope.getExtension().getPackagingOptions();
+    }
+
+    @NonNull
+    @Override
+    public String getTaskName(@NonNull String name) {
+        return getTaskName(name, "");
+    }
+
+    @NonNull
+    @Override
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return variantScope.getTaskName(prefix,
+                StringHelper.capitalize(androidAtom.getAtomName()) + suffix);
+    }
+
+    @NonNull
+    @Override
+    public Project getProject() {
+        return globalScope.getProject();
+    }
+
+    @NonNull
+    @Override
+    public File getOutputPackage() {
+        return variantScope.getPackageAtom(androidAtom);
+    }
+
+    @NonNull
+    @Override
+    public File getIntermediateApk() {
+        return variantOutputScope.getIntermediateApk();
     }
 
     @NonNull
     @Override
     public File getInstantRunSplitApkOutputFolder() {
-        return mVariantScope.getInstantRunSplitApkOutputFolder();
+        return variantScope.getInstantRunSplitApkOutputFolder();
     }
 
     @Nullable
     @Override
     public File getAtomMetadataBaseFolder() {
-        return mVariantOutputScope.getAtomMetadataBaseFolder();
+        return androidAtom.getAtomMetadataFile().getParentFile();
     }
 
     @NonNull
     @Override
     public String getApplicationId() {
-        return mVariantScope.getVariantConfiguration().getApplicationId();
+        return variantScope.getVariantConfiguration().getApplicationId();
     }
 
     @Override
     public int getVersionCode() {
-        return mVariantScope.getVariantConfiguration().getVersionCode();
+        return 0;
     }
 
     @Nullable
     @Override
     public String getVersionName() {
-        return mVariantScope.getVariantConfiguration().getVersionName();
+        return null;
     }
 
     @NonNull
     @Override
     public AaptOptions getAaptOptions() {
-        return mGlobalScope.getExtension().getAaptOptions();
+        return globalScope.getExtension().getAaptOptions();
     }
 
     @NonNull
     @Override
     public VariantType getVariantType() {
-        return mVariantScope.getVariantConfiguration().getType();
+        return VariantType.ATOM;
     }
 
     @NonNull
     @Override
     public File getManifestFile() {
-        return mVariantOutputScope.getManifestOutputFile();
+        // TODO: Replace with an empty manifest.
+        return androidAtom.getManifest();
     }
+
 }

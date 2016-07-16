@@ -994,13 +994,20 @@ public class AndroidBuilder {
                     throw new RuntimeException(msg);
                 }
 
+                boolean generateFinalIds = true;
+                if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+                    generateFinalIds = false;
+                } else if (aaptConfig.getVariantType() == VariantType.ATOM
+                        && aaptConfig.getBaseFeature() != null) {
+                    generateFinalIds = false;
+                }
                 //noinspection ConstantConditions
                 SymbolWriter writer =
                         new SymbolWriter(
                                 aaptConfig.getSourceOutputDir().getAbsolutePath(),
                                 packageName,
                                 fullSymbolValues,
-                                aaptConfig.getVariantType() != VariantType.LIBRARY);
+                                generateFinalIds);
                 for (SymbolLoader symbolLoader : symbols) {
                     writer.addSymbolsToWrite(symbolLoader);
                 }

@@ -272,6 +272,8 @@ public abstract class TaskManager {
 
     private static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
+    public static final String ATOM_SUFFIX = "Atom";
+
     private static final Revision MIN_REVISION_RS_COMPAT_64 = Revision.parseRevision("23.0.3");
 
 

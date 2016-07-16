@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.Objects;
@@ -39,9 +38,6 @@ import java.util.Set;
 public class DependencyContainerImpl implements DependencyContainer {
 
     @NonNull
-    private final ImmutableList<AndroidBundle> mBundleDependencies;
-
-    @NonNull
     private final ImmutableList<AndroidLibrary> mLibraryDependencies;
 
     @NonNull
@@ -53,6 +49,9 @@ public class DependencyContainerImpl implements DependencyContainer {
     @NonNull
     private final ImmutableList<JavaLibrary> mLocalJars;
 
+    @Nullable
+    private final AndroidAtom mBaseAtom;
+
     public DependencyContainerImpl(
             @NonNull List<? extends AndroidLibrary> aars,
             @NonNull List<? extends AndroidAtom> atoms,
@@ -60,12 +59,23 @@ public class DependencyContainerImpl implements DependencyContainer {
             @NonNull Collection<? extends JavaLibrary> localJars) {
         mLibraryDependencies = ImmutableList.copyOf(aars);
         mAtomDependencies = ImmutableList.copyOf(atoms);
-        mBundleDependencies = ImmutableList.<AndroidBundle>builder()
-                .addAll(aars)
-                .addAll(atoms)
-                .build();
         mJavaDependencies = ImmutableList.copyOf(jars);
         mLocalJars = ImmutableList.copyOf(localJars);
+
+        if (!mAtomDependencies.isEmpty()) {
+            List<? extends AndroidAtom> depAtoms = mAtomDependencies;
+            List<? extends AndroidAtom> subDepAtoms = depAtoms.get(0).getAtomDependencies();
+            while (!subDepAtoms.isEmpty()) {
+                depAtoms = subDepAtoms;
+                subDepAtoms = depAtoms.get(0).getAtomDependencies();
+            }
+
+            // TODO: Change this to a sync error.
+            assert (depAtoms.size() == 1);
+            mBaseAtom = depAtoms.get(0);
+        } else {
+            mBaseAtom = null;
+        }
     }
 
     public static DependencyContainer getEmpty() {
@@ -74,12 +84,6 @@ public class DependencyContainerImpl implements DependencyContainer {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of());
-    }
-
-    @NonNull
-    @Override
-    public ImmutableList<AndroidBundle> getBundleDependencies() {
-        return mBundleDependencies;
     }
 
     @NonNull
@@ -104,6 +108,12 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Override
     public ImmutableList<JavaLibrary> getLocalDependencies() {
         return mLocalJars;
+    }
+
+    @Nullable
+    @Override
+    public AndroidAtom getBaseAtom() {
+        return mBaseAtom;
     }
 
     @NonNull
@@ -237,7 +247,6 @@ public class DependencyContainerImpl implements DependencyContainer {
             @NonNull List<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         // resolve the dependencies for those atoms
-        //noinspection unchecked
         computeFlatAtomList(
                 androidAtom.getAtomDependencies(),
                 outFlatAndroidAtoms,
@@ -245,7 +254,6 @@ public class DependencyContainerImpl implements DependencyContainer {
                 outFlatJavaLibs);
 
         // resolve the dependencies for those libraries
-        //noinspection unchecked
         computeFlatLibraryList(
                 androidAtom.getLibraryDependencies(),
                 outFlatAndroidLibs,
@@ -253,7 +261,7 @@ public class DependencyContainerImpl implements DependencyContainer {
 
         computeFlatJarList(androidAtom.getJavaDependencies(), outFlatJavaLibs);
 
-        // and add the current one (if needed) in front (higher priority)
+        // and add the current atom (if needed) in front (higher priority)
         if (!outFlatAndroidAtoms.contains(androidAtom)) {
             outFlatAndroidAtoms.add(0, androidAtom);
         }
@@ -264,7 +272,6 @@ public class DependencyContainerImpl implements DependencyContainer {
             @NonNull List<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         // resolve the dependencies for those libraries
-        //noinspection unchecked
         computeFlatLibraryList(
                 androidLibrary.getLibraryDependencies(),
                 outFlatAndroidLibs,
@@ -286,7 +293,6 @@ public class DependencyContainerImpl implements DependencyContainer {
             if (!javaLib.isSkipped()) {
                 outFlatJavaLibs.add(javaLib);
             }
-            //noinspection unchecked
             computeFlatJarList(javaLib.getDependencies(), outFlatJavaLibs);
         }
     }
@@ -294,7 +300,6 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("mBundleDependencies", mBundleDependencies)
                 .add("mLibraryDependencies", mLibraryDependencies)
                 .add("mAtomDependencies", mAtomDependencies)
                 .add("mJavaDependencies", mJavaDependencies)

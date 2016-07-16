@@ -17,29 +17,42 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.AtomPackagingScope;
+import com.android.build.gradle.internal.scope.BaseAtomPackagingScope;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import com.android.build.gradle.internal.variant.InstantAppVariantOutputData;
+import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
-import com.android.build.gradle.tasks.MergeAtoms;
+import com.android.build.gradle.tasks.PackageAtom;
 import com.android.build.gradle.tasks.PackageInstantApp;
+import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessInstantAppResources;
+import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
+import com.android.build.gradle.tasks.factory.AtomResClassJavaCompileConfigAction;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.AndroidAtom;
+import com.android.utils.FileUtils;
 
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import android.databinding.tool.DataBindingBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -78,40 +91,131 @@ public class InstantAppTaskManager extends TaskManager {
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
 
-        // Add a task to merge the asset folders.
-        createMergeAtomsTask(tasks, variantScope);
+        // Add a task to process the manifests.
+        createMergeAppManifestsTask(tasks, variantScope);
+
+        AndroidTask<PackageAtom> lastPackageAtom =
+                createAtomPackagingTasks(tasks, variantScope);
 
         // Add a task to get the AndroidManifest from the atom.
-        createInstantAppProcessResTask(tasks, variantScope);
+        createInstantAppProcessResTask(tasks, variantScope, lastPackageAtom);
 
         createInstantAppPackagingTasks(tasks, variantScope);
     }
 
-    private void createMergeAtomsTask(
+    private AndroidTask<PackageAtom> createAtomPackagingTasks(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope) {
-        AndroidTask<MergeAtoms> mergeAtomsTask = getAndroidTasks().create(tasks,
-                new MergeAtoms.ConfigAction(variantScope));
-        variantScope.setMergeAtomsTask(mergeAtomsTask);
-        mergeAtomsTask.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
+        // Get the single output.
+        final VariantOutputScope variantOutputScope =
+                variantScope.getVariantData().getOutputs().get(0).getScope();
+        List<AndroidAtom> previousAtoms = new ArrayList<>();
+
+        List<AndroidAtom> androidAtoms = variantScope
+                .getVariantConfiguration()
+                .getPackageDependencies()
+                .getAtomDependencies();
+
+        AndroidTask<PackageAtom> previousPackagingTask = null;
+        for (AndroidAtom atom : androidAtoms) {
+            previousPackagingTask = createAtomPackagingTasks(
+                    tasks, variantOutputScope, atom, previousAtoms, previousPackagingTask);
+        }
+        return previousPackagingTask;
+    }
+
+    /**
+     * Create the packaging tasks for <code>androidAtom</code> and its dependencies.
+     *
+     * @param tasks the taskFactory.
+     * @param variantOutputScope the variantOutputScope for this instantApp.
+     * @param androidAtom the atom that needs to be packaged.
+     * @param previousAtoms the previously packaged atom files, in order.
+     * @param previousPackagingTask the previous packaging task.
+     * @return the packaging task.
+     */
+    private AndroidTask<PackageAtom> createAtomPackagingTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantOutputScope variantOutputScope,
+            @NonNull AndroidAtom androidAtom,
+            @NonNull List<AndroidAtom> previousAtoms,
+            @Nullable AndroidTask<PackageAtom> previousPackagingTask) {
+        final VariantScope variantScope = variantOutputScope.getVariantScope();
+        final BaseVariantData variantData = variantScope.getVariantData();
+        final GlobalScope globalScope = variantScope.getGlobalScope();
+
+        // If this is a common atom dependency that was previously handled, just return.
+        if (previousAtoms.contains(androidAtom))
+            return previousPackagingTask;
+
+
+        // Create dependent atom tasks first.
+        List<? extends AndroidAtom> androidAtoms = androidAtom.getAtomDependencies();
+        for (AndroidAtom atom : androidAtoms) {
+            previousPackagingTask = createAtomPackagingTasks(
+                    tasks, variantOutputScope, atom, previousAtoms, previousPackagingTask);
+        }
+
+        // This is the base atom, it only needs to be packaged.
+        if (previousPackagingTask == null) {
+            PackagingScope packagingScope =
+                    new BaseAtomPackagingScope(variantOutputScope, androidAtom);
+            AndroidTask<PackageAtom> packageAtom = getAndroidTasks().create(tasks,
+                    new PackageAtom.ConfigAction(packagingScope));
+            packageAtom.dependsOn(tasks,
+                    variantScope.getPrepareDependenciesTask());
+            previousAtoms.add(androidAtom);
+            return packageAtom;
+        }
+
+        // This is another atom, first, package the resources.
+        variantData.calculateFilters(globalScope.getExtension().getSplits());
+        AndroidTask<ProcessAndroidResources> processAtomResources = getAndroidTasks().create(tasks,
+                new ProcessAndroidResources.AtomConfigAction(
+                        variantOutputScope,
+                        FileUtils.join(globalScope.getIntermediatesDir(),
+                                "symbols",
+                                androidAtom.getAtomName(),
+                                variantData.getVariantConfiguration().getDirName()),
+                        androidAtom,
+                        previousAtoms));
+        processAtomResources.dependsOn(tasks, previousPackagingTask);
+
+        // Then, compile the final R class.
+        AndroidTask<AndroidJavaCompile> javaCompile = getAndroidTasks().create(tasks,
+                new AtomResClassJavaCompileConfigAction(variantScope, androidAtom));
+        javaCompile.dependsOn(tasks, processAtomResources);
+
+        // Merge the atom dex with the final R class.
+        AndroidTask<MergeDexAtomResClass> dexAtom = getAndroidTasks().create(tasks,
+                new MergeDexAtomResClass.ConfigAction(variantScope, androidAtom));
+        dexAtom.dependsOn(tasks, javaCompile);
+
+        // Finally, package the atom.
+        PackagingScope packagingScope =
+                new AtomPackagingScope(variantOutputScope, androidAtom);
+        AndroidTask<PackageAtom> packageAtom = getAndroidTasks().create(tasks,
+                new PackageAtom.ConfigAction(packagingScope));
+        packageAtom.dependsOn(tasks, dexAtom);
+
+        previousAtoms.add(androidAtom);
+        return packageAtom;
     }
 
     private void createInstantAppProcessResTask(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope) {
-        final InstantAppVariantData variantData =
-                (InstantAppVariantData) variantScope.getVariantData();
+            @NonNull VariantScope variantScope,
+            @NonNull AndroidTask<PackageAtom> lastPackageAtom) {
+        // Get the single output.
+        final VariantOutputScope variantOutputScope =
+                variantScope.getVariantData().getOutputs().get(0).getScope();
 
-        for (InstantAppVariantOutputData variantOutputData : variantData.getOutputs()) {
-            final VariantOutputScope variantOutputScope = variantOutputData.getScope();
-
-            AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask =
+        AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask =
                 getAndroidTasks().create(tasks,
-                    new ProcessInstantAppResources.ConfigAction(variantOutputScope));
-            variantOutputScope.setProcessInstantAppResourcesTask(processInstantAppResourcesTask);
-            processInstantAppResourcesTask.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
-        }
-
+                        new ProcessInstantAppResources.ConfigAction(variantOutputScope));
+        variantOutputScope.setProcessInstantAppResourcesTask(processInstantAppResourcesTask);
+        processInstantAppResourcesTask.dependsOn(tasks, lastPackageAtom);
+        processInstantAppResourcesTask.dependsOn(tasks, variantOutputScope.getManifestProcessorTask());
     }
 
     private void createInstantAppPackagingTasks(
@@ -141,7 +245,6 @@ public class InstantAppTaskManager extends TaskManager {
 
             packageInstantApp.dependsOn(tasks,
                     generateInstantAppMetadataTask,
-                    variantScope.getMergeAtomsTask(),
                     variantOutputScope.getProcessInstantAppResourcesTask());
             variantScope.getAssembleTask().dependsOn(tasks, packageInstantApp);
         }

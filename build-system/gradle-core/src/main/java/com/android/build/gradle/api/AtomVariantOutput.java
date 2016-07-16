@@ -17,7 +17,7 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.PackageAtom;
+import com.android.build.gradle.tasks.BundleAtom;
 
 /**
  * A variant output for library variants.
@@ -25,9 +25,8 @@ import com.android.build.gradle.tasks.PackageAtom;
 public interface AtomVariantOutput {
 
     /**
-     * Returns the Atom packaging task.
+     * Returns the Atom bundling task.
      */
     @Nullable
-    PackageAtom getPackageAtom();
-
+    BundleAtom getBundleAtom();
 }

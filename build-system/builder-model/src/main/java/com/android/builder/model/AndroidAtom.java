@@ -29,17 +29,23 @@ import java.util.List;
 public interface AndroidAtom extends AndroidBundle {
 
     /**
-     * Returns the list direct atom dependencies of this dependency.
+     * Returns the atom name.
+     */
+    @NonNull
+    String getAtomName();
+
+    /**
+     * Returns the list of direct atom dependencies of this dependency.
      * The order is important.
      */
     @NonNull
     List<? extends AndroidAtom> getAtomDependencies();
 
     /**
-     * Returns the atom folder location.
+     * Returns the dex folder for this atom.
      */
     @NonNull
-    File getAtomFolder();
+    File getDexFolder();
 
     /**
      * Returns the atom metadata file.
@@ -48,8 +54,20 @@ public interface AndroidAtom extends AndroidBundle {
     File getAtomMetadataFile();
 
     /**
-     * Returns the resource package file.
+     * Returns the native library folder. The file may not point to an existing folder.
      */
     @NonNull
-    File getResourcePackageFile();
+    File getLibFolder();
+
+    /**
+     * Returns the java resources folder for this atom.
+     */
+    @NonNull
+    File getJavaResFolder();
+
+    /**
+     * Returns the resource package file. This will only be present for the base atom.
+     */
+    @NonNull
+    File getResourcePackage();
 }

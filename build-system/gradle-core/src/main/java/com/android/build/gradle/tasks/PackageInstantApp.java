@@ -57,7 +57,7 @@ public class PackageInstantApp extends PackageAndroidArtifact implements FileSup
                     packagingScope::getAtomMetadataBaseFolder);
 
             ConventionMappingHelper.map(packageInstantApp, "outputFile",
-                    packagingScope::getPackageInstantApp);
+                    packagingScope::getOutputPackage);
         }
     }
 }

@@ -19,6 +19,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -35,9 +36,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
@@ -47,8 +50,10 @@ import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
+import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -61,7 +66,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 
 import java.io.File;
@@ -119,6 +123,10 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File instantRunSupportDir;
 
+    private File baseFeature;
+
+    private Collection<File> previousFeatures;
+
     private VariantScope variantScope;
 
     @Override
@@ -172,7 +180,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .setPseudoLocalize(getPseudoLocalesEnabled())
                     .setResourceConfigs(getResourceConfigs())
                     .setSplits(getSplits())
-                    .setPreferredDensity(getPreferredDensity());
+                    .setPreferredDensity(getPreferredDensity())
+                    .setBaseFeature(getBaseFeature())
+                    .setPreviousFeatures(getPreviousFeatures());
 
             builder.processResources(aapt, config, getEnforceUniquePackageName());
 
@@ -245,7 +255,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
 
-        private final VariantOutputScope scope;
+        protected final VariantOutputScope scope;
         private final File symbolLocation;
         private final boolean generateResourcePackage;
         private final boolean generateLegacyMultidexMainDexProguardRules;
@@ -291,9 +301,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                     SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
                 Set<String> allFilters = new HashSet<>();
                 allFilters.addAll(
-                        variantData.getFilters(com.android.build.OutputFile.FilterType.DENSITY));
+                        variantData.getFilters(OutputFile.FilterType.DENSITY));
                 allFilters.addAll(
-                        variantData.getFilters(com.android.build.OutputFile.FilterType.LANGUAGE));
+                        variantData.getFilters(OutputFile.FilterType.LANGUAGE));
                 processResources.splits = allFilters;
             }
 
@@ -301,7 +311,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             // it yet (if you have abi + density splits, then several abi output will have no
             // densityFilter)
             if (variantOutputData.getMainOutputFile()
-                    .getFilter(com.android.build.OutputFile.DENSITY) == null
+                    .getFilter(OutputFile.DENSITY) == null
                     && variantData.generateRClassTask == null) {
                 variantData.generateRClassTask = processResources;
                 processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
@@ -318,7 +328,11 @@ public class ProcessAndroidResources extends IncrementalTask {
                         new Callable<String>() {
                             @Override
                             public String call() throws Exception {
-                                return config.getOriginalApplicationId();
+                                String splitName = config.getSplitFromManifest();
+                                if (splitName == null)
+                                    return config.getOriginalApplicationId();
+                                else
+                                    return config.getOriginalApplicationId() + "." + splitName;
                             }
                         });
 
@@ -406,7 +420,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         @Nullable
                         public String call() throws Exception {
                             String variantFilter = variantOutputData.getMainOutputFile()
-                                    .getFilter(com.android.build.OutputFile.DENSITY);
+                                    .getFilter(OutputFile.DENSITY);
                             if (variantFilter != null) {
                                 return variantFilter;
                             }
@@ -414,7 +428,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     scope.getGlobalScope().getProject());
                         }
                     });
-
 
             processResources.setMergeBlameLogFolder(
                     scope.getVariantScope().getResourceBlameLogDir());
@@ -424,6 +437,134 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.instantRunBuildContext =
                     scope.getVariantScope().getInstantRunBuildContext();
+
+            processResources.setPreviousFeatures(ImmutableSet.of());
+
+            AndroidAtom baseAtom = scope
+                    .getVariantScope()
+                    .getVariantConfiguration()
+                    .getPackageDependencies()
+                    .getBaseAtom();
+            if (baseAtom != null ) {
+                processResources.setBaseFeature(baseAtom.getResourcePackage());
+            }
+
+        }
+    }
+
+    public static class AtomConfigAction extends ConfigAction {
+
+        private AndroidAtom androidAtom;
+        private Collection<File> previousAtoms;
+
+        public AtomConfigAction(
+                @NonNull VariantOutputScope scope,
+                @NonNull File symbolLocation,
+                @NonNull AndroidAtom androidAtom,
+                @NonNull List<AndroidAtom> previousAtoms) {
+            super(scope, symbolLocation, true, false);
+            this.androidAtom = androidAtom;
+            ImmutableSet.Builder<File> listBuilder = ImmutableSet.builder();
+            // Ignore the firt atom as it is the base atom.
+            for (int i = 1; i < previousAtoms.size(); i++) {
+                listBuilder.add(scope.getProcessResourcePackageOutputFile(previousAtoms.get(i)));
+            }
+            this.previousAtoms = listBuilder.build();
+
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return scope.getTaskName("process",
+                    StringHelper.capitalize(androidAtom.getAtomName()) + "AtomResources");
+        }
+
+        @Override
+        public void execute(@NonNull ProcessAndroidResources processResources) {
+            final BaseVariantData<? extends BaseVariantOutputData> variantData =
+                    scope.getVariantScope().getVariantData();
+            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+
+            processResources.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            processResources.setVariantName(config.getFullName());
+            processResources.variantScope = scope.getVariantScope();
+            processResources.setIncrementalFolder(
+                    scope.getVariantScope().getIncrementalDir(getName()));
+
+            processResources.splits = ImmutableSet.<String>builder()
+                    .addAll(variantData.getFilters(OutputFile.FilterType.DENSITY))
+                    .addAll(variantData.getFilters(OutputFile.FilterType.LANGUAGE))
+                    .build();
+
+            ConventionMappingHelper.map(processResources, "libraries",
+                    this::computeFlatLibraryList);
+
+            ConventionMappingHelper.map(processResources, "packageForR", () -> {
+                String splitName =
+                    new DefaultManifestParser(androidAtom.getManifest()).getSplit();
+                if (splitName == null)
+                    return config.getOriginalApplicationId();
+                else
+                    return config.getOriginalApplicationId() + "." + splitName;
+            });
+
+            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
+            processResources.setSourceOutputDir(
+                    scope.getVariantScope().getRClassSourceOutputDir(androidAtom));
+
+            ConventionMappingHelper.map(processResources, "manifestFile", androidAtom::getManifest);
+
+            ConventionMappingHelper.map(processResources, "resDir", androidAtom::getResFolder);
+
+            processResources.setPackageOutputFile(
+                    scope.getProcessResourcePackageOutputFile(androidAtom));
+
+            processResources.setType(VariantType.INSTANTAPP);
+            processResources.setDebuggable(config.getBuildType().isDebuggable());
+            processResources.setAaptOptions(scope.getGlobalScope().getExtension().getAaptOptions());
+            processResources.setPseudoLocalesEnabled(
+                    config.getBuildType().isPseudoLocalesEnabled());
+            ConventionMappingHelper.map(processResources, "resourceConfigs",
+                    variantData::discoverListOfResourceConfigs);
+            ConventionMappingHelper.map(processResources, "preferredDensity", () ->
+                    AndroidGradleOptions.getBuildTargetDensity(
+                            scope.getGlobalScope().getProject()));
+            processResources.setMergeBlameLogFolder(
+                    scope.getVariantScope().getResourceBlameLogDir(androidAtom));
+
+            processResources.instantRunSupportDir =
+                    scope.getVariantScope().getInstantRunSupportDir();
+
+            processResources.instantRunBuildContext =
+                    scope.getVariantScope().getInstantRunBuildContext();
+
+            processResources.setPreviousFeatures(previousAtoms);
+
+            AndroidAtom baseAtom = scope
+                    .getVariantScope()
+                    .getVariantConfiguration()
+                    .getPackageDependencies()
+                    .getBaseAtom();
+            assert baseAtom != null;
+            processResources.setBaseFeature(baseAtom.getResourcePackage());
+        }
+
+        private List<AndroidLibrary> computeFlatLibraryList() {
+            List<AndroidLibrary> flatAndroidLibraries = Lists.newArrayList();
+            computeFlatLibraryList(androidAtom.getLibraryDependencies(), flatAndroidLibraries);
+            return flatAndroidLibraries;
+        }
+
+        private static void computeFlatLibraryList(
+                List<? extends AndroidLibrary> androidLibraries,
+                List<AndroidLibrary> outFlatAndroidLibraries) {
+            for (AndroidLibrary lib : androidLibraries) {
+                if (lib.isSkipped() || outFlatAndroidLibraries.contains(lib))
+                    continue;
+                computeFlatLibraryList(lib.getLibraryDependencies(), outFlatAndroidLibraries);
+                outFlatAndroidLibraries.add(lib);
+            }
         }
     }
 
@@ -492,7 +633,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.textSymbolOutputDir = textSymbolOutputDir;
     }
 
-    @OutputFile
+    @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
     public File getPackageOutputFile() {
@@ -503,7 +644,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.packageOutputFile = packageOutputFile;
     }
 
-    @OutputFile
+    @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
     public File getProguardOutputFile() {
@@ -514,7 +655,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.proguardOutputFile = proguardOutputFile;
     }
 
-    @OutputFile
+    @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
     public File getMainDexListProguardOutputFile() {
@@ -644,5 +785,26 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setMergeBlameLogFolder(File mergeBlameLogFolder) {
         this.mergeBlameLogFolder = mergeBlameLogFolder;
+    }
+
+    @InputFile
+    @Optional
+    @Nullable
+    public File getBaseFeature() {
+        return baseFeature;
+    }
+
+    public void setBaseFeature(File baseFeature) {
+        this.baseFeature = baseFeature;
+    }
+
+    @InputFiles
+    @NonNull
+    public Collection<File> getPreviousFeatures() {
+        return previousFeatures;
+    }
+
+    public void setPreviousFeatures(Collection<File> previousFeatures) {
+        this.previousFeatures = previousFeatures;
     }
 }

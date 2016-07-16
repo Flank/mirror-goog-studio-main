@@ -73,7 +73,7 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
         }
 
         return packageAndroidArtifactTask == null
-                ? getScope().getFinalApk()
+                ? getScope().getFinalPackage()
                 : packageAndroidArtifactTask.getOutputFile();
     }
 

@@ -22,9 +22,6 @@ import com.android.build.gradle.internal.scope.PackagingScope;
 
 import org.gradle.api.tasks.ParallelizableTask;
 
-import java.io.File;
-import java.util.concurrent.Callable;
-
 /**
  * Task to package an atom.
  */
@@ -52,18 +49,13 @@ public class PackageAtom extends PackageAndroidArtifact {
 
         @Override
         public void execute(@NonNull final PackageAtom packageAtom) {
-            ConventionMappingHelper.map(packageAtom, "atomMetadataFolder", new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    return packagingScope.getAtomMetadataBaseFolder();
-                }
-            });
+            super.execute(packageAtom);
+
+            ConventionMappingHelper.map(packageAtom, "atomMetadataFolder",
+                    packagingScope::getAtomMetadataBaseFolder);
 
             ConventionMappingHelper.map(packageAtom, "outputFile",
-                    (Callable<File>) packagingScope::getPackageAtom);
-
-            super.execute(packageAtom);
+                    packagingScope::getOutputPackage);
         }
-
     }
 }

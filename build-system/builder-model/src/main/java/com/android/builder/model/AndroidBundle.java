@@ -48,14 +48,6 @@ public interface AndroidBundle extends Library {
     File getFolder();
 
     /**
-     * Returns the list of direct bundle dependencies of this dependency. This includes both aars
-     * and atoms if they are present.
-     * The order is important.
-     */
-    @NonNull
-    List<? extends AndroidBundle> getBundleDependencies();
-
-    /**
      * Returns the list of direct library dependencies of this dependency.
      * The order is important.
      */
@@ -83,5 +75,21 @@ public interface AndroidBundle extends Library {
      */
     @NonNull
     File getJarFile();
+
+    /**
+     * Returns the location of the res folder.
+     *
+     * @return a File for the res folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    File getResFolder();
+
+    /**
+     * Returns the location of the assets folder.
+     *
+     * @return a File for the assets folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    File getAssetsFolder();
 
 }

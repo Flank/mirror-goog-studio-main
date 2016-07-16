@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.scope;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.DOT_INSTANTAPP_PACKAGE;
+import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -28,6 +31,8 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
+import com.android.builder.core.VariantType;
+import com.android.builder.model.AndroidAtom;
 import com.android.utils.StringHelper;
 
 import org.gradle.api.DefaultTask;
@@ -114,22 +119,28 @@ public class VariantOutputScope implements TransformVariantScope {
     @Override
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        if (getVariantScope().getVariantData().getType() == VariantType.ATOM)
+            suffix = ATOM_SUFFIX + suffix;
         return prefix + StringHelper.capitalize(getVariantOutputData().getFullName()) + suffix;
     }
 
     /**
-     * Final APK, signed and zipaligned (if enabled), ready to be installed on the device.
+     * Final package file, signed and zipaligned (if enabled), ready to be installed on the device.
      */
     @NonNull
-    public File getFinalApk() {
+    public File getFinalPackage() {
         if (AndroidGradleOptions.useOldPackaging(getGlobalScope().getProject())) {
             if (isSignedApk() && isZipAlignApk()) {
-                return buildApkPath(".apk");
+                return buildPackagePath(DOT_ANDROID_PACKAGE);
             } else {
                 return getIntermediateApk();
             }
         } else {
-            return buildApkPath(isSignedApk() ? ".apk" : "-unsigned.apk");
+            if (getVariantScope().getVariantData().getType() == VariantType.INSTANTAPP) {
+                return buildPackagePath(DOT_INSTANTAPP_PACKAGE);
+            } else {
+                return buildPackagePath(isSignedApk() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
+            }
         }
     }
 
@@ -138,11 +149,11 @@ public class VariantOutputScope implements TransformVariantScope {
      */
     @NonNull
     public File getIntermediateApk() {
-        return buildApkPath(isSignedApk() ? "-unaligned.apk" : "-unsigned.apk");
+        return buildPackagePath(isSignedApk() ? "-unaligned.apk" : "-unsigned.apk");
     }
 
     @NonNull
-    private File buildApkPath(String suffix) {
+    private File buildPackagePath(String suffix) {
         return new File(
                 getGlobalScope().getApkLocation(),
                 getGlobalScope().getProjectBaseName()
@@ -159,15 +170,6 @@ public class VariantOutputScope implements TransformVariantScope {
     private boolean isZipAlignApk() {
         ApkVariantData apkVariantData = (ApkVariantData) variantScope.getVariantData();
         return apkVariantData.getZipAlignEnabled();
-    }
-
-    @NonNull
-    public File getPackageInstantApp() {
-        String instantAppName = getGlobalScope().getProjectBaseName() + "-"
-                + variantOutputData.getBaseName() + SdkConstants.DOT_INSTANTAPP_PACKAGE;
-
-        return getGlobalScope().getProject().file(
-                getGlobalScope().getApkLocation() + "/" + instantAppName);
     }
 
     @NonNull
@@ -201,6 +203,11 @@ public class VariantOutputScope implements TransformVariantScope {
     @NonNull
     public File getProcessResourcePackageOutputFile() {
         return variantOutputData.getProcessResourcePackageOutputFile();
+    }
+
+    @NonNull
+    public File getProcessResourcePackageOutputFile(AndroidAtom androidAtom) {
+        return variantOutputData.getProcessResourcePackageOutputFile(androidAtom);
     }
 
     @NonNull

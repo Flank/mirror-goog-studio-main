@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.annotations.PackageFile;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -1205,5 +1204,4 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                     packageAndroidArtifact, "packagingOptions", packagingScope::getPackagingOptions);
         }
     }
-
 }

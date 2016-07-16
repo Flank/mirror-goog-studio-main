@@ -19,7 +19,6 @@ package com.android.builder.dependency;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.collect.ImmutableList;
@@ -31,17 +30,6 @@ import com.google.common.collect.ImmutableList;
  * - android library (aar) dependencies
  */
 public interface DependencyContainer {
-
-    /**
-     * Returns a list of top level android bundle dependencies.
-     *
-     * Each atom object should contain its own dependencies (as android libs, java libs,
-     * and local jars). This is actually a dependency graph.
-     *
-     * @return a non null (but possibly empty) list.
-     */
-    @NonNull
-    ImmutableList<AndroidBundle> getBundleDependencies();
 
     /**
      * Returns a list of top level android library dependencies.
@@ -83,6 +71,14 @@ public interface DependencyContainer {
      */
     @NonNull
     ImmutableList<JavaLibrary> getLocalDependencies();
+
+    /**
+     * Returns the base atom dependency, if present.
+     *
+     * @return the base atom dependency, or null if not present.
+     */
+    @Nullable
+    AndroidAtom getBaseAtom();
 
     /**
      * Returns a version of this container where the graph is flattened into direct dependencies.

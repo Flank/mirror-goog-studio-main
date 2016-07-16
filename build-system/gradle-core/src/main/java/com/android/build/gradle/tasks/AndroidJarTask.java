@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -62,11 +62,9 @@ public class AndroidJarTask extends Jar implements BinaryFileProviderTask {
         @Override
         public void execute(@NonNull AndroidJarTask jarTask) {
             final BaseVariantData variantData = scope.getVariantData();
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
-            jarTask.setArchiveName("classes.jar");
-            jarTask.setDestinationDir(new File(
-                    scope.getGlobalScope().getIntermediatesDir(),
-                    "packaged/" + config.getDirName() + "/"));
+
+            jarTask.setArchiveName(SdkConstants.FN_CLASSES_JAR);
+            jarTask.setDestinationDir(scope.getMainJarOutputDir());
             jarTask.from(scope.getJavaOutputDir());
             jarTask.dependsOn(scope.getJavacTask().getName());
             variantData.binaryFileProviderTask = jarTask;

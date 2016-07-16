@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.Objects;
@@ -116,12 +115,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @Override
     public File getFolder() {
         return folder;
-    }
-
-    @NonNull
-    @Override
-    public List<? extends AndroidBundle> getBundleDependencies() {
-        return androidLibraries;
     }
 
     @NonNull
@@ -268,8 +261,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 .add("name", getName())
                 .add("project", getProject())
                 .add("variant", variant)
-                .add("requestedCoordinates", getRequestedCoordinates())
-                .add("resolvedCoordinates", getResolvedCoordinates())
                 .add("bundle", bundle)
                 .add("folder", folder)
                 .add("manifest", manifest)

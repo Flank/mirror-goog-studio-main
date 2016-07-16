@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.variant;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.DOT_RES;
+import static com.android.SdkConstants.FN_RES_BASE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -70,8 +72,7 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
     @NonNull
     @Override
     public File getProcessResourcePackageOutputFile() {
-        return new File(getScope().getVariantScope().getBaseBundleDir(),
-                "resources" + SdkConstants.DOT_RES);
+        return new File(getScope().getVariantScope().getBaseBundleDir(), FN_RES_BASE + DOT_RES);
     }
 
 }

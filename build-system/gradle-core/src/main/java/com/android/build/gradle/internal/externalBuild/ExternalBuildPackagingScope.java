@@ -201,19 +201,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputApk() {
-        return getMainOutputFile().getOutputFile();
-    }
-
-    @NonNull
-    @Override
-    public File getPackageAtom() {
-        return getMainOutputFile().getOutputFile();
-    }
-
-    @NonNull
-    @Override
-    public File getPackageInstantApp() {
+    public File getOutputPackage() {
         return getMainOutputFile().getOutputFile();
     }
 

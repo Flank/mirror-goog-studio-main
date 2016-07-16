@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.tasks;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.FD_INSTANTAPP_METADATA;
+import static com.android.SdkConstants.FN_INSTANTAPP_METADATA;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -47,7 +49,7 @@ public class GenerateInstantAppMetadata extends DefaultAndroidTask {
         instantAppMetadataBuilder.setSubstrateApiVersion(getSubstrateApiVersion());
 
         File instantAppMetadataFile =
-                new File(getInstantAppMetadataFolder(), SdkConstants.FN_INSTANTAPP_METADATA);
+                new File(getInstantAppMetadataFolder(), FN_INSTANTAPP_METADATA);
 
         // Re-create the file.
         instantAppMetadataFile.delete();
@@ -104,7 +106,7 @@ public class GenerateInstantAppMetadata extends DefaultAndroidTask {
 
             generateInstantAppMetadata.setInstantAppMetadataFolder(FileUtils.join(
                     scope.getGlobalScope().getIntermediatesDir(),
-                    SdkConstants.FD_INSTANTAPP_METADATA,
+                    FD_INSTANTAPP_METADATA,
                     scope.getVariantScope().getDirName()));
             generateInstantAppMetadata.setVariantName(variantOutputData.getFullName());
             // TODO: Set the substrate-api-version from the gradle file.
