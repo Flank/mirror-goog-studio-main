@@ -238,21 +238,25 @@ mimic such Unix behavior, the pattern is:
 root->GetOrNewFile("touch_me.txt")->Touch();
 ```
 
-### Walking directory content is done through a callback
+### Walking a directory returns PathStat instances
 
-When walking a directory, in most cases, you will only care about some small
-subset of all the files (say, only files older than a certain time, or those
-that end with a certain extension). Therefore, it is not worth creating
-temporary `File` instances for them.
+You might expect an API in `Dir` that looks something like `vector<File>
+ListFiles()`. However, when walking a directory, in most cases, you will only
+care about some small subset of all the files (say, only files older than a
+certain age, or those that end with a certain extension). Therefore, it is not
+worth creating `File` and `Dir` instances for _every_ child object, as those
+handles are somewhat heavyweight - by design, they are always allocated in the
+heap behind a shared pointer.
 
-Therefore, instead of returning `File` and `Dir` objects directly in the walk
-API, it returns a more lightweight `PathStat` data class metadata that will
-allow you to create a `File` or `Dir` instance on the spot if you need.
+Therefore, the `Walk` method introduces a more lightweight `PathStat` data
+class that provides useful metadata about each child entry, including
+information that allows you to create a `File` or `Dir` instance on the spot if
+you need.
 
 ```c++
-root->WalkFiles([root](const PathStat &pstat) {
+dir->Walk([dir](const PathStat &pstat) {
   if (pstat->type() == PathStat::Type::FILE) {
-    auto f = root->GetFile(fstat.rel_path); // PathStat -> File
+    auto file = dir->GetFile(pstat.rel_path()); // PathStat -> File
     ...
   }
 });
