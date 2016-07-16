@@ -20,13 +20,13 @@
 #include <memory>
 #include <string>
 
-#include "utils/fs/disk.h"
 #include "utils/fs/path.h"
 
 namespace profiler {
 
 class File;
 class FileSystem;
+class PathStat;
 
 // A handle to a directory location. The directory may or may not exist; use
 // |Exists| to check and |Create| to actually create it.
@@ -39,10 +39,6 @@ class Dir final : public Path {
 
   // Check to see if this directory already exists
   bool Exists() const override;
-
-  // Returns true if this directory is the ancestor of the target path. This
-  // also returns true if the path refers to this directory itself.
-  bool IsAncestorOf(const Path &path) const;
 
   // Fetch a directory handle for the specified path.
   std::shared_ptr<Dir> GetDir(const std::string &rel_path);

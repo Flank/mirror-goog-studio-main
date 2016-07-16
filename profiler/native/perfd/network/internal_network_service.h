@@ -24,7 +24,7 @@
 #include "proto/internal_network.grpc.pb.h"
 
 #include "perfd/network/network_cache.h"
-#include "utils/fs/file_system.h"
+#include "utils/fs/disk_file_system.h"
 
 namespace profiler {
 

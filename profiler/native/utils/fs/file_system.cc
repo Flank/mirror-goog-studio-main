@@ -17,31 +17,43 @@
 
 namespace profiler {
 
-using std::make_shared;
 using std::shared_ptr;
 using std::string;
 
-FileSystem::FileSystem(const string &root_path)
-    : FileSystem(make_shared<CDisk>(), root_path) {}
-
-FileSystem::FileSystem(shared_ptr<Disk> disk, const string &root_path)
-    : disk_(disk) {
-  root_ = DirFor(root_path);
-  root_->CreateDirsRecursively(root_path);
+shared_ptr<Dir> FileSystem::GetDir(const string &abs_path) {
+  // Can't use make_shared; Dir constructor is protected
+  return shared_ptr<Dir>(new Dir(this, abs_path));
 }
 
-shared_ptr<Dir> FileSystem::DirFor(const string &abs_path) {
-  string path_standard = Path::Standardize(abs_path);
-
-  // Can't use make_shared; must create Dir directly because of friend access
-  return shared_ptr<Dir>(new Dir(this, path_standard));
+shared_ptr<Dir> FileSystem::NewDir(const string &abs_path) {
+  auto dir = GetDir(abs_path);
+  dir->Delete();
+  dir->Create();
+  return dir;
 }
 
-shared_ptr<File> FileSystem::FileFor(const string &abs_path) {
-  string path_standard = Path::Standardize(abs_path);
+shared_ptr<Dir> FileSystem::GetOrNewDir(const string &abs_path) {
+  auto dir = GetDir(abs_path);
+  dir->Create();
+  return dir;
+}
 
-  // Can't use make_shared; must create File directly because of friend access
-  return shared_ptr<File>(new File(this, path_standard));
+shared_ptr<File> FileSystem::GetFile(const string &abs_path) {
+  // Can't use make_shared; File constructor is protected
+  return shared_ptr<File>(new File(this, abs_path));
+}
+
+shared_ptr<File> FileSystem::NewFile(const string &abs_path) {
+  auto file = GetFile(abs_path);
+  file->Delete();
+  file->Create();
+  return file;
+}
+
+shared_ptr<File> FileSystem::GetOrNewFile(const string &abs_path) {
+  auto file = GetFile(abs_path);
+  file->Create();
+  return file;
 }
 
 }  // namespace profiler

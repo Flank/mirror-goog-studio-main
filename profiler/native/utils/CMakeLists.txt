@@ -8,7 +8,7 @@ set(UTILS_SOURCES
     stopwatch.cc
     tokenizer.cc
     fs/dir.cc
-    fs/disk.cc
+    fs/disk_file_system.cc
     fs/file.cc
     fs/file_system.cc
     fs/path.cc)
@@ -35,6 +35,7 @@ add_unit_test(profiler_utils_test
               time_value_buffer_test.cc
               timespec_math_test.cc
               tokenizer_test.cc
+              fs/memory_file_system.cc
               fs/file_system_test.cc)
 
 target_link_libraries(profiler_utils_test

@@ -59,26 +59,14 @@ Path::Path(FileSystem *fs, const string &path)
 }
 
 int32_t Path::GetModificationAge() const {
-  return fs_->disk()->GetModificationAge(path_);
+  return fs_->GetModificationAge(path_);
 }
 
 bool Path::Create() {
-  if (fs_->disk()->HasDir(path_) || fs_->disk()->HasFile(path_)) {
+  if (fs_->HasDir(path_) || fs_->HasFile(path_)) {
     return false;
   }
 
-  auto root = fs_->root();
-  if (this == root.get()) {
-    if (!root->Exists()) {
-      return fs_->disk()->NewDir(root->path());
-    } else {
-      return false;
-    }
-  }
-
-  if (!root->IsAncestorOf(*this) || !root->Exists()) {
-    return false;
-  }
   if (path_.find("..") != string::npos) {
     return false;  // No relative paths allowed!
   }
@@ -95,7 +83,7 @@ bool Path::CreateDirsRecursively(const string &abs_path) {
     return true;  // path == "/"
   }
 
-  auto d = fs_->DirFor(abs_path);
+  auto d = fs_->GetDir(abs_path);
   if (d->Exists()) {
     return true;
   }
@@ -119,12 +107,5 @@ const shared_ptr<Dir> Path::Up() const { return DoUp(); }
 
 shared_ptr<Dir> Path::Up() { return DoUp(); }
 
-shared_ptr<Dir> Path::DoUp() const {
-  auto root = fs_->root();
-  if (path_ == root->path()) {
-    return root;  // Can't go above root
-  }
-
-  return fs_->DirFor(StripLast(path_));
-}
+shared_ptr<Dir> Path::DoUp() const { return fs_->GetDir(StripLast(path_)); }
 }

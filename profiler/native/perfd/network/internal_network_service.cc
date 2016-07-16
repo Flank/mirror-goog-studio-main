@@ -41,14 +41,11 @@ using grpc::Status;
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
     const std::string &root_path, NetworkCache *network_cache)
     : network_cache_(*network_cache) {
-  fs_.reset(new FileSystem(root_path + "/cache/network"));
-
+  fs_.reset(new DiskFileSystem());
   // Since we're restarting perfd, nuke any leftover cache from a previous run
-  fs_->root()->Delete();
-  fs_->root()->Create();
-
-  cache_partial_ = fs_->root()->NewDir("partial");
-  cache_complete_ = fs_->root()->NewDir("complete");
+  auto cache_root = fs_->NewDir(root_path + "/cache/network");
+  cache_partial_ = cache_root->NewDir("partial");
+  cache_complete_ = cache_root->NewDir("complete");
 
   is_janitor_running_ = true;
   janitor_thread_ =

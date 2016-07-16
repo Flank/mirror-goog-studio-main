@@ -39,6 +39,12 @@ class Path {
   // directly. It is exposed for testing.
   static std::string StripLast(const std::string &path);
 
+  // Append two paths together into one, e.g. /a/b/c and d/e -> /a/b/c/d/e
+  static std::string Append(const std::string &root,
+                            const std::string &rel_path) {
+    return root + "/" + rel_path;
+  }
+
   virtual ~Path() = default;
 
   // You may hold onto a handle to an path but that doesn't mean its actually
