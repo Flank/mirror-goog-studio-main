@@ -45,28 +45,28 @@ class Dir final : public Path {
   bool IsAncestorOf(const Path &path) const;
 
   // Fetch a directory handle for the specified path.
-  std::shared_ptr<Dir> GetDir(const std::string &path);
-  const std::shared_ptr<Dir> GetDir(const std::string &path) const;
+  std::shared_ptr<Dir> GetDir(const std::string &rel_path);
+  const std::shared_ptr<Dir> GetDir(const std::string &rel_path) const;
 
-  // Shortcut for calling |GetDir| followed by |Create|. This will overwrite
-  // an existing directory (but not an existing file).
-  std::shared_ptr<Dir> NewDir(const std::string &path);
+  // Fetch a directory handle for the specified path, ensuring it is created.
+  // If a directory already exists in this location, it will be overwritten.
+  std::shared_ptr<Dir> NewDir(const std::string &rel_path);
 
-  // Shortcut for calling |GetDir| followed by |Dir::Create| if the directory
-  // doesn't already exists.
-  std::shared_ptr<Dir> GetOrNewDir(const std::string &path);
+  // Fetch a directory handle for the specified path. If one does not already
+  // exist, it will be created.
+  std::shared_ptr<Dir> GetOrNewDir(const std::string &rel_path);
 
   // Fetch a file handle for the specified path.
-  std::shared_ptr<File> GetFile(const std::string &path);
-  const std::shared_ptr<File> GetFile(const std::string &path) const;
+  std::shared_ptr<File> GetFile(const std::string &rel_path);
+  const std::shared_ptr<File> GetFile(const std::string &rel_path) const;
 
-  // Shortcut for calling |GetFile| followed by |File::Create|. This will
-  // overwrite an existing file (but not an existing directory).
-  std::shared_ptr<File> NewFile(const std::string &path);
+  // Fetch a file handle for the specified path, ensuring it is created. If a
+  // file already exists in this location, it will be overwritten.
+  std::shared_ptr<File> NewFile(const std::string &rel_path);
 
-  // Shortcut for calling |GetFile| followed by |File::Create| if the file
-  // doesn't already exists.
-  std::shared_ptr<File> GetOrNewFile(const std::string &path);
+  // Fetch a file handle for the specified path. If one does not already exist,
+  // it will be created.
+  std::shared_ptr<File> GetOrNewFile(const std::string &rel_path);
 
   // Walk each file in this directory, triggering a callback for each file
   // visited. The callback will be triggered in an order where the paths can
@@ -76,14 +76,14 @@ class Dir final : public Path {
  protected:
   // Don't create directly. Use |GetDir| or |NewDir| from a parent directory
   // instead.
-  Dir(FileSystem *fs, const std::string &path);
+  Dir(FileSystem *fs, const std::string &abs_path);
 
   bool HandleCreate() override;
   bool HandleDelete() override;
 
  private:
-  std::shared_ptr<Dir> DoGetDir(const std::string &path) const;
-  std::shared_ptr<File> DoGetFile(const std::string &path) const;
+  std::shared_ptr<Dir> DoGetDir(const std::string &rel_path) const;
+  std::shared_ptr<File> DoGetFile(const std::string &rel_path) const;
 };
 
 }  // namespace profiler

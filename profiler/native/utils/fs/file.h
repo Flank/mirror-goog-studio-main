@@ -90,7 +90,7 @@ class File final : public Path {
  protected:
   // Don't create directly. Use |Dir::GetFile| or |Dir::NewFile| from a parent
   // directory instead.
-  File(FileSystem *fs, const std::string &path);
+  File(FileSystem *fs, const std::string &abs_path);
 
   bool HandleCreate() override;
   bool HandleDelete() override;

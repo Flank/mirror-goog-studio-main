@@ -20,8 +20,12 @@
 
 namespace profiler {
 
-std::string Path::Standardize(const std::string &path) {
-  std::string path_final = path;
+using std::size_t;
+using std::string;
+using std::shared_ptr;
+
+string Path::Standardize(const string &path) {
+  string path_final = path;
   if (path_final[0] != '/') {
     path_final.insert(0, "/");
   }
@@ -32,15 +36,15 @@ std::string Path::Standardize(const std::string &path) {
   }
 
   // Remove any redundant slashes, e.g. 'a/////b' -> 'a/b'
-  std::string::size_type pos = 0;
-  while ((pos = path_final.find("//", pos)) != std::string::npos) {
+  string::size_type pos = 0;
+  while ((pos = path_final.find("//", pos)) != string::npos) {
     path_final.replace(pos, 2, "/");
   }
   return path_final;
 }
 
-std::string Path::StripLast(const std::string &path) {
-  std::size_t last_slash = path.find_last_of("/");
+string Path::StripLast(const string &path) {
+  size_t last_slash = path.find_last_of("/");
   if (last_slash > 0) {
     return path.substr(0, last_slash);
   } else {
@@ -48,9 +52,9 @@ std::string Path::StripLast(const std::string &path) {
   }
 }
 
-Path::Path(FileSystem *fs, const std::string &path)
+Path::Path(FileSystem *fs, const string &path)
     : fs_(fs), path_(Standardize(path)) {
-  std::size_t last_slash = path.find_last_of("/");
+  size_t last_slash = path.find_last_of("/");
   name_ = path.substr(last_slash + 1);
 }
 
@@ -75,7 +79,7 @@ bool Path::Create() {
   if (!root->IsAncestorOf(*this) || !root->Exists()) {
     return false;
   }
-  if (path_.find("..") != std::string::npos) {
+  if (path_.find("..") != string::npos) {
     return false;  // No relative paths allowed!
   }
 
@@ -86,17 +90,17 @@ bool Path::Create() {
   }
 }
 
-bool Path::CreateDirsRecursively(const std::string &path) {
-  if (path.length() == 1) {
+bool Path::CreateDirsRecursively(const string &abs_path) {
+  if (abs_path.length() == 1) {
     return true;  // path == "/"
   }
 
-  auto d = fs_->DirFor(path);
+  auto d = fs_->DirFor(abs_path);
   if (d->Exists()) {
     return true;
   }
 
-  if (CreateDirsRecursively(StripLast(path))) {
+  if (CreateDirsRecursively(StripLast(abs_path))) {
     return d->HandleCreate();
   } else {
     return false;
@@ -111,11 +115,11 @@ bool Path::Delete() {
   return HandleDelete();
 }
 
-const std::shared_ptr<Dir> Path::Up() const { return DoUp(); }
+const shared_ptr<Dir> Path::Up() const { return DoUp(); }
 
-std::shared_ptr<Dir> Path::Up() { return DoUp(); }
+shared_ptr<Dir> Path::Up() { return DoUp(); }
 
-std::shared_ptr<Dir> Path::DoUp() const {
+shared_ptr<Dir> Path::DoUp() const {
   auto root = fs_->root();
   if (path_ == root->path()) {
     return root;  // Can't go above root

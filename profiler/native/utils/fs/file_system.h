@@ -54,7 +54,7 @@ namespace profiler {
 // The FileSystem class is NOT thread safe so be careful when modifying
 // directories and files across threads.
 class FileSystem final {
-  // Expose access to |DirFor|, |FileFor|, and |root| methods
+  // Expose access to |DirFor|, |FileFor|, and |disk| methods
   friend File;
   friend Dir;
   friend Path;
@@ -73,9 +73,9 @@ class FileSystem final {
   const std::shared_ptr<Disk> disk() const { return disk_; }
 
   // Returns a directory handle for the specified path
-  std::shared_ptr<Dir> DirFor(const std::string &path);
+  std::shared_ptr<Dir> DirFor(const std::string &abs_path);
   // Returns a file handle for the specified path
-  std::shared_ptr<File> FileFor(const std::string &path);
+  std::shared_ptr<File> FileFor(const std::string &abs_path);
 
   std::shared_ptr<Disk> disk_;
   std::shared_ptr<Dir> root_;
