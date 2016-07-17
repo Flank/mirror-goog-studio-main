@@ -585,7 +585,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     public static String toBase64(@NonNull byte[] bytes) {
         String base64 = DatatypeConverter.printBase64Binary(bytes);
-        return Joiner.on("").join(Splitter.fixedLength(60).split(base64));
+        return Joiner.on("\n").join(Splitter.fixedLength(60).split(base64));
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
@@ -595,7 +595,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     /**
      * Creates a test file from the given base64 data. To create this data, use {@link
      * #toBase64(File)} or {@link #toBase64(byte[])}, for example via <pre>{@code assertEquals("",
-     * uuencode(new File("path/to/your.class")));} </pre>
+     * toBase64(new File("path/to/your.class")));} </pre>
      *
      * @param to      the file to write as
      * @param encoded the encoded data
