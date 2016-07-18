@@ -122,6 +122,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
+import com.android.build.gradle.tasks.ExternalNativeCleanTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
@@ -1189,7 +1190,7 @@ public abstract class TaskManager {
         scope.getResourceGenTask().dependsOn(tasks, generateMicroApkTask);
     }
 
-    public void createExternalNativeBuildJsonGenerators(TaskFactory tasks, @NonNull VariantScope scope) {
+    public void createExternalNativeBuildJsonGenerators(@NonNull VariantScope scope) {
 
         CoreExternalNativeBuild externalNativeBuild = extension.getExternalNativeBuild();
         ExternalNativeBuildTaskUtils.ExternalNativeBuildProjectPathResolution pathResolution =
@@ -1228,12 +1229,14 @@ public abstract class TaskManager {
             return;
         }
 
+        // Set up JSON generation tasks
         AndroidTask<?> generateTask = androidTasks.create(tasks,
                 ExternalNativeBuildJsonTask.createTaskConfigAction(
                         generator, scope));
 
         generateTask.dependsOn(tasks, scope.getPreBuildTask());
 
+        // Set up build tasks
         AndroidTask<ExternalNativeBuildTask> buildTask = androidTasks.create(
                 tasks,
                 new ExternalNativeBuildTask.ConfigAction(generator, scope, androidBuilder));
@@ -1241,6 +1244,11 @@ public abstract class TaskManager {
         buildTask.dependsOn(tasks, generateTask);
         scope.setExternalNativeBuildTask(buildTask);
         scope.getCompileTask().dependsOn(tasks, buildTask);
+
+        // Set up clean tasks
+        Task cleanTask = checkNotNull(tasks.named("clean"));
+        cleanTask.dependsOn(androidTasks.create(tasks, new ExternalNativeCleanTask.ConfigAction(
+                generator, scope, androidBuilder)).getName());
     }
 
     public void createNdkTasks(@NonNull VariantScope scope) {
