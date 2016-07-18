@@ -66,7 +66,7 @@ public class PlatformLoaderTest {
                         realAndroidHome, SdkConstants.FD_PLATFORMS,
                         "android-" + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION),
                 FileUtils.join(mPrebuiltSdk,
-                        String.valueOf(GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)));
+                        GradleTestProject.DEFAULT_COMPILE_SDK_VERSION));
 
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(

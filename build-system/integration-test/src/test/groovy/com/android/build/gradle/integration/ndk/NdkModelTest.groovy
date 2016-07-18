@@ -162,10 +162,9 @@ android {
                 .getNativeLibraries().first()
         for (String flag : lib.getCCompilerFlags()) {
             if (flag.contains("sysroot")) {
-                int expected = Math.min(
-                        NdkHelper.getMaxPlatformSupported(project.getNdkDir()),
-                        GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                )
+                int expected =
+                        NdkHelper.getPlatformSupported(
+                                project.getNdkDir(), GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)
                 assertThat(flag).contains("android-${expected}")
             }
         }
