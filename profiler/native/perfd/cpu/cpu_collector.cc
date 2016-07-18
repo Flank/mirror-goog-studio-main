@@ -21,6 +21,7 @@
 
 #include "utils/clock.h"
 #include "utils/stopwatch.h"
+#include "utils/thread_name.h"
 
 namespace profiler {
 
@@ -43,6 +44,8 @@ void CpuCollector::Stop() {
 }
 
 void CpuCollector::Collect() {
+  SetThreadName("CpuCollector");
+
   Stopwatch stopwatch;
   while (is_running_.load()) {
     stopwatch.Start();

@@ -21,6 +21,7 @@
 #include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
+#include "utils/thread_name.h"
 
 namespace {
 using profiler::Clock;
@@ -126,6 +127,8 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 }
 
 void InternalNetworkServiceImpl::JanitorThread() {
+  SetThreadName("NetJanitor");
+
   Stopwatch stopwatch;
   while (is_janitor_running_) {
     if (Clock::ns_to_s(stopwatch.GetElapsed()) >= kCleanupPeriodS) {

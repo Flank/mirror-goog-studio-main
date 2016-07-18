@@ -20,6 +20,7 @@
 #include <mutex>
 
 #include "utils/config.h"
+#include "utils/thread_name.h"
 
 namespace {
 using profiler::Perfa;
@@ -70,6 +71,7 @@ Perfa::Perfa(const char* address) {
 }
 
 void Perfa::RunControlThread() {
+  SetThreadName("ControlThread");
   PerfaControlRequest request;
   while (control_stream_->Read(&request)) {
     // TODO: Process control request
