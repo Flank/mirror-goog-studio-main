@@ -18,8 +18,12 @@ package com.android.build.gradle.integration.automatic;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.ParallelParameterized;
+import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.repository.Revision;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -32,6 +36,7 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Test case that executes "standard" gradle tasks in all our tests projects.
@@ -86,17 +91,38 @@ public class CheckAll {
 
     @Test
     public void assembleAndLint() throws Exception {
-        Assume.assumeFalse(BROKEN_ASSEMBLE.contains(projectName));
+        Assume.assumeTrue(canAssemble(project));
         project.execute("assembleDebug", "assembleAndroidTest", "lint");
     }
 
-    // TODO: Investigate and clear these lists.
-    private static final ImmutableSet<String> BROKEN_ASSEMBLE = ImmutableSet.of(
-            "ndkRsHelloCompute", // TODO: Fails in C++ code, not sure what the issue is.
-            "jarjarWithJack", // Temporarily disabled until we have buildtools 24.0.0
+    private boolean canAssemble(@NonNull GradleTestProject project) {
+        if (BROKEN_FOR_REASON.containsKey(project.getName())) {
+            return BROKEN_FOR_REASON.get(project.getName()).test(project);
+        } else {
+            return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
+        }
+    }
 
+    // TODO: Investigate and clear these lists.
+    private static final ImmutableMap<String, Predicate<GradleTestProject>> BROKEN_FOR_REASON =
+            ImmutableMap.of(
+                    // TODO: Fails in C++ code, not sure what the issue is.
+                    "ndkRsHelloCompute",
+                    p -> false,
+
+                    // We need buildtools 24.0.0
+                    "jarjarWithJack",
+                    p ->
+                            Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
+                                    .compareTo(new Revision(24, 0, 0)) >= 0,
+
+                    // requires ndk r10
+                    "renderscriptNdk",
+                    p -> NdkHandler.findRevision(p.getNdkDir()) == null
+            );
+
+    private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE = ImmutableSet.of(
             // These are all right:
-            "daggerTwo", // requires Java 7
             "duplicateNameImport", // Fails on purpose.
             "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.
             "instant-unit-tests", // Specific to testing instant run, not a "real" project.
