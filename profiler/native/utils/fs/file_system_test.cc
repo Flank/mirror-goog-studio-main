@@ -25,6 +25,8 @@ using profiler::MockClock;
 using profiler::Path;
 using profiler::PathStat;
 using std::make_shared;
+using std::set;
+using std::string;
 
 TEST(Path, PathStandardizationChecks) {
   EXPECT_EQ(Path::Standardize("/a/b/c/"), "/a/b/c");
@@ -287,6 +289,73 @@ TEST(FileSystem, WalkDirectoriesReportsCorrectStats) {
   });
 
   EXPECT_EQ(file_count, 1);
+}
+
+TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
+  MemoryFileSystem fs;
+  auto root = fs.NewDir("/mock/root");
+
+  root->NewFile("file01");
+  root->NewFile("dir1/file11");
+  root->NewFile("dir1/file12");
+  root->NewFile("dir1/dir2/file21");
+  root->NewFile("dir1/dir2/file22");
+  root->NewFile("dir1/dir2/file23");
+  root->NewFile("dir1/dir2/dir3/file31");
+  root->NewFile("dir1/dir2/dir3/file32");
+  root->NewFile("dir1/dir2/dir3/file33");
+  root->NewFile("dir1/dir2/dir3/file34");
+  root->NewFile("dir1/dir2/dir4/file41");
+  root->NewFile("dir1/dir2/dir4/file42");
+  root->NewFile("dir1/dir2/dir4/file43");
+  root->NewFile("dir1/dir2/dir4/file44");
+  root->NewFile("dir1/dir2/dir4/file45");
+
+  {
+    set<string> files;
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        3);
+
+    EXPECT_TRUE(files.find("file01") != files.end());
+    EXPECT_TRUE(files.find("dir1/file11") != files.end());
+    EXPECT_TRUE(files.find("dir1/file12") != files.end());
+    EXPECT_TRUE(files.find("dir1/dir2/file21") != files.end());
+    EXPECT_TRUE(files.find("dir1/dir2/file22") != files.end());
+    EXPECT_TRUE(files.find("dir1/dir2/file23") != files.end());
+    EXPECT_EQ(files.size(), 6u);
+  }
+
+  {
+    set<string> files;
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        1);
+
+    EXPECT_TRUE(files.find("file01") != files.end());
+    EXPECT_EQ(files.size(), 1u);
+  }
+
+  {
+    set<string> files;
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        0);
+
+    EXPECT_EQ(files.size(), 0u);
+  }
 }
 
 TEST(FileSystem, CanWriteToFile) {

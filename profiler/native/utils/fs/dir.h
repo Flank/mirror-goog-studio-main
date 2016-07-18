@@ -67,7 +67,14 @@ class Dir final : public Path {
   // Walk each file in this directory, triggering a callback for each file
   // visited. The callback will be triggered in an order where the paths can
   // safely be deleted (i.e. children first).
-  void Walk(std::function<void(const PathStat &)>) const;
+  //
+  // An optional depth can be passed in, where a |max_depth| of 1 walks
+  // contents of this directory, |max_depth| of 2 also includes contents of its
+  // subdirectories, |max_depth| of 3 also includes the contents of those
+  // subdirectories' subdirectories, etc. A |max_depth| of 0 does nothing. If
+  // left unset, all children are walked.
+  void Walk(std::function<void(const PathStat &)>,
+            int32_t max_depth = INT32_MAX) const;
 
  protected:
   // Don't create directly. Use |GetDir| or |NewDir| from a parent directory

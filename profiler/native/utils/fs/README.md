@@ -183,6 +183,13 @@ d->Walk([d](const PathStat &pstat) {
 });
 ```
 
+### Do a shallow walk (don't visit any subdirectories)
+
+```c++
+const int SHALLOW_DEPTH = 1;
+root->Walk([](const PathStat &pstat) { ... }, SHALLOW_DEPTH);
+```
+
 ## Gotchas
 
 ### Notes about creating files and directories

@@ -84,7 +84,8 @@ int32_t DiskFileSystem::GetModificationAge(const string &fpath) const {
 void DiskFileSystem::Touch(const string &path) { utime(path.c_str(), NULL); }
 
 void DiskFileSystem::WalkDir(const string &dpath,
-                             function<void(const PathStat &)> callback) const {
+                             function<void(const PathStat &)> callback,
+                             int32_t max_depth) const {
   unique_ptr<char[]> root_path(new char[dpath.length() + 1]);
   strcpy(root_path.get(), dpath.c_str());
   char *dir_args[2];
@@ -94,6 +95,9 @@ void DiskFileSystem::WalkDir(const string &dpath,
   FTS *fts = nullptr;
   if ((fts = fts_open(dir_args, open_options, nullptr)) != nullptr) {
     while (auto f = fts_read(fts)) {
+      if (f->fts_level == max_depth) {
+        fts_set(fts, f, FTS_SKIP);
+      }
       bool valid = false;
       PathStat::Type type;
       const char *fts_path = f->fts_path;
@@ -174,7 +178,8 @@ void DiskFileSystem::Close(const string &fpath) {
 
 bool DiskFileSystem::DeleteDir(const string &dpath) {
   WalkDir(dpath,
-          [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); });
+          [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); },
+          INT32_MAX);
   return remove(dpath.c_str());
 }
 
