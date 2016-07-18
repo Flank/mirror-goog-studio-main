@@ -555,8 +555,9 @@ public abstract class ExternalNativeJsonGenerator {
         switch(buildSystem) {
             case NDK_BUILD: {
                 CoreExternalNativeNdkBuildOptions options =
-                        checkNotNull(variantConfig.getExternalNativeBuildOptions()
-                                .getExternalNativeNdkBuildOptions());
+                        variantConfig.getExternalNativeBuildOptions()
+                                .getExternalNativeNdkBuildOptions();
+                checkNotNull(options);
                 return new NdkBuildExternalNativeJsonGenerator(
                         ndkHandler,
                         minSdkVersionApiLevel,
@@ -577,8 +578,9 @@ public abstract class ExternalNativeJsonGenerator {
             }
             case CMAKE: {
                 CoreExternalNativeCmakeOptions options =
-                        checkNotNull(variantConfig.getExternalNativeBuildOptions()
-                                .getExternalNativeCmakeOptions());
+                        variantConfig.getExternalNativeBuildOptions()
+                                .getExternalNativeCmakeOptions();
+                checkNotNull(options);
                 // Install Cmake if it's not there.
                 ProgressIndicator progress = new ConsoleProgressIndicator();
                 AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
@@ -684,5 +686,10 @@ public abstract class ExternalNativeJsonGenerator {
     @Input
     public File getSdkFolder() {
         return sdkFolder;
+    }
+
+    @NonNull
+    List<Abi> getAbis() {
+        return abis;
     }
 }
