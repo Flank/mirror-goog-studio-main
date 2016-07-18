@@ -43,7 +43,8 @@ class MemoryFileSystem final : public FileSystem {
   int32_t GetModificationAge(const std::string &path) const override;
   void Touch(const std::string &path) override;
   void WalkDir(const std::string &dpath,
-               std::function<void(const PathStat &)> callback) const override;
+               std::function<void(const PathStat &)> callback,
+               int32_t max_depth) const override;
   std::string GetFileContents(const std::string &path) const override;
   bool MoveFile(const std::string &path_from,
                 const std::string &path_to) override;

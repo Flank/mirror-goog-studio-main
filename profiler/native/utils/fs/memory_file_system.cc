@@ -16,9 +16,11 @@
 #include "utils/fs/memory_file_system.h"
 
 #include <gtest/gtest.h>
+#include <algorithm>
 
 namespace profiler {
 
+using std::count;
 using std::function;
 using std::make_shared;
 using std::unordered_map;
@@ -65,8 +67,9 @@ void MemoryFileSystem::Touch(const string &path) {
   timestamps_[path] = clock_->GetCurrentTime();
 }
 
-void MemoryFileSystem::WalkDir(
-    const string &dpath, function<void(const PathStat &)> callback) const {
+void MemoryFileSystem::WalkDir(const string &dpath,
+                               function<void(const PathStat &)> callback,
+                               int32_t max_depth) const {
   vector<string> paths;
   for (const auto &file_entry : files_) {
     if (file_entry.first.compare(0, dpath.length(), dpath) == 0) {
@@ -84,7 +87,12 @@ void MemoryFileSystem::WalkDir(
     PathStat::Type type =
         HasDir(full_path) ? PathStat::Type::DIR : PathStat::Type::FILE;
 
-    callback(PathStat(type, dpath, full_path, modification_age_s));
+    PathStat pstat(type, dpath, full_path, modification_age_s);
+    int32_t depth =
+        count(pstat.rel_path().begin(), pstat.rel_path().end(), '/');
+    if (depth < max_depth) {
+      callback(PathStat(type, dpath, full_path, modification_age_s));
+    }
   }
 }
 

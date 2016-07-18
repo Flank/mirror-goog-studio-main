@@ -149,10 +149,15 @@ class FileSystem {
   // Given a path to a directory, walk over its contents, triggering the
   // callback for each file. The callback will be triggered in an order where
   // the paths can be safely deleted (i.e. children first).
-  // TODO: This should be done using an iterator, not a lambda
-  virtual void WalkDir(
-      const std::string &dpath,
-      std::function<void(const PathStat &)> callback) const = 0;
+  //
+  // This method also takes a depth parameter, where a |max_depth| of 1 walks
+  // contents of this directory, |max_depth| of 2 also includes contents of its
+  // subdirectories, |max_depth| of 3 also includes the contents of those
+  // subdirectories' subdirectories, etc. A |max_depth| of 0 does nothing. Pass
+  // in |INT32_MAX| to walk all children.
+  virtual void WalkDir(const std::string &dpath,
+                       std::function<void(const PathStat &)> callback,
+                       int32_t max_depth) const = 0;
 
   // Read a file's contents all in one pass. This will return the empty string
   // if the file at the target path is in write mode.

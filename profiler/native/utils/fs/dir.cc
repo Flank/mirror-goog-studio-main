@@ -66,8 +66,9 @@ shared_ptr<File> Dir::DoGetFile(const string &rel_path) const {
   return fs_->GetFile(Path::Append(path_, rel_path));
 }
 
-void Dir::Walk(function<void(const PathStat &)> callback) const {
-  fs_->WalkDir(path_, callback);
+void Dir::Walk(function<void(const PathStat &)> callback,
+               int32_t max_depth) const {
+  fs_->WalkDir(path_, callback, max_depth);
 }
 
 bool Dir::HandleCreate() { return fs_->CreateDir(path_); }
