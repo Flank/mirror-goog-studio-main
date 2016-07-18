@@ -1239,7 +1239,9 @@ public abstract class TaskManager {
         // Set up build tasks
         AndroidTask<ExternalNativeBuildTask> buildTask = androidTasks.create(
                 tasks,
-                new ExternalNativeBuildTask.ConfigAction(generator, scope, androidBuilder));
+                new ExternalNativeBuildTask.ConfigAction(
+                        AndroidGradleOptions.getBuildTargetAbi(project),
+                        generator, scope, androidBuilder));
 
         buildTask.dependsOn(tasks, generateTask);
         scope.setExternalNativeBuildTask(buildTask);
