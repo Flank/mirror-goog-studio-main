@@ -23,6 +23,7 @@
 #include "perfd/network/network_constants.h"
 #include "perfd/network/traffic_sampler.h"
 #include "utils/clock.h"
+#include "utils/thread_name.h"
 
 namespace profiler {
 
@@ -48,6 +49,8 @@ void NetworkCollector::Stop() {
 }
 
 void NetworkCollector::Collect() {
+  SetThreadName("NetCollector");
+
   profiler::SteadyClock clock;
   while (is_running_.load()) {
     for (const auto &sampler : samplers_) {

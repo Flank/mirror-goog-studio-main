@@ -15,8 +15,10 @@ set(UTILS_SOURCES
 
 if (CMAKE_HOST_APPLE AND NOT ANDROID)
     set(UTILS_SOURCES ${UTILS_SOURCES} clock.mac.cc)
+    set(UTILS_SOURCES ${UTILS_SOURCES} thread_name.mac.cc)
 else()
     set(UTILS_SOURCES ${UTILS_SOURCES} clock.cc)
+    set(UTILS_SOURCES ${UTILS_SOURCES} thread_name.cc)
 endif()
 
 if (ANDROID)
