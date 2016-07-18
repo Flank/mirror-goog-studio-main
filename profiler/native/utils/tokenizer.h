@@ -17,9 +17,9 @@
 #define UTILS_TOKENIZER_H_
 
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <functional>
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -74,7 +74,7 @@ class Tokenizer final {
   static std::vector<std::string> GetTokens(
       const std::string &input, const std::string &delimiters,
       const int32_t start_token_index = 0,
-      const int32_t max_token_count = std::numeric_limits<int32_t>::max());
+      const int32_t max_token_count = INT32_MAX);
 
   // Create a tokenizer that wraps an input string. By default, it will use
   // whitespace as a delimiter, but you can instead optionally specify a string
