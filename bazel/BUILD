@@ -33,4 +33,11 @@ exports_files([
   "groovy/bin/groovyc",
 ], ["//visibility:public"])
 
+java_import(
+  name = "prebuilts/studio-profiler-grpc-1.0-jarjar",
+  jars = [
+      "prebuilts/studio-profiler-grpc-1.0-jarjar.jar",
+    ],
+  visibility = ["//visibility:public"],
+)
 
