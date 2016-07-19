@@ -9,10 +9,8 @@ import com.android.build.gradle.integration.common.utils.NativeModelHelper;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
-import com.android.repository.Revision;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -110,9 +108,8 @@ public class NdkPlatformVersionTest {
                 assertThat(sysrootFlag.get()).contains("android-19");
             } else {
                 int expected =
-                        Math.min(
-                                NdkHelper.getMaxPlatformSupported(project.getNdkDir()),
-                                GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
+                        NdkHelper.getPlatformSupported(
+                                project.getNdkDir(), GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
                 assertThat(sysrootFlag.get()).contains("android-" + expected);
             }
         }

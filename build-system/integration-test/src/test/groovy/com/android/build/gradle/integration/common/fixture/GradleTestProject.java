@@ -39,6 +39,7 @@ import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -79,7 +80,7 @@ public class GradleTestProject implements TestRule {
     public static final File TEST_RES_DIR = new File("src/test/resources");
     public static final File TEST_PROJECT_DIR = new File("test-projects");
 
-    public static final int DEFAULT_COMPILE_SDK_VERSION = 23;
+    public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
 
     /**
@@ -108,14 +109,22 @@ public class GradleTestProject implements TestRule {
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
     static {
-        String envBuildToolVersion = System.getenv("CUSTOM_BUILDTOOLS");
-        DEFAULT_BUILD_TOOL_VERSION = !Strings.isNullOrEmpty(envBuildToolVersion) ?
-                envBuildToolVersion : "23.0.2";
-        String envVersion = System.getenv().get("CUSTOM_PLUGIN_VERSION");
-        ANDROID_GRADLE_PLUGIN_VERSION = !Strings.isNullOrEmpty(envVersion) ? envVersion
-                : Version.ANDROID_GRADLE_PLUGIN_VERSION;
+        // These are some properties that we use in the integration test projects, when generating
+        // build.gradle files. In case you would like to change any of the parameters, for instance
+        // when testing cross product of versions of buildtools, compile sdks, plugin versions,
+        // there are corresponding system environment variable that you are able to set.
+        String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
+        DEFAULT_BUILD_TOOL_VERSION = MoreObjects.firstNonNull(envBuildToolVersion, "23.0.2");
+
+        String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
+        ANDROID_GRADLE_PLUGIN_VERSION =
+                MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+
         String envJack = System.getenv().get("CUSTOM_JACK");
         USE_JACK = !Strings.isNullOrEmpty(envJack);
+
+        String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
+        DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "23");
     }
 
     private static final String COMMON_HEADER = "commonHeader.gradle";

@@ -1,5 +1,7 @@
 package com.android.build.gradle.integration.component;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -31,16 +33,13 @@ public class NdkStlVersionTest {
 
     @Before
     public void setUp() throws IOException {
-        int compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "apply plugin: 'com.android.model.application'\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "        buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "        compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "        buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n"
                         + "        ndk {\n"
                         + "            moduleName \"hello-jni\"\n"
                         + "            abiFilters.addAll([\"x86\", \"armeabi-v7a\", \"mips\"])\n"

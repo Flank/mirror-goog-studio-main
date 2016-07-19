@@ -78,7 +78,10 @@ public class BasicTest {
     @Test
     public void basicModel() {
         assertFalse("Library Project", model.isLibrary());
-        assertEquals("Compile Target", "android-23", model.getCompileTarget());
+        assertEquals(
+                "Compile Target",
+                "android-" + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION,
+                model.getCompileTarget());
         assertFalse("Non empty bootclasspath", model.getBootClasspath().isEmpty());
 
         assertNotNull("aaptOptions not null", model.getAaptOptions());
