@@ -50,12 +50,12 @@ public final class ChunkIO {
         if (method == null) {
             List<String> names = new ArrayList<>();
             for (Class<?> c = type; c != null; c = c.getEnclosingClass()) {
-                names.add(c.getSimpleName().replace('.', '$'));
+                names.add(c.getSimpleName());
             }
 
             Collections.reverse(names);
             String className = type.getPackage().getName() + '.' +
-                    ChunkUtils.join(names, "$") + "$$ChunkIO";
+                    ChunkUtils.join(names, "_") + "__ChunkIO";
 
             try {
                 Class<?> reader = Class.forName(className);
