@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"
-#include "utils/mock_clock.h"
 
 #include <gtest/gtest.h>
 
 using profiler::Dir;
+using profiler::FakeClock;
 using profiler::File;
 using profiler::MemoryFileSystem;
-using profiler::MockClock;
 using profiler::Path;
 using profiler::PathStat;
 using std::make_shared;
@@ -212,7 +212,7 @@ TEST(FileSystem, ConstAccessAllowsReadOnlyView) {
 }
 
 TEST(FileSystem, TouchUpdatesModificationAge) {
-  auto clock = make_shared<MockClock>(100);
+  auto clock = make_shared<FakeClock>(100);
   MemoryFileSystem fs(clock);
   auto root = fs.NewDir("/mock/root");
 
@@ -228,7 +228,7 @@ TEST(FileSystem, TouchUpdatesModificationAge) {
 }
 
 TEST(FileSystem, NonExistantFilesAlwaysHaveZeroModificationAge) {
-  auto clock = make_shared<MockClock>(100);
+  auto clock = make_shared<FakeClock>(100);
   MemoryFileSystem fs(clock);
   auto root = fs.NewDir("/mock/root");
 
@@ -270,7 +270,7 @@ TEST(FileSystem, ConstWalkDirectoriesWorks) {
 }
 
 TEST(FileSystem, WalkDirectoriesReportsCorrectStats) {
-  auto clock = make_shared<MockClock>(100);
+  auto clock = make_shared<FakeClock>(100);
   MemoryFileSystem fs(clock);
   auto root = fs.NewDir("/mock/root");
 
