@@ -491,7 +491,7 @@ public class AlignmentTest {
                     ZFileTestConstants.LOCAL_HEADER_SIZE
                             + "first.u".length()
                             + recognizable1.length,
-                    entry.getLocalExtra().length);
+                    entry.getLocalExtra().size());
         }
     }
 
