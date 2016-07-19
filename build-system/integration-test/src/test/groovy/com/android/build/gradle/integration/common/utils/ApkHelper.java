@@ -137,8 +137,9 @@ public class ApkHelper {
             Matcher m = PATTERN_LOCALES.matcher(line.trim());
             if (m.matches()) {
                 List<String> list = Splitter.on(' ').splitToList(m.group(1).trim());
-                return list.stream() // remove the '' on each side.
-                        .map(local -> local.substring(1, local.length() - 1))
+                return list.stream()
+                        // remove the '' on each side, if any present
+                        .map(local -> local.replaceAll("^'", "").replaceAll("'$", ""))
                         .collect(Collectors.toList());
             }
         }
