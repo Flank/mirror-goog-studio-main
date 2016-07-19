@@ -26,7 +26,7 @@ import java.io.PrintWriter;
  * Holds a generated class name.
  */
 final class ClassName {
-    private static final String GENERATED_CLASS_SUFFIX = "$$ChunkIO";
+    private static final String GENERATED_CLASS_SUFFIX = "__ChunkIO";
 
     /** Package where to generate the class. */
     final String packageName;
@@ -73,7 +73,7 @@ final class ClassName {
             className = typeName + GENERATED_CLASS_SUFFIX;
         } else {
             sourceName = typeName.substring(length + 1);
-            className = sourceName.replace('.', '$') + GENERATED_CLASS_SUFFIX;
+            className = sourceName.replace('.', '_') + GENERATED_CLASS_SUFFIX;
         }
 
         return new ClassName(packageName, className, sourceName);
