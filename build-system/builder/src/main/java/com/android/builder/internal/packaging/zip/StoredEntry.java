@@ -34,16 +34,16 @@ import java.util.Comparator;
 /**
  * A stored entry represents a file in the zip. The entry may or may not be written to the zip
  * file.
- * <p>
- * Stored entries provide the operations that are related to the files themselves, not to the zip.
- * It is through the {@code StoredEntry} class that entries can be deleted ({@link #delete()},
+ *
+ * <p>Stored entries provide the operations that are related to the files themselves, not to the
+ * zip. It is through the {@code StoredEntry} class that entries can be deleted ({@link #delete()},
  * open ({@link #open()}) or realigned ({@link #realign()}).
- * <p>
- * Entries are not created directly. They are created using
+ *
+ * <p>Entries are not created directly. They are created using
  * {@link ZFile#add(String, InputStream, boolean)} and obtained from the zip file
  * using {@link ZFile#get(String)} or {@link ZFile#entries()}.
- * <p>
- * Most of the data in the an entry is in the Central Directory Header. This includes the name,
+ *
+ * <p>Most of the data in the an entry is in the Central Directory Header. This includes the name,
  * compression method, file compressed and uncompressed sizes, CRC32 checksum, etc. The CDH can
  * be obtained using the {@link #getCentralDirectoryHeader()} method.
  */
@@ -175,7 +175,8 @@ public class StoredEntry {
     /**
      * Extra field specified in the local directory.
      */
-    private byte[] mLocalExtra;
+    @NonNull
+    private ExtraField mLocalExtra;
 
     /**
      * Type of data descriptor associated with the entry.
@@ -207,6 +208,12 @@ public class StoredEntry {
         mDeleted = false;
 
         if (header.getOffset() >= 0) {
+            /*
+             * This will be overwritten during readLocalHeader. However, IJ complains if we don't
+             * assign a value to mLocalExtra because of the @NonNull annotation.
+             */
+            mLocalExtra = new ExtraField();
+
             readLocalHeader();
 
             Preconditions.checkArgument(source == null, "Source was defined but contents already "
@@ -222,7 +229,7 @@ public class StoredEntry {
             /*
              * There is no local extra data for new files.
              */
-            mLocalExtra = new byte[0];
+            mLocalExtra = new ExtraField();
 
             Preconditions.checkNotNull(source, "Source was not defined, but contents are not "
                     + "on file.");
@@ -282,7 +289,7 @@ public class StoredEntry {
      */
     int getLocalHeaderSize() {
         Preconditions.checkState(!mDeleted, "mDeleted");
-        return FIXED_LOCAL_FILE_HEADER_SIZE + mCdh.getEncodedFileName().length + mLocalExtra.length;
+        return FIXED_LOCAL_FILE_HEADER_SIZE + mCdh.getEncodedFileName().length + mLocalExtra.size();
     }
 
     /**
@@ -426,8 +433,9 @@ public class StoredEntry {
         }
 
         long localExtraStart = fileNameStart + mCdh.getEncodedFileName().length;
-        mLocalExtra = new byte[Ints.checkedCast(extraLength)];
-        mFile.directFullyRead(localExtraStart, mLocalExtra);
+        byte[] localExtraRaw = new byte[Ints.checkedCast(extraLength)];
+        mFile.directFullyRead(localExtraStart, localExtraRaw);
+        mLocalExtra = new ExtraField(localExtraRaw);
     }
 
     /**
@@ -444,7 +452,7 @@ public class StoredEntry {
         CentralDirectoryHeaderCompressInfo compressInfo = mCdh.getCompressionInfoWithWait();
 
         long ddStart = mCdh.getOffset() + FIXED_LOCAL_FILE_HEADER_SIZE
-                + mCdh.getName().length() + mLocalExtra.length + compressInfo.getCompressedSize();
+                + mCdh.getName().length() + mLocalExtra.size() + compressInfo.getCompressedSize();
         byte ddData[] = new byte[DataDescriptorType.DATA_DESCRIPTOR_WITH_SIGNATURE.size];
         mFile.directFullyRead(ddStart, ddData);
 
@@ -629,8 +637,9 @@ public class StoredEntry {
 
         byte[] encodedFileName = mCdh.getEncodedFileName();
 
-        ByteBuffer out = ByteBuffer.allocate(F_EXTRA_LENGTH.endOffset() + encodedFileName.length
-                + mLocalExtra.length);
+        ByteBuffer out =
+                ByteBuffer.allocate(
+                        F_EXTRA_LENGTH.endOffset() + encodedFileName.length + mLocalExtra.size());
 
         CentralDirectoryHeaderCompressInfo compressInfo = mCdh.getCompressionInfoWithWait();
 
@@ -651,10 +660,10 @@ public class StoredEntry {
         F_COMPRESSED_SIZE.write(out, compressInfo.getCompressedSize());
         F_UNCOMPRESSED_SIZE.write(out, mCdh.getUncompressedSize());
         F_FILE_NAME_LENGTH.write(out, mCdh.getEncodedFileName().length);
-        F_EXTRA_LENGTH.write(out, mLocalExtra.length);
+        F_EXTRA_LENGTH.write(out, mLocalExtra.size());
 
         out.put(mCdh.getEncodedFileName());
-        out.put(mLocalExtra);
+        mLocalExtra.write(out);
 
         return out.array();
     }
@@ -680,19 +689,56 @@ public class StoredEntry {
     /**
      * Obtains the contents of the local extra field.
      *
-     * @return the contents of the local extra field, this byte array is modifiable
+     * @return the contents of the local extra field
      */
     @NonNull
-    public byte[] getLocalExtra() {
+    public ExtraField getLocalExtra() {
         return mLocalExtra;
     }
 
     /**
-     * Sets the contents of the local extra field, this byte array is modifiable externally.
+     * Sets the contents of the local extra field.
      *
      * @param localExtra the contents of the local extra field
+     * @throws IOException failed to update the zip file
      */
-    public void setLocalExtra(@NonNull byte[] localExtra) {
+    public void setLocalExtra(@NonNull ExtraField localExtra) throws IOException {
+        boolean resized = setLocalExtraNoNotify(localExtra);
+        mFile.localHeaderChanged(this, resized);
+    }
+
+    /**
+     * Sets the contents of the local extra field, does not notify the {@link ZFile} of the change.
+     * This is used internally when the {@link ZFile} itself wants to change the local extra and
+     * doesn't need the callback.
+     *
+     * @param localExtra the contents of the local extra field
+     * @return has the local header size changed?
+     * @throws IOException failed to load the file
+     */
+    boolean setLocalExtraNoNotify(@NonNull ExtraField localExtra) throws IOException {
+        boolean sizeChanged;
+
+        /*
+         * Make sure we load into memory.
+         *
+         * If we change the size of the local header, the actual start of the file changes
+         * according to our in-memory structures so, if we don't read the file now, we won't be
+         * able to load it later :)
+         *
+         * But, even if the size doesn't change, we need to read it force the entry to be
+         * rewritten otherwise the changes in the local header aren't written. Of course this case
+         * may be optimized with some extra complexity added :)
+         */
+        loadSourceIntoMemory();
+
+        if (mLocalExtra.size() != localExtra.size()) {
+            sizeChanged = true;
+        } else {
+            sizeChanged = false;
+        }
+
         mLocalExtra = localExtra;
+        return sizeChanged;
     }
 }
