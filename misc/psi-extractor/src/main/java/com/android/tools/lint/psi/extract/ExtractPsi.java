@@ -477,7 +477,7 @@ public class ExtractPsi {
         File metadaDir = artifactDir.getParentFile();
 
         // Write NOTICE file
-        File license = new File(mInstalledIde, "LICENSE.txt");
+        File license = new File(mSourceDir, "tools/idea/LICENSE.txt".replace('/', separatorChar));
         if (license.exists()) {
             try {
                 Files.copy(license, new File(artifactDir, "NOTICE"));
