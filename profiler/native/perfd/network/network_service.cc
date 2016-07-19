@@ -15,6 +15,7 @@
  */
 #include "network_service.h"
 
+#include "utils/trace.h"
 #include "utils/log.h"
 
 namespace profiler {
@@ -49,6 +50,7 @@ NetworkServiceImpl::NetworkServiceImpl(NetworkCache *network_cache)
 grpc::Status NetworkServiceImpl::GetData(
     grpc::ServerContext *context, const proto::NetworkDataRequest *request,
     proto::NetworkDataResponse *response) {
+  Trace trace("NET:GetData");
   int pid = request->app_id();
   NetworkProfilerBuffer *app_buffer = nullptr;
   for (const auto &buffer : app_buffers_) {

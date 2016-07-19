@@ -2,6 +2,7 @@
 
 #include "profiler_file.h"
 #include "sys/wait.h"
+#include "utils/trace.h"
 #include "utils/log.h"
 
 using std::string;
@@ -44,6 +45,7 @@ bool BashCommandRunner::Run(const string &parameters, string *output) const {
 
 bool BashCommandRunner::RunAndReadOutput(const string &cmd,
                                          string *output) const {
+  Trace trace(executable_path_);
   char buffer[1024];
   FILE *pipe = popen(cmd.c_str(), "r");
   if (pipe == nullptr) {

@@ -16,6 +16,7 @@
 #include "perfd/cpu/cpu_service.h"
 
 #include "utils/activity_manager.h"
+#include "utils/trace.h"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -41,6 +42,7 @@ Status CpuServiceImpl::GetData(ServerContext* context,
   int64_t id_in_request = request->app_id();
   int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? CpuCache::kAnyApp
                                                          : id_in_request);
+  Trace trace("CPU:GetData");
   const vector<CpuProfilerData>& data =
       cache_.Retrieve(id, request->start_timestamp(), request->end_timestamp());
   for (const auto& datum : data) {

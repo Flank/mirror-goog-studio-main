@@ -1,5 +1,6 @@
 set(UTILS_SOURCES
     activity_manager.cc
+    trace.cc
     bash_command.cc
     file_reader.cc
     installer.cc
@@ -29,6 +30,10 @@ endif()
 
 add_library(profiler_utils
             ${UTILS_SOURCES})
+
+if (TRACE_OUTPUT)
+    target_compile_definitions(profiler_utils PRIVATE TRACE_OUTPUT=1)
+endif()
 
 add_unit_test(profiler_utils_test
               file_reader_test.cc

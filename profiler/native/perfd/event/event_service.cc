@@ -18,6 +18,7 @@
 #include <grpc++/grpc++.h>
 #include <vector>
 
+#include "utils/trace.h"
 #include "perfd/event/event_cache.h"
 
 using grpc::ServerContext;
@@ -32,6 +33,7 @@ EventServiceImpl::EventServiceImpl(EventCache& cache) : cache_(cache) {}
 Status EventServiceImpl::GetData(ServerContext* context,
                                  const EventDataRequest* request,
                                  EventDataResponse* response) {
+  Trace trace("EVT:GetData");
   Status status = Status::OK;
   int64_t startTime = request->start_timestamp();
   int64_t endTime = request->end_timestamp();

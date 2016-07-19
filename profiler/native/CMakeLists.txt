@@ -18,6 +18,11 @@ if(HOST_BUILD_DIR)
   set(GRPC_CPP_PLUGIN_PATH ${HOST_BUILD_DIR}/grpc_cpp_plugin)
 endif()
 
+# Enables systrace output
+if (NOT TRACE_OUTPUT)
+  set(TRACE_OUTPUT ON)
+endif()
+
 # Set ROOT dir for every third party dependency
 set(EXTERNAL_ROOT_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/../../../../external)
 set(BORINGSSL_ROOT_DIR ${EXTERNAL_ROOT_DIR}/boringssl/src)
