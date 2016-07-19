@@ -13,28 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UTILS_MOCK_CLOCK_H_
-#define UTILS_MOCK_CLOCK_H_
+#ifndef UTILS_FAKE_CLOCK_H_
+#define UTILS_FAKE_CLOCK_H_
+
+#include <cstdint>
 
 #include "utils/clock.h"
 
 namespace profiler {
 
-// A mock implementation of |Clock|, useful for tests
-class MockClock final : public Clock {
+// A fake implementation of |Clock|, useful for tests
+class FakeClock final : public Clock {
  public:
-  MockClock(int64_t mockTime = 0) : mockTime_(mockTime) {}
+  FakeClock(int64_t fakeTime = 0) : fakeTime_(fakeTime) {}
 
-  virtual int64_t GetCurrentTime() const override { return mockTime_; }
+  virtual int64_t GetCurrentTime() const override { return fakeTime_; }
 
-  void SetCurrentTime(int64_t time) { mockTime_ = time; }
+  void SetCurrentTime(int64_t time) { fakeTime_ = time; }
 
-  void Elapse(int64_t elapsed) { mockTime_ += elapsed; }
+  void Elapse(int64_t elapsed) { fakeTime_ += elapsed; }
 
  private:
-  int64_t mockTime_;
+  int64_t fakeTime_;
 };
 
 }  // namespace profiler
 
-#endif  // UTILS_MOCK_CLOCK_H_
+#endif  // UTILS_FAKE_CLOCK_H_
