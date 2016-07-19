@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 #include "utils/stopwatch.h"
-#include "utils/mock_clock.h"
+#include "utils/fake_clock.h"
 
 #include <gtest/gtest.h>
 
-using profiler::MockClock;
+using profiler::FakeClock;
 using profiler::Stopwatch;
 using std::shared_ptr;
 
 TEST(Stopwatch, GetElapsedTimeFromConstruction) {
-  auto clock = std::make_shared<MockClock>(100);
+  auto clock = std::make_shared<FakeClock>(100);
   Stopwatch stopwatch(clock);
 
   EXPECT_EQ(0, stopwatch.GetElapsed());
@@ -36,7 +36,7 @@ TEST(Stopwatch, GetElapsedTimeFromConstruction) {
 }
 
 TEST(Stopwatch, GetElapsedTimeFromStart) {
-  auto clock = std::make_shared<MockClock>(100);
+  auto clock = std::make_shared<FakeClock>(100);
   Stopwatch stopwatch(clock);
 
   clock->Elapse(123);
