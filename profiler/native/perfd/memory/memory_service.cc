@@ -17,6 +17,8 @@
 
 #include <cassert>
 
+#include "utils/trace.h"
+
 using namespace ::profiler::proto;
 
 namespace profiler {
@@ -24,6 +26,7 @@ namespace profiler {
 ::grpc::Status MemoryServiceImpl::SetMemoryConfig(
     ::grpc::ServerContext* context,
     const ::profiler::proto::MemoryConfig* request, MemoryStatus* response) {
+  Trace trace("MEM:SetMemoryConfig");
   int32_t app_id = request->app_id();
 
   response->set_status_timestamp(clock_.GetCurrentTime());
@@ -62,6 +65,7 @@ namespace profiler {
 ::grpc::Status MemoryServiceImpl::GetData(::grpc::ServerContext* context,
                                           const MemoryRequest* request,
                                           MemoryData* response) {
+  Trace trace("MEM:GetData");
   auto result = collectors_.find(request->app_id());
   if (result == collectors_.end()) {
     return ::grpc::Status(
@@ -78,6 +82,7 @@ namespace profiler {
 ::grpc::Status MemoryServiceImpl::TriggerHeapDump(
     ::grpc::ServerContext* context, const HeapDumpRequest* request,
     HeapDumpResponse* response) {
+  Trace trace("MEM:TriggerHeapDump");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
