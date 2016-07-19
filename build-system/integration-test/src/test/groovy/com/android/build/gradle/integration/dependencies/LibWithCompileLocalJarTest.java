@@ -15,9 +15,12 @@
  */
 
 package com.android.build.gradle.integration.dependencies;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
@@ -44,20 +47,19 @@ public class LibWithCompileLocalJarTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-        appendToFile(project.getBuildFile(),
+        appendToFile(
+                project.getBuildFile(),
                 "\n" +
-                "apply plugin: \"com.android.library\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " +
-                String.valueOf(GradleTestProject.DEFAULT_COMPILE_SDK_VERSION) +
-                "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    compile files(\"libs/util-1.0.jar\")\n" +
-                "}\n");
+                        "apply plugin: \"com.android.library\"\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n" +
+                        "    buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
+                        "}\n" +
+                        "\n" +
+                        "dependencies {\n" +
+                        "    compile files(\"libs/util-1.0.jar\")\n" +
+                        "}\n");
 
         model = project.executeAndReturnModel("clean", "assembleDebug");
     }
