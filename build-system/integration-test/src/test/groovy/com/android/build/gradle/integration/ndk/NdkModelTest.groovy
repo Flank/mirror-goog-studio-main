@@ -154,7 +154,7 @@ android {
         project.buildFile <<
 """
 android {
-    compileSdkVersion "Google Inc.:Google APIs:$GradleTestProject.DEFAULT_COMPILE_SDK_VERSION"
+    compileSdkVersion "Google Inc.:Google APIs:$GradleTestProject.LATEST_GOOGLE_APIS_VERSION"
 }
 """
         AndroidProject model = project.executeAndReturnModel("assembleDebug")
