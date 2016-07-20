@@ -23,9 +23,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.builder.internal.aapt.Aapt
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
+import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
 import groovy.transform.CompileStatic
 import org.gradle.api.JavaVersion
@@ -42,12 +44,14 @@ import static com.android.build.gradle.integration.common.truth.AbstractAndroidS
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
+
 /**
  * Assemble tests for multiDex.
  */
 @CompileStatic
 @RunWith(FilterableParameterized)
 class MultiDexTest {
+
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("multiDex")
@@ -61,7 +65,7 @@ class MultiDexTest {
     public static Collection<Object[]> data() {
         if (GradleTestProject.USE_JACK) {
             return [
-                    [false] as Object[],
+                    [true] as Object[],
             ]
         } else {
             return [
@@ -76,7 +80,7 @@ class MultiDexTest {
 
     @Before
     public void disableDexInProcess() {
-        if (dexInProcess) {
+        if (!dexInProcess) {
             DexInProcessHelper.disableDexInProcess(project.buildFile)
         }
     }
@@ -85,7 +89,9 @@ class MultiDexTest {
     void "check normal build"() {
         project.execute("assembleDebug", "assembleAndroidTest")
 
-        def expected = [
+        // additional classes that might be found in the list, if build tools version
+        // is less than Aapt.VERSION_FOR_MAIN_DEX_LIST
+        def nonMandatoryMainDexClasses = [
                 "com/android/tests/basic/Used",
                 "com/android/tests/basic/DeadCode",
                 "com/android/tests/basic/Main",
@@ -95,31 +101,40 @@ class MultiDexTest {
         if (JavaVersion.current().isJava8Compatible()) {
             // javac 1.8 puts the InnerClasses attribute from R to R$id inside classes that use
             // R$id, like Main. The main dex list builder picks it up from the constant pool.
-            expected += [
+            nonMandatoryMainDexClasses += [
                     'com/android/tests/basic/R',
                     'com/android/tests/basic/R$id',
                     'com/android/tests/basic/R$layout',
             ]
         }
 
-        assertMainDexListContains("debug", expected)
+        assertMainDexListContains(
+                "debug", "android/support/multidex/MultiDexApplication",
+                nonMandatoryMainDexClasses)
 
         String transform = GradleTestProject.USE_JACK ? "jack" : "dex"
 
         // manually inspect the apk to ensure that the classes.dex that was created is the same
         // one in the apk. This tests that the packaging didn't rename the multiple dex files
         // around when we packaged them.
-        File classesDex =
-                project.file("build/intermediates/transforms/$transform/ics/debug/" +
-                        "folders/1000/1f/main/classes.dex")
+        File dexDir =
+                FileUtils.join(
+                        project.getIntermediatesDir(),
+                        "transforms",
+                        transform,
+                        "ics",
+                        "debug",
+                        "folders",
+                        "1000",
+                        "1f",
+                        "main");
+        File classesDex = FileUtils.join(dexDir, "classes.dex");
 
         assertThatZip(project.getApk("ics", "debug")).containsFileWithContent(
                 "classes.dex",
                 Files.toByteArray(classesDex))
 
-        File classes2Dex =
-                project.file("build/intermediates/transforms/$transform/ics/debug/" +
-                        "folders/1000/1f/main/classes2.dex")
+        File classes2Dex = FileUtils.join(dexDir, "classes2.dex");
 
         assertThatZip(project.getApk("ics", "debug")).containsFileWithContent(
                 "classes2.dex",
@@ -148,9 +163,10 @@ class MultiDexTest {
 
         assertMainDexListContains(
                 "minified",
-                [ "com/android/tests/basic/Used",
-                  "com/android/tests/basic/Main",
-                  "com/android/tests/basic/OtherActivity"])
+                "android/support/multidex/MultiDexApplication",
+                ["com/android/tests/basic/Used",
+                 "com/android/tests/basic/Main",
+                 "com/android/tests/basic/OtherActivity"])
 
         commonApkChecks("minified")
 
@@ -164,7 +180,17 @@ class MultiDexTest {
     public void "check additional flags"() throws Exception {
         Assume.assumeFalse("additionalParameters not supported by Jack", GradleTestProject.USE_JACK)
 
-        FileUtils.deletePath(project.file("src/main/java/com/android/tests/basic/manymethods"))
+        FileUtils.deletePath(
+                FileUtils.join(
+                        project.getTestDir(),
+                        "src",
+                        "main",
+                        "java",
+                        "com",
+                        "android",
+                        "tests",
+                        "basic",
+                        "manymethods"));
 
         project.buildFile << "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n"
 
@@ -188,12 +214,18 @@ class MultiDexTest {
 
     @Test
     public void checkManifestKeepListFilter() {
-        Assume.assumeTrue(Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
-                .compareTo(new Revision(24, 0, 0, 4)) < 0)
+        Assume.assumeFalse(aaptSupportsMultiDexList())
         project.execute("collectIcsDebugMultiDexComponents");
+        File manifestKeep =
+                FileUtils.join(
+                        project.getIntermediatesDir(),
+                        "multi-dex",
+                        "ics",
+                        "debug",
+                        "manifest_keep.txt");
         assertThat(
                 Files.toString(
-                        project.file("build/intermediates/multi-dex/ics/debug/manifest_keep.txt"),
+                       manifestKeep,
                         Charsets.UTF_8))
                 .contains("com.android.tests.basic.Main");
         TestFileUtils.appendToFile(project.getBuildFile(), "\n" +
@@ -208,7 +240,7 @@ class MultiDexTest {
 
         assertThat(
                 Files.toString(
-                        project.file("build/intermediates/multi-dex/ics/debug/manifest_keep.txt"),
+                        manifestKeep,
                         Charsets.UTF_8))
                 .doesNotContain("com.android.tests.basic.Main");
     }
@@ -219,26 +251,42 @@ class MultiDexTest {
         assertThatApk(project.getApk("lollipop", buildType)).
                 doesNotContainClass("Landroid/support/multidex/MultiDexApplication;")
 
-        assertThatApk(project.getApk("ics", buildType))
-                .containsClass("Lcom/android/tests/basic/Main;")
-        assertThatApk(project.getApk("ics", buildType))
-                .containsClass("Lcom/android/tests/basic/Used;")
-        assertThatApk(project.getApk("ics", buildType))
-                .containsClass("Lcom/android/tests/basic/Kept;")
+        for (String flavor : ImmutableList.of("ics", "lollipop")) {
+            assertThatApk(project.getApk(flavor, buildType))
+                    .containsClass("Lcom/android/tests/basic/Main;")
+            assertThatApk(project.getApk(flavor, buildType))
+                    .containsClass("Lcom/android/tests/basic/Used;")
+            assertThatApk(project.getApk(flavor, buildType))
+                    .containsClass("Lcom/android/tests/basic/Kept;")
+        }
     }
 
-    private assertMainDexListContains(String buildType, List<String> expected) {
+    private assertMainDexListContains(String buildType, String applicationClass,
+            List<String> nonMandatoryClasses) {
         // Jack do not produce maindexlist.txt
         if (GradleTestProject.USE_JACK) {
             return
         }
-        File listFile = project.file("build/intermediates/multi-dex/ics/${buildType}/maindexlist.txt")
+        File listFile =
+                FileUtils.join(
+                        project.getIntermediatesDir(),
+                        "multi-dex",
+                        "ics",
+                        buildType,
+                        "maindexlist.txt");
         Iterable<String> actual = listFile
                 .readLines()
-                .findAll{!it.isEmpty() && !it.startsWith("android/support/multidex")}
                 .collect{it - ~/.class$/}
 
-        assertThat(actual).containsExactlyElementsIn(expected.toList())
+        assertThat(actual).contains(applicationClass)
+        actual = actual.findAll{!it.isEmpty() && !it.startsWith("android/support/multidex")}
+
+        assertThat(nonMandatoryClasses).containsAllIn(actual.toList())
+    }
+
+    private static boolean aaptSupportsMultiDexList() {
+        return Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
+                .compareTo(Aapt.VERSION_FOR_MAIN_DEX_LIST) >= 0;
     }
 
     @Test
