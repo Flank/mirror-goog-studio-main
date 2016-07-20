@@ -82,6 +82,8 @@ public class GradleTestProject implements TestRule {
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
+    /** Latest published Google APIs version. Update this once new version is out. */
+    public static final int LATEST_GOOGLE_APIS_VERSION = 23;
 
     /**
      * Last SDK that contained java 6 bytecode in the platform jar. Since we run integration tests
