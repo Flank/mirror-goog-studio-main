@@ -24,6 +24,12 @@ exports_files([
 ], ["//visibility:public"])
 
 filegroup(
+    name = "kotlin-sdk",
+    srcs = glob(["kotlin/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "groovy-sdk",
     srcs = glob(["groovy/**"], exclude_directories=0),
     visibility = ["//visibility:public"],

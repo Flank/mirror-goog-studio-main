@@ -26,7 +26,7 @@ def _kotlin_jar_impl(ctx):
           ctx.files.srcs
         + ctx.files.deps
         + ctx.files._kotlinc
-        + ctx.files._kotlin_runtime
+        + ctx.files._kotlin_sdk
         + ctx.files._jdk
           ),
       outputs = [class_jar],
@@ -50,10 +50,9 @@ _kotlin_jar = rule(
             default=Label("//tools/base/bazel:kotlin/bin/kotlinc"),
             single_file=True,
             allow_files=True),
-        "_kotlin_runtime": attr.label(
-            default=Label("//tools/base/bazel:kotlin/lib/kotlin-runtime.jar"),
-            single_file=True,
-            allow_files=True),
+        "_kotlin_sdk": attr.label(
+            default=Label("//tools/base/bazel:kotlin-sdk"),
+        ),
         "_jdk": attr.label(
             default = Label("//tools/defaults:jdk"),
         ),
@@ -109,10 +108,12 @@ def _groovy_jar_impl(ctx):
 
   first = True;
   for src in ctx.files.srcs:
-    cmd += "find " + src.path + " -iname \"*.groovy\" -o -iname \"*.java\" " + ("> " if first else ">> ") + "%s/class_list\n" % build_output
+    # The directory might not contain any groovy or java files, so when sandboxed the directory wouldn't even exist.
+    cmd += "if [ -d " + src.path + " ]; then find " + src.path + " -iname \"*.groovy\" -o -iname \"*.java\"; fi " + ("> " if first else ">> ") + "%s/class_list\n" % build_output
     first = False;
 
-  cmd += ctx.file._groovyc.path + " %s -j -d %s %s\n" % (
+  # encoding cannot be pased using -Fencoding as -F *always* adds a "-" so it ends up like -encoding -utf8 and fails.
+  cmd += "JAVA_OPTS=\"-Dfile.encoding=UTF8\" " + ctx.file._groovyc.path + " %s -j -d %s %s\n" % (
       "-cp " + ":".join([dep.path for dep in all_deps]) if len(all_deps) != 0 else "",
       build_output,
       "@%s/class_list" % build_output
