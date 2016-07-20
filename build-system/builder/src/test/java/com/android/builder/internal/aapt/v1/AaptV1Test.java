@@ -63,8 +63,22 @@ public class AaptV1Test {
      */
     @NonNull
     private static Aapt makeAapt() throws Exception {
+        return makeAapt(AaptV1.PngProcessMode.ALL, "22.0.1");
+    }
+
+    /**
+     * Creates the {@link Aapt} instance.
+     *
+     * @param mode the PNG processing mode
+     * @param rev the revision of the build tools to use
+     * @return the instance
+     * @throws Exception failed to create the {@link Aapt} instance
+     */
+    @NonNull
+    private static Aapt makeAapt(@NonNull AaptV1.PngProcessMode mode, @NonNull String rev)
+            throws Exception {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
-        Revision revision = Revision.parseRevision("22.0.1");
+        Revision revision = Revision.parseRevision(rev);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo =
@@ -79,7 +93,7 @@ public class AaptV1Test {
                 new LoggedProcessOutputHandler(logger),
                 buildToolInfo,
                 logger,
-                AaptV1.PngProcessMode.ALL);
+                mode);
     }
 
     @Test
@@ -191,5 +205,29 @@ public class AaptV1Test {
                         + compiled.length()
                         + "]",
                 originalFile.length() < compiled.length());
+    }
+
+    @Test
+    public void ninePatchPngsAreNotProcessedIfNotEnabledBeforeV22() throws Exception {
+        Aapt aapt = makeAapt(AaptV1.PngProcessMode.NONE, "21.0.0");
+
+        File originalFile = AaptTestUtils.getNinePatchTestPng();
+
+        Future<File> compiledFuture =
+                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
+        File compiled = compiledFuture.get();
+        assertNull(compiled);
+    }
+
+    @Test
+    public void ninePatchPngsAreNotProcessedIfNotEnabledAfterV22() throws Exception {
+        Aapt aapt = makeAapt(AaptV1.PngProcessMode.NONE, "23.0.0");
+
+        File originalFile = AaptTestUtils.getNinePatchTestPng();
+
+        Future<File> compiledFuture =
+                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
+        File compiled = compiledFuture.get();
+        assertNull(compiled);
     }
 }
