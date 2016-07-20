@@ -68,14 +68,12 @@ fileset(
    visibility = ["//visibility:public"],
 )
 
-# java_test(
-#     name = "perflib_tests",
-#     runtime_deps = [
-#         ":perflib_testlib",
-#     ],
-#     test_class = "com.android.tools.bazel.GenericTestSuite",
-#     args = [ ":perflib.jar"]
-#     deps = [
-#       "//tools/base/bazel:test"
-#     ]
-# )
+java_test(
+    name = "perflib_tests",
+    runtime_deps = [
+        ":perflib_testlib",
+        "//tools/base/bazel:tests"
+    ],
+    jvm_flags = ["-Dtest.suite.jar=perflib_testlib.jar"],
+    test_class = "com.android.tools.BazelTestSuite",
+)
