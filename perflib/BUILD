@@ -1,6 +1,22 @@
 # This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
 
+java_test(
+  name = "perflib_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":perflib_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=perflib_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
 java_library(
   name = "perflib_testlib",
   srcs = glob([
@@ -20,6 +36,7 @@ java_library(
       "//tools/idea:lib/junit-4.12",
       "//tools/idea:lib/trove4j",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -28,7 +45,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/perflib/perflib.resources",
+  resource_strip_prefix = "tools/base/perflib/perflib.resources",
   resources = [
       "//tools/base/perflib:perflib.res",
     ],
@@ -43,6 +60,7 @@ java_library(
       "//tools/idea:lib/junit-4.12",
       "//tools/idea:lib/trove4j",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -65,15 +83,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
-)
-
-java_test(
-    name = "perflib_tests",
-    runtime_deps = [
-        ":perflib_testlib",
-        "//tools/base/bazel:tests"
-    ],
-    jvm_flags = ["-Dtest.suite.jar=perflib_testlib.jar"],
-    test_class = "com.android.tools.BazelTestSuite",
 )

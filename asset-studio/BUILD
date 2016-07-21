@@ -35,6 +35,23 @@ java_library(
               "//tools/base/repository:repository_testlib",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "assetstudio_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":assetstudio_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=assetstudio_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -43,7 +60,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/asset-studio/assetstudio.resources",
+  resource_strip_prefix = "tools/base/asset-studio/assetstudio.resources",
   resources = [
       "//tools/base/asset-studio:assetstudio.res",
     ],
@@ -69,6 +86,7 @@ java_library(
           "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -91,5 +109,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )

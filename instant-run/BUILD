@@ -20,7 +20,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -28,7 +27,7 @@ java_library(
   srcs = glob([
       "instant-run-common/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/instant-run/instant-run-common.resources",
+  resource_strip_prefix = "tools/base/instant-run/instant-run-common.resources",
   resources = [
       "//tools/base/instant-run:instant-run-common.res",
     ],
@@ -36,6 +35,7 @@ java_library(
       "@local_jdk//:langtools-neverlink",
       "//tools/base/annotations:android-annotations",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -58,7 +58,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -81,6 +80,23 @@ java_library(
       "//tools/idea:lib/junit-4.12",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "instant-run-client_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":instant-run-client_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=instant-run-client_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -89,7 +105,7 @@ java_library(
   srcs = glob([
       "instant-run-client/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/instant-run/instant-run-client.resources",
+  resource_strip_prefix = "tools/base/instant-run/instant-run-client.resources",
   resources = [
       "//tools/base/instant-run:instant-run-client.res",
     ],
@@ -105,5 +121,6 @@ java_library(
       "//tools/idea:lib/junit-4.12",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

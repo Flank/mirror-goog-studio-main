@@ -6,13 +6,14 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/chunkio/chunkio.resources",
+  resource_strip_prefix = "tools/base/chunkio/chunkio.resources",
   resources = [
       "//tools/base/chunkio:chunkio.res",
     ],
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -35,5 +36,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )

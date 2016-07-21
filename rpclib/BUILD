@@ -20,7 +20,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -28,7 +27,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/rpclib/rpclib.resources",
+  resource_strip_prefix = "tools/base/rpclib/rpclib.resources",
   resources = [
       "//tools/base/rpclib:rpclib.res",
     ],
@@ -59,5 +58,6 @@ java_library(
               "//tools/idea:editor-ui-api",
       "//tools/idea:lib/guava-18.0",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
