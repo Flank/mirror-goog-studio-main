@@ -6,7 +6,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/ninepatch/ninepatch.resources",
+  resource_strip_prefix = "tools/base/ninepatch/ninepatch.resources",
   resources = [
       "//tools/base/ninepatch:ninepatch.res",
     ],
@@ -15,6 +15,7 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -37,7 +38,22 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "ninepatch_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":ninepatch_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=ninepatch_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -52,5 +68,6 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

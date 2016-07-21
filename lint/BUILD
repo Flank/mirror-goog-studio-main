@@ -6,7 +6,7 @@ java_library(
   srcs = glob([
       "libs/lint-api/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/lint/lint-api.resources",
+  resource_strip_prefix = "tools/base/lint/lint-api.resources",
   resources = [
       "//tools/base/lint:lint-api.res",
     ],
@@ -49,6 +49,7 @@ java_library(
               "//tools/idea:lib/picocontainer",
               "//tools/idea:platform-resources-en",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -71,7 +72,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 fileset(
@@ -93,7 +93,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -101,7 +100,7 @@ java_library(
   srcs = glob([
       "libs/lint-checks/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/lint/lint-checks.resources",
+  resource_strip_prefix = "tools/base/lint/lint-checks.resources",
   resources = [
       "//tools/base/lint:lint-checks.res",
     ],
@@ -145,5 +144,6 @@ java_library(
                   "//tools/idea:lib/picocontainer",
                   "//tools/idea:platform-resources-en",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

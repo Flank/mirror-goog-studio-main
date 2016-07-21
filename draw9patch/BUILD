@@ -12,6 +12,23 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "draw9patch_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":draw9patch_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=draw9patch_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -36,7 +53,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -45,7 +61,7 @@ java_library(
       "src/main/java/**/*.java",
       "src/main/resources/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/draw9patch/draw9patch.resources",
+  resource_strip_prefix = "tools/base/draw9patch/draw9patch.resources",
   resources = [
       "//tools/base/draw9patch:draw9patch.res",
     ],
@@ -54,5 +70,6 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
