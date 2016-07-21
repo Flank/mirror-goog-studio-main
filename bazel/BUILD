@@ -47,3 +47,9 @@ java_import(
   visibility = ["//visibility:public"],
 )
 
+java_library(
+  name = "test_runner",
+  srcs = glob(["tests/**/*.java"]),
+  visibility = ["//visibility:public"],
+  deps = ["//prebuilts/tools/common/m2:repository/junit/junit/4.12/junit-4.12"],
+)
