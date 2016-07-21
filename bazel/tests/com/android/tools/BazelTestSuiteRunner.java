@@ -1,7 +1,5 @@
 package com.android.tools;
 
-import junit.framework.TestCase;
-import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -45,14 +43,9 @@ public class BazelTestSuiteRunner extends Suite {
             try (ZipInputStream zis = new ZipInputStream(new FileInputStream(file))) {
                 ZipEntry ze;
                 while ((ze = zis.getNextEntry()) != null) {
-                    if (!ze.isDirectory()) {
-                        String name = className(ze.getName());
-                        if (name != null) {
-                            Class<?> aClass = loader.loadClass(name);
-                            if (aClass.isAnnotationPresent(RunWith.class) || TestCase.class.isAssignableFrom(aClass)) {
-                                testClasses.add((Class<? extends TestCase>) aClass);
-                            }
-                        }
+                    if (ze.getName().endsWith(".class")) {
+                        String className = ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
+                        testClasses.add(loader.loadClass(className));
                     }
                 }
             } catch (ZipException e) {
@@ -60,12 +53,5 @@ public class BazelTestSuiteRunner extends Suite {
             }
         }
         return testClasses;
-    }
-
-    private static String className(String name) {
-        if (name.endsWith(".class")) {
-            return name.replaceAll("/", ".").replaceAll(".class$","");
-        }
-        return null;
     }
 }
