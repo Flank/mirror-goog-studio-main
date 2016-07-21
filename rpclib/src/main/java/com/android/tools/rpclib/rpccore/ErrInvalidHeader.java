@@ -82,7 +82,6 @@ public final class ErrInvalidHeader extends RpcException implements BinaryObject
         public void decode(@NotNull Decoder d, BinaryObject obj) throws IOException {
             ErrInvalidHeader o = (ErrInvalidHeader)obj;
             d.read(o.mHeader, o.mHeader.length);
-
         }
         //<<<End:Java.KlassBody:2>>>
     }

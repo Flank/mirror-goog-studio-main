@@ -86,7 +86,6 @@ final class IdSlice implements BinaryObject {
             o.mValue = new BinaryID[d.uint32()];
             for (int i = 0; i <o.mValue.length; i++) {
                 o.mValue[i] = new BinaryID(d);
-
             }
         }
         //<<<End:Java.KlassBody:2>>>

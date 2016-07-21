@@ -81,7 +81,6 @@ final class Id implements BinaryObject {
         public void decode(@NotNull Decoder d, BinaryObject obj) throws IOException {
             Id o = (Id)obj;
             o.mValue = new BinaryID(d);
-
         }
         //<<<End:Java.KlassBody:2>>>
     }
