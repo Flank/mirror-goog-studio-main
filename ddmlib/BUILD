@@ -7,6 +7,7 @@ java_library(
       "src/main/java/**/*.java",
     ]),
   resource_strip_prefix="tools/base/ddmlib/ddmlib.resources",
+  javacopts = ["-extra_checks:off"],
   resources = [
       "//tools/base/ddmlib:ddmlib.res",
     ],
