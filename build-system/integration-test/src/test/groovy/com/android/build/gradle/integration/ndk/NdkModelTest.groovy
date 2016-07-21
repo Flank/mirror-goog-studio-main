@@ -164,7 +164,8 @@ android {
             if (flag.contains("sysroot")) {
                 int expected =
                         NdkHelper.getPlatformSupported(
-                                project.getNdkDir(), GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)
+                                project.getNdkDir(),
+                                Integer.toString(GradleTestProject.LATEST_GOOGLE_APIS_VERSION))
                 assertThat(flag).contains("android-${expected}")
             }
         }
