@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Base class for Junit-4 based tests that need to manually instantiate tasks to test them.
@@ -69,6 +70,8 @@ public class TaskTestUtils {
     protected TransformVariantScope scope;
     protected TransformManager transformManager;
     protected FakeErrorReporter errorReporter;
+
+    protected Supplier<RuntimeException> mTransformTaskFailed;
 
     static class FakeErrorReporter extends ErrorReporter {
 
@@ -107,6 +110,7 @@ public class TaskTestUtils {
         errorReporter = new FakeErrorReporter(ErrorReporter.EvaluationMode.IDE);
         transformManager = new TransformManager(new AndroidTaskRegistry(), errorReporter);
         taskFactory = new TaskContainerAdaptor(project.getTasks());
+        mTransformTaskFailed = () -> new RuntimeException("Transform task creation failed.");
     }
 
     protected StreamTester streamTester() {

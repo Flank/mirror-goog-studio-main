@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.OutputFile.DENSITY;
-import static com.android.build.gradle.internal.pipeline.TransformManager.taskMissing;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -1791,21 +1790,20 @@ public abstract class TaskManager {
 
         for (int i = 0, count = customTransforms.size() ; i < count ; i++) {
             Transform transform = customTransforms.get(i);
-            AndroidTask<TransformTask> task =
-                    transformManager.addTransform(tasks, variantScope, transform).orElse(null);
-            // task could be null if the transform is invalid.
-            if (task != null) {
-                List<Object> deps = customTransformsDependencies.get(i);
-                if (!deps.isEmpty()) {
-                    task.dependsOn(tasks, deps);
-                }
 
-                // if the task is a no-op then we make assemble task depend on it.
-                if (transform.getScopes().isEmpty()) {
-                    variantScope.getAssembleTask().dependsOn(tasks, task);
-                }
+            List<Object> deps = customTransformsDependencies.get(i);
+            transformManager
+                    .addTransform(tasks, variantScope, transform)
+                    .ifPresent(t -> {
+                        if (!deps.isEmpty()) {
+                            t.dependsOn(tasks, deps);
+                        }
 
-            }
+                        // if the task is a no-op then we make assemble task depend on it.
+                        if (transform.getScopes().isEmpty()) {
+                            variantScope.getAssembleTask().dependsOn(tasks, t);
+                        }
+                    });
         }
 
         // ----- Minify next -----
@@ -1842,7 +1840,7 @@ public abstract class TaskManager {
         }
         // ----- Multi-Dex support
 
-        AndroidTask<TransformTask> multiDexClassListTask = null;
+        Optional<AndroidTask<TransformTask>> multiDexClassListTask;
         // non Library test are running as native multi-dex
         if (isMultiDexEnabled && isLegacyMultiDexMode) {
             if (!variantData.getVariantConfiguration().getBuildType().isUseProguard()) {
@@ -1857,10 +1855,9 @@ public abstract class TaskManager {
                 // not used during the computation.
                 JarMergingTransform jarMergingTransform = new JarMergingTransform(
                         TransformManager.SCOPE_FULL_PROJECT);
-                variantScope.addColdSwapBuildTask(
-                        transformManager
-                                .addTransform(tasks, variantScope, jarMergingTransform)
-                                .orElseThrow(taskMissing(jarMergingTransform)));
+                transformManager
+                        .addTransform(tasks, variantScope, jarMergingTransform)
+                        .ifPresent(variantScope::addColdSwapBuildTask);
             }
 
             // ----------
@@ -1868,13 +1865,15 @@ public abstract class TaskManager {
             // needed in the primary dex.
             // This is not needed for AAPT >= AaptV1.VERSION_FOR_MAIN_DEX_LIST,
             // where the '-D manifestKeepListProguardFile' option is used instead.
-            AndroidTask<CreateManifestKeepList> manifestKeepListTask = null;
+            AndroidTask<CreateManifestKeepList> manifestKeepListTask;
             if (!useAaptToGenerateLegacyMultidexMainDexProguardRules(variantScope)) {
                 manifestKeepListTask = androidTasks.create(tasks,
                         new CreateManifestKeepList.ConfigAction(variantScope));
                 manifestKeepListTask.dependsOn(tasks,
                         variantData.getOutputs().get(0).getScope().getManifestProcessorTask());
                 variantScope.addColdSwapBuildTask(manifestKeepListTask);
+            } else {
+                manifestKeepListTask = null;
             }
             // ---------
             // create the transform that's going to take the code and the proguard keep list
@@ -1883,11 +1882,13 @@ public abstract class TaskManager {
                     variantScope,
                     null);
             multiDexClassListTask =
-                    transformManager
-                            .addTransform(tasks, variantScope, multiDexTransform)
-                            .orElseThrow(taskMissing(multiDexTransform));
-            multiDexClassListTask.optionalDependsOn(tasks, manifestKeepListTask);
-            variantScope.addColdSwapBuildTask(multiDexClassListTask);
+                    transformManager.addTransform(tasks, variantScope, multiDexTransform);
+            multiDexClassListTask.ifPresent(t -> {
+                t.optionalDependsOn(tasks, manifestKeepListTask);
+                variantScope.addColdSwapBuildTask(t);
+            });
+        } else {
+            multiDexClassListTask = Optional.empty();
         }
         // create dex transform
         DefaultDexOptions dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
@@ -1908,14 +1909,14 @@ public abstract class TaskManager {
                 getLogger(),
                 variantScope.getInstantRunBuildContext(),
                 AndroidGradleOptions.getUserCache(variantScope.getGlobalScope().getProject()));
-        AndroidTask<TransformTask> dexTask =
-                transformManager
-                        .addTransform(tasks, variantScope, dexTransform)
-                        .orElseThrow(taskMissing(dexTransform));
+        Optional<AndroidTask<TransformTask>> dexTask =
+                transformManager.addTransform(tasks, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
         // consumption making this automatic
-        dexTask.optionalDependsOn(tasks, multiDexClassListTask);
-        variantScope.addColdSwapBuildTask(dexTask);
+        dexTask.ifPresent(t -> {
+            t.optionalDependsOn(tasks, multiDexClassListTask.orElse(null));
+            variantScope.addColdSwapBuildTask(t);
+        });
 
         if (preColdSwapTask != null) {
             for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
@@ -1961,10 +1962,9 @@ public abstract class TaskManager {
         ExtractJarsTransform extractJarsTransform = new ExtractJarsTransform(
                 ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.SUB_PROJECTS));
-        AndroidTask<TransformTask> extractJarsTask =
+        Optional<AndroidTask<TransformTask>> extractJarsTask =
                 transformManager
-                        .addTransform(tasks, variantScope, extractJarsTransform)
-                        .orElse(null);
+                        .addTransform(tasks, variantScope, extractJarsTransform);
 
         InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(getLogger(),
                 variantScope,
@@ -1977,7 +1977,7 @@ public abstract class TaskManager {
                 instantRunTaskManager.createInstantRunAllTasks(
                         variantScope.getGlobalScope().getExtension().getDexOptions(),
                         androidBuilder::getDexByteCodeConverter,
-                        extractJarsTask,
+                        extractJarsTask.orElse(null),
                         allActionAnchorTask,
                         getResMergingScopes(variantScope),
                         new SupplierTask<File>() {
@@ -2036,14 +2036,13 @@ public abstract class TaskManager {
             @NonNull final VariantScope variantScope) {
 
         JacocoTransform jacocoTransform = new JacocoTransform(project.getConfigurations());
-        AndroidTask<?> task =
+        Optional<AndroidTask<TransformTask>> task =
                 variantScope
                         .getTransformManager()
-                        .addTransform(taskFactory, variantScope, jacocoTransform)
-                        .orElseThrow(taskMissing(jacocoTransform));
+                        .addTransform(taskFactory, variantScope, jacocoTransform);
 
         AndroidTask<Copy> agentTask = getJacocoAgentTask(taskFactory);
-        task.dependsOn(taskFactory, agentTask);
+        task.ifPresent(t -> t.dependsOn(taskFactory, agentTask));
     }
 
     @Nullable
@@ -2060,7 +2059,7 @@ public abstract class TaskManager {
                             .setDependency(scope.getTestedVariantData().getScope().getJavaCompilerTask().getName())
                             .build());
         }
-        AndroidTask<TransformTask> exportJarsForDataBindingTask = null;
+        AndroidTask<TransformTask> exportJarsForDataBindingTask;
         if (extension.getDataBinding().isEnabled()) {
             exportJarsForDataBindingTask =
                     scope.getTransformManager()
@@ -2069,6 +2068,8 @@ public abstract class TaskManager {
                                     scope,
                                     new DataBindingExportDependencyJarsTransform(scope))
                             .orElse(null);
+        } else {
+            exportJarsForDataBindingTask = null;
         }
         // ----- Create PreDex tasks for libraries -----
         JackPreDexTransform preDexPackagedTransform = new JackPreDexTransform(
@@ -2078,23 +2079,17 @@ public abstract class TaskManager {
                 true);
         Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
-        if (exportJarsForDataBindingTask != null) {
-            packageTask
-                    .orElseThrow(taskMissing(preDexPackagedTransform))
-                    .dependsOn(tasks, exportJarsForDataBindingTask);
-        }
+        packageTask.ifPresent(t -> t.optionalDependsOn(tasks, exportJarsForDataBindingTask));
+
         AndroidTask jacocoTask = getJacocoAgentTask(tasks);
-        if (jacocoTask != null) {
-            packageTask
-                    .orElseThrow(taskMissing(preDexPackagedTransform))
-                    .dependsOn(
-                            tasks,
-                            scope.getVariantData()
-                                    .getVariantDependency()
-                                    .getPackageConfiguration()
-                                    .getBuildDependencies(),
-                            jacocoTask);
-        }
+        packageTask.ifPresent(t ->
+                t.optionalDependsOn(
+                        tasks,
+                        scope.getVariantData()
+                                .getVariantDependency()
+                                .getPackageConfiguration()
+                                .getBuildDependencies(),
+                        jacocoTask));
 
         JackPreDexTransform preDexRuntimeTransform = new JackPreDexTransform(
                 androidBuilder,
@@ -2692,9 +2687,7 @@ public abstract class TaskManager {
                                 transform,
                                 proGuardTransformCallback);
 
-        if (mappingConfiguration != null) {
-            task.orElseThrow(taskMissing(transform)).dependsOn(taskFactory, mappingConfiguration);
-        }
+        task.ifPresent(t -> t.optionalDependsOn(taskFactory, mappingConfiguration));
     }
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {

@@ -58,6 +58,7 @@ import org.gradle.api.Task;
 
 import java.io.File;
 import java.util.EnumSet;
+import java.util.Optional;
 
 /**
  * Task Manager for External Build system integration.
@@ -130,10 +131,8 @@ class ExternalBuildTaskManager {
         ExtractJarsTransform extractJarsTransform = new ExtractJarsTransform(
                 ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                 ImmutableSet.of(QualifiedContent.Scope.PROJECT));
-        AndroidTask<TransformTask> extractJarsTask =
-                transformManager
-                        .addTransform(tasks, variantScope, extractJarsTransform)
-                        .orElseThrow(TransformManager.taskMissing(extractJarsTransform));
+        Optional<AndroidTask<TransformTask>> extractJarsTask =
+                transformManager.addTransform(tasks, variantScope, extractJarsTransform);
 
         InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(project.getLogger(),
                 variantScope, transformManager, androidTasks, tasks);
@@ -142,7 +141,7 @@ class ExternalBuildTaskManager {
                 instantRunTaskManager.createInstantRunAllTasks(
                         new DexOptions(modelInfo),
                         externalBuildContext.getAndroidBuilder()::getDexByteCodeConverter,
-                        extractJarsTask,
+                        extractJarsTask.orElse(null),
                         externalBuildAnchorTask,
                         EnumSet.of(QualifiedContent.Scope.PROJECT),
                         new SupplierTask<File>() {
@@ -161,7 +160,7 @@ class ExternalBuildTaskManager {
                         },
                         false /* addResourceVerifier */);
 
-        extractJarsTask.dependsOn(tasks, buildInfoLoaderTask);
+        extractJarsTask.ifPresent(t -> t.dependsOn(tasks, buildInfoLoaderTask));
 
         AndroidTask<PreColdSwapTask> preColdswapTask = instantRunTaskManager
                 .createPreColdswapTask(project);
