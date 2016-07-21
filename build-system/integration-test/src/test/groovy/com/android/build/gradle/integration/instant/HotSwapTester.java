@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.integration.instant;
 
-import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesArt;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.UninstallOnClose;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.Packaging;
@@ -30,6 +29,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
@@ -41,35 +41,66 @@ import com.google.common.collect.ImmutableList;
 import org.mockito.Mockito;
 
 import java.io.Closeable;
+import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * Helper for automating HotSwap testing.
  */
 public class HotSwapTester {
-    private HotSwapTester() {}
 
-    public static void run(
-            @NonNull GradleTestProject project,
-            @NonNull Packaging packaging,
-            @NonNull String packageName,
-            @NonNull String activityName,
-            @NonNull String logTag,
-            @NonNull Adb adb,
-            @NonNull Logcat logcat,
-            @NonNull Steps steps)  throws Exception {
-        IDevice device = adb.getDevice(thatUsesArt());
-        run(project, packaging, packageName, activityName, logTag, device, logcat, steps);
-    }
+    public static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    @NonNull
+    private final GradleTestProject project;
+    @NonNull
+    private final Packaging packaging;
+    @NonNull
+    private final String packageName;
+    @NonNull
+    private final String activityName;
+    @NonNull
+    private final String logTag;
+    @NonNull
+    private final IDevice device;
+    @NonNull
+    private final Logcat logcat;
 
-    public static void run(
+    public HotSwapTester(
             @NonNull GradleTestProject project,
             @NonNull Packaging packaging,
             @NonNull String packageName,
             @NonNull String activityName,
             @NonNull String logTag,
             @NonNull IDevice device,
-            @NonNull Logcat logcat,
-            @NonNull Steps steps)  throws Exception {
+            @NonNull Logcat logcat) {
+        this.project = project;
+        this.packaging = packaging;
+        this.packageName = packageName;
+        this.activityName = activityName;
+        this.logTag = logTag;
+        this.device = device;
+        this.logcat = logcat;
+    }
+
+    /**
+     * @see #run(Consumer, Iterable)
+     */
+    public void run(
+            @NonNull Runnable verifyOriginalCode,
+            @NonNull Change... changes)
+            throws Exception {
+        run(verifyOriginalCode, Arrays.asList(changes));
+    }
+
+    /**
+     * Runs the project, applies changes and verifies results are as expected.
+     *
+     * <p>Logcat is cleared between every change.
+     */
+    public void run(
+            @NonNull Runnable verifyOriginalCode,
+            @NonNull Iterable<Change> changes)
+            throws Exception {
         try (Closeable ignored = new UninstallOnClose(device, packageName)) {
             logcat.start(device, logTag);
 
@@ -80,7 +111,7 @@ public class HotSwapTester {
 
             // Run first time on device
             InstantRunTestUtils.doInitialBuild(
-                    project, packaging, device.getVersion().getApiLevel(), ColdswapMode.MULTIDEX);
+                    project, packaging, device.getVersion().getApiLevel(), COLDSWAP_MODE);
 
             // Deploy to device
             InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
@@ -104,50 +135,91 @@ public class HotSwapTester {
             // Give the app a chance to start
             InstantRunTestUtils.waitForAppStart(client, device);
 
-            steps.verifyOriginalCode(client, logcat, device);
+            verifyOriginalCode.run();
 
-            steps.makeChange();
+            for (Change change : changes) {
+                change.makeChange();
 
-            // Now build the hot swap patch.
-            project.executor()
-                    .withPackaging(packaging)
-                    .withInstantRun(device.getVersion().getApiLevel(), ColdswapMode.MULTIDEX)
-                    .run("assembleDebug");
+                // Now build the hot swap patch.
+                project.executor()
+                        .withPackaging(packaging)
+                        .withInstantRun(device.getVersion().getApiLevel(), COLDSWAP_MODE)
+                        .run("assembleDebug");
 
-            InstantRunArtifact artifact =
-                    InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
+                InstantRunArtifact artifact =
+                        InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
-            FileTransfer fileTransfer = FileTransfer.createHotswapPatch(artifact.file);
+                FileTransfer fileTransfer = FileTransfer.createHotswapPatch(artifact.file);
 
-            logcat.clearFiltered();
+                logcat.clearFiltered();
 
-            UpdateMode updateMode = client.pushPatches(
-                    device,
-                    info.getTimeStamp(),
-                    ImmutableList.of(fileTransfer.getPatch()),
-                    UpdateMode.HOT_SWAP,
-                    false /*restartActivity*/,
-                    true /*showToast*/);
+                UpdateMode updateMode = client.pushPatches(
+                        device,
+                        info.getTimeStamp(),
+                        ImmutableList.of(fileTransfer.getPatch()),
+                        UpdateMode.HOT_SWAP,
+                        false /*restartActivity*/,
+                        true /*showToast*/);
 
-            assertEquals(UpdateMode.HOT_SWAP, updateMode);
+                assertEquals(UpdateMode.HOT_SWAP, updateMode);
 
-            InstantRunTestUtils.waitForAppStart(client, device);
+                InstantRunTestUtils.waitForAppStart(client, device);
 
-            steps.verifyNewCode(client, logcat, device);
+                change.verifyChange(client, logcat, device);
+            }
         }
     }
 
-    interface Steps {
-        void verifyOriginalCode(
-                @NonNull InstantRunClient client,
-                @NonNull Logcat logcat,
-                @NonNull IDevice device) throws Exception;
-
+    interface Change {
         void makeChange() throws Exception;
-
-        void verifyNewCode(
+        void verifyChange(
                 @NonNull InstantRunClient client,
                 @NonNull Logcat logcat,
                 @NonNull IDevice device) throws Exception;
     }
+
+    /**
+     * Simple {@link Change} implementation that verifies that the expected message was logged.
+     */
+    public abstract static class LogcatChange implements Change {
+        public static final String CHANGE_PREFIX = "CHANGE ";
+
+        protected final String originalMessage;
+        protected final int changeId;
+
+        protected LogcatChange(int changeId, String originalMessage) {
+            this.originalMessage = originalMessage;
+            this.changeId = changeId;
+        }
+
+        /**
+         * Change the code in a way that CHANGE_PREFIX + changeId are logged on activity restart.
+         */
+        @Override
+        public abstract void makeChange() throws Exception;
+
+        @Override
+        public void verifyChange(
+                @NonNull InstantRunClient client,
+                @NonNull Logcat logcat,
+                @NonNull IDevice device) throws Exception {
+            // Should not have restarted activity
+            for (LogCatMessage logCatMessage : logcat.getFilteredLogCatMessages()) {
+                String message = logCatMessage.getMessage();
+                assertThat(message).isNotEqualTo(originalMessage);
+                assertThat(message).doesNotContain(CHANGE_PREFIX);
+            }
+
+            client.restartActivity(device);
+            InstantRunTestUtils.waitForAppStart(client, device);
+
+            for (LogCatMessage logCatMessage : logcat.getFilteredLogCatMessages()) {
+                String message = logCatMessage.getMessage();
+                assertThat(message).isNotEqualTo(originalMessage);
+                if (message.contains(CHANGE_PREFIX)) {
+                    assertThat(message).isEqualTo(CHANGE_PREFIX + changeId);
+                }
+            }
+        }
+    };
 }

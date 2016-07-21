@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.collect.Iterables;
 
 import org.gradle.api.JavaVersion;
@@ -61,7 +61,6 @@ public class DaggerTest {
 
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
     private static final String ORIGINAL_MESSAGE = "from module";
-    private static final String HOTSWAP_MESSAGE = "hotswap";
     private static final String APP_MODULE_DESC = "Lcom/android/tests/AppModule;";
     private static final String GET_MESSAGE = "getMessage";
 
@@ -153,7 +152,7 @@ public class DaggerTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.doInitialBuild(project, Packaging.DEFAULT, 23, COLDSWAP_MODE);
 
-        makeHotSwapChange();
+        TestFileUtils.searchAndReplace(mAppModule, "from module", "CHANGE");
 
         project.executor().withInstantRun(23, COLDSWAP_MODE)
                 .run("assembleDebug");
@@ -166,46 +165,44 @@ public class DaggerTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap_device() throws Exception {
-        HotSwapTester.run(
-                project,
-                Packaging.DEFAULT,
-                "com.android.tests",
-                "MainActivity",
-                this.testProject,
-                adb,
-                logcat,
-                new HotSwapTester.Steps() {
-                    @Override
-                    public void verifyOriginalCode(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) throws Exception {
-                        assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE);
-                        assertThat(logcat).doesNotContainMessageWithText(HOTSWAP_MESSAGE);
-                    }
+    public void hotSwap_device_art() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
+    }
 
+    @Test
+    @Category(DeviceTests.class)
+    public void hotSwap_device_dalvik() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
+    }
+
+    private void doTestHotSwap(IDevice iDevice) throws Exception {
+        HotSwapTester tester =
+                new HotSwapTester(
+                        project,
+                        Packaging.DEFAULT,
+                        "com.android.tests",
+                        "MainActivity",
+                        this.testProject,
+                        iDevice,
+                        logcat);
+
+        tester.run(
+                () -> assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE),
+                new HotSwapTester.LogcatChange(1, ORIGINAL_MESSAGE) {
                     @Override
                     public void makeChange() throws Exception {
-                        makeHotSwapChange();
+                        TestFileUtils.searchAndReplace(
+                                mAppModule, "from module", CHANGE_PREFIX + 1);
                     }
-
+                },
+                new HotSwapTester.LogcatChange(2, ORIGINAL_MESSAGE) {
                     @Override
-                    public void verifyNewCode(@NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) throws Exception {
-                        // Should not have restarted activity
-                        assertThat(logcat).doesNotContainMessageWithText(ORIGINAL_MESSAGE);
-                        assertThat(logcat).doesNotContainMessageWithText(HOTSWAP_MESSAGE);
-
-                        client.restartActivity(device);
-                        logcat.listenForMessage(HOTSWAP_MESSAGE).await();
-                        assertThat(logcat).doesNotContainMessageWithText(ORIGINAL_MESSAGE);
+                    public void makeChange() throws Exception {
+                        TestFileUtils.searchAndReplace(
+                                mAppModule, CHANGE_PREFIX + 1, CHANGE_PREFIX + 2);
                     }
-                });
+                }
+        );
     }
 
-    private void makeHotSwapChange() throws Exception {
-        TestFileUtils.searchAndReplace(mAppModule, "from module", "hotswap");
-    }
 }

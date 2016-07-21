@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.collect.Iterables;
 
 import org.junit.Assume;
@@ -51,7 +50,6 @@ import java.util.List;
 public class ButterKnifeTest {
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
     private static final String ORIGINAL_MESSAGE = "original";
-    private static final String HOTSWAP_MESSAGE = "hotswap";
     private static final String ACTIVITY_DESC = "Lcom/example/bk/Activ;";
 
     @Rule
@@ -114,7 +112,7 @@ public class ButterKnifeTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.doInitialBuild(project, Packaging.DEFAULT, 23, COLDSWAP_MODE);
 
-        makeHotSwapChange();
+        makeHotSwapChange("CHANGE");
 
         project.executor()
                 .withInstantRun(23, COLDSWAP_MODE)
@@ -126,50 +124,47 @@ public class ButterKnifeTest {
         assertThatDex(artifact.file).hasClass("Lcom/example/bk/Activ$override;");
     }
 
-    private void makeHotSwapChange() throws Exception {
-        TestFileUtils.searchAndReplace(mActiv, "text\\.getText\\(\\)\\.toString\\(\\)",
-                "\""+ HOTSWAP_MESSAGE +"\"");
+    private void makeHotSwapChange(String change) throws Exception {
+        TestFileUtils.searchAndReplace(
+                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\""+ change +"\"");
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap_device() throws Exception {
-        IDevice device = adb.getDevice(AndroidVersionMatcher.atLeast(23));
+    public void hotSwap_dalvik() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
+    }
 
-        HotSwapTester.run(
-                project,
-                Packaging.DEFAULT,
-                "com.example.bk",
-                "Activ",
-                "butterknife",
-                device,
-                logcat,
-                new HotSwapTester.Steps() {
-                    @Override
-                    public void verifyOriginalCode(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) throws Exception {
-                        assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE);
-                        assertThat(logcat).doesNotContainMessageWithText(HOTSWAP_MESSAGE);
-                    }
+    @Test
+    @Category(DeviceTests.class)
+    public void hotSwap_art() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
+    }
 
+    private void doTestHotSwap(IDevice device) throws Exception {
+        HotSwapTester tester =
+                new HotSwapTester(
+                        project,
+                        Packaging.DEFAULT,
+                        "com.example.bk",
+                        "Activ",
+                        "butterknife",
+                        device,
+                        logcat);
+
+        tester.run(
+                () -> assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE),
+                new HotSwapTester.LogcatChange(1, ORIGINAL_MESSAGE) {
                     @Override
                     public void makeChange() throws Exception {
-                        makeHotSwapChange();
+                        makeHotSwapChange(CHANGE_PREFIX + 1);
                     }
-
+                },
+                new HotSwapTester.LogcatChange(2, ORIGINAL_MESSAGE) {
                     @Override
-                    public void verifyNewCode(@NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) throws Exception {
-                        // Should not have restarted activity
-                        assertThat(logcat).doesNotContainMessageWithText(ORIGINAL_MESSAGE);
-                        assertThat(logcat).doesNotContainMessageWithText(HOTSWAP_MESSAGE);
-
-                        client.restartActivity(device);
-                        logcat.listenForMessage(HOTSWAP_MESSAGE).await();
-                        assertThat(logcat).doesNotContainMessageWithText(ORIGINAL_MESSAGE);
+                    public void makeChange() throws Exception {
+                        TestFileUtils.searchAndReplace(
+                                mActiv, CHANGE_PREFIX + 1, CHANGE_PREFIX + 2);
                     }
                 });
     }
