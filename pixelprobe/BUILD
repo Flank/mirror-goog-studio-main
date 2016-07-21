@@ -26,7 +26,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -42,6 +41,23 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "pixelprobe_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":pixelprobe_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=pixelprobe_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -52,7 +68,7 @@ java_library(
       "src/main/java/**/*.java",
       "src/test/tools/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/pixelprobe/pixelprobe.resources",
+  resource_strip_prefix = "tools/base/pixelprobe/pixelprobe.resources",
   resources = [
       "//tools/base/pixelprobe:pixelprobe.res",
     ],
@@ -63,5 +79,6 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

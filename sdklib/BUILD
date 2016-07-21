@@ -6,7 +6,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/sdklib/sdklib.resources",
+  resource_strip_prefix = "tools/base/sdklib/sdklib.resources",
   resources = [
       "//tools/base/sdklib:sdklib.res",
     ],
@@ -28,6 +28,7 @@ java_library(
       "//tools/idea:lib/gson-2.5",
       "//tools/base/repository:repository",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -59,6 +60,23 @@ java_library(
       "//tools/base/layoutlib-api:layoutlib-api_testlib",
       "//tools/base/repository:repository_testlib",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "sdklib_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":sdklib_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=sdklib_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -81,5 +99,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )

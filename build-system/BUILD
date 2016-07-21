@@ -20,7 +20,22 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "manifest-merger_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":manifest-merger_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=manifest-merger_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -28,7 +43,7 @@ java_library(
   srcs = glob([
       "manifest-merger/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/build-system/manifest-merger.resources",
+  resource_strip_prefix = "tools/base/build-system/manifest-merger.resources",
   resources = [
       "//tools/base/build-system:manifest-merger.res",
     ],
@@ -54,6 +69,7 @@ java_library(
       "//tools/base/sdk-common:sdk-common",
           "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -91,6 +107,7 @@ java_library(
           "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
       "//tools/base/sdk-common:sdk-common_testlib",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -112,6 +129,7 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -134,7 +152,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -142,7 +159,7 @@ java_library(
   srcs = glob([
       "builder-test-api/src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/build-system/builder-test-api.resources",
+  resource_strip_prefix = "tools/base/build-system/builder-test-api.resources",
   resources = [
       "//tools/base/build-system:builder-test-api.res",
     ],
@@ -156,5 +173,22 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "builder-test-api_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":builder-test-api_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=builder-test-api_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

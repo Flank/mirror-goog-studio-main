@@ -20,6 +20,7 @@ java_library(
       "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28",
       "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28-sources",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -28,7 +29,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/testutils/testutils.resources",
+  resource_strip_prefix = "tools/base/testutils/testutils.resources",
   resources = [
       "//tools/base/testutils:testutils.res",
     ],
@@ -44,6 +45,23 @@ java_library(
       "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28",
       "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28-sources",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "testutils_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":testutils_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=testutils_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -66,5 +84,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )

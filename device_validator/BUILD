@@ -17,6 +17,7 @@ java_library(
       "//tools/idea:lib/junit-4.12",
       "//tools/base/common:common_testlib",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -41,7 +42,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -50,7 +50,7 @@ java_library(
       "dvlib/src/main/java/**/*.java",
       "dvlib/src/main/resources/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/device_validator/dvlib.resources",
+  resource_strip_prefix = "tools/base/device_validator/dvlib.resources",
   resources = [
       "//tools/base/device_validator:dvlib.res",
     ],
@@ -62,5 +62,22 @@ java_library(
           "//tools/idea:lib/guava-18.0",
           "//tools/base/annotations:android-annotations",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "dvlib_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":dvlib_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=dvlib_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

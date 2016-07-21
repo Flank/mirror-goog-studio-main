@@ -20,7 +20,22 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "layoutlib-api_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":layoutlib-api_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=layoutlib-api_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -28,7 +43,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/layoutlib-api/layoutlib-api.resources",
+  resource_strip_prefix = "tools/base/layoutlib-api/layoutlib-api.resources",
   resources = [
       "//tools/base/layoutlib-api:layoutlib-api.res",
     ],
@@ -41,6 +56,7 @@ java_library(
       "//tools/idea:annotations",
           "//tools/idea:annotations-common",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -59,5 +75,6 @@ java_library(
       "//tools/idea:annotations",
           "//tools/idea:annotations-common",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

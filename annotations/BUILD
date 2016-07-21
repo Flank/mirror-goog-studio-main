@@ -6,13 +6,14 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/annotations/android-annotations.resources",
+  resource_strip_prefix = "tools/base/annotations/android-annotations.resources",
   resources = [
       "//tools/base/annotations:android-annotations.res",
     ],
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -35,5 +36,4 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )

@@ -6,7 +6,7 @@ java_library(
   srcs = glob([
       "binary-resources/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/apkparser/binary-resources.resources",
+  resource_strip_prefix = "tools/base/apkparser/binary-resources.resources",
   resources = [
       "//tools/base/apkparser:binary-resources.res",
     ],
@@ -19,6 +19,23 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "binary-resources_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":binary-resources_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=binary-resources_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -41,7 +58,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -59,5 +75,6 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

@@ -18,6 +18,7 @@ java_library(
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1",
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1-sources",
     ],
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
 
@@ -40,7 +41,6 @@ fileset(
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
-   visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -48,7 +48,7 @@ java_library(
   srcs = glob([
       "src/main/java/**/*.java",
     ]),
-  resource_strip_prefix="tools/base/repository/repository.resources",
+  resource_strip_prefix = "tools/base/repository/repository.resources",
   resources = [
       "//tools/base/repository:repository.res",
     ],
@@ -63,5 +63,22 @@ java_library(
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1",
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1-sources",
     ],
+  javacopts = ["-extra_checks:off"],
+  visibility = ["//visibility:public"],
+)
+
+java_test(
+  name = "repository_tests",
+  srcs = glob([
+    ]),
+  runtime_deps = [
+      ":repository_testlib",
+      "//tools/base/bazel:test_runner",
+    ],
+  jvm_flags = [
+      "-Dtest.suite.jar=repository_testlib.jar",
+    ],
+  test_class = "com.android.tools.BazelTestSuite",
+  javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
