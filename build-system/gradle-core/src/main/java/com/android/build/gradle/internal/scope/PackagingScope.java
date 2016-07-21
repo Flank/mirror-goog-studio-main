@@ -121,7 +121,10 @@ public interface PackagingScope {
     Project getProject();
 
     @NonNull
-    File getPackageApk();
+    File getOutputApk();
+
+    @NonNull
+    File getIntermediateApk();
 
     @NonNull
     File getPackageAtom();
