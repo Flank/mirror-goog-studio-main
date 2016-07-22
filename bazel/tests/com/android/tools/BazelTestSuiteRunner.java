@@ -1,5 +1,10 @@
 package com.android.tools;
 
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -7,10 +12,13 @@ import org.junit.runners.model.RunnerBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -45,7 +53,10 @@ public class BazelTestSuiteRunner extends Suite {
                 while ((ze = zis.getNextEntry()) != null) {
                     if (ze.getName().endsWith(".class")) {
                         String className = ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
-                        testClasses.add(loader.loadClass(className));
+                        Class<?> aClass = loader.loadClass(className);
+                        if (seemsLikeJUnit3(aClass) || seemsLikeJUnit4(aClass)) {
+                            testClasses.add(aClass);
+                        }
                     }
                 }
             } catch (ZipException e) {
@@ -53,5 +64,15 @@ public class BazelTestSuiteRunner extends Suite {
             }
         }
         return testClasses;
+    }
+
+    private static boolean seemsLikeJUnit3(Class<?> aClass) {
+        return TestCase.class.isAssignableFrom(aClass) || TestSuite.class.isAssignableFrom(aClass);
+    }
+
+    private static boolean seemsLikeJUnit4(Class<?> aClass) {
+        Predicate<Method> hasTestAnnotation = method -> method.isAnnotationPresent(Test.class);
+        return aClass.isAnnotationPresent(RunWith.class)
+                || Arrays.asList(aClass.getMethods()).stream().anyMatch(hasTestAnnotation);
     }
 }
