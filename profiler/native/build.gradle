@@ -26,7 +26,7 @@ cmake {
 buildTypesList.each() { buildType ->
     def buildTypeDir = buildType.toLowerCase()
 
-    project."precompileAndroid$buildType".dependsOn "compileHostRelease"
+    project."precompileAndroid$buildType".dependsOn "compileToolsHostRelease"
 }
 
 task assemblePerfa(type: Copy, dependsOn: compileAndroidRelease) {
