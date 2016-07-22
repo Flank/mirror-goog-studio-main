@@ -61,7 +61,7 @@ jarjar.repackage('jarjarLibs') {
     from configurations.compile
     from files(sourceSets.main.output.classesDir)
     dependsOn sourceSets.main.output
-    classRename 'com.google.protobuf.**', 'com.google.protobuf3-jarjar.@1'
+    classRename 'com.google.protobuf.**', 'com.google.protobuf3jarjar.@1'
 }
 
 artifacts {
