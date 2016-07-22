@@ -15,11 +15,13 @@ subprojects {
 
 class CMakeClosureDelegate {
     String[] abis = [];
+    String[] buildTypes = [];
     String name;
     String projectDir;
     String[] flags = []
 
     def abis(String[] value) { abis = value; }
+    def buildTypes(String[] value) { buildTypes = value; }
     def name(String value) { name = value; }
     def projectDir(String value) { projectDir = value; }
     def flags(String[] value) { flags = value}
@@ -33,39 +35,40 @@ def cmake(cl) {
     def os = System.getProperty("os.name").toLowerCase();
     def host = os.startsWith("linux") ? "linux" : (os.startsWith("win") ? "windows" : "darwin")
 
-    if (data.abis.size() == 0) {
-        // Building for the host
-        createTasks(data, "Host", "host", cl.owner, host);
-    } else {
-        // Building multiple abis for android
-        def configure = cl.owner.tasks.create(name: "configure" + data.name.capitalize(), group: "Native build", type: DefaultTask) {}
-        def precompile = cl.owner.tasks.create(name: "precompile" + data.name.capitalize(), group: "Native build", type: DefaultTask) {}
-        def compile = cl.owner.tasks.create(name: "compile" + data.name.capitalize(), group: "Native build", type: DefaultTask) {}
-        def check = cl.owner.tasks.create(name: "check" + data.name.capitalize(), group: "Native build", type: DefaultTask) {}
+    data.buildTypes.each { buildType ->
+        if (data.abis.size() == 0) {
+            // Building for the host
+            createTasks(data, "Host", "host", buildType, cl.owner, host);
+        } else {
+            // Building multiple abis for android
+            def configure = cl.owner.tasks.create(name: "configure" + data.name.capitalize() + buildType, group: "Native build", type: DefaultTask) {}
+            def precompile = cl.owner.tasks.create(name: "precompile" + data.name.capitalize() + buildType, group: "Native build", type: DefaultTask) {}
+            def compile = cl.owner.tasks.create(name: "compile" + data.name.capitalize() + buildType, group: "Native build", type: DefaultTask) {}
+            def check = cl.owner.tasks.create(name: "check" + data.name.capitalize() + buildType, group: "Native build", type: DefaultTask) {}
 
-        data.abis.each { abi ->
-            // ABI names contain "-" which do not work well as task names.
-            // Remove them and capitalize instead.
-            def normAbi = abi.split("-").collect { it.capitalize() }.join()
-            def name = data.name.capitalize() + normAbi;
-            createTasks(data, name, abi, cl.owner, host);
-            configure.dependsOn cl.owner.tasks.("configure" + name)
-            compile.dependsOn cl.owner.tasks.("compile" + name)
-            check.dependsOn cl.owner.tasks.("check" + name)
+            data.abis.each { abi ->
+                // ABI names contain "-" which do not work well as task names.
+                // Remove them and capitalize instead.
+                def normAbi = abi.split("-").collect { it.capitalize() }.join()
+                def name = data.name.capitalize() + normAbi;
+                createTasks(data, name, abi, buildType, cl.owner, host);
+                configure.dependsOn cl.owner.tasks.("configure" + name + buildType)
+                compile.dependsOn cl.owner.tasks.("compile" + name + buildType)
+                check.dependsOn cl.owner.tasks.("check" + name + buildType)
 
-            cl.owner.tasks.("compile" + name).dependsOn precompile
+                cl.owner.tasks.("compile" + name + buildType).dependsOn precompile
+            }
         }
     }
 }
 
-def createTasks(data, name, abi, project, host) {
+def createTasks(data, name, abi, buildType, project, host) {
+  def buildTypeDir = buildType.toLowerCase()
   def cmakeBuildDir = "$rootDir/../../../out/studio/${project.name}"
-  def gen = "$cmakeBuildDir/gen/$abi";
-  def out = "$cmakeBuildDir/out/$abi";
+  def gen = "$cmakeBuildDir/gen/$buildTypeDir/$abi";
+  def out = "$cmakeBuildDir/out/$buildTypeDir/$abi";
 
-  // TODO: Define different tasks for debug and release and specify
-  // -DCMAKE_BUILD_TYPE=[Debug|Release|MinSizeRel]
-  def configureAbi = createTask(project, host, "configure" + name) {
+  def configureAbi = createTask(project, host, "configure" + name + buildType) {
       doFirst {
           file(gen).deleteDir();
           file(gen).mkdirs();
@@ -73,9 +76,10 @@ def createTasks(data, name, abi, project, host) {
       workingDir gen
       executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
       args = ["-G", "Ninja", data.projectDir,
+          "-DCMAKE_BUILD_TYPE=$buildType",
           "-DCMAKE_TOOLCHAIN_FILE=$rootDir/native/cmake/${host}-${abi}.cmake",
           "-DCMAKE_MAKE_PROGRAM=$rootDir/../../../prebuilts/ninja/$host-x86/ninja",
-          "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$out",
+          "-DCMAKE_INSTALL_PREFIX=$out",
           "-DGO_EXECUTABLE=$rootDir/../../../prebuilts/go/$host-x86/bin/go",
           "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"] + Arrays.asList(data.flags)
       environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
@@ -83,9 +87,9 @@ def createTasks(data, name, abi, project, host) {
       outputs.file "$gen/CMakeCache.txt"
   }
 
-  def compileAbi = createTask(project, host, "compile" + name) {
+  def compileAbi = createTask(project, host, "compile" + name + buildType) {
       workingDir gen
-      args = ["--build", "$gen"]
+      args = ["--build", "$gen", "--target", "install/strip"]
       executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
       environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
       // Always run this task as ninja's super fast dependency check takes care of it
@@ -93,7 +97,7 @@ def createTasks(data, name, abi, project, host) {
   }
   compileAbi.dependsOn configureAbi
 
-  def checkAbi = createTask(project, host, "check" + name) {
+  def checkAbi = createTask(project, host, "check" + name + buildType) {
       workingDir gen
       args = ["--build", "$gen", "--target", "check"]
       executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
