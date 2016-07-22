@@ -47,14 +47,14 @@ public class SplitApkInstaller {
     public void install(long timeout, @NonNull TimeUnit unit) throws InstallException {
         // Installing multiple APK's is perfomed as follows:
         //  # First we create a install session passing in the total size of all APKs
-        //      $ pm install-create -S <total_size>
+        //      $ cmd package install-create -S <total_size>
         //      Success: [integer-session-id]   # error if session-id < 0
         //  # Then for each APK, we perform the following. A unique id per APK is generated
         //  # as <index>_<name>, the - at the end means that the APK is streamed via stdin
-        //      $ pm install-write -S <session-id> <per_apk_unique_id> -
+        //      $ cmd package install-write -S <session-id> <per_apk_unique_id> -
         //  # Finally, we close the session
-        //      $ pm install-commit <session-id>  (or)
-        //      $ pm install-abandon <session-id>
+        //      $ cmd package install-commit <session-id>  (or)
+        //      $ cmd package install-abandon <session-id>
 
         try {
             // create a installation session.
@@ -73,7 +73,7 @@ public class SplitApkInstaller {
             }
 
             // if all files were upload successfully, commit otherwise abandon the installation.
-            String command = "pm install-" +
+            String command = "cmd package install-" +
                     (allUploadSucceeded ? "commit " : "abandon ") +
                     sessionId;
             Device.InstallReceiver receiver = new Device.InstallReceiver();
@@ -107,7 +107,7 @@ public class SplitApkInstaller {
         }
 
         MultiInstallReceiver receiver = new MultiInstallReceiver();
-        String cmd = String.format("pm install-create %1$s -S %2$d", pmOptions, totalFileSize);
+        String cmd = String.format("cmd package install-create %1$s -S %2$d", pmOptions, totalFileSize);
         mDevice.executeShellCommand(cmd, receiver, timeout, unit);
         return receiver.getSessionId();
     }
@@ -134,7 +134,7 @@ public class SplitApkInstaller {
 
         baseName = UNSAFE_PM_INSTALL_SESSION_SPLIT_NAME_CHARS.replaceFrom(baseName, '_');
 
-        String command = String.format("pm install-write -S %d %s %d_%s -",
+        String command = String.format("cmd package install-write -S %d %s %d_%s -",
                 fileToUpload.length(), sessionId, uniqueId, baseName);
 
         Log.d(sessionId, String.format("Executing : %1$s", command));
@@ -209,10 +209,10 @@ public class SplitApkInstaller {
             }
         }
 
-        if (!device.getVersion().isGreaterOrEqualThan(21)) {
+        if (!device.getVersion().isGreaterOrEqualThan(24)) {
             if (apks.size() > 1) {
                 throw new IllegalArgumentException(
-                  "Cannot install split APKs on device with API level < 21");
+                  "Cannot install split APKs on device with API level < 24");
             }
         }
     }
