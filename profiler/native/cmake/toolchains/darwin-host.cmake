@@ -1,4 +1,4 @@
-set(PREBUILTS "${CMAKE_CURRENT_LIST_DIR}/../../../../../prebuilts")
+set(PREBUILTS "${CMAKE_CURRENT_LIST_DIR}/../../../../../../prebuilts")
 set(STL "${PREBUILTS}/clang/darwin-x86/sdk/3.5/include/c++/v1")
 
 set(JDK "${PREBUILTS}/studio/jdk/mac/Contents/Home")

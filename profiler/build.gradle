@@ -77,13 +77,13 @@ def createTasks(data, name, abi, buildType, project, host) {
       executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
       args = ["-G", "Ninja", data.projectDir,
           "-DCMAKE_BUILD_TYPE=$buildType",
-          "-DCMAKE_TOOLCHAIN_FILE=$rootDir/native/cmake/${host}-${abi}.cmake",
+          "-DCMAKE_TOOLCHAIN_FILE=$rootDir/native/cmake/toolchains/${host}-${abi}.cmake",
           "-DCMAKE_MAKE_PROGRAM=$rootDir/../../../prebuilts/ninja/$host-x86/ninja",
           "-DCMAKE_INSTALL_PREFIX=$out",
           "-DGO_EXECUTABLE=$rootDir/../../../prebuilts/go/$host-x86/bin/go",
           "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"] + Arrays.asList(data.flags)
       environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
-      inputs.dir "$rootDir/native/cmake"
+      inputs.dir "$rootDir/native/cmake/toolchains"
       outputs.file "$gen/CMakeCache.txt"
   }
 
