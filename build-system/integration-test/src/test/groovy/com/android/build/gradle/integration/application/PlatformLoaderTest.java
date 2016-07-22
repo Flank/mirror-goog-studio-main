@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 
-import org.apache.commons.lang.SystemUtils;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +55,7 @@ public class PlatformLoaderTest {
     @Test
     public void runsSuccessfully_Default() throws Exception{
         // Platform development not supported on Windows
-        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
 
         // Copy all necessary prebuilts
         File realAndroidHome = new File(System.getenv(SdkConstants.ANDROID_HOME_ENV));

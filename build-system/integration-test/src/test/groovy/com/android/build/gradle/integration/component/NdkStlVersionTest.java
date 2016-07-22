@@ -54,7 +54,7 @@ public class NdkStlVersionTest {
         project.execute("clean", "assembleDebug");
         File cppOptions =
                 project.file(
-                        "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniMainCpp/"
+                        "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniX86DebugSharedLibraryMainCpp/"
                                 + "options.txt");
         assertThat(cppOptions).containsAllOf("gnu-libstdc++/4.9/");
     }
@@ -96,7 +96,7 @@ public class NdkStlVersionTest {
             project.execute("clean", "assembleDebug");
             File cppOptions =
                     project.file(
-                            "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniMainCpp/"
+                            "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniX86DebugSharedLibraryMainCpp/"
                                     + "options.txt");
             assertThat(cppOptions).containsAllOf("gnu-libstdc++/" + stlVersion + "/");
         }
