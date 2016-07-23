@@ -186,10 +186,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             }
         }
 
-        // Create directory for output of annotation processor.
-        javacTask.doFirst(task -> {
-            FileUtils.mkdirs(scope.getAnnotationProcessorOutputDir());
-        });
         javacTask.getOptions().getCompilerArgs().add("-s");
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());

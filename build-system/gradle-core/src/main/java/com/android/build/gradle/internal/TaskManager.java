@@ -126,6 +126,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.JackPreDexTransform;
+import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.Lint;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
@@ -1096,13 +1097,17 @@ public abstract class TaskManager {
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope) {
         final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+
         AndroidTask<IncrementalSafeguard> javacIncrementalSafeguard = androidTasks.create(tasks,
                 new IncrementalSafeguard.ConfigAction(scope));
+
+        AndroidTask<JavaPreCompileTask> preCompileTask = androidTasks.create(tasks,
+                new JavaPreCompileTask.ConfigAction(scope));
 
         final AndroidTask<? extends JavaCompile> javacTask = androidTasks.create(tasks,
                 new JavaCompileConfigAction(scope));
         scope.setJavacTask(javacTask);
-        javacTask.dependsOn(tasks, javacIncrementalSafeguard);
+        javacTask.dependsOn(tasks, javacIncrementalSafeguard, preCompileTask);
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
