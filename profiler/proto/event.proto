@@ -84,6 +84,17 @@ message FragmentEventData {
     UNSPECIFIED = 0;
     ADDED = 1;
     REMOVED = 2;
+    ATTACHED = 3;
+    CREATED= 4;
+    CREATEDVIEW = 5;
+    ACTIVITYCREATED = 6;
+    STARTED = 7;
+    RESUMED = 8;
+    PAUSED = 9;
+    STOPPED = 10;
+    DESTROYEDVIEW = 11;
+    DESTROYED = 12;
+    DETACHED = 13;
   }
   string name = 1;
   FragmentState fragment_state = 2;
