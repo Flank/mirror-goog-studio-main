@@ -37,6 +37,7 @@ public final class ProfilerTransform extends ClassTransform {
         visitor = new InitializerAdapter(visitor);
         visitor = new NetworkingAdapter(visitor);
         visitor = new EventAdapter(visitor);
+        visitor = new FragmentAdapter(visitor);
         visitor = new EnergyAdapter(visitor);
 
         ClassReader cr = new ClassReader(in);
