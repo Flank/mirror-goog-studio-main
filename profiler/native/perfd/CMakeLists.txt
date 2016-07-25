@@ -20,5 +20,4 @@ add_subdirectory(event)
 add_subdirectory(memory)
 add_subdirectory(network)
 
-install(PROGRAMS $<TARGET_FILE:perfd>
-        DESTINATION .)
+install_executable(perfd)
