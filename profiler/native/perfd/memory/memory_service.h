@@ -52,6 +52,6 @@ class MemoryServiceImpl final
   std::unordered_map<int32_t, MemoryCollector>&
       collectors_;  // maps pid to MemoryCollector
 };
-}
+}  // namespace profiler
 
 #endif  // PERFD_MEMORY_MEMORY_SERVICE_H_

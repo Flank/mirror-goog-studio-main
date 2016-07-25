@@ -92,8 +92,9 @@ bool ParseThreadStat(int32_t tid, const string& content, char* state,
   size_t left_parentheses = content.find_first_of('(');
   size_t right_parentheses = content.find_first_of(')');
   if (left_parentheses == string::npos || right_parentheses == string::npos ||
-      right_parentheses <= left_parentheses || left_parentheses == 0)
+      right_parentheses <= left_parentheses || left_parentheses == 0) {
     return false;
+  }
 
   // Sanity check on tid.
   // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.

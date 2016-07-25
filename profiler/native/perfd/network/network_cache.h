@@ -32,7 +32,7 @@ class NetworkCache final {
  public:
   // Create a cache, passing in a clock which will be used to initialize a new
   // connection's start timestamp.
-  NetworkCache(const Clock& clock);
+  explicit NetworkCache(const Clock& clock);
 
   // Register a new connection, returning a |ConnectionDetails| instance in case
   // there is additional information you can initialize. This will initialize

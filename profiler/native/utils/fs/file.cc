@@ -83,4 +83,4 @@ void File::Close() {
 bool File::HandleCreate() { return fs_->CreateFile(path_); }
 
 bool File::HandleDelete() { return fs_->DeleteFile(path_); }
-}
+}  // namespace profiler

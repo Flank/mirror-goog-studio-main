@@ -32,7 +32,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
 
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  CpuProfilerComponent(const Daemon& daemon)
+  explicit CpuProfilerComponent(const Daemon& daemon)
       : usage_sampler_(daemon, &cache_), thread_monitor_(daemon, &cache_) {
     collector_.Start();
   }

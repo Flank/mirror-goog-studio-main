@@ -91,4 +91,4 @@ void NetworkCollector::CreateSamplers() {
 
 int NetworkCollector::pid() { return pid_; }
 
-}  // profiler
+}  // namespace profiler

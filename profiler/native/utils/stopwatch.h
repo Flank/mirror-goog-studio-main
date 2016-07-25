@@ -37,7 +37,7 @@ class Stopwatch final {
   Stopwatch();
 
   // Constructor which can take a custom clock, useful for testing
-  Stopwatch(std::shared_ptr<Clock> clock);
+  explicit Stopwatch(const std::shared_ptr<Clock>& clock);
 
   // Start counting time from now.
   //

@@ -55,7 +55,7 @@ void SendVmStats(int32_t alloc_count, int32_t free_count, int32_t gc_count) {
   mem_stub.RecordVmStats(&context, vm_stats_request, &reply);
 }
 
-}  // namespace profiler
+}  // namespace
 
 extern "C" {
 

@@ -187,4 +187,4 @@ bool DiskFileSystem::DeleteFile(const string &fpath) {
   Close(fpath);
   return remove(fpath.c_str()) == 0;
 }
-}
+}  // namespace profiler

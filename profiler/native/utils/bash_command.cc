@@ -71,4 +71,4 @@ bool BashCommandRunner::IsRunAsCapable() {
   // See bug report: https://code.google.com/p/android/issues/detail?id=187955
   return run_as.Exists();
 }
-}
+}  // namespace profiler

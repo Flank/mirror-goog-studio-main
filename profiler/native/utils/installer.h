@@ -26,7 +26,7 @@ namespace profiler {
 class Installer {
  public:
   // input MUST NOT be null.
-  Installer(const char *app_package_name);
+  explicit Installer(const char *app_package_name);
 
   // Install (copy) an executable, taking care of renaming and write/read
   // permission.

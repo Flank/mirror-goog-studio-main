@@ -7,7 +7,7 @@
 using std::string;
 
 namespace profiler {
-ProfilerFile::ProfilerFile(string path) : path_(path) {}
+ProfilerFile::ProfilerFile(const string& path) : path_(path) {}
 
 bool ProfilerFile::Exists() const {
   struct stat buffer;

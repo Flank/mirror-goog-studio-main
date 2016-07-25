@@ -25,7 +25,7 @@ namespace profiler {
 // Class to manipulate filesystem.
 class ProfilerFile {
  public:
-  explicit ProfilerFile(std::string path);
+  explicit ProfilerFile(const std::string& path);
 
   bool Exists() const;
 

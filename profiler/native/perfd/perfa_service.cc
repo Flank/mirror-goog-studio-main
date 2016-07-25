@@ -15,8 +15,12 @@
  */
 #include "perfa_service.h"
 
-using namespace profiler;
-using namespace profiler::proto;
+using profiler::proto::DataStreamResponse;
+using profiler::proto::PerfaControlRequest;
+using profiler::proto::ProfilerData;
+using profiler::proto::RegisterApplication;
+
+namespace profiler {
 
 grpc::Status PerfaServiceImpl::RegisterAgent(
     grpc::ServerContext* context, const RegisterApplication* request,
@@ -36,3 +40,5 @@ grpc::Status PerfaServiceImpl::DataStream(
   }
   return grpc::Status::OK;
 }
+
+}  // namespace profiler

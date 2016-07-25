@@ -74,4 +74,4 @@ void Dir::Walk(function<void(const PathStat &)> callback,
 bool Dir::HandleCreate() { return fs_->CreateDir(path_); }
 
 bool Dir::HandleDelete() { return fs_->DeleteDir(path_); }
-}
+}  // namespace profiler

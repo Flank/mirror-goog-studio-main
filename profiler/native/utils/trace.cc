@@ -41,4 +41,4 @@ void Trace::Init() {}
 void Trace::Begin(const char *name) {}
 void Trace::End() {}
 #endif
-}
+}  // namespace profiler

@@ -77,7 +77,7 @@ bool IsLocalInterface(Tokenizer *t) {
   }
   return false;
 }
-}
+}  // namespace
 
 namespace profiler {
 

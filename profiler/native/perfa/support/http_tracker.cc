@@ -53,7 +53,7 @@ void SendHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
 
   net_stub.SendHttpEvent(&ctx, httpEvent, &reply);
 }
-}
+}  // namespace
 
 extern "C" {
 
