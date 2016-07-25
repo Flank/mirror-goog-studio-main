@@ -95,46 +95,21 @@ def kotlin_library(name, srcs=[], deps=[], visibility=[], **kwargs):
 
 
 def _groovy_jar_impl(ctx):
-  class_jar = ctx.outputs.class_jar
-  build_output = class_jar.path + ".build_output"
-
   all_deps = set(ctx.files.deps)
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "java"):
       all_deps += this_dep.java.transitive_runtime_deps
 
-  cmd = "rm -rf %s\n" % build_output
-  cmd += "mkdir -p %s\n" % build_output
-
-  first = True;
-  for src in ctx.files.srcs:
-    # The directory might not contain any groovy or java files, so when sandboxed the directory wouldn't even exist.
-    cmd += "if [ -d " + src.path + " ]; then find " + src.path + " -iname \"*.groovy\" -o -iname \"*.java\"; fi " + ("> " if first else ">> ") + "%s/class_list\n" % build_output
-    first = False;
-
-  # encoding cannot be pased using -Fencoding as -F *always* adds a "-" so it ends up like -encoding -utf8 and fails.
-  cmd += "JAVA_OPTS=\"-Dfile.encoding=UTF8\" " + ctx.file._groovyc.path + " %s -j -d %s %s\n" % (
-      "-cp " + ":".join([dep.path for dep in all_deps]) if len(all_deps) != 0 else "",
-      build_output,
-      "@%s/class_list" % build_output
-  )
-  # TODO: We should not be using groovy to compile the java classes.
-  cmd += "jar cf " + class_jar.path + " -C " + build_output + " .\n"
-
-  cmd += "rm -rf %s" % build_output
+  class_jar = ctx.outputs.class_jar
+  args = ["-o", class_jar.path, "-cp", ":".join([dep.path for dep in all_deps])] + [src.path for src in ctx.files.srcs]
 
   # Execute the command
   ctx.action(
-      inputs = (
-          ctx.files.src_files
-          + list(all_deps)
-          + ctx.files._groovysdk
-          + ctx.files._jdk
-          ),
+      inputs = (ctx.files.srcs + list(all_deps)),
       outputs = [class_jar],
-      mnemonic = "Groovyc",
-      command = "set -e;" + cmd,
-      use_default_shell_env = True,
+      mnemonic = "groovyc",
+      executable = ctx.executable._groovy,
+      arguments = args,
   )
 
 _groovy_jar = rule(
@@ -143,25 +118,14 @@ _groovy_jar = rule(
             non_empty = True,
             allow_files = True,
         ),
-        "src_files": attr.label_list(
-            non_empty = True,
-            allow_files = True,
-        ),
         "deps": attr.label_list(
             mandatory = False,
             allow_files = FileType([".jar"]),
         ),
-        "_groovyc": attr.label(
-            executable=True,
-            default=Label("//tools/base/bazel:groovy/bin/groovyc"),
-            single_file=True,
-            allow_files=True),
-        "_groovysdk": attr.label(
-            default = Label("//tools/base/bazel:groovy-sdk"),
-        ),
-        "_jdk": attr.label(
-            default = Label("//tools/defaults:jdk"),
-        ),
+        "_groovy": attr.label(
+            executable = True,
+            default = Label("//tools/base/bazel:groovyc"),
+            allow_files = True),
     },
     outputs = {
         "class_jar": "lib%{name}.jar",
@@ -169,22 +133,40 @@ _groovy_jar = rule(
     implementation = _groovy_jar_impl,
 )
 
-def groovy_library(name, srcs=[], deps=[], visibility=[], resources=[], **kwargs):
-  _groovy_jar(
-      name = name + "-groovy",
-      srcs = srcs,
-      src_files = native.glob([src + "/**/*.java" for src in srcs] + [src + "/**/*.groovy" for src in srcs]),
-      deps = deps,
+def groovy_library(name, srcs=[], deps=[], visibility=[], resources=[], javacopts=[], **kwargs):
+  groovies = []
+  for src in srcs:
+     gsrc = native.glob([src + "/**/*.groovy"]);
+     groovies += gsrc;
+
+  groovies = native.glob([src + "/**/*.groovy" for src in srcs]);
+  native.genrule(
+    name = name + ".stub",
+    srcs = groovies,
+    outs = [ name + ".stub.jar" ],
+    cmd = "./$(location //tools/base/bazel:groovy_stub_gen) -o $(@D)/" + name + ".stub.jar $(SRCS);",
+    tools = ["//tools/base/bazel:groovy_stub_gen"],
   )
+
   native.java_library(
-      name = name + "-res",
+      name = name + "-java",
+      srcs = native.glob([src + "/**/*.java" for src in srcs]),
+      javacopts = javacopts + ["-sourcepath $(GENDIR)/$(location :" + name + ".stub)", "-implicit:none"],
       resources = resources,
       visibility = visibility,
+      deps = deps + [":" + name + ".stub"],
       **kwargs
   )
+
+  _groovy_jar(
+      name = name + "-groovy",
+      srcs = native.glob([src + "/**/*.groovy" for src in srcs]),
+      deps = deps + [":" + name + "-java"],
+  )
+
   native.java_import(
       name = name,
-      jars = ["lib" + name + "-groovy.jar", "lib" + name + "-res.jar"],
+      jars = ["lib" + name + "-groovy.jar", "lib" + name + "-java.jar"],
       visibility = visibility,
   )
 
@@ -195,22 +177,17 @@ def kotlin_groovy_library(name, srcs=[], deps=[], visibility=[], **kwargs):
       deps = deps,
   )
 
-  _groovy_jar(
-      name = name + ".groovy",
-      srcs = srcs,
-      src_files = native.glob([src + "/**/*.java" for src in srcs] + [src + "/**/*.groovy" for src in srcs]),
-      deps = deps + ["//tools/base/bazel:kotlin/lib/kotlin-runtime.jar", "lib" + name + ".kotlin.jar"],
-  )
-
-  native.java_library(
-      name = name + "-res",
-      visibility = visibility,
-      **kwargs
-   )
+  groovy_library(
+    name = name + ".groovy",
+    srcs = srcs,
+    deps = deps + ["//tools/base/bazel:kotlin/lib/kotlin-runtime.jar", "lib" + name + ".kotlin.jar"],
+    visibility = visibility,
+    **kwargs
+    )
 
   native.java_import(
       name = name,
-      jars = ["lib" + name + ".kotlin.jar", "lib" + name + ".groovy.jar", "lib" + name + "-res.jar"],
+      jars = ["lib" + name + ".kotlin.jar", "lib" + name + ".groovy-groovy.jar", "lib" + name + ".groovy-java.jar"],
       visibility = visibility,
     )
 
@@ -284,4 +261,3 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
     name = name,
     srcs = outs + rem
   )
-

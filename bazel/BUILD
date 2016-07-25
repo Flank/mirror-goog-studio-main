@@ -59,6 +59,27 @@ java_library(
   ),
   visibility = ["//visibility:public"],
   deps = ["//prebuilts/tools/common/m2:repository/junit/junit/4.12/junit-4.12"],
+  visibility = ["//visibility:public"],
+)
+
+java_library(
+  name = "groovy_library",
+  srcs = glob(["groovy/**/*.java"]),
+  deps = ["//prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6"],
+)
+
+java_binary(
+  name = "groovy_stub_gen",
+  runtime_deps = [":groovy_library"],
+  main_class = "com.android.tools.groovy.GroovyStubGenerator",
+  visibility = ["//visibility:public"],
+)
+
+java_binary(
+  name = "groovyc",
+  runtime_deps = [":groovy_library"],
+  main_class = "com.android.tools.groovy.GroovyCompiler",
+  visibility = ["//visibility:public"],
 )
 
 java_library(
