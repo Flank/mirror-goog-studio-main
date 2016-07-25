@@ -20,8 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
+import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.google.common.collect.Lists;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -30,7 +32,8 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.StringHelper;
-import com.google.common.collect.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 
 import org.gradle.api.tasks.TaskAction;
 
@@ -38,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does clean steps with them.
@@ -62,16 +66,22 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
                 .getNativeBuildConfigValues(
                         existingJsons, checkNotNull(getVariantName()));
         List<String> cleanCommands = Lists.newArrayList();
+        List<String> targetNames = Lists.newArrayList();
         for (NativeBuildConfigValue config : configValueList) {
             if (config.libraries == null) {
                 continue;
             }
             if (config.cleanCommands != null) {
                 cleanCommands.addAll(config.cleanCommands);
+                Set<String> targets = Sets.newHashSet();
+                for (NativeLibraryValue library : config.libraries.values()) {
+                    targets.add(String.format("%s %s", library.artifactName, library.abi));
+                }
+                targetNames.add(Joiner.on(",").join(targets));
             }
         }
         diagnostic("about to execute %s clean commands", cleanCommands.size());
-        executeProcessBatch(cleanCommands);
+        executeProcessBatch(cleanCommands, targetNames);
         diagnostic("clean complete");
     }
 
@@ -79,9 +89,12 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
      * Given a list of build commands, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    protected void executeProcessBatch(@NonNull List<String> commands) throws ProcessException {
-        for (String command : commands) {
-            getLogger().lifecycle(String.format("  cleaning %s", getName()));
+    protected void executeProcessBatch(@NonNull List<String> commands,
+            @NonNull List<String> targetNames) throws ProcessException {
+        for (int commandIndex = 0; commandIndex < commands.size(); ++commandIndex) {
+            String command = commands.get(commandIndex);
+            String target = targetNames.get(commandIndex);
+            diagnostic("cleaning %s", target);
             List<String> tokens = StringHelper.tokenizeString(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
             processBuilder.setExecutable(tokens.get(0));

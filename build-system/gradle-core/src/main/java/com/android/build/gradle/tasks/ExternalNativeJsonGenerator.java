@@ -45,7 +45,6 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -536,8 +535,7 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
-        checkNotNull(sdkHandler.getSdkFolder());
-        Preconditions.checkNotNull(sdkHandler.getSdkFolder());
+        checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
         if(sdkHandler.getNdkFolder() == null || !sdkHandler.getNdkFolder().exists()) {
             sdkHandler.installNdk();
         }
@@ -594,7 +592,7 @@ public abstract class ExternalNativeJsonGenerator {
                 CoreExternalNativeNdkBuildOptions options =
                         variantConfig.getExternalNativeBuildOptions()
                                 .getExternalNativeNdkBuildOptions();
-                checkNotNull(options);
+                checkNotNull(options, "NdkBuild options not found");
                 return new NdkBuildExternalNativeJsonGenerator(
                         ndkHandler,
                         minSdkVersionApiLevel,
@@ -617,7 +615,7 @@ public abstract class ExternalNativeJsonGenerator {
                 CoreExternalNativeCmakeOptions options =
                         variantConfig.getExternalNativeBuildOptions()
                                 .getExternalNativeCmakeOptions();
-                checkNotNull(options);
+                checkNotNull(options, "CMake options not found");
                 // Install Cmake if it's not there.
                 ProgressIndicator progress = new ConsoleProgressIndicator();
                 AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
