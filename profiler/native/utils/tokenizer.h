@@ -80,8 +80,8 @@ class Tokenizer final {
   // whitespace as a delimiter, but you can instead optionally specify a string
   // that contains one (or more) delimiters. If multiple delimiters are
   // specified, each one of them can separately indicate a token boundary.
-  Tokenizer(const std::string &input,
-            const std::string &delimiters = kWhitespace)
+  explicit Tokenizer(const std::string &input,
+                     const std::string &delimiters = kWhitespace)
       : input_(input), delimiters_(delimiters), index_(0) {}
 
   // Get the next token in the input text, where a token is text surrounded by

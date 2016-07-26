@@ -26,7 +26,7 @@ namespace profiler {
 class InternalEventServiceImpl final
     : public profiler::proto::InternalEventService::Service {
  public:
-  InternalEventServiceImpl(EventCache& cache);
+  explicit InternalEventServiceImpl(EventCache& cache);
 
   // RPC to store events in the event data cache. Incoming event data should
   // have

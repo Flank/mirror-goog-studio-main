@@ -40,7 +40,7 @@ class FileReader {
  private:
   // Single system call buffer size.
   // TODO: Make the buffer size configurable in a constructor.
-  static const short kBufferSize_ = 4096;
+  static const uint16_t kBufferSize_ = 4096;
 };
 
 }  // namespace profiler

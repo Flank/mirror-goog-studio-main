@@ -26,7 +26,7 @@ class BashCommandRunner {
  public:
   // Expected executable_path can be either absolute, relative or even
   // executable name only path.
-  BashCommandRunner(const std::string &executable_path);
+  explicit BashCommandRunner(const std::string &executable_path);
   bool Run(const std::string &parameters, std::string *output) const;
   bool RunAs(const std::string &parameters, const std::string &username,
              std::string *output) const;

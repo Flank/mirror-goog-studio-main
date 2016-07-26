@@ -32,7 +32,8 @@ using std::vector;
 MemoryFileSystem::MemoryFileSystem()
     : MemoryFileSystem(make_shared<SteadyClock>()) {}
 
-MemoryFileSystem::MemoryFileSystem(shared_ptr<Clock> clock) : clock_(clock) {}
+MemoryFileSystem::MemoryFileSystem(const shared_ptr<Clock> &clock)
+    : clock_(clock) {}
 
 bool MemoryFileSystem::HasDir(const string &dpath) const {
   return dirs_.find(dpath) != dirs_.end();
@@ -163,4 +164,4 @@ bool MemoryFileSystem::DeleteFile(const string &fpath) {
   timestamps_.erase(fpath);
   return files_.erase(fpath) == 1;
 }
-}
+}  // namespace profiler

@@ -79,7 +79,7 @@ void SendFragmentEvent(JNIEnv* env, const jstring& name,
   fragment->set_fragment_hash(hash);
   SendData(&data);
 }
-}
+}  // namespace
 
 extern "C" {
 // TODO: Create figure out how to autogenerate this class, to avoid typo errors.
@@ -89,7 +89,7 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
     JNIEnv* env, jobject thiz, jint jstate) {
   SystemEventData event;
   event.set_type(SystemEventData::TOUCH);
-  event.set_action_id((int)jstate);
+  event.set_action_id(jstate);
   SendSystemEvent(event);
 }
 
@@ -98,7 +98,7 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendKeyEven
     JNIEnv* env, jobject thiz, jint jstate) {
   SystemEventData event;
   event.set_type(SystemEventData::KEY);
-  event.set_action_id((int)jstate);
+  event.set_action_id(jstate);
   SendSystemEvent(event);
 }
 
@@ -227,7 +227,7 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
     JNIEnv* env, jobject thiz, jint jstate) {
   SystemEventData event;
   event.set_type(SystemEventData::ROTATION);
-  event.set_action_id((int)jstate);
+  event.set_action_id(jstate);
   SendSystemEvent(event);
 }
 };

@@ -26,7 +26,7 @@ namespace profiler {
 
 class MemoryProfilerComponent final : public ProfilerComponent {
  public:
-  MemoryProfilerComponent(const Daemon& daemon)
+  explicit MemoryProfilerComponent(const Daemon& daemon)
       : public_service_(daemon.clock(), &collectors_),
         private_service_(&collectors_) {}
 

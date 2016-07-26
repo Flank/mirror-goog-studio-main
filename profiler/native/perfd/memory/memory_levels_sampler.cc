@@ -39,7 +39,7 @@ enum MemoryType {
   CODE,
   OTHERS
 };
-}  // namespace anonymous
+}  // namespace
 
 namespace profiler {
 

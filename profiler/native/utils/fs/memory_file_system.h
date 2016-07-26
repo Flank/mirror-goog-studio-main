@@ -32,7 +32,7 @@ namespace profiler {
 class MemoryFileSystem final : public FileSystem {
  public:
   MemoryFileSystem();
-  MemoryFileSystem(std::shared_ptr<Clock> clock);
+  explicit MemoryFileSystem(const std::shared_ptr<Clock> &clock);
 
   ~MemoryFileSystem() override = default;
 
@@ -67,4 +67,4 @@ class MemoryFileSystem final : public FileSystem {
   mutable std::unordered_map<std::string, int32_t> timestamps_;
   std::shared_ptr<Clock> clock_;
 };
-}
+}  // namespace profiler

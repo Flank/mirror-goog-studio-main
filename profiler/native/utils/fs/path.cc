@@ -108,4 +108,4 @@ const shared_ptr<Dir> Path::Up() const { return DoUp(); }
 shared_ptr<Dir> Path::Up() { return DoUp(); }
 
 shared_ptr<Dir> Path::DoUp() const { return fs_->GetDir(StripLast(path_)); }
-}
+}  // namespace profiler

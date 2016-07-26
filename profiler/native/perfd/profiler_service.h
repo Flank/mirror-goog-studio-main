@@ -27,7 +27,7 @@ namespace profiler {
 class ProfilerServiceImpl final
     : public profiler::proto::DeviceService::Service {
  public:
-  ProfilerServiceImpl(const Daemon& daemon) : clock_(daemon.clock()) {}
+  explicit ProfilerServiceImpl(const Daemon& daemon) : clock_(daemon.clock()) {}
 
   grpc::Status GetTimes(grpc::ServerContext* context,
                         const profiler::proto::TimesRequest* request,

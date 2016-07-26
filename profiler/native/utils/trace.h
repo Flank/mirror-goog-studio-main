@@ -18,6 +18,6 @@ class Trace {
   static int trace_marker_fd;
   static const size_t kTraceMessageLen = 256;
 };
-}
+}  // namespace profiler
 
 #endif  // UTILS_TRACE_H

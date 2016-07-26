@@ -19,7 +19,13 @@
 
 #include "utils/trace.h"
 
-using namespace ::profiler::proto;
+using profiler::proto::HeapDumpRequest;
+using profiler::proto::HeapDumpResponse;
+using profiler::proto::MemoryConfig;
+using profiler::proto::MemoryData;
+using profiler::proto::MemoryFeature;
+using profiler::proto::MemoryRequest;
+using profiler::proto::MemoryStatus;
 
 namespace profiler {
 
@@ -31,7 +37,7 @@ namespace profiler {
 
   response->set_status_timestamp(clock_.GetCurrentTime());
   for (int i = 0; i < request->options_size(); i++) {
-    const MemoryConfig_Option& option = request->options(i);
+    const MemoryConfig::Option& option = request->options(i);
     switch (option.feature()) {
       case MemoryFeature::MEMORY_LEVELS: {
         auto got = collectors_.find(app_id);

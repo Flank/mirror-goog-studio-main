@@ -25,7 +25,7 @@ namespace profiler {
 // A fake implementation of |Clock|, useful for tests
 class FakeClock final : public Clock {
  public:
-  FakeClock(int64_t fakeTime = 0) : fakeTime_(fakeTime) {}
+  explicit FakeClock(int64_t fakeTime = 0) : fakeTime_(fakeTime) {}
 
   virtual int64_t GetCurrentTime() const override { return fakeTime_; }
 
