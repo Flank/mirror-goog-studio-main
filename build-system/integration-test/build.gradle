@@ -133,7 +133,7 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     outputs.upToDateWhen { false }
 
     forkEvery= 1
-    def count = Runtime.runtime.availableProcessors()
+    def count = Math.ceil(Runtime.runtime.availableProcessors() / 2)
     if (count > 8) {
         count = 8
     }
