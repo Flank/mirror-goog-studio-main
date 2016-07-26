@@ -49,7 +49,21 @@ java_import(
 
 java_library(
   name = "test_runner",
-  srcs = glob(["tests/**/*.java"]),
+  srcs = glob(
+      [
+          "tests/**/*.java",
+      ],
+      exclude = [
+          "tests/**/util/*.java",
+      ],
+  ),
   visibility = ["//visibility:public"],
   deps = ["//prebuilts/tools/common/m2:repository/junit/junit/4.12/junit-4.12"],
+)
+
+java_library(
+  name = "util",
+  srcs = glob(["tests/**/util/*.java"]),
+  deps = ["//tools/idea:lib/guava-18.0"],
+  visibility = ["//visibility:public"],
 )

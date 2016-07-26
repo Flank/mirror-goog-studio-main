@@ -5,6 +5,10 @@ java_test(
   name = "perflib_tests",
   srcs = glob([
     ]),
+  resources = [
+      "//tools/base/perflib:perflib_tests.res",
+    ],
+  resource_strip_prefix = "tools/base/perflib/perflib_tests.resources",
   runtime_deps = [
       ":perflib_testlib",
       "//tools/base/bazel:test_runner",
@@ -35,6 +39,7 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
       "//tools/idea:lib/trove4j",
+      "//tools/base/bazel:util",
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
@@ -80,6 +85,15 @@ fileset(
   mappings = {
       "src/main/java": "perflib.resources",
     },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
+fileset(
+  name = "perflib_tests.res",
+  srcs = glob(["src/test/resources/**"]),
+  mappings = {"src/test/resources": "perflib_tests.resources"},
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],
