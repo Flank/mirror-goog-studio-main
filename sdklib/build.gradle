@@ -80,7 +80,6 @@ offline_sdk_targets.each { config ->
     def arch = config[1]
     def dest = "$rootDir/../prebuilts/tools/" + config[2] + "/offline-sdk"
     task "updateOfflineRepo$os$arch"(type: JavaExec) {
-        print "Update $os $arch"
         classpath = sourceSets.main.runtimeClasspath
         main = "com.android.sdklib.tool.OfflineRepoCreator"
         args = ["--dest", dest] + offline_repo_files
