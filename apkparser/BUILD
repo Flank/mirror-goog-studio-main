@@ -42,7 +42,7 @@ java_test(
 fileset(
   name = "binary-resources.res",
   srcs = glob([
-      "binary-resources/java/**/*",
+      "binary-resources/testResources/**/*",
     ],
     exclude = [
       "**/* *",
@@ -53,7 +53,7 @@ fileset(
       "**/.DS_Store",
     ]),
   mappings = {
-      "binary-resources/java": "binary-resources.resources",
+      "binary-resources/testResources": "binary-resources.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
@@ -68,6 +68,7 @@ java_library(
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/apkparser:binary-resources",
+      "//tools/base/bazel:util",
       "//tools/idea:lib/jsr305",
       "//tools/idea:lib/guava-18.0",
       "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28",
