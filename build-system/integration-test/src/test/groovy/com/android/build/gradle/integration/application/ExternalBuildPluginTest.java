@@ -160,7 +160,7 @@ public class ExternalBuildPluginTest {
         assertThat(instantRunBuildContext.getLastBuild()).isNotNull();
         assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(1);
         InstantRunBuildContext.Build fullBuild  = instantRunBuildContext.getLastBuild();
-        assertThat(fullBuild.getVerifierStatus().get()).isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
+        assertThat(fullBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
         assertThat(fullBuild.getArtifacts()).hasSize(1);
         InstantRunBuildContext.Artifact artifact = fullBuild.getArtifacts().get(0);
         assertThat(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.MAIN);
@@ -214,8 +214,7 @@ public class ExternalBuildPluginTest {
         assertThat(instantRunBuildContext.getPreviousBuilds()).hasSize(2);
         InstantRunBuildContext.Build lastBuild = instantRunBuildContext.getLastBuild();
         assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getVerifierStatus().isPresent());
-        assertThat(lastBuild.getVerifierStatus().get()).isEqualTo(InstantRunVerifierStatus.COMPATIBLE);
+        assertThat(lastBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.COMPATIBLE);
         assertThat(lastBuild.getArtifacts()).hasSize(1);
         artifact = lastBuild.getArtifacts().get(0);
         assertThat(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.RELOAD_DEX);

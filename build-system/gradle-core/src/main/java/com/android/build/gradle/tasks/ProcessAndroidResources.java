@@ -201,7 +201,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     Files.asCharSource(previousManifestFile, Charsets.UTF_8).read();
             if (!currentManifest.equals(previousManifest)) {
                 // TODO: Deeper comparison, call out just a version change.
-                instantRunBuildContext.setVerifierResult(
+                instantRunBuildContext.setVerifierStatus(
                         InstantRunVerifierStatus.MANIFEST_FILE_CHANGE);
                 Files.copy(manifestFileToPackage, previousManifestFile);
             }
@@ -232,7 +232,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             // compare its content with the new binary file crc.
             String previousIterationCRC = Files.readFirstLine(crcFile, Charsets.UTF_8);
             if (!currentIterationCRC.equals(previousIterationCRC)) {
-                instantRunBuildContext.setVerifierResult(
+                instantRunBuildContext.setVerifierStatus(
                         InstantRunVerifierStatus.BINARY_MANIFEST_FILE_CHANGE);
             }
         }

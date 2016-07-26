@@ -231,10 +231,10 @@ public class InstantRunTaskManager {
         context.setDensity(AndroidGradleOptions.getBuildTargetDensity(project));
 
         if (transformVariantScope.getGlobalScope().isActive(OptionalCompilationStep.FULL_APK)) {
-            context.setVerifierResult(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
+            context.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         } else if (transformVariantScope.getGlobalScope().isActive(
                 OptionalCompilationStep.RESTART_ONLY)) {
-            context.setVerifierResult(InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
+            context.setVerifierStatus(InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
         }
 
         AndroidTask<PreColdSwapTask> preColdSwapTask = androidTasks.create(

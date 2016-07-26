@@ -141,7 +141,7 @@ public class InstantRunVerifierTransform extends Transform {
         // if we are being asked to produce the RESTART artifacts, there is no need to set the
         // verifier result, however the transform needed to run to backup the .class files.
         if (!variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY)) {
-            variantScope.getInstantRunBuildContext().setVerifierResult(resultSoFar);
+            variantScope.getInstantRunBuildContext().setVerifierStatus(resultSoFar);
         }
     }
 

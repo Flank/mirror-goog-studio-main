@@ -35,7 +35,7 @@ public class InstantRunAnalyticsHelper {
 
         builder.setBuildMode(convert(instantRunBuildContext.getBuildMode()));
         builder.setPatchingPolicy(convert(instantRunBuildContext.getPatchingPolicy()));
-        builder.setVerifierStatus(convert(instantRunBuildContext.getVerifierResult().orElse(null)));
+        builder.setVerifierStatus(convert(instantRunBuildContext.getVerifierResult()));
 
         InstantRunBuildContext.Build last = instantRunBuildContext.getLastBuild();
         if (last != null) {
@@ -87,10 +87,7 @@ public class InstantRunAnalyticsHelper {
     @VisibleForTesting
     @NonNull
     static AndroidStudioStats.InstantRunStatus.VerifierStatus convert(
-            @Nullable InstantRunVerifierStatus status) {
-        if (status == null) {
-            return AndroidStudioStats.InstantRunStatus.VerifierStatus.UNKNOWN_VERIFIER_STATUS;
-        }
+            @NonNull InstantRunVerifierStatus status) {
         try {
             return AndroidStudioStats.InstantRunStatus.VerifierStatus.valueOf(status.toString());
         } catch (IllegalArgumentException ignored) {

@@ -79,9 +79,7 @@ class ColdSwapTester {
         assertNotNull(lastBuild);
         assertThat(lastBuild.getBuildId()).isNotEqualTo(startBuildId);
 
-        Optional<InstantRunVerifierStatus> verifierStatus = lastBuild.getVerifierStatus();
-        assertTrue(verifierStatus.isPresent());
-        steps.checkVerifierStatus(verifierStatus.get());
+        steps.checkVerifierStatus(lastBuild.getVerifierStatus());
         steps.checkArtifacts(lastBuild.getArtifacts());
     }
 

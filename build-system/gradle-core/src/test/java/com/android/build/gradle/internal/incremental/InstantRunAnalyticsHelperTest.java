@@ -27,6 +27,7 @@ import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -53,8 +54,8 @@ public class InstantRunAnalyticsHelperTest {
         when(mInstantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
         when(mInstantRunBuildContext.getPatchingPolicy())
                 .thenReturn(InstantRunPatchingPolicy.MULTI_DEX);
-        when(mInstantRunBuildContext.getVerifierResult()).thenReturn(Optional.of(
-                InstantRunVerifierStatus.COMPATIBLE));
+        when(mInstantRunBuildContext.getVerifierResult())
+                .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
         when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
                 new InstantRunBuildContext.Artifact(InstantRunBuildContext.FileType.RESOURCES,
                         new File("resources.ap_")),
@@ -100,7 +101,5 @@ public class InstantRunAnalyticsHelperTest {
         for (InstantRunVerifierStatus status : InstantRunVerifierStatus.values()) {
             assertEquals(status.toString(), InstantRunAnalyticsHelper.convert(status).toString());
         }
-        assertEquals(AndroidStudioStats.InstantRunStatus.VerifierStatus.UNKNOWN_VERIFIER_STATUS,
-                InstantRunAnalyticsHelper.convert((InstantRunVerifierStatus) null));
     }
 }

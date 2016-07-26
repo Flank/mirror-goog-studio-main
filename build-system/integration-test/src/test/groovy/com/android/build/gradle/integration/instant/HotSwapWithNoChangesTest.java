@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.internal.utils.IOExceptionRunnable;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -148,7 +149,8 @@ public class HotSwapWithNoChangesTest {
                 InstantRunTestUtils.loadBuildContext(23, instantRunModel);
 
         assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(0);
-        assertThat(instantRunBuildContext.getLastBuild().getVerifierStatus()).isAbsent();
+        assertThat(instantRunBuildContext.getLastBuild().getVerifierStatus())
+                .isEqualTo(InstantRunVerifierStatus.NO_CHANGES);
     }
 
     private void makeHotSwapChange() throws IOException {

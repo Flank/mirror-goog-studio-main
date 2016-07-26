@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -137,11 +136,13 @@ public class InstantRunBuildContext {
      * and the result of the InstantRun verification process.
      */
     public static class Build {
+
         private final long buildId;
-        private Optional<InstantRunVerifierStatus> verifierStatus;
+        @NonNull
+        private InstantRunVerifierStatus verifierStatus;
         private final List<Artifact> artifacts = new ArrayList<>();
 
-        public Build(long buildId, @NonNull Optional<InstantRunVerifierStatus> verifierStatus) {
+        public Build(long buildId, @NonNull InstantRunVerifierStatus verifierStatus) {
             this.buildId = buildId;
             this.verifierStatus = verifierStatus;
         }
@@ -175,9 +176,7 @@ public class InstantRunBuildContext {
 
         private void toXml(@NonNull Document document, @NonNull Element element) {
             element.setAttribute(ATTR_TIMESTAMP, String.valueOf(buildId));
-            if (verifierStatus.isPresent()) {
-                element.setAttribute(ATTR_VERIFIER, verifierStatus.get().name());
-            }
+            element.setAttribute(ATTR_VERIFIER, verifierStatus.name());
             for (Artifact artifact : artifacts) {
                 element.appendChild(artifact.toXml(document));
             }
@@ -189,10 +188,7 @@ public class InstantRunBuildContext {
             Node verifierAttribute = attributes.getNamedItem(ATTR_VERIFIER);
             Build build = new Build(
                     Long.parseLong(attributes.getNamedItem(ATTR_TIMESTAMP).getNodeValue()),
-                    verifierAttribute != null
-                        ? Optional.of(InstantRunVerifierStatus.valueOf(
-                            verifierAttribute.getNodeValue()))
-                        : Optional.<InstantRunVerifierStatus>empty());
+                    InstantRunVerifierStatus.valueOf(verifierAttribute.getNodeValue()));
             NodeList childNodes = buildNode.getChildNodes();
             for (int i=0; i< childNodes.getLength(); i++) {
                 Node artifactNode = childNodes.item(i);
@@ -214,7 +210,7 @@ public class InstantRunBuildContext {
         }
 
         @NonNull
-        public Optional<InstantRunVerifierStatus> getVerifierStatus() {
+        public InstantRunVerifierStatus getVerifierStatus() {
             return verifierStatus;
         }
     }
@@ -287,8 +283,8 @@ public class InstantRunBuildContext {
     private Integer featureLevel = null;
     private String density = null;
     private String abi = null;
-    private final Build currentBuild = new Build(
-            System.nanoTime(), Optional.<InstantRunVerifierStatus>empty());
+    private final Build currentBuild =
+            new Build(System.nanoTime(), InstantRunVerifierStatus.NO_CHANGES);
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private File tmpBuildInfo = null;
     private boolean isInstantRunMode = false;
@@ -329,10 +325,10 @@ public class InstantRunBuildContext {
      * Setst the verifier status for the current build.
      * @param verifierStatus
      */
-    public void setVerifierResult(@NonNull InstantRunVerifierStatus verifierStatus) {
-        if (!currentBuild.verifierStatus.isPresent() ||
-                currentBuild.getVerifierStatus().get() == InstantRunVerifierStatus.COMPATIBLE) {
-            currentBuild.verifierStatus = Optional.of(verifierStatus);
+    public void setVerifierStatus(@NonNull InstantRunVerifierStatus verifierStatus) {
+        if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES
+                || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE) {
+            currentBuild.verifierStatus = verifierStatus;
         }
         buildMode = buildMode.combine(
                 verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
@@ -340,10 +336,10 @@ public class InstantRunBuildContext {
     }
 
     /**
-     * Returns the verifier status if set for the current build being executed or
-     * null {@link Optional} if it is not set.
+     * Returns the verifier status if set for the current build being executed.
      */
-    public Optional<InstantRunVerifierStatus> getVerifierResult() {
+    @NonNull
+    public InstantRunVerifierStatus getVerifierResult() {
         return currentBuild.getVerifierStatus();
     }
 
@@ -353,8 +349,7 @@ public class InstantRunBuildContext {
      * @return true to use hot swapping, false otherwise.
      */
     public boolean hasPassedVerification() {
-        return !currentBuild.verifierStatus.isPresent()
-                || currentBuild.verifierStatus.get() == InstantRunVerifierStatus.COMPATIBLE;
+        return buildMode == InstantRunBuildMode.HOT_WARM;
     }
 
     public void setApiLevel(int featureLevel,
@@ -395,6 +390,9 @@ public class InstantRunBuildContext {
             throws IOException {
         if (patchingPolicy == null) {
             return;
+        }
+        if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES) {
+            currentBuild.verifierStatus = InstantRunVerifierStatus.COMPATIBLE;
         }
         // make sure we don't add the same artifacts twice.
         for (Artifact artifact : currentBuild.artifacts) {
@@ -467,17 +465,6 @@ public class InstantRunBuildContext {
         return previousBuilds.isEmpty() ? null : previousBuilds.lastEntry().getValue();
     }
 
-    @Nullable
-    public Artifact getPastBuildsArtifactForType(@NonNull FileType fileType) {
-        for (Build build : previousBuilds.values()) {
-            Artifact artifact = build.getArtifactForType(fileType);
-            if (artifact != null) {
-                return artifact;
-            }
-        }
-        return null;
-    }
-
     public long getSecretToken() {
         return token.get();
     }
@@ -509,19 +496,16 @@ public class InstantRunBuildContext {
             if (previousBuild.buildId == initialFullBuild) {
                 continue;
             }
-            if (previousBuild.verifierStatus.isPresent()) {
-                if (previousBuild.verifierStatus.get() == InstantRunVerifierStatus.COMPATIBLE) {
-                    if (foundColdRestart) {
-                        previousBuilds.remove(aBuildId);
-                        continue;
-                    }
-                } else {
-                    foundColdRestart = true;
+            if (previousBuild.verifierStatus == InstantRunVerifierStatus.COMPATIBLE) {
+                if (foundColdRestart) {
+                    // Remove previous hot swap artifacts, they have been superseded by the cold
+                    // swap artifact.
+                    previousBuilds.remove(aBuildId);
+                    continue;
                 }
-            } else {
-                // no verifier status is indicative of a full build or no code change.
-                // If this is a full build, treat it as a cold restart.
-                foundColdRestart = previousBuild.hasCodeArtifact();
+            }
+            else if (previousBuild.verifierStatus != InstantRunVerifierStatus.NO_CHANGES) {
+                foundColdRestart = true;
             }
             // when a coldswap build was found, remove all RESOURCES entries for previous builds
             // as the resource is redelivered as part of the main split.
@@ -629,7 +613,7 @@ public class InstantRunBuildContext {
     public void loadFromXmlFile(@NonNull File persistedState)
             throws IOException, ParserConfigurationException, SAXException {
         if (!persistedState.exists()) {
-            setVerifierResult(InstantRunVerifierStatus.INITIAL_BUILD);
+            setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;
         }
         loadFromDocument(XmlUtils.parseUtfXmlFile(persistedState, false));
@@ -650,7 +634,7 @@ public class InstantRunBuildContext {
             // Don't load if we've changed api level.
             Logging.getLogger(InstantRunBuildContext.class)
                     .quiet("Instant Run: Target device API level has changed.");
-            setVerifierResult(InstantRunVerifierStatus.INITIAL_BUILD);
+            setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;
         }
 
@@ -659,7 +643,7 @@ public class InstantRunBuildContext {
             // Don't load if the plugin version has changed.
             Logging.getLogger(InstantRunBuildContext.class)
                     .quiet("Instant Run: Android plugin version has changed.");
-            setVerifierResult(InstantRunVerifierStatus.INITIAL_BUILD);
+            setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;
         }
 
