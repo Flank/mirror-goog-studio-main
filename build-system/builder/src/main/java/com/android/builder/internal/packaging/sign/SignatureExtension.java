@@ -368,7 +368,7 @@ public class SignatureExtension {
 
             if (!SIGNATURE_VERSION_VALUE.equals(versionName)
                     || !SIGNATURE_CREATED_BY_VALUE.equals(createdBy)
-                    || mainAttrs.get(mDigestAlgorithm.manifestAttributeName) != null
+                    || mainAttrs.getValue(mDigestAlgorithm.manifestAttributeName) == null
                     || !Objects.equal(mApkSignedHeaderValue, apkSigned)) {
                 needsNewSignature = true;
             }

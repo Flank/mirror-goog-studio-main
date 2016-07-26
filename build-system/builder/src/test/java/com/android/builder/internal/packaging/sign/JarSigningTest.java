@@ -17,6 +17,7 @@
 package com.android.builder.internal.packaging.sign;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.builder.internal.packaging.zip.StoredEntry;
@@ -39,6 +40,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public class JarSigningTest {
+
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
@@ -85,7 +87,6 @@ public class JarSigningTest {
             me.register(zf2);
             new SignatureExtension(me, 10, p.getSecond(), p.getFirst(), null).register();
         }
-
 
         try (ZFile zf3 = new ZFile(zipFile)) {
             StoredEntry manifestEntry = zf3.get("META-INF/MANIFEST.MF");
@@ -200,7 +201,6 @@ public class JarSigningTest {
             signatureExtension.register();
         }
 
-
         try (ZFile verifyZFile = new ZFile(zipFile)) {
             long centralDirOffset = verifyZFile.getCentralDirectoryOffset();
             byte[] apkSigningBlockMagic = new byte[16];
@@ -298,5 +298,88 @@ public class JarSigningTest {
                 assertEquals(file1ShaTxt, file1Attrs.getValue("SHA-256-Digest"));
             }
         }
+    }
+
+    @Test
+    public void openSignedJarDoesNotForcesWriteifSignatureIsNotCorrect() throws Exception {
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+
+        Pair<PrivateKey, X509Certificate> p = SignatureTestUtils.generateSignaturePos18();
+
+        String fileName = "file";
+        byte[] fileContents = "Very interesting contents".getBytes(Charsets.US_ASCII);
+
+        try (ZFile zf = new ZFile(zipFile)) {
+            ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
+            me.register(zf);
+            new SignatureExtension(me, 21, p.getSecond(), p.getFirst(), null).register();
+
+            zf.add(fileName, new ByteArrayInputStream(fileContents));
+        }
+
+        long fileTimestamp = zipFile.lastModified();
+
+        /*
+         * Wait to make sure the timestamp can increase.
+         */
+        while (true) {
+            File notUsed = mTemporaryFolder.newFile();
+            long notTimestamp = notUsed.lastModified();
+            notUsed.delete();
+            if (notTimestamp > fileTimestamp) {
+                break;
+            }
+        }
+
+        /*
+         * Open the zip file, but don't touch it.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
+            me.register(zf);
+            new SignatureExtension(me, 21, p.getSecond(), p.getFirst(), null).register();
+        }
+
+        /*
+         * Check the file wasn't touched.
+         */
+        assertEquals(fileTimestamp, zipFile.lastModified());
+
+        /*
+         * Change the file contents ignoring any signing.
+         */
+        fileContents = "Not so interesting contents".getBytes(Charsets.US_ASCII);
+        try (ZFile zf = new ZFile(zipFile)) {
+            zf.add(fileName, new ByteArrayInputStream(fileContents));
+        }
+
+        fileTimestamp = zipFile.lastModified();
+
+        /*
+         * Wait to make sure the timestamp can increase.
+         */
+        while (true) {
+            File notUsed = mTemporaryFolder.newFile();
+            long notTimestamp = notUsed.lastModified();
+            notUsed.delete();
+            if (notTimestamp > fileTimestamp) {
+                break;
+            }
+        }
+
+        /*
+         * Open the zip file, but do any changes. The need to updating the signature should force
+         * a file update.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
+            me.register(zf);
+            new SignatureExtension(me, 21, p.getSecond(), p.getFirst(), null).register();
+        }
+
+        /*
+         * Check the file was touched.
+         */
+        assertNotEquals(fileTimestamp, zipFile.lastModified());
     }
 }
