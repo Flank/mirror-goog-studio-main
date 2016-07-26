@@ -78,11 +78,6 @@ public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat
 
     @NonNull
     private static Predicate<LogCatMessage> messageTextOf(@NonNull final String text) {
-        return new Predicate<LogCatMessage>() {
-            @Override
-            public boolean apply(LogCatMessage input) {
-                return text.equals(input.getMessage());
-            }
-        };
+        return input -> text.equals(input.getMessage());
     }
 }

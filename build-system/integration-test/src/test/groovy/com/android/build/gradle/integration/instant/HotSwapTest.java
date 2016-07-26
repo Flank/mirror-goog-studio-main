@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
@@ -55,7 +54,9 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Smoke test for hot swap builds.
@@ -63,10 +64,10 @@ import java.util.Collection;
 @RunWith(FilterableParameterized.class)
 public class HotSwapTest {
 
-    private static final int VERSION_CODE = 17;
-    private static final String VERSION_NAME = "0.0.1";
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
     private static final String LOG_TAG = "hotswapTest";
+    private static final String ORIGINAL_MESSAGE = "Original";
+    private static final int CHANGES_COUNT = 3;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -94,16 +95,7 @@ public class HotSwapTest {
     @Before
     public void activityClass() throws IOException {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
-        createActivityClass("Original");
-    }
-
-    @Before
-    public void setVersionInBuildFile() throws IOException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(), "android.defaultConfig.versionCode = " + VERSION_CODE);
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.defaultConfig.versionName = '" + VERSION_NAME + "'");
+        createActivityClass(ORIGINAL_MESSAGE);
     }
 
     @Test
@@ -122,7 +114,7 @@ public class HotSwapTest {
         apkFile.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
 
-        makeHotSwapChange();
+        createActivityClass("CHANGE");
 
         project.executor()
                 .withInstantRun(19, COLDSWAP_MODE)
@@ -198,52 +190,30 @@ public class HotSwapTest {
     }
 
     private void doHotSwapChangeTest(@NonNull IDevice device) throws Exception {
-        HotSwapTester.run(
-                project,
-                packaging,
-                "com.example.helloworld",
-                "HelloWorld",
-                LOG_TAG,
-                device,
-                logcat,
-                new HotSwapTester.Steps() {
-                    @Override
-                    public void verifyOriginalCode(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device)
-                            throws Exception {
-                        assertThat(logcat).containsMessageWithText("Original");
-                        assertThat(logcat).doesNotContainMessageWithText("HOT SWAP!");
-                    }
+        HotSwapTester tester =
+                new HotSwapTester(
+                        project,
+                        packaging,
+                        "com.example.helloworld",
+                        "HelloWorld",
+                        LOG_TAG,
+                        device,
+                        logcat);
 
-                    @Override
-                    public void makeChange() throws Exception {
-                        makeHotSwapChange();
-                    }
+        List<HotSwapTester.Change> changes = new ArrayList<>();
 
-                    @Override
-                    public void verifyNewCode(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device)
-                            throws Exception {
-                        // Should not have restarted activity
-                        assertThat(logcat).doesNotContainMessageWithText("Original");
-                        assertThat(logcat).doesNotContainMessageWithText("HOT SWAP!");
+        for (int i = 0; i < CHANGES_COUNT; i++) {
+            changes.add(new HotSwapTester.LogcatChange(i, ORIGINAL_MESSAGE) {
+                @Override
+                public void makeChange() throws Exception {
+                    createActivityClass(CHANGE_PREFIX + changeId);
+                }
+            });
+        }
 
-                        client.restartActivity(device);
-                        InstantRunTestUtils.waitForAppStart(client, device);
-
-                        assertThat(logcat).doesNotContainMessageWithText("Original");
-                        assertThat(logcat).containsMessageWithText("HOT SWAP!");
-                    }
-                });
-
-    }
-
-    private void makeHotSwapChange() throws IOException {
-        createActivityClass("HOT SWAP!");
+        tester.run(
+                () -> assertThat(logcat).containsMessageWithText("Original"),
+                changes);
     }
 
     private void createActivityClass(String message)
