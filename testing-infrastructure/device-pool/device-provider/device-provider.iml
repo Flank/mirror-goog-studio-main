@@ -17,17 +17,6 @@
     <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="gradle-core" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/gradle-api-full/gradle-api-full-2.10.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/gradle-api-full/gradle-api-full-2.10.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="module" module-name="builder-test-api" />
     <orderEntry type="module" module-name="common" />
@@ -35,7 +24,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-core-2.10.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-core-2.14.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -44,7 +33,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-model-core-2.10.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-model-core-2.14.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -53,7 +42,16 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-base-services-2.10.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-base-services-2.14.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../../out/gradle-dist-link/lib/gradle-logging-2.14.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
