@@ -42,6 +42,7 @@ add_unit_test(profiler_utils_test
               time_value_buffer_test.cc
               timespec_math_test.cc
               tokenizer_test.cc
+              uid_fetcher_test.cc
               fs/memory_file_system.cc
               fs/file_system_test.cc)
 

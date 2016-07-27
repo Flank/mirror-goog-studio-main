@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 #include "energy_service.h"
-
-#include <cinttypes>
-#include <cstdlib>
+#include "utils/uid_fetcher.h"
 
 using namespace profiler::proto;
 
@@ -42,8 +40,8 @@ grpc::Status EnergyServiceImpl::StartCollection(
 
   response->set_app_id(request->app_id());
   response->set_timestamp(clock_.GetCurrentTime());
-  // TODO this will be changed to get actual UID by pid-to-uid CL.
-  collector_.Start(10087);
+
+  collector_.Start(UidFetcher::GetUid(request->app_id()));
 
   return grpc::Status::OK;
 }
