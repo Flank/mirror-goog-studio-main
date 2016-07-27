@@ -1,28 +1,16 @@
 # This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
 
-TESTING_SRCS = [
-  "src/test/java/com/android/assetstudiolib/BitmapGeneratorTest.java",
-  "src/test/java/com/android/assetstudiolib/GeneratorTest.java",
-]
-
-java_library(
-  name = "assetstudio_testing",
-  srcs = TESTING_SRCS,
-  deps = [
-    ":assetstudio",
-    "//tools/idea:lib/junit-4.12",
-  ],
-)
-
 java_library(
   name = "assetstudio_testlib",
-  srcs = glob(
-      include = ["src/test/java/**/*.java"],
-      exclude = TESTING_SRCS,
-  ),
+  srcs = glob([
+      "src/test/java/**/*.java",
+    ]),
+  resource_strip_prefix = "tools/base/asset-studio/assetstudio_testlib.resources",
+  resources = [
+      "//tools/base/asset-studio:assetstudio_testlib.res",
+    ],
   deps = [
-      ":assetstudio_testing",
       "@local_jdk//:langtools-neverlink",
       "//tools/base/asset-studio:assetstudio",
           "//tools/base/common:common",
@@ -44,7 +32,7 @@ java_library(
               "//tools/adt/idea:android/lib/commons-compress-1.8.1",
               "//tools/idea:lib/gson-2.5",
               "//tools/base/repository:repository",
-          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
       "//tools/base/sdk-common:sdk-common_testlib",
           "//tools/base/sdklib:sdklib_testlib",
               "//tools/base/device_validator:dvlib_testlib",
@@ -61,12 +49,12 @@ java_test(
     ]),
   runtime_deps = [
       ":assetstudio_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=assetstudio_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
@@ -99,7 +87,7 @@ java_library(
               "//tools/adt/idea:android/lib/commons-compress-1.8.1",
               "//tools/idea:lib/gson-2.5",
               "//tools/base/repository:repository",
-          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
   javacopts = ["-extra_checks:off"],
@@ -110,7 +98,6 @@ fileset(
   name = "assetstudio.res",
   srcs = glob([
       "src/main/java/**/*",
-      "src/test/java/**/*",
     ],
     exclude = [
       "**/* *",
@@ -122,7 +109,27 @@ fileset(
     ]),
   mappings = {
       "src/main/java": "assetstudio.resources",
-      "src/test/java": "assetstudio.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
+fileset(
+  name = "assetstudio_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "assetstudio_testlib.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",

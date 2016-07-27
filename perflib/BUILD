@@ -5,20 +5,39 @@ java_test(
   name = "perflib_tests",
   srcs = glob([
     ]),
-  resources = [
-      "//tools/base/perflib:perflib_tests.res",
-    ],
-  resource_strip_prefix = "tools/base/perflib/perflib_tests.resources",
   runtime_deps = [
       ":perflib_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=perflib_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "perflib_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+      "src/test/resources/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "perflib_testlib.resources",
+      "src/test/resources": "perflib_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )
 
 java_library(
@@ -26,6 +45,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/perflib/perflib_testlib.resources",
+  resources = [
+      "//tools/base/perflib:perflib_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/perflib:perflib",
@@ -39,7 +62,8 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
       "//tools/idea:lib/trove4j",
-      "//tools/base/bazel:util",
+      "//tools/base/testutils:testutils",
+      "//tools/base/testutils:testutils_testlib",
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
@@ -64,6 +88,7 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
       "//tools/idea:lib/trove4j",
+      "//tools/base/testutils:testutils",
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
@@ -85,15 +110,6 @@ fileset(
   mappings = {
       "src/main/java": "perflib.resources",
     },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
-)
-
-fileset(
-  name = "perflib_tests.res",
-  srcs = glob(["src/test/resources/**"]),
-  mappings = {"src/test/resources": "perflib_tests.resources"},
   deps = [
       "@local_jdk//:langtools-neverlink",
     ],

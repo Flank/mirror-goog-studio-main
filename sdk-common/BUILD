@@ -29,7 +29,7 @@ java_library(
           "//tools/idea:lib/gson-2.5",
           "//tools/base/repository:repository",
       "//tools/base/testutils:testutils",
-      "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+      "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
       "//tools/base/build-system:builder-test-api",
           "//tools/base/ddmlib:ddmlib",
@@ -43,11 +43,38 @@ java_library(
   visibility = ["//visibility:public"],
 )
 
+fileset(
+  name = "sdk-common_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+      "src/test/resources/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "sdk-common_testlib.resources",
+      "src/test/resources": "sdk-common_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
 java_library(
   name = "sdk-common_testlib",
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/sdk-common/sdk-common_testlib.resources",
+  resources = [
+      "//tools/base/sdk-common:sdk-common_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/sdk-common:sdk-common",
@@ -67,7 +94,7 @@ java_library(
               "//tools/adt/idea:android/lib/commons-compress-1.8.1",
               "//tools/idea:lib/gson-2.5",
               "//tools/base/repository:repository",
-          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
       "//tools/base/layoutlib-api:layoutlib-api_testlib",
       "//tools/base/common:common_testlib",
       "//tools/base/sdklib:sdklib_testlib",
@@ -96,12 +123,12 @@ java_test(
     ]),
   runtime_deps = [
       ":sdk-common_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=sdk-common_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
