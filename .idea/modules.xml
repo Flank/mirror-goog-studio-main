@@ -58,6 +58,7 @@
       <module fileurl="file://$PROJECT_DIR$/sdk-common/sdk-common-base.iml" filepath="$PROJECT_DIR$/sdk-common/sdk-common-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdklib/sdklib-base.iml" filepath="$PROJECT_DIR$/sdklib/sdklib-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils.iml" filepath="$PROJECT_DIR$/testutils/testutils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bazel/utils/utils.iml" filepath="$PROJECT_DIR$/bazel/utils/utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/vector-drawable-tool/vector-drawable-tool.iml" filepath="$PROJECT_DIR$/vector-drawable-tool/vector-drawable-tool.iml" />
     </modules>
   </component>
