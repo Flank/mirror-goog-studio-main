@@ -6,6 +6,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/common/common_testlib.resources",
+  resources = [
+      "//tools/base/common:common_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/common:common",
@@ -63,18 +67,39 @@ fileset(
     ],
 )
 
+fileset(
+  name = "common_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "common_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
 java_test(
   name = "common_tests",
   srcs = glob([
     ]),
   runtime_deps = [
       ":common_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=common_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

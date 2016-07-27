@@ -22,7 +22,7 @@ java_library(
 fileset(
   name = "ninepatch.res",
   srcs = glob([
-      "src/test/resources/**/*",
+      "src/main/java/**/*",
     ],
     exclude = [
       "**/* *",
@@ -33,7 +33,7 @@ fileset(
       "**/.DS_Store",
     ]),
   mappings = {
-      "src/test/resources": "ninepatch.resources",
+      "src/main/java": "ninepatch.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
@@ -46,14 +46,37 @@ java_test(
     ]),
   runtime_deps = [
       ":ninepatch_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=ninepatch_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "ninepatch_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+      "src/test/resources/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "ninepatch_testlib.resources",
+      "src/test/resources": "ninepatch_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )
 
 java_library(
@@ -62,6 +85,10 @@ java_library(
       "src/test/java/**/*.java",
       "src/test/resources/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/ninepatch/ninepatch_testlib.resources",
+  resources = [
+      "//tools/base/ninepatch:ninepatch_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/ninepatch:ninepatch",

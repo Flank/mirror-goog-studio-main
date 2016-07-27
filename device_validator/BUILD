@@ -7,6 +7,10 @@ java_library(
       "dvlib/src/test/java/**/*.java",
       "dvlib/src/test/resources/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/device_validator/dvlib_testlib.resources",
+  resources = [
+      "//tools/base/device_validator:dvlib_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/device_validator:dvlib",
@@ -19,6 +23,29 @@ java_library(
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "dvlib_testlib.res",
+  srcs = glob([
+      "dvlib/src/test/java/**/*",
+      "dvlib/src/test/resources/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "dvlib/src/test/java": "dvlib_testlib.resources",
+      "dvlib/src/test/resources": "dvlib_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )
 
 fileset(
@@ -72,12 +99,12 @@ java_test(
     ]),
   runtime_deps = [
       ":dvlib_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=dvlib_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

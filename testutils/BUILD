@@ -6,6 +6,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/testutils/testutils_testlib.resources",
+  resources = [
+      "//tools/base/testutils:testutils_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/testutils:testutils",
@@ -55,12 +59,12 @@ java_test(
     ]),
   runtime_deps = [
       ":testutils_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=testutils_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
@@ -80,6 +84,27 @@ fileset(
     ]),
   mappings = {
       "src/main/java": "testutils.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
+fileset(
+  name = "testutils_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "testutils_testlib.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",

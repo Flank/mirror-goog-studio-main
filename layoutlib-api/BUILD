@@ -28,12 +28,12 @@ java_test(
     ]),
   runtime_deps = [
       ":layoutlib-api_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=layoutlib-api_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
@@ -65,6 +65,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/layoutlib-api/layoutlib-api_testlib.resources",
+  resources = [
+      "//tools/base/layoutlib-api:layoutlib-api_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/layoutlib-api:layoutlib-api",
@@ -77,4 +81,25 @@ java_library(
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "layoutlib-api_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "layoutlib-api_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )
