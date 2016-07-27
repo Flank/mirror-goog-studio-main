@@ -13,6 +13,8 @@ target_link_libraries(perfd
                       profiler_protos
                       profiler_utils)
 
+set_linker_script(perfd perfd.exports perfd.cc)
+
 # Add perfd profiler components
 add_subdirectory(cpu)
 add_subdirectory(energy)

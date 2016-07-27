@@ -9,4 +9,6 @@ target_link_libraries(perfa
                       profiler_protos
                       profiler_utils)
 
+set_linker_script(perfa perfa.exports perfa.cc)
+
 install_library(perfa)
