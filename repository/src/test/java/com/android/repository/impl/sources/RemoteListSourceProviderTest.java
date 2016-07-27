@@ -56,7 +56,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                 .create("http://example.com/sourceList.xml", null, permittedModules);
         FakeDownloader downloader = new FakeDownloader(fop);
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
-                getClass().getResourceAsStream("../testData/testSourceList-1.xml"));
+                getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         List<RepositorySource> sources = provider.getSources(downloader, progress, false);
         progress.assertNoErrorsOrWarnings();
@@ -84,7 +84,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                 .create("http://example.com/sourceList.xml", null, permittedModules);
         FakeDownloader downloader = new FakeDownloader(fop);
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
-                getClass().getResourceAsStream("../testData/testSourceList-1.xml"));
+                getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         provider.getSources(downloader, progress, false);
         progress.assertNoErrorsOrWarnings();
@@ -140,13 +140,13 @@ public class RemoteListSourceProviderTest extends TestCase {
                 .create("http://example.com/sourceList.xml", null, permittedModules);
         FakeDownloader downloader = new FakeDownloader(fop);
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
-                getClass().getResourceAsStream("../testData/testSourceList-1.xml"));
+                getClass().getResourceAsStream("/testSourceList-1.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         provider.getSources(downloader, progress, false);
         progress.assertNoErrorsOrWarnings();
 
         downloader.registerUrl(new URL("http://example.com/sourceList.xml"),
-                getClass().getResourceAsStream("../testData/testSourceList2-1.xml"));
+                getClass().getResourceAsStream("/testSourceList2-1.xml"));
 
         List<RepositorySource> sources = provider.getSources(downloader, progress, true);
         progress.assertNoErrorsOrWarnings();
