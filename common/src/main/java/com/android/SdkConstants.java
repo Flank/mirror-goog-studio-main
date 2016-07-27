@@ -1594,9 +1594,10 @@ public final class SdkConstants {
     public static final String GRAVITY_VALUE_FILL = "fill";                           //$NON-NLS-1$
 
     // Mockup
-    public static final String ATTR_MOCKUP = "mockup";                            //$NON-NLS-1$
-    public static final String ATTR_MOCKUP_POSITION = "mockup_position";          //$NON-NLS-1$
-    public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity";          //$NON-NLS-1$
+    public static final String ATTR_MOCKUP = "mockup";                             //$NON-NLS-1$
+    public static final String ATTR_MOCKUP_CROP = "mockup_crop";                   //$NON-NLS-1$
+    public static final String ATTR_MOCKUP_POSITION = "mockup_crop";               //$NON-NLS-1$
+    public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity";             //$NON-NLS-1$
 
     public static final class ImageViewAttributes {
         public static final String TINT = "tint";
