@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
+#include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
-#include "utils/trace.h"
 #include "utils/config.h"
 #include "utils/fs/path.h"
+#include "utils/trace.h"
 
 #include <string>
 
@@ -42,6 +44,9 @@ int main(int argc, char** argv) {
 
   profiler::EventProfilerComponent event_component{};
   daemon.RegisterComponent(&event_component);
+
+  profiler::EnergyProfilerComponent energy_component{daemon};
+  daemon.RegisterComponent(&energy_component);
 
   // TODO: This is assuming argv[0] is a full path, but this may not be true.
   // We should consider getting the path a more foolproof way.

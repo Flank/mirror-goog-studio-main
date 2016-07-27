@@ -42,6 +42,7 @@ class MemoryCache {
  private:
   const Clock& clock_;
 
+  // TODO replace these with circular buffer class when it becomes available.
   std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;
   std::unique_ptr<proto::MemoryData::VmStatsSample[]> vm_stats_samples_;
   std::unique_ptr<proto::MemoryData::HeapDumpSample[]> heap_dump_samples_;
