@@ -23,7 +23,7 @@ namespace profiler {
 
 class EnergyProfilerComponent final : public ProfilerComponent {
  public:
-  EnergyProfilerComponent(const Daemon& daemon)
+  explicit EnergyProfilerComponent(const Daemon& daemon)
       : public_service_(daemon.clock()) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).

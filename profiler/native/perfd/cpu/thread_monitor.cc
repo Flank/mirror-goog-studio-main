@@ -27,7 +27,6 @@ using profiler::FileReader;
 using profiler::proto::CpuProfilerData;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
-using profiler::proto::ThreadActivities;
 using profiler::proto::ThreadActivity;
 using std::string;
 using std::vector;

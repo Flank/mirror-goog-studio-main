@@ -24,11 +24,9 @@ using profiler::EventCache;
 using profiler::proto::EventProfilerData;
 using profiler::proto::EventDataResponse;
 using std::lock_guard;
-using std::vector;
 
 namespace profiler {
 
-using proto::EventProfilerData;
 
 void EventCache::AddData(const EventProfilerData& data) {
   // TODO: Add sorting function to vector / priority queue to guarantee

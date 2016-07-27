@@ -29,7 +29,7 @@ namespace profiler {
 // favor of new ones.
 class EnergyCache final {
  public:
-  EnergyCache(const int32_t samples_capacity)
+  explicit EnergyCache(const int32_t samples_capacity)
       : samples_capacity_(samples_capacity),
         energy_samples_(
             new proto::EnergyDataResponse::EnergySample[samples_capacity]){};

@@ -18,7 +18,11 @@
 #include <cinttypes>
 #include <cstdlib>
 
-using namespace profiler::proto;
+using profiler::proto::EnergyCollectionStatusResponse;
+using profiler::proto::EnergyDataRequest;
+using profiler::proto::EnergyDataResponse;
+using profiler::proto::StartEnergyCollectionRequest;
+using profiler::proto::StopEnergyCollectionRequest;
 
 namespace profiler {
 

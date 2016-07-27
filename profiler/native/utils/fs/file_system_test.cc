@@ -18,9 +18,7 @@
 
 #include <gtest/gtest.h>
 
-using profiler::Dir;
 using profiler::FakeClock;
-using profiler::File;
 using profiler::MemoryFileSystem;
 using profiler::Path;
 using profiler::PathStat;
