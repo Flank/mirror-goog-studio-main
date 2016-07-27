@@ -12,5 +12,6 @@
     <orderEntry type="module" module-name="ddmlib" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="Trove4j" level="project" />
+    <orderEntry type="module" module-name="bazel-tests-support" scope="TEST" />
   </component>
 </module>

@@ -15,6 +15,7 @@
  */
 package com.android.tools.perflib.heap;
 
+import com.android.tools.util.TestResources;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import junit.framework.TestCase;
 
@@ -28,7 +29,7 @@ public class ClassObjTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    File file = new File(getClass().getResource("/dialer.android-hprof").getFile());
+    File file = TestResources.getFile(getClass(), "/dialer.android-hprof");
     mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
   }
 
