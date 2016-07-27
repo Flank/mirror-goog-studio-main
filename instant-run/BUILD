@@ -4,7 +4,7 @@ load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin
 fileset(
   name = "instant-run-client.res",
   srcs = glob([
-      "instant-run-client/src/main/java/**/*",
+      "instant-run-client/src/test/resources/**/*",
     ],
     exclude = [
       "**/* *",
@@ -15,7 +15,7 @@ fileset(
       "**/.DS_Store",
     ]),
   mappings = {
-      "instant-run-client/src/main/java": "instant-run-client.resources",
+      "instant-run-client/src/test/resources": "instant-run-client.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
