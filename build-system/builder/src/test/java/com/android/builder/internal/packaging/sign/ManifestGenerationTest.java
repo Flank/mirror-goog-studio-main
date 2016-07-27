@@ -23,19 +23,16 @@ import static org.junit.Assert.assertTrue;
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.ZFile;
 import com.android.testutils.TestUtils;
-import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.internal.util.collections.Sets;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.internal.util.collections.Sets;
 
 public class ManifestGenerationTest {
     @Rule
@@ -180,7 +177,7 @@ public class ManifestGenerationTest {
 
             long timeOfWriting = zip.lastModified();
 
-            TestUtils.waitFilesystemTime();
+            TestUtils.waitForFileSystemTick(timeOfWriting);
 
             zf = closer.register(new ZFile(zip));
             zf.close();

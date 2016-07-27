@@ -19,12 +19,11 @@ package com.android.testutils;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.IOException;
+import junit.framework.TestCase;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -129,23 +128,31 @@ public class TestUtils {
         throw new IllegalStateException("SDK directory not defined with ANDROID_HOME");
     }
 
+    public static void waitForFileSystemTick() throws InterruptedException, IOException {
+        waitForFileSystemTick(getFreshTimestamp());
+    }
+
     /**
-     * Sleeps the current thread for enough time to ensure that we exceed filesystem timestamp
-     * resolution. This method is usually called in tests when it is necessary to ensure filesystem
-     * writes are detected through timestamp modification.
+     * Sleeps the current thread for enough time to ensure that the local file system had enough
+     * time to notice a "tick". This method is usually called in tests when it is necessary to
+     * ensure filesystem writes are detected through timestamp modification.
      *
+     * @param currentTimestamp last timestamp read from disk
      * @throws InterruptedException waiting interrupted
+     * @throws IOException issues creating a temporary file
      */
-    public static void waitFilesystemTime() throws InterruptedException {
-        /*
-         * How much time to wait until we are sure that the file system will update the last
-         * modified timestamp of a file. This is usually related to the accuracy of last timestamps.
-         * In modern windows systems 100ms be more than enough (NTFS has 100us accuracy --
-         * see https://msdn.microsoft.com/en-us/library/windows/desktop/ms724290(v=vs.85).aspx).
-         * In linux it will depend on the filesystem. ext4 has 1ns accuracy (if inodes are 256 byte
-         * or larger), but ext3 has 1 second.
-         */
-        Thread.sleep(2000);
+    public static void waitForFileSystemTick(long currentTimestamp)
+            throws InterruptedException, IOException {
+        while (getFreshTimestamp() <= currentTimestamp) {
+            Thread.sleep(100);
+        }
+    }
+
+    private static long getFreshTimestamp() throws IOException {
+        File notUsed = File.createTempFile(TestUtils.class.getName(), "waitForFileSystemTick");
+        long freshTimestamp = notUsed.lastModified();
+        FileUtils.delete(notUsed);
+        return freshTimestamp;
     }
 
     @NonNull
