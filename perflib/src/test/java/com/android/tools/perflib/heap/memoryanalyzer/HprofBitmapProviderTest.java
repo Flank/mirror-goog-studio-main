@@ -20,7 +20,6 @@ import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
-import com.android.tools.util.TestResources;
 
 import junit.framework.TestCase;
 
@@ -46,7 +45,8 @@ public class HprofBitmapProviderTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        File testHprofFile = TestResources.getFile(getClass(), "/bitmap_test.android-hprof");
+        File testHprofFile = new File(
+                getClass().getResource("/bitmap_test.android-hprof").getFile());
         assert testHprofFile.exists();
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(testHprofFile));
         mAppHeap = mSnapshot.getHeap("app");
