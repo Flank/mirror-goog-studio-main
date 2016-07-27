@@ -16,6 +16,7 @@
 
 package com.android.dvlib;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -49,8 +50,8 @@ public class DeviceSchemaTest extends TestCase {
     //---- actual tests -----
 
     public void testValidXml_v1() throws Exception {
-        InputStream xml = DeviceSchemaTest.class.getResourceAsStream("devices.xml");
-        assertTrue(xml.markSupported());
+        InputStream xml = new BufferedInputStream(
+                DeviceSchemaTest.class.getResourceAsStream("devices.xml"));
         xml.mark(500000);   // set mark to beginning of stream
 
         // Check schema version
@@ -69,8 +70,8 @@ public class DeviceSchemaTest extends TestCase {
     }
 
     public void testValidXml_v2() throws Exception {
-        InputStream xml = DeviceSchemaTest.class.getResourceAsStream("devices_v2.xml");
-        assertTrue(xml.markSupported());
+        InputStream xml = new BufferedInputStream(
+                DeviceSchemaTest.class.getResourceAsStream("devices_v2.xml"));
         xml.mark(500000);   // set mark to beginning of stream
 
         // Check schema version
@@ -191,7 +192,6 @@ public class DeviceSchemaTest extends TestCase {
     private void checkFailure(Map<String, String> replacements, String regex) throws Exception {
         // Generate XML stream with replacements
         InputStream xmlStream = getReplacedStream(replacements);
-        assertTrue(xmlStream.markSupported());
         xmlStream.mark(500000);   // set mark to beginning of stream
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -206,8 +206,8 @@ public class DeviceSchemaTest extends TestCase {
     }
 
     private void checkFailure(String resource, String regex) throws Exception {
-        InputStream xml = DeviceSchemaTest.class.getResourceAsStream(resource);
-        assertTrue(xml.markSupported());
+        InputStream xml = new BufferedInputStream(
+                DeviceSchemaTest.class.getResourceAsStream(resource));
         xml.mark(500000);   // set mark to beginning of stream
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -223,7 +223,6 @@ public class DeviceSchemaTest extends TestCase {
 
     private void checkSuccess(Map<String, String> replacements) throws Exception {
         InputStream xmlStream = getReplacedStream(replacements);
-        assertTrue(xmlStream.markSupported());
         xmlStream.mark(500000);   // set mark to beginning of stream
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
