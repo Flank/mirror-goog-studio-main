@@ -18,11 +18,16 @@ package com.android.assetstudiolib;
 
 import com.android.assetstudiolib.LauncherIconGenerator.LauncherOptions;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
-public class LauncherIconGeneratorTest extends BitmapGeneratorTest {
-    private void checkGraphic(String baseName,
+@RunWith(JUnit4.class)
+public class LauncherIconGeneratorTest {
+
+    private static void checkGraphic(String baseName,
             GraphicGenerator.Shape shape, GraphicGenerator.Style style,
             boolean crop, int background, boolean isWebGraphic) throws IOException {
         LauncherOptions options = new LauncherOptions();
@@ -33,9 +38,11 @@ public class LauncherIconGeneratorTest extends BitmapGeneratorTest {
         options.isWebGraphic = isWebGraphic;
 
         LauncherIconGenerator generator = new LauncherIconGenerator();
-        checkGraphic(5 + (isWebGraphic ? 1 : 0), "launcher", baseName, generator, options);
+        BitmapGeneratorTests.checkGraphic(
+                5 + (isWebGraphic ? 1 : 0), "launcher", baseName, generator, options);
     }
 
+    @Test
     public void testLauncher_simpleCircle() throws Exception {
         checkGraphic("red_simple_circle", GraphicGenerator.Shape.CIRCLE,
                 GraphicGenerator.Style.SIMPLE, true, 0xFF0000, true);

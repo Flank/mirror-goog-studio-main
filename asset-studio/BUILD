@@ -38,6 +38,7 @@ java_library(
               "//tools/base/device_validator:dvlib_testlib",
               "//tools/base/repository:repository_testlib",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
+      "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28",
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
