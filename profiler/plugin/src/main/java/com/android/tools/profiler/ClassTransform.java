@@ -44,7 +44,7 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * An abstract transform that provides a simple API for transforming all the possible classes.
- * The only abstract method is {@link #transform(InputStream, OutputStream)} which will be run
+ * The only abstract method is {@link #transform(InputStream, OutputStream, boolean)}which will be run
  * for every class. This class takes care of all the incremental and jar vs class details.
  */
 abstract class ClassTransform extends Transform {
@@ -105,6 +105,12 @@ abstract class ClassTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws InterruptedException, IOException {
+        transformHelper(invocation, true);
+        transformHelper(invocation, false);
+    }
+
+    public void transformHelper(@NonNull TransformInvocation invocation, boolean buildHierarchyOnly)
+            throws InterruptedException, IOException {
         assert invocation.getOutputProvider() != null;
 
         int outputNumber = 0;
@@ -128,14 +134,14 @@ abstract class ClassTransform extends Transform {
                             break;
                         case ADDED:
                         case CHANGED:
-                            transformJar(inputJar, outputJar);
+                            transformJar(inputJar, outputJar, buildHierarchyOnly);
                             break;
                         case REMOVED:
                             FileUtils.delete(outputJar);
                             break;
                     }
                 } else {
-                    transformJar(inputJar, outputJar);
+                    transformJar(inputJar, outputJar, buildHierarchyOnly);
                 }
             }
             for (DirectoryInput di : ti.getDirectoryInputs()) {
@@ -154,7 +160,7 @@ abstract class ClassTransform extends Transform {
                             case CHANGED:
                                 for (File in : FileUtils.getAllFiles(inputFile)) {
                                     File out = toOutputFile(outputDir, inputDir, in);
-                                    transformFile(in, out);
+                                    transformFile(in, out, buildHierarchyOnly);
                                 }
                                 break;
                             case REMOVED:
@@ -166,14 +172,14 @@ abstract class ClassTransform extends Transform {
                 } else {
                     for (File in : FileUtils.getAllFiles(inputDir)) {
                         File out = toOutputFile(outputDir, inputDir, in);
-                        transformFile(in, out);
+                        transformFile(in, out, buildHierarchyOnly);
                     }
                 }
             }
         }
     }
 
-    private void transformJar(File inputJar, File outputJar) throws IOException {
+    private void transformJar(File inputJar, File outputJar, boolean buildHierarchyOnly) throws IOException {
         Files.createParentDirs(outputJar);
         try (FileInputStream fis = new FileInputStream(inputJar);
              ZipInputStream zis = new ZipInputStream(fis);
@@ -183,7 +189,7 @@ abstract class ClassTransform extends Transform {
             while (entry != null) {
                 zos.putNextEntry(new ZipEntry(entry.getName()));
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    transform(zis, zos);
+                    transform(zis, zos, buildHierarchyOnly);
                 } else {
                     ByteStreams.copy(zis, zos);
                 }
@@ -192,11 +198,11 @@ abstract class ClassTransform extends Transform {
         }
     }
 
-    private void transformFile(File inputFile, File outputFile) throws IOException {
+    private void transformFile(File inputFile, File outputFile, boolean buildHierarchyOnly) throws IOException {
         Files.createParentDirs(outputFile);
         try (FileInputStream fis = new FileInputStream(inputFile);
              FileOutputStream fos = new FileOutputStream(outputFile)) {
-            transform(fis, fos);
+            transform(fis, fos, buildHierarchyOnly);
         }
     }
 
@@ -205,5 +211,5 @@ abstract class ClassTransform extends Transform {
         return new File(outputDir, FileUtils.relativePath(inputFile, inputDir));
     }
 
-    protected abstract void transform(InputStream in, OutputStream out) throws IOException;
+    protected abstract void transform(InputStream in, OutputStream out, boolean buildHierarchyOnly) throws IOException;
 }
