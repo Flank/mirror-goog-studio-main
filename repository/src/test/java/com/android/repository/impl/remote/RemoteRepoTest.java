@@ -55,7 +55,7 @@ public class RemoteRepoTest extends TestCase {
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("../testData/testRepo.xml"));
+                getClass().getResourceAsStream("/testRepo.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
                 new FakeRepositorySourceProvider(ImmutableList.of(source))), null, null);
@@ -89,7 +89,7 @@ public class RemoteRepoTest extends TestCase {
                                                              null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
-                               getClass().getResourceAsStream("../testData/testRepoWithChannels.xml"));
+                getClass().getResourceAsStream("/testRepoWithChannels.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
           new FakeRepositorySourceProvider(ImmutableList.of(source))), null, null);
@@ -132,7 +132,7 @@ public class RemoteRepoTest extends TestCase {
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("../testData/testRepo.xml"));
+                getClass().getResourceAsStream("/testRepo.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -163,7 +163,7 @@ public class RemoteRepoTest extends TestCase {
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("../testData/testRepo.xml"));
+                getClass().getResourceAsStream("/testRepo.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -263,7 +263,7 @@ public class RemoteRepoTest extends TestCase {
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("../testData/testRepo.xml"));
+                getClass().getResourceAsStream("/testRepo.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();

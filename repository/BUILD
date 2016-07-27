@@ -75,6 +75,7 @@ fileset(
   name = "repository_testlib.res",
   srcs = glob([
       "src/test/java/**/*",
+      "src/test/resources/**/*",
     ],
     exclude = [
       "**/* *",
@@ -86,6 +87,7 @@ fileset(
     ]),
   mappings = {
       "src/test/java": "repository_testlib.resources",
+      "src/test/resources": "repository_testlib.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
