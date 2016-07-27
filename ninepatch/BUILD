@@ -22,7 +22,7 @@ java_library(
 fileset(
   name = "ninepatch.res",
   srcs = glob([
-      "src/main/java/**/*",
+      "src/test/resources/**/*",
     ],
     exclude = [
       "**/* *",
@@ -33,7 +33,7 @@ fileset(
       "**/.DS_Store",
     ]),
   mappings = {
-      "src/main/java": "ninepatch.resources",
+      "src/test/resources": "ninepatch.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
