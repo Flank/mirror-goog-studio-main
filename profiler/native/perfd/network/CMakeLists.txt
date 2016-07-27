@@ -4,7 +4,6 @@ add_library(profiler_network
             internal_network_service.cc
             network_cache.cc
             network_collector.cc
-            network_sampler.cc
             traffic_sampler.cc
             network_service.cc)
 
@@ -15,7 +14,6 @@ target_link_libraries(profiler_network
 add_unit_test(profiler_network_test
               connection_sampler_test.cc
               connectivity_sampler_test.cc
-              network_sampler_test.cc
               traffic_sampler_test.cc)
 
 target_link_libraries(profiler_network_test

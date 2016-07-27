@@ -13,50 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "network_sampler.h"
+#include "uid_fetcher.h"
 
 #include <gtest/gtest.h>
 
-using profiler::NetworkSampler;
+using profiler::UidFetcher;
 
-TEST(GetUidString, UidFoundAfterPrefix) {
+TEST(GetUidStringFromPidFile, UidFoundAfterPrefix) {
   std::string file_name("uid_found_after_prefix.txt");
   std::string content;
-  EXPECT_TRUE(NetworkSampler::GetUidString(file_name, &content));
+  EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
 }
 
-TEST(GetUidString, UidFoundAfterPrefixAndEmptySpaces) {
+TEST(GetUidStringFromPidFile, UidFoundAfterPrefixAndEmptySpaces) {
   std::string file_name("uid_found_after_prefix_and_spaces.txt");
   std::string content;
-  EXPECT_TRUE(NetworkSampler::GetUidString(file_name, &content));
+  EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
 }
 
-TEST(GetUidString, UidNotFoundAsPrefixIsMissing) {
+TEST(GetUidStringFromPidFile, UidNotFoundAsPrefixIsMissing) {
   std::string file_name("uid_missing.txt");
   std::string content;
-  EXPECT_FALSE(NetworkSampler::GetUidString(file_name, &content));
+  EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }
 
-TEST(GetUidString, UidNotFoundAsNegativeNumber) {
+TEST(GetUidStringFromPidFile, UidNotFoundAsNegativeNumber) {
   std::string file_name("uid_negative_number.txt");
   std::string content;
-  EXPECT_FALSE(NetworkSampler::GetUidString(file_name, &content));
+  EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }
 
-TEST(GetUidString, UidNotFoundAsLetters) {
+TEST(GetUidStringFromPidFile, UidNotFoundAsLetters) {
   std::string file_name("uid_invalid_letters.txt");
   std::string content;
-  EXPECT_FALSE(NetworkSampler::GetUidString(file_name, &content));
-}
-
-TEST(GetUid, UidIntegerFound) {
-  std::string file_name("uid_found_after_prefix.txt");
-  EXPECT_EQ(10023, NetworkSampler::GetUid(file_name));
-}
-
-TEST(GetUid, UidIntegerNotFound) {
-  std::string file_name("uid_negative_number.txt");
-  EXPECT_EQ(-1, NetworkSampler::GetUid(file_name));
+  EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }

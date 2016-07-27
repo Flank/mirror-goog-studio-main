@@ -25,6 +25,7 @@
 #include "utils/trace.h"
 #include "utils/clock.h"
 #include "utils/thread_name.h"
+#include "utils/uid_fetcher.h"
 
 namespace profiler {
 
@@ -79,8 +80,7 @@ void NetworkCollector::CreateSamplers() {
   }
 
   std::string uid;
-  bool has_uid = NetworkSampler::GetUidString(
-      NetworkConstants::GetPidStatusFilePath(pid_), &uid);
+  bool has_uid = UidFetcher::GetUidString(pid_, &uid);
   if (has_uid) {
     samplers_.emplace_back(
         new TrafficSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));

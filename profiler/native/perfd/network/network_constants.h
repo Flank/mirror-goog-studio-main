@@ -24,13 +24,6 @@ namespace profiler {
 // Utility methods for fetching standard network commands and log files.
 class NetworkConstants final {
  public:
-  // Path of pid status file to get uid from pid.
-  static std::string GetPidStatusFilePath(const int pid) {
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "/proc/%d/status", pid);
-    return buffer;
-  }
-
   // Path of file that contains all apps' sent and received bytes.
   static const char *const GetTrafficBytesFilePath() {
     return "/proc/net/xt_qtaguid/stats";
