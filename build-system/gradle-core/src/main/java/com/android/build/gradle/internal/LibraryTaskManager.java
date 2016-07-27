@@ -409,21 +409,22 @@ public class LibraryTaskManager extends TaskManager {
                                                 scopes));
                             }
 
-                            AndroidTask<TransformTask> task =
-                                    transformManager
-                                            .addTransform(tasks, variantScope, transform)
-                                            .orElse(null);
-                            if (task != null) {
-                                List<Object> deps = customTransformsDependencies.get(i);
-                                if (!deps.isEmpty()) {
-                                    task.dependsOn(tasks, deps);
-                                }
+                            List<Object> deps = customTransformsDependencies.get(i);
+                            transformManager
+                                    .addTransform(tasks, variantScope, transform)
+                                    .ifPresent(t -> {
+                                        if (!deps.isEmpty()) {
+                                            t.dependsOn(tasks, deps);
+                                        }
 
-                                // if the task is a no-op then we make assemble task depend on it.
-                                if (transform.getScopes().isEmpty()) {
-                                    variantScope.getAssembleTask().dependsOn(tasks, task);
-                                }
-                            }
+                                        // if the task is a no-op then we make assemble task
+                                        // depend on it.
+                                        if (transform.getScopes().isEmpty()) {
+                                            variantScope
+                                                    .getAssembleTask()
+                                                    .dependsOn(tasks, t);
+                                        }
+                                    });
                         }
 
                         // ----- Minify next -----
@@ -454,10 +455,7 @@ public class LibraryTaskManager extends TaskManager {
                                 transformManager.addTransform(
                                         tasks, variantScope, transform);
                         if (!generateSourcesOnly) {
-                            AndroidTask<TransformTask> jarPackagingTransformTask =
-                                    jarPackagingTask.orElseThrow(
-                                            TransformManager.taskMissing(transform));
-                            bundle.dependsOn(jarPackagingTransformTask.getName());
+                            jarPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
                         }
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle.
@@ -468,10 +466,7 @@ public class LibraryTaskManager extends TaskManager {
                                 transformManager.addTransform(
                                         tasks, variantScope, jniTransform);
                         if (!generateSourcesOnly) {
-                            AndroidTask<TransformTask> jniPackagingTransformTask =
-                                    jniPackagingTask.orElseThrow(
-                                            TransformManager.taskMissing(jniTransform));
-                            bundle.dependsOn(jniPackagingTransformTask.getName());
+                            jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
                         }
                         return null;
                     }

@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.pipeline.TransformManager.taskMissing;
-
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -52,6 +51,7 @@ import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -60,8 +60,8 @@ import java.util.function.Supplier;
  */
 public class InstantRunTaskManager {
 
-    private AndroidTask<TransformTask> verifierTask;
-    private AndroidTask<TransformTask> reloadDexTask;
+    @Nullable private AndroidTask<TransformTask> verifierTask;
+    @Nullable private AndroidTask<TransformTask> reloadDexTask;
 
     @NonNull
     private final Logger logger;
@@ -94,7 +94,7 @@ public class InstantRunTaskManager {
     public AndroidTask<BuildInfoLoaderTask> createInstantRunAllTasks(
             DexOptions dexOptions,
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
-            AndroidTask<?> preTask,
+            @Nullable AndroidTask<?> preTask,
             AndroidTask<?> anchorTask,
             Set<QualifiedContent.Scope> resMergingScopes,
             SupplierTask<File> instantRunMergedManifest,
@@ -108,11 +108,10 @@ public class InstantRunTaskManager {
         // always run the verifier first, since if it detects incompatible changes, we
         // should skip bytecode enhancements of the changed classes.
         InstantRunVerifierTransform verifierTransform = new InstantRunVerifierTransform(variantScope);
-        verifierTask =
-                transformManager
-                        .addTransform(tasks, transformVariantScope, verifierTransform)
-                        .orElseThrow(taskMissing(verifierTransform));
-        verifierTask.dependsOn(tasks, preTask);
+        Optional<AndroidTask<TransformTask>> verifierTaskOptional =
+                transformManager.addTransform(tasks, transformVariantScope, verifierTransform);
+        verifierTask = verifierTaskOptional.orElse(null);
+        verifierTaskOptional.ifPresent(t -> t.optionalDependsOn(tasks, preTask));
 
         NoChangesVerifierTransform javaResourcesVerifierTransform =
                 new NoChangesVerifierTransform(
@@ -124,19 +123,21 @@ public class InstantRunTaskManager {
                         resMergingScopes,
                         InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
 
-        AndroidTask<TransformTask> javaResourcesVerifierTask =
-                transformManager
-                        .addTransform(tasks, transformVariantScope, javaResourcesVerifierTransform)
-                        .orElseThrow(taskMissing(javaResourcesVerifierTransform));
-        javaResourcesVerifierTask.dependsOn(tasks, verifierTask);
+        Optional<AndroidTask<TransformTask>> javaResourcesVerifierTask =
+                transformManager.addTransform(
+                        tasks, transformVariantScope, javaResourcesVerifierTransform);
+        javaResourcesVerifierTask.ifPresent(t -> t.optionalDependsOn(tasks, verifierTask));
 
         InstantRunTransform instantRunTransform = new InstantRunTransform(variantScope);
-        AndroidTask<TransformTask> instantRunTask =
-                transformManager
-                        .addTransform(tasks, transformVariantScope, instantRunTransform)
-                        .orElseThrow(taskMissing(instantRunTransform));
+        Optional<AndroidTask<TransformTask>> instantRunTask =
+                transformManager.addTransform(tasks, transformVariantScope, instantRunTransform);
 
-        instantRunTask.dependsOn(tasks, buildInfoLoaderTask, verifierTask, javaResourcesVerifierTask);
+        instantRunTask.ifPresent(t ->
+                t.dependsOn(
+                        tasks,
+                        buildInfoLoaderTask,
+                        verifierTask,
+                        javaResourcesVerifierTask.orElse(null)));
 
         if (addResourceVerifier) {
             NoChangesVerifierTransform dependenciesVerifierTransform =
@@ -149,13 +150,12 @@ public class InstantRunTaskManager {
                                     QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
                                     QualifiedContent.Scope.EXTERNAL_LIBRARIES),
                             InstantRunVerifierStatus.DEPENDENCY_CHANGED);
-            AndroidTask<TransformTask> dependenciesVerifierTask =
-                    transformManager
-                            .addTransform(
-                                    tasks, transformVariantScope, dependenciesVerifierTransform)
-                            .orElseThrow(taskMissing(dependenciesVerifierTransform));
-            dependenciesVerifierTask.dependsOn(tasks, verifierTask);
-            instantRunTask.dependsOn(tasks, dependenciesVerifierTask);
+            Optional<AndroidTask<TransformTask>> dependenciesVerifierTask =
+                    transformManager.addTransform(
+                            tasks, transformVariantScope, dependenciesVerifierTransform);
+            dependenciesVerifierTask.ifPresent(t -> t.optionalDependsOn(tasks, verifierTask));
+            instantRunTask.ifPresent(t ->
+                    t.optionalDependsOn(tasks, dependenciesVerifierTask.orElse(null)));
         }
 
 
@@ -194,7 +194,7 @@ public class InstantRunTaskManager {
         generateAppInfoAndroidTask.optionalDependsOn(
                 tasks, instantRunMergedManifest.getBuilderTask());
 
-        anchorTask.dependsOn(tasks, instantRunTask);
+        anchorTask.optionalDependsOn(tasks, instantRunTask.orElse(null));
 
         // we always produce the reload.dex irrespective of the targeted version,
         // and if we are not in incremental mode, we need to still need to clean our output state.
@@ -207,9 +207,8 @@ public class InstantRunTaskManager {
         reloadDexTask =
                 transformManager
                         .addTransform(tasks, transformVariantScope, reloadDexTransform)
-                        .orElseThrow(taskMissing(reloadDexTransform));
-
-        anchorTask.dependsOn(tasks, reloadDexTask);
+                        .orElse(null);
+        anchorTask.optionalDependsOn(tasks, reloadDexTask);
 
         return buildInfoLoaderTask;
     }
@@ -243,7 +242,7 @@ public class InstantRunTaskManager {
                         transformVariantScope,
                         variantScope));
 
-        preColdSwapTask.dependsOn(tasks, verifierTask);
+        preColdSwapTask.optionalDependsOn(tasks, verifierTask);
 
         return preColdSwapTask;
     }
@@ -257,11 +256,9 @@ public class InstantRunTaskManager {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
         //
         InstantRunSlicer slicer = new InstantRunSlicer(logger, variantScope);
-        AndroidTask<TransformTask> slicing =
-                transformManager
-                        .addTransform(tasks, transformVariantScope, slicer)
-                        .orElseThrow(taskMissing(slicer));
-        variantScope.addColdSwapBuildTask(slicing);
+        Optional<AndroidTask<TransformTask>> slicing =
+                transformManager.addTransform(tasks, transformVariantScope, slicer);
+        slicing.ifPresent(variantScope::addColdSwapBuildTask);
     }
 
     /**

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.pipeline;
 
-import static com.android.build.gradle.internal.pipeline.TransformManager.taskMissing;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.api.transform.QualifiedContent;
@@ -59,7 +58,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -148,7 +149,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -189,7 +192,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -284,7 +289,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -347,7 +354,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -391,7 +400,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // check the class stream was not consumed.
         assertThat(transformManager.getStreams()).containsExactly(projectClass);
@@ -431,7 +442,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -479,7 +492,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -533,7 +548,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -582,7 +599,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         AndroidTask<TransformTask> task =
-                transformManager.addTransform(taskFactory, scope, t).orElseThrow(taskMissing(t));
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();

@@ -120,16 +120,6 @@ public class TransformManager extends FilterableStreamCollection {
 
     }
 
-    /**
-     * If a task must be created for transform, use this in combination with {@link Optional}
-     * returned by the {@link #addTransform(TaskFactory, TransformVariantScope, Transform)} in order
-     * to throw exception with a meaningful message if task is missing.
-     */
-    @NonNull
-    public static Supplier<RuntimeException> taskMissing(@NonNull Transform t) {
-        return () -> new RuntimeException("Task missing for transform " + t.getName());
-    }
-
     @NonNull
     public AndroidTaskRegistry getTaskRegistry() {
         return taskRegistry;
