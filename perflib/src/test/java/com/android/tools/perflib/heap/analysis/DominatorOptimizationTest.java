@@ -15,11 +15,11 @@
  */
 package com.android.tools.perflib.heap.analysis;
 
+import com.android.testutils.TestResources;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
-import com.android.tools.util.TestResources;
 
 import gnu.trove.TObjectProcedure;
 import junit.framework.TestCase;

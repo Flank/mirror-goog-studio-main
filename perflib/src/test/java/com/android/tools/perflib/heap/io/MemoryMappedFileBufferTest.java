@@ -17,9 +17,9 @@
 package com.android.tools.perflib.heap.io;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestResources;
 import com.android.tools.perflib.heap.Snapshot;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
-import com.android.tools.util.TestResources;
 
 import junit.framework.TestCase;
 import sun.misc.IOUtils;
