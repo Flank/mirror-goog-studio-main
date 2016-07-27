@@ -1,12 +1,28 @@
 # This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
 
+TESTING_SRCS = [
+  "src/test/java/com/android/assetstudiolib/BitmapGeneratorTest.java",
+  "src/test/java/com/android/assetstudiolib/GeneratorTest.java",
+]
+
+java_library(
+  name = "assetstudio_testing",
+  srcs = TESTING_SRCS,
+  deps = [
+    ":assetstudio",
+    "//tools/idea:lib/junit-4.12",
+  ],
+)
+
 java_library(
   name = "assetstudio_testlib",
-  srcs = glob([
-      "src/test/java/**/*.java",
-    ]),
+  srcs = glob(
+      include = ["src/test/java/**/*.java"],
+      exclude = TESTING_SRCS,
+  ),
   deps = [
+      ":assetstudio_testing",
       "@local_jdk//:langtools-neverlink",
       "//tools/base/asset-studio:assetstudio",
           "//tools/base/common:common",
@@ -94,6 +110,7 @@ fileset(
   name = "assetstudio.res",
   srcs = glob([
       "src/main/java/**/*",
+      "src/test/java/**/*",
     ],
     exclude = [
       "**/* *",
@@ -105,6 +122,7 @@ fileset(
     ]),
   mappings = {
       "src/main/java": "assetstudio.resources",
+      "src/test/java": "assetstudio.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
