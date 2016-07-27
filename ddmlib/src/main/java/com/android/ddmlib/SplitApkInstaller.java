@@ -17,6 +17,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 
@@ -37,24 +38,30 @@ public class SplitApkInstaller {
     @NonNull private final List<File> mApks;
     @NonNull private final String mOptions;
 
+    private final String mPrefix;
+
     private SplitApkInstaller(@NonNull IDevice device, @NonNull List<File> apks,
             @NonNull String options) {
         mDevice = device;
         mApks = apks;
         mOptions = options;
+
+        // Use "cmd package" when possible to avoid starting up a new VM
+        mPrefix = mDevice.getVersion().isGreaterOrEqualThan(
+                AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel()) ? "cmd package" : "pm";
     }
 
     public void install(long timeout, @NonNull TimeUnit unit) throws InstallException {
         // Installing multiple APK's is perfomed as follows:
         //  # First we create a install session passing in the total size of all APKs
-        //      $ cmd package install-create -S <total_size>
+        //      $ [pm|cmd package] install-create -S <total_size>
         //      Success: [integer-session-id]   # error if session-id < 0
         //  # Then for each APK, we perform the following. A unique id per APK is generated
         //  # as <index>_<name>, the - at the end means that the APK is streamed via stdin
-        //      $ cmd package install-write -S <session-id> <per_apk_unique_id> -
+        //      $ [pm|cmd package] install-write -S <session-id> <per_apk_unique_id> -
         //  # Finally, we close the session
-        //      $ cmd package install-commit <session-id>  (or)
-        //      $ cmd package install-abandon <session-id>
+        //      $ [pm|cmd package] install-commit <session-id>  (or)
+        //      $ [pm|cmd package] install-abandon <session-id>
 
         try {
             // create a installation session.
@@ -73,7 +80,7 @@ public class SplitApkInstaller {
             }
 
             // if all files were upload successfully, commit otherwise abandon the installation.
-            String command = "cmd package install-" +
+            String command = mPrefix + " install-" +
                     (allUploadSucceeded ? "commit " : "abandon ") +
                     sessionId;
             Device.InstallReceiver receiver = new Device.InstallReceiver();
@@ -107,7 +114,7 @@ public class SplitApkInstaller {
         }
 
         MultiInstallReceiver receiver = new MultiInstallReceiver();
-        String cmd = String.format("cmd package install-create %1$s -S %2$d", pmOptions, totalFileSize);
+        String cmd = String.format(mPrefix + " install-create %1$s -S %2$d", pmOptions, totalFileSize);
         mDevice.executeShellCommand(cmd, receiver, timeout, unit);
         return receiver.getSessionId();
     }
@@ -134,7 +141,7 @@ public class SplitApkInstaller {
 
         baseName = UNSAFE_PM_INSTALL_SESSION_SPLIT_NAME_CHARS.replaceFrom(baseName, '_');
 
-        String command = String.format("cmd package install-write -S %d %s %d_%s -",
+        String command = String.format(mPrefix + " install-write -S %d %s %d_%s -",
                 fileToUpload.length(), sessionId, uniqueId, baseName);
 
         Log.d(sessionId, String.format("Executing : %1$s", command));
@@ -209,11 +216,10 @@ public class SplitApkInstaller {
             }
         }
 
-        if (!device.getVersion().isGreaterOrEqualThan(24)) {
-            if (apks.size() > 1) {
-                throw new IllegalArgumentException(
-                  "Cannot install split APKs on device with API level < 24");
-            }
+        int apiWithSplitApk = AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel();
+        if (!device.getVersion().isGreaterOrEqualThan(apiWithSplitApk)) {
+            throw new IllegalArgumentException(
+              "Cannot install split APKs on device with API level < " + apiWithSplitApk);
         }
     }
 
