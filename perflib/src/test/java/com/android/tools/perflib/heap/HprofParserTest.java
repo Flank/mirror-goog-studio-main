@@ -17,7 +17,6 @@
 package com.android.tools.perflib.heap;
 
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
-import com.android.tools.util.TestResources;
 
 import junit.framework.TestCase;
 
@@ -33,7 +32,7 @@ public class HprofParserTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        File file = TestResources.getFile(getClass(), "/dialer.android-hprof");
+        File file = new File(getClass().getResource("/dialer.android-hprof").getFile());
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
         mSnapshot.resolveReferences();
     }

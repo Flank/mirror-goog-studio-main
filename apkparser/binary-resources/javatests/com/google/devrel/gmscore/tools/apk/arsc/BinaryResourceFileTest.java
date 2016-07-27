@@ -18,7 +18,6 @@ package com.google.devrel.gmscore.tools.apk.arsc;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.util.TestResources;
 import com.google.common.io.ByteStreams;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,7 +43,8 @@ public final class BinaryResourceFileTest {
   /** Tests that resource files, when reassembled, are identical. */
   @Test
   public void testToByteArray() throws Exception {
-    File apk = TestResources.getFile(getClass(), "/test.apk");
+    URL resource = getClass().getResource("/test.apk");
+    File apk = new File(resource.getFile());
 
     // Get all .arsc and encoded .xml files
     String regex = "(.*?\\.arsc)|(AndroidManifest\\.xml)|(res/.*?\\.xml)";
