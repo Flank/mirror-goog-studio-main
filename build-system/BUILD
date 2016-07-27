@@ -22,18 +22,39 @@ fileset(
     ],
 )
 
+fileset(
+  name = "builder-test-api_testlib.res",
+  srcs = glob([
+      "builder-test-api/src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "builder-test-api/src/test/java": "builder-test-api_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
 java_test(
   name = "manifest-merger_tests",
   srcs = glob([
     ]),
   runtime_deps = [
       ":manifest-merger_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=manifest-merger_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
@@ -67,7 +88,7 @@ java_library(
           "//tools/base/repository:repository",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
       "//tools/base/sdk-common:sdk-common",
-          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
     ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
@@ -78,6 +99,10 @@ java_library(
   srcs = glob([
       "manifest-merger/src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/build-system/manifest-merger_testlib.resources",
+  resources = [
+      "//tools/base/build-system:manifest-merger_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/build-system:manifest-merger",
@@ -104,7 +129,7 @@ java_library(
           "//tools/base/repository:repository_testlib",
       "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
       "//tools/base/sdk-common:sdk-common",
-          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-dev",
+          "//prebuilts/tools/common/builder-model:builder-model-2.2.0-alpha6",
       "//tools/base/sdk-common:sdk-common_testlib",
     ],
   javacopts = ["-extra_checks:off"],
@@ -116,6 +141,10 @@ java_library(
   srcs = glob([
       "builder-test-api/src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/build-system/builder-test-api_testlib.resources",
+  resources = [
+      "//tools/base/build-system:builder-test-api_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/build-system:builder-test-api",
@@ -183,12 +212,33 @@ java_test(
     ]),
   runtime_deps = [
       ":builder-test-api_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=builder-test-api_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "manifest-merger_testlib.res",
+  srcs = glob([
+      "manifest-merger/src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "manifest-merger/src/test/java": "manifest-merger_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )

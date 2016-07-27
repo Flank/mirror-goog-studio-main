@@ -17,6 +17,7 @@
 package com.android.tools.perflib.heap.io;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestResources;
 import com.android.tools.perflib.heap.Snapshot;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 
@@ -30,7 +31,7 @@ import java.util.Arrays;
 
 public class MemoryMappedFileBufferTest extends TestCase {
 
-    File file = new File(getClass().getResource("/dialer.android-hprof").getFile());
+    File file = TestResources.getFile(getClass(), "/dialer.android-hprof");
 
     public void testSimpleMapping() throws Exception {
         Snapshot snapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));

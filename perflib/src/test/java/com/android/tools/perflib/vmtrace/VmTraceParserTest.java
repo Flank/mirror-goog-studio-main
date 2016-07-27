@@ -16,6 +16,7 @@
 
 package com.android.tools.perflib.vmtrace;
 
+import com.android.testutils.TestResources;
 import com.google.common.primitives.Ints;
 
 import junit.framework.TestCase;
@@ -347,6 +348,6 @@ public class VmTraceParserTest extends TestCase {
         // *.trace files as resources, otherwise they are excluded from compiler output
         // resulting in a NPE.
         assertNotNull(path + " not found", resource);
-        return new File(resource.getFile());
+        return TestResources.getFile(getClass(), path);
     }
 }

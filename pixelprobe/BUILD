@@ -33,6 +33,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/pixelprobe/pixelprobe_testlib.resources",
+  resources = [
+      "//tools/base/pixelprobe:pixelprobe_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/pixelprobe:pixelprobe",
@@ -51,14 +55,37 @@ java_test(
     ]),
   runtime_deps = [
       ":pixelprobe_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=pixelprobe_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
+)
+
+fileset(
+  name = "pixelprobe_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+      "src/test/resources/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "pixelprobe_testlib.resources",
+      "src/test/resources": "pixelprobe_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
 )
 
 java_library(

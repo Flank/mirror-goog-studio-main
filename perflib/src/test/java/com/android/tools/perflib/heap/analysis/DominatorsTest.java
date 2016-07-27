@@ -16,6 +16,7 @@
 
 package com.android.tools.perflib.heap.analysis;
 
+import com.android.testutils.TestResources;
 import com.android.tools.perflib.heap.*;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 
@@ -237,7 +238,7 @@ public class DominatorsTest extends TestCase {
     }
 
     public void testSampleHprof() throws Exception {
-        File file = new File(ClassLoader.getSystemResource("dialer.android-hprof").getFile());
+        File file = TestResources.getFile(getClass(), "/dialer.android-hprof");
         mSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
         mSnapshot.computeDominators();
 

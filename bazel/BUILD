@@ -47,9 +47,35 @@ java_import(
   visibility = ["//visibility:public"],
 )
 
+#java_library(
+#  name = "test_runner",
+#  runtime_deps = ["//tools/base/bazel/tests:bazel-tests-support_testlib"],
+#  visibility = ["//visibility:public"],
+#)
+
 java_library(
-  name = "test_runner",
-  srcs = glob(["tests/**/*.java"]),
-  visibility = ["//visibility:public"],
-  deps = ["//prebuilts/tools/common/m2:repository/junit/junit/4.12/junit-4.12"],
+  name = "groovy_library",
+  srcs = glob(["groovy/**/*.java"]),
+  deps = ["//prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6"],
 )
+
+java_binary(
+  name = "groovy_stub_gen",
+  runtime_deps = [":groovy_library"],
+  main_class = "com.android.tools.groovy.GroovyStubGenerator",
+  visibility = ["//visibility:public"],
+)
+
+java_binary(
+  name = "groovyc",
+  runtime_deps = [":groovy_library"],
+  main_class = "com.android.tools.groovy.GroovyCompiler",
+  visibility = ["//visibility:public"],
+)
+
+#java_library(
+#  name = "util",
+#  srcs = glob(["tests/**/util/*.java"]),
+#  deps = ["//tools/idea:lib/guava-18.0"],
+#  visibility = ["//visibility:public"],
+#)

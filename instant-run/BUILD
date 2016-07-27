@@ -4,6 +4,28 @@ load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin
 fileset(
   name = "instant-run-client.res",
   srcs = glob([
+      "instant-run-client/src/main/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "instant-run-client/src/main/java": "instant-run-client.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
+fileset(
+  name = "instant-run-client_testlib.res",
+  srcs = glob([
+      "instant-run-client/src/test/java/**/*",
       "instant-run-client/src/test/resources/**/*",
     ],
     exclude = [
@@ -15,7 +37,8 @@ fileset(
       "**/.DS_Store",
     ]),
   mappings = {
-      "instant-run-client/src/test/resources": "instant-run-client.resources",
+      "instant-run-client/src/test/java": "instant-run-client_testlib.resources",
+      "instant-run-client/src/test/resources": "instant-run-client_testlib.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
@@ -65,6 +88,10 @@ java_library(
   srcs = glob([
       "instant-run-client/src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/instant-run/instant-run-client_testlib.resources",
+  resources = [
+      "//tools/base/instant-run:instant-run-client_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/instant-run:instant-run-client",
@@ -90,12 +117,12 @@ java_test(
     ]),
   runtime_deps = [
       ":instant-run-client_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=instant-run-client_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

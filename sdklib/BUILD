@@ -1,6 +1,27 @@
 # This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
 
+fileset(
+  name = "sdklib_testlib.res",
+  srcs = glob([
+      "src/test/java/**/*",
+    ],
+    exclude = [
+      "**/* *",
+      "**/*.java",
+      "**/*.kt",
+      "**/*.groovy",
+      "**/*$*",
+      "**/.DS_Store",
+    ]),
+  mappings = {
+      "src/test/java": "sdklib_testlib.resources",
+    },
+  deps = [
+      "@local_jdk//:langtools-neverlink",
+    ],
+)
+
 java_library(
   name = "sdklib",
   srcs = glob([
@@ -37,6 +58,10 @@ java_library(
   srcs = glob([
       "src/test/java/**/*.java",
     ]),
+  resource_strip_prefix = "tools/base/sdklib/sdklib_testlib.resources",
+  resources = [
+      "//tools/base/sdklib:sdklib_testlib.res",
+    ],
   deps = [
       "@local_jdk//:langtools-neverlink",
       "//tools/base/sdklib:sdklib",
@@ -70,12 +95,12 @@ java_test(
     ]),
   runtime_deps = [
       ":sdklib_testlib",
-      "//tools/base/bazel:test_runner",
+      "//tools/base/testutils:testutils",
     ],
   jvm_flags = [
       "-Dtest.suite.jar=sdklib_testlib.jar",
     ],
-  test_class = "com.android.tools.BazelTestSuite",
+  test_class = "com.android.testutils.JarTestSuite",
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
