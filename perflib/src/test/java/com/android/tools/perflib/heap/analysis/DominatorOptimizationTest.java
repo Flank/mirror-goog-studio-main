@@ -19,6 +19,8 @@ import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
+import com.android.tools.util.TestResources;
+
 import gnu.trove.TObjectProcedure;
 import junit.framework.TestCase;
 
@@ -27,7 +29,7 @@ import java.io.IOException;
 
 public class DominatorOptimizationTest extends TestCase {
     public void testCorrectness() throws IOException {
-        File file = new File(getClass().getResource("/native_allocation.android-hprof").getFile());
+        File file = TestResources.getFile(getClass(), "/native_allocation.android-hprof");
 
         Snapshot groundTruthSnapshot = Snapshot.createSnapshot(new MemoryMappedFileBuffer(file));
         groundTruthSnapshot.prepareDominatorComputation();

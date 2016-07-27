@@ -12,6 +12,7 @@ dependencies {
 
     testCompile 'org.easymock:easymock:3.1'
     testCompile 'junit:junit:4.12'
+    testCompile project(':base:testutils')
 }
 
 project.ext.pomName = 'Android Tools perflib'
