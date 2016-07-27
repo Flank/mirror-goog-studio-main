@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools;
+package com.android.testutils;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -39,9 +39,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
-public class BazelTestSuiteRunner extends Suite {
+public class JarTestSuiteRunner extends Suite {
 
-    public BazelTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
+    public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
         super(builder, suiteClass, getTestClasses());
     }
 
@@ -49,7 +49,7 @@ public class BazelTestSuiteRunner extends Suite {
         List<Class<?>> testClasses = new ArrayList<>();
         String name = System.getProperty("test.suite.jar");
 
-        final ClassLoader loader = BazelTestSuite.class.getClassLoader();
+        final ClassLoader loader = JarTestSuite.class.getClassLoader();
         if (loader instanceof URLClassLoader) {
             for (URL url : ((URLClassLoader)loader).getURLs()) {
                 if (url.getPath().endsWith(name)) {

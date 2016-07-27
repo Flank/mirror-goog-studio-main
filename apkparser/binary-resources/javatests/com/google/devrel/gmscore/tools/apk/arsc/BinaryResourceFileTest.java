@@ -18,7 +18,7 @@ package com.google.devrel.gmscore.tools.apk.arsc;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.util.TestResources;
+import com.android.testutils.TestResources;
 import com.google.common.io.ByteStreams;
 import org.junit.Test;
 import org.junit.runner.RunWith;

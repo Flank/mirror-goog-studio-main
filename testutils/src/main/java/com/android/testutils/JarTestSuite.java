@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.tools;
+package com.android.testutils;
 
 import org.junit.runner.RunWith;
 
-@RunWith(BazelTestSuiteRunner.class)
-public class BazelTestSuite {}
+@RunWith(JarTestSuiteRunner.class)
+public class JarTestSuite {}

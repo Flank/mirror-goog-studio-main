@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.util;
+package com.android.testutils;
 
 import com.google.common.io.Resources;
 

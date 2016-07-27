@@ -16,7 +16,7 @@
 
 package com.android.tools.perflib.vmtrace;
 
-import com.android.tools.util.TestResources;
+import com.android.testutils.TestResources;
 import com.google.common.primitives.Ints;
 
 import junit.framework.TestCase;

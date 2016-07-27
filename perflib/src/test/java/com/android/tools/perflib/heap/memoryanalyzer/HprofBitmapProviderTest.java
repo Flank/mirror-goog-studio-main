@@ -16,11 +16,11 @@
 package com.android.tools.perflib.heap.memoryanalyzer;
 
 import com.android.ddmlib.BitmapDecoder;
+import com.android.testutils.TestResources;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
-import com.android.tools.util.TestResources;
 
 import junit.framework.TestCase;
 
