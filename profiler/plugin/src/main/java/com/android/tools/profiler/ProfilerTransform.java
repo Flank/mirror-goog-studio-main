@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class ProfilerTransform extends ClassTransform {
-
     public ProfilerTransform() {
         super("profiler", new String[] { "com.android.tools" + File.separator + "studio-profiler-lib" });
     }
@@ -37,11 +36,16 @@ public final class ProfilerTransform extends ClassTransform {
         visitor = new InitializerAdapter(visitor);
         visitor = new NetworkingAdapter(visitor);
         visitor = new EventAdapter(visitor);
-        visitor = new FragmentAdapter(visitor);
+        visitor = new ComponentInheritanceAdapter(visitor);
+        /**
+         * TODO: Will be removed when the user class' instrumentation method stabilized
+         */
+        //visitor = new FragmentAdapter(visitor);
         visitor = new EnergyAdapter(visitor);
 
         ClassReader cr = new ClassReader(in);
         cr.accept(visitor, 0);
+        ComponentInheritanceUtils.buildInheritance();
         out.write(writer.toByteArray());
     }
 }
