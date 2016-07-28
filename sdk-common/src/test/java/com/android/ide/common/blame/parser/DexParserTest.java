@@ -128,4 +128,22 @@ public class DexParserTest {
                 message.getSourceFilePositions());
         assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
     }
+
+    @Test
+    public void testNewerByteCodeVersionBuildTools24ErrorMessage() {
+        String stderr = "PARSE ERROR:\n"
+                + "unsupported class file version 52.0\n"
+                + "...while parsing com/example/MyClass.class\n";
+        Message message = Iterables.getOnlyElement(PARSER.parseToolOutput(stderr));
+        assertEquals(Message.Kind.ERROR, message.getKind());
+        assertEquals(String.format(
+                DexParser.COULD_NOT_CONVERT_BYTECODE_TO_DEX,
+                String.format(DexParser.INVALID_BYTE_CODE_VERSION, 52) + "\n"
+                        + "...while parsing com/example/MyClass.class"),
+                message.getText());
+        assertEquals(stderr.trim(), message.getRawMessage().trim());
+        assertEquals(ImmutableList.of(SourceFilePosition.UNKNOWN),
+                message.getSourceFilePositions());
+        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+    }
 }
