@@ -30,7 +30,7 @@ namespace profiler {
 // provide a faster and lighter sampling method.
 class EnergyUsageSampler final {
  public:
-  EnergyUsageSampler(const Clock& clock) : clock_(clock) {}
+  explicit EnergyUsageSampler(const Clock& clock) : clock_(clock) {}
   ~EnergyUsageSampler() = default;
 
   // Gets available energy stats for the process with given pid. If a stat is

@@ -23,8 +23,6 @@ namespace profiler {
 using std::count;
 using std::function;
 using std::make_shared;
-using std::unordered_map;
-using std::set;
 using std::shared_ptr;
 using std::string;
 using std::vector;

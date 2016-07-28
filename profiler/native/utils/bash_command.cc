@@ -6,7 +6,6 @@
 #include "utils/log.h"
 
 using std::string;
-using profiler::Log;
 
 namespace {
 const char *const kRunAsExecutable = "/system/bin/run-as";

@@ -20,7 +20,6 @@
 
 using profiler::FakeClock;
 using profiler::Stopwatch;
-using std::shared_ptr;
 
 TEST(Stopwatch, GetElapsedTimeFromConstruction) {
   auto clock = std::make_shared<FakeClock>(100);

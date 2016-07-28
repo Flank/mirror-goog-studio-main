@@ -25,13 +25,9 @@ using grpc::Status;
 using profiler::proto::HttpConnectionData;
 using profiler::proto::HttpDetailsRequest;
 using profiler::proto::HttpDetailsResponse;
-using profiler::proto::HttpDetailsResponse_Body;
-using profiler::proto::HttpDetailsResponse_Request;
-using profiler::proto::HttpDetailsResponse_Response;
 using profiler::proto::HttpRangeRequest;
 using profiler::proto::HttpRangeResponse;
 using profiler::proto::NetworkDataRequest;
-using profiler::proto::NetworkProfilerData;
 using profiler::Log;
 
 namespace {
