@@ -42,6 +42,7 @@ import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -149,6 +150,7 @@ public class NativeComponentModelBuilder implements ToolingModelBuilder {
                     files,
                     ImmutableList.copyOf(lib.getExportedHeaders()),
                     lib.getOutput(),
+                    ImmutableSet.copyOf(lib.getRuntimeFiles()),
                     lib.getAbi(),
                     lib.getArtifactName());
             artifacts.add(artifact);

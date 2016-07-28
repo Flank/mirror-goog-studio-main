@@ -47,7 +47,9 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
     @NonNull
     private final Collection<File> exportedHeaders;
     @NonNull
-    private final File getOutputFile;
+    private final File outputFile;
+    @NonNull
+    private final Collection<File> runtimeFiles;
     @NonNull
     private final String abi;
     @NonNull
@@ -61,7 +63,8 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
             @NonNull Collection<NativeFolder> sourceFolders,
             @NonNull Collection<NativeFile> sourceFiles,
             @NonNull Collection<File> exportedHeaders,
-            @NonNull File getOutputFile,
+            @NonNull File outputFile,
+            @NonNull Collection<File> runtimeFiles,
             @NonNull String abi,
             @NonNull String targetName) {
         this.name = name;
@@ -71,7 +74,8 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
         this.sourceFolders = sourceFolders;
         this.sourceFiles = sourceFiles;
         this.exportedHeaders = exportedHeaders;
-        this.getOutputFile = getOutputFile;
+        this.outputFile = outputFile;
+        this.runtimeFiles = runtimeFiles;
         this.abi = abi;
         this.targetName = targetName;
     }
@@ -121,7 +125,13 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
     @Override
     @NonNull
     public File getOutputFile() {
-        return getOutputFile;
+        return outputFile;
+    }
+
+    @NonNull
+    @Override
+    public Collection<File> getRuntimeFiles() {
+        return runtimeFiles;
     }
 
     @Override
@@ -146,7 +156,8 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
                 .add("SourceFoldersCount", sourceFolders.size())
                 .add("SourceFilesCount", sourceFiles.size())
                 .add("ExportedHeadersSize", exportedHeaders.size())
-                .add("OutputFile", getOutputFile)
+                .add("OutputFile", outputFile)
+                .add("RuntimeFiles", getRuntimeFiles())
                 .toString();
     }
 }

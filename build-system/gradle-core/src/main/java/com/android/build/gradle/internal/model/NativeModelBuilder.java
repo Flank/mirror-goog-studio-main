@@ -217,6 +217,9 @@ public class NativeModelBuilder implements ToolingModelBuilder {
                     files,
                     exportedHeaders,
                     library.output,
+                    library.runtimeFiles == null
+                            ? ImmutableList.of()
+                            : ImmutableList.copyOf(library.runtimeFiles),
                     library.abi,
                     library.artifactName);
         }
