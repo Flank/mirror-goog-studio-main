@@ -36,7 +36,7 @@ class EnergyUsageSampler final {
   // Gets available energy stats for the process with given pid. If a stat is
   // not available, the field will not be set.
   const void GetProcessEnergyUsage(
-      const int pid, proto::EnergyDataResponse_EnergySample& sample);
+      const int pid, proto::EnergyDataResponse_EnergySample* sample);
 
   // Parses a series of stat tokens given a tokenizer at the beginning of the
   // category token; For example, the following are the stat tokens for CPU:
@@ -46,8 +46,9 @@ class EnergyUsageSampler final {
   // It will then put the parsed stats into it's appropriate section in the
   // specified sample. If no recognized stats can be found, the sample will be
   // left untouched.
-  const void ParseStatTokens(Tokenizer& tokenizer,
-                             proto::EnergyDataResponse_EnergySample& sample);
+  const void ParseStatTokens(
+      Tokenizer* tokenizer,
+      proto::EnergyDataResponse_EnergySample* sample);
 
   // Checks that a line begins with the required heading. A required heading
   // begins with the following:
@@ -57,7 +58,7 @@ class EnergyUsageSampler final {
   // If heading matches the required format, the tokenizer will be left right
   // before the category tag. If the required format does not match, the
   // tokenizer should be discarded and move on to the next line of input.
-  const bool VerifyRequiredHeading(Tokenizer& tokenizer,
+  const bool VerifyRequiredHeading(Tokenizer* tokenizer,
                                    const int32_t required_uid);
 
  private:

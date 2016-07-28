@@ -33,7 +33,7 @@ TEST(VerifyRequiredHeading, ReturnsTrueForCorrectHeading) {
   FakeClock fakeClock;
   EnergyUsageSampler sampler(fakeClock);
 
-  EXPECT_TRUE(sampler.VerifyRequiredHeading(tokenizer, 12345));
+  EXPECT_TRUE(sampler.VerifyRequiredHeading(&tokenizer, 12345));
 }
 
 TEST(VerifyRequiredHeading, ReturnsFalseForEmptyHeading) {
@@ -43,7 +43,7 @@ TEST(VerifyRequiredHeading, ReturnsFalseForEmptyHeading) {
   FakeClock fakeClock;
   EnergyUsageSampler sampler(fakeClock);
 
-  EXPECT_FALSE(sampler.VerifyRequiredHeading(tokenizer, 12345));
+  EXPECT_FALSE(sampler.VerifyRequiredHeading(&tokenizer, 12345));
 }
 
 TEST(VerifyRequiredHeading, ReturnsFalseForCorruptHeading) {
@@ -53,7 +53,7 @@ TEST(VerifyRequiredHeading, ReturnsFalseForCorruptHeading) {
   FakeClock fakeClock;
   EnergyUsageSampler sampler(fakeClock);
 
-  EXPECT_FALSE(sampler.VerifyRequiredHeading(tokenizer, 12345));
+  EXPECT_FALSE(sampler.VerifyRequiredHeading(&tokenizer, 12345));
 }
 
 TEST(VerifyRequiredHeading, ReturnsFalseForIncorrectUid) {
@@ -63,7 +63,7 @@ TEST(VerifyRequiredHeading, ReturnsFalseForIncorrectUid) {
   FakeClock fakeClock;
   EnergyUsageSampler sampler(fakeClock);
 
-  EXPECT_FALSE(sampler.VerifyRequiredHeading(tokenizer, 12345));
+  EXPECT_FALSE(sampler.VerifyRequiredHeading(&tokenizer, 12345));
 }
 
 TEST(ParseStatTokens, ParsesAndSavedTokensCorrectly) {
@@ -74,7 +74,7 @@ TEST(ParseStatTokens, ParsesAndSavedTokensCorrectly) {
   FakeClock fakeClock;
   EnergyUsageSampler sampler(fakeClock);
 
-  sampler.ParseStatTokens(tokenizer, sample);
+  sampler.ParseStatTokens(&tokenizer, &sample);
 
   EXPECT_EQ(sample.cpu_user_power_usage(), 100);
 }

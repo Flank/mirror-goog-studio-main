@@ -43,18 +43,19 @@ namespace profiler {
 using std::string;
 
 const bool EnergyUsageSampler::VerifyRequiredHeading(
-    Tokenizer& tokenizer, const int32_t required_uid) {
+    Tokenizer* tokenizer, const int32_t required_uid) {
   string log_type;
   string uid;
-  return (tokenizer.EatNextToken(Tokenizer::IsDigit) &&
-          tokenizer.GetNextToken(&uid) && temp_stoi(uid) == required_uid &&
-          tokenizer.GetNextToken(&log_type) && log_type.compare("l") == 0);
+  return (tokenizer->EatNextToken(Tokenizer::IsDigit) &&
+          tokenizer->GetNextToken(&uid) && temp_stoi(uid) == required_uid &&
+          tokenizer->GetNextToken(&log_type) && log_type.compare("l") == 0);
 }
 
 const void EnergyUsageSampler::ParseStatTokens(
-    Tokenizer& tokenizer, proto::EnergyDataResponse_EnergySample& sample) {
+    Tokenizer* tokenizer,
+    proto::EnergyDataResponse_EnergySample* sample) {
   std::string category;
-  tokenizer.GetNextToken(&category);
+  tokenizer->GetNextToken(&category);
 
   // TODO add sampling for remaining stats defined in proto.
   // Compares the category token to the required categories and further
@@ -67,24 +68,24 @@ const void EnergyUsageSampler::ParseStatTokens(
     // Format: user-cpu-time-ms, system-cpu-time-ms, total-cpu-power-mAus
     string user_time_token;
     string system_time_token;
-    tokenizer.GetNextToken(&user_time_token);
-    tokenizer.GetNextToken(&system_time_token);
+    tokenizer->GetNextToken(&user_time_token);
+    tokenizer->GetNextToken(&system_time_token);
     int32_t user_time = temp_stoi(user_time_token);
     int32_t system_time = temp_stoi(system_time_token);
-    sample.set_cpu_user_power_usage(user_time);
-    sample.set_cpu_system_power_usage(system_time);
+    sample->set_cpu_user_power_usage(user_time);
+    sample->set_cpu_system_power_usage(system_time);
 
   } else if (category.compare("fg") == 0) {
     // Format: total-time, start-count
     string foreground_time_token;
-    tokenizer.GetNextToken(&foreground_time_token);
+    tokenizer->GetNextToken(&foreground_time_token);
     int32_t foreground_time = temp_stoi(foreground_time_token);
-    sample.set_screen_power_usage(foreground_time);
+    sample->set_screen_power_usage(foreground_time);
   }
 }
 
 const void EnergyUsageSampler::GetProcessEnergyUsage(
-    const int pid, proto::EnergyDataResponse_EnergySample& sample) {
+    const int pid, proto::EnergyDataResponse_EnergySample* sample) {
   std::unique_ptr<FILE, int (*)(FILE*)> dump_file(
       popen(kDumpsysBatterystatsCommand, "r"), pclose);
 
@@ -93,14 +94,14 @@ const void EnergyUsageSampler::GetProcessEnergyUsage(
     return;
   }
 
-  sample.set_timestamp(clock_.GetCurrentTime());
+  sample->set_timestamp(clock_.GetCurrentTime());
 
   char line_buffer[kLineBufferSize];
   while (!feof(dump_file.get()) &&
          fgets(line_buffer, kLineBufferSize, dump_file.get()) != nullptr) {
     Tokenizer tokenizer(line_buffer, ",");
-    if (VerifyRequiredHeading(tokenizer, pid)) {
-      ParseStatTokens(tokenizer, sample);
+    if (VerifyRequiredHeading(&tokenizer, pid)) {
+      ParseStatTokens(&tokenizer, sample);
     }
   }
 }

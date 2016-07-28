@@ -35,7 +35,8 @@ grpc::Status EnergyServiceImpl::GetData(grpc::ServerContext* context,
 }
 
 grpc::Status EnergyServiceImpl::StartCollection(
-    grpc::ServerContext* context, const StartEnergyCollectionRequest* request,
+    grpc::ServerContext* context,
+    const StartEnergyCollectionRequest* request,
     EnergyCollectionStatusResponse* response) {
   int reset_command_result = system(kUnplugBatteryStateCommand);
   if (reset_command_result != 0) {
@@ -51,7 +52,8 @@ grpc::Status EnergyServiceImpl::StartCollection(
 }
 
 grpc::Status EnergyServiceImpl::StopCollection(
-    grpc::ServerContext* context, const StopEnergyCollectionRequest* request,
+    grpc::ServerContext* context,
+    const StopEnergyCollectionRequest* request,
     EnergyCollectionStatusResponse* response) {
   collector_.Stop();
   response->set_app_id(request->app_id());
