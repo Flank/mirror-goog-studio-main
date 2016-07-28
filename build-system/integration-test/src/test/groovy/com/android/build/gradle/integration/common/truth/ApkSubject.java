@@ -29,6 +29,7 @@ import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.testutils.truth.IndirectSubject;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
