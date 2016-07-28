@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
@@ -88,7 +89,7 @@ public class AntennaPodInstantRunPerformanceTest {
                         GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION + '"');
         TestFileUtils.searchAndReplace(project.getBuildFile(),
                 "jcenter\\(\\)",
-                "maven { url '" + System.getenv("CUSTOM_REPO") +  "'} \n"
+                "maven { url '" + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO")) +  "'} \n"
                         + "        jcenter()");
 
         if (dexInProcess == DexInProcess.DEX_OUT_OF_PROCESS) {
