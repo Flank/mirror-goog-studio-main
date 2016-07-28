@@ -32,7 +32,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -111,8 +110,6 @@ public class AndroidTargetManager {
                     }
                 }
             }
-            Map<LocalPackage, IAndroidTarget> result = Maps.newTreeMap(TARGET_COMPARATOR);
-            result.putAll(tempTargetToPackage.inverse());
             for (LocalPackage p : manager.getPackages().getLocalPackages().values()) {
                 TypeDetails details = p.getTypeDetails();
                 if (details instanceof DetailsTypes.AddonDetailsType) {
@@ -120,11 +117,13 @@ public class AndroidTargetManager {
                             ((DetailsTypes.AddonDetailsType)details).getAndroidVersion();
                     PlatformTarget baseTarget = platformTargets.get(addonVersion);
                     if (baseTarget != null) {
-                        result.put(p, new AddonTarget(p, baseTarget,
-                          mSdkHandler.getSystemImageManager(progress), progress, mFop));
+                        tempTargetToPackage.put(new AddonTarget(p, baseTarget,
+                          mSdkHandler.getSystemImageManager(progress), progress, mFop), p);
                     }
                 }
             }
+            Map<LocalPackage, IAndroidTarget> result = Maps.newTreeMap(TARGET_COMPARATOR);
+            result.putAll(tempTargetToPackage.inverse());
             for (LocalPackage p :
               manager.getPackages().getLocalPackagesForPrefix(SdkConstants.FD_ANDROID_SOURCES)) {
                 TypeDetails details = p.getTypeDetails();
