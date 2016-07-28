@@ -22,6 +22,7 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestResources;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 
@@ -46,7 +47,7 @@ public class AddonListSourceProviderTest extends TestCase {
 
         downloader
                 .registerUrl(new URL("https://dl.google.com/android/repository/addons_list-1.xml"),
-                        getClass().getResourceAsStream("testdata/addons_list_sample_1.xml"));
+                        getClass().getResourceAsStream("/addons_list_sample_1.xml"));
         List<RepositorySource> sources = provider.getSources(downloader, progress, false);
         progress.assertNoErrorsOrWarnings();
         assertEquals(4, sources.size());
@@ -55,7 +56,7 @@ public class AddonListSourceProviderTest extends TestCase {
                 sources.get(1).getPermittedModules());
         downloader
                 .registerUrl(new URL("https://dl.google.com/android/repository/addons_list-2.xml"),
-                        getClass().getResourceAsStream("testdata/addons_list_sample_2.xml"));
+                        getClass().getResourceAsStream("/addons_list_sample_2.xml"));
 
         sources = provider.getSources(downloader, progress, true);
         progress.assertNoErrorsOrWarnings();
@@ -69,7 +70,7 @@ public class AddonListSourceProviderTest extends TestCase {
 
         downloader
                 .registerUrl(new URL("https://dl.google.com/android/repository/addons_list-3.xml"),
-                        getClass().getResourceAsStream("testdata/addons_list_sample_3.xml"));
+                        getClass().getResourceAsStream("/addons_list_sample_3.xml"));
 
         sources = provider.getSources(downloader, progress, true);
         progress.assertNoErrorsOrWarnings();
@@ -84,7 +85,7 @@ public class AddonListSourceProviderTest extends TestCase {
     public void testLocalSource() throws Exception {
         AndroidLocation.resetFolder();
         MockFileOp fop = new MockFileOp();
-        File testFile = new File(getClass().getResource("testdata/repositories.xml").toURI());
+        File testFile = TestResources.getFile(getClass(), "/repositories.xml");
         fop.recordExistingFile(
                 new File(AndroidLocation.getFolder(), AndroidSdkHandler.LOCAL_ADDONS_FILENAME)
                         .getAbsolutePath(),

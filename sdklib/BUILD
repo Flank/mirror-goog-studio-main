@@ -5,6 +5,7 @@ fileset(
   name = "sdklib_testlib.res",
   srcs = glob([
       "src/test/java/**/*",
+      "src/test/resources/**/*",
     ],
     exclude = [
       "**/* *",
@@ -16,6 +17,7 @@ fileset(
     ]),
   mappings = {
       "src/test/java": "sdklib_testlib.resources",
+      "src/test/resources": "sdklib_testlib.resources",
     },
   deps = [
       "@local_jdk//:langtools-neverlink",
@@ -91,6 +93,7 @@ java_library(
       "//tools/idea:lib/gson-2.5",
       "//tools/base/repository:repository",
       "//tools/base/repository:repository_testlib",
+      "//tools/base/testutils",
     ],
   exports = [
       "//tools/base/sdklib:sdklib",

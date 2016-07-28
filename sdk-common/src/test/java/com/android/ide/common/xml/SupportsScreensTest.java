@@ -24,10 +24,7 @@ import junit.framework.TestCase;
 
 public class SupportsScreensTest extends TestCase {
 
-    private static final String TESTDATA_PATH =
-        "/com/android/sdklib/testdata/";  //$NON-NLS-1$
-    private static final String TESTAPP2_XML = TESTDATA_PATH +
-        "AndroidManifest-testapp2.xml";  //$NON-NLS-1$
+    private static final String TESTAPP2_XML = "/AndroidManifest-testapp2.xml";  //$NON-NLS-1$
 
     public void testDefaultValuesApi3() {
         SupportsScreens supportsScreens = SupportsScreens.getDefaultValues(3);

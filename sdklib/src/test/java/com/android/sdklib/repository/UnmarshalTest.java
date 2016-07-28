@@ -46,7 +46,7 @@ import java.util.Map;
 public class UnmarshalTest extends TestCase {
 
     public void testLoadRepo() throws Exception {
-        String filename = "testdata/repository2_sample_1.xml";
+        String filename = "/repository2_sample_1.xml";
         InputStream xmlStream = getClass().getResourceAsStream(filename);
         assertNotNull("Missing test file: " + filename, xmlStream);
 

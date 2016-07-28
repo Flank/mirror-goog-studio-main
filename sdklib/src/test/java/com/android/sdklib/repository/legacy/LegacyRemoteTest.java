@@ -41,7 +41,6 @@ import junit.framework.TestCase;
 import java.net.URL;
 import java.util.Map;
 
-
 /**
  * Tests for {@link LegacyRemoteRepoLoader}.
  */
@@ -74,12 +73,12 @@ public class LegacyRemoteTest extends TestCase {
         // TODO: find a better way to get it into the cache/have the fallback load it
         fop.recordExistingFile(fop.getAgnosticAbsPath(
                 AndroidLocation.getFolder() + "cache/sdkbin-1_951b49ff-test_epo"), ByteStreams
-                .toByteArray(getClass().getResourceAsStream("../../testdata/repository_sample_10.xml")));
+                .toByteArray(getClass().getResourceAsStream("/repository_sample_10.xml")));
 
         downloader.registerUrl(new URL("http://www.example.com/testRepo2"),
-                getClass().getResourceAsStream("../testdata/repository2_sample_1.xml"));
+                getClass().getResourceAsStream("/repository2_sample_1.xml"));
         downloader.registerUrl(new URL("http://www.example.com/testRepo"),
-                getClass().getResourceAsStream("../../testdata/repository_sample_10.xml"));
+                getClass().getResourceAsStream("/repository_sample_10.xml"));
         FakeProgressRunner runner = new FakeProgressRunner();
 
         mgr.load(0, Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
