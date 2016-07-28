@@ -6,33 +6,24 @@ def _kotlin_jar_impl(ctx):
 
 
   all_deps = set(ctx.files.deps)
+  all_deps += set(ctx.files._kotlin)
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "java"):
       all_deps += this_dep.java.transitive_runtime_deps
 
-
-  cmd = "rm -f %s\n" % build_output
-
-  # Compile all files in srcs with kotlinc
-  cmd += "/bin/bash " + ctx.file._kotlinc.path + " %s -d %s %s\n" % (
-      "-cp " + ":".join([dep.path for dep in ctx.files.deps]) if len(ctx.files.deps) != 0 else "",
-      build_output,
-      " ".join([src.path for src in ctx.files.srcs]),
-  )
+  args = []
+  if ctx.files.deps:
+    args = ["-cp", ":".join([dep.path for dep in all_deps])]
+  args += ["-d", build_output]
+  args += [src.path for src in ctx.files.srcs]
 
   # Execute the command
   ctx.action(
-      inputs = (
-          ctx.files.srcs
-        + ctx.files.deps
-        + ctx.files._kotlinc
-        + ctx.files._kotlin_sdk
-        + ctx.files._jdk
-          ),
+      inputs = (ctx.files.srcs + list(all_deps)),
       outputs = [class_jar],
       mnemonic = "kotlinc",
-      command = "set -e;" + cmd,
-      use_default_shell_env = True,
+      executable = ctx.executable._kotlinc,
+      arguments = args,
   )
 
 _kotlin_jar = rule(
@@ -46,16 +37,12 @@ _kotlin_jar = rule(
             allow_files = FileType([".jar"]),
         ),
         "_kotlinc": attr.label(
-            executable=True,
-            default=Label("//tools/base/bazel:kotlin/bin/kotlinc"),
-            single_file=True,
-            allow_files=True),
-        "_kotlin_sdk": attr.label(
-            default=Label("//tools/base/bazel:kotlin-sdk"),
-        ),
-        "_jdk": attr.label(
-            default = Label("//tools/defaults:jdk"),
-        ),
+            executable = True,
+            default = Label("//tools/base/bazel:kotlinc"),
+            allow_files = True),
+        "_kotlin": attr.label(
+            default = Label("//tools/base/bazel:kotlin-runtime"),
+            allow_files = True),
     },
     outputs = {
         "class_jar": "lib%{name}.jar",
@@ -81,7 +68,7 @@ def kotlin_library(name, srcs=[], deps=[], visibility=[], **kwargs):
     native.java_library(
         name = name + ".java",
         srcs = javas,
-        deps = deps + ["lib" + name + ".kotlin.jar", "//tools/base/bazel:kotlin/lib/kotlin-runtime.jar"],
+        deps = deps + ["lib" + name + ".kotlin.jar", "//tools/base/bazel:kotlin-runtime"],
         **kwargs
     )
     jars = ["lib" + name + ".java.jar"]
@@ -180,7 +167,7 @@ def kotlin_groovy_library(name, srcs=[], deps=[], visibility=[], **kwargs):
   groovy_library(
     name = name + ".groovy",
     srcs = srcs,
-    deps = deps + ["//tools/base/bazel:kotlin/lib/kotlin-runtime.jar", "lib" + name + ".kotlin.jar"],
+    deps = deps + ["//tools/base/bazel:kotlin-runtime", "lib" + name + ".kotlin.jar"],
     visibility = visibility,
     **kwargs
     )
