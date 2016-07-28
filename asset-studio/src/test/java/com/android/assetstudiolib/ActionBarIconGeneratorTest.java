@@ -19,22 +19,29 @@ package com.android.assetstudiolib;
 import com.android.assetstudiolib.ActionBarIconGenerator.ActionBarOptions;
 import com.android.assetstudiolib.ActionBarIconGenerator.Theme;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
-public class ActionBarIconGeneratorTest extends BitmapGeneratorTest {
-    private void checkGraphic(String baseName, Theme theme) throws IOException {
+@RunWith(JUnit4.class)
+public class ActionBarIconGeneratorTest {
+
+    private static void checkGraphic(String baseName, Theme theme) throws IOException {
         ActionBarOptions options = new ActionBarOptions();
         options.theme = theme;
 
         ActionBarIconGenerator generator = new ActionBarIconGenerator();
-        checkGraphic(4, "actions", baseName, generator, options);
+        BitmapGeneratorTests.checkGraphic(4, "actions", baseName, generator, options);
     }
 
+    @Test
     public void testDark() throws Exception {
         checkGraphic("ic_action_dark", Theme.HOLO_DARK);
     }
 
+    @Test
     public void testLight() throws Exception {
         checkGraphic("ic_action_light", Theme.HOLO_LIGHT);
     }

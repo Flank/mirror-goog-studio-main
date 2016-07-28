@@ -16,15 +16,22 @@
 
 package com.android.assetstudiolib;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
-public class MenuIconGeneratorTest extends BitmapGeneratorTest {
-    private void checkGraphic(String baseName) throws IOException {
+@RunWith(JUnit4.class)
+public class MenuIconGeneratorTest {
+
+    private static void checkGraphic(String baseName) throws IOException {
         MenuIconGenerator generator = new MenuIconGenerator();
-        checkGraphic(4, "menus", baseName, generator, new GraphicGenerator.Options());
+        BitmapGeneratorTests.checkGraphic(
+                4, "menus", baseName, generator, new GraphicGenerator.Options());
     }
 
+    @Test
     public void testMenu() throws Exception {
         checkGraphic("ic_menu_1");
     }

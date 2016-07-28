@@ -16,22 +16,31 @@
 
 package com.android.assetstudiolib;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
-public class TabIconGeneratorTest extends BitmapGeneratorTest {
-    private void checkGraphic(String folderName, String baseName, int minSdk,
-            int expectedFileCount) throws IOException {
+@RunWith(JUnit4.class)
+public class TabIconGeneratorTest {
+
+    private static void checkGraphic(
+            String folderName, String baseName, int minSdk, int expectedFileCount)
+            throws IOException {
         TabIconGenerator generator = new TabIconGenerator();
         TabIconGenerator.TabOptions options = new TabIconGenerator.TabOptions();
         options.minSdk = minSdk;
-        checkGraphic(expectedFileCount, folderName, baseName, generator, options);
+        BitmapGeneratorTests.checkGraphic(
+                expectedFileCount, folderName, baseName, generator, options);
     }
 
+    @Test
     public void testTabs1() throws Exception {
         checkGraphic("tabs", "ic_tab_1", 1 /* minSdk */, 16 /* expectedFileCount */);
     }
 
+    @Test
     public void testTabs2() throws Exception {
         checkGraphic("tabs-v5+", "ic_tab_1", 5, 8);
     }

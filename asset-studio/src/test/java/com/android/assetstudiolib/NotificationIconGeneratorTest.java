@@ -18,31 +18,39 @@ package com.android.assetstudiolib;
 
 import com.android.assetstudiolib.NotificationIconGenerator.NotificationOptions;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
-public class NotificationIconGeneratorTest extends BitmapGeneratorTest {
-    private void checkGraphic(String baseName, int minSdk, String folderName,
+@RunWith(JUnit4.class)
+public class NotificationIconGeneratorTest {
+
+    private static void checkGraphic(String baseName, int minSdk, String folderName,
             int expectedCount) throws IOException {
         NotificationOptions options = new NotificationOptions();
         options.minSdk = minSdk;
 
         NotificationIconGenerator generator = new NotificationIconGenerator();
-        checkGraphic(expectedCount, folderName, baseName, generator, options);
+        BitmapGeneratorTests.checkGraphic(expectedCount, folderName, baseName, generator, options);
     }
 
-    private void checkGraphic(String baseName) throws IOException {
+    private static void checkGraphic(String baseName) throws IOException {
         checkGraphic(baseName, 1, "notification", 12);
     }
 
+    @Test
     public void testNotification1() throws Exception {
         checkGraphic("ic_stat_1");
     }
 
+    @Test
     public void testNotification2() throws Exception {
         checkGraphic("ic_stat_1", 9 /* minSdk */, "notification-v9+", 8 /* fileCount */);
     }
 
+    @Test
     public void testNotification3() throws Exception {
         checkGraphic("ic_stat_1", 11, "notification-v11+", 4);
     }

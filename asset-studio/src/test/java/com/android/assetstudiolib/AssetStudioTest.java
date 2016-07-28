@@ -15,19 +15,25 @@
  */
 package com.android.assetstudiolib;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.assetstudiolib.AssetStudio.Generator;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import java.util.Collections;
 
+@RunWith(JUnit4.class)
 public final class AssetStudioTest {
+
+    @Rule public final ExpectedException thrown = ExpectedException.none();
 
     private Generator mGenerator;
 
@@ -48,7 +54,7 @@ public final class AssetStudioTest {
                 "ic_search_black_24dp",
                 "images/material_design_icons/action/ic_search_black_24dp.xml");
 
-        assertEquals(expected, AssetStudio.getBasenameToPathMap(mGenerator));
+        assertThat(AssetStudio.getBasenameToPathMap(mGenerator)).isEqualTo(expected);
     }
 
     @Test
@@ -56,10 +62,7 @@ public final class AssetStudioTest {
         Mockito.when(mGenerator.getResourceNames("images/material_design_icons/device/"))
                 .thenReturn(Collections.singletonList("ic_search_black_24dp.xml").iterator());
 
-        try {
-            AssetStudio.getBasenameToPathMap(mGenerator);
-            fail();
-        } catch (IllegalArgumentException ignored) {
-        }
+        thrown.expect(IllegalArgumentException.class);
+        AssetStudio.getBasenameToPathMap(mGenerator);
     }
 }
