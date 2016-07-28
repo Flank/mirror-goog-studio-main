@@ -1,44 +1,3 @@
-exports_files([
-  "kotlin/bin/kotlin",
-  "kotlin/bin/kotlin.bat",
-  "kotlin/bin/kotlinc",
-  "kotlin/bin/kotlinc-js",
-  "kotlin/bin/kotlinc-js.bat",
-  "kotlin/bin/kotlinc-jvm",
-  "kotlin/bin/kotlinc-jvm.bat",
-  "kotlin/bin/kotlinc.bat",
-  "kotlin/lib/android-compiler-plugin.jar",
-  "kotlin/lib/kotlin-android-sdk-annotations.jar",
-  "kotlin/lib/kotlin-ant.jar",
-  "kotlin/lib/kotlin-build-common.jar",
-  "kotlin/lib/kotlin-compiler.jar",
-  "kotlin/lib/kotlin-daemon-client.jar",
-  "kotlin/lib/kotlin-jdk-annotations.jar",
-  "kotlin/lib/kotlin-jslib-sources.jar",
-  "kotlin/lib/kotlin-jslib.jar",
-  "kotlin/lib/kotlin-preloader.jar",
-  "kotlin/lib/kotlin-reflect.jar",
-  "kotlin/lib/kotlin-runner.jar",
-  "kotlin/lib/kotlin-runtime-sources.jar",
-  "kotlin/lib/kotlin-runtime.jar",
-], ["//visibility:public"])
-
-filegroup(
-    name = "kotlin-sdk",
-    srcs = glob(["kotlin/**"]),
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "groovy-sdk",
-    srcs = glob(["groovy/**"], exclude_directories=0),
-    visibility = ["//visibility:public"],
-)
-
-exports_files([
-  "groovy/bin/groovyc",
-], ["//visibility:public"])
-
 java_import(
   name = "prebuilts/studio-profiler-grpc-1.0-jarjar",
   jars = [
@@ -47,35 +6,54 @@ java_import(
   visibility = ["//visibility:public"],
 )
 
-#java_library(
-#  name = "test_runner",
-#  runtime_deps = ["//tools/base/bazel/tests:bazel-tests-support_testlib"],
-#  visibility = ["//visibility:public"],
-#)
-
 java_library(
-  name = "groovy_library",
-  srcs = glob(["groovy/**/*.java"]),
+  name = "bazel",
+  srcs = glob(["src/**/*.java"]),
   deps = ["//prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6"],
 )
 
 java_binary(
   name = "groovy_stub_gen",
-  runtime_deps = [":groovy_library"],
+  runtime_deps = [":bazel"],
   main_class = "com.android.tools.groovy.GroovyStubGenerator",
   visibility = ["//visibility:public"],
 )
 
 java_binary(
   name = "groovyc",
-  runtime_deps = [":groovy_library"],
+  runtime_deps = [":bazel"],
   main_class = "com.android.tools.groovy.GroovyCompiler",
   visibility = ["//visibility:public"],
 )
 
-#java_library(
-#  name = "util",
-#  srcs = glob(["tests/**/util/*.java"]),
-#  deps = ["//tools/idea:lib/guava-18.0"],
-#  visibility = ["//visibility:public"],
-#)
+java_binary(
+  name = "unzipper",
+  main_class = "com.android.tools.utils.Unzipper",
+  runtime_deps = [":bazel"],
+  visibility = ["//visibility:public"],
+)
+
+genrule(
+  name = "kotlin-compiler",
+  srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
+  outs = ["kotlin-compiler.jar"],
+  cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-compiler.jar:$@",
+  tools = [":unzipper"],
+)
+
+genrule(
+  name = "kotlin-runtime",
+  srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
+  outs = ["kotlin-runtime.jar"],
+  cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-runtime.jar:$@",
+  tools = [":unzipper"],
+  visibility = ["//visibility:public"],
+)
+
+java_binary(
+  name = "kotlinc",
+  main_class = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
+  runtime_deps = [":kotlin-compiler", ":kotlin-runtime"],
+  visibility = ["//visibility:public"],
+)
+
