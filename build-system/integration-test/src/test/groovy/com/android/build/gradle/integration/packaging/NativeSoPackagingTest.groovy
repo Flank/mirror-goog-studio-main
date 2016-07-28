@@ -65,7 +65,7 @@ class NativeSoPackagingTest {
 
     private void execute(String... tasks) {
         // TODO: Remove once we understand the cause of flakiness.
-        TestUtils.waitFilesystemTime();
+        TestUtils.waitForFileSystemTick();
         project.executor().withPackaging(mPackaging).run(tasks)
     }
 
