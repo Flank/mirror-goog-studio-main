@@ -20,7 +20,6 @@
 #include <gtest/gtest.h>
 
 using profiler::ConnectivitySampler;
-using profiler::BashCommandRunner;
 
 TEST(ConnectivitySampler, RadioActive) {
   ConnectivitySampler sampler("cat connectivity_radio_active.txt", "");

@@ -28,7 +28,6 @@
 using grpc::ClientContext;
 using profiler::JByteArrayWrapper;
 using profiler::JStringWrapper;
-using profiler::Log;
 using profiler::Perfa;
 using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;

@@ -25,7 +25,6 @@ using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::EventDataRequest;
 using profiler::proto::EventDataResponse;
-using std::vector;
 
 namespace profiler {
 EventServiceImpl::EventServiceImpl(EventCache& cache) : cache_(cache) {}

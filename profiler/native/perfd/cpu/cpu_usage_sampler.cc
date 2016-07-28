@@ -37,7 +37,6 @@ using profiler::proto::CpuProfilerData;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
-using profiler::proto::ProfilerData;
 using profiler::FileReader;
 using profiler::Tokenizer;
 using std::string;

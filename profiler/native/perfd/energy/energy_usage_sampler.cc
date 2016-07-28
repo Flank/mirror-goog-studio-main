@@ -36,7 +36,7 @@ static const int32_t temp_stoi(const std::string& s) {
   stream >> i;
   return i;
 }
-}
+}  // namespace
 
 namespace profiler {
 
@@ -104,4 +104,4 @@ const void EnergyUsageSampler::GetProcessEnergyUsage(
     }
   }
 }
-}
+}  // namespace profiler

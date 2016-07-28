@@ -17,7 +17,6 @@
 
 namespace profiler {
 
-using std::back_inserter;
 using std::lock_guard;
 using std::mutex;
 using std::vector;

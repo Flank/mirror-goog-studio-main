@@ -26,7 +26,6 @@ using grpc::Status;
 using profiler::proto::EventProfilerData;
 using profiler::proto::EmptyEventResponse;
 using profiler::EventCache;
-using std::vector;
 
 namespace profiler {
 

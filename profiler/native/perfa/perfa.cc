@@ -40,7 +40,6 @@ using proto::PerfaService;
 using proto::ProfilerData;
 using proto::RegisterApplication;
 using std::lock_guard;
-using std::mutex;
 
 void Perfa::Initialize() {
   lock_guard<mutex> guard(perfa_mutex_);

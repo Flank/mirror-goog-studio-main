@@ -27,7 +27,7 @@ namespace profiler {
 
 class EnergyServiceImpl final : public proto::EnergyService::Service {
  public:
-  EnergyServiceImpl(const Clock& clock)
+  explicit EnergyServiceImpl(const Clock& clock)
       : clock_(clock),
         energy_cache_(kSamplesCount),
         collector_(clock, energy_cache_) {}
@@ -62,6 +62,6 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
   EnergyCache energy_cache_;
   EnergyCollector collector_;
 };
-}
+}  // namespace profiler
 
 #endif  // PROFILER_PERFD_ENERGY_ENERGY_SERVICE_H_
