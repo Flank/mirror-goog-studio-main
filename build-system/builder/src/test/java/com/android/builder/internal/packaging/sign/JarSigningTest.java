@@ -22,14 +22,10 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.testutils.TestUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -38,6 +34,9 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class JarSigningTest {
 
@@ -319,17 +318,7 @@ public class JarSigningTest {
 
         long fileTimestamp = zipFile.lastModified();
 
-        /*
-         * Wait to make sure the timestamp can increase.
-         */
-        while (true) {
-            File notUsed = mTemporaryFolder.newFile();
-            long notTimestamp = notUsed.lastModified();
-            notUsed.delete();
-            if (notTimestamp > fileTimestamp) {
-                break;
-            }
-        }
+        TestUtils.waitForFileSystemTick(fileTimestamp);
 
         /*
          * Open the zip file, but don't touch it.
