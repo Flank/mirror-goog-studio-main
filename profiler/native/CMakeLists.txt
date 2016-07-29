@@ -39,6 +39,10 @@ include(cmake/install.cmake)
 include(cmake/proto_compile.cmake)
 include(cmake/test.cmake)
 
+# Set compiler flags used both for the profiler code and for its third party dependencies
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+
 # Include gRPC
 set(GRPC_INCLUDE_DIR ${GRPC_ROOT_DIR}/include)
 set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_ROOT_DIR}/src)
