@@ -99,7 +99,7 @@ public class NoChangesVerifierTransform extends Transform {
         // build, we want to fail the verifier if any Java resource changed.  (Native libraries are
         // treated as Java resources in the plugin)
         if (hasChangedInputs(transformInvocation.getReferencedInputs())) {
-            variantScope.getInstantRunBuildContext().setVerifierResult(failureStatus);
+            variantScope.getInstantRunBuildContext().setVerifierStatus(failureStatus);
         }
     }
 

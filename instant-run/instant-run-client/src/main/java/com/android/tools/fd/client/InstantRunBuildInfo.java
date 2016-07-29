@@ -92,20 +92,8 @@ public class InstantRunBuildInfo {
     }
 
     public boolean canHotswap() {
-        String verifierStatus = getVerifierStatus();
-        if (VALUE_VERIFIER_STATUS_COMPATIBLE.equals(verifierStatus)) {
-            return true;
-        } else if (verifierStatus.isEmpty()) {
-            // build-info.xml doesn't currently specify a verifier status if there is *only* a resource
-            // change!
-            List<InstantRunArtifact> artifacts = getArtifacts();
-            if (artifacts.size() == 1
-                    && artifacts.get(0).type == InstantRunArtifactType.RESOURCES) {
-                return true;
-            }
-        }
+        return VALUE_VERIFIER_STATUS_COMPATIBLE.equals(getVerifierStatus());
 
-        return false;
     }
 
     /** Returns whether there were NO changes from the previous build. */

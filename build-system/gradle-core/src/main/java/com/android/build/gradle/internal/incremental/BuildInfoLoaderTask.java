@@ -59,7 +59,7 @@ public class BuildInfoLoaderTask extends BaseTask {
             if (buildInfoFile.exists()) {
                 instantRunBuildContext.loadFromXmlFile(buildInfoFile);
             } else {
-                instantRunBuildContext.setVerifierResult(InstantRunVerifierStatus.INITIAL_BUILD);
+                instantRunBuildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             }
             long token = instantRunBuildContext.getSecretToken();
             if (token == 0) {

@@ -99,7 +99,7 @@ public class InstantRunBuildContextTest {
         File file = new File("/path/to/non/existing/file");
         instantRunBuildContext.loadFromXmlFile(file);
         assertThat(instantRunBuildContext.getBuildId()).isAtLeast(1L);
-        assertThat(instantRunBuildContext.getVerifierResult().get())
+        assertThat(instantRunBuildContext.getVerifierResult())
                 .isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
     }
 
@@ -120,7 +120,7 @@ public class InstantRunBuildContextTest {
             InstantRunBuildContext context = new InstantRunBuildContext();
             context.setApiLevel(23, ColdswapMode.MULTIDEX.name(), null);
             context.loadFromXml(xml);
-            assertThat(context.getVerifierResult().get())
+            assertThat(context.getVerifierResult())
                     .isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
             assertThat(context.getPreviousBuilds()).isEmpty();
         }
@@ -261,7 +261,7 @@ public class InstantRunBuildContextTest {
         first.loadFromXml(buildInfo);
         first.addChangedFile(InstantRunBuildContext.FileType.RELOAD_DEX,
                 new File("reload.dex"));
-        first.setVerifierResult(InstantRunVerifierStatus.COMPATIBLE);
+        first.setVerifierStatus(InstantRunVerifierStatus.COMPATIBLE);
         first.close();
         buildInfo = first.toXml();
 
@@ -269,7 +269,7 @@ public class InstantRunBuildContextTest {
         second.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("split.apk"));
-        second.setVerifierResult(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
+        second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
 
         second.close();
         buildInfo = second.toXml();
@@ -297,7 +297,7 @@ public class InstantRunBuildContextTest {
         first.loadFromXml(buildInfo);
         first.addChangedFile(InstantRunBuildContext.FileType.RELOAD_DEX,
                 new File("reload.dex"));
-        first.setVerifierResult(InstantRunVerifierStatus.COMPATIBLE);
+        first.setVerifierStatus(InstantRunVerifierStatus.COMPATIBLE);
         first.close();
         buildInfo = first.toXml();
 
@@ -305,7 +305,7 @@ public class InstantRunBuildContextTest {
         second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("split.apk"));
-        second.setVerifierResult(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
+        second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
 
         second.close();
         buildInfo = second.toXml();
@@ -316,7 +316,7 @@ public class InstantRunBuildContextTest {
         third.addChangedFile(InstantRunBuildContext.FileType.RESOURCES,
                 new File("resources-debug.ap_"));
         third.addChangedFile(InstantRunBuildContext.FileType.RELOAD_DEX, new File("reload.dex"));
-        third.setVerifierResult(InstantRunVerifierStatus.COMPATIBLE);
+        third.setVerifierStatus(InstantRunVerifierStatus.COMPATIBLE);
 
         third.close();
         buildInfo = third.toXml();
@@ -326,7 +326,7 @@ public class InstantRunBuildContextTest {
         fourth.loadFromXml(buildInfo);
         fourth.addChangedFile(InstantRunBuildContext.FileType.RESOURCES,
                 new File("resources-debug.ap_"));
-        fourth.setVerifierResult(InstantRunVerifierStatus.COMPATIBLE);
+        fourth.setVerifierStatus(InstantRunVerifierStatus.COMPATIBLE);
         fourth.close();
         buildInfo = fourth.toXml();
 
@@ -361,7 +361,7 @@ public class InstantRunBuildContextTest {
         first.loadFromXml(buildInfo);
         first.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("/tmp/split-1.apk"));
         first.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("/tmp/split-2.apk"));
-        first.setVerifierResult(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
+        first.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
         first.close();
         buildInfo = first.toXml();
 
@@ -369,7 +369,7 @@ public class InstantRunBuildContextTest {
         second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("/tmp/split-2.apk"));
-        second.setVerifierResult(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
+        second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
         second.close();
         buildInfo = second.toXml();
 
@@ -378,7 +378,7 @@ public class InstantRunBuildContextTest {
         third.loadFromXml(buildInfo);
         third.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("/tmp/split-2.apk"));
         third.addChangedFile(InstantRunBuildContext.FileType.SPLIT, new File("/tmp/split-3.apk"));
-        third.setVerifierResult(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
+        third.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
 
         third.close();
         buildInfo = third.toXml();

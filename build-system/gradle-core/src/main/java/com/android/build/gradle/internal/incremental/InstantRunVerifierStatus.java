@@ -27,6 +27,10 @@ import java.util.Map;
  */
 public enum InstantRunVerifierStatus {
 
+    // There were no changes.
+    NO_CHANGES(
+            InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM),
+
     // changes are compatible with current InstantRun features.
     COMPATIBLE(
             InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM),
