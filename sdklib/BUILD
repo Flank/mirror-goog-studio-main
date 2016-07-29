@@ -87,6 +87,7 @@ java_library(
       "//tools/adt/idea:android/lib/commons-compress-1.8.1",
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
+      "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28",
       "//tools/idea:lib/gson-2.5",
       "//tools/base/repository:repository",
       "//tools/base/repository:repository_testlib",

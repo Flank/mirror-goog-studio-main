@@ -16,32 +16,36 @@
 
 package com.android.sdklib;
 
-
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.EnvVar;
 import com.android.sdklib.mock.MockLog;
 
+import org.junit.rules.ExternalResource;
+
 import java.io.File;
 import java.io.IOException;
 
-import junit.framework.TestCase;
-
 /**
- * Test case that overrides the {@link AndroidLocation} to point to temp one.
+ * {@link org.junit.rules.TestRule} that overrides the {@link AndroidLocation} to point to temp one.
  * <p>
- * This one doesn't create a temp fake SDK (see {@link SdkManagerTestCase}.)
+ * This one doesn't create a temp fake SDK (see {@link TempSdkManager}.)
  */
-public abstract class AndroidLocationTestCase extends TestCase {
+public class TempAndroidLocation extends ExternalResource {
 
+    private final String mAndroidHomeName;
     private String mOldAndroidHomeProp;
     private File mAndroidHome;
+
+    public TempAndroidLocation(String androidHomeName) {
+        mAndroidHomeName = androidHomeName;
+    }
 
     /**
      * Sets up a {@link MockLog}, a fake SDK in a temporary directory
      * and an AVD Manager pointing to an initially-empty AVD directory.
      */
     @Override
-    public void setUp() throws Exception {
+    protected void before() throws Throwable {
         makeFakeAndroidHome();
     }
 
@@ -49,14 +53,13 @@ public abstract class AndroidLocationTestCase extends TestCase {
      * Removes the temporary SDK and AVD directories.
      */
     @Override
-    public void tearDown() throws Exception {
+    protected void after() {
         tearDownAndroidHome();
     }
 
     private void makeFakeAndroidHome() throws IOException {
         // First we create a temp file to "reserve" the temp directory name we want to use.
-        mAndroidHome = File.createTempFile(
-                "androidhome_" + this.getClass().getSimpleName() + '_' + this.getName(), null);
+        mAndroidHome = File.createTempFile(mAndroidHomeName, null);
         // Then erase the file and make the directory
         mAndroidHome.delete();
         mAndroidHome.mkdirs();
@@ -78,19 +81,18 @@ public abstract class AndroidLocationTestCase extends TestCase {
     }
 
     /** Clear the .android home folder and reconstruct it empty. */
-    protected void clearAndroidHome() {
+    private void clearAndroidHome() {
         deleteDir(mAndroidHome);
         mAndroidHome.mkdirs();
         AndroidLocation.resetFolder();
     }
-
 
     /**
      * Recursive delete directory. Mostly for fake SDKs.
      *
      * @param root directory to delete
      */
-    private void deleteDir(File root) {
+    private static void deleteDir(File root) {
         if (root.exists()) {
             for (File file : root.listFiles()) {
                 if (file.isDirectory()) {
@@ -102,5 +104,4 @@ public abstract class AndroidLocationTestCase extends TestCase {
             root.delete();
         }
     }
-
 }
