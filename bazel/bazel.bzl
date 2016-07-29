@@ -50,7 +50,7 @@ _kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(name, srcs=[], deps=[], visibility=[], **kwargs):
+def kotlin_library(name, srcs=[], deps=[], exports=[], visibility=[], **kwargs):
   """Rule analagous to java_library that accepts .kt sources instead of
   .java sources. The result is wrapped in a java_import so that java rules may
   depend on it.
@@ -78,6 +78,7 @@ def kotlin_library(name, srcs=[], deps=[], visibility=[], **kwargs):
       jars = ["lib" + name + ".kotlin.jar"] + jars,
       deps = deps,
       visibility = visibility,
+      exports = exports,
     )
 
 
@@ -120,7 +121,7 @@ _groovy_jar = rule(
     implementation = _groovy_jar_impl,
 )
 
-def groovy_library(name, srcs=[], deps=[], visibility=[], resources=[], javacopts=[], **kwargs):
+def groovy_library(name, srcs=[], deps=[], visibility=[], resources=[], javacopts=[], exports=[], **kwargs):
   groovies = []
   for src in srcs:
      gsrc = native.glob([src + "/**/*.groovy"]);
@@ -155,9 +156,10 @@ def groovy_library(name, srcs=[], deps=[], visibility=[], resources=[], javacopt
       name = name,
       jars = ["lib" + name + "-groovy.jar", "lib" + name + "-java.jar"],
       visibility = visibility,
+      exports = exports
   )
 
-def kotlin_groovy_library(name, srcs=[], deps=[], visibility=[], **kwargs):
+def kotlin_groovy_library(name, srcs=[], deps=[], exports=[], visibility=[], **kwargs):
   _kotlin_jar(
       name = name + ".kotlin",
       srcs = srcs,
@@ -176,6 +178,7 @@ def kotlin_groovy_library(name, srcs=[], deps=[], visibility=[], **kwargs):
       name = name,
       jars = ["lib" + name + ".kotlin.jar", "lib" + name + ".groovy-groovy.jar", "lib" + name + ".groovy-java.jar"],
       visibility = visibility,
+      exports = exports,
     )
 
 
