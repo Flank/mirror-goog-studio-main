@@ -33,14 +33,9 @@ public class AndroidManifestParserTest extends TestCase {
     private ManifestData mManifestTestApp;
     private ManifestData mManifestInstrumentation;
 
-    private static final String TESTDATA_PATH =
-        "/com/android/sdklib/testdata/";  //$NON-NLS-1$
-    private static final String INSTRUMENTATION_XML = TESTDATA_PATH +
-        "AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
-    private static final String TESTAPP_XML = TESTDATA_PATH +
-        "AndroidManifest-testapp.xml";  //$NON-NLS-1$
-    private static final String ACTIVITY_ALIAS_XML = TESTDATA_PATH +
-            "AndroidManifest-activityalias.xml";  //$NON-NLS-1$
+    private static final String INSTRUMENTATION_XML = "/AndroidManifest-instrumentation.xml";  //$NON-NLS-1$
+    private static final String TESTAPP_XML = "/AndroidManifest-testapp.xml";  //$NON-NLS-1$
+    private static final String ACTIVITY_ALIAS_XML = "/AndroidManifest-activityalias.xml";  //$NON-NLS-1$
     private static final String PACKAGE_NAME =  "com.android.testapp"; //$NON-NLS-1$
     private static final Integer VERSION_CODE = 42;
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$

@@ -12,6 +12,7 @@ dependencies {
     compile project(':base:dvlib').sourceSets.test.output
     compile 'junit:junit:4.12'
     compile 'com.google.truth:truth:0.28'
+    compile project(':base:testutils')
 }
 
 sourceSets {
