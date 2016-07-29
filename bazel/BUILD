@@ -57,3 +57,29 @@ java_binary(
   visibility = ["//visibility:public"],
 )
 
+test_suite(
+  name = "all_tests",
+  tests = [
+    "//tools/analytics-library:analytics-publisher_tests",
+    "//tools/analytics-library:analytics-shared_tests",
+    "//tools/analytics-library:analytics-tracker_tests",
+    "//tools/base/apkparser:binary-resources_tests",
+    "//tools/base/asset-studio:assetstudio_tests",
+    "//tools/base/build-system:builder-test-api_tests",
+    "//tools/base/build-system:manifest-merger_tests",
+    "//tools/base/common:common_tests",
+    "//tools/base/device_validator:dvlib_tests",
+    "//tools/base/draw9patch:draw9patch_tests",
+    "//tools/base/instant-run:instant-run-client_tests",
+    "//tools/base/layoutlib-api:layoutlib-api_tests",
+    "//tools/base/ninepatch:ninepatch_tests",
+    "//tools/base/perflib:perflib_tests",
+    "//tools/base/pixelprobe:pixelprobe_tests",
+    "//tools/base/repository:repository_tests",
+    "//tools/base/testutils:testutils_tests",
+    "//tools/data-binding:db-compilerCommon_tests",
+    "//tools/idea:extensions_tests",
+    "//tools/idea:forms-compiler_tests",
+    "//tools/idea:lang-api_tests",
+  ],
+)
