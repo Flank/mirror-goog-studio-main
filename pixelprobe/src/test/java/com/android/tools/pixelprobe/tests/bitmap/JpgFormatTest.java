@@ -72,7 +72,9 @@ public class JpgFormatTest {
         Assert.assertEquals(8, image.getColorDepth());
         Assert.assertEquals(0, image.getLayers().size());
         Assert.assertEquals(0, image.getGuides().size());
-        Assert.assertEquals("KODAK Grayscale Conversion - Gamma 1.0", image.getColorProfileDescription());
+        // Don't test the name of the color profile as it's implementation dependent
+        Assert.assertNotNull(image.getColorProfileDescription());
+        Assert.assertTrue(!image.getColorProfileDescription().isEmpty());
         Assert.assertEquals(ColorSpace.TYPE_GRAY, image.getColorSpace().getType());
         Assert.assertFalse(Images.isColorSpace_sRGB(image.getMergedImage()));
     }
