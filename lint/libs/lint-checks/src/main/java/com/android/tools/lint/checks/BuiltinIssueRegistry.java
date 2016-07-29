@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 264;
+    static final int INITIAL_CAPACITY = 267;
 
     static {
         List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
@@ -192,6 +192,9 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(NamespaceDetector.UNUSED);
         issues.add(NegativeMarginDetector.ISSUE);
         issues.add(NestedScrollingWidgetDetector.ISSUE);
+        issues.add(NetworkSecurityConfigDetector.ISSUE);
+        issues.add(NetworkSecurityConfigDetector.MISSING_BACKUP_PIN);
+        issues.add(NetworkSecurityConfigDetector.PIN_SET_EXPIRY);
         issues.add(NfcTechListDetector.ISSUE);
         issues.add(NonInternationalizedSmsDetector.ISSUE);
         issues.add(ObsoleteLayoutParamsDetector.ISSUE);
@@ -323,7 +326,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 80;
+                initialSize += 83;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
