@@ -9,5 +9,4 @@ target_link_libraries(perfa
                       profiler_protos
                       profiler_utils)
 
-install(PROGRAMS $<TARGET_FILE:perfa>
-        DESTINATION .)
+install_library(perfa)
