@@ -36,6 +36,7 @@ set(HAVE_ZLIB 1) # But still tell it to use it.
 # Include additional cmake modules after setting global variables
 include(cmake/clang-tidy.cmake)
 include(cmake/install.cmake)
+include(cmake/linker-script.cmake)
 include(cmake/proto_compile.cmake)
 include(cmake/test.cmake)
 
