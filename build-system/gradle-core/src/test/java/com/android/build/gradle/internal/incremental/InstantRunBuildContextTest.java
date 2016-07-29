@@ -507,31 +507,6 @@ public class InstantRunBuildContextTest {
 
     }
 
-
-    private void testArmInjectedArchitecture() {
-        InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(20, null /* coldswapMode */, "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.PRE_LOLLIPOP);
-
-        context.setApiLevel(21, null /* coldswapMode */, "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
-
-        context.setApiLevel(23, null /* coldswapMode */, "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
-
-        context.setApiLevel(21, ColdswapMode.MULTIAPK.name(), "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
-
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.name(), "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
-
-        context.setApiLevel(21, ColdswapMode.MULTIDEX.name(), "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_DEX);
-
-        context.setApiLevel(23, ColdswapMode.MULTIDEX.name(), "arm");
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_DEX);
-    }
-
     private static List<Element> getElementsByName(Node parent, String nodeName) {
         ImmutableList.Builder<Element> builder = ImmutableList.builder();
         NodeList childNodes = parent.getChildNodes();
