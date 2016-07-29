@@ -45,6 +45,9 @@ java_library(
       "//tools/idea:lib/hamcrest-core-1.3",
       "//tools/idea:lib/junit-4.12",
     ],
+  exports = [
+      "//tools/base/pixelprobe:pixelprobe",
+    ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )

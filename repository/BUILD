@@ -22,6 +22,9 @@ java_library(
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1",
       "//prebuilts/tools/common/m2:repository/com/google/jimfs/jimfs/1.1/jimfs-1.1-sources",
     ],
+  exports = [
+      "//tools/base/repository:repository",
+    ],
   javacopts = ["-extra_checks:off"],
   visibility = ["//visibility:public"],
 )
