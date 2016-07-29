@@ -82,7 +82,7 @@ public class ProcessAndroidResourcesTest {
             Files.write("Changed Manifest", manifestFileToPackage, Charsets.UTF_8);
             ProcessAndroidResources.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
-            verify(context).setVerifierResult(InstantRunVerifierStatus.MANIFEST_FILE_CHANGE);
+            verify(context).setVerifierStatus(InstantRunVerifierStatus.MANIFEST_FILE_CHANGE);
         }
 
         // No changes
@@ -126,7 +126,7 @@ public class ProcessAndroidResourcesTest {
             writeManifestFile(resOutBaseNameFile, "Changed binary manifest");
             ProcessAndroidResources.runManifestBinaryChangeVerifier(
                     context, instantRunSupportDir, resOutBaseNameFile);
-            verify(context).setVerifierResult(
+            verify(context).setVerifierStatus(
                     InstantRunVerifierStatus.BINARY_MANIFEST_FILE_CHANGE);
         }
 

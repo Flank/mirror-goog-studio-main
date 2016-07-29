@@ -110,8 +110,7 @@ public class JavaResourcesTest {
 
         //TODO: switch back to loadContext when it no longer adds more artifacts.
         InstantRunBuildContext context2 = InstantRunTestUtils.loadBuildContext(apiLevel, instantRunModel);
-        assertThat(context2.getLastBuild().getVerifierStatus().isPresent());
-        assertThat(context2.getLastBuild().getVerifierStatus().get()).isEqualTo(
+        assertThat(context2.getLastBuild().getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
         assertThat(context2.getLastBuild().getArtifacts()).hasSize(1);
 
