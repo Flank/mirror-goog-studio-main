@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.truth.IndirectSubject;
 import com.google.common.truth.FailureStrategy;
 
 import java.io.File;

@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.truth.IncrementalFileSubject;
 import com.android.build.gradle.integration.common.truth.IncrementalFileSubjectFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 /**
