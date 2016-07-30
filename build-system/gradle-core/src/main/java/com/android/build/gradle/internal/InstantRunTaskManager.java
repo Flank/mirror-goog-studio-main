@@ -21,9 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
-import com.android.build.gradle.internal.incremental.InstantRunWrapperTask;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -44,16 +44,20 @@ import com.android.build.gradle.tasks.fd.GenerateInstantRunAppInfoTask;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.model.OptionalCompilationStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.execution.TaskExecutionAdapter;
 import org.gradle.api.logging.Logger;
 
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.tasks.TaskState;
 
 /**
  * Task Manager for InstantRun related transforms configuration and tasks handling.
@@ -62,6 +66,7 @@ public class InstantRunTaskManager {
 
     @Nullable private AndroidTask<TransformTask> verifierTask;
     @Nullable private AndroidTask<TransformTask> reloadDexTask;
+    @Nullable private AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask;
 
     @NonNull
     private final Logger logger;
@@ -102,7 +107,7 @@ public class InstantRunTaskManager {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
-        AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask = androidTasks.create(tasks,
+        buildInfoLoaderTask = androidTasks.create(tasks,
                 new BuildInfoLoaderTask.ConfigAction(variantScope, logger));
 
         // always run the verifier first, since if it detects incompatible changes, we
@@ -210,6 +215,7 @@ public class InstantRunTaskManager {
                         .orElse(null);
         anchorTask.optionalDependsOn(tasks, reloadDexTask);
 
+
         return buildInfoLoaderTask;
     }
 
@@ -251,7 +257,6 @@ public class InstantRunTaskManager {
     /**
      * If we are at API 21 or above, we generate multi-dexes.
      */
-    @NonNull
     public void createSlicerTask() {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
         //
@@ -263,21 +268,52 @@ public class InstantRunTaskManager {
 
     /**
      * Creates the task to save the build-info.xml and sets its dependencies.
+     *
+     * <p>This task does not depend on other tasks, so if previous tasks fails it will still run.
+     * Instead the read build info task is {@link Task#finalizedBy(Object...)} the write build info
+     * task, so whenever the read task runs the write task must also run.
+     *
+     * <p>It also {@link Task#mustRunAfter(Object...)} the various build types so that it runs after
+     * those tasks, but runs even if those tasks fail. Using {@link Task#dependsOn(Object...)}
+     * would not run the task if a previous task failed.
+     *
      * @return the task instance.
      */
     @NonNull
-    public AndroidTask<InstantRunWrapperTask> createBuildInfoGeneratorTask(
+    public AndroidTask<BuildInfoWriterTask> createBuildInfoWriterTask(
             AndroidTask<?>... dependencies) {
-        AndroidTask<InstantRunWrapperTask> buildInfoGeneratorTask =
+        AndroidTask<BuildInfoWriterTask> buildInfoWriterTask =
                 androidTasks.create(tasks,
-                        new InstantRunWrapperTask.ConfigAction(variantScope, logger));
-        buildInfoGeneratorTask.dependsOn(tasks, reloadDexTask);
-        if (dependencies != null) {
-            for (AndroidTask<?> dependency : dependencies) {
-                buildInfoGeneratorTask.dependsOn(tasks, dependency);
+                        new BuildInfoWriterTask.ConfigAction(variantScope, logger));
+        Preconditions.checkNotNull(buildInfoLoaderTask,
+                "createInstantRunAllTasks() should have been called first ");
+        buildInfoLoaderTask.configure(
+                tasks,
+                readerTask -> readerTask.finalizedBy(buildInfoWriterTask.getName()));
+
+        buildInfoWriterTask.configure(tasks, writerTask -> {
+            writerTask.mustRunAfter(reloadDexTask.getName());
+            if (dependencies != null) {
+                for (AndroidTask<?> dependency : dependencies) {
+                    writerTask.mustRunAfter(dependency.getName());
+                }
             }
-        }
-        return buildInfoGeneratorTask;
+        });
+
+        // Register a task execution listener to allow the writer task to write the temp build info
+        // on build failure, which will get merged into the next build.
+        variantScope.getGlobalScope().getProject().getGradle().getTaskGraph()
+                .addTaskExecutionListener(new TaskExecutionAdapter() {
+                    @Override
+                    public void afterExecute(Task task, TaskState state) {
+                        //noinspection ThrowableResultOfMethodCallIgnored
+                        if (state.getFailure() != null) {
+                            variantScope.getInstantRunBuildContext().setBuildHasFailed();
+                        }
+                    }
+                });
+
+        return buildInfoWriterTask;
     }
 
 }

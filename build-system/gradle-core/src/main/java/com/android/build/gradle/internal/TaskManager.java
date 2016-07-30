@@ -49,9 +49,9 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunAnchorTaskConfigAction;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.incremental.InstantRunWrapperTask;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -2225,7 +2225,7 @@ public abstract class TaskManager {
     public void createPackagingTask(@NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             boolean publishApk,
-            @Nullable AndroidTask<InstantRunWrapperTask> fullBuildInfoGeneratorTask) {
+            @Nullable AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask) {
         GlobalScope globalScope = variantScope.getGlobalScope();
         ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
 
@@ -2360,8 +2360,14 @@ public abstract class TaskManager {
 
             checkState(variantScope.getAssembleTask() != null);
             if (fullBuildInfoGeneratorTask != null) {
-                fullBuildInfoGeneratorTask.optionalDependsOn(
-                        tasks, appTask, packageInstantRunResources);
+                AndroidTask<PackageApplication> finalPackageInstantRunResources =
+                        packageInstantRunResources;
+                AndroidTask<?> finalAppTask = appTask;
+                fullBuildInfoGeneratorTask.configure(tasks, task -> {
+                    task.mustRunAfter(
+                            finalAppTask.getName(),
+                            finalPackageInstantRunResources.getName());
+                });
                 variantScope.getAssembleTask().dependsOn(
                         tasks, fullBuildInfoGeneratorTask.getName());
             }

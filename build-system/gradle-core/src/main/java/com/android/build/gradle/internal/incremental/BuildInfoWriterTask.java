@@ -24,6 +24,8 @@ import com.android.builder.profile.ProcessRecorder;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
@@ -31,15 +33,13 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
- * InstantRun related tasks wrapping code, this task is added twice to the task trees, once
- * for the full build (assembleVariant), once for the incremental build. Only one of these two
- * task will execute from the IDE.
+ * Instant run task to finalize and write the {@code build-info.xml}.
  *
- * Task responsibility :
- * <ul><li>generate the build-info.xml on each gradle invocation with InstantRun enabled.</li>
- * <li>delete incremental change files when doing a full build.</li></ul>
+ * If the build has failed, it writes a tmp build info instead, which is loaded in the next build.
+ *
+ * See {@link InstantRunBuildContext}.
  */
-public class InstantRunWrapperTask extends BaseTask {
+public class BuildInfoWriterTask extends BaseTask {
 
     /**
      * Output File
@@ -47,8 +47,6 @@ public class InstantRunWrapperTask extends BaseTask {
     File buildInfoFile;
 
     /** Input */
-    String buildId;
-
     File tmpBuildInfoFile;
 
     Logger logger;
@@ -58,12 +56,19 @@ public class InstantRunWrapperTask extends BaseTask {
     @TaskAction
     public void executeAction() {
 
+        if (instantRunBuildContext.getBuildHasFailed()) {
+            try {
+                instantRunBuildContext.writeTmpBuildInfo(tmpBuildInfoFile);
+            } catch (ParserConfigurationException | IOException e) {
+                throw new RuntimeException("Exception while saving temp-build-info.xml", e);
+            }
+            return;
+        }
+
         // done with the instant run context.
         instantRunBuildContext.close();
 
-        // saves the build information xml file.
         try {
-            // only write past builds in incremental mode.
             String xml = instantRunBuildContext.toXml();
             if (logger.isEnabled(LogLevel.DEBUG)) {
                 logger.debug("build-id $1$l, build-info.xml : %2$s",
@@ -72,15 +77,7 @@ public class InstantRunWrapperTask extends BaseTask {
             Files.createParentDirs(buildInfoFile);
             Files.write(xml, buildInfoFile, Charsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException(
-                    String.format("Exception while saving build-info.xml : %s", e.getMessage()));
-        }
-
-        // since we closed and produce the build-info.xml, delete any temporary one.
-        if (tmpBuildInfoFile.exists()) {
-            if (!tmpBuildInfoFile.delete()) {
-                logger.warn(String.format("Cannot delete %1$s", tmpBuildInfoFile));
-            }
+            throw new RuntimeException("Exception while saving build-info.xml", e);
         }
 
         // Record instant run status in analytics for this build
@@ -88,13 +85,13 @@ public class InstantRunWrapperTask extends BaseTask {
                 InstantRunAnalyticsHelper.generateAnalyticsProto(instantRunBuildContext));
     }
 
-    public static class ConfigAction implements TaskConfigAction<InstantRunWrapperTask> {
+    public static class ConfigAction implements TaskConfigAction<BuildInfoWriterTask> {
 
-        public static File getBuildInfoFile(InstantRunVariantScope scope) {
+        public static File getBuildInfoFile(@NonNull InstantRunVariantScope scope) {
             return new File(scope.getRestartDexOutputFolder(), "build-info.xml");
         }
 
-        public static File getTmpBuildInfoFile(InstantRunVariantScope scope) {
+        public static File getTmpBuildInfoFile(@NonNull InstantRunVariantScope scope) {
             return new File(scope.getRestartDexOutputFolder(), "tmp-build-info.xml");
         }
 
@@ -118,19 +115,18 @@ public class InstantRunWrapperTask extends BaseTask {
 
         @NonNull
         @Override
-        public Class<InstantRunWrapperTask> getType() {
-            return InstantRunWrapperTask.class;
+        public Class<BuildInfoWriterTask> getType() {
+            return BuildInfoWriterTask.class;
         }
 
         @Override
-        public void execute(@NonNull InstantRunWrapperTask task) {
+        public void execute(@NonNull BuildInfoWriterTask task) {
             task.setDescription("InstantRun task to build incremental artifacts");
             task.setVariantName(variantScope.getFullVariantName());
             task.buildInfoFile = getBuildInfoFile(variantScope);
             task.tmpBuildInfoFile = getTmpBuildInfoFile(variantScope);
             task.instantRunBuildContext = variantScope.getInstantRunBuildContext();
             task.logger = logger;
-            task.buildId = String.valueOf(task.instantRunBuildContext.getBuildId());
         }
     }
 

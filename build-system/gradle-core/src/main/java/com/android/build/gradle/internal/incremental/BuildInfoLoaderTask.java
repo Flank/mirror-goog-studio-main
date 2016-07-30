@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 import org.gradle.api.logging.LogLevel;
@@ -42,7 +43,6 @@ public class BuildInfoLoaderTask extends BaseTask {
     File pastBuildsFolder;
 
     // Inputs
-    String buildId;
     File buildInfoFile;
     File tmpBuildInfoFile;
 
@@ -53,7 +53,7 @@ public class BuildInfoLoaderTask extends BaseTask {
 
     @TaskAction
     public void executeAction() {
-        // saves the build information xml file.
+        // loads the build information xml file.
         try {
             // load the persisted state, this will give us previous build-ids in case we need them.
             if (buildInfoFile.exists()) {
@@ -70,10 +70,12 @@ public class BuildInfoLoaderTask extends BaseTask {
             // artifacts into the current build.
             if (tmpBuildInfoFile.exists()) {
                 instantRunBuildContext.mergeFromFile(tmpBuildInfoFile);
+                FileUtils.delete(tmpBuildInfoFile);
             }
         } catch (Exception e) {
-            throw new RuntimeException(
-                    String.format("Exception while loading build-info.xml : %s", e.getMessage()));
+            throw new RuntimeException(String.format(
+                    "Exception while loading build-info.xml : %s",
+                    Throwables.getStackTraceAsString(e)));
         }
         try {
             // move last iteration artifacts to our back up folder.
@@ -103,9 +105,9 @@ public class BuildInfoLoaderTask extends BaseTask {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(
-                    String.format("Exception while doing past iteration backup : %s",
-                            e.getMessage()));
+            throw new RuntimeException(String.format(
+                    "Exception while doing past iteration backup : %s",
+                    e.getMessage()));
         }
     }
 
@@ -139,15 +141,12 @@ public class BuildInfoLoaderTask extends BaseTask {
         public void execute(@NonNull BuildInfoLoaderTask task) {
             task.setDescription("InstantRun task to load and backup previous iterations artifacts");
             task.setVariantName(variantScope.getFullVariantName());
-            variantScope.getInstantRunBuildContext().setTmpBuildInfo(
-                    InstantRunWrapperTask.ConfigAction.getTmpBuildInfoFile(variantScope));
-            task.buildInfoFile = InstantRunWrapperTask.ConfigAction.getBuildInfoFile(variantScope);
+            task.buildInfoFile = BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope);
             task.tmpBuildInfoFile =
-                    InstantRunWrapperTask.ConfigAction.getTmpBuildInfoFile(variantScope);
+                    BuildInfoWriterTask.ConfigAction.getTmpBuildInfoFile(variantScope);
             task.pastBuildsFolder = variantScope.getInstantRunPastIterationsFolder();
             task.instantRunBuildContext = variantScope.getInstantRunBuildContext();
             task.logger = logger;
-            task.buildId = String.valueOf(task.instantRunBuildContext.getBuildId());
         }
     }
 }

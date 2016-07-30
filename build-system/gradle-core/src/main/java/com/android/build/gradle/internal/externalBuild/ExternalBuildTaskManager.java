@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.incremental.InstantRunWrapperTask;
 import com.android.build.gradle.internal.model.AaptOptionsImpl;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -252,11 +252,11 @@ class ExternalBuildTaskManager {
         }
 
         // finally, generate the build-info.xml
-        AndroidTask<InstantRunWrapperTask> buildInfoGeneratorTask =
-                instantRunTaskManager.createBuildInfoGeneratorTask(packageApp);
+        AndroidTask<BuildInfoWriterTask>buildInfoWriterTask =
+                instantRunTaskManager.createBuildInfoWriterTask(packageApp);
 
-        buildInfoGeneratorTask.dependsOn(tasks, packageApp);
-        externalBuildAnchorTask.dependsOn(tasks, buildInfoGeneratorTask);
+        externalBuildAnchorTask.dependsOn(tasks, packageApp);
+        externalBuildAnchorTask.dependsOn(tasks, buildInfoWriterTask);
 
         for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
             task.dependsOn(tasks, preColdswapTask);
