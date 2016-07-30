@@ -129,6 +129,21 @@ public class Location {
     }
 
     /**
+     * Sets a secondary location with the given message and returns the current location
+     * updated with the given secondary location.
+     *
+     * @param secondary a secondary location associated with this location
+     * @param message a message to be set on the secondary location
+     * @return current location updated with the secondary location
+     */
+    @NonNull
+    public Location withSecondary(@NonNull Location secondary, @NonNull String message) {
+        secondary.setMessage(message);
+        setSecondary(secondary);
+        return this;
+    }
+
+    /**
      * Sets a custom message for this location. This is typically used for
      * secondary locations, to describe the significance of this alternate
      * location. For example, for a duplicate id warning, the primary location
