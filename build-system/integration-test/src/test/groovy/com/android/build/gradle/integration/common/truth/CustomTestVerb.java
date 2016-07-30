@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
+import com.android.testutils.truth.FileSubject;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.TestVerb;
 

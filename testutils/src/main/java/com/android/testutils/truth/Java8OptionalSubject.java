@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.truth;
+package com.android.testutils.truth;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.truth;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.truth.FileSubject;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
