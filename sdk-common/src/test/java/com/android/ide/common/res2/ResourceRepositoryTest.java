@@ -28,7 +28,7 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -567,7 +567,8 @@ public class ResourceRepositoryTest extends BaseTestCase {
      */
     private static ResourceMerger getBaseResourceMerger()
             throws MergingException, IOException {
-        File root = TestUtils.getRoot("resources", "baseMerge");
+        File root = TestResources
+                .getDirectory(ResourceRepositoryTest.class, "/testData/resources/baseMerge");
 
         ResourceSet res = ResourceSetTest.getBaseResourceSet();
 
@@ -621,7 +622,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
     }
 
     private static File getIncMergeRoot(String name) throws IOException {
-        File root = TestUtils.getCanonicalRoot("resources", "incMergeData");
+        File root = TestResources
+                .getDirectory(ResourceRepositoryTest.class, "/testData/resources/incMergeData")
+                .getCanonicalFile();
         return new File(root, name);
     }
 

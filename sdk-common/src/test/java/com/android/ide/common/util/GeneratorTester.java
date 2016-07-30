@@ -15,7 +15,10 @@
  */
 package com.android.ide.common.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -26,13 +29,21 @@ import java.io.IOException;
 /**
  * Shared test infrastructure for asset (either bitmap or vector) generator.
  */
-public abstract class GeneratorTest extends TestCase {
-  protected abstract String getTestDataRelPath();
+public class GeneratorTester {
 
-  protected String generateGoldenImage(File targetDir,
-                                       BufferedImage goldenImage,
-                                       String missingFilePath,
-                                       String filePath) throws IOException {
+  private final String mTestDataRelPath;
+
+  private GeneratorTester(String testDataRelPath) {
+    mTestDataRelPath = testDataRelPath;
+  }
+
+  public static GeneratorTester withTestDataRelativePath(String testDataRelPath) {
+    return new GeneratorTester(testDataRelPath);
+  }
+
+  public String generateGoldenImage(BufferedImage goldenImage, String missingFilePath,
+          String filePath) throws IOException {
+    File targetDir = getTargetDir();
     if (targetDir == null) {
       fail(
         "Did not find " + missingFilePath + ". Set $ANDROID_SRC to have it created automatically");
@@ -148,7 +159,7 @@ public abstract class GeneratorTest extends TestCase {
     g.dispose();
   }
 
-  protected static File getTempDir() {
+  private static File getTempDir() {
     if (System.getProperty("os.name").equals("Mac OS X")) {
       return new File("/tmp"); //$NON-NLS-1$
     }
@@ -159,13 +170,13 @@ public abstract class GeneratorTest extends TestCase {
   /**
    * Get the location to write missing golden files to
    */
-  protected File getTargetDir() {
+  private File getTargetDir() {
     // Set $ANDROID_SRC to point to your git AOSP working tree
     String sdk = System.getenv("ANDROID_SRC");
     if (sdk != null) {
       File root = new File(sdk);
       if (root.exists()) {
-        File testData = new File(root, getTestDataRelPath().replace('/', File.separatorChar));
+        File testData = new File(root, mTestDataRelPath.replace('/', File.separatorChar));
         if (testData.exists()) {
           return testData;
         }

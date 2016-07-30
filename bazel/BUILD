@@ -76,6 +76,7 @@ test_suite(
     "//tools/base/perflib:perflib_tests",
     "//tools/base/pixelprobe:pixelprobe_tests",
     "//tools/base/repository:repository_tests",
+    "//tools/base/sdk-common:sdk-common_tests",
     "//tools/base/sdklib:sdklib_tests",
     "//tools/base/testutils:testutils_tests",
     "//tools/data-binding:db-compilerCommon_tests",
