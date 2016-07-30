@@ -35,6 +35,7 @@ import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -284,17 +285,12 @@ public class RepoManagerImplTest extends TestCase {
             }
         };
 
-        Runnable errorCallback = new Runnable() {
-            @Override
-            public void run() {
-                fail();
-            }
-        };
+        Runnable errorCallback = Assert::fail;
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, new TestLoaderFactory());
         mgr.setLocalPath(new File("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.<RepositorySource>of()));
+                ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         mgr.load(0, ImmutableList.of(localCallback1), ImmutableList.of(remoteCallback1),
                 ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, false);
@@ -302,7 +298,7 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, false);
         runLocal.release();
 
-        if (!completeDone.tryAcquire(10, TimeUnit.SECONDS)) {
+        if (!completeDone.tryAcquire(2, 10, TimeUnit.SECONDS)) {
             fail();
         }
         assertTrue(localCallback1Run.get());
