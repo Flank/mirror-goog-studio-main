@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Files;
@@ -94,7 +95,7 @@ public class AssetMergerTest extends BaseTestCase {
      */
     @Test
     public void testLoadingTestPathReplacement() throws Exception {
-        File root = TestUtils.getRoot("assets", "baseMerge");
+        File root = TestResources.getDirectory(getClass(), "/testData/assets/baseMerge");
         File fakeRoot = getMergedBlobFolder(root);
 
         AssetMerger assetMerger = new AssetMerger();
@@ -339,7 +340,7 @@ public class AssetMergerTest extends BaseTestCase {
         AssetMerger assetMerger = new AssetMerger();
         assetMerger.addDataSet(assetSet);
 
-        File root = TestUtils.getRoot("assets", "baseSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/assets/baseSet");
         File changedCVSFoo = new File(root, "CVS/foo.txt");
         FileValidity<AssetSet> fileValidity = assetMerger.findDataSetContaining(changedCVSFoo);
 
@@ -372,7 +373,8 @@ public class AssetMergerTest extends BaseTestCase {
     private static AssetMerger getAssetMerger()
             throws IOException, MergingException {
         if (sAssetMerger == null) {
-            File root = TestUtils.getRoot("assets", "baseMerge");
+            File root = TestResources
+                    .getDirectory(AssetMergerTest.class, "/testData/assets/baseMerge");
 
             AssetSet res = AssetSetTest.getBaseAssetSet();
 
