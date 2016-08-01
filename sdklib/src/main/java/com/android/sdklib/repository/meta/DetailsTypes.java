@@ -237,6 +237,16 @@ public final class DetailsTypes {
      */
     @XmlTransient
     public interface MavenType {
+
+        /**
+         * Gets the default {@link RepoPackage#getPath() path} for the maven-type
+         * {@link RepoPackage} with the maven coordinate groupId:artifactId:version
+         *
+         * @param groupId    The maven groupId
+         * @param artifactId The maven artifactId
+         * @param version    The maven version
+         * @return The {@link RepoPackage#getPath() path} for the corresponding {@link RepoPackage}.
+         */
         static String getRepositoryPath(
                 @NonNull String groupId, @NonNull String artifactId, @NonNull String version) {
             return String.join(
