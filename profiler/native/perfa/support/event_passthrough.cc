@@ -145,6 +145,12 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivitySave
 }
 
 JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_activity_ActivityWrapper_sendActivityOnRestart(
+    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
+  SendActivityEvent(env, jname, ActivityEventData::RESTARTED, jhash);
+}
+
+JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
   SendFragmentEvent(env, jname, FragmentEventData::ADDED, jhash);
@@ -157,67 +163,67 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemo
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentAttached(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnAttach(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::ATTACHED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentCreated(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnCreate(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::CREATED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentCreatedView(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnCreateView(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::CREATEDVIEW, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentActivityCreated(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnActivityCreated(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::ACTIVITYCREATED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentStarted(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnStart(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::STARTED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentResumed(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnResume(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::RESUMED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentPaused(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnPause(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::PAUSED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentStopped(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnStop(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::STOPPED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentDestroyedView(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDestroyView(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::DESTROYEDVIEW, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentDestroyed(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDestroy(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::DESTROYED, jhash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentDetached(
+Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDetach(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
    SendFragmentEvent(env, jname, FragmentEventData::DETACHED, jhash);
 }

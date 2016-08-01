@@ -29,23 +29,34 @@ public final class ProfilerTransform extends ClassTransform {
     }
 
     @Override
-    protected void transform(InputStream in, OutputStream out) throws IOException {
-        ClassWriter writer = new ClassWriter(0);
-        // Create the chain of transformers
+    protected void transform(InputStream in, OutputStream out, boolean buildHierarchyOnly) throws IOException {
+        /**
+         * Flag to automatically compute the maximum stack size and the maximum number of local
+         * variables of methods.
+         * If this flag is set, then the arguments of the visitMaxs method
+         * of the MethodVisitor returned by the visitMethod method will be ignored,
+         * and computed automatically from the signature and the bytecode of each method.
+         */
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
-        visitor = new NetworkingAdapter(visitor);
-        visitor = new EventAdapter(visitor);
-        visitor = new ComponentInheritanceAdapter(visitor);
-        /**
-         * TODO: Will be removed when the user class' instrumentation method stabilized
-         */
-        //visitor = new FragmentAdapter(visitor);
-        visitor = new EnergyAdapter(visitor);
-
-        ClassReader cr = new ClassReader(in);
-        cr.accept(visitor, 0);
-        ComponentInheritanceUtils.buildInheritance();
+        if (buildHierarchyOnly) {
+            visitor = new ComponentInheritanceAdapter(visitor);
+            ClassReader cr = new ClassReader(in);
+            cr.accept(visitor, 0);
+            ComponentInheritanceUtils.buildInheritance();
+        } else {
+            visitor = new NetworkingAdapter(visitor);
+            visitor = new EventAdapter(visitor);
+            /**
+             * TODO: Remove the following line when the user class' instrumentation method stabilized
+             */
+            //visitor = new FragmentAdapter(visitor);
+            visitor = new EnergyAdapter(visitor);
+            visitor = new UserClassAdapter(visitor);
+            ClassReader cr = new ClassReader(in);
+            cr.accept(visitor, 0);
+        }
         out.write(writer.toByteArray());
     }
 }

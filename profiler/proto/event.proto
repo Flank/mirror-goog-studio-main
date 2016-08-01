@@ -68,6 +68,7 @@ message ActivityEventData {
     SAVED = 6;
     // Event to fire when an activity gets destroyed
     DESTROYED = 7;
+    RESTARTED = 8;
     // TODO: Flush this out to map the activity lifecycle.
   }
 
