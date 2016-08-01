@@ -31,6 +31,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Target that generates all protobuf files. It is used by the linter tools to
+# ensure that all generated files are available before they are running.
+add_custom_target(generate-protobuf)
+
 function(_protobuf_generate_cpp SRCS HDRS FILE_SUFFIX OUT_TYPE PLUGIN PROTOPATH)
   if(NOT ARGN)
     message(SEND_ERROR "Error: _protobuf_generate_cpp() called without any proto files")
@@ -74,6 +78,11 @@ function(_protobuf_generate_cpp SRCS HDRS FILE_SUFFIX OUT_TYPE PLUGIN PROTOPATH)
       DEPENDS ${ABS_FIL} ${PROTOBUF_PROTOC_EXECUTABLE} ${PLUGIN_EXECUTABLE}
       COMMENT "Running C++ protocol buffer compiler on ${FIL}"
       VERBATIM )
+
+    add_custom_target(generate-protobuf-${FIL_WE}${FILE_SUFFIX}
+      DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}${FILE_SUFFIX}.cc"
+              "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}${FILE_SUFFIX}.h")
+    add_dependencies(generate-protobuf generate-protobuf-${FIL_WE}${FILE_SUFFIX})
   endforeach()
 
   set_source_files_properties(${${SRCS}} ${${HDRS}} PROPERTIES GENERATED TRUE)

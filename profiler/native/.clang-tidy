@@ -1,3 +1,3 @@
-Checks:                '-*,google-*,-google-readability-todo,misc-*,-misc-unused-parameters'
+Checks:                '-*,google-*,-google-readability-todo,misc-*,-misc-unused-parameters,-misc-misplaced-widening-cast'
 HeaderFilterRegex:     'native/[a-zA-Z0-9/_]*/[a-zA-Z0-9_.]*$'
 AnalyzeTemporaryDtors: false
