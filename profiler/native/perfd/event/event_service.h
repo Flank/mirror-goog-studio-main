@@ -25,7 +25,7 @@ namespace profiler {
 
 class EventServiceImpl final : public profiler::proto::EventService::Service {
  public:
-  explicit EventServiceImpl(EventCache& cache);
+  explicit EventServiceImpl(EventCache* cache);
 
   // RPC Call that returns an array of event data scoped to the start and end
   // times passed in

@@ -29,8 +29,8 @@ using profiler::EventCache;
 
 namespace profiler {
 
-InternalEventServiceImpl::InternalEventServiceImpl(EventCache& cache)
-    : cache_(cache) {
+InternalEventServiceImpl::InternalEventServiceImpl(EventCache* cache)
+    : cache_(*cache) {
   Log::V("Event Service Setup Properly");
 }
 Status InternalEventServiceImpl::SendEvent(ServerContext* context,

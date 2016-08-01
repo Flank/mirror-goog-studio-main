@@ -27,7 +27,7 @@ using profiler::proto::EventDataRequest;
 using profiler::proto::EventDataResponse;
 
 namespace profiler {
-EventServiceImpl::EventServiceImpl(EventCache& cache) : cache_(cache) {}
+EventServiceImpl::EventServiceImpl(EventCache* cache) : cache_(*cache) {}
 
 Status EventServiceImpl::GetData(ServerContext* context,
                                  const EventDataRequest* request,
