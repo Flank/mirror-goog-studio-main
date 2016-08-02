@@ -88,13 +88,17 @@ public class ManifestGenerationExtension {
     private final Manifest mManifest;
 
     /**
-     * Byte representation of the manifest. This is important because there is no guarantee that
-     * two writes of the manifest will yield the same byte array (there is no guaranteed order
+     * Byte representation of the manifest. There is no guarantee that two writes of the java's
+     * {@code Manifest} object will yield the same byte array (there is no guaranteed order
      * of entries in the manifest).
      *
-     * <p>However, we want to ensure that two writes of the manifest will, if the manifest is not
-     * changed in-between, generate the exact same byte representation. Otherwise it would be
-     * difficult to build a signing extension.
+     * <p>Because we need the byte representation of the manifest to be stable if there are
+     * no changes to the manifest, we cannot rely on {@code Manifest} to generate the byte
+     * representation every time we need the byte representation.
+     *
+     * <p>This cache will ensure that we will request one byte generation from the {@code Manifest}
+     * and will cache it. All further requests of the manifest's byte representation will
+     * receive the same byte array.
      */
     @NonNull
     private CachedSupplier<byte[]> mManifestBytes;
