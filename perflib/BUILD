@@ -59,6 +59,7 @@ java_library(
       "//tools/idea:lib/trove4j",
       "//tools/base/testutils:testutils",
       "//tools/base/testutils:testutils_testlib",
+      "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
     ],
   exports = [
       "//tools/base/perflib:perflib",
