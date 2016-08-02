@@ -81,7 +81,14 @@ public class UserClassAdapter extends ClassVisitor implements Opcodes {
   private static final String SEND_ACTIVITY_ON_DESTROY = "sendActivityOnDestroy";
   private static final String SEND_ACTIVITY_ON_RESTART = "sendActivityOnRestart";
 
+  /**
+   * Map activity class name to the set of methods that created by user.
+   */
   private HashMap<String, Set<String>> myActivityMethodRecord;
+
+  /**
+   * Map fragment class name to the set of methods that created by user.
+   */
   private HashMap<String, Set<String>> myFragmentMethodRecord;
   private String currentVisitingClass;
 
@@ -100,14 +107,7 @@ public class UserClassAdapter extends ClassVisitor implements Opcodes {
 
   public UserClassAdapter(ClassVisitor cv) {
     super(ASM5, cv);
-    /**
-     * Map activity object to set of existed method.
-     */
     this.myActivityMethodRecord = new HashMap<>();
-
-    /**
-     * Map fragment object to set of existed method.
-     */
     this.myFragmentMethodRecord = new HashMap<>();
 
     ACTIVITY_METHOD_SET.add(ACTIVITY_ON_CREATE);
