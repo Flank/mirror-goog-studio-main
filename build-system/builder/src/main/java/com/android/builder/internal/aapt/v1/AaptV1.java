@@ -48,6 +48,8 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,6 +63,16 @@ import java.util.concurrent.TimeUnit;
  * process execution of {@code aapt}.
  */
 public class AaptV1 extends AbstractProcessExecutionAapt {
+
+    /**
+     * How much time to wait for {@code aapt} to flush the files.
+     */
+    private static final Duration MAX_WAIT_FOR_AAPT_FLUSH = Duration.ofSeconds(1);
+
+    /**
+     * How much time to wait between retries while waiting for {@code aapt} to flush the files.
+     */
+    private static final Duration MAX_CYCLE_AAPT_FLUSH_WAIT = Duration.ofMillis(50);
 
     /**
      * What mode should PNG be processed?
@@ -420,6 +432,27 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
                 mWaitExecutor.execute(() -> {
                     try {
                         mCruncher.end(key);
+
+                        /*
+                         * Sometimes aapt doesn't flush the file fast enough and we get here
+                         * without the file actually existing. It is pretty crap, but that's what
+                         * we've got. So, we wait for a little bit to make sure the file exists
+                         * before marking the future as complete.
+                         */
+                        Instant maxWaitUntil = Instant.now().plus(MAX_WAIT_FOR_AAPT_FLUSH);
+                        while (!outputFile.exists() && Instant.now().isBefore(maxWaitUntil)) {
+                            try {
+                                Thread.sleep(MAX_CYCLE_AAPT_FLUSH_WAIT.toMillis());
+                            } catch (InterruptedException e) {
+                                /*
+                                 * Ignored, just try again.
+                                 */
+                            }
+                        }
+
+                        Preconditions.checkState(
+                                outputFile.exists(),
+                                "aapt did not generate '" + outputFile.getAbsolutePath() + "'");
                         future.set(outputFile);
                     } catch (Exception e) {
                         future.setException(e);
