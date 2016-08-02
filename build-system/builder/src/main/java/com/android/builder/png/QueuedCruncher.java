@@ -18,6 +18,8 @@ package com.android.builder.png;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
 import com.android.builder.tasks.QueueThreadContext;
@@ -27,9 +29,13 @@ import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -45,6 +51,11 @@ public class QueuedCruncher implements PngCruncher {
      * Number of concurrent cruncher processes to launch.
      */
     public static final int NUMBER_CRUNCHER_PROCESSES = 5;
+
+    /**
+     * Delay to shutdown the work queue after the last {@link Terminator#shutdown()}.
+     */
+    private static final Duration TERMINATE_DELAY = Duration.ofSeconds(5);
 
     // use an enum to ensure singleton.
     public enum Builder {
@@ -93,6 +104,14 @@ public class QueuedCruncher implements PngCruncher {
     // per process unique key provider to remember which users enlisted which requests.
     @NonNull private final AtomicInteger keyProvider = new AtomicInteger(0);
 
+    /**
+     * Terminator thread used to finish the cruncher some time after all PNGs have been crunched.
+     * The deferred termination is used to allow the cruncher to reuse aapt processes. This will
+     * be {@code null} while there are no crunchers running and no need to terminate them.
+     */
+    @Nullable
+    @GuardedBy("this")
+    private Terminator mTerminator;
 
     private QueuedCruncher(
             @NonNull final String aaptLocation,
@@ -168,7 +187,7 @@ public class QueuedCruncher implements PngCruncher {
                         queueThreadContext,
                         "png-cruncher",
                         NUMBER_CRUNCHER_PROCESSES,
-                        2f);
+                        0);
     }
 
     private static final class QueuedJob extends Job<AaptProcess> {
@@ -187,7 +206,7 @@ public class QueuedCruncher implements PngCruncher {
         if (from.getAbsolutePath().length() > 240
                 && SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
             throw new PngException("File path too long on Windows, keep below 240 characters : "
-                + from.getAbsolutePath());
+                    + from.getAbsolutePath());
         }
         if (to.getAbsolutePath().length() > 240
                 && SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
@@ -275,11 +294,23 @@ public class QueuedCruncher implements PngCruncher {
     @Override
     public synchronized int start() {
         // increment our reference count.
-        refCount.incrementAndGet();
+        if (refCount.incrementAndGet() == 1) {
+
+            /*
+             * First key starting. If there is no terminator running, start one. IF there is one
+             * running, it is being reused from a previous run.
+             */
+            if (mTerminator == null) {
+                mTerminator = new Terminator();
+                mTerminator.start();
+            }
+        }
+
         // get a unique key for the lifetime of this process.
         int key = keyProvider.incrementAndGet();
         mOutstandingJobs.put(key, new ConcurrentLinkedQueue<Job<AaptProcess>>());
         mDoneJobs.put(key, new ConcurrentLinkedQueue<Job<AaptProcess>>());
+        mTerminator.reset();
         return key;
     }
 
@@ -293,9 +324,87 @@ public class QueuedCruncher implements PngCruncher {
         } finally {
             // even if we have failures, we need to shutdown property the sub processes.
             if (refCount.decrementAndGet() == 0) {
-                mCrunchingRequests.shutdown();
+                Preconditions.checkState(mTerminator != null, "mTerminator == null");
+                mTerminator.shutdown();
                 mLogger.verbose("Shutdown finished in %1$d",
                         System.currentTimeMillis() - startTime);
+            }
+        }
+    }
+
+    /**
+     * Thread that terminates all threads in the {@link WorkQueue} at {@link #mCrunchingRequests}
+     * some time after {@link #shutdown()} is invoked. If {@link #shutdown()} is called multiple
+     * times, the time will count from the last invocation.
+     *
+     * <p>If at any point {@link #reset()} is called, termination is suspended until
+     * {@link #shutdown()} has been invoked and the timeout has passed.
+     */
+    private class Terminator extends Thread {
+
+        /**
+         * When to terminate. {@code null} if {@link #shutdown()} was not invoked.
+         */
+        @Nullable
+        private Instant mTerminateAt;
+
+        /**
+         * Creates a new terminator thread.
+         */
+        private Terminator() {
+            super("Cruncher terminator");
+
+            mTerminateAt = null;
+        }
+
+        /**
+         * Resets the terminator. The work queue will not be invoke unless {@link #shutdown()} is
+         * called <i>after</i> this invocation (it is irrelevant if {@link #shutdown()} has been
+         * called before this invocation.
+         */
+        private void reset() {
+            synchronized (QueuedCruncher.this) {
+                mTerminateAt = null;
+                QueuedCruncher.this.notifyAll();
+            }
+        }
+
+        /**
+         * Shuts down the terminator in {@link #TERMINATE_DELAY}, overriding any
+         * previously defined termination time.
+         */
+        private void shutdown() {
+            synchronized (QueuedCruncher.this) {
+                mTerminateAt = Instant.now().plus(TERMINATE_DELAY);
+                QueuedCruncher.this.notifyAll();
+            }
+        }
+
+        @Override
+        public void run() {
+            synchronized (QueuedCruncher.this) {
+                while (true) {
+                    try {
+                        if (mTerminateAt == null) {
+                            QueuedCruncher.this.wait();
+                        } else {
+                            long waitTime = ChronoUnit.MILLIS.between(Instant.now(), mTerminateAt);
+                            if (waitTime > 0) {
+                                QueuedCruncher.this.wait(waitTime);
+                            }
+
+                            if (mTerminateAt != null && !mTerminateAt.isAfter(Instant.now())) {
+                                mCrunchingRequests.shutdown();
+                                mTerminator = null;
+                                return;
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        /*
+                         * We don't care.
+                         */
+                    }
+                }
             }
         }
     }
