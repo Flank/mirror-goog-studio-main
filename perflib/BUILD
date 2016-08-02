@@ -1,111 +1,19 @@
 # This file has been automatically generated, please do not modify directly.
-load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 
-java_test(
-  name = "perflib_tests",
-  srcs = glob([
-    ]),
-  runtime_deps = [
-      ":perflib_testlib",
-      "//tools/base/testutils:testutils",
+iml_module(
+    name = "perflib",
+    srcs = ["src/main/java"],
+    test_srcs = ["src/test/java"],
+    test_resources = ["src/test/resources"],
+    deps = [
+        "//tools/base/ddmlib:ddmlib[module]",
+        "//tools/idea:lib/hamcrest-core-1.3[test]",
+        "//tools/idea:lib/junit-4.12[test]",
+        "//tools/idea:lib/trove4j",
+        "//tools/base/testutils:testutils[module, test]",
+        "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5[test]",
     ],
-  jvm_flags = [
-      "-Dtest.suite.jar=perflib_testlib.jar",
-    ],
-  test_class = "com.android.testutils.JarTestSuite",
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-fileset(
-  name = "perflib_testlib.res",
-  srcs = glob([
-      "src/test/java/**/*",
-      "src/test/resources/**/*",
-    ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "src/test/java": "perflib_testlib.resources",
-      "src/test/resources": "perflib_testlib.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
-)
-
-java_library(
-  name = "perflib_testlib",
-  srcs = glob([
-      "src/test/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/perflib/perflib_testlib.resources",
-  resources = [
-      "//tools/base/perflib:perflib_testlib.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/perflib:perflib",
-      "//tools/base/ddmlib:ddmlib",
-      "//tools/base/ddmlib:ddmlib_testlib",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-      "//tools/idea:lib/trove4j",
-      "//tools/base/testutils:testutils",
-      "//tools/base/testutils:testutils_testlib",
-      "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
-    ],
-  exports = [
-      "//tools/base/perflib:perflib",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-java_library(
-  name = "perflib",
-  srcs = glob([
-      "src/main/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/perflib/perflib.resources",
-  resources = [
-      "//tools/base/perflib:perflib.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/ddmlib:ddmlib",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-      "//tools/idea:lib/trove4j",
-      "//tools/base/testutils:testutils",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-fileset(
-  name = "perflib.res",
-  srcs = glob([
-      "src/main/java/**/*",
-    ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "src/main/java": "perflib.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
+    javacopts = ["-extra_checks:off"],
+    visibility = ["//visibility:public"],
 )
