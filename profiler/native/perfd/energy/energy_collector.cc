@@ -46,8 +46,8 @@ void EnergyCollector::CollectorMain() {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     proto::EnergyDataResponse_EnergySample sample;
-    energy_usage_sampler_.GetProcessEnergyUsage(pid_, sample);
-    energy_cache_.SaveEnergySample(sample);
+    energy_usage_sampler_.GetProcessEnergyUsage(pid_, &sample);
+    energy_cache_->SaveEnergySample(sample);
 
     int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
     if (kSleepNs > elapsed_time_ns) {

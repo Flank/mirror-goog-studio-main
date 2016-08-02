@@ -30,7 +30,7 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
   explicit EnergyServiceImpl(const Clock& clock)
       : clock_(clock),
         energy_cache_(kSamplesCount),
-        collector_(clock, energy_cache_) {}
+        collector_(clock, &energy_cache_) {}
   virtual ~EnergyServiceImpl() = default;
 
   grpc::Status GetData(grpc::ServerContext* context,
@@ -42,9 +42,10 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
       const proto::StartEnergyCollectionRequest* request,
       proto::EnergyCollectionStatusResponse* response) override;
 
-  grpc::Status StopCollection(grpc::ServerContext* context,
-                              const proto::StopEnergyCollectionRequest* request,
-                              proto::EnergyCollectionStatusResponse* response) override;
+  grpc::Status StopCollection(
+      grpc::ServerContext* context,
+      const proto::StopEnergyCollectionRequest* request,
+      proto::EnergyCollectionStatusResponse* response) override;
 
  private:
   static constexpr int32_t kSamplesCount = 10;

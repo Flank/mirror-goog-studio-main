@@ -32,7 +32,7 @@ namespace profiler {
 // first call.
 class EnergyCollector final {
  public:
-  EnergyCollector(const Clock& clock, EnergyCache& energy_cache)
+  EnergyCollector(const Clock& clock, EnergyCache* energy_cache)
       : energy_cache_(energy_cache), energy_usage_sampler_(clock) {}
   ~EnergyCollector();
 
@@ -44,7 +44,7 @@ class EnergyCollector final {
  private:
   static constexpr int64_t kSleepNs = profiler::Clock::ms_to_ns(500);
   int32_t pid_;
-  EnergyCache& energy_cache_;
+  EnergyCache* energy_cache_;
   EnergyUsageSampler energy_usage_sampler_;
   std::thread server_thread_;
   std::atomic_bool is_running_{false};
