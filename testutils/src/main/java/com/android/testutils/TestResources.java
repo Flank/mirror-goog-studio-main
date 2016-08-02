@@ -61,6 +61,31 @@ public final class TestResources {
     }
 
     /**
+     * Given a {@code resourceName} relative to {@code clazz}, copies the resource to a new file
+     * at {@code filePath} and registers that to be deleted when the JVM exits. If there is an
+     * existing file at {@code filePath}, it does nothing.
+     *
+     * @param clazz Resource class.
+     * @param resourceName Input name to get resource from class.
+     * @param filePath Output file name in specific directory.
+     */
+    public static void getFileInDirectory(
+            Class<?> clazz, String resourceName, String filePath) {
+        File file = new File(filePath);
+        if (file.exists()) {
+            return;
+        }
+        URL url = Resources.getResource(clazz, resourceName);
+        file.getParentFile().mkdirs();
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+            Resources.copy(url, outputStream);
+            file.deleteOnExit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Returns a file that is a directory from resources. If original resources is in a jar, the
      * specified directory and all files beneath are copied to system temp root directory. Those
      * copied temp files will be deleted on program exits.

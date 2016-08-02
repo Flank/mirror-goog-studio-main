@@ -30,6 +30,7 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser;
+import com.android.testutils.TestResources;
 import com.android.utils.StdLogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
@@ -436,6 +437,9 @@ public class AaptOutputParserTest {
                         "    </style>\n" +
                         "\n" +
                         "</resources>\n");
+        TestResources.getFileInDirectory(getClass(),
+                "/testData/resources/baseSet/values/values.xml",
+                "src/test/resources/testData/resources/baseSet/values/values.xml");
 
         String messageText
                 = "String types not allowed (at 'drawable_ref' with value '@drawable/stat_notify_sync_anim0').";
@@ -492,6 +496,9 @@ public class AaptOutputParserTest {
                         "</LinearLayout>\n" +
                         "\n" +
                         "<!-- From: file:src/test/resources/testData/resources/incMergeData/filesVsValues/main/layout/main.xml -->");
+        TestResources.getFileInDirectory(getClass(),
+                "/testData/resources/incMergeData/filesVsValues/main/layout/main.xml",
+                "src/test/resources/testData/resources/incMergeData/filesVsValues/main/layout/main.xml");
 
         String messageText = "Random error message here";
         String err = sourceFilePath + ":4: error: Error: " + messageText;

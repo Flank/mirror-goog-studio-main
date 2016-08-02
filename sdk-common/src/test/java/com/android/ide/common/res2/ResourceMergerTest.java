@@ -35,6 +35,7 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
@@ -440,7 +441,7 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testMergeIdGeneratingResources() throws Exception {
         // Test loading and writing Id resources.  Test loading a single file instead of all.
-        File root = TestUtils.getRoot("resources", "idGenerating");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
         ResourceSet resourceSet = new ResourceSet("idResources", null);
         resourceSet.addSource(root);
         ResourceMerger merger = new ResourceMerger(0);
@@ -516,13 +517,17 @@ public class ResourceMergerTest extends BaseTestCase {
     public void testScanForIdDrawableXmlMixedWithBinary() throws Exception {
         // Test that in a drawable directory with both XML and PNG, we can pick up IDs
         // without being confused about the PNG.
-        File srcDrawables = FileUtils.join(TestUtils.getRoot("resources", "idGenerating"), "drawable-v21");
+        File srcDrawables = FileUtils
+                .join(TestResources.getDirectory(getClass(), "/testData/resources/idGenerating"),
+                        "drawable-v21");
         File copiedRoot = TestUtils.createTempDirDeletedOnExit();
         copiedRoot.deleteOnExit();
         File copiedDrawables = FileUtils.join(copiedRoot, "drawable-v21");
         copyFolder(srcDrawables, copiedDrawables);
 
-        File srcPng = FileUtils.join(TestUtils.getRoot("resources", "baseSet"), "drawable", "icon.png");
+        File srcPng = FileUtils
+                .join(TestResources.getDirectory(getClass(), "/testData/resources/baseSet"),
+                        "drawable", "icon.png");
         FileUtils.copyFileToDirectory(srcPng, copiedDrawables);
         assertTrue(FileUtils.join(copiedDrawables, "drawable_for_id_scan.xml").exists());
 
@@ -544,7 +549,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testDontNormalizeQualifiers() throws Exception {
-        File root = TestUtils.getRoot("resources", "idGenerating");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
         File copiedRoot = getFolderCopy(root);
         copiedRoot.deleteOnExit();
         // Add some qualifiers to directory before loading.
@@ -667,7 +672,7 @@ public class ResourceMergerTest extends BaseTestCase {
      */
     @Test
     public void testLoadingTestPathReplacement() throws Exception {
-        File root = TestUtils.getRoot("resources", "baseMerge");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/baseMerge");
         File fakeRoot = getMergedBlobFolder(root);
 
         ResourceMerger resourceMerger = new ResourceMerger(0);
@@ -1253,7 +1258,7 @@ public class ResourceMergerTest extends BaseTestCase {
         ResourceMerger resourceMerger = new ResourceMerger(0);
         resourceMerger.addDataSet(res);
 
-        File root = TestUtils.getRoot("resources", "baseSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/baseSet");
         File changedCVSFoo = new File(root, "CVS/foo.txt");
         FileValidity<ResourceSet> fileValidity = resourceMerger.findDataSetContaining(
                 changedCVSFoo);
@@ -1263,7 +1268,8 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testIncDataForRemovedFile() throws Exception {
-        File root = TestUtils.getCanonicalRoot("resources", "removedFile");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/removedFile")
+                .getCanonicalFile();
         File fakeBlobRoot = getMergedBlobFolder(root);
 
         ResourceMerger resourceMerger = new ResourceMerger(0);
@@ -1328,7 +1334,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testMergedDeclareStyleable() throws Exception {
-        File root = TestUtils.getRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable");
 
         // load both base and overlay set
         File baseRoot = new File(root, "base");
@@ -1405,7 +1411,7 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testUnchangedMergedItem() throws Exception {
         // locate the merger file that contains exactly the result of the source folders.
-        File root = TestUtils.getRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable");
         File fakeBlobRoot = getMergedBlobFolder(root, new File(root, "unchanged_merger.xml"));
 
         // load a resource merger based on it.
@@ -1427,7 +1433,8 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testRemovedMergedItem() throws Exception {
         // locate the merger file that contains exactly the result of the source folders.
-        File root = TestUtils.getCanonicalRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable")
+                .getCanonicalFile();
         File fakeBlobRoot = getMergedBlobFolder(root, new File(root, "removed_merger.xml"));
 
         // load a resource merger based on it.
@@ -1478,7 +1485,8 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testTouchedMergedItem() throws Exception {
         // locate the merger file that contains exactly the result of the source folders.
-        File root = TestUtils.getCanonicalRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable")
+                .getCanonicalFile();
         File fakeBlobRoot = getMergedBlobFolder(root, new File(root, "touched_merger.xml"));
 
         // load a resource merger based on it.
@@ -1519,7 +1527,8 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testTouchedNoDiffMergedItem() throws Exception {
         // locate the merger file that contains exactly the result of the source folders.
-        File root = TestUtils.getCanonicalRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable")
+                .getCanonicalFile();
         File fakeBlobRoot = getMergedBlobFolder(root, new File(root, "touched_nodiff_merger.xml"));
 
         // load a resource merger based on it.
@@ -1563,7 +1572,8 @@ public class ResourceMergerTest extends BaseTestCase {
         // contain the merged items even if they were touched but had no change.
 
         // locate the merger file that contains exactly the result of the source folders.
-        File root = TestUtils.getCanonicalRoot("resources", "declareStyleable");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/declareStyleable")
+                .getCanonicalFile();
         File fakeBlobRoot = getMergedBlobFolder(root, new File(root, "removed_other_merger.xml"));
 
         // load a resource merger based on it.
@@ -1617,7 +1627,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testStringWhiteSpaces() throws Exception {
-        File root = TestUtils.getRoot("resources", "stringWhiteSpaces");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/stringWhiteSpaces");
 
         // load res folder
         ResourceSet baseSet = new ResourceSet("main", null);
@@ -1687,7 +1697,8 @@ public class ResourceMergerTest extends BaseTestCase {
 
     private static ResourceMerger getResourceMerger()
             throws MergingException, IOException {
-        File root = TestUtils.getRoot("resources", "baseMerge");
+        File root = TestResources
+                .getDirectory(ResourceMergerTest.class, "/testData/resources/baseMerge");
 
         ResourceSet res = ResourceSetTest.getBaseResourceSet();
 
@@ -1708,7 +1719,8 @@ public class ResourceMergerTest extends BaseTestCase {
 
     private static Pair<ResourceMerger, File> getResourceMergerBackedByTempFiles()
       throws MergingException, IOException {
-        File srcOverlay = TestUtils.getRoot("resources", "baseMerge", "overlay");
+        File srcOverlay = TestResources
+                .getDirectory(ResourceMergerTest.class, "/testData/resources/baseMerge/overlay");
 
         RecordingLogger logger = new RecordingLogger();
         File testFolder = getFolderCopy(srcOverlay);
@@ -1738,7 +1750,9 @@ public class ResourceMergerTest extends BaseTestCase {
     }
 
     private static File getIncMergeRoot(String name) throws IOException {
-        File root = TestUtils.getCanonicalRoot("resources", "incMergeData");
+        File root = TestResources
+                .getDirectory(ResourceMergerTest.class, "/testData/resources/incMergeData")
+                .getCanonicalFile();
         return new File(root, name);
     }
 
@@ -1841,7 +1855,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testInvalidFileNames() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet5");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet5");
         ResourceSet resourceSet = new ResourceSet("brokenSet5", null);
         resourceSet.addSource(root);
         RecordingLogger logger =  new RecordingLogger();
@@ -1864,7 +1878,8 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testStricterInvalidFileNames() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSetDrawableFileName");
+        File root = TestResources
+                .getDirectory(getClass(), "/testData/resources/brokenSetDrawableFileName");
         ResourceSet resourceSet = new ResourceSet("brokenSetDrawableFileName", null);
         resourceSet.addSource(root);
         RecordingLogger logger =  new RecordingLogger();
@@ -1885,7 +1900,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testXmlParseError1() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet6");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet6");
         try {
             ResourceSet resourceSet = new ResourceSet("brokenSet6", null);
             resourceSet.addSource(root);
@@ -1911,7 +1926,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @Test
     public void testXmlParseError7() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet7");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet7");
         try {
             ResourceSet resourceSet = new ResourceSet("brokenSet7", null);
             resourceSet.addSource(root);
@@ -1936,7 +1951,8 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testSdkFiltering() throws Exception {
         ResourceSet resourceSet = new ResourceSet("filterableSet", null);
-        resourceSet.addSource(TestUtils.getRoot("resources", "filterableSet"));
+        resourceSet.addSource(
+                TestResources.getDirectory(getClass(), "/testData/resources/filterableSet"));
         resourceSet.loadFromFiles(new RecordingLogger());
 
         ResourceMerger resourceMerger = new ResourceMerger(21);

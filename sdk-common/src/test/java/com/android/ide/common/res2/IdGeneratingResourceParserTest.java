@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.resources.ResourceType;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -39,7 +40,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
     @Test
     public void testParseLayoutDocument() throws Exception {
-        File root = TestUtils.getRoot("resources", "idGenerating");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
         File layout = new File(root, "layout");
         File layoutFile = new File(layout, "layout_for_id_scan.xml");
 
@@ -56,7 +57,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
     @Test
     public void testParseMenuDocument() throws Exception {
-        File root = TestUtils.getRoot("resources", "idGenerating");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
         File menu = new File(root, "menu");
         File menuFile = new File(menu, "menu.xml");
 
@@ -72,7 +73,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
     @Test
     public void testParseDataBindingDocument() throws Exception {
-        File root = TestUtils.getRoot("resources", "idGenerating");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
         File layout = new File(root, "layout");
         File layoutFile = new File(layout, "layout_with_databinding.xml");
 

@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
@@ -136,7 +137,8 @@ public class ValueResourceParser2Test extends BaseTestCase {
 
     private static List<ResourceItem> getParsedResources() throws MergingException {
         if (sResources == null) {
-            File root = TestUtils.getRoot("resources", "baseSet");
+            File root = TestResources
+                    .getDirectory(ValueResourceParser2Test.class, "/testData/resources/baseSet");
             File values = new File(root, "values");
             File valuesXml = new File(values, "values.xml");
 
