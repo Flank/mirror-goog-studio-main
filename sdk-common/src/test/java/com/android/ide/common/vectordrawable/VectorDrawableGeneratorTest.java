@@ -17,8 +17,8 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
-import com.android.ide.common.util.GeneratorTest;
-import com.android.testutils.TestUtils;
+import com.android.ide.common.util.GeneratorTester;
+import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import junit.framework.TestCase;
@@ -28,16 +28,13 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 
 @SuppressWarnings("javadoc")
-public class VectorDrawableGeneratorTest extends GeneratorTest {
-    private static final String TEST_DATA_REL_PATH =
-      "tools/base/sdk-common/src/test/resources/testData/vectordrawable";
+public class VectorDrawableGeneratorTest extends TestCase {
+
+    private static final GeneratorTester GENERATOR_TESTER =
+            GeneratorTester.withTestDataRelativePath(
+                    "tools/base/sdk-common/src/test/resources/testData/vectordrawable");
 
     private static final int IMAGE_SIZE = 64;
-
-    @Override
-    protected String getTestDataRelPath() {
-        return TEST_DATA_REL_PATH;
-    }
 
     private enum FileType {
         SVG,
@@ -55,7 +52,7 @@ public class VectorDrawableGeneratorTest extends GeneratorTest {
         String imageName = testFileName + ".png";
 
         String parentDir =  "vectordrawable" + File.separator;
-        File parentDirFile = TestUtils.getRoot("vectordrawable");
+        File parentDirFile = TestResources.getDirectory(getClass(), "/testData/vectordrawable");
 
         File incomingFile = new File(parentDirFile, incomingFileName);
         String xmlContent = null;
@@ -93,8 +90,7 @@ public class VectorDrawableGeneratorTest extends GeneratorTest {
         String imageNameWithParent = parentDir + imageName;
         File pngFile = new File(parentDirFile, imageName);
         if (!pngFile.exists()) {
-            // Generate golden images here.
-            generateGoldenImage(getTargetDir(), image, imageNameWithParent, imageName);
+            GENERATOR_TESTER.generateGoldenImage(image, imageNameWithParent, imageName);
         } else {
             InputStream is = new FileInputStream(pngFile);
             BufferedImage goldenImage = ImageIO.read(is);
@@ -104,7 +100,8 @@ public class VectorDrawableGeneratorTest extends GeneratorTest {
             if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
                 diffThreshold = 5.0f;
             }
-            assertImageSimilar(imageNameWithParent, goldenImage, image, diffThreshold);
+            GeneratorTester.assertImageSimilar(
+                    imageNameWithParent, goldenImage, image, diffThreshold);
         }
 
     }

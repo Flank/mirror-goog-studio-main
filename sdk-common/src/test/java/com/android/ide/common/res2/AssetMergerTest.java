@@ -406,7 +406,8 @@ public class AssetMergerTest extends BaseTestCase {
     }
 
     private File getIncMergeRoot(String name) throws IOException {
-        File root = TestUtils.getCanonicalRoot("assets", "incMergeData");
+        File root = TestResources.getDirectory(getClass(), "/testData/assets/incMergeData")
+                .getCanonicalFile();
         return new File(root, name);
     }
 

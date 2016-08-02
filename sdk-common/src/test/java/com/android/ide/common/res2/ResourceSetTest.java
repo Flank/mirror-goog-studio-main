@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 import com.android.utils.XmlUtils;
 
 import org.junit.Test;
@@ -84,7 +84,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testDupResourceSet() throws Exception {
-        File root = TestUtils.getRoot("resources", "dupSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/dupSet");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(new File(root, "res1"));
@@ -115,7 +115,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSet() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -137,7 +137,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSet2() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet2");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet2");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -159,7 +159,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSet3() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet3");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet3");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -181,7 +181,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSet4() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSet4");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet4");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -204,7 +204,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSetBadType() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSetBadType");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSetBadType");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -226,7 +226,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testBrokenSetBadType2() throws Exception {
-        File root = TestUtils.getRoot("resources", "brokenSetBadType2");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSetBadType2");
 
         ResourceSet set = new ResourceSet("main", null);
         set.addSource(root);
@@ -248,7 +248,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @Test
     public void testTrackSourcePositions() throws IOException, MergingException {
-        File root = TestUtils.getRoot("resources", "baseSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/resources/baseSet");
 
         // By default, track positions.
         ResourceSet resourceSet = new ResourceSet("main", null);
@@ -279,7 +279,8 @@ public class ResourceSetTest extends BaseTestCase {
     }
 
     static ResourceSet getBaseResourceSet() throws MergingException, IOException {
-        File root = TestUtils.getRoot("resources", "baseSet");
+        File root = TestResources
+                .getDirectory(ResourceSetTest.class, "/testData/resources/baseSet");
 
         ResourceSet resourceSet = new ResourceSet("main", null);
         resourceSet.addSource(root);

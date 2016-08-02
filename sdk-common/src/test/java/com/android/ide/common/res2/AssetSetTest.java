@@ -51,7 +51,7 @@ public class AssetSetTest extends BaseTestCase {
 
     @Test
     public void testDupAssetSet() throws Exception {
-        File root = TestUtils.getRoot("assets", "dupSet");
+        File root = TestResources.getDirectory(getClass(), "/testData/assets/dupSet");
 
         AssetSet set = new AssetSet("main");
         set.addSource(new File(root, "assets1"));
