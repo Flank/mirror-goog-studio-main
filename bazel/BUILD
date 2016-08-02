@@ -8,7 +8,10 @@ java_import(
 
 java_library(
   name = "bazel",
-  srcs = glob(["src/**/*.java"]),
+  srcs = glob(
+    include = ["src/**/*.java"],
+    exclude = ["src/**/kotlin/*"],
+  ),
   deps = ["//prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6"],
 )
 
@@ -52,8 +55,10 @@ genrule(
 
 java_binary(
   name = "kotlinc",
-  main_class = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler",
-  runtime_deps = [":kotlin-compiler", ":kotlin-runtime"],
+  srcs = ["src/com/android/tools/kotlin/KotlinCompiler.java"],
+  main_class = "com.android.tools.kotlin.KotlinCompiler",
+  deps = [":kotlin-compiler"],
+  runtime_deps = [":kotlin-runtime"],
   visibility = ["//visibility:public"],
 )
 
