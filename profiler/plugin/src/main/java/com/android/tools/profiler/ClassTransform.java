@@ -102,14 +102,26 @@ abstract class ClassTransform extends Transform {
         return false;
     }
 
+    /**
+     * Complete the previous class transform and building the inheritance hierarchy firstly
+     * (set instrumentUserClassOnly false) then instrument on User Class (set instrumentUserClassOnly true)
+     *
+     * The reason to do this is before instrumenting on user class, we need to create the inheritance
+     * hierarchy firstly, also the flag of the class writer for instrumenting on user class
+     * is different (need to set as COMPUTE_MAXS, since the stack size may change during instrumentation)
+     *
+     * @param invocation TransformInvocation
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws InterruptedException, IOException {
-        transformHelper(invocation, true);
         transformHelper(invocation, false);
+        transformHelper(invocation, true);
     }
 
-    public void transformHelper(@NonNull TransformInvocation invocation, boolean buildHierarchyOnly)
+    private void transformHelper(@NonNull TransformInvocation invocation, boolean instrumentUserClassOnly)
             throws InterruptedException, IOException {
         assert invocation.getOutputProvider() != null;
 
@@ -134,14 +146,14 @@ abstract class ClassTransform extends Transform {
                             break;
                         case ADDED:
                         case CHANGED:
-                            transformJar(inputJar, outputJar, buildHierarchyOnly);
+                            transformJar(inputJar, outputJar, instrumentUserClassOnly);
                             break;
                         case REMOVED:
                             FileUtils.delete(outputJar);
                             break;
                     }
                 } else {
-                    transformJar(inputJar, outputJar, buildHierarchyOnly);
+                    transformJar(inputJar, outputJar, instrumentUserClassOnly);
                 }
             }
             for (DirectoryInput di : ti.getDirectoryInputs()) {
@@ -160,7 +172,7 @@ abstract class ClassTransform extends Transform {
                             case CHANGED:
                                 for (File in : FileUtils.getAllFiles(inputFile)) {
                                     File out = toOutputFile(outputDir, inputDir, in);
-                                    transformFile(in, out, buildHierarchyOnly);
+                                    transformFile(in, out, instrumentUserClassOnly);
                                 }
                                 break;
                             case REMOVED:
@@ -172,14 +184,14 @@ abstract class ClassTransform extends Transform {
                 } else {
                     for (File in : FileUtils.getAllFiles(inputDir)) {
                         File out = toOutputFile(outputDir, inputDir, in);
-                        transformFile(in, out, buildHierarchyOnly);
+                        transformFile(in, out, instrumentUserClassOnly);
                     }
                 }
             }
         }
     }
 
-    private void transformJar(File inputJar, File outputJar, boolean buildHierarchyOnly) throws IOException {
+    private void transformJar(File inputJar, File outputJar, boolean instrumentUserClassOnly) throws IOException {
         Files.createParentDirs(outputJar);
         try (FileInputStream fis = new FileInputStream(inputJar);
              ZipInputStream zis = new ZipInputStream(fis);
@@ -189,7 +201,7 @@ abstract class ClassTransform extends Transform {
             while (entry != null) {
                 zos.putNextEntry(new ZipEntry(entry.getName()));
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    transform(zis, zos, buildHierarchyOnly);
+                    transform(zis, zos, instrumentUserClassOnly);
                 } else {
                     ByteStreams.copy(zis, zos);
                 }
@@ -198,11 +210,11 @@ abstract class ClassTransform extends Transform {
         }
     }
 
-    private void transformFile(File inputFile, File outputFile, boolean buildHierarchyOnly) throws IOException {
+    private void transformFile(File inputFile, File outputFile, boolean instrumentUserClassOnly) throws IOException {
         Files.createParentDirs(outputFile);
         try (FileInputStream fis = new FileInputStream(inputFile);
              FileOutputStream fos = new FileOutputStream(outputFile)) {
-            transform(fis, fos, buildHierarchyOnly);
+            transform(fis, fos, instrumentUserClassOnly);
         }
     }
 
@@ -211,5 +223,5 @@ abstract class ClassTransform extends Transform {
         return new File(outputDir, FileUtils.relativePath(inputFile, inputDir));
     }
 
-    protected abstract void transform(InputStream in, OutputStream out, boolean buildHierarchyOnly) throws IOException;
+    protected abstract void transform(InputStream in, OutputStream out, boolean instrumentUserClassOnly) throws IOException;
 }
