@@ -19,7 +19,7 @@ package com.android.tools.profiler.support.fragment;
 import java.util.HashMap;
 
 public class FragmentWrapper {
-  private static final String ID_SPLITTER = ".";
+  private static final String ID_SPLITTER = ":";
 
   /**
    * Fragment lifecycle states name.
@@ -161,6 +161,11 @@ public class FragmentWrapper {
     lastState.put(fragmentObj.hashCode(), ON_DETACH_STATE);
   }
 
+  /**
+   * @param fragmentObject Current fragment object
+   * @param nestedClassName The name of current fragment's nested class
+   * @return nestedActivityName:currentFragment_hashCode
+   */
   private static String fragmentNameBuilder(Object fragmentObject, String nestedClassName) {
     String localClassName = fragmentObject.getClass().getSimpleName();
     int hashCode = fragmentObject.hashCode();
