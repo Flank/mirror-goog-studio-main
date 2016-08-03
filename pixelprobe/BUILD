@@ -14,8 +14,8 @@ iml_module(
     deps = [
         "//tools/base/chunkio:chunkio[module]",
         "//tools/base/chunkio-processor:chunkio-processor[module]",
-        "//tools/idea:lib/hamcrest-core-1.3[test]",
-        "//tools/idea:lib/junit-4.12[test]",
+        "//tools:idea/lib/hamcrest-core-1.3[test]",
+        "//tools:idea/lib/junit-4.12[test]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],

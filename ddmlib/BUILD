@@ -9,8 +9,8 @@ iml_module(
         "//tools/base/common:common[module]",
         "//prebuilts/tools/common/kxml2-tools:kxml2-2.3.0",
         "//prebuilts/tools/common/easymock-tools:easymock-3.1[test]",
-        "//tools/idea:lib/hamcrest-core-1.3[test]",
-        "//tools/idea:lib/junit-4.12[test]",
+        "//tools:idea/lib/hamcrest-core-1.3[test]",
+        "//tools:idea/lib/junit-4.12[test]",
     ],
     exports = [
         "//tools/base/common:common",
