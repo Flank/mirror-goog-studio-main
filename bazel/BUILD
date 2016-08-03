@@ -87,8 +87,8 @@ test_suite(
     "//tools/base/sdklib:sdklib_tests",
     "//tools/base/testutils:testutils_tests",
     "//tools/data-binding:db-compilerCommon_tests",
-    "//tools/idea:extensions_tests",
-    "//tools/idea:forms-compiler_tests",
-    "//tools/idea:lang-api_tests",
+    "//tools:idea.extensions_tests",
+    "//tools:idea.forms-compiler_tests",
+    "//tools:idea.lang-api_tests",
   ],
 )
