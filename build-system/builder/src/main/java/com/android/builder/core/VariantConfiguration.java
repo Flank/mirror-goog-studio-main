@@ -718,10 +718,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the Android library dependency graph
+     * Returns all the compile Android libraries, direct and transitive in a single flat list.
      */
     @NonNull
-    public List<AndroidLibrary> getCompileAndroidLibraries() {
+    public List<AndroidLibrary> getFlatCompileAndroidLibraries() {
         return mFlatCompileDependencies.getAndroidDependencies();
     }
 

@@ -215,10 +215,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             return Collections.emptyList();
         }
 
-        // this is a graph of Android Library so need to get them recursively.
-        List<File> files = Lists.newArrayListWithCapacity(libs.size() * 2);
+        List<File> files = Lists.newArrayListWithCapacity(libs.size());
         for (AndroidLibrary androidLibrary : libs) {
-            fillManifestList(androidLibrary, files);
+            if (!androidLibrary.isProvided())
+                files.add(androidLibrary.getManifest());
         }
 
         return files;
@@ -320,7 +320,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             ConventionMappingHelper.map(
                     processTestManifestTask, "testLabel", config::getTestLabel);
             ConventionMappingHelper.map(
-                    processTestManifestTask, "libraries", config::getCompileAndroidLibraries);
+                    processTestManifestTask, "libraries", config::getFlatCompileAndroidLibraries);
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());
