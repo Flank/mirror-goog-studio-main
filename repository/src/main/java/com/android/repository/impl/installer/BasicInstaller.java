@@ -63,9 +63,9 @@ class BasicInstaller extends AbstractInstaller {
         Archive archive = getPackage().getArchive();
         assert archive != null;
         try {
-            String fileName = url.getPath();
-            fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
-            File downloadLocation = new File(installTempPath, fileName);
+            String path = url.getPath();
+            File downloadLocation =
+                    new File(installTempPath, path.substring(path.lastIndexOf('/') + 1));
             // TODO: allow resuming of partial downloads
             String checksum = archive.getComplete().getChecksum();
             getDownloader().downloadFully(url, downloadLocation, checksum, progress);
