@@ -1,114 +1,22 @@
 # This file has been automatically generated, please do not modify directly.
-load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 
-fileset(
-  name = "pixelprobe.res",
-  srcs = glob([
-      "src/main/generated/**/*",
-      "src/main/java/**/*",
-      "src/test/tools/**/*",
-      "src/main/resources/**/*",
+iml_module(
+    name = "pixelprobe",
+    srcs = [
+        "src/main/generated",
+        "src/main/java",
+        "src/test/tools",
     ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "src/main/resources": "pixelprobe.resources",
-      "src/main/java": "pixelprobe.resources",
-      "src/test/tools": "pixelprobe.resources",
-      "src/main/generated": "pixelprobe.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
+    test_srcs = ["src/test/java"],
+    resources = ["src/main/resources"],
+    test_resources = ["src/test/resources"],
+    deps = [
+        "//tools/base/chunkio:chunkio[module]",
+        "//tools/base/chunkio-processor:chunkio-processor[module]",
+        "//tools/idea:lib/hamcrest-core-1.3[test]",
+        "//tools/idea:lib/junit-4.12[test]",
     ],
-)
-
-java_library(
-  name = "pixelprobe_testlib",
-  srcs = glob([
-      "src/test/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/pixelprobe/pixelprobe_testlib.resources",
-  resources = [
-      "//tools/base/pixelprobe:pixelprobe_testlib.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/pixelprobe:pixelprobe",
-      "//tools/base/chunkio:chunkio",
-      "//tools/base/chunkio-processor:chunkio-processor",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-    ],
-  exports = [
-      "//tools/base/pixelprobe:pixelprobe",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-java_test(
-  name = "pixelprobe_tests",
-  srcs = glob([
-    ]),
-  runtime_deps = [
-      ":pixelprobe_testlib",
-      "//tools/base/testutils:testutils",
-    ],
-  jvm_flags = [
-      "-Dtest.suite.jar=pixelprobe_testlib.jar",
-    ],
-  test_class = "com.android.testutils.JarTestSuite",
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-fileset(
-  name = "pixelprobe_testlib.res",
-  srcs = glob([
-      "src/test/java/**/*",
-      "src/test/resources/**/*",
-    ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "src/test/java": "pixelprobe_testlib.resources",
-      "src/test/resources": "pixelprobe_testlib.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
-)
-
-java_library(
-  name = "pixelprobe",
-  srcs = glob([
-      "src/main/generated/**/*.java",
-      "src/main/java/**/*.java",
-      "src/test/tools/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/pixelprobe/pixelprobe.resources",
-  resources = [
-      "//tools/base/pixelprobe:pixelprobe.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/chunkio:chunkio",
-      "//tools/base/chunkio-processor:chunkio-processor",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
+    javacopts = ["-extra_checks:off"],
+    visibility = ["//visibility:public"],
 )

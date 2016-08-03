@@ -1,147 +1,26 @@
 # This file has been automatically generated, please do not modify directly.
-load("//tools/base/bazel:bazel.bzl", "kotlin_library", "groovy_library", "kotlin_groovy_library", "fileset")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 
-fileset(
-  name = "instant-run-client.res",
-  srcs = glob([
-      "instant-run-client/src/main/java/**/*",
-    ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "instant-run-client/src/main/java": "instant-run-client.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
+iml_module(
+    name = "instant-run-common",
+    srcs = ["instant-run-common/src/main/java"],
+    deps = ["//tools/base/annotations:android-annotations[module]"],
+    javacopts = ["-extra_checks:off"],
+    visibility = ["//visibility:public"],
 )
 
-fileset(
-  name = "instant-run-client_testlib.res",
-  srcs = glob([
-      "instant-run-client/src/test/java/**/*",
-      "instant-run-client/src/test/resources/**/*",
+iml_module(
+    name = "instant-run-client",
+    srcs = ["instant-run-client/src/main/java"],
+    test_srcs = ["instant-run-client/src/test/java"],
+    test_resources = ["instant-run-client/src/test/resources"],
+    deps = [
+        "//tools/base/instant-run:instant-run-common[module]",
+        "//tools/base/ddmlib:ddmlib[module]",
+        "//tools/idea:lib/hamcrest-core-1.3[test]",
+        "//tools/idea:lib/junit-4.12[test]",
+        "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5[test]",
     ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "instant-run-client/src/test/java": "instant-run-client_testlib.resources",
-      "instant-run-client/src/test/resources": "instant-run-client_testlib.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
-)
-
-java_library(
-  name = "instant-run-common",
-  srcs = glob([
-      "instant-run-common/src/main/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/instant-run/instant-run-common.resources",
-  resources = [
-      "//tools/base/instant-run:instant-run-common.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/annotations:android-annotations",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-fileset(
-  name = "instant-run-common.res",
-  srcs = glob([
-      "instant-run-common/src/main/java/**/*",
-    ],
-    exclude = [
-      "**/* *",
-      "**/*.java",
-      "**/*.kt",
-      "**/*.groovy",
-      "**/*$*",
-      "**/.DS_Store",
-    ]),
-  mappings = {
-      "instant-run-common/src/main/java": "instant-run-common.resources",
-    },
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-    ],
-)
-
-java_library(
-  name = "instant-run-client_testlib",
-  srcs = glob([
-      "instant-run-client/src/test/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/instant-run/instant-run-client_testlib.resources",
-  resources = [
-      "//tools/base/instant-run:instant-run-client_testlib.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/instant-run:instant-run-client",
-      "//tools/base/instant-run:instant-run-common",
-      "//tools/base/ddmlib:ddmlib",
-      "//tools/base/ddmlib:ddmlib_testlib",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-      "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
-    ],
-  exports = [
-      "//tools/base/instant-run:instant-run-client",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-java_test(
-  name = "instant-run-client_tests",
-  srcs = glob([
-    ]),
-  runtime_deps = [
-      ":instant-run-client_testlib",
-      "//tools/base/testutils:testutils",
-    ],
-  jvm_flags = [
-      "-Dtest.suite.jar=instant-run-client_testlib.jar",
-    ],
-  test_class = "com.android.testutils.JarTestSuite",
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
-)
-
-java_library(
-  name = "instant-run-client",
-  srcs = glob([
-      "instant-run-client/src/main/java/**/*.java",
-    ]),
-  resource_strip_prefix = "tools/base/instant-run/instant-run-client.resources",
-  resources = [
-      "//tools/base/instant-run:instant-run-client.res",
-    ],
-  deps = [
-      "@local_jdk//:langtools-neverlink",
-      "//tools/base/instant-run:instant-run-common",
-      "//tools/base/ddmlib:ddmlib",
-      "//tools/idea:lib/hamcrest-core-1.3",
-      "//tools/idea:lib/junit-4.12",
-      "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5",
-    ],
-  javacopts = ["-extra_checks:off"],
-  visibility = ["//visibility:public"],
+    javacopts = ["-extra_checks:off"],
+    visibility = ["//visibility:public"],
 )
