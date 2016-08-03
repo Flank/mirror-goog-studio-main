@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 
+import com.android.builder.model.AndroidProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -42,6 +43,11 @@ public class TestPlugin extends BasePlugin implements Plugin<Project> {
     @Inject
     public TestPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         super(instantiator, registry);
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_TEST;
     }
 
     @Override

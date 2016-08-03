@@ -101,6 +101,10 @@ public interface AndroidProject {
     int MODEL_LEVEL_2_DEP_GRAPH = 2; // studio 2.2+, with full dep graph
     int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_DEP_GRAPH;
 
+    int PROJECT_TYPE_APP = 0;
+    int PROJECT_TYPE_LIBRARY = 1;
+    int PROJECT_TYPE_TEST = 2;
+
     /**
      * Returns the model version. This is a string in the format X.Y.Z
      *
@@ -135,8 +139,18 @@ public interface AndroidProject {
     /**
      * Returns whether this is a library.
      * @return true for a library module.
+     * @deprecated use {@link #getProjectType()} instead.
      */
+    @Deprecated
     boolean isLibrary();
+
+    /**
+     * Returns the type of project: Android application, library, Atom or IAPK.
+     *
+     * @return the type of project.
+     * @since 2.3
+     */
+    int getProjectType();
 
     /**
      * Returns the {@link ProductFlavorContainer} for the 'main' default config.

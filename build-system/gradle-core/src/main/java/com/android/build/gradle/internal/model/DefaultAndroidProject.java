@@ -77,7 +77,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     private final String resourcePrefix;
     @NonNull
     private final Collection<NativeToolchain> nativeToolchains;
-    private final boolean isLibrary;
+    private final int projectType;
     private final int apiVersion;
 
     private final Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
@@ -107,7 +107,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
             @Nullable String resourcePrefix,
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull String buildToolsVersion,
-            boolean isLibrary,
+            int projectType,
             int apiVersion,
             int generation) {
         this.modelVersion = modelVersion;
@@ -125,7 +125,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
         this.lintOptions = lintOptions;
         this.buildFolder = buildFolder;
         this.resourcePrefix = resourcePrefix;
-        this.isLibrary = isLibrary;
+        this.projectType = projectType;
         this.apiVersion = apiVersion;
         this.generation = generation;
         this.nativeToolchains = nativeToolchains;
@@ -212,7 +212,12 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
 
     @Override
     public boolean isLibrary() {
-        return isLibrary;
+        return getProjectType() == PROJECT_TYPE_LIBRARY;
+    }
+
+    @Override
+    public int getProjectType() {
+        return projectType;
     }
 
     @Override

@@ -60,6 +60,7 @@ class  TictactoeTest {
         AndroidProject libModel = models.get(":lib")
         assertNotNull("lib module model null-check", libModel)
         assertTrue("lib module library flag", libModel.isLibrary())
+        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_LIBRARY, libModel.getProjectType())
 
         AndroidProject appModel = models.get(":app")
         assertNotNull("app module model null-check", appModel)
