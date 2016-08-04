@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.testing
 
 import com.android.build.gradle.integration.common.category.SmokeTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -40,7 +39,7 @@ class UnitTestingDefaultValuesTest {
         simpleProject.execute("testDebug")
 
         def results = new JUnitResults(
-                simpleProject.file("build/test-results/debug/TEST-com.android.tests.UnitTest.xml"))
+                simpleProject.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"))
 
         assertThat(results.allTestCases).containsExactly("defaultValues")
         assert results.outcome("defaultValues") == PASSED

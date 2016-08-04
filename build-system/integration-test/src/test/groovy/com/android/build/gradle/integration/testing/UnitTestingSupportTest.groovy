@@ -57,7 +57,8 @@ class UnitTestingSupportTest {
         project.execute("clean", "test")
 
         for (variant in ["debug", "release"]) {
-            def unitTestXml = "build/test-results/${variant}/TEST-com.android.tests.UnitTest.xml"
+            def dirName = "test${variant.capitalize()}UnitTest"
+            def unitTestXml = "build/test-results/${dirName}/TEST-com.android.tests.UnitTest.xml"
             def unitTextResults = new JUnitResults(project.file(unitTestXml))
 
             assertThat(unitTextResults.stdErr).contains("INFO: I can use commons-logging")
@@ -82,7 +83,7 @@ class UnitTestingSupportTest {
                     ], project)
 
             checkResults(
-                    "build/test-results/${variant}/TEST-com.android.tests.NonStandardName.xml",
+                    "build/test-results/${dirName}/TEST-com.android.tests.NonStandardName.xml",
                     [],
                     ["passingTest"], project)
         }

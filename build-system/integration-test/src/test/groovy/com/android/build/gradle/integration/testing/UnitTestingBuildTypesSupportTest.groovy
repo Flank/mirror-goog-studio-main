@@ -37,7 +37,7 @@ class UnitTestingBuildTypesSupportTest {
         flavorsProject.execute("clean", "testDebug")
 
         def results = new JUnitResults(
-                flavorsProject.file("build/test-results/debug/TEST-com.android.tests.UnitTest.xml"))
+                flavorsProject.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"))
 
         assert results.outcome("referenceProductionCode") == PASSED
         assert results.outcome("resourcesOnClasspath") == PASSED
@@ -45,7 +45,7 @@ class UnitTestingBuildTypesSupportTest {
 
         flavorsProject.execute("clean", "testBuildTypeWithResource")
         results = new JUnitResults(
-                flavorsProject.file("build/test-results/buildTypeWithResource/TEST-com.android.tests.UnitTest.xml"))
+                flavorsProject.file("build/test-results/testBuildTypeWithResourceUnitTest/TEST-com.android.tests.UnitTest.xml"))
         assert results.outcome("javaResourcesOnClasspath") == PASSED
         assert results.outcome("prodJavaResourcesOnClasspath") == PASSED
 
