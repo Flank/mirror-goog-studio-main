@@ -105,9 +105,6 @@ public class GradleTestProject implements TestRule {
 
     public static final boolean USE_JACK;
 
-
-    private static final String RECORD_BENCHMARK_NAME = "com.android.benchmark.name";
-    private static final String RECORD_BENCHMARK_MODE = "com.android.benchmark.mode";
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
     static {
