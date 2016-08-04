@@ -72,6 +72,7 @@ public class DependencyContainerImpl implements DependencyContainer {
         return new DependencyContainerImpl(
                 ImmutableList.of(),
                 ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableList.of());
     }
 
