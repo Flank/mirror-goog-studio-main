@@ -1,0 +1,28 @@
+--------- beginning of system
+[ 08-28 11:17:40.000   779:  123 D/StartupTestService ]
+starting fake adb server test
+
+[ 08-29 14:35:26.296   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109351769, fe80::200:5eff:fe01:265, [00005E000265], RTM_NEWNEIGH, NUD_REACHABLE}
+
+[ 08-29 14:35:28.476   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109353949, 100.110.255.254, [00005E000165], RTM_NEWNEIGH, NUD_STALE}
+
+[ 08-29 14:35:32.296   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109357769, fe80::200:5eff:fe01:265, [00005E000265], RTM_NEWNEIGH, NUD_STALE}
+
+[ 08-29 14:35:56.669 23990:24165 I/ClearcutLoggerApiImpl ]
+disconnect managed GoogleApiClient
+
+[ 08-29 14:36:19.488   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109404961, 100.110.255.254, [00005E000165], RTM_NEWNEIGH, NUD_PROBE}
+
+[ 08-29 14:36:19.996   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109405469, fe80::200:5eff:fe01:265, [00005E000265], RTM_NEWNEIGH, NUD_REACHABLE}
+
+[ 08-29 14:36:27.716   779: 9876 D/NetlinkSocketObserver ]
+NeighborEvent{elapsedMs=5109413189, 100.110.255.254, [00005E000165], RTM_NEWNEIGH, NUD_STALE}
+
+[ 08-29 14:37:20.000   779:  123 D/ShutdownTestService ]
+ending fake adb server test
+
