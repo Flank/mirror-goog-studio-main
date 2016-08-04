@@ -68,6 +68,13 @@ public class DependencyContainerImpl implements DependencyContainer {
         mLocalJars = ImmutableList.copyOf(localJars);
     }
 
+    public static DependencyContainer getEmpty() {
+        return new DependencyContainerImpl(
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of());
+    }
+
     @NonNull
     @Override
     public ImmutableList<AndroidBundle> getBundleDependencies() {

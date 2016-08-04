@@ -28,6 +28,8 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.transform.QualifiedContent;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.tasks.PrepareAtomTask;
@@ -43,6 +45,7 @@ import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
@@ -361,12 +364,26 @@ public class DependencyManager {
             @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap) {
 
+        boolean needPackageScope = true;
+        if (AndroidGradleOptions.buildModelOnly(project)) {
+            // if we're only syncing (building the model), then we only need the package
+            // scope if we will actually pass it to the IDE.
+            Integer modelLevelInt = AndroidGradleOptions.buildModelOnlyVersion(project);
+            int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+            if (modelLevelInt != null) {
+                modelLevel = modelLevelInt;
+            }
+            needPackageScope = modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+        }
+
         Configuration compileClasspath = variantDeps.getCompileConfiguration();
         Configuration packageClasspath = variantDeps.getPackageConfiguration();
 
         // TODO - shouldn't need to do this - fix this in Gradle
         ensureConfigured(compileClasspath);
-        ensureConfigured(packageClasspath);
+        if (needPackageScope) {
+            ensureConfigured(packageClasspath);
+        }
 
         if (DEBUG_DEPENDENCY) {
             System.out.println(">>>>>>>>>>");
@@ -382,18 +399,27 @@ public class DependencyManager {
         Set<String> artifactSet = Sets.newHashSet();
 
         // start with package dependencies, record the artifacts
-        DependencyContainer packagedDependencies = gatherDependencies(
-                packageClasspath,
-                variantDeps,
-                reverseLibMap,
-                reverseAtomMap,
-                currentUnresolvedDependencies,
-                testedProjectPath,
-                artifactSet,
-                true /*recordArtifactSet*/);
+        DependencyContainer packagedDependencies;
+        if (needPackageScope) {
+            packagedDependencies = gatherDependencies(
+                    packageClasspath,
+                    variantDeps,
+                    reverseLibMap,
+                    reverseAtomMap,
+                    currentUnresolvedDependencies,
+                    testedProjectPath,
+                    artifactSet,
+                    ScopeType.PACKAGE);
+        } else {
+            packagedDependencies = DependencyContainerImpl.getEmpty();
+        }
 
         // then the compile dependencies, comparing against the record package dependencies
         // to set the provided flag.
+        // if we have not compute the package scope, we disable the computation of
+        // provided bits. This disables the checks on impossible provided libs (provided aar in
+        // apk project).
+        ScopeType scopeType = needPackageScope ? ScopeType.COMPILE : ScopeType.COMPILE_ONLY;
         DependencyContainer compileDependencies = gatherDependencies(
                 compileClasspath,
                 variantDeps,
@@ -402,7 +428,7 @@ public class DependencyManager {
                 currentUnresolvedDependencies,
                 testedProjectPath,
                 artifactSet,
-                false /*recordArtifactSet*/);
+                scopeType);
 
         if (extraModelInfo.getMode() != STANDARD &&
                 compileClasspath.getResolvedConfiguration().hasError()) {
@@ -417,7 +443,10 @@ public class DependencyManager {
         }
 
         // validate the dependencies.
-        variantDeps.getChecker().validate(compileDependencies, packagedDependencies, testedVariantDeps);
+        if (needPackageScope) {
+            variantDeps.getChecker()
+                    .validate(compileDependencies, packagedDependencies, testedVariantDeps);
+        }
 
         if (DEBUG_DEPENDENCY) {
             System.out.println("*** COMPILE DEPS ***");
@@ -456,6 +485,12 @@ public class DependencyManager {
         }
     }
 
+    enum ScopeType {
+        PACKAGE,
+        COMPILE,
+        COMPILE_ONLY;
+    }
+
     @NonNull
     private DependencyContainer gatherDependencies(
             @NonNull Configuration configuration,
@@ -465,7 +500,7 @@ public class DependencyManager {
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
-            boolean recordArtifactSet) {
+            @NonNull ScopeType scopeType) {
 
         // collect the artifacts first.
         Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = Maps.newHashMap();
@@ -505,7 +540,7 @@ public class DependencyManager {
                         testedProjectPath,
                         Collections.emptyList(),
                         artifactSet,
-                        recordArtifactSet,
+                        scopeType,
                         false, /*forceProvided*/
                         0);
             } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -538,21 +573,31 @@ public class DependencyManager {
                                         project.getName(), localJarFile.getAbsolutePath()));
                     } else {
                         JarDependency localJar;
-                        if (recordArtifactSet) {
-                            localJar = new JarDependency(localJarFile);
-                            artifactSet.add(
-                                    computeVersionLessCoordinateKey(localJar.getResolvedCoordinates()));
-                        } else {
-                            MavenCoordinates coord = JarDependency.getCoordForLocalJar(localJarFile);
-                            boolean provided = !artifactSet
-                                    .contains(computeVersionLessCoordinateKey(coord));
+                        switch (scopeType) {
+                            case PACKAGE:
+                                localJar = new JarDependency(localJarFile);
+                                artifactSet.add(
+                                        computeVersionLessCoordinateKey(localJar.getResolvedCoordinates()));
+                                break;
+                            case COMPILE:
+                                MavenCoordinates coord = JarDependency.getCoordForLocalJar(localJarFile);
+                                boolean provided = !artifactSet
+                                        .contains(computeVersionLessCoordinateKey(coord));
 
-                            localJar = new JarDependency(
-                                    localJarFile,
-                                    ImmutableList.of(),
-                                    coord,
-                                    null,
-                                    provided);
+                                localJar = new JarDependency(
+                                        localJarFile,
+                                        ImmutableList.of(),
+                                        coord,
+                                        null,
+                                        provided);
+                                break;
+                            case COMPILE_ONLY:
+                                // if we only have the compile scope, ignore computation of the
+                                // provided bits.
+                                localJar = new JarDependency(localJarFile);
+                                break;
+                            default:
+                                throw new RuntimeException("unsupported ProvidedComputationAction");
                         }
                         localJars.add(localJar);
                     }
@@ -713,7 +758,7 @@ public class DependencyManager {
             @Nullable String testedProjectPath,
             @NonNull List<String> projectChain,
             @NonNull Set<String> artifactSet,
-            boolean recordArtifactSet,
+            @NonNull ScopeType scopeType,
             boolean forceProvided,
             int indent) {
 
@@ -768,7 +813,8 @@ public class DependencyManager {
             // check if this is a tested app project (via a separate test module).
             // In which case, all the dependencies must become provided.
             boolean childForceProvided = forceProvided;
-            if (!recordArtifactSet && testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
+            if (scopeType == ScopeType.COMPILE &&
+                    testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
                 childForceProvided = true;
             }
 
@@ -823,7 +869,7 @@ public class DependencyManager {
                             testedProjectPath,
                             newProjectChain,
                             artifactSet,
-                            recordArtifactSet,
+                            scopeType,
                             childForceProvided,
                             indent + 1);
                 } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -849,9 +895,9 @@ public class DependencyManager {
                     MavenCoordinates mavenCoordinates = createMavenCoordinates(artifact);
                     boolean provided = forceProvided;
                     String coordKey = computeVersionLessCoordinateKey(mavenCoordinates);
-                    if (recordArtifactSet) {
+                    if (scopeType == ScopeType.PACKAGE) {
                         artifactSet.add(coordKey);
-                    } else {
+                    } else if (scopeType == ScopeType.COMPILE) {
                         provided |= !artifactSet.contains(coordKey);
                     }
 
@@ -969,7 +1015,7 @@ public class DependencyManager {
                                 // TODO: we should take the jar only (of the aars). The rest doesn't matter.
 
                                 // if this is a package scope, then skip the dependencies.
-                                if (recordArtifactSet) {
+                                if (scopeType == ScopeType.PACKAGE) {
                                     recursiveLibSkip(nestedLibraries);
                                 } else {
                                     // if it's compile scope, make it optional.
@@ -1016,7 +1062,8 @@ public class DependencyManager {
 
                         // if package scope and the jar (and its dependencies) is from a tested
                         // app module then skip it.
-                        if (recordArtifactSet && testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
+                        if (scopeType == ScopeType.PACKAGE &&
+                                testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
                             jarDependency.skip();
 
                             //noinspection unchecked
