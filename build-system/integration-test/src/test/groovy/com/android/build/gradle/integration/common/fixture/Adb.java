@@ -29,6 +29,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import org.hamcrest.Matcher;
@@ -47,7 +48,7 @@ import org.junit.runners.model.Statement;
  *
  * At the end of the test method, the device is returned to the pool.
  */
-public class Adb implements TestRule {
+public class Adb implements TestRule, Closeable {
 
     private List<String> devicesToReturn = Lists.newArrayList();
     private boolean exclusiveAccess = false;
@@ -58,18 +59,21 @@ public class Adb implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                try {
+                try (Closeable ignored = Adb.this) {
                     displayName = description.getDisplayName();
                     base.evaluate();
-                } finally {
-                    if (!devicesToReturn.isEmpty()) {
-                        DevicePoolClient.returnDevices(devicesToReturn, displayName);
-                    } else if (exclusiveAccess) {
-                        DevicePoolClient.returnAllDevices(displayName);
-                    }
                 }
             }
         };
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (!devicesToReturn.isEmpty()) {
+            DevicePoolClient.returnDevices(devicesToReturn, displayName);
+        } else if (exclusiveAccess) {
+            DevicePoolClient.returnAllDevices(displayName);
+        }
     }
 
     /**
