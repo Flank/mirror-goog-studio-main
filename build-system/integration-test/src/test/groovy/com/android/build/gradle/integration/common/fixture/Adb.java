@@ -29,16 +29,13 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.util.List;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -138,9 +135,9 @@ public class Adb implements TestRule {
 
     }
 
-    private static Supplier<AndroidDebugBridge> sAdbGetter = Suppliers.memoizeWithExpiration(
+    private static Supplier<AndroidDebugBridge> sAdbGetter = Suppliers.memoize(
             () -> {
-                AndroidDebugBridge.init(false /*clientSupport*/);
+                AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
                 AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(
                         SdkHelper.getAdb().getAbsolutePath(), false /*forceNewBridge*/);
                 assertNotNull("Debug bridge", bridge);
@@ -159,8 +156,7 @@ public class Adb implements TestRule {
                     throw new RuntimeException("Timeout getting device list.");
                 }
                 return bridge;
-            },
-            10, TimeUnit.MINUTES);
+            });
 
 
     private static AndroidDebugBridge getBridge() {
