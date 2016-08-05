@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -29,21 +30,16 @@ import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
 import groovy.transform.CompileStatic
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
 import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
+import static com.google.common.truth.Truth.assertThat
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
-import static com.google.common.truth.Truth.assertThat;
 
 /**
  * Assemble tests for flavors.
@@ -63,6 +59,7 @@ class FlavorsTest {
         File projectDir = project.getTestDir()
 
         assertFalse("Library Project", model.isLibrary())
+        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType())
 
         assertThat(model.getFlavorDimensions()).containsExactly("group1", "group2")
 

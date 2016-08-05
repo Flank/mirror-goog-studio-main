@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
-import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -67,7 +66,6 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessRecorder;
-import com.android.builder.profile.ProcessRecorderFactory;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
@@ -282,8 +280,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
      * Return whether this plugin creates Android library.  Should be overridden if true.
      */
     protected boolean isLibrary() {
-        return false;
+        return getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY;
     }
+
+    protected abstract int getProjectType();
 
     @VisibleForTesting
     VariantManager getVariantManager() {
@@ -527,7 +527,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 extraModelInfo,
                 ndkHandler,
                 new NativeLibraryFactoryImpl(ndkHandler),
-                isLibrary(),
+                getProjectType(),
                 AndroidProject.GENERATION_ORIGINAL);
         registry.register(modelBuilder);
 
