@@ -286,10 +286,10 @@ public class InstantRunBuildContext {
     private final Build currentBuild =
             new Build(System.nanoTime(), InstantRunVerifierStatus.NO_CHANGES);
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
-    private File tmpBuildInfo = null;
     private boolean isInstantRunMode = false;
     private final AtomicLong token = new AtomicLong(0);
     private InstantRunBuildMode buildMode = InstantRunBuildMode.HOT_WARM;
+    private boolean buildHasFailed = false;
 
     public void setInstantRunMode(boolean instantRunMode) {
         isInstantRunMode = instantRunMode;
@@ -299,8 +299,12 @@ public class InstantRunBuildContext {
         return isInstantRunMode;
     }
 
-    public void setTmpBuildInfo(File tmpBuildInfo) {
-        this.tmpBuildInfo = tmpBuildInfo;
+    public void setBuildHasFailed() {
+        buildHasFailed = true;
+    }
+
+    public boolean getBuildHasFailed() {
+        return buildHasFailed;
     }
 
     /**
@@ -330,6 +334,8 @@ public class InstantRunBuildContext {
                 || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE) {
             currentBuild.verifierStatus = verifierStatus;
         }
+        Preconditions.checkNotNull(patchingPolicy,
+                "setApiLevel should be called before setVerifierStatus");
         buildMode = buildMode.combine(
                 verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
         LOG.info("Got verifier result: {}. Build mode is now {}.", verifierStatus, buildMode);
@@ -451,12 +457,6 @@ public class InstantRunBuildContext {
             }
         }
         currentBuild.artifacts.add(new Artifact(fileType, file));
-        // save the temporary build info file in case the build fails later on.
-        try {
-            writeTmpBuildInfo();
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e);
-        }
     }
 
 
@@ -676,9 +676,6 @@ public class InstantRunBuildContext {
 
     public void mergeFromFile(@NonNull File tmpBuildInfoFile)
             throws IOException, SAXException, ParserConfigurationException {
-        if (!tmpBuildInfoFile.exists()) {
-            return;
-        }
         mergeFrom(XmlUtils.parseUtfXmlFile(tmpBuildInfoFile, false));
     }
 
@@ -828,11 +825,8 @@ public class InstantRunBuildContext {
      * @throws ParserConfigurationException
      * @throws IOException
      */
-    private void writeTmpBuildInfo() throws ParserConfigurationException, IOException {
-
-        if (tmpBuildInfo == null) {
-            return;
-        }
+    public void writeTmpBuildInfo(@NonNull File tmpBuildInfo)
+            throws ParserConfigurationException, IOException {
         Files.createParentDirs(tmpBuildInfo);
         Files.write(toXml(PersistenceMode.TEMP_BUILD), tmpBuildInfo, Charsets.UTF_8);
     }
