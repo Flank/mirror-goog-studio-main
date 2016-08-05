@@ -127,6 +127,8 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
                 new ModelPath(ModelConstants.JNILIBS_DEPENDENCIES),
                 multimapModelType(String.class, NativeDependencyResolveResult.class));
 
+        int projectType = isApplication ? AndroidProject.PROJECT_TYPE_APP
+                : AndroidProject.PROJECT_TYPE_LIBRARY;
         return new ModelBuilder(
                 androidBuilder,
                 variantManager,
@@ -136,7 +138,7 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
                 ndkHandler,
                 new ComponentNativeLibraryFactory(
                         binaries, ndkHandler, abiOptions, nativeDependencies, jniLibsDependencies),
-                !isApplication,
+                projectType,
                 AndroidProject.GENERATION_COMPONENT);
     }
 }

@@ -68,6 +68,7 @@ class FlavoredlibTest {
         assertNotNull("Module app null-check", appModel)
 
         assertFalse("Library Project", appModel.isLibrary())
+        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, appModel.getProjectType())
 
         Collection<Variant> variants = appModel.getVariants()
         Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors()

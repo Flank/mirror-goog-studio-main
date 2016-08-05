@@ -103,7 +103,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private Map<Abi, NativeToolchain> toolchains;
     @NonNull
     private NativeLibraryFactory nativeLibFactory;
-    private final boolean isLibrary;
+    private final int projectType;
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
 
@@ -115,7 +115,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull NdkHandler ndkHandler,
             @NonNull NativeLibraryFactory nativeLibraryFactory,
-            boolean isLibrary,
+            int projectType,
             int generation) {
         this.androidBuilder = androidBuilder;
         this.config = config;
@@ -124,7 +124,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         this.taskManager = taskManager;
         this.ndkHandler = ndkHandler;
         this.nativeLibFactory = nativeLibraryFactory;
-        this.isLibrary = isLibrary;
+        this.projectType = projectType;
         this.generation = generation;
     }
 
@@ -192,7 +192,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 config.getResourcePrefix(),
                 ImmutableList.copyOf(toolchains.values()),
                 config.getBuildToolsVersion(),
-                isLibrary,
+                projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation);
 

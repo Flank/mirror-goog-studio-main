@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 
+import com.android.builder.model.AndroidProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -42,6 +43,11 @@ public class AppPlugin extends BasePlugin implements Plugin<Project> {
     @Inject
     public AppPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         super(instantiator, registry);
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_APP;
     }
 
     @Override
