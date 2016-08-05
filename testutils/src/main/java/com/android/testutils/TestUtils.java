@@ -128,6 +128,14 @@ public class TestUtils {
         throw new IllegalStateException("SDK directory not defined with ANDROID_HOME");
     }
 
+    /**
+     * Sleeps the current thread for enough time to ensure that the local file system had enough
+     * time to notice a "tick". This method is usually called in tests when it is necessary to
+     * ensure filesystem writes are detected through timestamp modification.
+     *
+     * @throws InterruptedException waiting interrupted
+     * @throws IOException issues creating a temporary file
+     */
     public static void waitForFileSystemTick() throws InterruptedException, IOException {
         waitForFileSystemTick(getFreshTimestamp());
     }
