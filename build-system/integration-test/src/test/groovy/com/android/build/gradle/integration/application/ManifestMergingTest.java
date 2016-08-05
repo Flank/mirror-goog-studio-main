@@ -63,7 +63,7 @@ public class ManifestMergingTest {
     public void checkManifestMergingForLibraries() {
         libsTest.execute("clean", "build");
         File fileOutput = libsTest.
-                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/release/AndroidManifest.xml");
+                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/default/AndroidManifest.xml");
 
         assertTrue(fileOutput.exists());
     }

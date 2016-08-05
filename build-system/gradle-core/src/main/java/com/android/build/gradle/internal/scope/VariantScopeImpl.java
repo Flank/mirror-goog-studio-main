@@ -952,10 +952,34 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBaseBundleDir() {
-        return FileUtils.join(getGlobalScope().getIntermediatesDir(),
+        // The base bundle dir must be recomputable from outside of this project.
+        // DirName is a set for folders (flavor1/flavor2/buildtype) which is difficult to
+        // recompute if all you have is the fullName (flavor1Flavor2Buildtype) as it would
+        // require string manipulation which could break is a flavor is using camelcase in
+        // its name (myFlavor).
+        // So here we use getFullName directly. It's a direct match with the externally visible
+        // variant name (which is == to getFullName), and set as the published artifact's
+        // classifier.
+        // However if there is only a single published artifact, then the bundle is set to a
+        // standard name ('default', which cannot be a variant name anyway), since the consuming
+        // side doesn't know what the variant name is (no coordinate classifier in this case). Note
+        // that this only applies to the published artifact. Non published artifact always use their
+        // name no matter what (necessary for testing)
+        // See DependencyManager.addDependency
+
+        String leaf;
+        String variantName = getVariantConfiguration().getFullName();
+        if (globalScope.getExtension().getPublishNonDefault() ||
+                !variantName.equals(globalScope.getExtension().getDefaultPublishConfig())) {
+            leaf = variantName;
+        } else {
+            leaf = "default";
+        }
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
                 getVariantConfiguration().getType() == VariantType.ATOM ?
                         DIR_ATOMBUNDLES : DIR_BUNDLES,
-                getDirName());
+                leaf);
     }
 
     @NonNull

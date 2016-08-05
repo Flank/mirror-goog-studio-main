@@ -36,7 +36,7 @@ public class LibraryDependencyTest {
     }
 
     private static LibraryDependency getRedAarValue() {
-        return new LibraryDependency(
+        return LibraryDependency.createExplodedAarLibrary(
                 new File("red"),
                 new File(""),
                 ImmutableList.of(),
@@ -50,7 +50,7 @@ public class LibraryDependencyTest {
     }
 
     private static LibraryDependency getBlackAarValue() {
-        return new LibraryDependency(
+        return LibraryDependency.createExplodedAarLibrary(
                 new File("black"),
                 new File(""),
                 ImmutableList.of(),

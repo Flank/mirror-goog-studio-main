@@ -50,7 +50,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
     @NonNull
     private final MavenCoordinates mResolvedCoordinates;
 
-    private boolean skipped = false;
+    private boolean mSkipped = false;
 
     public JarDependency(
             @NonNull File jarFile,
@@ -104,12 +104,12 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
 
     @Override
     public boolean isSkipped() {
-        return skipped;
+        return mSkipped;
     }
 
     @Override
     public void skip() {
-        skipped = true;
+        mSkipped = true;
     }
 
     @Override
@@ -149,14 +149,18 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
                 Objects.equal(mProjectPath, that.mProjectPath) &&
                 Objects.equal(mDependencies, that.mDependencies) &&
                 Objects.equal(mResolvedCoordinates, that.mResolvedCoordinates) &&
-                Objects.equal(skipped, that.skipped);
+                Objects.equal(mSkipped, that.mSkipped);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hashCode(mJarFile, mIsProvided, mProjectPath, mDependencies, mResolvedCoordinates,
-                        skipped);
+        return Objects.hashCode(
+                mJarFile,
+                mIsProvided,
+                mProjectPath,
+                mDependencies,
+                mResolvedCoordinates,
+                mSkipped);
     }
 
     @Override
@@ -167,7 +171,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
                 .add("mProjectPath", mProjectPath)
                 .add("mDependencies", mDependencies)
                 .add("mResolvedCoordinates", mResolvedCoordinates)
-                .add("skipped", skipped)
+                .add("mSkipped", mSkipped)
                 .toString();
     }
 }

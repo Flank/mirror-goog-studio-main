@@ -32,6 +32,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.ide.common.caching.CreatingCache;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -57,11 +58,9 @@ final class DependenciesImpl implements Dependencies, Serializable {
     private static final CreatingCache<AndroidAtom, AndroidAtomImpl> sAtomCache
             = new CreatingCache<>(DependenciesImpl::convertAndroidAtom);
     private static final CreatingCache<AndroidLibrary, AndroidLibraryImpl> sLibCache
-            = new CreatingCache<>(DependenciesImpl::convertAndroidLibrary);
+            = new CreatingCache<>(DependenciesImpl::getAndroidLibraryValue);
     private static final CreatingCache<JavaLibrary, JavaLibraryImpl> sJarCache
-            = new CreatingCache<>(DependenciesImpl::convertJarLibrary);
-    private static final CreatingCache<JavaLibrary, JavaLibraryImpl> sFlatJarCache
-            = new CreatingCache<>(DependenciesImpl::convertFlatJarLibrary);
+            = new CreatingCache<>(DependenciesImpl::getJavaLibraryValue);
 
     @NonNull
     private final List<AndroidAtom> atoms;
@@ -84,7 +83,6 @@ final class DependenciesImpl implements Dependencies, Serializable {
         sAtomCache.clear();
         sLibCache.clear();
         sJarCache.clear();
-        sFlatJarCache.clear();
     }
 
     @NonNull
@@ -141,7 +139,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
         }
 
         for (AndroidLibrary libImpl : androidLibraries) {
-            AndroidLibrary clonedLib = sLibCache.get(libImpl);
+            AndroidLibrary clonedLib = sLibCache.get(getAndroidLibraryKey(libImpl));
             if (clonedLib != null) {
                 clonedAndroidLibraries.add(clonedLib);
             }
@@ -163,7 +161,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
             } else {
                 // just convert the library using the cache. It'll recursively
                 // handle the dependencies.
-                JavaLibraryImpl clonedJavaLibrary = sJarCache.get(javaLibrary);
+                JavaLibraryImpl clonedJavaLibrary = sJarCache.get(getJavaLibraryKey(javaLibrary));
                 if (clonedJavaLibrary != null) {
                     clonedJavaLibraries.add(clonedJavaLibrary);
                 }
@@ -236,7 +234,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
         if (!customArtifact && javaLibrary.getProject() != null) {
             clonedProjects.add(javaLibrary.getProject().intern());
         } else {
-            JavaLibrary clonedJavaLib = sFlatJarCache.get(javaLibrary);
+            JavaLibrary clonedJavaLib = sJarCache.get(getJavaLibraryKey(javaLibrary));
             if (clonedJavaLib != null && !clonedJavaLibraries.contains(clonedJavaLib)) {
                 clonedJavaLibraries.add(clonedJavaLib);
             }
@@ -334,19 +332,49 @@ final class DependenciesImpl implements Dependencies, Serializable {
     }
 
     @NonNull
-    private static AndroidLibraryImpl convertAndroidLibrary(
+    private static AndroidLibrary getAndroidLibraryKey(@NonNull AndroidLibrary androidLibrary) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+
+        if (fullCopy) {
+            // in a full copy case, we let the cache create the serializable instance
+            // and the original instance can be the key
+            return androidLibrary;
+        }
+
+        // else in a partial copy case, we need to first make a copy without the removed
+        // stuff and use that as a key
+        // It's ok because it's a fairly shallow copy anyway.
+        return createSerializableAndroidLibrary(androidLibrary);
+    }
+
+    @NonNull
+    private static AndroidLibraryImpl getAndroidLibraryValue(
+            @NonNull AndroidLibrary androidLibrary) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+
+        if (fullCopy) {
+            // in a full copy case, the value is the serializable copy of the key.
+            return createSerializableAndroidLibrary(androidLibrary);
+        }
+
+        // in a non full copy case, the key is already serializable so we can return it directly.
+        assert androidLibrary instanceof AndroidLibraryImpl;
+        return (AndroidLibraryImpl) androidLibrary;
+    }
+
+    @NonNull
+    private static AndroidLibraryImpl createSerializableAndroidLibrary(
             @NonNull AndroidLibrary libraryDependency) {
         boolean newDepModel = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
 
         List<JavaLibrary> clonedJavaLibraries = ImmutableList.of();
         List<AndroidLibrary> clonedDeps = ImmutableList.of();
 
-        // if this is a sub-project, no need to include the children.
         if (newDepModel || libraryDependency.getProject() == null) {
             List<? extends AndroidLibrary> deps = libraryDependency.getLibraryDependencies();
             clonedDeps = Lists.newArrayListWithCapacity(deps.size());
             for (AndroidLibrary child : deps) {
-                AndroidLibrary clonedLib = sLibCache.get(child);
+                AndroidLibrary clonedLib = sLibCache.get(getAndroidLibraryKey(child));
                 if (clonedLib != null) {
                     clonedDeps.add(clonedLib);
                 }
@@ -358,7 +386,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
                 Collection<? extends JavaLibrary> jarDeps = libraryDependency.getJavaDependencies();
                 clonedJavaLibraries = Lists.newArrayListWithCapacity(jarDeps.size());
                 for (JavaLibrary javaLibrary : jarDeps) {
-                    JavaLibraryImpl clonedJar = sJarCache.get(javaLibrary);
+                    JavaLibraryImpl clonedJar = sJarCache.get(getJavaLibraryKey(javaLibrary));
                     if (clonedJar != null) {
                         clonedJavaLibraries.add(clonedJar);
                     }
@@ -377,15 +405,50 @@ final class DependenciesImpl implements Dependencies, Serializable {
     }
 
     @NonNull
-    private static JavaLibraryImpl convertJarLibrary(@NonNull JavaLibrary javaLibrary) {
-        List<? extends JavaLibrary> javaDependencies = javaLibrary.getDependencies();
-        List<JavaLibrary> clonedDependencies = Lists.newArrayListWithCapacity(
-                javaDependencies.size());
+    private static JavaLibrary getJavaLibraryKey(@NonNull JavaLibrary javaLibrary) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
 
-        for (JavaLibrary javaDependency : javaDependencies) {
-            JavaLibraryImpl clonedJar = sJarCache.get(javaDependency);
-            if (clonedJar != null) {
-                clonedDependencies.add(clonedJar);
+        if (fullCopy) {
+            // in a full copy case, we let the cache create the serializable instance
+            // and the original instance can be the key
+            return javaLibrary;
+        }
+
+        // else in a partial copy case, we need to first make a copy without the removed
+        // stuff and use that as a key
+        // It's ok because it's a fairly shallow copy anyway.
+        return createSerializableJavaLibrary(javaLibrary);
+    }
+
+    @NonNull
+    private static JavaLibraryImpl getJavaLibraryValue(@NonNull JavaLibrary javaLibrary) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+
+        if (fullCopy) {
+            // in a full copy case, the value is the serializable copy of the key.
+            return createSerializableJavaLibrary(javaLibrary);
+        }
+
+        // in a non full copy case, the key is already serializable so we can return it directly.
+        assert javaLibrary instanceof JavaLibraryImpl;
+        return (JavaLibraryImpl) javaLibrary;
+    }
+
+
+    @NonNull
+    private static JavaLibraryImpl createSerializableJavaLibrary(@NonNull JavaLibrary javaLibrary) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+        List<JavaLibrary> clonedDependencies = ImmutableList.of();
+
+        if (fullCopy) {
+            List<? extends JavaLibrary> javaDependencies = javaLibrary.getDependencies();
+            clonedDependencies = Lists.newArrayListWithCapacity(javaDependencies.size());
+
+            for (JavaLibrary javaDependency : javaDependencies) {
+                JavaLibraryImpl clonedJar = sJarCache.get(getJavaLibraryKey(javaDependency));
+                if (clonedJar != null) {
+                    clonedDependencies.add(clonedJar);
+                }
             }
         }
 
@@ -393,19 +456,6 @@ final class DependenciesImpl implements Dependencies, Serializable {
                 javaLibrary.getJarFile(),
                 javaLibrary.getProject(),
                 clonedDependencies,
-                javaLibrary.getRequestedCoordinates(),
-                javaLibrary.getResolvedCoordinates(),
-                javaLibrary.isSkipped(),
-                javaLibrary.isProvided());
-    }
-
-
-    @NonNull
-    private static JavaLibraryImpl convertFlatJarLibrary(@NonNull JavaLibrary javaLibrary) {
-        return new JavaLibraryImpl(
-                javaLibrary.getJarFile(),
-                null /*project*/,
-                ImmutableList.of(),
                 javaLibrary.getRequestedCoordinates(),
                 javaLibrary.getResolvedCoordinates(),
                 javaLibrary.isSkipped(),
@@ -469,14 +519,13 @@ final class DependenciesImpl implements Dependencies, Serializable {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DependenciesImpl{");
-        sb.append("atoms=").append(atoms);
-        sb.append(", libraries=").append(libraries);
-        sb.append(", javaLibraries=").append(javaLibraries);
-        sb.append(", projects=").append(projects);
-        sb.append(", baseAtom=").append(baseAtom);
-        sb.append('}');
-        return sb.toString();
+        return MoreObjects.toStringHelper(this)
+                .add("libraries", libraries)
+                .add("javaLibraries", javaLibraries)
+                .add("projects", projects)
+                .add("atoms", atoms)
+                .add("baseAtom", baseAtom)
+                .toString();
     }
 
     @Override

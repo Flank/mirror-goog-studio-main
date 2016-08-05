@@ -32,7 +32,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.android.sdklib.repository.meta.Library;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.io.File;
@@ -40,14 +42,74 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * An implementation of an AndroidLibrary that represents an extracted AAR.
+ */
 public final class LibraryDependency extends AbstractBundleDependency implements AndroidLibrary, SkippableLibrary {
 
     private boolean mSkipped = false;
     private final boolean mIsProvided;
     @NonNull
     private final File mJarsRootFolder;
+    /**
+     * Whether the library is an android Lib sub-module. This is different from testing
+     * {@link #getProject()} as a module could wrap a local aar, which is not the same as a
+     * lib sub-module.
+     */
+    private final boolean mIsSubModule;
 
-    public LibraryDependency(
+    public static LibraryDependency createLocalTestedAarLibrary(
+            @NonNull File bundle,
+            @NonNull File bundleFolder,
+            @Nullable String name,
+            @Nullable String projectPath,
+            @NonNull String projectVariant) {
+        return new LibraryDependency(
+                bundle,
+                bundleFolder,
+                ImmutableList.of(), /* androidDependencies */
+                ImmutableList.of(), /* jarDependencies */
+                name,
+                projectPath,
+                projectVariant,
+                null, /* requestedCoordinates */
+                new MavenCoordinatesImpl(
+                        "__tested_library__",
+                        bundle.getPath(),
+                        "unspecified"),
+                bundleFolder, /*jarsRootFolder*/
+                false /*isProvided*/,
+                true /*IsSubModule*/);
+    }
+
+    public static LibraryDependency createStagedAarLibrary(
+            @NonNull File bundle,
+            @NonNull File stagedFolder,
+            @NonNull List<LibraryDependency> androidDependencies,
+            @NonNull Collection<JarDependency> jarDependencies,
+            @Nullable String name,
+            @Nullable String variantName,
+            @Nullable String projectPath,
+            @Nullable MavenCoordinates requestedCoordinates,
+            @NonNull MavenCoordinates resolvedCoordinates,
+            boolean isProvided) {
+        return new LibraryDependency(
+                bundle,
+                stagedFolder,
+                androidDependencies,
+                jarDependencies,
+                name,
+                variantName,
+                projectPath,
+                requestedCoordinates,
+                resolvedCoordinates,
+                stagedFolder,
+                isProvided,
+                true /*IsSubModule*/
+        );
+    }
+
+    public static LibraryDependency createExplodedAarLibrary(
             @NonNull File bundle,
             @NonNull File explodedBundle,
             @NonNull List<LibraryDependency> androidDependencies,
@@ -58,7 +120,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             boolean isProvided) {
-        this(bundle,
+        return new LibraryDependency(bundle,
                 explodedBundle,
                 androidDependencies,
                 jarDependencies,
@@ -68,10 +130,11 @@ public final class LibraryDependency extends AbstractBundleDependency implements
                 requestedCoordinates,
                 resolvedCoordinates,
                 new File(explodedBundle, FD_JARS),
-                isProvided);
+                isProvided,
+                false /*IsSubModule*/);
     }
 
-    public LibraryDependency(
+    private LibraryDependency(
             @NonNull File bundle,
             @NonNull File explodedBundle,
             @NonNull List<LibraryDependency> androidDependencies,
@@ -82,7 +145,8 @@ public final class LibraryDependency extends AbstractBundleDependency implements
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             @NonNull File jarsRootFolder,
-            boolean isProvided) {
+            boolean isProvided,
+            boolean isSubModule) {
         super(bundle,
                 explodedBundle,
                 androidDependencies,
@@ -92,8 +156,19 @@ public final class LibraryDependency extends AbstractBundleDependency implements
                 projectPath,
                 requestedCoordinates,
                 resolvedCoordinates);
-        this.mJarsRootFolder = jarsRootFolder;
-        this.mIsProvided = isProvided;
+        mJarsRootFolder = jarsRootFolder;
+        mIsProvided = isProvided;
+        mIsSubModule = isSubModule;
+    }
+
+    /**
+     * Returns whether the library is an android Lib sub-module.
+     *
+     * This is different from testing {@link #getProject()} as a module could wrap a local aar,
+     * which is not the same as a lib sub-module.
+     */
+    public boolean isSubModule() {
+        return mIsSubModule;
     }
 
     @Override
@@ -206,12 +281,14 @@ public final class LibraryDependency extends AbstractBundleDependency implements
         LibraryDependency that = (LibraryDependency) o;
         return mSkipped == that.mSkipped &&
                 mIsProvided == that.mIsProvided &&
+                mIsSubModule == that.mIsSubModule &&
                 Objects.equals(mJarsRootFolder, that.mJarsRootFolder);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(super.hashCode(), mSkipped, mIsProvided, mJarsRootFolder);
+        return java.util.Objects.hash(
+                super.hashCode(), mSkipped, mIsProvided, mIsSubModule, mJarsRootFolder);
     }
 
     @Override
@@ -220,6 +297,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
                 .add("super", super.toString())
                 .add("mSkipped", mSkipped)
                 .add("mIsProvided", mIsProvided)
+                .add("mIsSubModule", mIsSubModule)
                 .add("mJarsRootFolder", mJarsRootFolder)
                 .toString();
     }

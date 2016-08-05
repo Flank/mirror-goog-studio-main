@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_JAR;
+import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.dependency.DependencyChecker.computeVersionLessCoordinateKey;
 import static com.android.builder.core.BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE;
 import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE;
@@ -28,6 +29,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -50,6 +52,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.SdkLibData;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -80,6 +83,7 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.plugins.ApplicationPlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.specs.Specs;
 import org.gradle.util.GUtil;
@@ -100,6 +104,7 @@ import java.util.Set;
 public class DependencyManager {
 
     private static final boolean DEBUG_DEPENDENCY = false;
+    public static final String EXPLODED_AAR = "exploded-aar";
     private final Project project;
     private final ExtraModelInfo extraModelInfo;
     private final ILogger logger;
@@ -181,7 +186,7 @@ public class DependencyManager {
             @NonNull VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath) {
-        Multimap<AndroidLibrary, Configuration> reverseLibMap = ArrayListMultimap.create();
+        Multimap<LibraryDependency, Configuration> reverseLibMap = ArrayListMultimap.create();
         Multimap<AndroidAtom, Configuration> reverseAtomMap = ArrayListMultimap.create();
 
         resolveDependencyForConfig(
@@ -195,8 +200,8 @@ public class DependencyManager {
         processAtoms(reverseAtomMap);
     }
 
-    private void processLibraries(@NonNull Multimap<AndroidLibrary, Configuration> reverseMap) {
-        for (AndroidLibrary lib : reverseMap.keySet()) {
+    private void processLibraries(@NonNull Multimap<LibraryDependency, Configuration> reverseMap) {
+        for (LibraryDependency lib : reverseMap.keySet()) {
             setupPrepareLibraryTask(lib, reverseMap.get(lib));
         }
     }
@@ -208,7 +213,7 @@ public class DependencyManager {
     }
 
     private void setupPrepareLibraryTask(
-            @NonNull AndroidLibrary androidLibrary,
+            @NonNull LibraryDependency androidLibrary,
             @Nullable Collection<Configuration> configurationList) {
         Task task = maybeCreatePrepareLibraryTask(androidLibrary, project);
 
@@ -278,9 +283,11 @@ public class DependencyManager {
      * @return the prepare task.
      */
     private PrepareLibraryTask maybeCreatePrepareLibraryTask(
-            @NonNull AndroidLibrary library,
+            @NonNull LibraryDependency library,
             @NonNull Project project) {
-        LibraryDependency lib = (LibraryDependency) library;
+        if (library.isSubModule()) {
+            throw new RuntimeException("Creating PrepareLib task for submodule: " + library.getResolvedCoordinates());
+        }
 
         // create proper key for the map. library here contains all the dependencies which
         // are not relevant for the task (since the task only extract the aar which does not
@@ -295,14 +302,14 @@ public class DependencyManager {
         PrepareLibraryTask prepareLibraryTask = prepareLibTaskMap.get(key);
 
         if (prepareLibraryTask == null) {
-            String bundleName = GUtil.toCamelCase(lib.getName().replaceAll("\\:", " "));
+            String bundleName = GUtil.toCamelCase(library.getName().replaceAll("\\:", " "));
 
             prepareLibraryTask = project.getTasks().create(
                     "prepare" + bundleName + "Library", PrepareLibraryTask.class);
 
-            prepareLibraryTask.setDescription("Prepare " + lib.getName());
-            prepareLibraryTask.setBundle(lib.getBundle());
-            prepareLibraryTask.setExplodedDir(lib.getFolder());
+            prepareLibraryTask.setDescription("Prepare " + library.getName());
+            prepareLibraryTask.setBundle(library.getBundle());
+            prepareLibraryTask.setExplodedDir(library.getFolder());
             prepareLibraryTask.setVariantName("");
 
             prepareLibTaskMap.put(key, prepareLibraryTask);
@@ -357,7 +364,7 @@ public class DependencyManager {
             @NonNull final VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap) {
 
         boolean needPackageScope = true;
@@ -477,7 +484,7 @@ public class DependencyManager {
 
         if (DEBUG_DEPENDENCY) {
             System.out.println(project.getName() + ":" + compileClasspath.getName() + "/" +packageClasspath.getName());
-            System.out.println("<<<<<<<<<<");
+            System.out.println("<<<<<<`<");
         }
     }
 
@@ -491,7 +498,7 @@ public class DependencyManager {
     private DependencyContainer gatherDependencies(
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
-            @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
@@ -747,7 +754,7 @@ public class DependencyManager {
             @NonNull Map<ModuleVersionIdentifier, List<AtomDependency>> alreadyFoundAtoms,
             @NonNull Map<ModuleVersionIdentifier, List<JarDependency>> alreadyFoundJars,
             @NonNull Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-            @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
@@ -777,8 +784,10 @@ public class DependencyManager {
             }
             outLibraries.addAll(libsForThisModule);
 
-            for (AndroidLibrary lib : libsForThisModule) {
-                reverseLibMap.put(lib, configuration);
+            for (LibraryDependency lib : libsForThisModule) {
+                if (!lib.isSubModule()) {
+                    reverseLibMap.put(lib, configuration);
+                }
             }
         } else if (atomsForThisModule != null) {
             if (DEBUG_DEPENDENCY) {
@@ -913,24 +922,78 @@ public class DependencyManager {
                             printIndent(indent, "PATH: " + path);
                         }
 
-                        File explodedDir = project.file(project.getBuildDir() + "/" + FD_INTERMEDIATES + "/exploded-aar/" + path);
+                        final String variantName = artifact.getClassifier();
 
-                        @SuppressWarnings("unchecked")
-                        LibraryDependency LibraryDependency = new LibraryDependency(
-                                artifact.getFile(),
-                                explodedDir,
-                                nestedLibraries,
-                                nestedJars,
-                                name,
-                                artifact.getClassifier(),
-                                gradlePath,
-                                null /*requestedCoordinates*/,
-                                mavenCoordinates,
-                                provided);
+                        LibraryDependency libraryDependency;
+                        Project subProject = null;
 
-                        libsForThisModule.add(LibraryDependency);
-                        outLibraries.add(LibraryDependency);
-                        reverseLibMap.put(LibraryDependency, configuration);
+                        boolean isSubProject = false;
+                        if (gradlePath != null) {
+                            // this is a sub-module. Get the matching object file
+                            // to query its build output;
+                            subProject = project.findProject(gradlePath);
+
+                            // this could be a simple project wrapping an aar file, so we check the
+                            // presence of the android plugin to make sure it's an android module.
+                            isSubProject = subProject.getPlugins().hasPlugin("com.android.library") ||
+                                    subProject.getPlugins().hasPlugin("com.android.model.library");
+                        }
+
+                        if (isSubProject) {
+                            // if there is a variant name then we use it for the leaf
+                            // (this means the subproject is publishing all its variants and each
+                            // artifact has a classifier that is the variant Name).
+                            // Otherwise the subproject only outputs a single artifact
+                            // and the location was set to default.
+                            String pathLeaf = variantName != null ? variantName : "default";
+
+                            File stagingDir = FileUtils.join(
+                                    subProject.getBuildDir(),
+                                    FD_INTERMEDIATES, DIR_BUNDLES,
+                                    pathLeaf);
+
+                            libraryDependency = LibraryDependency.createStagedAarLibrary(
+                                    artifact.getFile(),
+                                    stagingDir,
+                                    nestedLibraries,
+                                    nestedJars,
+                                    name,
+                                    variantName,
+                                    gradlePath,
+                                    null /*requestedCoordinates*/,
+                                    mavenCoordinates,
+                                    provided);
+
+                        } else {
+                            File explodedDir = project.file(
+                                    project.getBuildDir() +
+                                            "/" +
+                                            FD_INTERMEDIATES +
+                                            "/" + EXPLODED_AAR + "/" +
+                                            path);
+
+                            libraryDependency = LibraryDependency.createExplodedAarLibrary(
+                                    artifact.getFile(),
+                                    explodedDir,
+                                    nestedLibraries,
+                                    nestedJars,
+                                    name,
+                                    variantName,
+                                    null /*gradlePath*/,
+                                    null /*requestedCoordinates*/,
+                                    mavenCoordinates,
+                                    provided);
+                        }
+
+
+                        libsForThisModule.add(libraryDependency);
+                        outLibraries.add(libraryDependency);
+
+                        // reverse lib map is to create extract task, which is not needed for
+                        // sub-projects/
+                        if (!isSubProject) {
+                            reverseLibMap.put(libraryDependency, configuration);
+                        }
 
                         // check this aar does not have a dependency on an atom, as this would
                         // not work.

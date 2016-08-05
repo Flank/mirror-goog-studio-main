@@ -16,26 +16,23 @@
 
 package com.android.build.gradle.integration.library;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.internal.DependencyManager;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
-import com.google.common.base.Joiner;
+import com.android.utils.FileUtils;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Collection;
@@ -73,52 +70,67 @@ public class FlavorlibTest {
     }
 
     @Test
+    public void checkExplodedAar() {
+        File intermediates = FileUtils.join(project.getTestDir(), "app", "build", "intermediates");
+        assertThat(intermediates).isDirectory();
+        assertThat(new File(intermediates, DependencyManager.EXPLODED_AAR)).doesNotExist();
+    }
+
+    @Test
     public void testModel() throws Exception {
 
-        AndroidProject appProject = models.get(":app");
-        assertNotNull("Module app null-check", appProject);
+        AndroidProject appModel = models.get(":app");
+        assertThat(appModel).named("app model").isNotNull();
 
-        assertFalse("Library Project", appProject.isLibrary());
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, appProject.getProjectType());
+        assertThat(appModel.isLibrary()).named("App isLibrary()").isFalse();
+        assertThat(appModel.getProjectType()).named("App Project Type").isEqualTo(AndroidProject.PROJECT_TYPE_APP);
 
-        Collection<Variant> variants = appProject.getVariants();
-        Collection<ProductFlavorContainer> productFlavors = appProject.getProductFlavors();
+        Collection<Variant> variants = appModel.getVariants();
+        Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors();
 
         ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1");
-        assertNotNull(flavor1);
+        assertThat(flavor1).named("flavor1 PFC").isNotNull();
 
         Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
+        assertThat(flavor1Debug).named("flavor1Debug variant").isNotNull();
 
         Dependencies dependencies = flavor1Debug.getMainArtifact().getCompileDependencies();
-        assertNotNull(dependencies);
+        assertThat(dependencies).named("flavor 1 deps").isNotNull();
         Collection<AndroidLibrary> libs = dependencies.getLibraries();
-        assertNotNull(libs);
-        assertEquals(1, libs.size());
+        assertThat(libs).named("flavor 1 android libs").isNotNull();
+        assertThat(libs).named("flavor 1 android libs").hasSize(1);
         AndroidLibrary androidLibrary = libs.iterator().next();
-        assertNotNull(androidLibrary);
-        assertEquals(":lib1", androidLibrary.getProject());
-        // TODO: right now we can only test the folder name efficiently
-        String path = androidLibrary.getFolder().getPath();
-        assertTrue(path, path.endsWith(Joiner.on(File.separatorChar).join(
-                "flavorlib", "lib1", "unspecified")));
+        assertThat(androidLibrary).named("flavor 1 androidLib").isNotNull();
+        assertThat(androidLibrary.getProject())
+                .named("flavor 1 androidLib.getProject")
+                .isEqualTo(":lib1");
+
+        // check that the folder name is located inside the lib project's intermediate staging folder
+        // reconstruct the path
+        File staging = FileUtils.join(project.getTestDir(),
+                "lib1", "build", "intermediates", "bundles", "default");
+        assertThat(androidLibrary.getFolder())
+                .named("flavor 1 androidLib.getFolder")
+                .isEqualTo(staging);
 
         ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
-        assertNotNull(flavor2);
+        assertThat(flavor2).named("flavor2 PFC").isNotNull();
 
         Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
+        assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();
 
         dependencies = flavor2Debug.getMainArtifact().getCompileDependencies();
-        assertNotNull(dependencies);
+        assertThat(dependencies).named("flavor 2 deps").isNotNull();
         libs = dependencies.getLibraries();
-        assertNotNull(libs);
-        Assert.assertEquals(1, libs.size());
+        assertThat(libs).named("flavor 2 android libs").isNotNull();
+        assertThat(libs).named("flavor 2 android libs").hasSize(1);
         androidLibrary = libs.iterator().next();
-        assertNotNull(androidLibrary);
-        assertEquals(":lib2", androidLibrary.getProject());
-        // TODO: right now we can only test the folder name efficiently
-        path = androidLibrary.getFolder().getPath();
-        assertTrue(path, path.endsWith(
-                Joiner.on(File.separatorChar).join("flavorlib", "lib2", "unspecified")));
+        assertThat(androidLibrary).named("flavor 2 androidLib").isNotNull();
+        assertThat(androidLibrary.getProject()).named("flavor 2 androidLib.getProject").isEqualTo(":lib2");
+        // check that the folder name is located inside the lib project's intermediate staging folder
+        // reconstruct the path
+        staging = FileUtils.join(project.getTestDir(), "lib2", "build", "intermediates", "bundles", "default");
+        assertThat(androidLibrary.getFolder()).named("flavor 2 androidLib.getFolder").isEqualTo(staging);
     }
 
     @Test
