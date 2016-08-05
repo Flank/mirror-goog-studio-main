@@ -31,27 +31,26 @@ class EnergyCache final {
  public:
   explicit EnergyCache(int32_t samples_capacity)
       : samples_capacity_(samples_capacity),
-        energy_samples_(
+        samples_(
             new proto::EnergyDataResponse::EnergySample[samples_capacity]){};
 
-  virtual void SaveEnergySample(
-      const proto::EnergyDataResponse::EnergySample& sample);
+  void SaveEnergySample(const proto::EnergyDataResponse::EnergySample& sample);
 
   // Note that this function will not clobber any previously added samples to
   // the EnergyDataResponse, it will add the new samples instead.
-  virtual void LoadEnergyData(int64_t start_time_excl, int64_t end_time_incl,
-                              proto::EnergyDataResponse* response);
+  void LoadEnergyData(int64_t start_time_excl, int64_t end_time_incl,
+                      proto::EnergyDataResponse* response);
 
  private:
   int32_t samples_capacity_;
-  int32_t latest_energy_sample_index_{0};
   // TODO replace with circular buffer class when it becomes available.
-  std::unique_ptr<proto::EnergyDataResponse::EnergySample[]> energy_samples_;
-  std::mutex energy_samples_mutex_;
+  int32_t samples_head_{0};
+  int32_t samples_size_{0};
+  std::unique_ptr<proto::EnergyDataResponse::EnergySample[]> samples_;
+  std::mutex samples_mutex_;
 
-  // Returns the next valid index logically after the given one (e.g. wrapping
-  // around the circular buffer.)
-  virtual int32_t GetNextValidIndex(int32_t current_index) const;
+  // Returns an index bounded by the size of the circular buffer.
+  int32_t ToValidIndex(int32_t current_index) const;
 };
 
 }  // namespace profiler

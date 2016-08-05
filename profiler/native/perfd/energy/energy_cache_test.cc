@@ -57,20 +57,36 @@ TEST(SaveEnergySample, SaveEnergySampleDiscardsOldSamples) {
   profiler::proto::EnergyDataResponse::EnergySample sample_a;
   profiler::proto::EnergyDataResponse::EnergySample sample_b;
   profiler::proto::EnergyDataResponse::EnergySample sample_c;
+  profiler::proto::EnergyDataResponse::EnergySample sample_d;
 
   sample_a.set_timestamp(10000);
   sample_b.set_timestamp(10002);
   sample_c.set_timestamp(10003);
+  sample_d.set_timestamp(10004);
 
   cache.SaveEnergySample(sample_a);
   cache.SaveEnergySample(sample_b);
   cache.SaveEnergySample(sample_c);
 
-  profiler::proto::EnergyDataResponse response;
-  cache.LoadEnergyData(0, 20000, &response);
-  profiler::proto::EnergyDataResponse::EnergySample response_sample;
-  response_sample.CopyFrom(response.energy_samples(0));
+  {
+    profiler::proto::EnergyDataResponse response;
+    cache.LoadEnergyData(0, 20000, &response);
+    profiler::proto::EnergyDataResponse::EnergySample response_sample;
+    response_sample.CopyFrom(response.energy_samples(0));
 
-  EXPECT_EQ(sample_b.timestamp(), response.energy_samples(0).timestamp());
-  EXPECT_EQ(sample_c.timestamp(), response.energy_samples(1).timestamp());
+    EXPECT_EQ(sample_b.timestamp(), response.energy_samples(0).timestamp());
+    EXPECT_EQ(sample_c.timestamp(), response.energy_samples(1).timestamp());
+  }
+
+  cache.SaveEnergySample(sample_d);
+
+  {
+    profiler::proto::EnergyDataResponse response;
+    cache.LoadEnergyData(0, 20000, &response);
+    profiler::proto::EnergyDataResponse::EnergySample response_sample;
+    response_sample.CopyFrom(response.energy_samples(0));
+
+    EXPECT_EQ(sample_c.timestamp(), response.energy_samples(0).timestamp());
+    EXPECT_EQ(sample_d.timestamp(), response.energy_samples(1).timestamp());
+  }
 }
