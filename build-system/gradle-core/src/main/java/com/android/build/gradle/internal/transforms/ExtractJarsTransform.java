@@ -37,7 +37,6 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closer;
 
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -47,10 +46,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -138,41 +137,29 @@ public class ExtractJarsTransform extends Transform {
                     FileUtils.mkdirs(outJarFolder);
 
                     if (!isIncremental) {
-                        executor.execute(new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                extractJar(outJarFolder, jarFile, extractCode);
-                                return null;
-                            }
+                        executor.execute(() -> {
+                            extractJar(outJarFolder, jarFile, extractCode);
+                            return null;
                         });
                     } else {
                         switch (jarInput.getStatus()) {
                             case CHANGED:
-                                executor.execute(new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                        FileUtils.cleanOutputDir(outJarFolder);
-                                        extractJar(outJarFolder, jarFile, extractCode);
-                                        return null;
-                                    }
+                                executor.execute(() -> {
+                                    FileUtils.cleanOutputDir(outJarFolder);
+                                    extractJar(outJarFolder, jarFile, extractCode);
+                                    return null;
                                 });
                                 break;
                             case ADDED:
-                                executor.execute(new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                        extractJar(outJarFolder, jarFile, extractCode);
-                                        return null;
-                                    }
+                                executor.execute(() -> {
+                                    extractJar(outJarFolder, jarFile, extractCode);
+                                    return null;
                                 });
                                 break;
                             case REMOVED:
-                                executor.execute(new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                        delete(outJarFolder);
-                                        return null;
-                                    }
+                                executor.execute(() -> {
+                                    delete(outJarFolder);
+                                    return null;
                                 });
                                 break;
                         }
@@ -197,9 +184,8 @@ public class ExtractJarsTransform extends Transform {
         HashSet<String> lowerCaseNames = new HashSet<>();
         boolean foundCaseInsensitiveIssue = false;
 
-        try (Closer closer = Closer.create()) {
-            FileInputStream fis = closer.register(new FileInputStream(jarFile));
-            ZipInputStream zis = closer.register(new ZipInputStream(fis));
+        try (FileInputStream fis = new FileInputStream(jarFile);
+                ZipInputStream zis = new ZipInputStream(fis)) {
             // loop on the entries of the intermediary package and put them in the final package.
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
@@ -220,9 +206,8 @@ public class ExtractJarsTransform extends Transform {
                                 name.replace('/', File.separatorChar));
                         mkdirs(outputFile.getParentFile());
 
-                        try (Closer closer2 = Closer.create()) {
-                            java.io.OutputStream outputStream = closer2.register(
-                                    new BufferedOutputStream(new FileOutputStream(outputFile)));
+                        try (OutputStream outputStream =
+                                     new BufferedOutputStream(new FileOutputStream(outputFile))) {
                             ByteStreams.copy(zis, outputStream);
                             outputStream.flush();
                         }
