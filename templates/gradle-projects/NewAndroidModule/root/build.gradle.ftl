@@ -85,6 +85,6 @@ dependencies {
     })
 <#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
     wearApp project(':${WearprojectName}')
-    compile 'com.google.android.gms:play-services:+'
+    compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
 }
