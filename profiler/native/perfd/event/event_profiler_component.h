@@ -34,8 +34,8 @@ class EventProfilerComponent final : public ProfilerComponent {
 
  private:
   EventCache cache_;
-  EventServiceImpl public_service_{cache_};
-  InternalEventServiceImpl internal_service_{cache_};
+  EventServiceImpl public_service_{&cache_};
+  InternalEventServiceImpl internal_service_{&cache_};
 };
 
 }  // namespace profiler
