@@ -29,12 +29,19 @@ import java.util.Collection;
 public interface AndroidProject {
     //  Injectable properties to use with -P
     // Sent by Studio 1.0 ONLY
-    String PROPERTY_BUILD_MODEL_ONLY =  "android.injected.build.model.only";
+    String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
     // Sent by Studio 1.1+
-    String PROPERTY_BUILD_MODEL_ONLY_ADVANCED =  "android.injected.build.model.only.advanced";
+    String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
     // Sent by Studio 2.2+. The value of the prop is a monotonically increasing integer.
     // see MODEL_LEVEL_* constants
-    String PROPERTY_BUILD_MODEL_ONLY_VERSIONED =  "android.injected.build.model.only.versioned";
+    String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
+
+    // Sent by Studio 2.2+
+    // This property will enable compatibility checks between Android Studio and the Android
+    // Gradle plugin.
+    // A use case for this property is that by restricting which versions of Studio are compatible
+    // with the plugin, we could safely remove deprecated methods in the builder-model interfaces.
+    String PROPERTY_STUDIO_VERSION = "android.injected.studio.version";
 
     // Sent in when external native projects models requires a refresh.
     String PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL = "android.injected.refresh.external.native.model";
