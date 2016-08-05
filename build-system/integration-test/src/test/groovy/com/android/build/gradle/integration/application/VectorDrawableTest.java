@@ -28,14 +28,13 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VectorDrawablesOptions;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
+import java.io.File;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
 
 /**
  * Tests for the PNG generation feature.
@@ -44,6 +43,7 @@ import java.io.File;
  * supported since API 4.
  */
 public class VectorDrawableTest {
+
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("vectorDrawables")
@@ -141,9 +141,10 @@ public class VectorDrawableTest {
         File heartXmlCopy = new File(project.getTestDir(), "src/main/res/drawable/heart_copy.xml");
         Files.copy(heartXml, heartXmlCopy);
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
-        //assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
-        //assertThat(intermediatesHdpiPng).wasModifiedAt(pngTimestamp);
+        assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
+        assertThat(intermediatesHdpiPng).wasModifiedAt(pngTimestamp);
 
         assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
@@ -165,6 +166,7 @@ public class VectorDrawableTest {
 
         FileUtils.delete(new File(project.getTestDir(), "src/main/res/drawable/heart.xml"));
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         File apk = project.getApk("debug");
@@ -176,7 +178,7 @@ public class VectorDrawableTest {
         assertThatApk(apk).doesNotContainResource("drawable-xhdpi/heart.png");
         assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
 
-        //assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
+        assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
 
     @Test
@@ -185,7 +187,6 @@ public class VectorDrawableTest {
         File intermediatesXml =
                 project.file("build/intermediates/res/merged/debug/drawable-anydpi-v21/heart.xml");
         long xmlTimestamp = intermediatesXml.lastModified();
-
 
         File generatedPng = new File(
                 project.getTestDir(),
@@ -204,13 +205,14 @@ public class VectorDrawableTest {
 
         FileUtils.delete(originalPng);
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         assertWithMessage("Wrong file used.")
                 .that(FileUtils.sha1(pngToUse))
                 .isEqualTo(FileUtils.sha1(generatedPng));
 
-        //assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
+        assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
     }
 
     @Test
@@ -232,11 +234,14 @@ public class VectorDrawableTest {
                 .isEqualTo(FileUtils.sha1(generatedPng));
 
         // Create a PNG file for XHDPI. It should be used instead of the generated one.
-        File hdpiPng = new File(project.getTestDir(), "src/main/res/drawable-hdpi/special_heart.png");
-        File xhdpiPng = new File(project.getTestDir(), "src/main/res/drawable-xhdpi/special_heart.png");
+        File hdpiPng = new File(project.getTestDir(),
+                "src/main/res/drawable-hdpi/special_heart.png");
+        File xhdpiPng = new File(project.getTestDir(),
+                "src/main/res/drawable-xhdpi/special_heart.png");
         Files.createParentDirs(xhdpiPng);
         Files.copy(hdpiPng, xhdpiPng);
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         assertWithMessage("Wrong file used.")
@@ -247,7 +252,7 @@ public class VectorDrawableTest {
                 .that(FileUtils.sha1(pngToUse))
                 .isEqualTo(FileUtils.sha1(xhdpiPng));
 
-        //assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
+        assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
     }
 
     @Test
@@ -273,6 +278,7 @@ public class VectorDrawableTest {
         // Change the heart to blue.
         Files.write(content.replace("ff0000", "0000ff"), heartXml, UTF_8);
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         assertThat(iconPngToUse.lastModified()).isEqualTo(iconPngModified);
@@ -281,7 +287,7 @@ public class VectorDrawableTest {
                 .that(FileUtils.sha1(heartPngToUse))
                 .isNotEqualTo(oldHashCode);
 
-        //assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
+        assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
 
     @Test
@@ -298,6 +304,7 @@ public class VectorDrawableTest {
                 heartXml,
                 UTF_8);
 
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         File apk = project.getApk("debug");
@@ -316,7 +323,7 @@ public class VectorDrawableTest {
         // They won't be equal, because of the source marker added in the XML.
         assertThat(Files.toString(heartXmlToUse, UTF_8)).contains(Files.toString(heartXml, UTF_8));
 
-        //assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
+        assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
 
     @Test
@@ -353,6 +360,7 @@ public class VectorDrawableTest {
         assertThat(Files.toString(heartXmlToUse, UTF_8)).contains(Files.toString(heartXml, UTF_8));
 
         Files.write(vectorDrawable, heartXml, UTF_8);
+        TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
         assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
@@ -362,7 +370,7 @@ public class VectorDrawableTest {
         assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
         assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
 
-        //assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
+        assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
 
     @Test
