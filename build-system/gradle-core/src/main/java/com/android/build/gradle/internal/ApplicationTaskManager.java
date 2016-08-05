@@ -22,8 +22,8 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.incremental.InstantRunWrapperTask;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -313,7 +313,7 @@ public class ApplicationTaskManager extends TaskManager {
                     @Override
                     public Void call() {
                         @Nullable
-                        AndroidTask<InstantRunWrapperTask> fullBuildInfoGeneratorTask
+                        AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask
                                 = createInstantRunPackagingTasks(tasks, variantScope);
                         createPackagingTask(tasks, variantScope, true /*publishApk*/,
                                 fullBuildInfoGeneratorTask);
@@ -338,15 +338,15 @@ public class ApplicationTaskManager extends TaskManager {
      * Create tasks related to creating pure split APKs containing sharded dex files.
      */
     @Nullable
-    protected AndroidTask<InstantRunWrapperTask> createInstantRunPackagingTasks(
+    protected AndroidTask<BuildInfoWriterTask> createInstantRunPackagingTasks(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
 
         if (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE) {
             return null;
         }
 
-        AndroidTask<InstantRunWrapperTask> buildInfoGeneratorTask = getAndroidTasks()
-                .create(tasks, new InstantRunWrapperTask.ConfigAction(variantScope, getLogger()));
+        AndroidTask<BuildInfoWriterTask> buildInfoGeneratorTask =
+                variantScope.getInstantRunTaskManager().createBuildInfoWriterTask();
 
         InstantRunPatchingPolicy patchingPolicy =
                 variantScope.getInstantRunBuildContext().getPatchingPolicy();
@@ -366,11 +366,12 @@ public class ApplicationTaskManager extends TaskManager {
                 splitApk.dependsOn(tasks, stream.getDependencies());
             }
             variantScope.getAssembleTask().dependsOn(tasks, splitApk);
-            buildInfoGeneratorTask.dependsOn(tasks, splitApk);
+            buildInfoGeneratorTask.configure(tasks, task -> task.mustRunAfter(splitApk.getName()));
 
             // if the assembleVariant task run, make sure it also runs the task to generate
             // the build-info.xml.
             variantScope.getAssembleTask().dependsOn(tasks, buildInfoGeneratorTask);
+
         }
         return buildInfoGeneratorTask;
     }
