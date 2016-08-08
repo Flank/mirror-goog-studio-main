@@ -19,7 +19,7 @@ iml_module(
         "//tools/base/ddmlib:ddmlib[module]",
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
-        "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5[test]",
+        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar[test]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],

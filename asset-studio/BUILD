@@ -11,9 +11,8 @@ iml_module(
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
         "//tools/base/sdk-common:sdk-common[module]",
-        "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5[test]",
-        "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28[test]",
-        "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28-sources[test]",
+        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar[test]",
+        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28:jar[test]",
     ],
     exports = [
         "//tools/base/common:common",
