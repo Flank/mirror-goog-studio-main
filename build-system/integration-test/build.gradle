@@ -73,7 +73,7 @@ configure([test, testPrebuilts]) {
     outputs.upToDateWhen { false }
 
     forkEvery = 1
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+    maxParallelForks = Runtime.runtime.availableProcessors() / 4
 
     useJUnit {
         if (System.properties['test.includeCategories'] != null) {
@@ -133,7 +133,7 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     outputs.upToDateWhen { false }
 
     forkEvery= 1
-    def count = Math.ceil(Runtime.runtime.availableProcessors() / 2)
+    def count = Math.ceil(Runtime.runtime.availableProcessors() / 4)
     if (count > 8) {
         count = 8
     }
