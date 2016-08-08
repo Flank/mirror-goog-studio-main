@@ -45,23 +45,21 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.GradleException;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.OutputFiles;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFiles;
 
 /**
  * Base class for generation of native JSON.
@@ -536,10 +534,13 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
         checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
-        if(sdkHandler.getNdkFolder() == null || !sdkHandler.getNdkFolder().exists()) {
-            sdkHandler.installNdk();
+        File ndkFolder =  sdkHandler.getNdkFolder();
+        if (ndkFolder == null || !ndkFolder.isDirectory()) {
+            throw new InvalidUserDataException(String.format(
+                    "NDK not configured. %s\n" +
+                            "Download it with SDK manager.)",
+                    ndkFolder== null ? "" : ndkFolder));
         }
-        Verify.verifyNotNull(sdkHandler.getNdkFolder());
         final BaseVariantData<? extends BaseVariantOutputData> variantData =
                 scope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
