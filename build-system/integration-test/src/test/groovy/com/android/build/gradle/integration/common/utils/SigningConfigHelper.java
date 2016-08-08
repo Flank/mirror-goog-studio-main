@@ -23,8 +23,8 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
-
 import java.io.File;
+import java.io.IOException;
 import java.security.KeyStore;
 import java.util.Locale;
 
@@ -97,11 +97,13 @@ public final class SigningConfigHelper {
         return this;
     }
 
-    public void test() {
+    public void test() throws IOException {
         assertEquals("SigningConfig name", name, signingConfig.getName());
 
-        assertEquals(String.format("SigningConfig '%s' storeFile", name),
-                storeFile, signingConfig.getStoreFile());
+        assertEquals(
+                String.format("SigningConfig '%s' storeFile", name),
+                storeFile.getCanonicalFile(),
+                storeFile.getCanonicalFile());
 
         assertEquals(String.format("SigningConfig '%s' storePassword", name),
                 storePassword, signingConfig.getStorePassword());
