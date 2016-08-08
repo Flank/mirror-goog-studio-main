@@ -25,29 +25,24 @@ import com.android.testutils.TestUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.security.Permission;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.PrintStream;
-import java.security.Permission;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 @SuppressWarnings("javadoc")
 public class XmlPrettyPrinterTest {
 
 
 
-    private void checkFormat(XmlFormatPreferences prefs,
+    private static void checkFormat(XmlFormatPreferences prefs,
             String xml,
             String expected, String delimiter, String startNodeName,
             String endNodeName) throws Exception {
@@ -93,16 +88,16 @@ public class XmlPrettyPrinterTest {
         return null;
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, String xml,
+    private static void checkFormat(XmlFormatPreferences prefs, String xml,
             String expected, String delimiter) throws Exception {
         checkFormat(prefs, xml, expected, delimiter, null, null);
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, String xml,
+    private static void checkFormat(XmlFormatPreferences prefs, String xml,
             String expected) throws Exception {
         checkFormat(prefs, xml, expected, "\n"); //$NON-NLS-1$
     }
-    private void checkFormat(String xml, String expected)
+    private static void checkFormat(String xml, String expected)
             throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.defaults();
         checkFormat(prefs, xml, expected);
@@ -855,29 +850,6 @@ public class XmlPrettyPrinterTest {
                 "</resources>");
     }
 
-    /* This test fails when run on a plain DOM; when used with the Eclipse DOM for example
-       where we can get access to the original DOM, as in EclipseXmlPrettyPrinter, it works
-       public void testPreserveEntities() throws Exception {
-        // Ensure that entities such as &gt; in the input string are preserved in the output
-        // format
-        checkFormat(
-                "res/values/strings.xml",
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources><string name=\"untitled\">&lt;untitled2></string>\n" +
-                "<string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
-                "<string name=\"untitled3\">&apos;untitled3&quot;</string></resources>\n",
-
-                //"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
-                "\n" +
-                "    <string name=\"untitled\">&lt;untitled2></string>\n" +
-                "    <string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
-                "    <string name=\"untitled3\">&apos;untitled3&quot;</string>\n" +
-                "\n" +
-                "</resources>");
-    }
-    */
-
     @Test
     public void testCData1() throws Exception {
         checkFormat(
@@ -1093,6 +1065,7 @@ public class XmlPrettyPrinterTest {
     }
 
 
+    @Test
     public void testToXml4() throws Exception {
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1119,6 +1092,7 @@ public class XmlPrettyPrinterTest {
                 xml);
     }
 
+    @Test
     public void testToXml5() throws Exception {
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1146,6 +1120,7 @@ public class XmlPrettyPrinterTest {
                 xml);
     }
 
+    @Test
     public void testMarkupSpacing() throws Exception {
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1183,6 +1158,7 @@ public class XmlPrettyPrinterTest {
                 xml);
     }
 
+    @Test
     public void testXliff() throws Exception {
         String xml = ""
                 + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
@@ -1206,6 +1182,7 @@ public class XmlPrettyPrinterTest {
             xml);
     }
 
+    @Test
     public void test52887() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=52887
         String xml = ""
@@ -1227,6 +1204,7 @@ public class XmlPrettyPrinterTest {
                 xml);
     }
 
+    @Test
     public void testPreserveNewlines() throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.defaults();
         XmlFormatStyle style = XmlFormatStyle.LAYOUT;
@@ -1244,6 +1222,7 @@ public class XmlPrettyPrinterTest {
         assertEquals(expected, after);
     }
 
+    @Test
     public void testDriver1() throws Exception {
         checkDriver(""
                 + "Usage: XmlPrettyPrinter <options>... <files or directories...>\n"
@@ -1259,6 +1238,7 @@ public class XmlPrettyPrinterTest {
         );
     }
 
+    @Test
     public void testDriver2() throws Exception {
         String brokenXml = "<view>\n"
                 + "<notclosed>\n"
@@ -1278,6 +1258,7 @@ public class XmlPrettyPrinterTest {
         temp.delete();
     }
 
+    @Test
     public void testDriver3() throws Exception {
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -1316,6 +1297,7 @@ public class XmlPrettyPrinterTest {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
     public void testDriver4() throws Exception {
         File root = TestUtils.createTempDirDeletedOnExit();
         String xml = ""
@@ -1364,6 +1346,7 @@ public class XmlPrettyPrinterTest {
         root.delete();
     }
 
+    @Test
     public void testDriver5() throws Exception {
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
