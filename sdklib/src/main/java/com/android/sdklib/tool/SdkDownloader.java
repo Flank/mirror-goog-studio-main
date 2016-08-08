@@ -32,7 +32,6 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,12 +138,17 @@ public class SdkDownloader {
     }
 
     private static void usageAndExit() {
-        System.out.println("Usage: java com.android.sdklib.tool.SdkDownloader "
-          + "[--uninstall] [--channel=channelId] <sdk path> "
-          + "<package path> <package path>...\n"
-          + "    <package path> is a sdk-style path (e.g. build-tools;23.0.0 or "
-          + "platforms;android-23)\n"
-          + "    channelId is the id of the least stable channel to check.");
+        System.err.println("Usage: java com.android.sdklib.tool.SdkDownloader \\");
+        System.err.println("  --uninstall");
+        System.err.println("  --update [--channel=<channelId>] <sdk path>");
+        System.err.println("  [--channel=<channelId>] <sdk path> <packages>...");
+        System.err.println();
+        System.err.println("<package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or "
+                + "\"platforms;android-23\")");
+        System.err.println("<channelId> is the id of the least stable channel to check");
+        System.err.println();
+        System.err.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
+                + "  \"macosx\", or \"linux\", packages will be downloaded for that OS");
         System.exit(1);
     }
 

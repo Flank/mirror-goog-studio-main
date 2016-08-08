@@ -22,11 +22,9 @@ import com.android.repository.Revision;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.SchemaModule;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -43,7 +41,7 @@ public abstract class Archive {
     /**
      * Environment variable used to override the detected OS.
      */
-    public static final String OS_OVERRIDE_ENV_VAR = "REPO_OS_OVERRIDE";
+    private static final String OS_OVERRIDE_ENV_VAR = "REPO_OS_OVERRIDE";
 
     /**
      * The detected bit size of the JVM.
