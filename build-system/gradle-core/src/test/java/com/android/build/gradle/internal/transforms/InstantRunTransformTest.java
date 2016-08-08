@@ -84,7 +84,7 @@ public class InstantRunTransformTest {
     public void setUpMock() {
         MockitoAnnotations.initMocks(this);
         AndroidBuilder mockBuilder = Mockito.mock(AndroidBuilder.class);
-        when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.<File>of());
+        when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.of());
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
@@ -127,7 +127,7 @@ public class InstantRunTransformTest {
             @NonNull
             @Override
             public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                return ImmutableList.of(new DirectoryInputForTests() {
                     @NonNull
                     @Override
                     public Map<File, Status> getChangedFiles() {
@@ -246,7 +246,7 @@ public class InstantRunTransformTest {
             @NonNull
             @Override
             public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                return ImmutableList.of(new DirectoryInputForTests() {
                     @NonNull
                     @Override
                     public Map<File, Status> getChangedFiles() {
@@ -290,7 +290,7 @@ public class InstantRunTransformTest {
             }
         };
         // delete the "deleted" file.
-        originalFile.delete();
+        FileUtils.delete(originalFile);
 
         transform.transform(new TransformInvocationBuilder(context)
                 .addOutputProvider(transformOutputProvider)
@@ -326,7 +326,7 @@ public class InstantRunTransformTest {
         @NonNull
         @Override
         public Set<ContentType> getContentTypes() {
-            return ImmutableSet.<ContentType>of(DefaultContentType.CLASSES);
+            return ImmutableSet.of(DefaultContentType.CLASSES);
         }
 
         @NonNull

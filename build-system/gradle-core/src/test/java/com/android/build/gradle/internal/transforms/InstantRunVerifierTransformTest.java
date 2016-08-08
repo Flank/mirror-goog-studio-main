@@ -105,7 +105,7 @@ public class InstantRunVerifierTransformTest {
         assertTrue(inputClass.createNewFile());
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
+                ImmutableList.of(new TransformInput() {
             @NonNull
             @Override
             public Collection<JarInput> getJarInputs() {
@@ -115,7 +115,7 @@ public class InstantRunVerifierTransformTest {
             @NonNull
             @Override
             public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                return ImmutableList.of(new DirectoryInputForTests() {
 
                     @NonNull
                     @Override
@@ -165,7 +165,7 @@ public class InstantRunVerifierTransformTest {
         assertTrue(lastIterationChangedFile.createNewFile());
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
+                ImmutableList.of(new TransformInput() {
                     @NonNull
                     @Override
                     public Collection<JarInput> getJarInputs() {
@@ -175,7 +175,7 @@ public class InstantRunVerifierTransformTest {
                     @NonNull
                     @Override
                     public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                        return ImmutableList.of(new DirectoryInputForTests() {
 
                             @NonNull
                             @Override
@@ -231,7 +231,7 @@ public class InstantRunVerifierTransformTest {
         final File deletedFile = new File(tmpDir, "com/foo/bar/DeletedFile.class");
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
+                ImmutableList.of(new TransformInput() {
                     @NonNull
                     @Override
                     public Collection<JarInput> getJarInputs() {
@@ -241,7 +241,7 @@ public class InstantRunVerifierTransformTest {
                     @NonNull
                     @Override
                     public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                        return ImmutableList.of(new DirectoryInputForTests() {
 
                             @NonNull
                             @Override
@@ -294,7 +294,7 @@ public class InstantRunVerifierTransformTest {
         }
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
+                ImmutableList.of(new TransformInput() {
                     @NonNull
                     @Override
                     public Collection<JarInput> getJarInputs() {
@@ -304,7 +304,7 @@ public class InstantRunVerifierTransformTest {
                     @NonNull
                     @Override
                     public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                        return ImmutableList.of(new DirectoryInputForTests() {
 
                             @NonNull
                             @Override
@@ -360,7 +360,7 @@ public class InstantRunVerifierTransformTest {
         }
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
+                ImmutableList.of(new TransformInput() {
                     @NonNull
                     @Override
                     public Collection<JarInput> getJarInputs() {
@@ -370,7 +370,7 @@ public class InstantRunVerifierTransformTest {
                     @NonNull
                     @Override
                     public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+                        return ImmutableList.of(new DirectoryInputForTests() {
 
                             @NonNull
                             @Override
@@ -444,7 +444,7 @@ public class InstantRunVerifierTransformTest {
         @NonNull
         @Override
         public Set<ContentType> getContentTypes() {
-            return ImmutableSet.<ContentType>of(DefaultContentType.CLASSES);
+            return ImmutableSet.of(DefaultContentType.CLASSES);
         }
 
         @NonNull

@@ -22,28 +22,31 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.SecondaryFile;
-import com.android.build.api.transform.SecondaryInput;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.SecondaryFile;
+import com.android.build.api.transform.SecondaryInput;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.scope.AndroidTask;
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
-import com.google.common.base.Supplier;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
@@ -51,12 +54,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class TransformTaskTest extends TaskTestUtils {
 
@@ -131,7 +128,7 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass = IntermediateStream.builder()
-                .addContentTypes(QualifiedContent.DefaultContentType.CLASSES.CLASSES)
+                .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
                 .addScopes(Scope.PROJECT)
                 .setRootLocation(rootFolder)
                 .setDependency("my dependency")
@@ -147,7 +144,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // create the transform
         TestTransform t = TestTransform.builder()
-                .setInputTypes(QualifiedContent.DefaultContentType.CLASSES.CLASSES)
+                .setInputTypes(QualifiedContent.DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
                 .build();
 
@@ -195,7 +192,7 @@ public class TransformTaskTest extends TaskTestUtils {
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         OriginalStream projectClass = OriginalStream.builder()
-                .addContentType(QualifiedContent.DefaultContentType.CLASSES.CLASSES)
+                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
                 .addScope(Scope.PROJECT)
                 .setJar(new File("input file"))
                 .setDependency("my dependency")
@@ -204,7 +201,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // create the transform
         TestTransform t = TestTransform.builder()
-                .setInputTypes(QualifiedContent.DefaultContentType.CLASSES.CLASSES)
+                .setInputTypes(QualifiedContent.DefaultContentType.CLASSES)
                 .setReferencedScopes(Scope.PROJECT)
                 .build();
 
@@ -816,12 +813,9 @@ public class TransformTaskTest extends TaskTestUtils {
         OriginalStream projectClass = OriginalStream.builder()
                 .addContentType(DefaultContentType.CLASSES)
                 .addScope(Scope.PROJECT)
-                .setJars(new Supplier<Collection<File>>() {
-                    @Override
-                    public Collection<File> get() {
-                        // this should not contain the removed jar files.
-                        return ImmutableList.of(addedFile, changedFile);
-                    }
+                .setJars(() -> {
+                    // this should not contain the removed jar files.
+                    return ImmutableList.of(addedFile, changedFile);
                 })
                 .setDependency("my dependency")
                 .build();
@@ -1957,7 +1951,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
                 @Override
                 public String toString() {
-                    return Objects.toStringHelper(this)
+                    return MoreObjects.toStringHelper(this)
                             .add("file", getFile())
                             .add("added", isAdded())
                             .add("modified", isModified())

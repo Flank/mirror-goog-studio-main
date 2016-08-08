@@ -15,7 +15,6 @@
  */
 package com.android.builder.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
@@ -26,13 +25,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class SymbolWriterTest {
