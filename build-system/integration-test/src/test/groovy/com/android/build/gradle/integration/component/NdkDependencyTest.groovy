@@ -24,10 +24,10 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.ZipHelper
-import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
+import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeLibrary
 import com.android.builder.model.NativeSettings
 import groovy.transform.CompileStatic
@@ -244,7 +244,6 @@ model {
 
     @Test
     void "check app contains compiled .so"() {
-
         project.execute("clean", ":app:assembleDebug")
         Map<String, AndroidProject> models = project.model().getMulti()
         GradleTestProject app = project.getSubproject("app")
@@ -278,6 +277,19 @@ model {
                 assertThatNativeLib(lib).isStripped()
             }
         }
+
+        Map<String, NativeAndroidProject> nativeModels =
+                project.model().getMulti(NativeAndroidProject.class);
+        for (NativeArtifact artifact : nativeModels.get(":app").getArtifacts()) {
+            assertThat(artifact.getRuntimeFiles().collect{it.getName()}).containsExactly(
+                    "libstlport_shared.so",
+                    "libgetstring1.so",
+                    "libgetstring2.so",
+                    "libprebuilt.so")
+            for (File runtimeFile : artifact.getRuntimeFiles()) {
+                assertThat(runtimeFile.getPath()).contains(artifact.getAbi())
+            }
+        }
     }
 
     @Test
@@ -291,7 +303,7 @@ model {
     android {
         compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
         ndk {
-            moduleName "hello-jni"
+            moduleName = "getstring1"
         }
         sources {
             main {
@@ -322,6 +334,15 @@ model {
             GradleTestProject lib2 = project.getSubproject("lib2")
             assertThat(lib2.file("build/intermediates/binaries/debug/obj/$abi/libgetstring2.a")).exists()
             assertThat(lib2.file("build/intermediates/binaries/debug/obj/$abi/libgetstring2.so")).doesNotExist()
+        }
+        for (NativeArtifact artifact : model.getArtifacts()) {
+            assertThat(artifact.getRuntimeFiles().collect{it.getName()}).containsExactly(
+                    "libstlport_shared.so",
+                    "libgetstring1.so",
+                    "libprebuilt.so")
+            for (File runtimeFile : artifact.getRuntimeFiles()) {
+                assertThat(runtimeFile.getPath()).contains(artifact.getAbi())
+            }
         }
         for (NativeSettings settings : model.getSettings()) {
             assertThat(settings.getCompilerFlags())

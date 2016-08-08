@@ -45,4 +45,6 @@ public class NativeLibraryValue {
     public Collection<File> exportedHeaders;
     @Nullable
     public File output;
+    @Nullable
+    public Collection<File> runtimeFiles;
 }
