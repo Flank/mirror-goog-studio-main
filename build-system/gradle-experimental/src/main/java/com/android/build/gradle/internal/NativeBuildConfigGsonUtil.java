@@ -137,6 +137,9 @@ public class NativeBuildConfigGsonUtil {
             library.getExportedHeaders().addAll(value.exportedHeaders);
         }
         library.setOutput(value.output);
+        if (value.runtimeFiles != null) {
+            library.getRuntimeFiles().addAll(value.runtimeFiles);
+        }
     }
 
     private static void copyToNativeToolchain(

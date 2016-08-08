@@ -25,6 +25,7 @@ import org.gradle.model.ModelSet;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Configurations for a native library.
@@ -91,4 +92,7 @@ public interface NativeLibrary extends Named {
     @Nullable
     File getOutput();
     void setOutput(File output);
+
+    @NonNull
+    Set<File> getRuntimeFiles();
 }

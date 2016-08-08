@@ -62,7 +62,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import org.gradle.api.Action;
 import org.gradle.api.BuildableComponentSpec;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
@@ -311,7 +310,7 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
         }
 
         @Mutate
-        public static void createNativeLibrary(
+        public static void configureNativeLibrary(
                 final ModelMap<NativeLibrarySpec> nativeComponents,
                 @Path("android.ndk") final NdkConfig ndkConfig,
                 final NdkHandler ndkHandler,
@@ -471,7 +470,8 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
                     final String abi = nativeBinary.getTargetPlatform().getName();
                     config.getLibraries().create(
                             binary.getName() + '-' + abi,
-                            new CreateNativeLibraryAction(
+                            lib -> configureNativeLibrary(
+                                    lib,
                                     binary,
                                     (SharedLibraryBinarySpec) nativeBinary,
                                     abiConfigs,
@@ -495,93 +495,79 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
                 }
             }
         }
-        private static class CreateNativeLibraryAction implements Action<NativeLibrary> {
-            @NonNull
-            private final AndroidBinaryInternal binary;
-            @NonNull
-            private final SharedLibraryBinarySpec nativeBinary;
-            @NonNull
-            private final ModelMap<NdkAbiOptions> abiConfigs;
-            @NonNull
-            private final NdkHandler ndkHandler;
 
-            public CreateNativeLibraryAction(
-                    @NonNull AndroidBinaryInternal binary,
-                    @NonNull SharedLibraryBinarySpec nativeBinary,
-                    @NonNull ModelMap<NdkAbiOptions> abiConfigs,
-                    @NonNull NdkHandler ndkHandler) {
-                this.binary = binary;
-                this.nativeBinary = nativeBinary;
-                this.abiConfigs = abiConfigs;
-                this.ndkHandler = ndkHandler;
-            }
+        /**
+         * Configure a NativeLibrary used to create the tooling model.
+         */
+        private static void configureNativeLibrary(
+                @NonNull NativeLibrary nativeLibrary,
+                @NonNull AndroidBinaryInternal binary,
+                @NonNull SharedLibraryBinarySpec nativeBinary,
+                @NonNull ModelMap<NdkAbiOptions> abiConfigs,
+                @NonNull NdkHandler ndkHandler) {
+            final Abi abi = Abi.getByName(nativeBinary.getTargetPlatform().getName());
+            Preconditions.checkNotNull(abi);
 
-            @Override
-            public void execute(NativeLibrary nativeLibrary) {
-                final Abi abi = Abi.getByName(nativeBinary.getTargetPlatform().getName());
-                Preconditions.checkNotNull(abi);
+            nativeLibrary.setOutput(nativeBinary.getSharedLibraryFile());
+            Set<File> srcFolders = Sets.newHashSet();
+            nativeLibrary.setGroupName(binary.getName());
+            nativeLibrary.setAssembleTaskName(nativeBinary.getBuildTask().getName());
+            nativeLibrary.setAbi(abi.getName());
+            nativeLibrary.setArtifactName(NdkUtils.getTargetNameFromBuildOutputFile(
+                    nativeBinary.getSharedLibraryFile()));
 
-                nativeLibrary.setOutput(nativeBinary.getSharedLibraryFile());
-                Set<File> srcFolders = Sets.newHashSet();
-                nativeLibrary.setGroupName(binary.getName());
-                nativeLibrary.setAssembleTaskName(nativeBinary.getBuildTask().getName());
-                nativeLibrary.setAbi(abi.getName());
-                nativeLibrary.setArtifactName(NdkUtils.getTargetNameFromBuildOutputFile(
-                        nativeBinary.getSharedLibraryFile()));
+            final List<String> cFlags = Lists.newArrayList(nativeBinary.getcCompiler().getArgs());
+            final List<String> cppFlags =
+                    Lists.newArrayList(nativeBinary.getCppCompiler().getArgs());
 
-                final List<String> cFlags =
-                        Lists.newArrayList(nativeBinary.getcCompiler().getArgs());
-                final List<String> cppFlags =
-                        Lists.newArrayList(nativeBinary.getCppCompiler().getArgs());
+            NdkAbiOptions abiConfig = abiConfigs.get(abi.getName());
 
-                NdkAbiOptions abiConfig = abiConfigs.get(abi.getName());
+            String sysroot = (abiConfig == null || abiConfig.getPlatformVersion() == null)
+                    ? ndkHandler.getSysroot(abi)
+                    : ndkHandler.getSysroot(abi, abiConfig.getPlatformVersion());
+            cFlags.add("--sysroot=" + sysroot);
+            cppFlags.add("--sysroot=" + sysroot);
 
-                String sysroot = (abiConfig == null || abiConfig.getPlatformVersion() == null)
-                        ? ndkHandler.getSysroot(abi)
-                        : ndkHandler.getSysroot(abi, abiConfig.getPlatformVersion());
-                cFlags.add("--sysroot=" + sysroot);
-                cppFlags.add("--sysroot=" + sysroot);
+            for (LanguageSourceSet sourceSet : nativeBinary.getSources()) {
+                srcFolders.addAll(sourceSet.getSource().getSrcDirs());
+                if (sourceSet instanceof HeaderExportingSourceSet) {
+                    Set<File> headerDirs =
+                            ((HeaderExportingSourceSet) sourceSet).getExportedHeaders()
+                                    .getSrcDirs();
+                    for (File headerDir : headerDirs) {
+                        if (headerDir.isDirectory()
+                                && !nativeLibrary.getExportedHeaders().contains(headerDir)) {
+                            nativeLibrary.getExportedHeaders().add(headerDir);
 
-                for (LanguageSourceSet sourceSet : nativeBinary.getSources()) {
-                    srcFolders.addAll(sourceSet.getSource().getSrcDirs());
-                    if (sourceSet instanceof HeaderExportingSourceSet) {
-                        Set<File> headerDirs =
-                                ((HeaderExportingSourceSet) sourceSet).getExportedHeaders()
-                                        .getSrcDirs();
-                        for (File headerDir : headerDirs) {
-                            if (headerDir.isDirectory()
-                                    && !nativeLibrary.getExportedHeaders().contains(headerDir)) {
-                                nativeLibrary.getExportedHeaders().add(headerDir);
-
-                                // Exported headers are not part of the binary's flag.  Need to add
-                                // it manually.
-                                cFlags.add("-I" + headerDir);
-                                cppFlags.add("-I" + headerDir);
-                            }
+                            // Exported headers are not part of the binary's flag.  Need to add
+                            // it manually.
+                            cFlags.add("-I" + headerDir);
+                            cppFlags.add("-I" + headerDir);
                         }
                     }
                 }
-
-                for (NativeDependencySet dependency : nativeBinary.getLibs()) {
-                    for (File includeDir : dependency.getIncludeRoots()) {
-                        cFlags.add("-I" + includeDir);
-                        cppFlags.add("-I" + includeDir);
-                    }
-                }
-
-                for (final File srcFolder : srcFolders) {
-                    nativeLibrary.getFolders().create(
-                            nativeSourceFolder -> {
-                                nativeSourceFolder.setSrc(srcFolder);
-                                nativeSourceFolder.setcFlags(
-                                        StringHelper.quoteAndJoinTokens(cFlags));
-                                nativeSourceFolder.setCppFlags(
-                                        StringHelper.quoteAndJoinTokens(cppFlags));
-                            });
-                }
-
-                nativeLibrary.setToolchain("ndk-" + abi.getName());
             }
+
+            for (NativeDependencySet dependency : nativeBinary.getLibs()) {
+                nativeLibrary.getRuntimeFiles().addAll(dependency.getRuntimeFiles().getFiles());
+                for (File includeDir : dependency.getIncludeRoots()) {
+                    cFlags.add("-I" + includeDir);
+                    cppFlags.add("-I" + includeDir);
+                }
+            }
+
+            for (final File srcFolder : srcFolders) {
+                nativeLibrary.getFolders().create(
+                        nativeSourceFolder -> {
+                            nativeSourceFolder.setSrc(srcFolder);
+                            nativeSourceFolder.setcFlags(
+                                    StringHelper.quoteAndJoinTokens(cFlags));
+                            nativeSourceFolder.setCppFlags(
+                                    StringHelper.quoteAndJoinTokens(cppFlags));
+                        });
+            }
+
+            nativeLibrary.setToolchain("ndk-" + abi.getName());
         }
 
         @Model("androidInjectedBuildAbi")
@@ -632,7 +618,8 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
 
                     artifactContainer.getNativeArtifacts().create(
                             name,
-                            new CreateNativeLibraryArtifactAction(
+                            artifact -> configureNativeLibraryArtifact(
+                                    artifact,
                                     binary,
                                     nativeBinary,
                                     dependencies.get(nativeBinary.getName()),
@@ -642,84 +629,71 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
             }
         }
 
-        private static class CreateNativeLibraryArtifactAction
-                implements Action<NativeLibraryArtifact> {
-            private final AndroidBinaryInternal binary;
-            private final NativeLibraryBinarySpec nativeBinary;
-            private final Collection<NativeDependencyResolveResult> dependencies;
-            private final NdkHandler ndkHandler;
-            private final ProjectIdentifier projectId;
+        /**
+         * Configure a NativeLibraryArtifact for exporting native dependency.
+         */
+        private static void configureNativeLibraryArtifact(
+                NativeLibraryArtifact artifact,
+                AndroidBinaryInternal binary,
+                NativeLibraryBinarySpec nativeBinary,
+                Collection<NativeDependencyResolveResult> dependencies,
+                NdkHandler ndkHandler,
+                ProjectIdentifier projectId) {
 
-            public CreateNativeLibraryArtifactAction(AndroidBinaryInternal binary,
-                    NativeLibraryBinarySpec nativeBinary,
-                    Collection<NativeDependencyResolveResult> dependencies,
-                    NdkHandler ndkHandler,
-                    ProjectIdentifier projectId) {
-                this.binary = binary;
-                this.nativeBinary = nativeBinary;
-                this.dependencies = dependencies;
-                this.ndkHandler = ndkHandler;
-                this.projectId = projectId;
+            final NativeDependencyLinkage linkage =
+                    nativeBinary instanceof SharedLibraryBinarySpec
+                            ? NativeDependencyLinkage.SHARED
+                            : NativeDependencyLinkage.STATIC;
+            File output  = nativeBinary instanceof SharedLibraryBinarySpec
+                    ? ((SharedLibraryBinarySpec) nativeBinary).getSharedLibraryFile()
+                    : ((StaticLibraryBinarySpec) nativeBinary).getStaticLibraryFile();
+
+            artifact.getLibraries().add(output);
+            artifact.setBuildType(binary.getBuildType().getName());
+            for (ProductFlavor flavor : binary.getProductFlavors()) {
+                artifact.getProductFlavors().add(flavor.getName());
             }
+            artifact.setVariantName(binary.getName());
+            artifact.setAbi(nativeBinary.getTargetPlatform().getName());
+            artifact.setTarget(NdkUtils.getTargetNameFromBuildOutputFile(output));
+            artifact.setLinkage(linkage);
 
-            @Override
-            public void execute(NativeLibraryArtifact artifact) {
-
-                final NativeDependencyLinkage linkage =
-                        nativeBinary instanceof SharedLibraryBinarySpec
-                                ? NativeDependencyLinkage.SHARED
-                                : NativeDependencyLinkage.STATIC;
-                File output  = nativeBinary instanceof SharedLibraryBinarySpec
-                        ? ((SharedLibraryBinarySpec) nativeBinary).getSharedLibraryFile()
-                        : ((StaticLibraryBinarySpec) nativeBinary).getStaticLibraryFile();
-
-                artifact.getLibraries().add(output);
-                artifact.setBuildType(binary.getBuildType().getName());
-                for (ProductFlavor flavor : binary.getProductFlavors()) {
-                    artifact.getProductFlavors().add(flavor.getName());
+            List<Object> builtBy = Lists.newArrayList();
+            builtBy.add(nativeBinary);
+            builtBy.add(projectId.getPath() + ":" + NdkNamingScheme.getNdkBuildTaskName(nativeBinary));
+            artifact.setBuiltBy(builtBy);
+            for (LanguageSourceSet sourceSet : nativeBinary.getSources()) {
+                if (sourceSet instanceof HeaderExportingSourceSet) {
+                    HeaderExportingSourceSet source = (HeaderExportingSourceSet) sourceSet;
+                    artifact.getExportedHeaderDirectories().addAll(
+                            source.getExportedHeaders().getSrcDirs());
                 }
-                artifact.setVariantName(binary.getName());
-                artifact.setAbi(nativeBinary.getTargetPlatform().getName());
-                artifact.setTarget(NdkUtils.getTargetNameFromBuildOutputFile(output));
-                artifact.setLinkage(linkage);
+            }
+            Abi abi = Abi.getByName(nativeBinary.getTargetPlatform().getName());
+            Preconditions.checkNotNull(abi);
+            final StlNativeToolSpecification stlConfig =
+                    ndkHandler.getStlNativeToolSpecification(
+                            Stl.getById(binary.getMergedNdkConfig().getStl()),
+                            binary.getMergedNdkConfig().getStlVersion(),
+                            abi);
+            artifact.getLibraries().addAll(stlConfig.getSharedLibs());
 
-                List<Object> builtBy = Lists.newArrayList();
-                builtBy.add(nativeBinary);
-                builtBy.add(projectId.getPath() + ":" + NdkNamingScheme.getNdkBuildTaskName(nativeBinary));
-                artifact.setBuiltBy(builtBy);
-                for (LanguageSourceSet sourceSet : nativeBinary.getSources()) {
-                    if (sourceSet instanceof HeaderExportingSourceSet) {
-                        HeaderExportingSourceSet source = (HeaderExportingSourceSet) sourceSet;
-                        artifact.getExportedHeaderDirectories().addAll(
-                                source.getExportedHeaders().getSrcDirs());
+            // Include transitive dependencies.
+            // Dynamic objects from dependencies needs to be added to the library list.
+            for (NativeDependencyResolveResult dependency : dependencies) {
+                for (NativeLibraryBinary lib : dependency.getPrebuiltLibraries()) {
+                    if (lib instanceof SharedLibraryBinary
+                            && abi.getName().equals(lib.getTargetPlatform().getName())) {
+                        artifact.getLibraries().add(((SharedLibraryBinary) lib).getSharedLibraryFile());
                     }
                 }
-                Abi abi = Abi.getByName(nativeBinary.getTargetPlatform().getName());
-                Preconditions.checkNotNull(abi);
-                final StlNativeToolSpecification stlConfig =
-                        ndkHandler.getStlNativeToolSpecification(
-                                Stl.getById(binary.getMergedNdkConfig().getStl()),
-                                binary.getMergedNdkConfig().getStlVersion(),
-                                abi);
-                artifact.getLibraries().addAll(stlConfig.getSharedLibs());
 
-                // Include transitive dependencies.
-                // Dynamic objects from dependencies needs to be added to the library list.
-                for (NativeDependencyResolveResult dependency : dependencies) {
-                    for (NativeLibraryBinary lib : dependency.getPrebuiltLibraries()) {
-                        if (lib instanceof SharedLibraryBinary
-                                && abi.getName().equals(lib.getTargetPlatform().getName())) {
-                            artifact.getLibraries().add(((SharedLibraryBinary) lib).getSharedLibraryFile());
-                        }
-                    }
-
-                    Collection<NativeLibraryArtifact> artifacts = dependency.getNativeArtifacts();
-                    for (NativeLibraryArtifact dep : artifacts) {
-                        if (abi.getName().equals(dep.getAbi())) {
-                            dep.getLibraries().stream()
-                                    .filter(file -> file.getName().endsWith(".so"))
-                                    .forEach(artifact.getLibraries()::add);
-                        }
+                Collection<NativeLibraryArtifact> artifacts = dependency.getNativeArtifacts();
+                for (NativeLibraryArtifact dep : artifacts) {
+                    if (abi.getName().equals(dep.getAbi())) {
+                        dep.getLibraries().stream()
+                                .filter(file -> file.getName().endsWith(".so"))
+                                .forEach(artifact.getLibraries()::add);
                     }
                 }
             }

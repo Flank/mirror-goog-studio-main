@@ -67,13 +67,13 @@ public interface NativeArtifact {
     Collection<NativeFile> getSourceFiles();
 
     /**
-     * Return the folders container headers exported for the library.
+     * Returns the folders container headers exported for the library.
      */
     @NonNull
     Collection<File> getExportedHeaders();
 
     /**
-     * Return the target ABI of the artifact.
+     * Returns the target ABI of the artifact.
      */
     @NonNull
     String getAbi();
@@ -85,8 +85,14 @@ public interface NativeArtifact {
     String getTargetName();
 
     /**
-     * Returns the output file.
+     * Returns the output file with debug symbols unstripped.
      */
     @NonNull
     File getOutputFile();
+
+    /**
+     * Returns the files that needs to be deployed with getOutputFile to be executed on device.
+     */
+    @NonNull
+    Collection<File> getRuntimeFiles();
 }

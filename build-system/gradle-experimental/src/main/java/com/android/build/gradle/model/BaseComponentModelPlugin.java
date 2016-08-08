@@ -19,6 +19,7 @@ package com.android.build.gradle.model;
 import static com.android.build.gradle.model.AndroidComponentModelPlugin.COMPONENT_NAME;
 import static com.android.build.gradle.model.ModelConstants.ANDROID_BUILDER;
 import static com.android.build.gradle.model.ModelConstants.ANDROID_CONFIG_ADAPTOR;
+import static com.android.build.gradle.model.ModelConstants.EXTERNAL_BUILD_CONFIG;
 import static com.android.build.gradle.model.ModelConstants.EXTRA_MODEL_INFO;
 import static com.android.build.gradle.model.ModelConstants.JNILIBS_DEPENDENCIES;
 import static com.android.build.gradle.model.ModelConstants.NATIVE_BUILD_CONFIG_VALUES;
@@ -711,10 +712,8 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
 
         @Mutate
         public static void modifyNativeBuildModel(
-                @Path(ModelConstants.EXTERNAL_BUILD_CONFIG)
-                NativeBuildConfig config,
-                @Path(NATIVE_BUILD_CONFIG_VALUES)
-                List<NativeBuildConfigValue> configValues) {
+                @Path(EXTERNAL_BUILD_CONFIG) NativeBuildConfig config,
+                @Path(NATIVE_BUILD_CONFIG_VALUES) List<NativeBuildConfigValue> configValues) {
             for (NativeBuildConfigValue configValue : configValues) {
                 NativeBuildConfigGsonUtil.copyToNativeBuildConfig(configValue, config);
             }
