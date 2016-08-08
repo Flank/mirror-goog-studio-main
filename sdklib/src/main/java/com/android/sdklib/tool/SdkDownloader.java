@@ -32,8 +32,10 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.google.common.collect.Lists;
-
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,12 +141,19 @@ public class SdkDownloader {
     }
 
     private static void usageAndExit() {
-        System.out.println("Usage: java com.android.sdklib.tool.SdkDownloader "
-          + "[--uninstall] [--channel=channelId] <sdk path> "
-          + "<package path> <package path>...\n"
-          + "    <package path> is a sdk-style path (e.g. build-tools;23.0.0 or "
-          + "platforms;android-23)\n"
-          + "    channelId is the id of the least stable channel to check.");
+        System.err.println("Usage: java com.android.sdklib.tool.SdkDownloader \\");
+        System.err.println("  --uninstall");
+        System.err.println("  --update [--channel=<channelId>] <sdk path>");
+        System.err.println("  [--channel=<channelId>] <sdk path> "
+                + "[--package_file <package-file>] <packages>...");
+        System.err.println();
+        System.err.println("<package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or "
+                + "\"platforms;android-23\")");
+        System.err.println("<package-file> is a text file where each line is a sdk-style path");
+        System.err.println("<channelId> is the id of the least stable channel to check");
+        System.err.println();
+        System.err.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
+                + "  \"macosx\", or \"linux\", packages will be downloaded for that OS");
         System.exit(1);
     }
 
@@ -153,6 +162,7 @@ public class SdkDownloader {
         private static final String CHANNEL_ARG = "--channel=";
         private static final String UNINSTALL_ARG = "--uninstall";
         private static final String UPDATE_ARG = "--update";
+        private static final String PKG_FILE_ARG = "--package_file=";
 
         private File mLocalPath;
         private List<String> mPackages = new ArrayList<>();
@@ -171,23 +181,31 @@ public class SdkDownloader {
                 } else if (arg.startsWith(CHANNEL_ARG)) {
                     try {
                         result.mChannel = Integer.parseInt(arg.substring(CHANNEL_ARG.length()));
-                    }
-                    catch (NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         return null;
                     }
-                }
-                else if (result.mLocalPath == null) {
+                } else if (arg.startsWith(PKG_FILE_ARG)) {
+                    String packageFile = arg.substring(PKG_FILE_ARG.length());
+                    try {
+                        result.mPackages.addAll(Files.readAllLines(Paths.get(packageFile)));
+                    } catch (IOException e) {
+                        ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
+                        progress.logError(
+                                String.format("Invalid package file \"%s\" threw exception:\n%s\n",
+                                        packageFile, e));
+                        return null;
+                    }
+                } else if (result.mLocalPath == null) {
                     File path = new File(arg);
-                    ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
                     if (!path.exists()) {
                         if (!path.mkdirs()) {
+                            ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
                             progress.logError("Failed to create SDK root dir: " + path);
                             return null;
                         }
                     }
                     result.mLocalPath = path;
-                }
-                else {
+                } else {
                     result.mPackages.add(arg);
                 }
             }
