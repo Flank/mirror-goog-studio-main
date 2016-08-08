@@ -2,7 +2,7 @@
 <recipe>
 
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
-    <dependency mavenUrl="com.google.android.gms:play-services:+"/>
+    <dependency mavenUrl="com.google.android.gms:play-services-plus:+"/>
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
