@@ -184,40 +184,33 @@ public class ResourceUsageAnalyzerTest {
         } else {
             List<File> files = Lists.newArrayList();
             addFiles(resources, files);
-            Collections.sort(files, new Comparator<File>() {
-
-                @Override
-                public int compare(File file, File file2) {
-                    return file.getPath().compareTo(file2.getPath());
-                }
-            });
+            Collections.sort(files, (file, file2) -> file.getPath().compareTo(file2.getPath()));
 
             // Generate a .zip file from a directory
             File uncompressedFile = File.createTempFile("uncompressed", ".ap_");
             String prefix = resources.getPath() + File.separatorChar;
-            FileOutputStream fos = new FileOutputStream(uncompressedFile);
-            ZipOutputStream zos = new ZipOutputStream(fos);
-            for (File file : files) {
-                if (file.equals(resources)) {
-                    continue;
+            try (FileOutputStream fos = new FileOutputStream(uncompressedFile);
+                 ZipOutputStream zos = new ZipOutputStream(fos)) {
+                for (File file : files) {
+                    if (file.equals(resources)) {
+                        continue;
+                    }
+                    assertTrue(file.getPath().startsWith(prefix));
+                    String relative = "res/" + file.getPath().substring(prefix.length())
+                            .replace(File.separatorChar, '/');
+                    boolean isValuesFile = relative.equals("res/values/values.xml");
+                    if (isValuesFile) {
+                        relative = "resources.arsc";
+                    }
+                    ZipEntry ze = new ZipEntry(relative);
+                    zos.putNextEntry(ze);
+                    if (!file.isDirectory() && !isValuesFile) {
+                        byte[] bytes = Files.toByteArray(file);
+                        zos.write(bytes);
+                    }
+                    zos.closeEntry();
                 }
-                assertTrue(file.getPath().startsWith(prefix));
-                String relative = "res/" + file.getPath().substring(prefix.length())
-                        .replace(File.separatorChar, '/');
-                boolean isValuesFile = relative.equals("res/values/values.xml");
-                if (isValuesFile) {
-                    relative = "resources.arsc";
-                }
-                ZipEntry ze = new ZipEntry(relative);
-                zos.putNextEntry(ze);
-                if (!file.isDirectory() && !isValuesFile) {
-                    byte[] bytes = Files.toByteArray(file);
-                    zos.write(bytes);
-                }
-                zos.closeEntry();
             }
-            zos.close();
-            fos.close();
 
             assertEquals(""
                     + "res/drawable-hdpi\n"
