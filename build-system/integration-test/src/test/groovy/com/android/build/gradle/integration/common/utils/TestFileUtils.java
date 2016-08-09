@@ -22,14 +22,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
