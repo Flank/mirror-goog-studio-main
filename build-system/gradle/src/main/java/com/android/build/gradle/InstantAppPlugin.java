@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 
+import com.android.builder.model.AndroidProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -36,7 +37,7 @@ import android.databinding.tool.DataBindingBuilder;
 import javax.inject.Inject;
 
 /**
- * Gradle plugin class for 'iapk' projects.
+ * Gradle plugin class for 'instantApp' projects.
  */
 public class InstantAppPlugin extends BasePlugin implements Plugin<Project> {
 
@@ -74,6 +75,11 @@ public class InstantAppPlugin extends BasePlugin implements Plugin<Project> {
                 ndkHandler,
                 dependencyManager,
                 toolingRegistry);
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_INSTANTAPP;
     }
 
     @Override

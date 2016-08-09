@@ -111,6 +111,8 @@ public interface AndroidProject {
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;
     int PROJECT_TYPE_TEST = 2;
+    int PROJECT_TYPE_ATOM = 3;
+    int PROJECT_TYPE_INSTANTAPP = 4;
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z

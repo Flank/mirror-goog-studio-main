@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.AtomVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 
+import com.android.builder.model.AndroidProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -58,6 +59,11 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     protected boolean isLibrary() {
         return true;
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_ATOM;
     }
 
     @Override
