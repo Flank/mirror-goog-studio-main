@@ -130,7 +130,7 @@ public class HotSwapWithNoChangesTest {
                 AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
                 .that().hasMethod("onCreate");
         apkFile.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.ALL);
+                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
 
         makeHotSwapChange();
         runColdSwapBuild.run();

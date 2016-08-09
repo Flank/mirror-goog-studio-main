@@ -19,14 +19,16 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.truth.DexClassSubject;
-import com.android.build.gradle.integration.common.truth.DexFileSubject;
+import com.android.build.gradle.integration.common.truth.DexBackedDexFileSubject;
+import com.android.build.gradle.integration.common.utils.DexUtils;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
@@ -34,18 +36,18 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.zip.ZipFile;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Smoke test for cold swap builds.
@@ -124,9 +126,9 @@ public class ColdSwapTest {
                         AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
                         .that().hasMethod("onCreate");
                 apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                        AbstractAndroidSubject.ClassFileScope.ALL);
+                        AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
                 apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                        AbstractAndroidSubject.ClassFileScope.ALL);
+                        AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
             }
 
             @Override
@@ -146,7 +148,7 @@ public class ColdSwapTest {
 
                 expect.that(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.DEX);
 
-                checkUpdatedClassPresence(artifact.getLocation());
+                checkUpdatedClassPresence(DexUtils.loadDex(artifact.getLocation()));
             }
         });
     }
@@ -176,7 +178,8 @@ public class ColdSwapTest {
                             InstantRunBuildContext.FileType.SPLIT,
                             InstantRunBuildContext.FileType.SPLIT_MAIN);
                     if (artifact.getType().equals(InstantRunBuildContext.FileType.SPLIT)) {
-                        checkUpdatedClassPresence(artifact.getLocation());
+                        checkUpdatedClassPresence(DexUtils.loadDex(
+                                ZipHelper.extractEntry(artifact.getLocation(), "classes.dex")));
                     }
                 }
             }
@@ -194,13 +197,12 @@ public class ColdSwapTest {
 
     }
 
-    private void checkUpdatedClassPresence(@NonNull File dexFile) throws Exception {
-        DexClassSubject helloWorldClass = expect.about(DexFileSubject.FACTORY)
-                .that(dexFile)
+    private void checkUpdatedClassPresence(@Nullable DexBackedDexFile dex) throws Exception {
+        expect.about(DexBackedDexFileSubject.FACTORY)
+                .that(dex)
                 .hasClass("Lcom/example/helloworld/HelloWorld;")
-                .that();
-        helloWorldClass.hasMethod("onCreate");
-        helloWorldClass.hasMethod("newMethod");
+                .that()
+                .hasMethods("onCreate", "newMethod");
     }
 
     private void createActivityClass(@NonNull String imports, @NonNull String newMethodBody)

@@ -20,9 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.IndirectSubject;
 import com.google.common.truth.FailureStrategy;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.zip.ZipFile;
@@ -53,7 +51,7 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
         /**
          * Main and secondary class files.
          */
-        ALL,
+        MAIN_AND_SECONDARY,
 
         /**
          * InstantRun type of packaging, where some classes can be in the main or secondary class
@@ -79,7 +77,7 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void containsClass(@NonNull String className) throws IOException, ProcessException {
-        containsClass(className, ClassFileScope.ALL);
+        containsClass(className, ClassFileScope.MAIN_AND_SECONDARY);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -108,7 +106,7 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
 
     public void doesNotContainClass(@NonNull String className)
             throws IOException, ProcessException {
-        doesNotContainClass(className, ClassFileScope.ALL);
+        doesNotContainClass(className, ClassFileScope.MAIN_AND_SECONDARY);
     }
 
     public void doesNotContainClass(@NonNull String className, @NonNull ClassFileScope scope)
@@ -162,17 +160,6 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public abstract void containsJavaResourceWithContent(
             @NonNull String path, @NonNull byte[] content) throws IOException, ProcessException;
-
-
-    protected IndirectSubject<DexFileSubject> getDexFile(final File extractedDexFile) {
-        return new IndirectSubject<DexFileSubject>() {
-            @Override
-            @NonNull
-            public DexFileSubject that() {
-                return DexFileSubject.FACTORY.getSubject(failureStrategy, extractedDexFile);
-            }
-        };
-    }
 
     @Override
     protected String getDisplaySubject() {

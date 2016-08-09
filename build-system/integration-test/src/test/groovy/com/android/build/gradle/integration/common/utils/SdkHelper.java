@@ -70,11 +70,6 @@ public class SdkHelper {
     }
 
     @NonNull
-    public static File getDexDump() {
-        return getBuildTool(BuildToolInfo.PathId.DEXDUMP);
-    }
-
-    @NonNull
     public static File getDxJar() {
         return getBuildTool(BuildToolInfo.PathId.DX_JAR);
     }

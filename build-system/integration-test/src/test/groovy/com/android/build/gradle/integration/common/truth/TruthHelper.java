@@ -67,7 +67,6 @@ import com.google.common.truth.Subject;
 import com.google.common.truth.TableSubject;
 import com.google.common.truth.TestVerb;
 import com.google.common.truth.ThrowableSubject;
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.Map;
