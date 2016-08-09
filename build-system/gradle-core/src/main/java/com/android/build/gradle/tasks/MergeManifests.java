@@ -148,10 +148,10 @@ public class MergeManifests extends ManifestProcessorTask {
             return Collections.emptyList();
         }
 
-        // this is a graph of Android Library so need to get them recursively.
-        List<File> files = Lists.newArrayListWithCapacity(libs.size() * 2);
+        List<File> files = Lists.newArrayListWithCapacity(libs.size());
         for (AndroidLibrary androidLibrary : libs) {
-            fillManifestList(androidLibrary, files);
+            if (!androidLibrary.isProvided())
+                files.add(androidLibrary.getManifest());
         }
 
         return files;
@@ -281,7 +281,7 @@ public class MergeManifests extends ManifestProcessorTask {
                         @Override
                         public List<AndroidLibrary> call() throws Exception {
                             List<AndroidLibrary> manifests = Lists.newArrayList(
-                                    config.getCompileAndroidLibraries());
+                                    config.getFlatCompileAndroidLibraries());
 
                             if (scope.getVariantScope().getMicroApkTask() != null &&
                                     variantData.getVariantConfiguration().getBuildType().
