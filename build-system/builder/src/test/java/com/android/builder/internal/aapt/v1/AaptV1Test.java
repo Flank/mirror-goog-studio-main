@@ -57,6 +57,9 @@ import org.junit.rules.TemporaryFolder;
  */
 public class AaptV1Test {
 
+    // The obsolete 22.0.0 is not installed on the build server.
+    private static final Revision TEST_VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 1);
+
     /**
      * Temporary folder to use in tests.
      */
@@ -124,7 +127,7 @@ public class AaptV1Test {
      */
     @NonNull
     private Aapt makeAapt() throws Exception {
-        return makeAapt(AaptV1.PngProcessMode.ALL, AaptV1.VERSION_FOR_SERVER_AAPT);
+        return makeAapt(AaptV1.PngProcessMode.ALL, TEST_VERSION_FOR_SERVER_AAPT);
     }
 
     /**
@@ -328,7 +331,7 @@ public class AaptV1Test {
 
         AaptPackageConfig config = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target23)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(getBuildToolInfo(TEST_VERSION_FOR_SERVER_AAPT))
                 .setLogger(mLogger)
                 .setManifestFile(manifestFile)
                 .setOptions(mDummyOptions)
@@ -381,7 +384,7 @@ public class AaptV1Test {
 
         AaptPackageConfig config = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target23)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(getBuildToolInfo(TEST_VERSION_FOR_SERVER_AAPT))
                 .setLogger(mLogger)
                 .setManifestFile(manifestFile)
                 .setOptions(mDummyOptions)
