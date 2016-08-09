@@ -62,6 +62,12 @@ java_binary(
   visibility = ["//visibility:public"],
 )
 
+java_import(
+  name = "langtools",
+  jars = ["@local_jdk//:langtools"],
+  visibility = ["//visibility:public"],
+)
+
 test_suite(
   name = "all_tests",
   tests = [
