@@ -1,0 +1,8 @@
+*~
+*.bak
+*.pyc
+Thumbs.db
+*.class
+*.DS_Store
+/out
+.idea/workspace.xml
