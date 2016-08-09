@@ -1,0 +1,19 @@
+<idea-plugin version="2">
+  <id>com.android.tools.imltobazel</id>
+  <name>Plugin display name here</name>
+  <version>1.0</version>
+
+  <description><![CDATA[
+      Exports .iml build definitions as Bazel build rules.
+    ]]></description>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="141.0"/>
+
+  <actions>
+    <action id="Bazel.Generate" class="com.android.tools.bazel.GenerateBazelAction" text="Generate Bazel Build..." description="Generates BUILD files">
+      <add-to-group group-id="BuildMenu" anchor="after" relative-to-action="GenerateAntBuild"/>
+    </action>
+  </actions>
+
+</idea-plugin>
