@@ -16,30 +16,6 @@
 
 package com.android.ide.common.xml;
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.resources.ResourceFolderType;
-import com.android.utils.SdkUtils;
-import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TAG_COLOR;
 import static com.android.SdkConstants.TAG_DIMEN;
@@ -50,6 +26,29 @@ import static com.android.SdkConstants.XMLNS;
 import static com.android.utils.XmlUtils.XML_COMMENT_BEGIN;
 import static com.android.utils.XmlUtils.XML_COMMENT_END;
 import static com.android.utils.XmlUtils.XML_PROLOG;
+
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.android.resources.ResourceFolderType;
+import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Visitor which walks over the subtree of the DOM to be formatted and pretty prints
@@ -1146,7 +1145,7 @@ public class XmlPrettyPrinter {
         return true;
     }
 
-    private static void printUsage() {
+    private static void printUsage() throws ExitWithErrorStatusException {
         System.out.println("Usage: " + XmlPrettyPrinter.class.getSimpleName() +
             " <options>... <files or directories...>");
         System.out.println("OPTIONS:");
@@ -1154,11 +1153,21 @@ public class XmlPrettyPrinter {
         System.out.println("--removeEmptyLines");
         System.out.println("--noAttributeOnFirstLine");
         System.out.println("--noSpaceBeforeClose");
-        System.exit(1);
+        throw new ExitWithErrorStatusException();
     }
 
     /** Command line driver */
     public static void main(String[] args) {
+        try {
+            mainThrowOnFailure(args);
+        } catch (ExitWithErrorStatusException e) {
+            System.exit(1);
+        }
+        System.exit(0);
+    }
+
+    @VisibleForTesting
+    static void mainThrowOnFailure(@NonNull String[] args) throws ExitWithErrorStatusException {
         if (args.length == 0) {
             printUsage();
         }
@@ -1186,7 +1195,7 @@ public class XmlPrettyPrinter {
                 File file = new File(arg).getAbsoluteFile();
                 if (!file.exists()) {
                     System.err.println("Can't find file " + file);
-                    System.exit(1);
+                    throw new ExitWithErrorStatusException();
                 } else {
                     files.add(file);
                 }
@@ -1196,12 +1205,10 @@ public class XmlPrettyPrinter {
         for (File file : files) {
             formatFile(prefs, file, stdout);
         }
-
-        System.exit(0);
     }
 
     private static void formatFile(@NonNull XmlFormatPreferences prefs, File file,
-            boolean stdout) {
+            boolean stdout) throws ExitWithErrorStatusException {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
@@ -1231,8 +1238,7 @@ public class XmlPrettyPrinter {
                 Document document = XmlUtils.parseDocumentSilently(xml, true);
                 if (document == null) {
                     System.err.println("Could not parse " + file);
-                    System.exit(1);
-                    return;
+                    throw new ExitWithErrorStatusException();
                 }
 
                 if (style == null) {
@@ -1251,8 +1257,13 @@ public class XmlPrettyPrinter {
                 }
             } catch (IOException e) {
                 System.err.println("Could not read " + file);
-                System.exit(1);
+                throw new ExitWithErrorStatusException();
             }
         }
     }
+
+    @VisibleForTesting
+    static final class ExitWithErrorStatusException extends Exception {
+    }
+
 }
