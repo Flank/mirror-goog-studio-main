@@ -15,11 +15,7 @@
  */
 package com.android.build.gradle.tasks;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
-import com.android.builder.model.AndroidBundle;
-import com.android.builder.model.AndroidLibrary;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -28,7 +24,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -93,12 +88,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
         return Joiner.on(",").join(
                 Ordering.natural().sortedCopy(Iterables.transform(
                         mapToSerialize.entrySet(),
-                        new Function<Map.Entry<String, Object>, String>() {
-                            @Override
-                            public String apply(final Map.Entry<String, Object> input) {
-                                return keyValueJoiner.join(input.getKey(), input.getValue());
-                            }
-                        })));
+                        (input) -> keyValueJoiner.join(input.getKey(), input.getValue()))));
     }
 
     /**
@@ -108,20 +98,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     public File getOutputFile() {
         File aaptFriendlyManifest = getAaptFriendlyManifestOutputFile();
         return aaptFriendlyManifest != null ? aaptFriendlyManifest : getManifestOutputFile();
-    }
-
-    protected static void fillManifestList(
-            @NonNull AndroidBundle androidBundle,
-            @NonNull List<File> manifestList) {
-        // we must exclude optional manifests as they must have a proper direct dependency to be
-        // supported.
-        if (androidBundle.isProvided()) {
-            return;
-        }
-        manifestList.add(androidBundle.getManifest());
-        for (AndroidBundle bundle : androidBundle.getBundleDependencies()) {
-            fillManifestList(bundle, manifestList);
-        }
     }
 
 }

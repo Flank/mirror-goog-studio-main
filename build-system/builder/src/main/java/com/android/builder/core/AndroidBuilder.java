@@ -699,7 +699,7 @@ public class AndroidBuilder {
      * @see VariantConfiguration#getHandleProfiling()
      * @see VariantConfiguration#getFunctionalTest()
      * @see VariantConfiguration#getTestLabel()
-     * @see VariantConfiguration#getCompileAndroidLibraries() ()
+     * @see VariantConfiguration#getFlatCompileAndroidLibraries() ()
      */
     public void mergeManifestsForTestVariant(
             @NonNull String testApplicationId,

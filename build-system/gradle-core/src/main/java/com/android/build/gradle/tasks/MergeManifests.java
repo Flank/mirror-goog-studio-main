@@ -149,10 +149,10 @@ public class MergeManifests extends ManifestProcessorTask {
             return Collections.emptyList();
         }
 
-        // this is a graph of Android Library so need to get them recursively.
         List<File> files = Lists.newArrayListWithCapacity(bundles.size() * 2);
         for (AndroidBundle androidBundle : bundles) {
-            fillManifestList(androidBundle, files);
+            if (!androidBundle.isProvided())
+                files.add(androidBundle.getManifest());
         }
 
         return files;
