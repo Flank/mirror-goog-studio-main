@@ -1,9 +1,9 @@
 java_import(
-  name = "prebuilts/studio-profiler-grpc-1.0-jarjar",
-  jars = [
-      "prebuilts/studio-profiler-grpc-1.0-jarjar.jar",
+    name = "prebuilts/studio-profiler-grpc-1.0-jarjar",
+    jars = [
+        "prebuilts/studio-profiler-grpc-1.0-jarjar.jar",
     ],
-  visibility = ["//visibility:public"],
+    visibility = ["//visibility:public"],
 )
 
 java_library(
@@ -56,20 +56,20 @@ java_binary(
 )
 
 genrule(
-  name = "kotlin-compiler",
-  srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
-  outs = ["kotlin-compiler.jar"],
-  cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-compiler.jar:$@",
-  tools = [":unzipper"],
+    name = "kotlin-compiler",
+    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
+    outs = ["kotlin-compiler.jar"],
+    cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-compiler.jar:$@",
+    tools = [":unzipper"],
 )
 
 genrule(
-  name = "kotlin-runtime",
-  srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
-  outs = ["kotlin-runtime.jar"],
-  cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-runtime.jar:$@",
-  tools = [":unzipper"],
-  visibility = ["//visibility:public"],
+    name = "kotlin-runtime",
+    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.0-release-IJ143-78.zip"],
+    outs = ["kotlin-runtime.jar"],
+    cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-runtime.jar:$@",
+    tools = [":unzipper"],
+    visibility = ["//visibility:public"],
 )
 
 java_binary(
@@ -101,6 +101,31 @@ java_import(
   jars = ["@local_jdk//:langtools"],
   visibility = ["//visibility:public"],
 )
+
+java_library(
+    name = "maven",
+    srcs = glob(["src/**/maven/*.java"]),
+    deps = [
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+    ],
+)
+
+java_binary(
+    name = "java_import_generator",
+    main_class = "com.android.tools.maven.JavaImportGenerator",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
+    # TODO: how to pass the path to workspace as argument?
+)
+
+java_binary(
+    name = "third_party_build_generator",
+    main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
+)
+
 
 test_suite(
   name = "all_tests",
