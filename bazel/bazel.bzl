@@ -292,8 +292,21 @@ def _get_label_and_tags(label):
 # "module_name": A Java library compiled from the production sources
 # "module_name_testlib": A Java library compiled from the test sources
 # "module_name_tests": A java test rule that runs the tests found in "libmodule_name_testlib.jar"
-def iml_module(name, srcs=[], test_srcs=[], exclude=[], resources=[], test_resources=[], deps=[],
-    visibility=[], exports=[], javacopts=[], back_target=0, back_deps=[]):
+def iml_module(name,
+    srcs=[],
+    test_srcs=[],
+    exclude=[],
+    resources=[],
+    test_resources=[],
+    deps=[],
+    visibility=[],
+    exports=[],
+    javacopts=[],
+    test_data=[],
+    test_timeout="moderate",
+    test_class="com.android.testutils.JarTestSuite",
+    back_target=0,
+    back_deps=[]):
 
   # Create the explicit lists of main, tests and exports the same way IntelliJ does
   main_deps = []
@@ -338,9 +351,12 @@ def iml_module(name, srcs=[], test_srcs=[], exclude=[], resources=[], test_resou
     runtime_deps = [
       ":" + name + "_testlib",
       "//tools/base/testutils:testutils",
+      "//tools/base/bazel:langtools",
     ],
+    timeout = test_timeout,
+    data = test_data,
     #TODO support tests from all the three jars
     jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.javas.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
+    test_class = test_class,
     visibility = ["//visibility:public"],
   )
