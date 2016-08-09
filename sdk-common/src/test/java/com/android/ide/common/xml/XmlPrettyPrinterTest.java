@@ -28,7 +28,6 @@ import com.google.common.io.Files;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.security.Permission;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
@@ -39,8 +38,6 @@ import org.w3c.dom.NodeList;
 
 @SuppressWarnings("javadoc")
 public class XmlPrettyPrinterTest {
-
-
 
     private static void checkFormat(XmlFormatPreferences prefs,
             String xml,
@@ -1232,7 +1229,7 @@ public class XmlPrettyPrinterTest {
                 + "--noAttributeOnFirstLine\n"
                 + "--noSpaceBeforeClose\n",
                 "Unknown flag --nonexistentFlag\n",
-                1,
+                ExitStatus.FAILURE,
                 new String[]{"--nonexistentFlag"},
                 null
         );
@@ -1250,7 +1247,7 @@ public class XmlPrettyPrinterTest {
                 "[Fatal Error] :3:3: The element type \"notclosed\" must be terminated by "
                         + "the matching end-tag \"</notclosed>\".\n"
                         + "Could not parse $TESTFILE\n",
-                1,
+                ExitStatus.FAILURE,
                 new String[]{"--stdout", temp.getPath()},
                 temp
         );
@@ -1274,7 +1271,7 @@ public class XmlPrettyPrinterTest {
         checkDriver(
                 "",
                 "",
-                0,
+                ExitStatus.OK,
                 new String[]{temp.getPath()},
                 temp
         );
@@ -1319,7 +1316,7 @@ public class XmlPrettyPrinterTest {
         checkDriver(
                 "",
                 "",
-                0,
+                ExitStatus.OK,
                 new String[]{file1.getPath(), dir1.getPath()},
                 root
         );
@@ -1359,7 +1356,7 @@ public class XmlPrettyPrinterTest {
         checkDriver(
                 "",
                 "",
-                0,
+                ExitStatus.OK,
                 new String[]{temp.getPath()},
                 temp
         );
@@ -1400,41 +1397,27 @@ public class XmlPrettyPrinterTest {
         return doc;
     }
 
-    private static void checkDriver(String expectedOutput, String expectedError,
-            int expectedExitCode, String[] args, File testFile)
+    private static void checkDriver(
+            @NonNull String expectedOutput,
+            @NonNull String expectedError,
+            ExitStatus expectedExitStatus,
+            @NonNull String[] args,
+            @Nullable File testFile)
             throws Exception {
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
         try {
-            // Trap System.exit calls:
-            System.setSecurityManager(new SecurityManager() {
-                @Override
-                public void checkPermission(Permission perm)
-                {
-                    // allow anything.
-                }
-                @Override
-                public void checkPermission(Permission perm, Object context)
-                {
-                    // allow anything.
-                }
-                @Override
-                public void checkExit(int status) {
-                    throw new ExitException(status);
-                }
-            });
 
             final ByteArrayOutputStream output = new ByteArrayOutputStream();
             System.setOut(new PrintStream(output));
             final ByteArrayOutputStream error = new ByteArrayOutputStream();
             System.setErr(new PrintStream(error));
 
-            int exitCode = 0xCAFEBABE; // not set
+            ExitStatus exitStatus = ExitStatus.OK;
             try {
-                XmlPrettyPrinter.main(args);
-            } catch (ExitException e) {
-                // Allow
-                exitCode = e.getStatus();
+                XmlPrettyPrinter.mainThrowOnFailure(args);
+            } catch (XmlPrettyPrinter.ExitWithErrorStatusException e) {
+                exitStatus = ExitStatus.FAILURE;
             }
 
             String testPath = testFile == null
@@ -1442,28 +1425,14 @@ public class XmlPrettyPrinterTest {
             String pathName = "$TESTFILE";
             assertEquals(expectedError, error.toString().replace(testPath, pathName));
             assertEquals(expectedOutput, output.toString().replace(testPath, pathName));
-            assertEquals(expectedExitCode, exitCode);
+            assertEquals(expectedExitStatus, exitStatus);
         } finally {
-            // Re-enable system exit for unit test
-            System.setSecurityManager(null);
-
             System.setOut(previousOut);
             System.setErr(previousErr);
         }
     }
 
-    private static class ExitException extends SecurityException {
-        private static final long serialVersionUID = 1L;
-
-        private final int mStatus;
-
-        public ExitException(int status) {
-            super("Unit test");
-            mStatus = status;
-        }
-
-        public int getStatus() {
-            return mStatus;
-        }
+    private enum ExitStatus {
+        OK, FAILURE
     }
 }
