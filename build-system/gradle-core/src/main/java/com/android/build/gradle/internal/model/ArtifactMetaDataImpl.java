@@ -17,14 +17,17 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.ArtifactMetaData;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of ArtifactMetaData that is serializable
  */
-public class ArtifactMetaDataImpl implements ArtifactMetaData, Serializable {
+@Immutable
+public final class ArtifactMetaDataImpl implements ArtifactMetaData, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -52,5 +55,24 @@ public class ArtifactMetaDataImpl implements ArtifactMetaData, Serializable {
     @Override
     public int getType() {
         return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ArtifactMetaDataImpl that = (ArtifactMetaDataImpl) o;
+        return isTest == that.isTest &&
+                type == that.type &&
+                Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, isTest, type);
     }
 }

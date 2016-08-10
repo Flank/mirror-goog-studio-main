@@ -18,95 +18,95 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Implementation of ProductFlavor that is serializable. Objects used in the DSL cannot be
  * serialized.
  **/
-class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Serializable {
+@Immutable
+final class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String name = null;
-    private String mDimension = null;
-    private ApiVersion mMinSdkVersion = null;
-    private ApiVersion mTargetSdkVersion = null;
-    private Integer mMaxSdkVersion = null;
-    private Integer mRenderscriptTargetApi = null;
-    private Boolean mRenderscriptSupportMode = null;
-    private Boolean mRenderscriptSupportModeBlas = null;
-    private Boolean mRenderscriptNdkMode = null;
-    private Integer mVersionCode = null;
-    private String mVersionName = null;
-    private String mApplicationId = null;
-    private String mTestApplicationId = null;
-    private String mTestInstrumentationRunner = null;
-    private Map<String, String> mTestInstrumentationRunnerArguments = Maps.newHashMap();
-    private Boolean mTestHandleProfiling = null;
-    private Boolean mTestFunctionalTest = null;
-    private Set<String> mResourceConfigurations = null;
-    private DefaultVectorDrawablesOptions mVectorDrawablesOptions = null;
-    private Boolean mWearAppUnbundled = null;
+    private final String name;
+    private final String mDimension;
+    private final ApiVersion mMinSdkVersion;
+    private final ApiVersion mTargetSdkVersion;
+    private final Integer mMaxSdkVersion;
+    private final Integer mRenderscriptTargetApi;
+    private final Boolean mRenderscriptSupportMode;
+    private final Boolean mRenderscriptSupportModeBlas;
+    private final Boolean mRenderscriptNdkMode;
+    private final Integer mVersionCode;
+    private final String mVersionName;
+    private final String mApplicationId;
+    private final String mTestApplicationId;
+    private final String mTestInstrumentationRunner;
+    private final Map<String, String> mTestInstrumentationRunnerArguments;
+    private final Boolean mTestHandleProfiling;
+    private final Boolean mTestFunctionalTest;
+    private final Set<String> mResourceConfigurations;
+    private final DefaultVectorDrawablesOptions mVectorDrawablesOptions;
+    private final Boolean mWearAppUnbundled;
 
-    @NonNull
-    static ProductFlavorImpl cloneFlavor(
+
+    public ProductFlavorImpl(
             @NonNull ProductFlavor productFlavor,
             @Nullable ApiVersion minSdkVersionOverride,
             @Nullable ApiVersion targetSdkVersionOverride) {
-        ProductFlavorImpl clonedFlavor = new ProductFlavorImpl(productFlavor);
-        clonedFlavor.name = productFlavor.getName();
-        clonedFlavor.mDimension = productFlavor.getDimension();
-        clonedFlavor.mMinSdkVersion = minSdkVersionOverride != null
+        super(productFlavor);
+
+        this.name = productFlavor.getName();
+        this.mDimension = productFlavor.getDimension();
+        this.mMinSdkVersion = minSdkVersionOverride != null
                 ? minSdkVersionOverride
                 : ApiVersionImpl.clone(productFlavor.getMinSdkVersion());
-        clonedFlavor.mTargetSdkVersion = targetSdkVersionOverride != null
+        this.mTargetSdkVersion = targetSdkVersionOverride != null
                 ? targetSdkVersionOverride
                 : ApiVersionImpl.clone(productFlavor.getTargetSdkVersion());
-        clonedFlavor.mMaxSdkVersion = targetSdkVersionOverride != null
+        //noinspection VariableNotUsedInsideIf
+        this.mMaxSdkVersion = targetSdkVersionOverride != null
                 ? null /* we remove the maxSdkVersion when dealing with a preview release */
                 : productFlavor.getMaxSdkVersion();
-        clonedFlavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
-        clonedFlavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportModeEnabled();
-        clonedFlavor.mRenderscriptSupportModeBlas = productFlavor.getRenderscriptSupportModeBlasEnabled();
-        clonedFlavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkModeEnabled();
+        this.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
+        this.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportModeEnabled();
+        this.mRenderscriptSupportModeBlas = productFlavor.getRenderscriptSupportModeBlasEnabled();
+        this.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkModeEnabled();
 
-        clonedFlavor.mVersionCode = productFlavor.getVersionCode();
-        clonedFlavor.mVersionName = productFlavor.getVersionName();
+        this.mVersionCode = productFlavor.getVersionCode();
+        this.mVersionName = productFlavor.getVersionName();
 
-        clonedFlavor.mApplicationId = productFlavor.getApplicationId();
+        this.mApplicationId = productFlavor.getApplicationId();
 
-        clonedFlavor.mTestApplicationId = productFlavor.getTestApplicationId();
-        clonedFlavor.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
-        clonedFlavor.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
-        clonedFlavor.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
+        this.mTestApplicationId = productFlavor.getTestApplicationId();
+        this.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
+        this.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
+        this.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
 
-        clonedFlavor.mResourceConfigurations = ImmutableSet.copyOf(
+        this.mResourceConfigurations = ImmutableSet.copyOf(
                 productFlavor.getResourceConfigurations());
 
-        clonedFlavor.mTestInstrumentationRunnerArguments = Maps.newHashMap(
+        this.mTestInstrumentationRunnerArguments = Maps.newHashMap(
                 productFlavor.getTestInstrumentationRunnerArguments());
 
-        clonedFlavor.mVectorDrawablesOptions =
+        this.mVectorDrawablesOptions =
                 DefaultVectorDrawablesOptions.copyOf(productFlavor.getVectorDrawables());
 
-        clonedFlavor.mWearAppUnbundled = productFlavor.getWearAppUnbundled();
-
-        return clonedFlavor;
-    }
-
-    private ProductFlavorImpl(@NonNull ProductFlavor productFlavor) {
-        super(productFlavor);
+        this.mWearAppUnbundled = productFlavor.getWearAppUnbundled();
     }
 
     @Override
@@ -234,27 +234,74 @@ class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, Seriali
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        ProductFlavorImpl that = (ProductFlavorImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(mDimension, that.mDimension) &&
+                Objects.equals(mMinSdkVersion, that.mMinSdkVersion) &&
+                Objects.equals(mTargetSdkVersion, that.mTargetSdkVersion) &&
+                Objects.equals(mMaxSdkVersion, that.mMaxSdkVersion) &&
+                Objects.equals(mRenderscriptTargetApi, that.mRenderscriptTargetApi) &&
+                Objects.equals(mRenderscriptSupportMode, that.mRenderscriptSupportMode) &&
+                Objects
+                        .equals(mRenderscriptSupportModeBlas, that.mRenderscriptSupportModeBlas) &&
+                Objects.equals(mRenderscriptNdkMode, that.mRenderscriptNdkMode) &&
+                Objects.equals(mVersionCode, that.mVersionCode) &&
+                Objects.equals(mVersionName, that.mVersionName) &&
+                Objects.equals(mApplicationId, that.mApplicationId) &&
+                Objects.equals(mTestApplicationId, that.mTestApplicationId) &&
+                Objects.equals(mTestInstrumentationRunner, that.mTestInstrumentationRunner) &&
+                Objects.equals(mTestInstrumentationRunnerArguments,
+                        that.mTestInstrumentationRunnerArguments) &&
+                Objects.equals(mTestHandleProfiling, that.mTestHandleProfiling) &&
+                Objects.equals(mTestFunctionalTest, that.mTestFunctionalTest) &&
+                Objects.equals(mResourceConfigurations, that.mResourceConfigurations) &&
+                Objects.equals(mVectorDrawablesOptions, that.mVectorDrawablesOptions) &&
+                Objects.equals(mWearAppUnbundled, that.mWearAppUnbundled);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), name, mDimension, mMinSdkVersion, mTargetSdkVersion,
+                mMaxSdkVersion, mRenderscriptTargetApi, mRenderscriptSupportMode,
+                mRenderscriptSupportModeBlas, mRenderscriptNdkMode, mVersionCode, mVersionName,
+                mApplicationId, mTestApplicationId, mTestInstrumentationRunner,
+                mTestInstrumentationRunnerArguments, mTestHandleProfiling, mTestFunctionalTest,
+                mResourceConfigurations, mVectorDrawablesOptions, mWearAppUnbundled);
+    }
+
+    @Override
     public String toString() {
-        return "ProductFlavorImpl{" +
-                "name='" + name + '\'' +
-                ", mDimension='" + mDimension + '\'' +
-                ", mMinSdkVersion=" + mMinSdkVersion +
-                ", mTargetSdkVersion=" + mTargetSdkVersion +
-                ", mMaxSdkVersion=" + mMaxSdkVersion +
-                ", mRenderscriptTargetApi=" + mRenderscriptTargetApi +
-                ", mRenderscriptSupportMode=" + mRenderscriptSupportMode +
-                ", mRenderscriptSupportModeBlas=" + mRenderscriptSupportModeBlas +
-                ", mRenderscriptNdkMode=" + mRenderscriptNdkMode +
-                ", mVersionCode=" + mVersionCode +
-                ", mVersionName='" + mVersionName + '\'' +
-                ", mApplicationId='" + mApplicationId + '\'' +
-                ", mTestApplicationId='" + mTestApplicationId + '\'' +
-                ", mTestInstrumentationRunner='" + mTestInstrumentationRunner + '\'' +
-                ", mTestHandleProfiling=" + mTestHandleProfiling +
-                ", mTestFunctionalTest=" + mTestFunctionalTest +
-                ", mResourceConfigurations=" + mResourceConfigurations +
-                ", mVectorDrawablesOptions=" + mVectorDrawablesOptions +
-                ", mWearAppUnbundled=" + mWearAppUnbundled +
-                "} " + super.toString();
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("mDimension", mDimension)
+                .add("mMinSdkVersion", mMinSdkVersion)
+                .add("mTargetSdkVersion", mTargetSdkVersion)
+                .add("mMaxSdkVersion", mMaxSdkVersion)
+                .add("mRenderscriptTargetApi", mRenderscriptTargetApi)
+                .add("mRenderscriptSupportMode", mRenderscriptSupportMode)
+                .add("mRenderscriptSupportModeBlas", mRenderscriptSupportModeBlas)
+                .add("mRenderscriptNdkMode", mRenderscriptNdkMode)
+                .add("mVersionCode", mVersionCode)
+                .add("mVersionName", mVersionName)
+                .add("mApplicationId", mApplicationId)
+                .add("mTestApplicationId", mTestApplicationId)
+                .add("mTestInstrumentationRunner", mTestInstrumentationRunner)
+                .add("mTestInstrumentationRunnerArguments", mTestInstrumentationRunnerArguments)
+                .add("mTestHandleProfiling", mTestHandleProfiling)
+                .add("mTestFunctionalTest", mTestFunctionalTest)
+                .add("mResourceConfigurations", mResourceConfigurations)
+                .add("mVectorDrawablesOptions", mVectorDrawablesOptions)
+                .add("mWearAppUnbundled", mWearAppUnbundled)
+                .toString();
     }
 }

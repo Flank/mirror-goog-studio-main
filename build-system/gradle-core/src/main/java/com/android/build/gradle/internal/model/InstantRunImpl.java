@@ -17,17 +17,22 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.InstantRun;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of the {@link InstantRun} model
  */
-public class InstantRunImpl implements InstantRun, Serializable {
+@Immutable
+final class InstantRunImpl implements InstantRun, Serializable {
+    private static final long serialVersionUID = 1L;
 
-    @NonNull private final File infoFile;
+    @NonNull
+    private final File infoFile;
     private final int supportStatus;
 
     public InstantRunImpl(@NonNull File infoFile, int supportStatus) {
@@ -49,5 +54,23 @@ public class InstantRunImpl implements InstantRun, Serializable {
     @Override
     public int getSupportStatus() {
         return supportStatus;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        InstantRunImpl that = (InstantRunImpl) o;
+        return supportStatus == that.supportStatus &&
+                Objects.equals(infoFile, that.infoFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(infoFile, supportStatus);
     }
 }

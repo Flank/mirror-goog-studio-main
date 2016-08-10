@@ -18,17 +18,19 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.ApiVersion;
 import com.android.sdklib.AndroidVersion;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of ApiVersion that is serializable so that it can be used in the
  * model returned by the Gradle plugin.
  **/
-public class ApiVersionImpl implements ApiVersion, Serializable {
-
+@Immutable
+final class ApiVersionImpl implements ApiVersion, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final int mApiLevel;
@@ -72,5 +74,23 @@ public class ApiVersionImpl implements ApiVersion, Serializable {
     @Override
     public String getApiString() {
         return mCodename != null ? mCodename : Integer.toString(mApiLevel);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ApiVersionImpl that = (ApiVersionImpl) o;
+        return mApiLevel == that.mApiLevel &&
+                Objects.equals(mCodename, that.mCodename);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mApiLevel, mCodename);
     }
 }

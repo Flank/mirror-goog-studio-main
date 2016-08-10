@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
@@ -26,12 +27,14 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Implementation of JavaArtifact that is serializable
  */
-public class JavaArtifactImpl extends BaseArtifactImpl implements JavaArtifact, Serializable {
+@Immutable
+public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArtifact, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Set<String> ideSetupTaskNames;
@@ -54,8 +57,8 @@ public class JavaArtifactImpl extends BaseArtifactImpl implements JavaArtifact, 
                 javaArtifact.getMockablePlatformJar(),
                 DependenciesImpl.cloneDependenciesForJavaArtifacts(javaArtifact.getCompileDependencies()),
                 DependenciesImpl.cloneDependenciesForJavaArtifacts(javaArtifact.getPackageDependencies()),
-                variantSP != null ? SourceProviderImpl.cloneProvider(variantSP) : null,
-                flavorsSP != null ? SourceProviderImpl.cloneProvider(flavorsSP) : null);
+                variantSP != null ? new SourceProviderImpl(variantSP) : null,
+                flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }
 
     public JavaArtifactImpl(
@@ -88,5 +91,26 @@ public class JavaArtifactImpl extends BaseArtifactImpl implements JavaArtifact, 
     @Nullable
     public File getMockablePlatformJar() {
         return mockablePlatformJar;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        JavaArtifactImpl that = (JavaArtifactImpl) o;
+        return Objects.equals(ideSetupTaskNames, that.ideSetupTaskNames) &&
+                Objects.equals(mockablePlatformJar, that.mockablePlatformJar);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), ideSetupTaskNames, mockablePlatformJar);
     }
 }

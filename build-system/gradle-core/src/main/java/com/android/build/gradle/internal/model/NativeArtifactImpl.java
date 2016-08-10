@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeFolder;
@@ -25,11 +26,13 @@ import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Implementation of {@link NativeArtifact}.
  */
-public class NativeArtifactImpl implements NativeArtifact, Serializable {
+@Immutable
+public final class NativeArtifactImpl implements NativeArtifact, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -144,6 +147,35 @@ public class NativeArtifactImpl implements NativeArtifact, Serializable {
     @NonNull
     public String getTargetName() {
         return targetName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeArtifactImpl that = (NativeArtifactImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(toolChain, that.toolChain) &&
+                Objects.equals(groupName, that.groupName) &&
+                Objects.equals(assembleTaskName, that.assembleTaskName) &&
+                Objects.equals(sourceFolders, that.sourceFolders) &&
+                Objects.equals(sourceFiles, that.sourceFiles) &&
+                Objects.equals(exportedHeaders, that.exportedHeaders) &&
+                Objects.equals(outputFile, that.outputFile) &&
+                Objects.equals(runtimeFiles, that.runtimeFiles) &&
+                Objects.equals(abi, that.abi) &&
+                Objects.equals(targetName, that.targetName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(name, toolChain, groupName, assembleTaskName, sourceFolders, sourceFiles,
+                        exportedHeaders, outputFile, runtimeFiles, abi, targetName);
     }
 
     @Override

@@ -17,20 +17,24 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of Variant that is serializable.
  */
-class VariantImpl implements Variant, Serializable {
+@Immutable
+final class VariantImpl implements Variant, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -124,5 +128,46 @@ class VariantImpl implements Variant, Serializable {
     @Override
     public Collection<TestedTargetVariant> getTestedTargetVariants() {
         return testedTargetVariants;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        VariantImpl variant = (VariantImpl) o;
+        return Objects.equals(name, variant.name) &&
+                Objects.equals(displayName, variant.displayName) &&
+                Objects.equals(buildTypeName, variant.buildTypeName) &&
+                Objects.equals(productFlavorNames, variant.productFlavorNames) &&
+                Objects.equals(mergedFlavor, variant.mergedFlavor) &&
+                Objects.equals(mainArtifactInfo, variant.mainArtifactInfo) &&
+                Objects.equals(extraAndroidArtifacts, variant.extraAndroidArtifacts) &&
+                Objects.equals(extraJavaArtifacts, variant.extraJavaArtifacts) &&
+                Objects.equals(testedTargetVariants, variant.testedTargetVariants);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, displayName, buildTypeName, productFlavorNames, mergedFlavor,
+                mainArtifactInfo, extraAndroidArtifacts, extraJavaArtifacts, testedTargetVariants);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("displayName", displayName)
+                .add("buildTypeName", buildTypeName)
+                .add("productFlavorNames", productFlavorNames)
+                .add("mergedFlavor", mergedFlavor)
+                .add("mainArtifactInfo", mainArtifactInfo)
+                .add("extraAndroidArtifacts", extraAndroidArtifacts)
+                .add("extraJavaArtifacts", extraJavaArtifacts)
+                .add("testedTargetVariants", testedTargetVariants)
+                .toString();
     }
 }

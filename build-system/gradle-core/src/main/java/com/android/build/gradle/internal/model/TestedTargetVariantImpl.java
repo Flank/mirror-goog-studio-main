@@ -17,15 +17,19 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.TestedTargetVariant;
 
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of {@link com.android.builder.model.TestedTargetVariant} that is
  * serializable.
  */
-public class TestedTargetVariantImpl implements TestedTargetVariant, Serializable{
+@Immutable
+public final class TestedTargetVariantImpl implements TestedTargetVariant, Serializable{
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -52,10 +56,28 @@ public class TestedTargetVariantImpl implements TestedTargetVariant, Serializabl
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TestedTargetVariantImpl that = (TestedTargetVariantImpl) o;
+        return Objects.equals(mTargetProjectPath, that.mTargetProjectPath) &&
+                Objects.equals(mTargetVariant, that.mTargetVariant);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mTargetProjectPath, mTargetVariant);
+    }
+
+    @Override
     public String toString() {
-        return "TestedTargetVariantImpl{" +
-                "targetProjectPath='" + mTargetProjectPath + '\'' +
-                ", targetVariant=" + mTargetVariant+
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("mTargetProjectPath", mTargetProjectPath)
+                .add("mTargetVariant", mTargetVariant)
+                .toString();
     }
 }

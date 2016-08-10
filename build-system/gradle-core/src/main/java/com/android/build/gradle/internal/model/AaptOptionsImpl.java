@@ -18,18 +18,20 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AaptOptions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of AaptOptions that is Serializable.
  */
-public class AaptOptionsImpl implements AaptOptions, Serializable {
-
+@Immutable
+public final class AaptOptionsImpl implements AaptOptions, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Nullable
@@ -96,5 +98,26 @@ public class AaptOptionsImpl implements AaptOptions, Serializable {
                 ", failOnMissingConfigEntry=" + failOnMissingConfigEntry +
                 ", additionalParameters=" + additionalParameters +
                 "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AaptOptionsImpl that = (AaptOptionsImpl) o;
+        return failOnMissingConfigEntry == that.failOnMissingConfigEntry &&
+                Objects.equals(ignoreAssets, that.ignoreAssets) &&
+                Objects.equals(noCompress, that.noCompress) &&
+                Objects.equals(additionalParameters, that.additionalParameters);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(ignoreAssets, noCompress, failOnMissingConfigEntry, additionalParameters);
     }
 }

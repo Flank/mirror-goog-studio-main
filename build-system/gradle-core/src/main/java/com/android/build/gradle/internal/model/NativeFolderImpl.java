@@ -18,16 +18,20 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeFolder;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementation of {@link NativeFolder}
  */
-public class NativeFolderImpl implements NativeFolder, Serializable {
+@Immutable
+public final class NativeFolderImpl implements NativeFolder, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -63,5 +67,33 @@ public class NativeFolderImpl implements NativeFolder, Serializable {
     @Nullable
     public File getWorkingDirectory() {
         return workingDirectory;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeFolderImpl that = (NativeFolderImpl) o;
+        return Objects.equals(folderPath, that.folderPath) &&
+                Objects.equals(perLanguageSettings, that.perLanguageSettings) &&
+                Objects.equals(workingDirectory, that.workingDirectory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(folderPath, perLanguageSettings, workingDirectory);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("folderPath", folderPath)
+                .add("perLanguageSettings", perLanguageSettings)
+                .add("workingDirectory", workingDirectory)
+                .toString();
     }
 }

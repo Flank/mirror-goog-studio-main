@@ -35,11 +35,12 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Implementation of the AndroidProject model object.
  */
-class DefaultAndroidProject implements AndroidProject, Serializable {
+final class DefaultAndroidProject implements AndroidProject, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -80,11 +81,12 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     private final int projectType;
     private final int apiVersion;
 
+    @NonNull
+    private final ProductFlavorContainer defaultConfig;
+
     private final Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
     private final Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
     private final Collection<Variant> variants = Lists.newArrayList();
-
-    private ProductFlavorContainer defaultConfig;
 
     @NonNull
     private final Collection<String> flavorDimensions;
@@ -92,6 +94,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     DefaultAndroidProject(
             @NonNull String modelVersion,
             @NonNull String name,
+            @NonNull ProductFlavorContainer defaultConfig,
             @NonNull Collection<String> flavorDimensions,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
@@ -112,6 +115,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
             int generation) {
         this.modelVersion = modelVersion;
         this.name = name;
+        this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
         this.compileTarget = compileTarget;
         this.bootClasspath = bootClasspath;
@@ -130,12 +134,6 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
         this.generation = generation;
         this.nativeToolchains = nativeToolchains;
         this.buildToolsVersion = buildToolsVersion;
-    }
-
-    @NonNull
-    DefaultAndroidProject setDefaultConfig(@NonNull ProductFlavorContainer defaultConfigContainer) {
-        defaultConfig = defaultConfigContainer;
-        return this;
     }
 
     @NonNull
@@ -301,5 +299,53 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     @Override
     public int getPluginGeneration() {
         return generation;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DefaultAndroidProject that = (DefaultAndroidProject) o;
+        return generation == that.generation &&
+                projectType == that.projectType &&
+                apiVersion == that.apiVersion &&
+                Objects.equals(modelVersion, that.modelVersion) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(compileTarget, that.compileTarget) &&
+                Objects.equals(bootClasspath, that.bootClasspath) &&
+                Objects.equals(frameworkSource, that.frameworkSource) &&
+                Objects.equals(signingConfigs, that.signingConfigs) &&
+                Objects.equals(aaptOptions, that.aaptOptions) &&
+                Objects.equals(extraArtifacts, that.extraArtifacts) &&
+                Objects.equals(unresolvedDependencies, that.unresolvedDependencies) &&
+                Objects.equals(syncIssues, that.syncIssues) &&
+                Objects.equals(javaCompileOptions, that.javaCompileOptions) &&
+                Objects.equals(lintOptions, that.lintOptions) &&
+                Objects.equals(buildFolder, that.buildFolder) &&
+                Objects.equals(buildToolsVersion, that.buildToolsVersion) &&
+                Objects.equals(resourcePrefix, that.resourcePrefix) &&
+                Objects.equals(nativeToolchains, that.nativeToolchains) &&
+                Objects.equals(buildTypes, that.buildTypes) &&
+                Objects.equals(productFlavors, that.productFlavors) &&
+                Objects.equals(variants, that.variants) &&
+                Objects.equals(defaultConfig, that.defaultConfig) &&
+                Objects.equals(flavorDimensions, that.flavorDimensions);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(modelVersion, name, compileTarget, bootClasspath, frameworkSource,
+                        signingConfigs,
+                        aaptOptions, extraArtifacts, unresolvedDependencies, syncIssues, generation,
+                        javaCompileOptions, lintOptions, buildFolder, buildToolsVersion,
+                        resourcePrefix,
+                        nativeToolchains, projectType, apiVersion, buildTypes, productFlavors,
+                        variants,
+                        defaultConfig, flavorDimensions);
     }
 }

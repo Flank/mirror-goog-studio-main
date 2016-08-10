@@ -17,13 +17,16 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +43,8 @@ import java.util.stream.Collectors;
  * To create more dynamic isntances of SourceProviderContainer, use
  * {@link com.android.build.gradle.internal.variant.DefaultSourceProviderContainer}
  */
-class SourceProviderContainerImpl implements SourceProviderContainer, Serializable {
+@Immutable
+final class SourceProviderContainerImpl implements SourceProviderContainer, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -77,7 +81,7 @@ class SourceProviderContainerImpl implements SourceProviderContainer, Serializab
             @NonNull String name,
             @NonNull SourceProvider sourceProvider) {
         return new SourceProviderContainerImpl(name,
-                SourceProviderImpl.cloneProvider(sourceProvider));
+                new SourceProviderImpl(sourceProvider));
     }
 
     private SourceProviderContainerImpl(@NonNull String name,
@@ -96,5 +100,31 @@ class SourceProviderContainerImpl implements SourceProviderContainer, Serializab
     @Override
     public SourceProvider getSourceProvider() {
         return sourceProvider;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SourceProviderContainerImpl that = (SourceProviderContainerImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(sourceProvider, that.sourceProvider);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, sourceProvider);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("sourceProvider", sourceProvider)
+                .toString();
     }
 }
