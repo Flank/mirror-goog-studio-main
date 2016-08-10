@@ -29,8 +29,7 @@ import java.io.Serializable;
  * Serializable implementation of Library for use in the model.
  */
 @Immutable
-class LibraryImpl implements Library, Serializable {
-    private static final long serialVersionUID = 1L;
+abstract class LibraryImpl implements Library, Serializable {
 
     @Nullable
     private final String project;

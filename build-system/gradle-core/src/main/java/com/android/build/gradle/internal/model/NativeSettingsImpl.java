@@ -17,23 +17,25 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeSettings;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of {@link NativeSettings}.
  */
-public class NativeSettingsImpl implements NativeSettings, Serializable {
+@Immutable
+public final class NativeSettingsImpl implements NativeSettings, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
-    String name;
+    private final String name;
     @NonNull
-    List<String> compilerFlags;
+    private final List<String> compilerFlags;
 
     public NativeSettingsImpl(@NonNull String name, @NonNull List<String> compilerFlags) {
         this.name = name;
@@ -53,10 +55,28 @@ public class NativeSettingsImpl implements NativeSettings, Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeSettingsImpl that = (NativeSettingsImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(compilerFlags, that.compilerFlags);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(name, compilerFlags);
+    }
+
+    @Override
     public String toString() {
-        return Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(this)
                 .add("name", name)
-                .add("flags", Joiner.on(" ").join(compilerFlags))
+                .add("compilerFlags", compilerFlags)
                 .toString();
     }
 }

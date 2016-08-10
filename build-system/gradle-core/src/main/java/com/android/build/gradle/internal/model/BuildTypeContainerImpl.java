@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
@@ -28,8 +29,10 @@ import com.android.builder.model.SourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
+@Immutable
+final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -64,8 +67,8 @@ class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
             }
         }
         return new BuildTypeContainerImpl(
-                BuildTypeImpl.cloneBuildType(buildTypeData.getBuildType()),
-                SourceProviderImpl.cloneProvider(buildTypeData.getSourceSet()),
+                new BuildTypeImpl(buildTypeData.getBuildType()),
+                new SourceProviderImpl(buildTypeData.getSourceSet()),
                 clonedContainers);
     }
 
@@ -94,5 +97,24 @@ class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     @Override
     public Collection<SourceProviderContainer> getExtraSourceProviders() {
         return extraSourceProviders;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BuildTypeContainerImpl that = (BuildTypeContainerImpl) o;
+        return Objects.equals(buildType, that.buildType) &&
+                Objects.equals(sourceProvider, that.sourceProvider) &&
+                Objects.equals(extraSourceProviders, that.extraSourceProviders);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(buildType, sourceProvider, extraSourceProviders);
     }
 }

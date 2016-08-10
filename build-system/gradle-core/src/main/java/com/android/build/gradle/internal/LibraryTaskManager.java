@@ -526,13 +526,12 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         // configure the variant to be testable.
-        variantConfig.setOutput(new LocalTestedAarLibrary(
+        variantConfig.setOutput(createLocalTestedAarLibrary(
                 bundle.getArchivePath(),
                 variantBundleDir,
                 variantData.getName(),
                 project.getPath(),
-                variantData.getName(),
-                false /*isProvided*/));
+                variantData.getName()));
 
         ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
                 projectPath, variantName, new Recorder.Block<Void>() {
@@ -544,44 +543,27 @@ public class LibraryTaskManager extends TaskManager {
                 });
     }
 
-    private static final class LocalTestedAarLibrary extends LibraryDependency {
-
-        LocalTestedAarLibrary(
-                @NonNull File bundle,
-                @NonNull File bundleFolder,
-                @Nullable String name,
-                @Nullable String projectPath,
-                @NonNull String projectVariant,
-                boolean isProvided) {
-            super(
-                    bundle,
-                    bundleFolder,
-                    ImmutableList.of(), /* androidDependencies */
-                    ImmutableList.of(), /* jarDependencies */
-                    name,
-                    projectPath,
-                    projectVariant,
-                    null, /* requestedCoordinates */
-                    new MavenCoordinatesImpl(
-                            "__tested_library__",
-                            bundle.getPath(),
-                            "unspecified"),
-                    isProvided);
-        }
-
-        @Override
-        public boolean isSkipped() {
-            return false;
-        }
-
-        @NonNull
-        @Override
-        protected File getJarsRootFolder() {
-            // this instance represents the staged version of the aar, rather than the
-            // exploded version, which makes the location of the jar files different.
-            return getFolder();
-        }
-
+    private static LibraryDependency createLocalTestedAarLibrary(
+            @NonNull File bundle,
+            @NonNull File bundleFolder,
+            @Nullable String name,
+            @Nullable String projectPath,
+            @NonNull String projectVariant) {
+        return new LibraryDependency(
+                bundle,
+                bundleFolder,
+                ImmutableList.of(), /* androidDependencies */
+                ImmutableList.of(), /* jarDependencies */
+                name,
+                projectPath,
+                projectVariant,
+                null, /* requestedCoordinates */
+                new MavenCoordinatesImpl(
+                        "__tested_library__",
+                        bundle.getPath(),
+                        "unspecified"),
+                bundleFolder, /*jarsRootFolder*/
+                false /*isProvided*/);
     }
 
     private void excludeDataBindingClassesIfNecessary(final VariantScope variantScope,

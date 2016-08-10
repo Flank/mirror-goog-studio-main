@@ -18,51 +18,49 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
+import com.android.builder.model.BaseConfig;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of BuildType that is serializable. Objects used in the DSL cannot be
  * serialized.
  */
-class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
+@Immutable
+final class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String name;
-    private boolean debuggable;
-    private boolean testCoverageEnabled;
-    private boolean jniDebuggable;
-    private boolean pseudoLocalesEnabled;
-    private boolean renderscriptDebuggable;
-    private int renderscriptOptimLevel;
-    private String versionNameSuffix;
-    private boolean minifyEnabled;
-    private boolean zipAlignEnabled;
-    private boolean embedMicroApp;
-
     @NonNull
-    static BuildTypeImpl cloneBuildType(@NonNull BuildType buildType) {
-        BuildTypeImpl clonedBuildType = new BuildTypeImpl(buildType);
+    private final String name;
+    private final boolean debuggable;
+    private final boolean testCoverageEnabled;
+    private final boolean jniDebuggable;
+    private final boolean pseudoLocalesEnabled;
+    private final boolean renderscriptDebuggable;
+    private final int renderscriptOptimLevel;
+    @Nullable
+    private final String versionNameSuffix;
+    private final boolean minifyEnabled;
+    private final boolean zipAlignEnabled;
+    private final boolean embedMicroApp;
 
-        clonedBuildType.name = buildType.getName();
-        clonedBuildType.debuggable = buildType.isDebuggable();
-        clonedBuildType.testCoverageEnabled = buildType.isTestCoverageEnabled();
-        clonedBuildType.jniDebuggable = buildType.isJniDebuggable();
-        clonedBuildType.renderscriptDebuggable = buildType.isRenderscriptDebuggable();
-        clonedBuildType.renderscriptOptimLevel = buildType.getRenderscriptOptimLevel();
-        clonedBuildType.versionNameSuffix = buildType.getVersionNameSuffix();
-        clonedBuildType.minifyEnabled = buildType.isMinifyEnabled();
-        clonedBuildType.zipAlignEnabled = buildType.isZipAlignEnabled();
-        clonedBuildType.embedMicroApp = buildType.isEmbedMicroApp();
-        clonedBuildType.pseudoLocalesEnabled = buildType.isPseudoLocalesEnabled();
-
-        return clonedBuildType;
-    }
-
-    private BuildTypeImpl(@NonNull BuildType buildType) {
+    BuildTypeImpl(@NonNull BuildType buildType) {
         super(buildType);
+        this.name = buildType.getName();
+        this.debuggable =  buildType.isDebuggable();
+        this.testCoverageEnabled = buildType.isTestCoverageEnabled();
+        this.jniDebuggable = buildType.isJniDebuggable();
+        this.pseudoLocalesEnabled = buildType.isPseudoLocalesEnabled();
+        this.renderscriptDebuggable = buildType.isRenderscriptDebuggable();
+        this.renderscriptOptimLevel = buildType.getRenderscriptOptimLevel();
+        this.versionNameSuffix = buildType.getVersionNameSuffix();
+        this.minifyEnabled = buildType.isMinifyEnabled();
+        this.zipAlignEnabled = buildType.isZipAlignEnabled();
+        this.embedMicroApp = buildType.isEmbedMicroApp();
     }
 
     @NonNull
@@ -142,5 +140,38 @@ class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializable {
                 ", zipAlignEnabled=" + zipAlignEnabled +
                 ", embedMicroApp=" + embedMicroApp +
                 "} " + super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        BuildTypeImpl buildType = (BuildTypeImpl) o;
+        return debuggable == buildType.debuggable &&
+                testCoverageEnabled == buildType.testCoverageEnabled &&
+                jniDebuggable == buildType.jniDebuggable &&
+                pseudoLocalesEnabled == buildType.pseudoLocalesEnabled &&
+                renderscriptDebuggable == buildType.renderscriptDebuggable &&
+                renderscriptOptimLevel == buildType.renderscriptOptimLevel &&
+                minifyEnabled == buildType.minifyEnabled &&
+                zipAlignEnabled == buildType.zipAlignEnabled &&
+                embedMicroApp == buildType.embedMicroApp &&
+                Objects.equals(name, buildType.name) &&
+                Objects.equals(versionNameSuffix, buildType.versionNameSuffix);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), name, debuggable, testCoverageEnabled, jniDebuggable,
+                pseudoLocalesEnabled, renderscriptDebuggable, renderscriptOptimLevel,
+                versionNameSuffix,
+                minifyEnabled, zipAlignEnabled, embedMicroApp);
     }
 }

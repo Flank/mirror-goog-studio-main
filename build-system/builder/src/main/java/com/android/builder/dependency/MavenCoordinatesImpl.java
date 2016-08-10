@@ -33,7 +33,9 @@ import java.util.List;
  * Serializable implementation of MavenCoordinates for use in the model.
  */
 @Immutable
-public class MavenCoordinatesImpl implements MavenCoordinates, Serializable {
+public final class MavenCoordinatesImpl implements MavenCoordinates, Serializable {
+    private static final long serialVersionUID = 1L;
+
     @NonNull
     private final String groupId;
     @NonNull

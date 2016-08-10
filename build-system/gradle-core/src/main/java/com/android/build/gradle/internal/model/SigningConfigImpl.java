@@ -18,16 +18,20 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SigningConfig;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of SigningConfig that is serializable. Objects used in the DSL cannot be
  * serialized.
  */
-class SigningConfigImpl implements SigningConfig, Serializable {
+@Immutable
+final class SigningConfigImpl implements SigningConfig, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -130,5 +134,46 @@ class SigningConfigImpl implements SigningConfig, Serializable {
     @Override
     public boolean isSigningReady() {
         return signingReady;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SigningConfigImpl that = (SigningConfigImpl) o;
+        return v1SigningEnabled == that.v1SigningEnabled &&
+                v2SigningEnabled == that.v2SigningEnabled &&
+                signingReady == that.signingReady &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(storeFile, that.storeFile) &&
+                Objects.equals(storePassword, that.storePassword) &&
+                Objects.equals(keyAlias, that.keyAlias) &&
+                Objects.equals(keyPassword, that.keyPassword) &&
+                Objects.equals(storeType, that.storeType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, storeFile, storePassword, keyAlias, keyPassword, storeType,
+                v1SigningEnabled, v2SigningEnabled, signingReady);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("storeFile", storeFile)
+                .add("storePassword", storePassword)
+                .add("keyAlias", keyAlias)
+                .add("keyPassword", keyPassword)
+                .add("storeType", storeType)
+                .add("v1SigningEnabled", v1SigningEnabled)
+                .add("v2SigningEnabled", v2SigningEnabled)
+                .add("signingReady", signingReady)
+                .toString();
     }
 }

@@ -17,17 +17,20 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifactOutput;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Implementation of AndroidArtifactOutput that is serializable
  */
-public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializable {
+@Immutable
+final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -91,5 +94,28 @@ public class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Seriali
     @Override
     public File getSplitFolder() {
         return getMainOutputFile().getOutputFile().getParentFile();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AndroidArtifactOutputImpl that = (AndroidArtifactOutputImpl) o;
+        return versionCode == that.versionCode &&
+                Objects.equals(generatedManifest, that.generatedManifest) &&
+                Objects.equals(assembleTaskName, that.assembleTaskName) &&
+                Objects.equals(outputFiles, that.outputFiles) &&
+                Objects.equals(mainOutputFile, that.mainOutputFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(generatedManifest, assembleTaskName, versionCode, outputFiles,
+                        mainOutputFile);
     }
 }

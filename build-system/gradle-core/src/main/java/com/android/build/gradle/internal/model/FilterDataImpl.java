@@ -17,14 +17,19 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of {@link com.android.build.FilterData} interface
  */
-public class FilterDataImpl implements FilterData, Serializable {
+@Immutable
+public final class FilterDataImpl implements FilterData, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final String filterType;
     private final String identifier;
 
@@ -47,5 +52,23 @@ public class FilterDataImpl implements FilterData, Serializable {
 
     public static FilterData build(final String filterType, final String identifier) {
         return new FilterDataImpl(filterType, identifier);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FilterDataImpl that = (FilterDataImpl) o;
+        return Objects.equals(filterType, that.filterType) &&
+                Objects.equals(identifier, that.identifier);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(filterType, identifier);
     }
 }

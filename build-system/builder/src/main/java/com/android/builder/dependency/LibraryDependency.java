@@ -31,19 +31,20 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Objects;
 
-public class LibraryDependency extends AbstractBundleDependency implements AndroidLibrary, SkippableLibrary {
+public final class LibraryDependency extends AbstractBundleDependency implements AndroidLibrary, SkippableLibrary {
 
-    private final AtomicBoolean mSkipped = new AtomicBoolean(false);
-
+    private boolean mSkipped = false;
     private final boolean mIsProvided;
+    @NonNull
+    private final File mJarsRootFolder;
 
     public LibraryDependency(
             @NonNull File bundle,
@@ -56,6 +57,31 @@ public class LibraryDependency extends AbstractBundleDependency implements Andro
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             boolean isProvided) {
+        this(bundle,
+                explodedBundle,
+                androidDependencies,
+                jarDependencies,
+                name,
+                variantName,
+                projectPath,
+                requestedCoordinates,
+                resolvedCoordinates,
+                new File(explodedBundle, FD_JARS),
+                isProvided);
+    }
+
+    public LibraryDependency(
+            @NonNull File bundle,
+            @NonNull File explodedBundle,
+            @NonNull List<LibraryDependency> androidDependencies,
+            @NonNull Collection<JarDependency> jarDependencies,
+            @Nullable String name,
+            @Nullable String variantName,
+            @Nullable String projectPath,
+            @Nullable MavenCoordinates requestedCoordinates,
+            @NonNull MavenCoordinates resolvedCoordinates,
+            @NonNull File jarsRootFolder,
+            boolean isProvided) {
         super(bundle,
                 explodedBundle,
                 androidDependencies,
@@ -65,6 +91,7 @@ public class LibraryDependency extends AbstractBundleDependency implements Andro
                 projectPath,
                 requestedCoordinates,
                 resolvedCoordinates);
+        this.mJarsRootFolder = jarsRootFolder;
         this.mIsProvided = isProvided;
     }
 
@@ -163,17 +190,17 @@ public class LibraryDependency extends AbstractBundleDependency implements Andro
 
     @NonNull
     protected File getJarsRootFolder() {
-        return new File(getFolder(), FD_JARS);
+        return mJarsRootFolder;
     }
 
     @Override
     public boolean isSkipped() {
-        return mSkipped.get();
+        return mSkipped;
     }
 
     @Override
     public void skip() {
-        mSkipped.set(true);
+        mSkipped = true;
     }
 
     @Override
@@ -194,23 +221,24 @@ public class LibraryDependency extends AbstractBundleDependency implements Andro
             return false;
         }
         LibraryDependency that = (LibraryDependency) o;
-        return mIsProvided == that.mIsProvided;
+        return mSkipped == that.mSkipped &&
+                mIsProvided == that.mIsProvided &&
+                Objects.equals(mJarsRootFolder, that.mJarsRootFolder);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(
-                super.hashCode(),
-                mIsProvided);
+        return java.util.Objects.hash(super.hashCode(), mSkipped, mIsProvided, mJarsRootFolder);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("mIsProvided", mIsProvided)
+        return MoreObjects.toStringHelper(this)
                 .add("super", super.toString())
+                .add("mSkipped", mSkipped)
+                .add("mIsProvided", mIsProvided)
+                .add("mJarsRootFolder", mJarsRootFolder)
                 .toString();
     }
-
 }
 

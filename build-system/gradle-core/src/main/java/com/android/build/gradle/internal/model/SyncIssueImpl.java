@@ -18,15 +18,19 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SyncIssue;
 
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * An implementation of BaseConfig specifically for sending as part of the Android model
  * through the Gradle tooling API.
  */
-public class SyncIssueImpl implements SyncIssue, Serializable {
+@Immutable
+public final class SyncIssueImpl implements SyncIssue, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final int type;
@@ -65,12 +69,32 @@ public class SyncIssueImpl implements SyncIssue, Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SyncIssueImpl syncIssue = (SyncIssueImpl) o;
+        return type == syncIssue.type &&
+                severity == syncIssue.severity &&
+                Objects.equals(data, syncIssue.data) &&
+                Objects.equals(message, syncIssue.message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, severity, data, message);
+    }
+
+    @Override
     public String toString() {
-        return "SyncIssueImpl{" +
-                "type=" + type +
-                ", severity=" + severity +
-                ", data='" + data + '\'' +
-                ", message='" + message + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("type", type)
+                .add("severity", severity)
+                .add("data", data)
+                .add("message", message)
+                .toString();
     }
 }

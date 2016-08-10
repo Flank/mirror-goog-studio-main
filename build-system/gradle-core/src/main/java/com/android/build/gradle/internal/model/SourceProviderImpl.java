@@ -17,63 +17,63 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SourceProvider;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * Implementation of SourceProvider that is serializable. Objects used in the DSL cannot be
  * serialized.
  */
-class SourceProviderImpl implements SourceProvider, Serializable {
+@Immutable
+final class SourceProviderImpl implements SourceProvider, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String name;
-    private File manifestFile;
-    private Collection<File> javaDirs;
-    private Collection<File> resourcesDirs;
-    private Collection<File> aidlDirs;
-    private Collection<File> rsDirs;
-    private Collection<File> cDirs;
-    private Collection<File> cppDirs;
-    private Collection<File> resDirs;
-    private Collection<File> assetsDirs;
-    private Collection<File> libsDirs;
-    private Collection<File> shaderDirs;
-
     @NonNull
-    static SourceProviderImpl cloneProvider(@NonNull SourceProvider sourceProvider) {
-        SourceProviderImpl sourceProviderClone = new SourceProviderImpl();
-
-        sourceProviderClone.name = sourceProvider.getName();
-        sourceProviderClone.manifestFile = sourceProvider.getManifestFile();
-        sourceProviderClone.javaDirs = sourceProvider.getJavaDirectories();
-        sourceProviderClone.resourcesDirs = sourceProvider.getResourcesDirectories();
-        sourceProviderClone.aidlDirs = sourceProvider.getAidlDirectories();
-        sourceProviderClone.rsDirs = sourceProvider.getRenderscriptDirectories();
-        sourceProviderClone.cDirs = sourceProvider.getCDirectories();
-        sourceProviderClone.cppDirs = sourceProvider.getCDirectories();
-        sourceProviderClone.resDirs = sourceProvider.getResDirectories();
-        sourceProviderClone.assetsDirs = sourceProvider.getAssetsDirectories();
-        sourceProviderClone.libsDirs = sourceProvider.getJniLibsDirectories();
-        sourceProviderClone.shaderDirs = sourceProvider.getShadersDirectories();
-
-        return sourceProviderClone;
-    }
-
+    private final String name;
     @NonNull
-    static Collection<SourceProvider> cloneCollection(
-            @NonNull Collection<SourceProvider> sourceProviders) {
-        return sourceProviders.stream()
-                .map(SourceProviderImpl::cloneProvider)
-                .collect(Collectors.toList());
-    }
+    private final File manifestFile;
+    @NonNull
+    private final Collection<File> javaDirs;
+    @NonNull
+    private final Collection<File> resourcesDirs;
+    @NonNull
+    private final Collection<File> aidlDirs;
+    @NonNull
+    private final Collection<File> rsDirs;
+    @NonNull
+    private final Collection<File> cDirs;
+    @NonNull
+    private final Collection<File> cppDirs;
+    @NonNull
+    private final Collection<File> resDirs;
+    @NonNull
+    private final Collection<File> assetsDirs;
+    @NonNull
+    private final Collection<File> libsDirs;
+    @NonNull
+    private final Collection<File> shaderDirs;
 
-    private SourceProviderImpl() {
+    public SourceProviderImpl(@NonNull SourceProvider sourceProvider) {
+        this.name = sourceProvider.getName();
+        this.manifestFile = sourceProvider.getManifestFile();
+        this.javaDirs = sourceProvider.getJavaDirectories();
+        this.resourcesDirs = sourceProvider.getResourcesDirectories();
+        this.aidlDirs = sourceProvider.getAidlDirectories();
+        this.rsDirs = sourceProvider.getRenderscriptDirectories();
+        this.cDirs = sourceProvider.getCDirectories();
+        this.cppDirs = sourceProvider.getCDirectories();
+        this.resDirs = sourceProvider.getResDirectories();
+        this.assetsDirs = sourceProvider.getAssetsDirectories();
+        this.libsDirs = sourceProvider.getJniLibsDirectories();
+        this.shaderDirs = sourceProvider.getShadersDirectories();
     }
 
     @NonNull
@@ -149,19 +149,50 @@ class SourceProviderImpl implements SourceProvider, Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SourceProviderImpl that = (SourceProviderImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(manifestFile, that.manifestFile) &&
+                Objects.equals(javaDirs, that.javaDirs) &&
+                Objects.equals(resourcesDirs, that.resourcesDirs) &&
+                Objects.equals(aidlDirs, that.aidlDirs) &&
+                Objects.equals(rsDirs, that.rsDirs) &&
+                Objects.equals(cDirs, that.cDirs) &&
+                Objects.equals(cppDirs, that.cppDirs) &&
+                Objects.equals(resDirs, that.resDirs) &&
+                Objects.equals(assetsDirs, that.assetsDirs) &&
+                Objects.equals(libsDirs, that.libsDirs) &&
+                Objects.equals(shaderDirs, that.shaderDirs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(name, manifestFile, javaDirs, resourcesDirs, aidlDirs, rsDirs, cDirs, cppDirs,
+                        resDirs, assetsDirs, libsDirs, shaderDirs);
+    }
+
+    @Override
     public String toString() {
-        return "SourceProviderImpl{" +
-                "manifestFile=" + manifestFile +
-                ", javaDirs=" + javaDirs +
-                ", resourcesDirs=" + resourcesDirs +
-                ", aidlDirs=" + aidlDirs +
-                ", rsDirs=" + rsDirs +
-                ", cDirs=" + cDirs +
-                ", cppDirs=" + cppDirs +
-                ", resDirs=" + resDirs +
-                ", assetsDirs=" + assetsDirs +
-                ", libsDirs=" + libsDirs +
-                ", shadersDirs=" + shaderDirs +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("manifestFile", manifestFile)
+                .add("javaDirs", javaDirs)
+                .add("resourcesDirs", resourcesDirs)
+                .add("aidlDirs", aidlDirs)
+                .add("rsDirs", rsDirs)
+                .add("cDirs", cDirs)
+                .add("cppDirs", cppDirs)
+                .add("resDirs", resDirs)
+                .add("assetsDirs", assetsDirs)
+                .add("libsDirs", libsDirs)
+                .add("shaderDirs", shaderDirs)
+                .toString();
     }
 }

@@ -18,15 +18,19 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeFile;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of {@link NativeFile}.
  */
-public class NativeFileImpl implements NativeFile, Serializable {
+@Immutable
+public final class NativeFileImpl implements NativeFile, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -61,5 +65,33 @@ public class NativeFileImpl implements NativeFile, Serializable {
     @Nullable
     public File getWorkingDirectory() {
         return workingDirectory;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeFileImpl that = (NativeFileImpl) o;
+        return Objects.equals(filePath, that.filePath) &&
+                Objects.equals(settingsName, that.settingsName) &&
+                Objects.equals(workingDirectory, that.workingDirectory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(filePath, settingsName, workingDirectory);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("filePath", filePath)
+                .add("settingsName", settingsName)
+                .add("workingDirectory", workingDirectory)
+                .toString();
     }
 }

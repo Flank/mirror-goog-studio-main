@@ -17,42 +17,46 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeLibrary;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of NativeLibrary that is serializable.
  */
-public class NativeLibraryImpl implements NativeLibrary, Serializable{
+@Immutable
+public final class NativeLibraryImpl implements NativeLibrary, Serializable{
     private static final long serialVersionUID = 1L;
 
     @NonNull
-    String name;
+    private final String name;
     @NonNull
-    String toolchainName;
+    private final String toolchainName;
     @NonNull
-    String abi;
+    private final String abi;
     @NonNull
-    List<File> cIncludeDirs;
+    private final List<File> cIncludeDirs;
     @NonNull
-    List<File> cppIncludeDirs;
+    private final List<File> cppIncludeDirs;
     @NonNull
-    List<File> cSystemIncludeDirs;
+    private final List<File> cSystemIncludeDirs;
     @NonNull
-    List<File> cppSystemIncludeDirs;
+    private final List<File> cppSystemIncludeDirs;
     @NonNull
-    List<String> cDefines;
+    private final List<String> cDefines;
     @NonNull
-    List<String> cppDefines;
+    private final List<String> cppDefines;
     @NonNull
-    List<String> cCompilerFlags;
+    private final List<String> cCompilerFlags;
     @NonNull
-    List<String> cppCompilerFlags;
+    private final List<String> cppCompilerFlags;
     @NonNull
-    List<File> debuggableLibraryFolders;
+    private final List<File> debuggableLibraryFolders;
 
     public NativeLibraryImpl(
             @NonNull String name,
@@ -154,17 +158,52 @@ public class NativeLibraryImpl implements NativeLibrary, Serializable{
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeLibraryImpl that = (NativeLibraryImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(toolchainName, that.toolchainName) &&
+                Objects.equals(abi, that.abi) &&
+                Objects.equals(cIncludeDirs, that.cIncludeDirs) &&
+                Objects.equals(cppIncludeDirs, that.cppIncludeDirs) &&
+                Objects.equals(cSystemIncludeDirs, that.cSystemIncludeDirs) &&
+                Objects.equals(cppSystemIncludeDirs, that.cppSystemIncludeDirs) &&
+                Objects.equals(cDefines, that.cDefines) &&
+                Objects.equals(cppDefines, that.cppDefines) &&
+                Objects.equals(cCompilerFlags, that.cCompilerFlags) &&
+                Objects.equals(cppCompilerFlags, that.cppCompilerFlags) &&
+                Objects.equals(debuggableLibraryFolders, that.debuggableLibraryFolders);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(name, toolchainName, abi, cIncludeDirs, cppIncludeDirs, cSystemIncludeDirs,
+                        cppSystemIncludeDirs, cDefines, cppDefines, cCompilerFlags,
+                        cppCompilerFlags,
+                        debuggableLibraryFolders);
+    }
+
+    @Override
     public String toString() {
-        return "NativeLibraryImpl{" +
-                "name='" + name + '\'' +
-                ", toolchainName='" + toolchainName + '\'' +
-                ", cIncludeDirs=" + cIncludeDirs +
-                ", cppIncludeDirs=" + cppIncludeDirs +
-                ", cDefines=" + cDefines +
-                ", cppDefines=" + cppDefines +
-                ", cCompilerFlags=" + cCompilerFlags +
-                ", cppCompilerFlags=" + cppCompilerFlags +
-                ", solibSearchPaths=" + debuggableLibraryFolders +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("toolchainName", toolchainName)
+                .add("abi", abi)
+                .add("cIncludeDirs", cIncludeDirs)
+                .add("cppIncludeDirs", cppIncludeDirs)
+                .add("cSystemIncludeDirs", cSystemIncludeDirs)
+                .add("cppSystemIncludeDirs", cppSystemIncludeDirs)
+                .add("cDefines", cDefines)
+                .add("cppDefines", cppDefines)
+                .add("cCompilerFlags", cCompilerFlags)
+                .add("cppCompilerFlags", cppCompilerFlags)
+                .add("debuggableLibraryFolders", debuggableLibraryFolders)
+                .toString();
     }
 }

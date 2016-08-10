@@ -17,21 +17,24 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementation of {@link NativeAndroidProject}.
  */
-public class NativeAndroidProjectImpl implements NativeAndroidProject, Serializable {
-
+@Immutable
+public final class NativeAndroidProjectImpl implements NativeAndroidProject, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final int apiVersion;
@@ -126,9 +129,45 @@ public class NativeAndroidProjectImpl implements NativeAndroidProject, Serializa
         return buildSystems;
     }
 
-    @NonNull
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeAndroidProjectImpl that = (NativeAndroidProjectImpl) o;
+        return apiVersion == that.apiVersion &&
+                Objects.equals(modelVersion, that.modelVersion) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(buildFiles, that.buildFiles) &&
+                Objects.equals(artifacts, that.artifacts) &&
+                Objects.equals(toolChains, that.toolChains) &&
+                Objects.equals(settings, that.settings) &&
+                Objects.equals(fileExtensions, that.fileExtensions) &&
+                Objects.equals(buildSystems, that.buildSystems);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(apiVersion, modelVersion, name, buildFiles, artifacts, toolChains, settings,
+                        fileExtensions, buildSystems);
+    }
+
     @Override
     public String toString() {
-        return "NativeAndroidProjectImpl{name='" + name + "'}";
+        return MoreObjects.toStringHelper(this)
+                .add("apiVersion", apiVersion)
+                .add("modelVersion", modelVersion)
+                .add("name", name)
+                .add("buildFiles", buildFiles)
+                .add("artifacts", artifacts)
+                .add("toolChains", toolChains)
+                .add("settings", settings)
+                .add("fileExtensions", fileExtensions)
+                .add("buildSystems", buildSystems)
+                .toString();
     }
 }

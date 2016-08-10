@@ -18,13 +18,16 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SyncIssue;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
 
 /**
  * Creates a key from a SyncIssue to use in a map.
  */
-public class SyncIssueKey {
+@Immutable
+public final class SyncIssueKey {
 
     private final int type;
 
@@ -48,14 +51,21 @@ public class SyncIssueKey {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         SyncIssueKey that = (SyncIssueKey) o;
-
-        return type == that.type && Objects.equal(this.data, that.data);
+        return type == that.type &&
+                Objects.equals(data, that.data);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(type, data);
+        return java.util.Objects.hash(type, data);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("type", type)
+                .add("data", data)
+                .toString();
     }
 }

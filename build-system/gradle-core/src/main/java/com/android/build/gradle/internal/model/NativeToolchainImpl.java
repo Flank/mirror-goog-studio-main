@@ -18,22 +18,27 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeToolchain;
 
+import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of NativeToolchain that is serializable.
  */
-public class NativeToolchainImpl implements NativeToolchain, Serializable {
+@Immutable
+public final class NativeToolchainImpl implements NativeToolchain, Serializable {
+    private static final long serialVersionUID = 1L;
 
     @NonNull
-    String name;
+    private final String name;
     @Nullable
-    File cCompilerExecutable;
+    private final File cCompilerExecutable;
     @Nullable
-    File cppCompilerExecutable;
+    private final File cppCompilerExecutable;
 
     public NativeToolchainImpl(
             @NonNull String name,
@@ -63,11 +68,30 @@ public class NativeToolchainImpl implements NativeToolchain, Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NativeToolchainImpl that = (NativeToolchainImpl) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(cCompilerExecutable, that.cCompilerExecutable) &&
+                Objects.equals(cppCompilerExecutable, that.cppCompilerExecutable);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, cCompilerExecutable, cppCompilerExecutable);
+    }
+
+    @Override
     public String toString() {
-        return "ToolchainImpl{" +
-                "name='" + name + '\'' +
-                ", cCompilerExecutable=" + cCompilerExecutable +
-                ", cppCompilerExecutable=" + cppCompilerExecutable +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("cCompilerExecutable", cCompilerExecutable)
+                .add("cppCompilerExecutable", cppCompilerExecutable)
+                .toString();
     }
 }

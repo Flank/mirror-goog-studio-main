@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Represents a Jar dependency. This could be the output of a Java project.
  *
  */
-public class JarDependency implements JavaLibrary, SkippableLibrary {
+public final class JarDependency implements JavaLibrary, SkippableLibrary {
 
     public static final String LOCAL_JAR_GROUPID = "__local_jars__";
     @NonNull
@@ -50,7 +50,7 @@ public class JarDependency implements JavaLibrary, SkippableLibrary {
     @NonNull
     private final MavenCoordinates mResolvedCoordinates;
 
-    private final AtomicBoolean skipped = new AtomicBoolean(false);
+    private boolean skipped = false;
 
     public JarDependency(
             @NonNull File jarFile,
@@ -104,12 +104,12 @@ public class JarDependency implements JavaLibrary, SkippableLibrary {
 
     @Override
     public boolean isSkipped() {
-        return skipped.get();
+        return skipped;
     }
 
     @Override
     public void skip() {
-        skipped.set(true);
+        skipped = true;
     }
 
     @Override
@@ -149,7 +149,7 @@ public class JarDependency implements JavaLibrary, SkippableLibrary {
                 Objects.equal(mProjectPath, that.mProjectPath) &&
                 Objects.equal(mDependencies, that.mDependencies) &&
                 Objects.equal(mResolvedCoordinates, that.mResolvedCoordinates) &&
-                Objects.equal(isSkipped(), that.isSkipped()); // AtomicBoolean does not implements Equals!
+                Objects.equal(skipped, that.skipped);
     }
 
     @Override
