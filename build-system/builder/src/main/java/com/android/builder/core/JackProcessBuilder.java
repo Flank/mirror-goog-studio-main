@@ -196,7 +196,9 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
         // apply all additional params
         for (String paramKey: options.getAdditionalParameters().keySet()) {
             String paramValue = options.getAdditionalParameters().get(paramKey);
-            builder.addArgs(paramKey, paramValue);
+            builder.addArgs(
+                "-D",
+                paramKey + "=" + paramValue);
         }
 
         return builder.createJavaProcess();
