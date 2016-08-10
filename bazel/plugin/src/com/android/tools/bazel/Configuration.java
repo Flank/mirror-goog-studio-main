@@ -33,5 +33,11 @@ interface Configuration {
     List<String> getLabelsToExport();
 
     Map<String, String> getCopySpec();
+
+    Map<String, List<String>> getTestData();
+
+    Map<String, String> getTestTimeout();
+
+    Map<String, String> getTestClass();
 }
 
