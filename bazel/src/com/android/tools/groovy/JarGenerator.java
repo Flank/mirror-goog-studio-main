@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.GregorianCalendar;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -27,6 +28,7 @@ public class JarGenerator {
 
     private byte[] mBuffer = new byte[1024 * 1024];
 
+    private static final long DOS_EPOCH = new GregorianCalendar(1980, 0, 1, 0, 0, 0).getTimeInMillis();
     /**
      * Moves a directory into a .jar. All the files are added relative to the given directory.
      * The directory itself is also deleted.
@@ -51,11 +53,13 @@ public class JarGenerator {
             if (file.isDirectory()) {
                 // Trailing slash to mark a directory entry
                 ZipEntry entry = new ZipEntry(newName + "/");
+                entry.setTime(DOS_EPOCH);
                 out.putNextEntry(entry);
                 out.closeEntry();
                 addToJar(file, out, newName);
             } else {
                 ZipEntry entry = new ZipEntry(newName);
+                entry.setTime(DOS_EPOCH);
                 out.putNextEntry(entry);
                 try (FileInputStream in = new FileInputStream(file)) {
                     int k;
