@@ -99,6 +99,6 @@ dependencies {
     @Test
     public void testDebug() {
         project.execute("clean", "testDebug")
-        assertThat(project.file("build/test-results/debug/TEST-com.android.tests.UnitTest.xml")).exists()
+        assertThat(project.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml")).exists()
     }
 }

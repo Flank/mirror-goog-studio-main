@@ -27,7 +27,9 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.List;
+import java.util.function.Predicate;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
@@ -35,10 +37,6 @@ import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
-
-import java.io.File;
-import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * Patched version of {@link Test} that we need to use for local unit tests support.
@@ -152,26 +150,21 @@ public class AndroidUnitTest extends Test {
                     });
 
             // Put the variant name in the report path, so that different testing tasks don't
-            // overwrite each other's reports.
-            // For component model plugin, the report tasks are not yet configured.  We get a hardcoded
-            // value matching Gradle's default.  This will eventually be replaced with the new Java
-            // plugin.
+            // overwrite each other's reports. For component model plugin, the report tasks are not
+            // yet configured.  We get a hardcoded value matching Gradle's default. This will
+            // eventually be replaced with the new Java plugin.
             TestTaskReports testTaskReports = runTestsTask.getReports();
             ConfigurableReport xmlReport = testTaskReports.getJunitXml();
             xmlReport.setDestination(
-                    xmlReport.getDestination() != null
-                            ? new File(xmlReport.getDestination(), testedVariantData.getName())
-                            : new File(
-                                    scope.getGlobalScope().getTestResultsFolder(),
-                                    testedVariantData.getName()));
+                    new File(
+                            scope.getGlobalScope().getTestResultsFolder(),
+                            runTestsTask.getName()));
 
             ConfigurableReport htmlReport = testTaskReports.getHtml();
             htmlReport.setDestination(
-                    htmlReport.getDestination() != null
-                            ? new File(htmlReport.getDestination(), testedVariantData.getName())
-                            : new File(
-                                    scope.getGlobalScope().getTestReportFolder(),
-                                    testedVariantData.getName()));
+                    new File(
+                            scope.getGlobalScope().getTestReportFolder(),
+                            runTestsTask.getName()));
 
             scope.getGlobalScope()
                     .getExtension()
@@ -181,9 +174,9 @@ public class AndroidUnitTest extends Test {
         }
 
         /**
-         * Sets task inputs. Normally this is done by JavaBasePlugin, but in our case this is too early
-         * and candidate class files are not known yet. So we call this here, once we know the class
-         * files.
+         * Sets task inputs. Normally this is done by JavaBasePlugin, but in our case this is too
+         * early and candidate class files are not known yet. So we call this here, once we know
+         * the class files.
          *
          * @see AndroidUnitTest#getCandidateClassFiles()
          */
