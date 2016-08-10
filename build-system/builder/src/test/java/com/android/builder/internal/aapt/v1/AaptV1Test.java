@@ -259,13 +259,6 @@ public class AaptV1Test {
     }
 
     @Test
-    public void repro__flakiness__will_be_deleted_in_subsequent_cl() throws Exception {
-        for (int i = 0; i < 1000; i++) {
-            ninePatchPngsAlwaysProcessedEvenIfBigger();
-        }
-    }
-
-    @Test
     public void ninePatchPngsAlwaysProcessedEvenIfBigger() throws Exception {
         Aapt aapt = makeAapt();
 
