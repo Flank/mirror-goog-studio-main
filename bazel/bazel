@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+"""Finds the appropriate bazel executable for the platform and passes along the arguments to bazel.
+"""
+
+import os
+import subprocess
+import sys
+
+_platform = sys.platform
+
+if _platform == "linux" or _platform == "linux2":
+  # Look for the WORKSPACE directory up from the current directory.
+  find_workspace_dir = os.getcwd();
+  while os.path.abspath(find_workspace_dir) != os.path.abspath('/') and \
+        not os.path.isfile(os.path.join(find_workspace_dir, 'WORKSPACE')):
+      find_workspace_dir = os.path.join(find_workspace_dir, os.pardir)
+  if os.path.isfile(os.path.join(find_workspace_dir, 'WORKSPACE')):
+    # We found the WORKSPACE file. Find bazel-real from that directory.
+    bazel_real = os.path.abspath(os.path.join(find_workspace_dir, 'tools', 'base', 'bazel',
+                                              'prebuilts', 'linux', 'bazel-real'))
+    try:
+      subprocess.call([bazel_real] + sys.argv[1:])
+    except:
+      print 'ERROR: Failed to call bazel-real in WORKSPACE: %s' % bazel_real
+      exit(1)
+  else:
+    print 'ERROR: Did not find WORKSPACE. Run bazel from inside a studio WORKSPACE.'
+    exit(1)
+elif _platform == "darwin":
+    print 'NOT IMPLEMENTED: call bazel for mac'
+elif _platform == "win32":
+    print 'NOT IMPLEMENTED: call bazel for win'
+
