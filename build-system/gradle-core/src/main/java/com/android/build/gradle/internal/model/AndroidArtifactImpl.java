@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
@@ -25,7 +26,7 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -33,12 +34,14 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Implementation of AndroidArtifact that is serializable
  */
-public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
+@Immutable
+final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -184,33 +187,34 @@ public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArti
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         AndroidArtifactImpl that = (AndroidArtifactImpl) o;
         return isSigned == that.isSigned &&
-                Objects.equal(outputs, that.outputs) &&
-                Objects.equal(signingConfigName, that.signingConfigName) &&
-                Objects.equal(applicationId, that.applicationId) &&
-                Objects.equal(sourceGenTaskName, that.sourceGenTaskName) &&
-                Objects
-                        .equal(generatedResourceFolders, that.generatedResourceFolders) &&
-                Objects.equal(abiFilters, that.abiFilters) &&
-                Objects.equal(nativeLibraries, that.nativeLibraries) &&
-                Objects.equal(buildConfigFields, that.buildConfigFields) &&
-                Objects.equal(resValues, that.resValues) &&
-                Objects.equal(instantRun, that.instantRun);
+                Objects.equals(outputs, that.outputs) &&
+                Objects.equals(signingConfigName, that.signingConfigName) &&
+                Objects.equals(applicationId, that.applicationId) &&
+                Objects.equals(sourceGenTaskName, that.sourceGenTaskName) &&
+                Objects.equals(generatedResourceFolders, that.generatedResourceFolders) &&
+                Objects.equals(abiFilters, that.abiFilters) &&
+                Objects.equals(nativeLibraries, that.nativeLibraries) &&
+                Objects.equals(buildConfigFields, that.buildConfigFields) &&
+                Objects.equals(resValues, that.resValues) &&
+                Objects.equals(instantRun, that.instantRun);
     }
 
     @Override
     public int hashCode() {
         return Objects
-                .hashCode(outputs, isSigned, signingConfigName, applicationId, sourceGenTaskName,
-                        generatedResourceFolders, abiFilters, nativeLibraries, buildConfigFields,
-                        resValues,
-                        instantRun);
+                .hash(super.hashCode(), outputs, isSigned, signingConfigName, applicationId,
+                        sourceGenTaskName, generatedResourceFolders, abiFilters, nativeLibraries,
+                        buildConfigFields, resValues, instantRun);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("outputs", outputs)
                 .add("isSigned", isSigned)
                 .add("signingConfigName", signingConfigName)

@@ -31,5 +31,6 @@
     <orderEntry type="library" exported="" name="guava-tools" level="project" />
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="builder-model" exported="" />
+    <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
   </component>
 </module>

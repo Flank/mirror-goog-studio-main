@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -48,7 +49,7 @@ import java.util.zip.ZipFile;
  * Serializable implementation of Dependencies for use in the model.
  */
 @Immutable
-public class DependenciesImpl implements Dependencies, Serializable {
+final class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final CreatingCache<AndroidLibrary, AndroidLibraryImpl> sLibCache
@@ -377,5 +378,24 @@ public class DependenciesImpl implements Dependencies, Serializable {
         sb.append(", projects=").append(projects);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DependenciesImpl that = (DependenciesImpl) o;
+        return Objects.equals(libraries, that.libraries) &&
+                Objects.equals(javaLibraries, that.javaLibraries) &&
+                Objects.equals(projects, that.projects);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(libraries, javaLibraries, projects);
     }
 }

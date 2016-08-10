@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.SourceProvider;
@@ -26,12 +27,13 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Implementation of BaseArtifact that is serializable
  */
+@Immutable
 abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
-    private static final long serialVersionUID = 1L;
 
     @NonNull
     protected final Collection<File> generatedSourceFolders;
@@ -142,5 +144,35 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     @Override
     public Collection<File> getGeneratedSourceFolders() {
         return generatedSourceFolders;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BaseArtifactImpl that = (BaseArtifactImpl) o;
+        return Objects.equals(generatedSourceFolders, that.generatedSourceFolders) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(assembleTaskName, that.assembleTaskName) &&
+                Objects.equals(compileTaskName, that.compileTaskName) &&
+                Objects.equals(classesFolder, that.classesFolder) &&
+                Objects.equals(javaResourcesFolder, that.javaResourcesFolder) &&
+                Objects.equals(compileDependencies, that.compileDependencies) &&
+                Objects.equals(packageDependencies, that.packageDependencies) &&
+                Objects.equals(variantSourceProvider, that.variantSourceProvider) &&
+                Objects.equals(multiFlavorSourceProviders, that.multiFlavorSourceProviders);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(generatedSourceFolders, name, assembleTaskName, compileTaskName,
+                        classesFolder,
+                        javaResourcesFolder, compileDependencies, packageDependencies,
+                        variantSourceProvider, multiFlavorSourceProviders);
     }
 }

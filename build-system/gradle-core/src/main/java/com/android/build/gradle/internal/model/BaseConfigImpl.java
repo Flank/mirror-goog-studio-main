@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableList;
@@ -29,18 +30,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * An implementation of BaseConfig specifically for sending as part of the Android model
  * through the Gradle tooling API.
  */
+@Immutable
 abstract class BaseConfigImpl implements BaseConfig, Serializable {
-    private static final long serialVersionUID = 1L;
 
     @Nullable
-    private String mApplicationIdSuffix;
+    private final String mApplicationIdSuffix;
     @Nullable
-    private String mVersionNameSuffix;
+    private final String mVersionNameSuffix;
     @NonNull
     private final Map<String, Object> mManifestPlaceholders;
     @NonNull
@@ -48,13 +50,13 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     @NonNull
     private final Map<String, ClassField> mResValues;
     @Nullable
-    private Boolean mMultiDexEnabled;
+    private final Boolean mMultiDexEnabled;
     @Nullable
-    private File mMultiDexKeepFile;
+    private final File mMultiDexKeepFile;
     @Nullable
-    private File mMultiDexKeepProguard;
+    private final File mMultiDexKeepProguard;
     @Nullable
-    private List<File> mJarJarRuleFiles;
+    private final List<File> mJarJarRuleFiles;
 
     protected BaseConfigImpl(@NonNull BaseConfig baseConfig) {
         mApplicationIdSuffix = baseConfig.getApplicationIdSuffix();
@@ -151,5 +153,32 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 ", mMultiDexEnabled=" + mMultiDexEnabled +
                 ", mJarJarRuleFiles=" + mJarJarRuleFiles +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BaseConfigImpl that = (BaseConfigImpl) o;
+        return Objects.equals(mApplicationIdSuffix, that.mApplicationIdSuffix) &&
+                Objects.equals(mVersionNameSuffix, that.mVersionNameSuffix) &&
+                Objects.equals(mManifestPlaceholders, that.mManifestPlaceholders) &&
+                Objects.equals(mBuildConfigFields, that.mBuildConfigFields) &&
+                Objects.equals(mResValues, that.mResValues) &&
+                Objects.equals(mMultiDexEnabled, that.mMultiDexEnabled) &&
+                Objects.equals(mMultiDexKeepFile, that.mMultiDexKeepFile) &&
+                Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard) &&
+                Objects.equals(mJarJarRuleFiles, that.mJarJarRuleFiles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mApplicationIdSuffix, mVersionNameSuffix, mManifestPlaceholders,
+                mBuildConfigFields, mResValues, mMultiDexEnabled, mMultiDexKeepFile,
+                mMultiDexKeepProguard, mJarJarRuleFiles);
     }
 }

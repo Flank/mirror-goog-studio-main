@@ -16,15 +16,20 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.builder.model.JavaCompileOptions;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implementation of {@link JavaCompileOptions}.
  */
-class DefaultJavaCompileOptions implements JavaCompileOptions, Serializable {
+@Immutable
+final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializable {
+    private static final long serialVersionUID = 1L;
+
     @NonNull
     private final String sourceCompatibility;
     @NonNull
@@ -54,5 +59,24 @@ class DefaultJavaCompileOptions implements JavaCompileOptions, Serializable {
     @Override
     public String getEncoding() {
         return encoding;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DefaultJavaCompileOptions that = (DefaultJavaCompileOptions) o;
+        return Objects.equals(sourceCompatibility, that.sourceCompatibility) &&
+                Objects.equals(targetCompatibility, that.targetCompatibility) &&
+                Objects.equals(encoding, that.encoding);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sourceCompatibility, targetCompatibility, encoding);
     }
 }

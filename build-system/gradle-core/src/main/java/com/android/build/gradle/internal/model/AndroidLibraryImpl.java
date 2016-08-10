@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +33,7 @@ import java.util.List;
  * Serializable implementation of AndroidLibrary for use in the model.
  */
 @Immutable
-public class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Serializable {
+final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Nullable

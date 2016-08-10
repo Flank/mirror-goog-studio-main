@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
@@ -28,10 +29,12 @@ import com.android.builder.model.SourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  */
-class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable {
+@Immutable
+final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -68,8 +71,8 @@ class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable
         }
 
         return new ProductFlavorContainerImpl(
-                ProductFlavorImpl.cloneFlavor(productFlavorData.getProductFlavor(), null, null),
-                SourceProviderImpl.cloneProvider(productFlavorData.getSourceSet()),
+                new ProductFlavorImpl(productFlavorData.getProductFlavor(), null, null),
+                new SourceProviderImpl(productFlavorData.getSourceSet()),
                 clonedContainers);
     }
 
@@ -99,5 +102,24 @@ class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable
     @Override
     public Collection<SourceProviderContainer> getExtraSourceProviders() {
         return extraSourceProviders;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ProductFlavorContainerImpl that = (ProductFlavorContainerImpl) o;
+        return Objects.equals(productFlavor, that.productFlavor) &&
+                Objects.equals(sourceProvider, that.sourceProvider) &&
+                Objects.equals(extraSourceProviders, that.extraSourceProviders);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productFlavor, sourceProvider, extraSourceProviders);
     }
 }

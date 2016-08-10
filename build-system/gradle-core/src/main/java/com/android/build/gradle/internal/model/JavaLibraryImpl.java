@@ -21,18 +21,21 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Serializable implementation of JavaLibrary for use in the model.
  */
 @Immutable
-public class JavaLibraryImpl extends LibraryImpl implements JavaLibrary, Serializable {
+public final class JavaLibraryImpl extends LibraryImpl implements JavaLibrary, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final File jarFile;
     private final List<JavaLibrary> dependencies;
 
@@ -73,21 +76,21 @@ public class JavaLibraryImpl extends LibraryImpl implements JavaLibrary, Seriali
             return false;
         }
         JavaLibraryImpl that = (JavaLibraryImpl) o;
-        return Objects.equal(jarFile, that.jarFile) &&
-                Objects.equal(dependencies, that.dependencies);
+        return Objects.equals(jarFile, that.jarFile) &&
+                Objects.equals(dependencies, that.dependencies);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), jarFile, dependencies);
+        return Objects.hash(super.hashCode(), jarFile, dependencies);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
+                .add("super", super.toString())
                 .add("jarFile", jarFile)
                 .add("dependencies", dependencies)
-                .add("super", super.toString())
                 .toString();
     }
 }

@@ -56,6 +56,7 @@ import com.android.builder.model.LintOptions;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
@@ -174,9 +175,16 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         toolchains = createNativeToolchainModelMap(ndkHandler);
 
+        ProductFlavorContainer defaultConfig = ProductFlavorContainerImpl
+                .createProductFlavorContainer(
+                        variantManager.getDefaultConfig(),
+                        extraModelInfo.getExtraFlavorSourceProviders(
+                                variantManager.getDefaultConfig().getProductFlavor().getName()));
+
         DefaultAndroidProject androidProject = new DefaultAndroidProject(
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 project.getName(),
+                defaultConfig,
                 flavorDimensionList,
                 androidBuilder.getTarget() != null ? androidBuilder.getTarget().hashString() : "",
                 bootClasspath,
@@ -195,11 +203,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation);
-
-        androidProject.setDefaultConfig(ProductFlavorContainerImpl.createProductFlavorContainer(
-                variantManager.getDefaultConfig(),
-                extraModelInfo.getExtraFlavorSourceProviders(
-                        variantManager.getDefaultConfig().getProductFlavor().getName())));
 
         for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
             androidProject.addBuildType(BuildTypeContainerImpl.create(
@@ -306,7 +309,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getBaseName(),
                 variantConfiguration.getBuildType().getName(),
                 getProductFlavorNames(variantData),
-                ProductFlavorImpl.cloneFlavor(
+                new ProductFlavorImpl(
                         variantConfiguration.getMergedFlavor(),
                         sdkVersionOverride,
                         sdkVersionOverride),
@@ -511,10 +514,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         return new SourceProviders(
                 variantSourceProvider != null ?
-                        SourceProviderImpl.cloneProvider(variantSourceProvider) :
+                        new SourceProviderImpl(variantSourceProvider) :
                         null,
                 multiFlavorSourceProvider != null ?
-                        SourceProviderImpl.cloneProvider(multiFlavorSourceProvider) :
+                        new SourceProviderImpl(multiFlavorSourceProvider) :
                         null);
     }
 

@@ -17,25 +17,37 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Implementation of the {@link OutputFile} interface for the model.
  */
-public class OutputFileImpl implements OutputFile, Serializable {
+@Immutable
+public final class OutputFileImpl implements OutputFile, Serializable {
+    private static final long serialVersionUID = 1L;
 
+    @NonNull
     private final Collection<FilterData> filters;
+    @NonNull
     private final Collection<String> filterTypes;
+    @NonNull
     private final String type;
+    @NonNull
     private final File outputFile;
 
-    public OutputFileImpl(Collection<FilterData> filters, String type, File file) {
+    public OutputFileImpl(
+            @NonNull Collection<FilterData> filters,
+            @NonNull String type,
+            @NonNull File file) {
         this.filters = filters;
         this.type = type;
         ImmutableList.Builder<String> filterTypes = ImmutableList.builder();
@@ -68,5 +80,35 @@ public class OutputFileImpl implements OutputFile, Serializable {
     @Override
     public File getOutputFile() {
         return outputFile;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        OutputFileImpl that = (OutputFileImpl) o;
+        return Objects.equals(filters, that.filters) &&
+                Objects.equals(filterTypes, that.filterTypes) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(outputFile, that.outputFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(filters, filterTypes, type, outputFile);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("filters", filters)
+                .add("filterTypes", filterTypes)
+                .add("type", type)
+                .add("outputFile", outputFile)
+                .toString();
     }
 }
