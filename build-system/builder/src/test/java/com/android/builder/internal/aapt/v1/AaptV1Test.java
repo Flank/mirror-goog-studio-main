@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v1;
 
+import static com.android.testutils.TestUtils.eventually;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -225,13 +226,14 @@ public class AaptV1Test {
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
 
-        assertTrue(
-                "originalFile.length() ["
-                        + originalFile.length()
-                        + "] != compiled.length() ["
-                        + compiled.length()
-                        + "]",
-                originalFile.length() == compiled.length());
+        eventually(
+                () -> assertTrue(
+                        "originalFile.length() ["
+                                + originalFile.length()
+                                + "] != compiled.length() ["
+                                + compiled.length()
+                                + "]",
+                        originalFile.length() == compiled.length()));
     }
 
     @Test
@@ -246,13 +248,14 @@ public class AaptV1Test {
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
 
-        assertTrue(
-                "originalFile.length() ["
-                        + originalFile.length()
-                        + "] < compiled.length() ["
-                        + compiled.length()
-                        + "]",
-                originalFile.length() > compiled.length());
+        eventually(
+                () -> assertTrue(
+                    "originalFile.length() ["
+                            + originalFile.length()
+                            + "] < compiled.length() ["
+                            + compiled.length()
+                            + "]",
+                    originalFile.length() > compiled.length()));
     }
 
     @Test
@@ -267,13 +270,17 @@ public class AaptV1Test {
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
 
-        assertTrue(
-                "originalFile.length() ["
-                        + originalFile.length()
-                        + "] > compiled.length() ["
-                        + compiled.length()
-                        + "]",
-                originalFile.length() < compiled.length());
+        /*
+         * We may have to wait until aapt flushes the file.
+         */
+        eventually(
+                () -> assertTrue(
+                        "originalFile.length() ["
+                                + originalFile.length()
+                                + "] > compiled.length() ["
+                                + compiled.length()
+                                + "]",
+                        originalFile.length() < compiled.length()));
     }
 
     @Test
