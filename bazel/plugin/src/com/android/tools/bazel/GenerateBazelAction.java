@@ -140,6 +140,9 @@ public class GenerateBazelAction extends AnAction {
                     }
                 }
             }
+            iml.setTestData(config.getTestData().get(name));
+            iml.setTestTimeout(config.getTestTimeout().get(name));
+            iml.setTestClass(config.getTestClass().get(name));
         }
 
         // 2nd pass: Dependencies.

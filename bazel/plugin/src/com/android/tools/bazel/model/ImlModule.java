@@ -29,6 +29,9 @@ public class ImlModule extends BazelRule {
     private List<String> resources = new LinkedList<>();
     private List<String> exclude = new LinkedList<>();
     private Map<BazelRule, List<String>> dependencyTags = new HashMap<>();
+    private List<String> testData;
+    private String testTimeout;
+    private String testClass;
 
     public ImlModule(Package pkg, String name) {
         super(pkg, name);
@@ -46,6 +49,9 @@ public class ImlModule extends BazelRule {
         append(writer, "test_resources", testResources);
         append(writer, "deps", tagDependencies(dependencies));
         append(writer, "exports", exported);
+        append(writer, "test_data", testData, true);
+        append(writer, "test_timeout", testTimeout);
+        append(writer, "test_class", testClass);
 
         writer.append("    javacopts = [\"-extra_checks:off\"],\n");
         writer.append("    visibility = [\"//visibility:public\"],\n");
@@ -70,16 +76,27 @@ public class ImlModule extends BazelRule {
         dependencyTags.put(rule, tags);
     }
 
+    private void append(PrintWriter writer, String name, String value) {
+        if (value != null) {
+            writer.append("    ").append(name).append(" = \"").append(value).append("\",\n");
+        }
+    }
+
     private void append(PrintWriter writer, String name, Collection<? extends Object> collection) {
-        if (!collection.isEmpty()) {
+        append(writer, name, collection, false);
+    }
+
+    private void append(PrintWriter writer, String name, Collection<? extends Object> collection, boolean glob) {
+        if (collection != null && !collection.isEmpty()) {
             boolean single = collection.size() == 1;
-            writer.append("    ").append(name).append(" = [").append(single ? "" : "\n");
+            writer.append("    ").append(name).append(" = ");
+            writer.append(glob ? "glob([" : "[").append(single ? "" : "\n");
             for (Object element : collection) {
                 writer.append(single ? "" : "        ");
                 writer.append("\"").append(element.toString()).append("\"");
                 writer.append(single ? "" : ",\n");
             }
-            writer.append(single ?  "" : "    ").append("],\n");
+            writer.append(single ?  "" : "    ").append(glob ? "])": "]").append(",\n");
         }
     }
 
@@ -106,5 +123,17 @@ public class ImlModule extends BazelRule {
     @Override
     public Set<String> getImports() {
         return ImmutableSet.of("iml_module");
+    }
+
+    public void setTestData(List<String> testData) {
+        this.testData = testData;
+    }
+
+    public void setTestTimeout(String timeout) {
+        this.testTimeout = timeout;
+    }
+
+    public void setTestClass(String testClass) {
+        this.testClass = testClass;
     }
 }

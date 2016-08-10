@@ -86,4 +86,21 @@ public class StudioConfiguration implements Configuration {
                 "tools/BUILD", "tools/base/bazel/tools.idea.BUILD"
         );
     }
+
+    @Override
+    public Map<String, List<String>> getTestData() {
+        return ImmutableMap.of(
+                "android", ImmutableList.of("android/testData/**/*", "designer/testData/**/*")
+        );
+    }
+
+    @Override
+    public Map<String, String> getTestTimeout() {
+        return ImmutableMap.of("android", "long");
+    }
+
+    @Override
+    public Map<String, String> getTestClass() {
+        return ImmutableMap.of("android", "com.android.tools.idea.IdeaTestSuite");
+    }
 }
