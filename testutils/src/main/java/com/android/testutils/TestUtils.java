@@ -31,6 +31,16 @@ import junit.framework.TestCase;
 public class TestUtils {
 
     /**
+     * Default timeout in milliseconds for an eventually check.
+     */
+    private static final long DEFAULT_EVENTUALLY_TIMEOUT_MS = 10_000;
+
+    /**
+     * Time to wait between checks to obtain the value of an eventually supplier.
+     */
+    private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
+
+    /**
      * returns a File for the subfolder of the test resource data.
      *
      * <p>This is basically {@code src/test/resources/testData/$name"}.
@@ -250,4 +260,47 @@ public class TestUtils {
         return sb.toString();
     }
 
+    /**
+     * Asserts that a runnable will eventually not throw an assertion exception. Equivalent to
+     * {@link #eventually(Runnable, long)}, but using a default timeout
+     *
+     * @param runnable a description of the failure, if the condition never becomes {@code true}
+     */
+    public static void eventually(@NonNull Runnable runnable) {
+        eventually(runnable, DEFAULT_EVENTUALLY_TIMEOUT_MS);
+    }
+
+    /**
+     * Asserts that a runnable will eventually not throw {@link AssertionError} before
+     * {@code timeoutMs} milliseconds have ellapsed
+     *
+     * @param runnable a description of the failure, if the condition never becomes {@code true}
+     * @param timeoutMs the timeout for the predicate to become true, in milliseconds
+     */
+    public static void eventually(@NonNull Runnable runnable, long timeoutMs) {
+        AssertionError lastError = null;
+
+        long timeoutTime = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < timeoutTime) {
+            try {
+                runnable.run();
+                return;
+            } catch (AssertionError e) {
+                /*
+                 * It is OK to throw this. Save for later.
+                 */
+                lastError = e;
+            }
+
+            try {
+                Thread.sleep(EVENTUALLY_CHECK_CYCLE_TIME_MS);
+            } catch (InterruptedException e) {
+                throw new AssertionError(e);
+            }
+        }
+
+        throw new AssertionError(
+                "Timed out waiting for runnable not to throw; last error was:",
+                lastError);
+    }
 }
