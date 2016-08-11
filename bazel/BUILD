@@ -12,7 +12,9 @@ java_library(
     include = ["src/**/*.java"],
     exclude = ["src/**/kotlin/*"],
   ),
-  deps = ["//prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6"],
+  # Note that version 2.3 of groovy, embeds timestamps into the generated classes
+  # making it unsuitable for bazel or any other reasonable tool.
+  deps = ["//tools:idea/lib/groovy-all-2.4.6"],
 )
 
 java_binary(
