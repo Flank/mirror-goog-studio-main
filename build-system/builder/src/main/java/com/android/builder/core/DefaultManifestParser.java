@@ -59,6 +59,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
             Set<String> xPaths =
                     Sets.newHashSet(
                             AndroidManifest.getPackageXPath(),
+                            AndroidManifest.getSplitXPath(),
                             AndroidManifest.getVersionNameXPath(),
                             AndroidManifest.getVersionCodeXPath(),
                             AndroidManifest.getMinSdkVersionXPath(),
@@ -81,6 +82,15 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Override
     public String getPackage() {
         return attributeValues.get(AndroidManifest.getPackageXPath());
+    }
+
+    /**
+     * Gets the split name for the manifest file processed by this parser.
+     */
+    @Nullable
+    @Override
+    public String getSplit() {
+        return attributeValues.get(AndroidManifest.getSplitXPath());
     }
 
     /**
