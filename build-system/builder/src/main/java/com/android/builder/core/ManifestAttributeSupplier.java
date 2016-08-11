@@ -32,6 +32,14 @@ public interface ManifestAttributeSupplier {
     String getPackage();
 
     /**
+     * Returns the split name from the manifest file.
+     *
+     * @return the split name or null if not found.
+     */
+    @Nullable
+    String getSplit();
+
+    /**
      * Returns the minSdkVersion from the manifest file.
      * The returned value can be an Integer or a String
      *

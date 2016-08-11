@@ -102,6 +102,7 @@ public final class AndroidManifest {
     public static final String ATTRIBUTE_UI_OPTIONS = "uiOptions";
     public static final String ATTRIBUTE_VALUE = "value";
     public static final String ATTRIBUTE_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
+    public static final String ATTRIBUTE_SPLIT = "split";
 
     public static final String VALUE_PARENT_ACTIVITY =
             SdkConstants.ANDROID_SUPPORT_PKG_PREFIX + "PARENT_ACTIVITY";
@@ -157,6 +158,42 @@ public final class AndroidManifest {
     @NonNull
     public static String getPackageXPath(){
         return  "/" + NODE_MANIFEST + "/@" + ATTRIBUTE_PACKAGE;
+    }
+
+    /**
+     * Returns the split for a given project.
+     *
+     * @param projectFolder the folder of the project.
+     * @return the split info or null (or empty) if not found.
+     * @throws StreamException If any error happens when reading the manifest.
+     */
+    @Nullable
+    public static String getSplit(@NonNull IAbstractFolder projectFolder)
+            throws StreamException {
+        IAbstractFile file = getManifest(projectFolder);
+        if (file != null) {
+            return getSplit(file);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the split for a given manifest.
+     *
+     * @param manifestFile the manifest to parse.
+     * @return the split info or null (or empty) if not found.
+     * @throws StreamException If any error happens when reading the manifest.
+     */
+    @NonNull
+    public static String getSplit(@NonNull IAbstractFile manifestFile) throws StreamException {
+        return getStringValue(manifestFile, getSplitXPath());
+    }
+
+    /** Returns the XPath expression for the split. **/
+    @NonNull
+    public static String getSplitXPath(){
+        return  "/" + NODE_MANIFEST + "/@" + ATTRIBUTE_SPLIT;
     }
 
     /**
