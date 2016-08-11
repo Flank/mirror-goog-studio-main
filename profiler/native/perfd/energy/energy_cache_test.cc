@@ -27,7 +27,6 @@ TEST(SaveEnergySample, SaveEnergySampleSavesCorrectly) {
   sample.set_screen_power_usage(10001);
   sample.set_cpu_system_power_usage(10002);
   sample.set_cpu_user_power_usage(10003);
-  sample.set_sensors_power_usage(10004);
   sample.set_cell_network_power_usage(10005);
   sample.set_wifi_network_power_usage(10006);
 
@@ -44,8 +43,6 @@ TEST(SaveEnergySample, SaveEnergySampleSavesCorrectly) {
             response_sample.cpu_system_power_usage());
   EXPECT_EQ(sample.cpu_user_power_usage(),
             response_sample.cpu_user_power_usage());
-  EXPECT_EQ(sample.sensors_power_usage(),
-            response_sample.sensors_power_usage());
   EXPECT_EQ(sample.cell_network_power_usage(),
             response_sample.cell_network_power_usage());
   EXPECT_EQ(sample.wifi_network_power_usage(),
