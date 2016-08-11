@@ -48,9 +48,8 @@ message EnergyDataResponse {
     int32 screen_power_usage = 2;       // (touch)screen.
     int32 cpu_system_power_usage = 3;   // System cpu time.
     int32 cpu_user_power_usage = 4;     // User cpu time.
-    int32 sensors_power_usage = 5;      // Various sensors (e.g. vibrator, accelerometer, etc)
-    int32 cell_network_power_usage = 6; // Cellular mobile network / radio.
-    int32 wifi_network_power_usage = 7; // Wifi network.
+    int32 cell_network_power_usage = 5; // Cellular mobile network / radio.
+    int32 wifi_network_power_usage = 6; // Wifi network.
   }
 
   int32 app_id = 1;
