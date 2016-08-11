@@ -18,7 +18,6 @@ package com.android.testutils;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -29,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -83,7 +83,8 @@ public class JarTestSuiteRunner extends Suite {
     }
 
     private static boolean seemsLikeJUnit3(Class<?> aClass) {
-        return TestCase.class.isAssignableFrom(aClass) || TestSuite.class.isAssignableFrom(aClass);
+        return (TestCase.class.isAssignableFrom(aClass) || TestSuite.class.isAssignableFrom(aClass))
+               && (aClass.getName().endsWith("Test") || !Modifier.isAbstract(aClass.getModifiers()));  // let an abstract “Test” fail
     }
 
     private static boolean seemsLikeJUnit4(Class<?> aClass) {
