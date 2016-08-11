@@ -30,19 +30,16 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.logcat.LogCatMessage;
-import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
 import com.android.tools.fd.client.InstantRunClient.FileTransfer;
 import com.android.tools.fd.client.UpdateMode;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-
-import org.mockito.Mockito;
-
 import java.io.Closeable;
 import java.util.Arrays;
-import java.util.function.Consumer;
+import org.mockito.Mockito;
 
 /**
  * Helper for automating HotSwap testing.
@@ -83,7 +80,7 @@ public class HotSwapTester {
     }
 
     /**
-     * @see #run(Consumer, Iterable)
+     * @see #run(Runnable, Iterable)
      */
     public void run(
             @NonNull Runnable verifyOriginalCode,
@@ -146,10 +143,20 @@ public class HotSwapTester {
                         .withInstantRun(device.getVersion().getApiLevel(), COLDSWAP_MODE)
                         .run("assembleDebug");
 
-                InstantRunArtifact artifact =
-                        InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
-
-                FileTransfer fileTransfer = FileTransfer.createHotswapPatch(artifact.file);
+                FileTransfer fileTransfer;
+                switch (change.getExpectedArtifactType()) {
+                    case RELOAD_DEX:
+                        fileTransfer = FileTransfer.createHotswapPatch(
+                                InstantRunTestUtils.getReloadDexArtifact(instantRunModel).file);
+                        break;
+                    case RESOURCES:
+                        fileTransfer = FileTransfer.createResourceFile(
+                                InstantRunTestUtils.getResourcesArtifact(instantRunModel).file);
+                        break;
+                    default:
+                        throw new AssertionError(
+                                "Unsupported artifact type " + change.getExpectedArtifactType());
+                }
 
                 logcat.clearFiltered();
 
@@ -170,18 +177,22 @@ public class HotSwapTester {
         }
     }
 
-    interface Change {
-        void makeChange() throws Exception;
-        void verifyChange(
+    public abstract static class Change {
+        abstract void makeChange() throws Exception;
+        abstract void verifyChange(
                 @NonNull InstantRunClient client,
                 @NonNull Logcat logcat,
                 @NonNull IDevice device) throws Exception;
+
+        public InstantRunArtifactType getExpectedArtifactType() {
+            return InstantRunArtifactType.RELOAD_DEX;
+        }
     }
 
     /**
      * Simple {@link Change} implementation that verifies that the expected message was logged.
      */
-    public abstract static class LogcatChange implements Change {
+    public abstract static class LogcatChange extends Change {
         public static final String CHANGE_PREFIX = "CHANGE ";
 
         protected final String originalMessage;

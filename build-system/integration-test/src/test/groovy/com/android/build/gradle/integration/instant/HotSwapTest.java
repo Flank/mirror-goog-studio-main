@@ -17,8 +17,6 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +40,10 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,13 +51,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Smoke test for hot swap builds.
@@ -128,37 +122,6 @@ public class HotSwapTest {
                 .that(artifact.file)
                 .hasClass("Lcom/example/helloworld/HelloWorld$1$override;")
                 .that().hasMethod("call");
-    }
-
-    @Test
-    public void updateResources() throws Exception {
-        File asset = project.file("src/main/assets/movie.mp4");
-        Files.createParentDirs(asset);
-        Files.write("this is a movie", asset, StandardCharsets.UTF_8);
-
-        InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle());
-
-        InstantRunTestUtils.doInitialBuild(project, packaging, 21, COLDSWAP_MODE);
-        File apk = project.getApk("debug");
-        assertThatApk(apk).contains("assets/movie.mp4");
-        assertThatApk(apk).contains("classes.dex");
-        assertThatApk(apk).contains("instant-run.zip");
-
-        TestFileUtils.appendToFile(asset, " upgraded");
-
-        project.executor()
-                .withInstantRun(21, COLDSWAP_MODE)
-                .withPackaging(packaging)
-                .run("assembleDebug");
-
-        InstantRunArtifact artifact =
-                InstantRunTestUtils.getResourcesArtifact(instantRunModel);
-
-        assertThat(artifact.file.getName()).endsWith(".ir.ap_");
-        assertThatZip(artifact.file).contains("assets/movie.mp4");
-        assertThatZip(artifact.file).doesNotContain("classes.dex");
-        assertThatZip(artifact.file).doesNotContain("instant-run.zip");
     }
 
     @Test
