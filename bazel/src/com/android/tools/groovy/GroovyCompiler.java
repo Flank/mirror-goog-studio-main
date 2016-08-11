@@ -16,67 +16,36 @@
 
 package com.android.tools.groovy;
 
-import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilerConfiguration;
-
+import com.android.tools.utils.JarOutputCompiler;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
 
 /**
  * A tool to compile groovy files directly into a jar.
  */
-public class GroovyCompiler {
+public class GroovyCompiler extends JarOutputCompiler {
+
+    GroovyCompiler() {
+        super("groovyc");
+    }
 
     public static void main(String[] args) throws IOException {
         System.exit(new GroovyCompiler().run(Arrays.asList(args)));
     }
 
-    private void usage(String message) {
-        System.err.println("Error: " + message);
-        System.err.println("Usage: groovyc [-cp class_path] -o jar_file <files>...");
-    }
-
-    private int run(List<String> args) throws IOException {
-        File out = null;
-        List<String> files = new LinkedList<>();
-        Iterator<String> it = args.iterator();
-        String classPath = "";
-        while (it.hasNext()) {
-            String arg = it.next();
-            if (arg.equals("-o") && it.hasNext()) {
-                out = new File(it.next());
-            } else if (arg.equals("-cp") && it.hasNext()) {
-                classPath = it.next();
-            } else {
-                files.add(arg);
-            }
-        }
-        if (out == null) {
-            usage("Output file not specified.");
-            System.exit(1);
-        }
-        if (files.isEmpty()) {
-            usage("No input files specified.");
-            System.exit(1);
-        }
-        compile(out, files, classPath);
-        return 0;
-    }
-
-    private void compile(File out, List<String> files, String classPath) throws IOException {
+    @Override
+    protected void compile(List<String> files, String classPath, File outDir) {
         CompilerConfiguration config = new CompilerConfiguration();
         config.setClasspath(classPath);
-        File tmp = new File(out.getAbsolutePath() + ".dir");
-        config.setTargetDirectory(tmp);
+        config.setTargetDirectory(outDir);
         CompilationUnit cu = new CompilationUnit(config);
         for (String name : files) {
             cu.addSource(new File(name));
         }
         cu.compile();
-        new JarGenerator().directoryToJar(tmp, out);
     }
 }

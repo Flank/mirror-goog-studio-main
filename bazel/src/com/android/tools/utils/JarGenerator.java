@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.groovy;
+package com.android.tools.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,16 +50,16 @@ public class JarGenerator {
         }
         for (File file : files) {
             String newName = name + (name.isEmpty() ? "" : "/") + file.getName();
+            String entryName = file.isDirectory() ? newName + "/" : newName;
+            ZipEntry entry = new ZipEntry(entryName);
+            // Adding two seconds to match what Bazel does on jar generation.
+            entry.setTime(DOS_EPOCH + 2);
             if (file.isDirectory()) {
                 // Trailing slash to mark a directory entry
-                ZipEntry entry = new ZipEntry(newName + "/");
-                entry.setTime(DOS_EPOCH);
                 out.putNextEntry(entry);
                 out.closeEntry();
                 addToJar(file, out, newName);
             } else {
-                ZipEntry entry = new ZipEntry(newName);
-                entry.setTime(DOS_EPOCH);
                 out.putNextEntry(entry);
                 try (FileInputStream in = new FileInputStream(file)) {
                     int k;

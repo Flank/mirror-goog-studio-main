@@ -16,16 +16,41 @@
 
 package com.android.tools.kotlin;
 
-import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
-
+import com.android.tools.utils.JarOutputCompiler;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.jetbrains.kotlin.cli.common.CLICompiler;
+import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
 
 /**
  * A wrapper for the Kotlin compiler.
  */
-public class KotlinCompiler {
+public class KotlinCompiler extends JarOutputCompiler {
+
+    protected KotlinCompiler() {
+        super("kotlinc");
+    }
 
     public static void main(String[] args) throws IOException {
-        K2JVMCompiler.main(args);
+        System.exit(new KotlinCompiler().run(Arrays.asList(args)));
+    }
+
+    @Override
+    protected void compile(List<String> files, String classPath, File outDir) {
+        // Extracted from CLICompiler.java:
+        // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
+        // to avoid accidentally starting the UI thread
+        System.setProperty("java.awt.headless", "true");
+
+        List<String> args = new ArrayList<>(files.size() + 10);
+        args.add("-d");
+        args.add(outDir.getAbsolutePath());
+        args.add("-cp");
+        args.add(classPath);
+        args.addAll(files);
+        CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[]{}));
     }
 }
