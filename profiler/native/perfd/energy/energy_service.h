@@ -27,15 +27,19 @@ namespace profiler {
 
 class EnergyServiceImpl final : public proto::EnergyService::Service {
  public:
-  explicit EnergyServiceImpl(const Clock& clock)
+  explicit EnergyServiceImpl(const Clock& clock, EnergyCache* energy_cache)
       : clock_(clock),
-        energy_cache_(kSamplesCount),
-        collector_(clock, &energy_cache_) {}
+        energy_cache_(energy_cache),
+        collector_(clock, energy_cache_) {}
   virtual ~EnergyServiceImpl() = default;
 
-  grpc::Status GetData(grpc::ServerContext* context,
-                       const proto::EnergyDataRequest* request,
-                       proto::EnergyDataResponse* response) override;
+  grpc::Status GetWakeLockData(grpc::ServerContext* context,
+                               const proto::WakeLockDataRequest* request,
+                               proto::WakeLockDataResponse* response) override;
+
+  grpc::Status GetEnergyData(grpc::ServerContext* context,
+                             const proto::EnergyDataRequest* request,
+                             proto::EnergyDataResponse* response) override;
 
   grpc::Status StartCollection(
       grpc::ServerContext* context,
@@ -48,8 +52,6 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
       proto::EnergyCollectionStatusResponse* response) override;
 
  private:
-  static constexpr int32_t kSamplesCount = 10;
-
   // This command does the following:
   // 1. Perform a reset on battey . This resets batterystats and clears any
   //    previously changed state that could interfere with energy profiling.
@@ -60,7 +62,7 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
       "dumpsys battery reset && dumpsys battery set usb 0 && dumpsys battery "
       "set ac 0 && dumpsys battery set wireless 0";
   const Clock& clock_;
-  EnergyCache energy_cache_;
+  EnergyCache* energy_cache_;
   EnergyCollector collector_;
 };
 }  // namespace profiler

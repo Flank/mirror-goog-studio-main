@@ -21,6 +21,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "proto/internal_energy.grpc.pb.h"
 #include "proto/internal_event.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
@@ -37,6 +38,12 @@ class Perfa {
 
   bool WriteData(const proto::ProfilerData& data);
 
+  const proto::InternalEnergyService::Stub& energy_stub() {
+    return *energy_stub_;
+  }
+
+  const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
+
   const proto::InternalMemoryService::Stub& memory_stub() {
     return *memory_stub_;
   }
@@ -45,17 +52,16 @@ class Perfa {
     return *network_stub_;
   }
 
-  const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
-
  private:
   // Use Perfa::Initialize to initialize
   explicit Perfa(const char* address);
   ~Perfa() = delete;  // TODO: Support destroying perfa.
 
   std::unique_ptr<proto::PerfaService::Stub> service_stub_;
+  std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
+  std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
-  std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
 
   // TODO: Move this over to the StreamingRpcManager when it is ready
   std::thread control_thread_;

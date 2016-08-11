@@ -1,8 +1,9 @@
 add_library(perfa SHARED
-            support/vm_stats_sampler.cc
-            support/profiler_service.cc
+            support/energy_passthrough.cc
             support/event_passthrough.cc
             support/http_tracker.cc
+            support/profiler_service.cc
+            support/vm_stats_sampler.cc
             perfa.cc)
 
 target_link_libraries(perfa

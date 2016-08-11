@@ -22,7 +22,7 @@ using profiler::EnergyCache;
 
 TEST(SaveEnergySample, SaveEnergySampleSavesCorrectly) {
   EnergyCache cache(2);
-  profiler::proto::EnergyDataResponse::EnergySample sample;
+  profiler::proto::EnergySample sample;
   sample.set_timestamp(10000);
   sample.set_screen_power_usage(10001);
   sample.set_cpu_system_power_usage(10002);
@@ -34,7 +34,7 @@ TEST(SaveEnergySample, SaveEnergySampleSavesCorrectly) {
 
   profiler::proto::EnergyDataResponse response;
   cache.LoadEnergyData(0, 20000, &response);
-  profiler::proto::EnergyDataResponse::EnergySample response_sample;
+  profiler::proto::EnergySample response_sample;
   response_sample.CopyFrom(response.energy_samples(0));
 
   EXPECT_EQ(sample.timestamp(), response_sample.timestamp());
@@ -51,10 +51,10 @@ TEST(SaveEnergySample, SaveEnergySampleSavesCorrectly) {
 
 TEST(SaveEnergySample, SaveEnergySampleDiscardsOldSamples) {
   EnergyCache cache(2);
-  profiler::proto::EnergyDataResponse::EnergySample sample_a;
-  profiler::proto::EnergyDataResponse::EnergySample sample_b;
-  profiler::proto::EnergyDataResponse::EnergySample sample_c;
-  profiler::proto::EnergyDataResponse::EnergySample sample_d;
+  profiler::proto::EnergySample sample_a;
+  profiler::proto::EnergySample sample_b;
+  profiler::proto::EnergySample sample_c;
+  profiler::proto::EnergySample sample_d;
 
   sample_a.set_timestamp(10000);
   sample_b.set_timestamp(10002);
@@ -68,7 +68,7 @@ TEST(SaveEnergySample, SaveEnergySampleDiscardsOldSamples) {
   {
     profiler::proto::EnergyDataResponse response;
     cache.LoadEnergyData(0, 20000, &response);
-    profiler::proto::EnergyDataResponse::EnergySample response_sample;
+    profiler::proto::EnergySample response_sample;
     response_sample.CopyFrom(response.energy_samples(0));
 
     EXPECT_EQ(sample_b.timestamp(), response.energy_samples(0).timestamp());
@@ -80,7 +80,7 @@ TEST(SaveEnergySample, SaveEnergySampleDiscardsOldSamples) {
   {
     profiler::proto::EnergyDataResponse response;
     cache.LoadEnergyData(0, 20000, &response);
-    profiler::proto::EnergyDataResponse::EnergySample response_sample;
+    profiler::proto::EnergySample response_sample;
     response_sample.CopyFrom(response.energy_samples(0));
 
     EXPECT_EQ(sample_c.timestamp(), response.energy_samples(0).timestamp());

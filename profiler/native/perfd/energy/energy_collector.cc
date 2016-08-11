@@ -45,7 +45,7 @@ void EnergyCollector::CollectorMain() {
   while (is_running_) {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
-    proto::EnergyDataResponse_EnergySample sample;
+    proto::EnergySample sample;
     energy_usage_sampler_.GetProcessEnergyUsage(pid_, &sample);
     energy_cache_->SaveEnergySample(sample);
 

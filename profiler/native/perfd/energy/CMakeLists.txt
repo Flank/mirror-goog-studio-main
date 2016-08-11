@@ -2,7 +2,8 @@ add_library(profiler_energy
             energy_cache.cc
             energy_collector.cc
             energy_service.cc
-            energy_usage_sampler.cc)
+            energy_usage_sampler.cc
+            internal_energy_service.cc)
 
 target_link_libraries(profiler_energy
                       profiler_protos

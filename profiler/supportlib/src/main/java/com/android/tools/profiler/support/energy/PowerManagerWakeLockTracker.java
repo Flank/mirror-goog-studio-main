@@ -18,7 +18,6 @@ package com.android.tools.profiler.support.energy;
 
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.util.Log;
 
 import java.util.HashMap;
 
@@ -27,13 +26,12 @@ import java.util.HashMap;
  * TODO Replace logging with sending data to perfa.
  */
 public class PowerManagerWakeLockTracker {
-    public static final String TAG = PowerManagerWakeLockTracker.class.getSimpleName();
     private static final HashMap<Integer, WakeLockInfo> wlInfoMap
             = new HashMap<Integer, WakeLockInfo>();
 
     public static PowerManager.WakeLock wrapNewWakeLock(PowerManager powerManager,
             int levelAndFlags, String tag) {
-        Log.d(TAG, String.format("New %d wake lock %s was made.", levelAndFlags, tag));
+        onPowerManagerWakeLockCreated(tag);
 
         // Add the {hashCode: WakeLockInfo} to the map.
         WakeLock wl = powerManager.newWakeLock(levelAndFlags, tag);
@@ -44,9 +42,7 @@ public class PowerManagerWakeLockTracker {
 
     public static void wrapSetReferenceCounted(WakeLock wl, boolean value) {
         wl.setReferenceCounted(value);
-
         WakeLockInfo info = wlInfoMap.get(System.identityHashCode(wl));
-        Log.d(TAG, String.format("Wake lock %s reference counting is now : %b", info.tag, value));
     }
 
     public static void wrapAcquire(WakeLock wl) {
@@ -83,7 +79,7 @@ public class PowerManagerWakeLockTracker {
             info.releaserThread.start();
         }
 
-        Log.d(TAG, String.format("Wake lock %s acquired: %s with timeout: %d", info.tag, wl, timeout));
+        onPowerManagerWakeLockAcquired(info.tag, timeout);
     }
 
     /**
@@ -97,8 +93,7 @@ public class PowerManagerWakeLockTracker {
             cancelPreviousTimerIfExists(info);
         }
 
-        Log.d(TAG, String.format("Wake lock %s released: %s with flags: %d. Auto release?: %b",
-                info.tag, wl, flags, autoRelease));
+        onPowerManagerWakeLockReleased(info.tag, autoRelease);
     }
 
     private static void cancelPreviousTimerIfExists(WakeLockInfo info) {
@@ -148,4 +143,10 @@ public class PowerManagerWakeLockTracker {
             }
         }
     }
+
+    private static native void onPowerManagerWakeLockCreated(String tag);
+
+    private static native void onPowerManagerWakeLockAcquired(String tag, long timeout);
+
+    private static native void onPowerManagerWakeLockReleased(String tag, boolean wasAutoRelease);
 }

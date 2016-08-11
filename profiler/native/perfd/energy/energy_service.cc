@@ -21,14 +21,26 @@ using profiler::proto::EnergyDataRequest;
 using profiler::proto::EnergyDataResponse;
 using profiler::proto::StartEnergyCollectionRequest;
 using profiler::proto::StopEnergyCollectionRequest;
+using profiler::proto::WakeLockDataRequest;
+using profiler::proto::WakeLockDataResponse;
 
 namespace profiler {
 
-grpc::Status EnergyServiceImpl::GetData(grpc::ServerContext* context,
+grpc::Status EnergyServiceImpl::GetEnergyData(grpc::ServerContext* context,
                                         const EnergyDataRequest* request,
                                         EnergyDataResponse* response) {
   response->set_app_id(request->app_id());
-  energy_cache_.LoadEnergyData(request->start_time_excl(),
+  energy_cache_->LoadEnergyData(request->start_time_excl(),
+                               request->end_time_incl(), response);
+
+  return grpc::Status::OK;
+}
+
+grpc::Status EnergyServiceImpl::GetWakeLockData(grpc::ServerContext* context,
+                                        const WakeLockDataRequest* request,
+                                        WakeLockDataResponse* response) {
+  response->set_app_id(request->app_id());
+  energy_cache_->LoadWakeLockData(request->start_time_excl(),
                                request->end_time_incl(), response);
 
   return grpc::Status::OK;
