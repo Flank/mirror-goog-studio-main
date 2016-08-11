@@ -7,26 +7,31 @@ java_import(
 )
 
 java_library(
-  name = "bazel",
-  srcs = glob(
-    include = ["src/**/*.java"],
-    exclude = ["src/**/kotlin/*"],
-  ),
+  name = "utils",
+  srcs = glob(["src/**/utils/*.java"]),
+)
+
+java_library(
+  name = "groovy-compiler",
+  srcs = glob(["src/**/groovy/*.java"]),
   # Note that version 2.3 of groovy, embeds timestamps into the generated classes
   # making it unsuitable for bazel or any other reasonable tool.
-  deps = ["//tools:idea/lib/groovy-all-2.4.6"],
+  deps = [
+    "//tools:idea/lib/groovy-all-2.4.6",
+    ":utils"
+  ],
 )
 
 java_binary(
   name = "groovy_stub_gen",
-  runtime_deps = [":bazel"],
+  runtime_deps = [":groovy-compiler"],
   main_class = "com.android.tools.groovy.GroovyStubGenerator",
   visibility = ["//visibility:public"],
 )
 
 java_binary(
   name = "groovyc",
-  runtime_deps = [":bazel"],
+  runtime_deps = [":groovy-compiler"],
   main_class = "com.android.tools.groovy.GroovyCompiler",
   visibility = ["//visibility:public"],
 )
@@ -34,7 +39,7 @@ java_binary(
 java_binary(
   name = "unzipper",
   main_class = "com.android.tools.utils.Unzipper",
-  runtime_deps = [":bazel"],
+  runtime_deps = [":utils"],
   visibility = ["//visibility:public"],
 )
 
@@ -59,7 +64,10 @@ java_binary(
   name = "kotlinc",
   srcs = ["src/com/android/tools/kotlin/KotlinCompiler.java"],
   main_class = "com.android.tools.kotlin.KotlinCompiler",
-  deps = [":kotlin-compiler"],
+  deps = [
+    ":kotlin-compiler",
+    ":utils",
+  ],
   runtime_deps = [":kotlin-runtime"],
   visibility = ["//visibility:public"],
 )

@@ -2,8 +2,6 @@
 def _kotlin_jar_impl(ctx):
 
   class_jar = ctx.outputs.class_jar
-  build_output = class_jar.path
-
 
   all_deps = set(ctx.files.deps)
   all_deps += set(ctx.files._kotlin)
@@ -14,7 +12,7 @@ def _kotlin_jar_impl(ctx):
   args = []
   if ctx.files.deps:
     args = ["-cp", ":".join([dep.path for dep in all_deps])]
-  args += ["-d", build_output]
+  args += ["-o", class_jar.path]
   args += [src.path for src in ctx.files.srcs]
 
   # Execute the command
