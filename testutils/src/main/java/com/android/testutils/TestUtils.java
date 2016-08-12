@@ -29,7 +29,6 @@ import junit.framework.TestCase;
  * Utility methods to deal with loading the test data.
  */
 public class TestUtils {
-
     /**
      * Default timeout in milliseconds for an eventually check.
      */
@@ -121,11 +120,122 @@ public class TestUtils {
     }
 
     /**
-     * Returns the SDK directory as built from the Android source tree.
+     * Returns the root of the entire Android Studio codebase.
      *
-     * @return the SDK directory
+     * From this path, you should be able to access any file in the workspace via its full path,
+     * e.g.
+     *
+     * new File(TestUtils.getWorkspaceRoot(), "tools/adt/idea/android/testSrc");
+     * new File(TestUtils.getWorkspaceRoot(), "prebuilts/studio/jdk");
+     *
+     * If this method is called by code run via IntelliJ / Gradle, it will simply walk its
+     * ancestor tree looking for the WORKSPACE file at its root; if called from Bazel, it will
+     * simply return the runfiles directory (which should be a mirror of the WORKSPACE root except
+     * only populated with explicitly declared dependencies).
+     *
+     * Instead of calling this directly, prefer calling {@link #getWorkspaceFile(String)} as it
+     * is more resilient to cross-platform testing.
+     *
+     * @throws IllegalStateException if the current directory of the test is not a subdirectory of
+     * the workspace directory when this method is called. This shouldn't happen if the test is run
+     * by Bazel or run by IntelliJ with default configuration settings (where the working directory
+     * is initialized to the module root).
      */
     @NonNull
+    public static File getWorkspaceRoot() {
+        // If we are using Bazel (which defines the following env vars), simply use the sandboxed
+        // root they provide us.
+        String workspace = System.getenv("TEST_WORKSPACE");
+        String workspaceParent = System.getenv("TEST_SRCDIR");
+        if (workspace != null && workspaceParent != null) {
+            return new File(workspaceParent, workspace);
+        }
+
+        // If here, we're using a non-Bazel build system. At this point, assume our working
+        // directory is located underneath our codebase's root folder, so keep navigating up until
+        // we find it.
+        File pwd = new File("");
+        File currDir = pwd;
+        while (!new File(currDir, "WORKSPACE").exists()) {
+            currDir = currDir.getAbsoluteFile().getParentFile();
+
+            if (currDir == null) {
+                throw new IllegalStateException(
+                        "Could not find WORKSPACE root. Is the original working directory a " +
+                                "subdirectory of the Android Studio codebase?\n\n" +
+                                "pwd = " + pwd.getAbsolutePath());
+            }
+        }
+
+        return currDir;
+    }
+
+    /**
+     * Given a full path to a file from the base of the current workspace, return the file.
+     *
+     * e.g.
+     * TestUtils.getWorkspaceFile("tools/adt/idea/android/testSrc");
+     * TestUtils.getWorkspaceFile("prebuilts/studio/jdk");
+     *
+     * This method guarantees the file exists, throwing an exception if not found, so tests can
+     * safely use the file immediately after receiving it.
+     *
+     * In order to have the same method call work on both Windows and non-Windows machines, if the
+     * current OS is Windows and the target path is found with a common windows extension on it,
+     * then it will automatically be returned, e.g. "/path/to/binary" -> "/path/to/binary.exe".
+     *
+     * @throws IllegalArgumentException if the path results in a file that's not found.
+     *
+     * @return a valid File object pointing at the requested workspace file.
+     */
+    @NonNull
+    public static File getWorkspaceFile(@NonNull String path) {
+        File f = new File(getWorkspaceRoot(), path);
+
+        if (!f.exists() && OsType.getHostOs() == OsType.WINDOWS) {
+            // This file may be a binary with a .exe extension
+            // TODO: Confirm this works on Windows
+            f = new File(f.getPath() + ".exe");
+        }
+
+        if (!f.exists()) {
+            throw new IllegalArgumentException("File \"" + path + "\" not found.");
+        }
+
+        return f;
+    }
+
+    /**
+     * Given a path to a file relative to the SDK's root, return the file.
+     *
+     * @throws IllegalStateException if the current OS is not supported.
+     * @throws IllegalArgumentException if the path results in a file not found.
+     *
+     * @return a valid File object pointing at the requested SDK file.
+     */
+    @NonNull
+    public static File getSdkFile(String path) {
+        OsType osType = OsType.getHostOs();
+        if (osType == OsType.UNKNOWN) {
+            throw new IllegalStateException(
+                    "SDK test not supported on unknown platform: " + OsType.getOsName());
+        }
+
+        String hostDir = osType.getFolderName();
+        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir + "/" + path);
+    }
+
+    /**
+     * Returns the SDK directory as built from the Android source tree. This requires that the
+     * ANDROID_HOME environment variable is set, or else it will throw an exception.
+     *
+     * @return the SDK directory
+     *
+     * @deprecated Tests are incrementally being migrated to use a checked-in development SDK
+     * instead. Use {@link #getSdkFile(String)} instead.
+     */
+    @NonNull
+    @Deprecated
     public static File getSdkDir() {
         String androidHome = System.getenv("ANDROID_HOME");
         if (androidHome != null) {

@@ -1,0 +1,260 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.utils;
+
+import com.android.repository.impl.meta.Archive;
+import com.android.sdklib.tool.SdkDownloader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * A utility class which manages updating an Android SDK for all supported platforms at the same
+ * time. For example, if you have SDKs in...
+ *
+ * <pre>
+ *   /path/to/sdk-root/darwin/...
+ *   /path/to/sdk-root/linux/...
+ *   /path/to/sdk-root/windows/...
+ * </pre>
+ *
+ * and you want to add a new SDK component to all of them, say build-tools;19.0.3, then this script
+ * helps manage that.
+ *
+ * Essentially, this is a utility that sits on top of {@link SdkDownloader}, which itself is
+ * responsible for managing an SDK for a single platform.
+ *
+ * Run "DevSdkUpdater --help" or see the {@link #usage()} method for more information.
+ */
+public final class DevSdkUpdater {
+
+  private static final List<OsEntry> OS_ENTRIES = Arrays.asList(
+    new OsEntry("macosx", "darwin"),
+    new OsEntry("linux"),
+    new OsEntry("windows")
+  );
+
+  public static void main(String[] args) throws IOException {
+    Status s = run(args);
+    System.exit(s.mResultCode);
+  }
+
+  private static void usage(String message) {
+    System.err.println();
+    System.err.println("Error: " + message);
+    System.err.println();
+    usage();
+  }
+
+  private static void usage() {
+    System.out.println("Usage: DevSdkUpdater <options> --dest <sdk-dest-root>");
+    System.out.println();
+    System.out.println("<sdk-dest-root>: A path to a root folder which will contain an SDK");
+    System.out.println("                 for each supported OS (darwin/linux/windows)");
+    System.out.println();
+    System.out.println("Valid options:");
+    System.out.println("  --help                  Prints this information and quits");
+    System.out.println("  --gitignore <file>      Copies <file> as .gitignore to within each ");
+    System.out.println("                          of the target SDK directories");
+    System.out.println("  --package <pkg>         A single SDK path to update/download,");
+    System.out.println("                          e.g. build-tools;23.0.1 or platform-tools");
+    System.out.println("  --package-file <file>   A file where each line is an SDK path");
+    System.out.println();
+    System.out.println("Example usages:");
+    System.out.println();
+    System.out.println("  # Updating a bunch of packages");
+    System.out.println("  $ DevSdkUpdater \\");
+    System.out.println("    --gitignore sdk.gitignore --package-file dev-sdk-packages \\");
+    System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
+    System.out.println();
+    System.out.println("  # Updating a single package");
+    System.out.println("  $ DevSdkUpdater \\");
+    System.out.println("    --package \"build-tools;23.0.1\" \\");
+    System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
+    System.out.println();
+  }
+
+  private static Status run(String[] args) throws IOException {
+
+    File sdkDest = null;
+    File gitIgnoreFile = null;
+    List<String> packages = new ArrayList<>();
+    for (int i = 0; i < args.length; ++i) {
+      String arg = args[i];
+      if (arg.equals("--help")) {
+        usage();
+        return Status.SUCCESS;
+      }
+      else if (arg.equals("--gitignore")) {
+        ++i;
+        try {
+          gitIgnoreFile = new File(args[i]);
+          if (!gitIgnoreFile.exists()) {
+            usage("Invalid gitignore file specified: " + args[i]);
+            return Status.ERROR;
+          }
+        }
+        catch (ArrayIndexOutOfBoundsException ignored) {
+          usage("Gitignore file not set");
+          return Status.ERROR;
+        }
+      }
+      else if (arg.equals("--package-file")) {
+        ++i;
+        try {
+          try {
+            packages.addAll(Files.readAllLines(Paths.get(args[i])));
+          }
+          catch (Exception e) {
+            usage("Could not successfully read package-file: " + args[i] +
+                  "\n\nException: " + e);
+            return Status.ERROR;
+          }
+        }
+        catch (ArrayIndexOutOfBoundsException ignored) {
+          usage("Package file not set");
+          return Status.ERROR;
+        }
+      }
+      else if (arg.equals("--package")) {
+        ++i;
+        try {
+          packages.add(args[i]);
+        }
+        catch (ArrayIndexOutOfBoundsException ignored) {
+          usage("Package not set");
+          return Status.ERROR;
+        }
+      }
+      else if (arg.equals("--dest")) {
+        ++i;
+        try {
+          sdkDest = new File(args[i]);
+          for (OsEntry osEntry : OS_ENTRIES) {
+            File f = new File(sdkDest, osEntry.mFolder);
+            if (!f.exists()) {
+              usage("Invalid SDK path \"" + args[i]
+                    + "\" doesn't contain expected subdir: " + osEntry.mFolder);
+              return Status.ERROR;
+            }
+          }
+        }
+        catch (ArrayIndexOutOfBoundsException ignored) {
+          usage("Dest path not set");
+          return Status.ERROR;
+        }
+      }
+      else {
+        usage("Uknown option: " + arg);
+        return Status.ERROR;
+      }
+    }
+
+    if (sdkDest == null) {
+      usage("SDK destination directory was not set");
+      return Status.ERROR;
+    }
+
+    if (gitIgnoreFile == null && packages.isEmpty()) {
+      usage("--gitignore and/or --package-file must be set");
+      return Status.ERROR;
+    }
+
+    if (gitIgnoreFile != null) {
+      System.out.print("Copying " + gitIgnoreFile.getPath() + " to SDK folders... ");
+      System.out.flush();
+      copyGitIgnore(gitIgnoreFile, sdkDest);
+      System.out.println("done!");
+    }
+
+    if (!packages.isEmpty()) {
+      System.out.println("Delegating work to SDK downloader for all SDK folders...");
+      downloadSdkPackages(sdkDest, packages);
+      System.out.println("done!");
+    }
+
+    return Status.SUCCESS;
+  }
+
+  private static void copyGitIgnore(File gitIgnoreSrc, File sdkDest) {
+    for (OsEntry osEntry : OS_ENTRIES) {
+      File osSdkDest = new File(sdkDest, osEntry.mFolder);
+      File gitIgnoreDest = new File(osSdkDest, ".gitignore");
+      try {
+        Files.copy(gitIgnoreSrc.toPath(), gitIgnoreDest.toPath(),
+                   StandardCopyOption.REPLACE_EXISTING);
+      }
+      catch (IOException e) {
+        System.err.println(
+          "Failed to copy to: " + gitIgnoreDest.getPath() + "\n\n" + "Exception: "
+          + e);
+      }
+    }
+  }
+
+  private static void downloadSdkPackages(File sdkDest, List<String> packages) {
+    for (OsEntry osEntry : OS_ENTRIES) {
+      File osSdkDest = new File(sdkDest, osEntry.mFolder);
+      // Delegate download operation to SdkDownloader program
+      List<String> args = new ArrayList<>();
+      args.add("--channel=3");
+      args.add(osSdkDest.getAbsolutePath());
+      args.addAll(packages);
+
+      Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
+      SdkDownloader.main(args.stream().toArray(String[]::new));
+    }
+  }
+
+  private enum Status {
+    SUCCESS(0),
+    ERROR(1);
+
+    private final int mResultCode;
+
+    Status(int resultCode) {
+      mResultCode = resultCode;
+    }
+  }
+
+  private static final class OsEntry {
+    /**
+     * Names that the SdkDownloader utility expects for specifying target OS.
+     */
+    public final String mName;
+
+   /**
+    * Subfolders that the SDKs will be installed within, usually but not always
+    * the same as {@link mName}
+    */
+    public final String mFolder;
+
+    public OsEntry(String name) {
+      this(name, name);
+    }
+
+    public OsEntry(String name, String folder) {
+      mName = name;
+      mFolder = folder;
+    }
+  }
+}
