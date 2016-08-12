@@ -144,7 +144,8 @@ public class AaptV1Test {
                 new LoggedProcessOutputHandler(mLogger),
                 getBuildToolInfo(rev),
                 mLogger,
-                mode);
+                mode,
+                0);
     }
 
     /**
