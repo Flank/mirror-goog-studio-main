@@ -75,7 +75,6 @@ public abstract class AbstractAapt implements Aapt {
      *     <li>The following fields are optional and some have defaults (these fields do <i>not</i>
      *     need to be defined):
      *     <ul>
-     *         <li>Assets dir (see {@link AaptPackageConfig#getAssetsDir()}};
      *         <li>Custom package for {@code R} (see
      *         {@link AaptPackageConfig#getCustomPackageForR()});
      *         <li>Libraries (see {@link AaptPackageConfig#getLibraries()}); if none is set, an
@@ -234,6 +233,14 @@ public abstract class AbstractAapt implements Aapt {
                         Joiner.on(",").join(resConfigs),
                         Joiner.on("\",\"").join(splits)));
             }
+        }
+
+        /*
+         * A base feature needs to be set to add previous features.
+         */
+        if (!packageConfig.getPreviousFeatures().isEmpty()
+                && packageConfig.getBaseFeature() == null) {
+            throw new AaptException("Previous features set but no base feature set.");
         }
     }
 }
