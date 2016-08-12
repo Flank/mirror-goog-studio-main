@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  You can put this into your .repo/local-manifest/ directory if you want to
+  sync all SDK projects. This is useful if you need to edit all three at the
+  same time.
+-->
+
+<manifest>
+    <extend-project name="platform/tools/vendor/google_prebuilts/studio/sdk/darwin" groups="default"/>
+    <extend-project name="platform/tools/vendor/google_prebuilts/studio/sdk/linux" groups="default"/>
+    <extend-project name="platform/tools/vendor/google_prebuilts/studio/sdk/windows" groups="default"/>
+</manifest>
