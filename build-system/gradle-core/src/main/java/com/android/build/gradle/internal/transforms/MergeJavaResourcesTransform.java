@@ -481,7 +481,7 @@ public class MergeJavaResourcesTransform extends Transform {
             filter.resetList(jarSources.get(jarFile));
 
             // copy the jar file
-            jarMerger.addJar(jarFile, true);
+            jarMerger.addJar(jarFile);
         }
 
         return jarMerger;
