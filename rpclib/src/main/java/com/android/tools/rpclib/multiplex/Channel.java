@@ -101,6 +101,17 @@ public class Channel implements Closeable {
     }
   }
 
+  public boolean isClosed() {
+    return mIsClosed;
+  }
+
+  public static class NotConnectedException extends IOException {
+
+    public NotConnectedException(String message) {
+      super(message);
+    }
+  }
+
   interface EventHandler {
     void closeChannel(long id) throws IOException;
     void writeChannel(long id, byte b[], int off, int len) throws IOException;

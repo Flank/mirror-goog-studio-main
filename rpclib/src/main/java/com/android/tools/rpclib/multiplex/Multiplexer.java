@@ -55,6 +55,12 @@ public class Multiplexer {
     executorService.execute(new Receiver());
   }
 
+  /**
+   * this method can throw Channel.NotConnectedException if the socket has been closed.
+   *
+   * it can also throw java.net.SocketException if the socket is closed after is it opened,
+   * but before the open channel message is sent into the chanel.
+   */
   public Channel openChannel() throws IOException {
     final long id = mNextChannelId.getAndIncrement();
     Channel channel = newChannel(id);
@@ -62,13 +68,13 @@ public class Multiplexer {
     return channel;
   }
 
-  private Channel newChannel(final long id) {
+  private Channel newChannel(final long id) throws Channel.NotConnectedException {
     Long key = Long.valueOf(id);
     Channel channel = new Channel(id, mChannelEventHandler);
 
     synchronized (mChannelMap) {
       if (mReceiverThreadFinished) {
-        throw new IllegalStateException("Receiver thread finished, cannot open new channel.");
+        throw new Channel.NotConnectedException("Receiver thread finished, cannot open new channel."); // will be ignored by Rpc.listen
       }
 
       if (mChannelMap.isEmpty()) {
