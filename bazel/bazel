@@ -20,13 +20,14 @@ if _platform == "linux" or _platform == "linux2":
     bazel_real = os.path.abspath(os.path.join(find_workspace_dir, 'tools', 'base', 'bazel',
                                               'prebuilts', 'linux', 'bazel-real'))
     try:
-      subprocess.call([bazel_real] + sys.argv[1:])
+      ret_val = subprocess.call([bazel_real] + sys.argv[1:])
     except:
       print 'ERROR: Failed to call bazel-real in WORKSPACE: %s' % bazel_real
-      exit(1)
+      sys.exit(1)
+    sys.exit(ret_val)
   else:
     print 'ERROR: Did not find WORKSPACE. Run bazel from inside a studio WORKSPACE.'
-    exit(1)
+    sys.exit(1)
 elif _platform == "darwin":
     print 'NOT IMPLEMENTED: call bazel for mac'
 elif _platform == "win32":
