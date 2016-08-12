@@ -39,103 +39,34 @@ import javax.xml.bind.annotation.XmlTransient;
 public abstract class Archive {
 
     /**
-     * Environment variable used to override the detected OS.
+     * See {@link HostConfig} for more details. If you ever need to override how a package is
+     * parsed, you can re-set this with a new instance, but you should be especially careful not to
+     * do so at an inappropriate time, like when a package is mid-parse.
      */
-    private static final String OS_OVERRIDE_ENV_VAR = "REPO_OS_OVERRIDE";
-
-    /**
-     * The detected bit size of the JVM.
-     */
-    private static int sJvmBits = 0;
-
-    /**
-     * The detected bit size of the host.
-     */
-    private static int sHostBits = 0;
-
-    /**
-     * The detected OS.
-     */
-    private static String sOs = null;
-
-    /**
-     * The detected JVM version.
-     */
-    private static Revision sJvmVersion = null;
+    public static HostConfig sHostConfig = new HostConfig();
 
     /**
      * @return {@code true} if this archive is compatible with the current system with respect to
      * the specified host os, bit size, jvm version, and jvm bit size (if any).
      */
     public boolean isCompatible() {
-        if (getHostOs() != null) {
-            if (sOs == null) {
-                String os = System.getenv(OS_OVERRIDE_ENV_VAR);
-                if (os == null) {
-                    os = System.getProperty("os.name");
-                }
-                if (os.startsWith("Mac")) {
-                    os = "macosx";
-                } else if (os.startsWith("Windows")) {
-                    os = "windows";
-                } else if (os.startsWith("Linux")) {
-                    os = "linux";
-                }
-                sOs = os;
-            }
-            if (!getHostOs().equals(sOs)) {
-                return false;
-            }
+        if (getHostOs() != null && !getHostOs().equals(sHostConfig.mOs)) {
+            return false;
         }
 
-        if (getJvmBits() != null || getHostBits() != null) {
-            if (sJvmBits == 0) {
-                int jvmBits = 0;
-                String arch = System.getProperty("os.arch");
-
-                if (arch.equalsIgnoreCase("x86_64") ||
-                        arch.equalsIgnoreCase("ia64") ||
-                        arch.equalsIgnoreCase("amd64")) {
-                    jvmBits = 64;
-                } else {
-                    jvmBits = 32;
-                }
-                sJvmBits = jvmBits;
-            }
-
-            if (getJvmBits() != null && getJvmBits() != sJvmBits) {
-                return false;
-            }
-
-            if (sHostBits == 0) {
-                // TODO figure out the host bit size.
-                // When jvmBits is 64 we know it's surely 64
-                // but that's not necessarily obvious when jvmBits is 32.
-                sHostBits = sJvmBits;
-            }
-
-            if (getHostBits() != null && getHostBits() != sHostBits) {
-                return false;
-            }
+        if (getJvmBits() != null && getJvmBits() != sHostConfig.mJvmBits) {
+            return false;
         }
 
-        if (getMinJvmVersion() != null) {
-            if (sJvmVersion == null) {
-                Revision minJvmVersion = null;
-                String javav = System.getProperty("java.version");              //$NON-NLS-1$
-                // java Version is typically in the form "1.2.3_45" and we just need to keep up to
-                // "1.2.3" since our revision numbers are in 3-parts form (1.2.3).
-                Pattern p = Pattern.compile("((\\d+)(\\.\\d+)?(\\.\\d+)?).*");  //$NON-NLS-1$
-                Matcher m = p.matcher(javav);
-                if (m.matches()) {
-                    minJvmVersion = Revision.parseRevision(m.group(1));
-                }
-                sJvmVersion = minJvmVersion;
-            }
-            if (getMinJvmVersion().toRevision().compareTo(sJvmVersion) > 0) {
-                return false;
-            }
+        if (getHostBits() != null && getHostBits() != sHostConfig.mHostBits) {
+            return false;
         }
+
+        if (getMinJvmVersion() != null
+                && getMinJvmVersion().toRevision().compareTo(sHostConfig.mJvmVersion) > 0) {
+            return false;
+        }
+
         return true;
     }
 
@@ -262,9 +193,110 @@ public abstract class Archive {
     public abstract CommonFactory createFactory();
 
     /**
+     * Some of the entries in a repository package get selected based on the values of the current
+     * system. This class includes all the settings that can affect which entries get picked.
+     */
+    @XmlTransient
+    public static final class HostConfig {
+
+        /**
+         * Environment variable used to override the detected OS.
+         */
+        private static final String OS_OVERRIDE_ENV_VAR = "REPO_OS_OVERRIDE";
+
+        /**
+         * The detected bit size of the JVM.
+         */
+        private final int mJvmBits;
+
+        /**
+         * The detected bit size of the host.
+         */
+        private final int mHostBits;
+
+        /**
+         * The detected OS.
+         */
+        private final String mOs;
+
+        /**
+         * The detected JVM version.
+         */
+        private final Revision mJvmVersion;
+
+        public HostConfig() {
+            this(detectOs());
+        }
+
+        /**
+         * Constructor for creating a config with a custom OS, useful if you want to select files
+         * for an OS that's different from the current system. You should only be creating this if
+         * you know what you're doing...
+         *
+         * @param os The value "macosx", "linux", or "windows"
+         */
+        public HostConfig(String os) {
+            mOs = os;
+            mJvmBits = detectJvmBits();
+            mHostBits = detectHostBits(mJvmBits);
+            mJvmVersion = detectJvmRevision();
+        }
+
+        private static String detectOs() {
+            String os = System.getenv(OS_OVERRIDE_ENV_VAR);
+            if (os == null) {
+                os = System.getProperty("os.name");
+            }
+            if (os.startsWith("Mac")) {
+                os = "macosx";
+            } else if (os.startsWith("Windows")) {
+                os = "windows";
+            } else if (os.startsWith("Linux")) {
+                os = "linux";
+            }
+            return os;
+        }
+
+        private static int detectJvmBits() {
+            int jvmBits;
+            String arch = System.getProperty("os.arch");
+
+            if (arch.equalsIgnoreCase("x86_64") ||
+                    arch.equalsIgnoreCase("ia64") ||
+                    arch.equalsIgnoreCase("amd64")) {
+                jvmBits = 64;
+            } else {
+                jvmBits = 32;
+            }
+            return jvmBits;
+        }
+
+        private static int detectHostBits(int jvmBits) {
+            // TODO figure out the host bit size.
+            // When jvmBits is 64 we know it's surely 64
+            // but that's not necessarily obvious when jvmBits is 32.
+            return jvmBits;
+        }
+
+        private static Revision detectJvmRevision() {
+            Revision minJvmVersion = null;
+            String javav = System.getProperty("java.version");              //$NON-NLS-1$
+            // java Version is typically in the form "1.2.3_45" and we just need to keep up to
+            // "1.2.3" since our revision numbers are in 3-parts form (1.2.3).
+            Pattern p = Pattern.compile("((\\d+)(\\.\\d+)?(\\.\\d+)?).*");  //$NON-NLS-1$
+            Matcher m = p.matcher(javav);
+            if (m.matches()) {
+                minJvmVersion = Revision.parseRevision(m.group(1));
+            }
+            return minJvmVersion;
+        }
+    }
+
+    /**
      * General parent for the actual files referenced in an archive.
      */
     public abstract static class ArchiveFile {
+
         /**
          * Gets the checksum for the zip.
          */
@@ -338,6 +370,7 @@ public abstract class Archive {
      */
     @XmlTransient
     public abstract static class PatchesType {
+
         @NonNull
         public List<PatchType> getPatch() {
             // Stub
