@@ -46,15 +46,12 @@ import com.google.common.collect.Sets;
 
 import org.w3c.dom.ls.LSResourceResolver;
 
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -143,13 +140,6 @@ public class RepoManagerImpl extends RepoManager {
     private final List<RepoLoadedCallback> mRemoteListeners = Lists.newArrayList();
 
     /**
-     * The name of the file where we store a hash of the known packages, used for invalidating the
-     * cache.
-     */
-    @VisibleForTesting
-    static final String KNOWN_PACKAGES_HASH_FN = ".knownPackages";
-
-    /**
      * How long we should let a load task run before assuming that it's dead.
      */
     private static final long TASK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
@@ -160,14 +150,14 @@ public class RepoManagerImpl extends RepoManager {
     private final Map<RepoPackage, PackageOperation> mInProgressInstalls = Maps.newHashMap();
 
     /**
-     * A facility for creating {@link LocalRepoLoader}s. By default,
-     * {@link LocalRepoLoaderFactoryImpl}.
+     * A facility for creating {@link LocalRepoLoader}s. By default, {@link
+     * LocalRepoLoaderFactoryImpl}.
      */
     private final LocalRepoLoaderFactory mLocalRepoLoaderFactory;
 
     /**
-     * A facility for creating {@link RemoteRepoLoader}s. By default,
-     * {@link RemoteRepoLoaderFactoryImpl}.
+     * A facility for creating {@link RemoteRepoLoader}s. By default, {@link
+     * RemoteRepoLoaderFactoryImpl}.
      */
     private final RemoteRepoLoaderFactory mRemoteRepoLoaderFactory;
 
@@ -183,23 +173,22 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * @see #RepoManagerImpl(FileOp)
-     *
-     * @param localFactory If {@code null}, {@link LocalRepoLoaderFactoryImpl} will be used. Can be
-     *                     non-null for testing.
+     * @param localFactory  If {@code null}, {@link LocalRepoLoaderFactoryImpl} will be used. Can be
+     *                      non-null for testing.
      * @param remoteFactory If {@code null}, {@link RemoteRepoLoaderFactoryImpl} will be used. Can
      *                      be non-null for testing.
+     * @see #RepoManagerImpl(FileOp)
      */
     @VisibleForTesting
     RepoManagerImpl(@Nullable FileOp fop, @Nullable LocalRepoLoaderFactory localFactory,
-      @Nullable RemoteRepoLoaderFactory remoteFactory) {
+            @Nullable RemoteRepoLoaderFactory remoteFactory) {
         mFop = fop;
         registerSchemaModule(getCommonModule());
         registerSchemaModule(getGenericModule());
         mLocalRepoLoaderFactory = localFactory == null ? new LocalRepoLoaderFactoryImpl()
-          : localFactory;
+                : localFactory;
         mRemoteRepoLoaderFactory = remoteFactory == null ? new RemoteRepoLoaderFactoryImpl()
-          : remoteFactory;
+                : remoteFactory;
     }
 
     @Nullable
@@ -262,7 +251,7 @@ public class RepoManagerImpl extends RepoManager {
     @Override
     @NonNull
     public Set<RepositorySource> getSources(@Nullable Downloader downloader,
-      @NonNull ProgressIndicator progress, boolean forceRefresh) {
+            @NonNull ProgressIndicator progress, boolean forceRefresh) {
         Set<RepositorySource> result = Sets.newHashSet();
         for (RepositorySourceProvider provider : mSourceProviders) {
             result.addAll(provider.getSources(downloader, progress, forceRefresh));
@@ -302,9 +291,9 @@ public class RepoManagerImpl extends RepoManager {
     @Nullable
     public LSResourceResolver getResourceResolver(@NonNull ProgressIndicator progress) {
         Set<SchemaModule<?>> allModules = ImmutableSet.<SchemaModule<?>>builder().addAll(
-          getSchemaModules()).add(
-          getCommonModule()).add(
-          getGenericModule()).build();
+                getSchemaModules()).add(
+                getCommonModule()).add(
+                getGenericModule()).build();
         return SchemaModuleUtil.createResourceResolver(allModules, progress);
     }
 
@@ -319,14 +308,14 @@ public class RepoManagerImpl extends RepoManager {
     // TODO: to reload with same settings,
     // TODO: and contains current valid or invalid packages as they are cached here.
     @Override
-    public boolean load(long cacheExpirationMs,
-      @Nullable List<RepoLoadedCallback> onLocalComplete,
-      @Nullable List<RepoLoadedCallback> onSuccess,
-      @Nullable List<Runnable> onError,
-      @NonNull ProgressRunner runner,
-      @Nullable Downloader downloader,
-      @Nullable SettingsController settings,
-      boolean sync) {
+    public void load(long cacheExpirationMs,
+            @Nullable List<RepoLoadedCallback> onLocalComplete,
+            @Nullable List<RepoLoadedCallback> onSuccess,
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings,
+            boolean sync) {
         if (onLocalComplete == null) {
             onLocalComplete = ImmutableList.of();
         }
@@ -337,17 +326,7 @@ public class RepoManagerImpl extends RepoManager {
             onError = ImmutableList.of();
         }
 
-        // If we're not going to refresh, just run the callbacks.
-        if (!isExpired(mLocalPath != null, downloader != null, cacheExpirationMs)) {
-            for (RepoLoadedCallback localComplete : onLocalComplete) {
-                runner.runSyncWithoutProgress(new CallbackRunnable(localComplete, mPackages));
-            }
-            for (RepoLoadedCallback success : onSuccess) {
-                runner.runSyncWithoutProgress(new CallbackRunnable(success, mPackages));
-            }
-            // false: we didn't actually reload.
-            return false;
-        }
+        // So we can block until complete in the synchronous case.
         final Semaphore completed = new Semaphore(1);
         try {
             completed.acquire();
@@ -365,7 +344,7 @@ public class RepoManagerImpl extends RepoManager {
                 mTask.addCallbacks(onLocalComplete, onSuccess, onError, runner);
                 if (sync) {
                     // If we're running synchronously, release the semaphore after run complete.
-                    // Use a dummy runner to ensure we don't try to run on a different thread, and
+                    // Use a dummy runner to ensure we don't try to run on a different thread and
                     // then block trying to release the semaphore.
                     mTask.addCallbacks(ImmutableList.of(),
                             ImmutableList.of(packages -> completed.release()),
@@ -374,8 +353,8 @@ public class RepoManagerImpl extends RepoManager {
                 }
             } else {
                 // Otherwise, create a new task.
-                mTask = new LoadTask(onLocalComplete, onSuccess, onError,
-                  downloader, settings);
+                mTask = new LoadTask(cacheExpirationMs, onLocalComplete, onSuccess, onError,
+                        downloader, settings);
                 mTaskCreateTime = System.currentTimeMillis();
                 createdTask = true;
             }
@@ -394,149 +373,27 @@ public class RepoManagerImpl extends RepoManager {
             runner.runSyncWithProgress((indicator, runner2) -> {
                 try {
                     completed.acquire();
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     /* shouldn't happen*/
                 }
             });
         }
 
-        return true;
-    }
-
-    /**
-     * Checks to see whether the local and/or remote package caches have expired and should be
-     * reloaded.
-     *
-     * @param checkLocal    Whether we should check whether the local packages have expired.
-     * @param checkRemote   Whether we should check whether the remote packages have expired.
-     * @param timeoutPeriod The timeout to use for the cache.
-     * @return {@code true} if {@code checkLocal} is true and the local cache was last refreshed at
-     * least {@code timeoutPeriod} ago or the known package hash file is more recent than our last
-     * update, or if {@code checkRemote} is true and the remote cache was last refreshed at least
-     * {@code timeoutPeriod} ago.
-     */
-    private boolean isExpired(boolean checkLocal, boolean checkRemote, long timeoutPeriod) {
-        long time = System.currentTimeMillis();
-        return (checkLocal &&
-          (mLastLocalRefreshMs + timeoutPeriod <= time || checkKnownPackagesUpdateTime())) ||
-          (checkRemote && mLastRemoteRefreshMs + timeoutPeriod <= time);
     }
 
     @Override
     public boolean reloadLocalIfNeeded(@NonNull ProgressIndicator progress) {
+        // TODO: there should be a nice interface whereby we can do this check without creating a
+        // new LocalRepoLoader instance.
         LocalRepoLoader local = mLocalRepoLoaderFactory.createLocalRepoLoader();
         if (local == null) {
             return false;
         }
 
-        if (checkKnownPackagesUpdateTime()) {
-            mLastLocalRefreshMs = 0;
-        }
-        else if (updateKnownPackageHashFileIfNecessary(local)) {
+        if (local.needsUpdate(mLastLocalRefreshMs, true)) {
             mLastLocalRefreshMs = 0;
         }
         return loadSynchronously(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, progress, null, null);
-    }
-
-    /**
-     * Check to see whether the known packages file has been updated since we last loaded the local
-     * repo.
-     *
-     * @return {@code true} if it has been updated (and thus we should reload our local packages).
-     */
-    private boolean checkKnownPackagesUpdateTime() {
-        File knownPackagesHashFile = getKnownPackagesHashFile();
-        return knownPackagesHashFile != null
-          && mFop.lastModified(knownPackagesHashFile) > mLastLocalRefreshMs;
-    }
-
-    /**
-     * Updates the known packages file with the hash of the current packages.
-     *
-     * @return {@code true} if an update was made.
-     */
-    private boolean updateKnownPackageHashFileIfNecessary(@NonNull LocalRepoLoader local) {
-        File knownPackagesHashFile = getKnownPackagesHashFile();
-        if (knownPackagesHashFile != null) {
-            DataInputStream is = null;
-            try {
-                byte[] buf = null;
-                // If we haven't updated any package more recently than the file, check the file
-                // contents as well before updating. Otherwise we'll always update the file.
-                if (local.getLatestPackageUpdateTime() <= mFop
-                  .lastModified(knownPackagesHashFile)) {
-                    is = new DataInputStream(mFop.newFileInputStream(knownPackagesHashFile));
-                    buf = new byte[(int) mFop.length(knownPackagesHashFile)];
-                    is.readFully(buf);
-                }
-                byte[] localPackagesHash = local.getLocalPackagesHash();
-                if (!Arrays.equals(buf, localPackagesHash)) {
-                    writeHashFile(localPackagesHash);
-                    return true;
-                }
-            } catch (Exception e) {
-                // nothing
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException e) {
-                        // nothing
-                    }
-                }
-            }
-        } else {
-            byte[] localPackagesHash = local.getLocalPackagesHash();
-            if (localPackagesHash != null) {
-                writeHashFile(localPackagesHash);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Actually writes the data to the hash file.
-     */
-    private void writeHashFile(@NonNull byte[] buf) {
-        File knownPackagesHashFile = getKnownPackagesHashFile();
-        if (knownPackagesHashFile == null) {
-            return;
-        }
-        try {
-            OutputStream os = new BufferedOutputStream(
-              mFop.newFileOutputStream(knownPackagesHashFile));
-            try {
-                os.write(buf);
-            } finally {
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    // nothing
-                }
-            }
-        } catch (IOException e) {
-            // nothing
-        }
-    }
-
-    /**
-     * Gets a reference to the known packages file, creating it if necessary.
-     *
-     * @return The file, or {@code null} if it doesn't exist and couldn't be created.
-     */
-    @Nullable
-    private File getKnownPackagesHashFile() {
-        File f = mLocalPath == null ? null : new File(mLocalPath, KNOWN_PACKAGES_HASH_FN);
-        if (f != null && !mFop.exists(f)) {
-            try {
-                mFop.createNewFile(f);
-            } catch (IOException e) {
-                return null;
-            }
-        }
-        return f;
     }
 
     @Override
@@ -551,7 +408,7 @@ public class RepoManagerImpl extends RepoManager {
 
     @Override
     public void installBeginning(@NonNull RepoPackage remotePackage,
-      @NonNull PackageOperation installer) {
+            @NonNull PackageOperation installer) {
         mInProgressInstalls.put(remotePackage, installer);
     }
 
@@ -600,20 +457,26 @@ public class RepoManagerImpl extends RepoManager {
 
         private final List<Runnable> mOnErrors = Lists.newArrayList();
 
-        private final List<Callback> mOnLocalCompletes = Lists.newArrayList();
+        // Must be synchronized since new elements can be added while the task is still in progress
+        // (that is, before mTask is set to null).
+        private final Queue<Callback> mOnLocalCompletes = new ConcurrentLinkedQueue<>();
 
         private final Downloader mDownloader;
 
         private final SettingsController mSettings;
 
-        public LoadTask(@NonNull List<RepoLoadedCallback> onLocalComplete,
-          @NonNull List<RepoLoadedCallback> onSuccess,
-          @NonNull List<Runnable> onError,
-          @Nullable Downloader downloader,
-          @Nullable SettingsController settings) {
+        private final long mCacheExpirationMs;
+
+        public LoadTask(long cacheExpirationMs,
+                @NonNull List<RepoLoadedCallback> onLocalComplete,
+                @NonNull List<RepoLoadedCallback> onSuccess,
+                @NonNull List<Runnable> onError,
+                @Nullable Downloader downloader,
+                @Nullable SettingsController settings) {
             addCallbacks(onLocalComplete, onSuccess, onError, null);
             mDownloader = downloader;
             mSettings = settings;
+            mCacheExpirationMs = cacheExpirationMs;
         }
 
         /**
@@ -622,9 +485,9 @@ public class RepoManagerImpl extends RepoManager {
          * running.
          */
         public void addCallbacks(@NonNull List<RepoLoadedCallback> onLocalComplete,
-          @NonNull List<RepoLoadedCallback> onSuccess,
-          @NonNull List<Runnable> onError,
-          @Nullable ProgressRunner runner) {
+                @NonNull List<RepoLoadedCallback> onSuccess,
+                @NonNull List<Runnable> onError,
+                @Nullable ProgressRunner runner) {
             for (RepoLoadedCallback local : onLocalComplete) {
                 mOnLocalCompletes.add(new Callback(local, runner));
             }
@@ -643,17 +506,20 @@ public class RepoManagerImpl extends RepoManager {
         @Override
         public void run(@NonNull ProgressIndicator indicator, @NonNull ProgressRunner runner) {
             boolean success = false;
+            boolean localSuccess = false;
             try {
                 LocalRepoLoader local = mLocalRepoLoaderFactory.createLocalRepoLoader();
-                if (local != null) {
+                if (local != null &&
+                        (mLastLocalRefreshMs + mCacheExpirationMs < System.currentTimeMillis() ||
+                                local.needsUpdate(mLastLocalRefreshMs, false))) {
                     if (mFallbackLocalRepoLoader != null) {
                         mFallbackLocalRepoLoader.refresh();
                     }
                     indicator.setText("Loading local repository...");
                     Map<String, LocalPackage> newLocals = local.getPackages(indicator);
-                    updateKnownPackageHashFileIfNecessary(local);
                     boolean fireListeners = !newLocals.equals(mPackages.getLocalPackages());
                     mPackages.setLocalPkgInfos(newLocals);
+                    mLastLocalRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
                         for (RepoLoadedCallback listener : mLocalListeners) {
                             listener.doRun(mPackages);
@@ -664,25 +530,31 @@ public class RepoManagerImpl extends RepoManager {
                 if (indicator.isCanceled()) {
                     return;
                 }
-                synchronized (mTaskLock) {
-                    for (Callback onLocalComplete : mOnLocalCompletes) {
-                        onLocalComplete.getRunner(runner).runSyncWithoutProgress(
-                          new CallbackRunnable(onLocalComplete.mCallback, mPackages));
-                    }
-                    mOnLocalCompletes.clear();
+                // Set to true even if we didn't reload locals: the no-op is complete.
+                localSuccess = true;
+
+                // Access using the synchronized queue interface so we don't have to worry about
+                // more elements getting added while we're in the middle of processing.
+                Callback onLocalComplete = mOnLocalCompletes.poll();
+                while (onLocalComplete != null) {
+                    onLocalComplete.getRunner(runner).runSyncWithoutProgress(
+                            new CallbackRunnable(onLocalComplete.mCallback, mPackages));
+                    onLocalComplete = mOnLocalCompletes.poll();
                 }
                 indicator.setText("Fetch remote repository...");
                 indicator.setSecondaryText("");
 
-                if (!mSourceProviders.isEmpty() && mDownloader != null) {
+                if (!mSourceProviders.isEmpty() && mDownloader != null &&
+                        mLastRemoteRefreshMs + mCacheExpirationMs < System.currentTimeMillis()) {
                     RemoteRepoLoader remoteLoader = mRemoteRepoLoaderFactory
-                      .createRemoteRepoLoader(indicator);
+                            .createRemoteRepoLoader(indicator);
                     Map<String, RemotePackage> remotes = remoteLoader
-                      .fetchPackages(indicator, mDownloader, mSettings);
+                            .fetchPackages(indicator, mDownloader, mSettings);
                     indicator.setText("Computing updates...");
                     indicator.setFraction(0.75);
                     boolean fireListeners = !remotes.equals(mPackages.getRemotePackages());
                     mPackages.setRemotePkgInfos(remotes);
+                    mLastRemoteRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
                         for (RepoLoadedCallback callback : mRemoteListeners) {
                             callback.doRun(mPackages);
@@ -701,45 +573,46 @@ public class RepoManagerImpl extends RepoManager {
                 }
                 success = true;
             } finally {
-                if (mDownloader != null) {
-                    mLastRemoteRefreshMs = System.currentTimeMillis();
-                }
-                if (mLocalPath != null) {
-                    mLastLocalRefreshMs = System.currentTimeMillis();
-                }
                 synchronized (mTaskLock) {
                     // The processing of the task is now complete.
                     // To ensure that no more callbacks are added, and to allow another task to be
                     // kicked off when needed, set mTask to null.
                     mTask = null;
-                    if (success) {
-                        for (Callback onLocalComplete : mOnLocalCompletes) {
-                            // in case some were added by another call in the interim.
-                            onLocalComplete.getRunner(runner).runSyncWithoutProgress(
-                              new CallbackRunnable(onLocalComplete.getCallback(), mPackages));
-                        }
-                        for (Callback onSuccess : mOnSuccesses) {
-                            onSuccess.getRunner(runner).runSyncWithoutProgress(
-                              new CallbackRunnable(onSuccess.getCallback(), mPackages));
-                        }
-                    } else {
-                        for (final Runnable onError : mOnErrors) {
-                            onError.run();
-                        }
+                }
+                // Note: in theory it's possible that another task could now be started and modify
+                // mPackages before the callbacks are run below, since we're out of the synchronized
+                // block. Since RepositoryPackages itself is synchronized, though, that should be
+                // ok.
+
+                // in case some were added by another call in the interim.
+                if (localSuccess) {
+                    for (Callback onLocalComplete : mOnLocalCompletes) {
+                        onLocalComplete.getRunner(runner).runSyncWithoutProgress(
+                                new CallbackRunnable(onLocalComplete.getCallback(), mPackages));
+                    }
+                }
+                if (success) {
+                    for (Callback onSuccess : mOnSuccesses) {
+                        onSuccess.getRunner(runner).runSyncWithoutProgress(
+                                new CallbackRunnable(onSuccess.getCallback(), mPackages));
+                    }
+                } else {
+                    for (final Runnable onError : mOnErrors) {
+                        onError.run();
                     }
                 }
             }
         }
     }
 
-    @VisibleForTesting
     interface LocalRepoLoaderFactory {
+
         @Nullable
         LocalRepoLoader createLocalRepoLoader();
     }
 
-    @VisibleForTesting
     interface RemoteRepoLoaderFactory {
+
         @NonNull
         RemoteRepoLoader createRemoteRepoLoader(@NonNull ProgressIndicator progress);
     }
@@ -747,15 +620,15 @@ public class RepoManagerImpl extends RepoManager {
     private class LocalRepoLoaderFactoryImpl implements LocalRepoLoaderFactory {
 
         /**
-         * @return A new {@link LocalRepoLoaderImpl} with our settings, or {@code null} if we don't have
-         * a local path set.
+         * @return A new {@link LocalRepoLoaderImpl} with our settings, or {@code null} if we don't
+         * have a local path set.
          */
         @Override
         @Nullable
         public LocalRepoLoader createLocalRepoLoader() {
             if (mLocalPath != null && mFop != null) {
                 return new LocalRepoLoaderImpl(mLocalPath, RepoManagerImpl.this,
-                  mFallbackLocalRepoLoader, mFop);
+                        mFallbackLocalRepoLoader, mFop);
             }
             return null;
         }
@@ -767,13 +640,13 @@ public class RepoManagerImpl extends RepoManager {
         @NonNull
         public RemoteRepoLoader createRemoteRepoLoader(@NonNull ProgressIndicator progress) {
             return new RemoteRepoLoaderImpl(mSourceProviders,
-              getResourceResolver(progress), mFallbackRemoteRepoLoader);
+                    getResourceResolver(progress), mFallbackRemoteRepoLoader);
         }
     }
 
     /**
-     * A {@link Runnable} that wraps a {@link RepoLoadedCallback} and calls it with the
-     * appropriate args.
+     * A {@link Runnable} that wraps a {@link RepoLoadedCallback} and calls it with the appropriate
+     * args.
      */
     private static class CallbackRunnable implements Runnable {
 
