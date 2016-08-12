@@ -35,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
  * Test cases for {@link FileUtils}.
  */
 public class FileUtilsTest {
+
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
@@ -143,5 +144,17 @@ public class FileUtilsTest {
 
         // Test Windows-based file path
         assertFalse(FileUtils.isFilePathTooLong("bar", new File("C:\\Users\\foo")));
+    }
+
+    @Test
+    public void testRelativePossiblyNonExistingPath() throws IOException {
+        File inputDir = new File("/folders/1/5/main");
+        File folder = new File(inputDir, "com/obsidian/v4/tv/home/playback");
+        File fileToProcess = new File(folder, "CameraPlaybackGlue$1.class");
+        assertEquals("com/obsidian/v4/tv/home/playback/CameraPlaybackGlue$1.class",
+                FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
+        fileToProcess = new File(folder, "CameraPlaybackGlue$CameraPlaybackHost.class");
+        assertEquals("com/obsidian/v4/tv/home/playback/CameraPlaybackGlue$CameraPlaybackHost.class",
+                FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
     }
 }
