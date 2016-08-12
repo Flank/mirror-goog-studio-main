@@ -27,25 +27,39 @@ import org.junit.runners.model.RunnerBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
 public class JarTestSuiteRunner extends Suite {
 
-    public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
-        super(builder, suiteClass, getTestClasses());
+    /** Putatively temporary mechanism to avoid running certain classes. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    public @interface ExcludeClasses {
+        Class<?>[] value();
     }
 
-    private static Class<?>[] getTestClasses() throws ClassNotFoundException, IOException {
+    public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
+        super(builder, suiteClass, getTestClasses(suiteClass));
+    }
+
+    private static Class<?>[] getTestClasses(Class<?> suiteClass) throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
         String name = System.getProperty("test.suite.jar");
 
@@ -57,7 +71,29 @@ public class JarTestSuiteRunner extends Suite {
                 }
             }
         }
-        return testClasses.toArray(new Class<?>[testClasses.size()]);
+        Set<String> excludeClassNames = classNamesToExclude(suiteClass, testClasses);
+        return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
+    }
+
+    /** Putatively temporary mechanism to avoid running certain classes. */
+    private static Set<String> classNamesToExclude(Class<?> suiteClass, List<Class<?>> testClasses) {
+        Set<String> testClassNames = testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+        Set<String> excludeClassNames = new HashSet<>();
+        ExcludeClasses annotation = suiteClass.getAnnotation(ExcludeClasses.class);
+        if (annotation != null) {
+            for (Class<?> classToExclude : annotation.value()) {
+                String className = classToExclude.getCanonicalName();
+                if (!excludeClassNames.add(className)) {
+                    throw new RuntimeException(String.format(
+                      "on %s, %s value duplicated: %s", suiteClass.getSimpleName(), ExcludeClasses.class.getSimpleName(), className));
+                }
+                if (!testClassNames.contains(className)) {
+                    throw new RuntimeException(String.format(
+                      "on %s, %s value not found: %s", suiteClass.getSimpleName(), ExcludeClasses.class.getSimpleName(), className));
+                }
+            }
+        }
+        return excludeClassNames;
     }
 
     private static List<Class<?>> getTestClasses(URL url, ClassLoader loader) throws ClassNotFoundException, IOException {
