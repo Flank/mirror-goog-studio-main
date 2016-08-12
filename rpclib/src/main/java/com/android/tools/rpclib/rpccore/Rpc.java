@@ -16,6 +16,7 @@
 package com.android.tools.rpclib.rpccore;
 
 import com.android.tools.rpclib.futures.FutureController;
+import com.android.tools.rpclib.multiplex.Channel;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -46,16 +47,22 @@ public class Rpc {
      * @throws CancellationException if the computation was cancelled.
      */
     public static <V> V get(final ListenableFuture<V> future, long timeout, TimeUnit unit)
-        throws RpcException, TimeoutException, ExecutionException {
+        throws RpcException, TimeoutException, ExecutionException, Channel.NotConnectedException {
         try {
             return Uninterruptibles.getUninterruptibly(future, timeout, unit);
         }
         catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            if (!(cause instanceof RpcException)) {
-                throw e;
+            if (cause instanceof RpcException) {
+                throw (RpcException)cause;
             }
-            throw (RpcException)cause;
+            if (cause instanceof Channel.NotConnectedException) {
+                throw (Channel.NotConnectedException)cause;
+            }
+            if (cause instanceof RejectedExecutionException) {
+                throw (RejectedExecutionException)cause;
+            }
+            throw e;
         }
     }
 
@@ -63,31 +70,25 @@ public class Rpc {
      * Calls {@link Callback#onFinish} with the {@link Result} once the {@link ListenableFuture} RPC call
      * has either successfully completed or thrown an exception.
      *
-     * <p>If {@link Callback#onFinish} does not throw an uncaught,
-     * non-{@link CancellationException} then it is logged as an error to the provided
-     * {@link Logger}.
-     *
-     * @param future   the {@link ListenableFuture} returned by the invoking the RPC call.
-     * @param log      the {@link Logger} used for logging uncaught exceptions thrown from {@link Callback#onFinish}.
-     * @param callback the {@link Callback} to handle {@link Callback#onStart} and {@link Callback#onFinish} events.
      * @param <V>      the RPC result type.
+     * @param future   the {@link ListenableFuture} returned by the invoking the RPC call.
+     * @param callback the {@link Callback} to handle {@link Callback#onStart} and {@link Callback#onFinish} events.
      */
-    public static <V> void listen(ListenableFuture<V> future, Logger log, Callback<V> callback) {
-        listen(future, log, FutureController.NULL_CONTROLLER, callback);
+    public static <V> void listen(ListenableFuture<V> future, Callback<V> callback) {
+        listen(future, FutureController.NULL_CONTROLLER, callback);
     }
 
     /**
-     * Extension of {@link #listen(ListenableFuture, Logger, Callback)} that also takes a {@link FutureController}
+     * Extension of {@link #listen(ListenableFuture, Callback)} that also takes a {@link FutureController}
      * for controlling the {@link Future}s.
      *
-     * @param future     the {@link ListenableFuture} returned by the invoking the RPC call.
-     * @param log        the {@link Logger} used for logging uncaught exceptions thrown from {@link Callback#onFinish}.
-     * @param callback   the {@link Callback} to handle {@link Callback#onStart} and {@link Callback#onFinish} events.
-     * @param controller the {@link FutureController} used to manage the RPC futures.
      * @param <V>        the RPC result type.
+     * @param future     the {@link ListenableFuture} returned by the invoking the RPC call.
+     * @param controller the {@link FutureController} used to manage the RPC futures.
+     * @param callback   the {@link Callback} to handle {@link Callback#onStart} and {@link Callback#onFinish} events.
      */
     public static <V> void listen(
-            final ListenableFuture<V> future, final Logger log, final FutureController controller, final Callback<V> callback) {
+      final ListenableFuture<V> future, final FutureController controller, final Callback<V> callback) {
         controller.onStart(future);
         future.addListener(new Runnable() {
             @Override
@@ -95,15 +96,7 @@ public class Rpc {
                 if (!controller.onStop(future)) {
                     return;
                 }
-                try {
-                    callback.onFinish(new Result<V>(future));
-                }
-                catch (CancellationException e) {
-                    // Not an error, don't log.
-                }
-                catch (Exception e) {
-                    log.error("error in Rpc.listen", e);
-                }
+                callback.onFinish(new Result<V>(future));
             }
         }, EXECUTOR);
     }
@@ -119,7 +112,7 @@ public class Rpc {
          *
          * <p>Call {@link Result#get()} to get the RPC result.
          */
-        public abstract void onFinish(Result<V> result) throws RpcException, ExecutionException;
+        void onFinish(Result<V> result);
     }
 
     /**
@@ -149,16 +142,22 @@ public class Rpc {
          *                               {@link ListenableFuture}.
          * @throws CancellationException if the computation was cancelled.
          */
-        public V get() throws RpcException, ExecutionException {
+        public V get() throws RpcException, ExecutionException, Channel.NotConnectedException {
             try {
                 return Uninterruptibles.getUninterruptibly(mFuture);
             }
             catch (ExecutionException e) {
                 Throwable cause = e.getCause();
-                if (!(cause instanceof RpcException)) {
-                    throw e;
+                if (cause instanceof RpcException) {
+                    throw (RpcException)cause;
                 }
-                throw (RpcException)cause;
+                if (cause instanceof Channel.NotConnectedException) {
+                    throw (Channel.NotConnectedException)cause;
+                }
+                if (cause instanceof RejectedExecutionException) {
+                    throw (RejectedExecutionException)cause;
+                }
+                throw e;
             }
         }
     }

@@ -20,6 +20,8 @@ import com.android.tools.rpclib.binary.Decoder;
 import com.android.tools.rpclib.binary.Encoder;
 import com.android.tools.rpclib.multiplex.Channel;
 import com.android.tools.rpclib.multiplex.Multiplexer;
+import java.io.EOFException;
+import java.net.SocketException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedOutputStream;
@@ -50,10 +52,12 @@ public class Broadcaster {
     encoder.int8((byte)(mVersion < 2 ? '0' : '1'));
   }
 
-  public BinaryObject Send(@NotNull BinaryObject call) throws IOException, RpcException {
-    Channel channel = mMultiplexer.openChannel();
+  public BinaryObject Send(@NotNull BinaryObject call) throws IOException, RpcException, Channel.NotConnectedException {
+    Channel channel = null;
 
     try {
+      channel = mMultiplexer.openChannel(); // this can sometimes throw SocketException, so needs to be inside the try
+
       BufferedOutputStream out = new BufferedOutputStream(channel.getOutputStream(), mMtu);
       Encoder e = new Encoder(out);
       Decoder d = new Decoder(channel.getInputStream());
@@ -77,9 +81,18 @@ public class Broadcaster {
 
       return res;
     }
+    catch (EOFException | SocketException ex) {
+      // trying to read but the connection has been closed, cancel the current operation
+      if ((channel != null && channel.isClosed()) || (ex instanceof SocketException && "Socket closed".equalsIgnoreCase(ex.getMessage()))) {
+        throw new Channel.NotConnectedException(ex.toString());
+      }
+      throw ex;
+    }
     finally {
       // Close the channel
-      channel.close();
+      if (channel != null) {
+        channel.close();
+      }
     }
   }
 }
