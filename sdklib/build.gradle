@@ -60,7 +60,8 @@ task initSdkForTests(type: JavaExec) {
                 'add-ons;addon-google_apis-google-21', 'add-ons;addon-google_apis-google-22',
                 'add-ons;addon-google_apis-google-23',
                 'extras;android;support', 'extras;google;m2repository', 'extras;android;m2repository',
-                'cmake;3.6']
+                'cmake;3.6', "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha6",
+                "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha6"]
     }
 }
 
