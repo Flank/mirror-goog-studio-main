@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.model.JavaLibraryImpl;
+import com.android.build.gradle.internal.ide.JavaLibraryImpl;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
