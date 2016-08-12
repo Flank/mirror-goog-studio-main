@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonWriter;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 
+import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProject.PluginGeneration;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
@@ -170,6 +171,14 @@ public class ProcessRecorder {
         }
         if (benchmarkMode != null) {
             properties.put("benchmark_mode", benchmarkMode);
+        }
+        // Set next_gen_plugin to true as long as one of the project use the component model plugin.
+        for (AndroidStudioStats.GradleBuildProject.Builder project :
+                mBuild.getProjectBuilderList()) {
+            if (project.getPluginGeneration() == PluginGeneration.COMPONENT_MODEL) {
+                properties.put("next_gen_plugin", "true");
+                break;
+            }
         }
         writer.write(
                 AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
