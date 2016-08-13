@@ -82,7 +82,9 @@ public class AnnotationProcessorTest {
                 .fromTestApp(new MultiModuleTestProject(
                         ImmutableMap.of(
                                 ":app", sApp,
-                                ":lib", new AnnotationProcessorLib())))
+                                ":lib", AnnotationProcessorLib.createLibrary(),
+                                ":lib-compiler", AnnotationProcessorLib.createCompiler()
+                                )))
                 .useExperimentalGradleVersion(forComponentPlugin)
                 .create();
     }
@@ -179,7 +181,7 @@ public class AnnotationProcessorTest {
     public void normalBuild() throws Exception {
         Files.append("\n"
                 + "dependencies {\n"
-                + "    annotationProcessor project(':lib')\n"
+                + "    annotationProcessor project(':lib-compiler')\n"
                 + "    compile project(':lib')\n"
                 + "}\n", project.getSubproject(":app").getBuildFile(), Charsets.UTF_8 );
         project.execute("assembleDebug");
@@ -201,7 +203,7 @@ public class AnnotationProcessorTest {
 
         Files.append(
                 "dependencies {\n"
-                        + "    compile project(':lib')\n"
+                        + "    compile project(':lib-compiler')\n"
                         + "    annotationProcessor files('empty.jar')\n"
                         + "}\n",
                 project.getSubproject(":app").getBuildFile(),
@@ -215,7 +217,7 @@ public class AnnotationProcessorTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
                 "dependencies {\n"
-                        + "    annotationProcessor project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
                         + "    compile project(':lib')\n"
                         + "}\n");
         project.executeConnectedCheck();
