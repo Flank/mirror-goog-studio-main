@@ -1903,6 +1903,38 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         copy("src/android/support/annotation/FloatRange.java.txt", "src/android/support/annotation/FloatRange.java")));
     }
 
+    public void testNegativeFloatRange() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=219246
+        // Make sure we correctly handle negative ranges for floats
+        assertEquals("src/test/pkg/FloatRangeTest.java:8: Error: Value must be ≥ -90.0 (was -150.0) [Range]\n"
+                        + "        call(-150.0); // ERROR\n"
+                        + "             ~~~~~~\n"
+                        + "src/test/pkg/FloatRangeTest.java:10: Error: Value must be ≤ -5.0 (was -3.0) [Range]\n"
+                        + "        call(-3.0); // ERROR\n"
+                        + "             ~~~~\n"
+                        + "2 errors, 0 warnings\n",
+
+                lintProject(
+                        java("src/test/pkg/FloatRangeTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.support.annotation.FloatRange;\n"
+                                + "\n"
+                                + "@SuppressWarnings(\"unused\")\n"
+                                + "public class FloatRangeTest {\n"
+                                + "    public void test() {\n"
+                                + "        call(-150.0); // ERROR\n"
+                                + "        call(-45.0); // OK\n"
+                                + "        call(-3.0); // ERROR\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private void call(@FloatRange(from=-90.0, to=-5.0) double arg) {\n"
+                                + "    }\n"
+                                + "}\n"),
+                        copy("src/android/support/annotation/IntRange.java.txt", "src/android/support/annotation/IntRange.java"),
+                        copy("src/android/support/annotation/FloatRange.java.txt", "src/android/support/annotation/FloatRange.java")));
+    }
+
     public void testIntDefInBuilder() throws Exception {
         // Ensure that we only check constants, not instance fields, when passing
         // fields as arguments to typedef parameters.
