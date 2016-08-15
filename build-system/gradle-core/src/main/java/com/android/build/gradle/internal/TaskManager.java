@@ -1153,6 +1153,9 @@ public abstract class TaskManager {
             compileTask.dependsOn(tasks,
                     scope.getVariantData().getVariantDependency().getCompileConfiguration()
                             .getBuildDependencies());
+            compileTask.dependsOn(tasks,
+                    scope.getVariantData().getVariantDependency()
+                            .getAnnotationProcessorConfiguration().getBuildDependencies());
         }
     }
 
