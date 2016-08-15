@@ -160,10 +160,12 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 processorPath, LOG);
 
         if (incremental) {
-            LOG.info("Using incremental javac compilation.");
+            LOG.verbose("Using incremental javac compilation for %1$s %2$s.",
+                    project.getPath(), scope.getFullVariantName());
             javacTask.getOptions().setIncremental(true);
         } else {
-            LOG.info("Not using incremental javac compilation.");
+            LOG.verbose("Not using incremental javac compilation for %1$s %2$s.",
+                    project.getPath(), scope.getFullVariantName());
         }
 
         if (!processorPath.isEmpty()) {

@@ -130,7 +130,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
         CustomTestRunListener runListener = null;
         try {
             device.connect(timeoutInMs, logger);
-            logger.info("connected to %s to run tests", deviceName);
+            logger.verbose("Connected to %s to run tests", deviceName);
             synchronized (ShardedTestCallable.class) {
                 if (!testedApks.isEmpty()) {
                     logger.verbose("DeviceConnector '%s': installing %s", deviceName,
@@ -159,13 +159,13 @@ public class ShardedTestCallable implements Callable<Boolean> {
                     device.installPackage(testApk,
                             ImmutableList.<String>of() /* installOptions */, timeoutInMs, logger);
                 }
-                logger.info("Installed test apk on %s", deviceName);
+                logger.verbose("Installed test apk on %s", deviceName);
             }
             isInstalled = true;
             Integer shard;
 
             while ((shard = shardProvider.getNextShard()) != null) {
-                logger.info("running shard %d on %s", shard, deviceName);
+                logger.verbose("Running shard %d on %s", shard, deviceName);
                 RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
                         testData.getApplicationId(),
                         testData.getInstrumentationRunner(),
@@ -201,7 +201,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
                     logger.warning("shard %d  has 0 tests. This might be OK", shard);
                 }
                 failed |= testRunResult.hasFailedTests() || testRunResult.isRunFailure();
-                logger.info("done running shard %d on %s", shard, deviceName);
+                logger.verbose("done running shard %d on %s", shard, deviceName);
             }
             return !failed;
         } catch (Exception e) {
@@ -231,7 +231,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
                         @Override
                         public void processNewLines(String[] lines) {
                             for (String line : lines) {
-                                logger.info(line);
+                                logger.verbose(line);
                             }
                         }
 
@@ -366,7 +366,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
 
         public synchronized void onTestFinished() {
             finishedTestCount++;
-            logger.info("finished %d of estimated %d tests. %.2f%%", finishedTestCount,
+            logger.verbose("finished %d of estimated %d tests. %.2f%%", finishedTestCount,
                     estimatedTestCount,
                     estimatedTestCount == 0 ? 0 : 100f * finishedTestCount / estimatedTestCount);
         }

@@ -107,10 +107,10 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
                 multiDex);
 
         ILogger logger = builder.getLogger();
-        logger.info("preDexLibrary : %s", itemKey);
+        logger.verbose("preDexLibrary : %1$s", itemKey);
         Pair<Item, Boolean> pair = getItem(logger, itemKey);
         Item item = pair.getFirst();
-        logger.info("Item from cache %s", item.toString());
+        logger.verbose("Item from cache %1$s", item.toString());
 
         // if this is an already cached item.
         if (!pair.getSecond()) {
@@ -119,7 +119,7 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
             }
             // if we fall through here, that means the cached item is not there any more, force
             // the regeneration.
-            logger.info("Forced regeneration : %s", itemKey);
+            logger.verbose("Forced regeneration : %1$s", itemKey);
             pair = regenerateItem(logger, itemKey);
             item = pair.getFirst();
         }

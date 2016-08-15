@@ -98,6 +98,6 @@ class LegacyTaskMonitor implements ITaskMonitor {
 
     @Override
     public void verbose(@NonNull String msgFormat, Object... args) {
-        // TODO
+        mWrapped.logVerbose(String.format(msgFormat, args));
     }
 }

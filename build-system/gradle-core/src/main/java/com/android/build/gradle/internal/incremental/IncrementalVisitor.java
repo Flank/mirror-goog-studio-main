@@ -113,7 +113,7 @@ public class IncrementalVisitor extends ClassVisitor {
         super(Opcodes.ASM5, classVisitor);
         this.classNode = classNode;
         this.parentNodes = parentNodes;
-        LOG.info("%s: Visiting %s", getClass().getSimpleName(), classNode.name);
+        LOG.verbose("%s: Visiting %s", getClass().getSimpleName(), classNode.name);
     }
 
     @NonNull
@@ -413,7 +413,7 @@ public class IncrementalVisitor extends ClassVisitor {
         while (currentParentName != null) {
             File parentFile = new File(binaryFolder, currentParentName + ".class");
             if (parentFile.exists()) {
-                LOG.info("Parsing %s.", parentFile);
+                LOG.verbose("Parsing %s.", parentFile);
                 InputStream parentFileClassReader = new BufferedInputStream(new FileInputStream(parentFile));
                 ClassReader parentClassReader = new ClassReader(parentFileClassReader);
                 ClassNode parentNode = new ClassNode();
@@ -433,7 +433,7 @@ public class IncrementalVisitor extends ClassVisitor {
                     currentParentName = parentNode.superName;
                 } catch (IOException e) {
                     // Could not locate parent class. This is as far as we can go locating parents.
-                    LOG.info(
+                    LOG.verbose(
                             "IncrementalVisitor parseParents could not locate %1$s "
                                     + "which is an ancestor of project class %2$s.\n",
                             currentParentName, classNode.name);

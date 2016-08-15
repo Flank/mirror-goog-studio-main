@@ -304,7 +304,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
             @NonNull ProgressIndicator progress) throws JAXBException {
         Repository repo;
         try {
-            progress.logInfo("Parsing " + packageXml);
+            progress.logVerbose("Parsing " + packageXml);
             repo = (Repository) SchemaModuleUtil.unmarshal(mFop.newFileInputStream(packageXml),
                     mRepoManager.getSchemaModules(), mRepoManager.getResourceResolver(progress),
                     false, progress);

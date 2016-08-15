@@ -120,7 +120,7 @@ public class CustomTestRunListener extends XmlTestRunListener {
         if (!mFailedTests.remove(test)) {
             // if wasn't present in the list, then the test succeeded.
             if (mLogger != null) {
-                mLogger.info("\n%1$s > %2$s[%3$s] \033[32mSUCCESS \033[0m",
+                mLogger.verbose("\n%1$s > %2$s[%3$s] \033[32mSUCCESS \033[0m",
                         test.getClassName(), test.getTestName(), mDeviceName);
             }
 

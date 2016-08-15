@@ -159,7 +159,7 @@ public class ManifestMerger2 {
         // merge in lower priority documents.
         Optional<XmlDocument> xmlDocumentOptional = Optional.absent();
         for (File inputFile : mFlavorsAndBuildTypeFiles) {
-            mLogger.info("Merging flavors and build manifest %s \n", inputFile.getPath());
+            mLogger.verbose("Merging flavors and build manifest %s \n", inputFile.getPath());
             LoadedManifestInfo overlayDocument = load(
                     new ManifestInfo(null, inputFile, XmlDocument.Type.OVERLAY,
                             Optional.of(mainPackageAttribute.get().getValue())),
@@ -215,7 +215,7 @@ public class ManifestMerger2 {
             }
         }
 
-        mLogger.info("Merging main manifest %s\n", mManifestFile.getPath());
+        mLogger.verbose("Merging main manifest %s\n", mManifestFile.getPath());
         xmlDocumentOptional =
                 merge(xmlDocumentOptional, loadedMainManifestInfo, mergingReportBuilder);
 
@@ -235,7 +235,7 @@ public class ManifestMerger2 {
             }
         }
         for (LoadedManifestInfo libraryDocument : loadedLibraryDocuments) {
-            mLogger.info("Merging library manifest " + libraryDocument.getLocation());
+            mLogger.verbose("Merging library manifest " + libraryDocument.getLocation());
             xmlDocumentOptional = merge(
                     xmlDocumentOptional, libraryDocument, mergingReportBuilder);
             if (!xmlDocumentOptional.isPresent()) {
@@ -568,7 +568,7 @@ public class ManifestMerger2 {
 
         ImmutableList.Builder<LoadedManifestInfo> loadedLibraryDocuments = ImmutableList.builder();
         for (Pair<String, File> libraryFile : mLibraryFiles) {
-            mLogger.info("Loading library manifest " + libraryFile.getSecond().getPath());
+            mLogger.verbose("Loading library manifest " + libraryFile.getSecond().getPath());
             ManifestInfo manifestInfo = new ManifestInfo(libraryFile.getFirst(),
                     libraryFile.getSecond(),
                     XmlDocument.Type.LIBRARY, Optional.<String>absent());

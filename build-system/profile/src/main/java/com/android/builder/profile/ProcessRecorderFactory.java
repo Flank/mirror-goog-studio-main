@@ -238,7 +238,7 @@ public class ProcessRecorderFactory {
 
                 while ((line = reader.readLine()) != null) {
                     if (mLogger != null) {
-                        mLogger.info("From POST : " + line);
+                        mLogger.verbose("From POST : " + line);
                     }
                 }
             }
