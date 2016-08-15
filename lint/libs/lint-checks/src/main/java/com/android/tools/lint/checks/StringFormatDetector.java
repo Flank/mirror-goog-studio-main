@@ -1356,6 +1356,13 @@ public class StringFormatDetector extends ResourceXmlDetector implements JavaPsi
                                     break;
                                 case 'h':
                                 case 'H': // Hex print of hash code of objects
+                                    // From https://developer.android.com/reference/java/util/Formatter.html
+                                    // """The following general conversions may be applied to any
+                                    // argument type: 'b', 'B', 'h', 'H', 's', 'S' """
+                                    // We'll still warn about %s since you may have intended
+                                    // numeric formatting, but hex printing seems pretty well
+                                    // intended.
+                                    continue;
                                 case 's':
                                 case 'S':
                                     // String. Can pass anything, but warn about
@@ -1417,6 +1424,16 @@ public class StringFormatDetector extends ResourceXmlDetector implements JavaPsi
                                         "(argument #%5$d in method call)%6$s",
                                         i, name, formatType, canonicalText,
                                         argumentIndex + 1, suggestion);
+
+                                if ((last == 's' || last == 'S') && isNumericType(type, false)) {
+                                    message = String.format(
+                                        "Suspicious argument type for formatting argument #%1$d " +
+                                        "in `%2$s`: conversion is `%3$s`, received `%4$s` " +
+                                        "(argument #%5$d in method call)%6$s",
+                                        i, name, formatType, canonicalText,
+                                        argumentIndex + 1, suggestion);
+                                }
+
                                 context.report(ARG_TYPES, call, location, message);
                                 if (reported == null) {
                                     reported = Sets.newHashSet();
