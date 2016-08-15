@@ -95,6 +95,8 @@ public class ExtractAnnotationsDriverTest {
                         + "    void foo()\n"
                         + "}\n"
                         + "\n"
+                        + "-keep class test.pkg.KeepTest.MyAnnotation\n"
+                        + "\n"
                         + "-keep class test.pkg.KeepTest.MyClass\n"
                         + "\n"
                         + "-keep enum test.pkg.KeepTest.MyEnum\n"
@@ -250,6 +252,55 @@ public class ExtractAnnotationsDriverTest {
                 + "</root>\n"
                 + "\n");
 
+
+        deleteFile(project);
+    }
+
+    @Test
+    public void testWriteJarRecipeFile() throws Exception {
+        checkValidEcj();
+
+        File androidJar = findAndroidJar(false);
+
+        File project = createProject(
+                mIntDefTest,
+                mPermissionsTest,
+                mManifest,
+                mKeepAnnotation,
+                mIntDefAnnotation,
+                mIntRangeAnnotation,
+                mPermissionAnnotation);
+
+        File output = mTemporaryFolder.newFile("annotations.zip");
+        File proguard = mTemporaryFolder.newFile("proguard.cfg");
+        File typedefFile = mTemporaryFolder.newFile("typedefs.txt");
+
+        List<String> list = java.util.Arrays.asList(
+                "--sources",
+                new File(project, "src").getPath(),
+                "--classpath",
+                androidJar.getPath(),
+
+                "--quiet",
+                "--language-level",
+                "1.6",
+                "--output",
+                output.getPath(),
+                "--proguard",
+                proguard.getPath(),
+                "--typedef-file",
+                typedefFile.getPath()
+        );
+        String[] args = list.toArray(new String[list.size()]);
+        assertNotNull(args);
+
+        new ExtractAnnotationsDriver().run(args);
+
+        // Check external annotations
+        assertEquals(""
+                + "D test/pkg/IntDefTest$DialogFlags\n"
+                + "D test/pkg/IntDefTest$DialogStyle\n",
+                Files.toString(typedefFile, Charsets.UTF_8));
 
         deleteFile(project);
     }
@@ -488,7 +539,6 @@ public class ExtractAnnotationsDriverTest {
                 ApiDatabase.getRawParameterList("Object<? extends java.util.List>,java.util.List<String>,"
                         + "List<? super Number>,int[],Object..."));
     }
-
 
     private static class TestFile {
         @NonNull
