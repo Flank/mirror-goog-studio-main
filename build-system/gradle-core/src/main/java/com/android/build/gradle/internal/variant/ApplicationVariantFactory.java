@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.model.FilterDataImpl;
+import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;

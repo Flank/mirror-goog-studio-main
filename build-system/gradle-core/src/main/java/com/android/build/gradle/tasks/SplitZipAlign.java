@@ -28,7 +28,7 @@ import com.android.build.OutputFile.FilterType;
 import com.android.build.OutputFile.OutputType;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.model.FilterDataImpl;
+import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;

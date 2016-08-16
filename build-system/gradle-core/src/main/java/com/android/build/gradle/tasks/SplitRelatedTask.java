@@ -22,14 +22,11 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.OutputFile.FilterType;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.model.FilterDataImpl;
+import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.publishing.FilterDataPersistence;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.tasks.SplitFileSupplier;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.gradle.api.Task;
 
