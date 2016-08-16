@@ -79,11 +79,16 @@ public class LibWithPackageLocalJarTest {
     }
 
     @Test
-    public void checkPackagedLocalJarIsNotInTheModel() {
+    public void checkPackagedLocalJarIsNotInTheCompileModel() {
         Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
 
         Dependencies compileDependencies = variant.getMainArtifact().getCompileDependencies();
         assertThat(compileDependencies.getJavaLibraries()).named("java libs").isEmpty();
+    }
+
+    @Test
+    public void checkPackagedLocalJarIsNotInThePackageModel() {
+        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
 
         Dependencies packageDependencies = variant.getMainArtifact().getPackageDependencies();
         assertThat(packageDependencies.getJavaLibraries()).named("java libs").hasSize(1);
