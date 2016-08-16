@@ -11,11 +11,23 @@ java_library(
   srcs = glob(["src/**/utils/*.java"]),
 )
 
+# Part of the standalone-jps-builder artifact from IDEA
+java_import(
+  name = "formc-deps",
+  jars = [
+    "prebuilts/asm-all.jar",
+    "prebuilts/jdom.jar",
+    "prebuilts/jgoodies-forms.jar",
+    "prebuilts/jps-builders.jar",
+  ],
+)
+
 java_library(
   name = "groovy-compiler",
   srcs = glob(["src/**/groovy/*.java"]),
   # Note that version 2.3 of groovy, embeds timestamps into the generated classes
   # making it unsuitable for bazel or any other reasonable tool.
+  # TODO: Update and use the prebuilts dependency
   deps = [
     "//tools:idea/lib/groovy-all-2.4.6",
     ":utils"
@@ -66,6 +78,18 @@ java_binary(
   main_class = "com.android.tools.kotlin.KotlinCompiler",
   deps = [
     ":kotlin-compiler",
+    ":utils",
+  ],
+  runtime_deps = [":kotlin-runtime"],
+  visibility = ["//visibility:public"],
+)
+
+java_binary(
+  name = "formc",
+  srcs = ["src/com/android/tools/form/FormCompiler.java"],
+  main_class = "com.android.tools.form.FormCompiler",
+  deps = [
+    ":formc-deps",
     ":utils",
   ],
   runtime_deps = [":kotlin-runtime"],
