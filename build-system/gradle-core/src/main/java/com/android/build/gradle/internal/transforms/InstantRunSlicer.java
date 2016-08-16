@@ -325,7 +325,7 @@ public class InstantRunSlicer extends Transform {
                 }
             }
         }
-        logger.info("No jar merging necessary, all input jars unchanged");
+        logger.verbose("No jar merging necessary, all input jars unchanged");
     }
 
     private void processCodeChanges(
@@ -356,7 +356,7 @@ public class InstantRunSlicer extends Transform {
                                 String.valueOf(
                                         variantScope.getInstantRunBuildContext().getBuildId()),
                                 new File(sliceOutputLocation, "buildId.txt"), Charsets.UTF_8);
-                        logger.info("Writing buildId in %s because of %s",
+                        logger.verbose("Writing buildId in %s because of %s",
                                 sliceOutputLocation.getAbsolutePath(),
                                 changedFile.toString());
                     }
@@ -372,7 +372,7 @@ public class InstantRunSlicer extends Transform {
                             if (fileToProcess.isFile()) {
                                 Files.createParentDirs(outputFile);
                                 Files.copy(fileToProcess, outputFile);
-                                logger.info("Copied %s to %s", fileToProcess, outputFile);
+                                logger.verbose("Copied %s to %s", fileToProcess, outputFile);
                             }
                             break;
                         case REMOVED:
@@ -387,7 +387,7 @@ public class InstantRunSlicer extends Transform {
                                             String.format("Cannot delete file %1$s",
                                                     outputFile.getAbsolutePath()));
                                 }
-                                logger.info("Deleted %s", outputFile);
+                                logger.verbose("Deleted %s", outputFile);
                             }
                             break;
                         default:

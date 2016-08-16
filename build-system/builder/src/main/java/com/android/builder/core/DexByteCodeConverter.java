@@ -166,13 +166,13 @@ public class DexByteCodeConverter {
             @NonNull final ProcessOutputHandler outputHandler)
             throws IOException, ProcessException {
         final String submission = Joiner.on(',').join(builder.getInputs());
-        mLogger.info("Dexing in-process : %s", submission);
+        mLogger.verbose("Dexing in-process : %1$s", submission);
         try {
             sDexExecutorService.submit(() -> {
                 Stopwatch stopwatch = Stopwatch.createStarted();
                 ProcessResult result = DexWrapper.run(builder, dexOptions, outputHandler);
                 result.assertNormalExitValue();
-                mLogger.info("Dexing %s took %s.", submission, stopwatch.toString());
+                mLogger.verbose("Dexing %1$s took %2$s.", submission, stopwatch.toString());
                 return null;
             }).get();
         } catch (Exception e) {
@@ -186,7 +186,7 @@ public class DexByteCodeConverter {
             @NonNull final ProcessOutputHandler processOutputHandler)
             throws ProcessException, InterruptedException {
         final String submission = Joiner.on(',').join(builder.getInputs());
-        mLogger.info("Dexing out-of-process : %s", submission);
+        mLogger.verbose("Dexing out-of-process : %1$s", submission);
         try {
             Callable<Void> task = () -> {
                 JavaProcessInfo javaProcessInfo =
@@ -205,7 +205,7 @@ public class DexByteCodeConverter {
             } else {
                 sDexExecutorService.submit(task).get();
             }
-            mLogger.info("Dexing %s took %s.", submission, stopwatch.toString());
+            mLogger.verbose("Dexing %1$s took %2$s.", submission, stopwatch.toString());
         } catch (Exception e) {
             throw new ProcessException(e);
         }
@@ -218,8 +218,8 @@ public class DexByteCodeConverter {
                 if (dexOptions.getMaxProcessCount() != null) {
                     DEX_PROCESS_COUNT.set(dexOptions.getMaxProcessCount());
                 }
-                mLogger.info(
-                        "Allocated dexExecutorService of size %d.",
+                mLogger.verbose(
+                        "Allocated dexExecutorService of size %1$d.",
                         DEX_PROCESS_COUNT.get());
                 sDexExecutorService = Executors.newFixedThreadPool(DEX_PROCESS_COUNT.get());
             } else {

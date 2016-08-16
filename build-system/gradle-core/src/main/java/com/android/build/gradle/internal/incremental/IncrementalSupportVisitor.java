@@ -661,7 +661,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                     serialUuid);
 
         } catch (ClassNotFoundException ex) {
-            LOG.info("Unable to add auto-generated serialVersionUID for " + classNode.name);
+            LOG.verbose("Unable to add auto-generated serialVersionUID for " + classNode.name);
         }
     }
 

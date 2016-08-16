@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.res2.MergingException;
 import com.android.utils.ILogger;
 import org.gradle.api.logging.LogLevel;
@@ -24,12 +25,18 @@ import org.gradle.api.logging.Logging;
 
 /**
  * Implementation of Android's {@link ILogger} over Gradle's {@link Logger}.
+ *
+ * Note that this maps info to the default user-visible lifecycle.
  */
 public class LoggerWrapper implements ILogger {
 
-    private final Logger logger;
+    // Mapping from ILogger method call to gradle log level.
+    private static final LogLevel ILOGGER_ERROR = LogLevel.ERROR;
+    private static final LogLevel ILOGGER_WARNING = LogLevel.WARN;
+    private static final LogLevel ILOGGER_INFO = LogLevel.LIFECYCLE;
+    private static final LogLevel ILOGGER_VERBOSE = LogLevel.INFO;
 
-    private final LogLevel infoLogLevel;
+    private final Logger logger;
 
     @NonNull
     public static LoggerWrapper getLogger(@NonNull Class<?> klass) {
@@ -37,24 +44,11 @@ public class LoggerWrapper implements ILogger {
     }
 
     public LoggerWrapper(@NonNull Logger logger) {
-        this(logger, LogLevel.INFO);
-    }
-
-    /**
-     * Allow {@link ILogger} info() level messages to be remapped to e.g. {@link
-     * LogLevel}.LIFECYCLE} rather than INFO
-     *
-     * This is useful for installs and uninstalls, so install details can be shown without the user
-     * having to use the noisy INFO log level, while not flagging informational log output as
-     * warnings or errors.
-     */
-    public LoggerWrapper(@NonNull Logger logger, @NonNull LogLevel infoLogLevel) {
         this.logger = logger;
-        this.infoLogLevel = infoLogLevel;
     }
 
     @Override
-    public void error(Throwable throwable, String s, Object... objects) {
+    public void error(@Nullable Throwable throwable, @Nullable String s, Object... objects) {
         if (throwable instanceof MergingException) {
             // MergingExceptions have a known cause: they aren't internal errors, they
             // are errors in the user's code, so a full exception is not helpful (and
@@ -66,56 +60,48 @@ public class LoggerWrapper implements ILogger {
             return;
         }
 
-        if (!logger.isEnabled(LogLevel.ERROR)) {
+        if (!logger.isEnabled(ILOGGER_ERROR)) {
             return;
         }
 
-        if (objects != null && objects.length > 0) {
+        if (s == null) {
+            s = "[no message defined]";
+        } else if (objects != null && objects.length > 0) {
             s = String.format(s, objects);
         }
 
         if (throwable == null) {
-            logger.log(LogLevel.ERROR, s);
+            logger.log(ILOGGER_ERROR, s);
 
         } else {
-            logger.log(LogLevel.ERROR, s, throwable);
+            logger.log(ILOGGER_ERROR, s, throwable);
         }
     }
 
     @Override
     public void warning(@NonNull String s, Object... objects) {
-        if (!logger.isEnabled(LogLevel.WARN)) {
-            return;
-        }
-        if (objects == null || objects.length == 0) {
-            logger.log(LogLevel.WARN, s);
-        } else {
-            logger.log(LogLevel.WARN, String.format(s, objects));
-        }
+        log(ILOGGER_WARNING, s, objects);
     }
 
     @Override
     public void info(@NonNull String s, Object... objects) {
-        if (!logger.isEnabled(infoLogLevel)) {
-            return;
-        }
-        if (objects == null || objects.length == 0) {
-            logger.log(infoLogLevel, s);
-        } else {
-            logger.log(infoLogLevel, String.format(s, objects));
-        }
+        log(ILOGGER_INFO, s, objects);
     }
 
     @Override
     public void verbose(@NonNull String s, Object... objects) {
-        if (!logger.isEnabled(LogLevel.DEBUG)) {
+        log(ILOGGER_VERBOSE, s, objects);
+    }
+
+    private void log(@NonNull LogLevel logLevel, @NonNull String s, @Nullable Object[] objects){
+        if (!logger.isEnabled(logLevel)) {
             return;
         }
         if (objects == null || objects.length == 0) {
-            logger.log(LogLevel.DEBUG, s);
+            logger.log(logLevel, s);
 
         } else {
-            logger.log(LogLevel.DEBUG, String.format(s, objects));
+            logger.log(logLevel, String.format(s, objects));
         }
     }
 }

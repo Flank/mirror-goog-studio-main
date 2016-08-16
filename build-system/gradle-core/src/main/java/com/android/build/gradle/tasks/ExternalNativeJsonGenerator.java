@@ -337,8 +337,8 @@ public abstract class ExternalNativeJsonGenerator {
      * Log low level diagnostic information.
      */
     void diagnostic(String format, Object... args) {
-        androidBuilder.getLogger().info(String.format(
-                "External native build " + variantName + ": " + format, args));
+        androidBuilder.getLogger().verbose(
+                "External native build " + variantName + ": " + format, args);
     }
 
     /**

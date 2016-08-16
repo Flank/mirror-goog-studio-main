@@ -214,7 +214,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
                         @Override
                         public void processNewLines(String[] lines) {
                             for (String line : lines) {
-                                logger.info(line);
+                                logger.verbose(line);
                             }
                         }
 

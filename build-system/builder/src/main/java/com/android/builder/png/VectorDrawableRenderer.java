@@ -133,7 +133,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
         if (isXml(toBeGenerated)) {
             Files.copy(original, toBeGenerated);
         } else {
-            mLogger.info(
+            mLogger.verbose(
                     "Generating PNG: [%s] from [%s]",
                     toBeGenerated.getAbsolutePath(),
                     original.getAbsolutePath());

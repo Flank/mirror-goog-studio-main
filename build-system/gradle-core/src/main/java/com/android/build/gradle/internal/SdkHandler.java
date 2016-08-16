@@ -117,13 +117,13 @@ public class SdkHandler {
         synchronized (LOCK_FOR_SDK_HANDLER) {
             if (useCachedVersion) {
                 if (sSdkLoader == null) {
-                    logger.info("Parsing the Sdk");
+                    logger.verbose("Parsing the Sdk");
                     sSdkLoader = getSdkLoader();
                 } else {
-                    logger.info("Reusing the SdkLoader");
+                    logger.verbose("Reusing the SdkLoader");
                 }
             } else {
-                logger.info("Parsing the SDK, no caching allowed");
+                logger.verbose("Parsing the SDK, no caching allowed");
                 sSdkLoader = getSdkLoader();
             }
             sdkLoader = sSdkLoader;
