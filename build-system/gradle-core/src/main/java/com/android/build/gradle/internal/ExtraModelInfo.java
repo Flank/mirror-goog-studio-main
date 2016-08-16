@@ -20,14 +20,14 @@ import static com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.model.ArtifactMetaDataImpl;
-import com.android.build.gradle.internal.model.JavaArtifactImpl;
-import com.android.build.gradle.internal.model.SyncIssueImpl;
-import com.android.build.gradle.internal.model.SyncIssueKey;
+import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
+import com.android.build.gradle.internal.ide.JavaArtifactImpl;
+import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidArtifact;
@@ -41,6 +41,7 @@ import com.android.ide.common.blame.MessageJsonSerializer;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
@@ -49,6 +50,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.Objects;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -364,5 +366,52 @@ public class ExtraModelInfo extends ErrorReporter {
 
     public enum ErrorFormatMode {
         MACHINE_PARSABLE, HUMAN_READABLE
+    }
+
+    /**
+     * Creates a key from a SyncIssue to use in a map.
+     */
+    @Immutable
+    static final class SyncIssueKey {
+
+        private final int type;
+
+        @Nullable
+        private final String data;
+
+        static SyncIssueKey from(@NonNull SyncIssue syncIssue) {
+            return new SyncIssueKey(syncIssue.getType(), syncIssue.getData());
+        }
+
+        private SyncIssueKey(int type, @Nullable String data) {
+            this.type = type;
+            this.data = data;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            SyncIssueKey that = (SyncIssueKey) o;
+            return type == that.type &&
+                    Objects.equals(data, that.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, data);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("type", type)
+                    .add("data", data)
+                    .toString();
+        }
     }
 }
