@@ -119,6 +119,6 @@ class TaskMonitorProgressIndicatorAdapter implements ITaskMonitor {
 
     @Override
     public void verbose(@NonNull String msgFormat, Object... args) {
-        // ProgressIndicator doesn't support verbose logging
+        myProgressIndicator.logVerbose(String.format(msgFormat, args));
     }
 }

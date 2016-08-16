@@ -100,14 +100,14 @@ public class AbstractCompilesUtil {
         boolean incremental;
         if (compileOptions.getIncremental() != null) {
             incremental = compileOptions.getIncremental();
-            log.info("Incremental flag set to %1$b in DSL", incremental);
+            log.verbose("Incremental flag set to %1$b in DSL", incremental);
         } else {
             if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
                     || !processorPath.isEmpty()
                     || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
                     || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
                 incremental = false;
-                log.info("Incremental Java compilation disabled in variant %1$s "
+                log.verbose("Incremental Java compilation disabled in variant %1$s "
                                 + "as you are using an incompatible plugin",
                         variantScope.getVariantConfiguration().getFullName());
             } else if (variantScope.getTestedVariantData() != null) {
@@ -131,7 +131,7 @@ public class AbstractCompilesUtil {
                 }
                 incremental = sourceFolders.size() == 1;
                 if (sourceFolders.size() > 1) {
-                    log.info("Incremental Java compilation disabled in variant %1$s "
+                    log.verbose("Incremental Java compilation disabled in variant %1$s "
                                     + "as you are using %2$d source folders : %3$s",
                             variantScope.getVariantConfiguration().getFullName(),
                             sourceFolders.size(), Joiner.on(',').join(sourceFolders));

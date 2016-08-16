@@ -235,7 +235,7 @@ public enum BuildToolsServiceLoader {
                         serviceIterator, service, service.getClass());
                 return Optional.of(service);
             } else {
-                logger.info("Cannot find service implementation %1$s" + serviceType);
+                logger.verbose("Cannot find service implementation %1$s", serviceType);
                 return Optional.absent();
             }
         }

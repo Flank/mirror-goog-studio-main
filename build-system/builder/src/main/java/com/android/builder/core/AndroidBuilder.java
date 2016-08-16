@@ -549,7 +549,7 @@ public class AndroidBuilder {
                     minSdkVersion, targetSdkVersion, maxSdkVersion);
 
             MergingReport mergingReport = manifestMergerInvoker.merge();
-            mLogger.info("Merging result:" + mergingReport.getResult());
+            mLogger.verbose("Merging result: %1$s", mergingReport.getResult());
             switch (mergingReport.getResult()) {
                 case WARNING:
                     mergingReport.log(mLogger);
@@ -563,7 +563,7 @@ public class AndroidBuilder {
                         mLogger.verbose(annotatedDocument);
                     }
                     save(xmlDocument, new File(outManifestLocation));
-                    mLogger.info("Merged manifest saved to " + outManifestLocation);
+                    mLogger.verbose("Merged manifest saved to " + outManifestLocation);
 
                     if (outAaptSafeManifestLocation != null) {
                         save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.AAPT_SAFE),
@@ -839,7 +839,7 @@ public class AndroidBuilder {
                     mLogger.error(e, "Cannot write resulting xml");
                     throw new RuntimeException(e);
                 }
-                mLogger.info("Merged manifest saved to " + outFile);
+                mLogger.verbose("Merged manifest saved to " + outFile);
                 break;
             case ERROR:
                 mergingReport.log(mLogger);
@@ -1482,7 +1482,7 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call preDexLibrary() before setTargetInfo() is called.");
 
-        getLogger().info("AndroidBuilder::preDexLibrary %s", inputFile.getAbsolutePath());
+        getLogger().verbose("AndroidBuilder::preDexLibrary %1$s", inputFile.getAbsolutePath());
         if (inputFile.isFile()) {
             PreDexCache.getCache().preDexLibrary(
                     this,
@@ -1521,7 +1521,7 @@ public class AndroidBuilder {
         checkNotNull(inputFile, "inputFile cannot be null.");
         checkNotNull(outFile, "outFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
-        getLogger().info("AndroidBuilder::preDexLibraryNoCache %s", inputFile.getAbsolutePath());
+        getLogger().verbose("AndroidBuilder::preDexLibraryNoCache %1$s", inputFile.getAbsolutePath());
 
         try {
             if (!checkLibraryClassesJar(inputFile)) {
@@ -1841,7 +1841,7 @@ public class AndroidBuilder {
         // Run the compilation
         try {
             compilationTask.run();
-            mLogger.info(outputStream.toString());
+            mLogger.verbose("Jack created dex: %1$s", outputStream.toString());
         } catch (CompilationException | ConfigurationException e) {
             mLogger.error(e, outputStream.toString());
             throw e;

@@ -322,7 +322,7 @@ public class DefaultSdkLoader implements SdkLoader {
 
         Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
         for (RemotePackage p : remotePackages) {
-            progress.logInfo(
+            progress.logVerbose(
                     "Checking the license for package "
                             + p.getDisplayName()
                             + " in "
@@ -335,7 +335,7 @@ public class DefaultSdkLoader implements SdkLoader {
                 progress.logWarning("License for package " + p.getDisplayName() + " not accepted.");
                 installResults.put(p, InstallResultType.LICENSE_FAIL);
             } else {
-                progress.logInfo("License for package " + p.getDisplayName() + " accepted.");
+                progress.logVerbose("License for package " + p.getDisplayName() + " accepted.");
                 Installer installer =
                         SdkInstallerUtil.findBestInstallerFactory(p, mSdkHandler)
                                 .createInstaller(

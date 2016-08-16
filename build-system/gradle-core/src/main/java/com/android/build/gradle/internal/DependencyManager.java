@@ -1195,7 +1195,7 @@ public class DependencyManager {
      */
     static String normalize(ILogger logger, ModuleVersionIdentifier id, String path) {
         if (path == null || path.isEmpty()) {
-            logger.info(String.format(
+            logger.verbose(String.format(
                     "When unzipping library '%s:%s:%s, either group, name or version is empty",
                     id.getGroup(), id.getName(), id.getVersion()));
             return path;
@@ -1204,7 +1204,7 @@ public class DependencyManager {
         String normalizedPath = path.replaceAll("[%<>:\"/?*\\\\]", "@");
         if (normalizedPath == null || normalizedPath.isEmpty()) {
             // if the path normalization failed, return the original path.
-            logger.info(String.format(
+            logger.verbose(String.format(
                     "When unzipping library '%s:%s:%s, the normalized '%s' is empty",
                     id.getGroup(), id.getName(), id.getVersion(), path));
             return path;

@@ -258,7 +258,7 @@ public class ConnectedDevice extends DeviceConnector {
             densityValue = getNullableProperty(IDevice.PROP_DEVICE_EMULATOR_DENSITY);
         }
         if (densityValue == null) {
-            mLogger.info("Unable to get density for device %1$s", getName());
+            mLogger.verbose("Unable to get density for device %1$s", getName());
             return -1;
         }
         try {

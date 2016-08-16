@@ -65,6 +65,11 @@ public class LoggerProgressIndicatorWrapper extends ProgressIndicatorAdapter {
         mWrapped.info(s);
     }
 
+    @Override
+    public void logVerbose(@NonNull String s) {
+        mWrapped.verbose(s);
+    }
+
     private static String throwableToString(@NonNull Throwable e) {
         StringWriter writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));

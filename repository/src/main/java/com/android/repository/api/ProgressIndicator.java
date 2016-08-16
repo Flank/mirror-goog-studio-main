@@ -98,4 +98,7 @@ public interface ProgressIndicator {
      */
     void logInfo(@NonNull String s);
 
+    default void logVerbose(@NonNull String s) {
+        logInfo(s);
+    }
 }

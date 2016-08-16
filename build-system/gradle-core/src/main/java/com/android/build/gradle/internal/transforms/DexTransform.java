@@ -232,9 +232,9 @@ public class DexTransform extends Transform {
             jarInputs.addAll(input.getJarInputs());
             directoryInputs.addAll(input.getDirectoryInputs());
         }
-        logger.info("Task is incremental : %b ", isIncremental);
-        logger.info("JarInputs %s", Joiner.on(",").join(jarInputs));
-        logger.info("DirInputs %s", Joiner.on(",").join(directoryInputs));
+        logger.verbose("Task is incremental : %b ", isIncremental);
+        logger.verbose("JarInputs %s", Joiner.on(",").join(jarInputs));
+        logger.verbose("DirInputs %s", Joiner.on(",").join(directoryInputs));
 
         ProcessOutputHandler outputHandler = new ParsingProcessOutputHandler(
                 new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
@@ -327,7 +327,7 @@ public class DexTransform extends Transform {
                     } else if (!isIncremental || !directoryInput.getChangedFiles().isEmpty()) {
                         // add the folder for re-dexing only if we're not in incremental
                         // mode or if it contains changed files.
-                        logger.info("Changed file for %s are %s",
+                        logger.verbose("Changed file for %s are %s",
                                 directoryInput.getFile().getAbsolutePath(),
                                 Joiner.on(",").join(directoryInput.getChangedFiles().entrySet()));
                         File preDexFile = getPreDexFile(
@@ -367,8 +367,8 @@ public class DexTransform extends Transform {
                     }
                 }
 
-                logger.info("inputFiles : %s", Joiner.on(",").join(inputFiles.entrySet()));
-                logger.info("externalLibs %s: ", Joiner.on(",").join(externalLibs));
+                logger.verbose("inputFiles : %s", Joiner.on(",").join(inputFiles.entrySet()));
+                logger.verbose("externalLibs %s: ", Joiner.on(",").join(externalLibs));
 
                 WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
@@ -379,7 +379,7 @@ public class DexTransform extends Transform {
                             hashs,
                             outputHandler,
                             externalLibs.contains(entry.getKey()) ? userCache : FileCache.NO_CACHE);
-                    logger.info("Adding PreDexTask for %s : %s", entry.getKey(), action);
+                    logger.verbose("Adding PreDexTask for %s : %s", entry.getKey(), action);
                     executor.execute(action);
                 }
 
@@ -391,7 +391,7 @@ public class DexTransform extends Transform {
                 }
 
                 executor.waitForTasksWithQuickFail(false);
-                logger.info("Done with all dexing");
+                logger.verbose("Done with all dexing");
 
                 if (needMerge) {
                     File outputDir = outputProvider.getContentLocation("main",
@@ -467,13 +467,13 @@ public class DexTransform extends Transform {
 
         @Override
         public Void call() throws Exception {
-            logger.info("predex called for %s", from);
+            logger.verbose("predex called for %s", from);
             // TODO remove once we can properly add a library as a dependency of its test.
             String hash = getFileHash(from);
 
             synchronized (hashs) {
                 if (hashs.contains(hash)) {
-                    logger.info("Hash unknown");
+                    logger.verbose("Hash unknown");
                     return null;
                 }
 

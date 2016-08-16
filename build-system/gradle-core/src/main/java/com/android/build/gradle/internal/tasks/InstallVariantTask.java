@@ -92,7 +92,7 @@ public class InstallVariantTask extends BaseTask {
 
     @TaskAction
     public void install() throws DeviceException, ProcessException, InterruptedException {
-        final ILogger iLogger = new LoggerWrapper(getLogger(), LogLevel.LIFECYCLE);
+        final ILogger iLogger = getILogger();
         DeviceProvider deviceProvider = new ConnectedDeviceProvider(getAdbExe(),
                 getTimeOutInMs(),
                 iLogger);

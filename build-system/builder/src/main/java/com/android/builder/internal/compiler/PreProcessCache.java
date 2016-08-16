@@ -340,19 +340,19 @@ abstract class PreProcessCache<T extends PreProcessCache.Key> {
             // check if we have a stored version.
             StoredItem storedItem = mStoredItems.get(itemKey);
 
-            logger.info("StoredItem is %s", storedItem);
+            logger.verbose("StoredItem is %1$s", storedItem);
 
             if (storedItem != null) {
                 // check the sha1 is still valid, and the pre-dex files are still there.
                 HashCode hash = getHash(inputFile);
-                logger.info("Hash for %s is %s", inputFile.getAbsolutePath(), hash.toString());
+                logger.verbose("Hash for %1$s is %2$s", inputFile.getAbsolutePath(), hash);
                 if (storedItem.areOutputFilesPresent() &&
                         storedItem.getSourceHash().equals(hash)) {
 
-                    logger.info("Cached result for getItem(" + inputFile + "): "
+                    logger.verbose("Cached result for getItem(" + inputFile + "): "
                             + storedItem.getOutputFiles());
                     for (File f : storedItem.getOutputFiles()) {
-                        logger.info(
+                        logger.verbose(
                                 String.format("%s l:%d ts:%d", f, f.length(), f.lastModified()));
                     }
 
@@ -394,8 +394,8 @@ abstract class PreProcessCache<T extends PreProcessCache.Key> {
             }
 
             if (logger != null) {
-                logger.info("PREDEX CACHE HITS:   " + mHits);
-                logger.info("PREDEX CACHE MISSES: " + mMisses);
+                logger.verbose("PREDEX CACHE HITS:   %1$d", mHits);
+                logger.verbose("PREDEX CACHE MISSES: %1$d", mMisses);
             }
         }
 

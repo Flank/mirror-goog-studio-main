@@ -79,7 +79,7 @@ public class QueuedCruncher implements PngCruncher {
                 @NonNull ILogger logger,
                 int cruncherProcesses) {
             synchronized (sLock) {
-                logger.info("QueuedCruncher is using %1$s", aaptLocation);
+                logger.verbose("QueuedCruncher is using %1$s", aaptLocation);
                 if (!sInstances.containsKey(aaptLocation)) {
                     QueuedCruncher queuedCruncher =
                             new QueuedCruncher(aaptLocation, logger, cruncherProcesses);
