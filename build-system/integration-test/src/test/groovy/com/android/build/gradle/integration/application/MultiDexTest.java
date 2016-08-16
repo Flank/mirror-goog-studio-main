@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -34,7 +35,9 @@ import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.gradle.api.JavaVersion;
@@ -49,6 +52,7 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Assemble tests for multiDex. */
@@ -81,6 +85,22 @@ public class MultiDexTest {
 
     @Test
     public void checkNormalBuild() throws Exception {
+        checkNormalBuild(true);
+    }
+
+    @Test
+    public void checkBuildWithoutKeepRuntimeAnnotatedClasses() throws Exception {
+        checkNormalBuild(true);
+    }
+
+    private void checkNormalBuild(boolean keepRuntimeAnnotatedClasses) throws Exception {
+
+        if (!keepRuntimeAnnotatedClasses) {
+            TestFileUtils.appendToFile(
+                    project.getBuildFile(),
+                    "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
+        }
+
         project.execute("assembleDebug", "assembleAndroidTest");
 
         // additional classes that will be found in the list, if build tools version
@@ -102,9 +122,16 @@ public class MultiDexTest {
                             "com/android/tests/basic/R$layout"));
         }
 
+        List<String> mandatoryClasses =
+                Lists.newArrayList("android/support/multidex/MultiDexApplication",
+                        "com/android/tests/basic/MyAnnotation");
+        if (keepRuntimeAnnotatedClasses) {
+            mandatoryClasses.add("com/android/tests/basic/ClassWithRuntimeAnnotation");
+        }
+
         assertMainDexListContains(
                 "debug",
-                "android/support/multidex/MultiDexApplication",
+                mandatoryClasses,
                 nonMandatoryMainDexClasses);
 
         String transform = GradleTestProject.USE_JACK ? "jack" : "dex";
@@ -158,7 +185,7 @@ public class MultiDexTest {
 
         assertMainDexListContains(
                 "minified",
-                "android/support/multidex/MultiDexApplication",
+                ImmutableList.of("android/support/multidex/MultiDexApplication"),
                 ImmutableList.of(
                         "com/android/tests/basic/Used",
                         "com/android/tests/basic/Main",
@@ -259,7 +286,9 @@ public class MultiDexTest {
     }
 
     private void assertMainDexListContains(
-            String buildType, String applicationClass, List<String> nonMandatoryClasses)
+            @NonNull String buildType,
+            @NonNull List<String> mandatoryClasses,
+            @NonNull List<String> permittedToBeInMainDexClasses)
             throws Exception {
         // Jack done not produce maindexlist.txt
         if (GradleTestProject.USE_JACK) {
@@ -273,22 +302,29 @@ public class MultiDexTest {
                         buildType,
                         "maindexlist.txt");
 
-        List<String> lines = Files.readLines(listFile, Charsets.UTF_8);
+        Set<String> lines = Files.readLines(listFile, Charsets.UTF_8)
+                .stream()
+                .filter(line -> !line.isEmpty())
+                .map(line -> line.replace(".class", ""))
+                .collect(Collectors.toSet());
 
         // MultiDexApplication needs to be there
-        assertThat(lines).contains(applicationClass + ".class");
+        assertThat(lines).containsAllIn(mandatoryClasses);
 
         // it may contain only classes from the support library
-        List<String> nonAppNonSupportClasses =
+        // Check that the main dex list only contains:
+        //  - The multidex support libray
+        //  - The mandatory classes
+        //  - The permittedToBeInMainDex classes.
+        Set<String> unwantedExtraClasses =
                 lines.stream()
-                        .filter(
-                                line ->
-                                        !line.isEmpty()
-                                                && !line.startsWith("android/support/multidex"))
-                        .map(line -> line.replaceAll("\\.class$", ""))
-                        .collect(Collectors.toList());
+                        .filter(line -> !line.startsWith("android/support/multidex"))
+                        .collect(Collectors.toSet());
+        unwantedExtraClasses.removeAll(mandatoryClasses);
+        unwantedExtraClasses.removeAll(permittedToBeInMainDexClasses);
 
-        assertThat(nonMandatoryClasses).containsAllIn(nonAppNonSupportClasses);
+        assertThat(unwantedExtraClasses).named("Unwanted classes in main dex").isEmpty();
+
     }
 
     private static boolean aaptSupportsMultiDexList() {
