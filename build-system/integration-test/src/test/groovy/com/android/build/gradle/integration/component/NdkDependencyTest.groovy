@@ -244,7 +244,14 @@ model {
 
     @Test
     void "check app contains compiled .so"() {
-        project.execute("clean", ":app:assembleDebug")
+        // Ensure that the prebuilt libraries do not need to be present until it is used in the
+        // compile task.
+        prebuiltProject.executor().run("clean")
+        project.executor().run("clean")
+
+        prebuiltProject.executor().run("assembleDebug")
+
+        project.execute(":app:assembleDebug")
         Map<String, AndroidProject> models = project.model().getMulti()
         GradleTestProject app = project.getSubproject("app")
         GradleTestProject lib1 = project.getSubproject("lib1")
