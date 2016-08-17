@@ -25,6 +25,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * If you meet some runtime errors like:
+ *    cannot find function definition: sendFragmentOnAttach
+ * Make sure you have re-compiled the native code and deployed the latest perfd.
+ * Especially when your device/ emulator is x86 architecture.
+ *
+ * Instruction for re-compiling and re-deploying:
+ *    1. If your device/ emulator is x86, modify .../tools/base/profiler/native/build.gradle
+ *       to uncomment the x86 option
+ *    2. cd .../tools/base/profiler
+ *    3. ../../gradlew build && ./deploy_perfd <host> (host = armeabi-v7a, arm64-v8a, x86)
+ *    4. Clean your project using gradle clean, and rebuild it.
+ */
 public class UserClassAdapter extends ClassVisitor implements Opcodes {
   public static final String ANDROID_APP_PREFIX = "android/app";
   public static final String ANDROID_SUPPORT_PREFIX = "android/support";
@@ -266,7 +279,7 @@ public class UserClassAdapter extends ClassVisitor implements Opcodes {
               break;
             case FRAGMENT_ON_DESTROY_VIEW:
               CreateLifecycleMethod(
-                  FRAGMENT_ON_DESTROY, "()V", SEND_FRAGMENT_ON_DESTROY_VIEW, 2, 1);
+                  FRAGMENT_ON_DESTROY_VIEW, "()V", SEND_FRAGMENT_ON_DESTROY_VIEW, 2, 1);
               break;
             case FRAGMENT_ON_DESTROY:
               CreateLifecycleMethod(FRAGMENT_ON_DESTROY, "()V", SEND_FRAGMENT_ON_DESTROY, 2, 1);
