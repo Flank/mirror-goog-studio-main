@@ -160,7 +160,7 @@ public class GenerateBuildConfig extends BaseTask {
 
     @SuppressWarnings("unused") // Synthetic input for items.
     @Input
-    List<String> getItemValues() {
+    public List<String> getItemValues() {
         List<Object> resolvedItems = getItems();
         List<String> list = Lists.newArrayListWithCapacity(resolvedItems.size() * 3);
 

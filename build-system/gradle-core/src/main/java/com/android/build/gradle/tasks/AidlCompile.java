@@ -72,14 +72,14 @@ public class AidlCompile extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
     @Input
-    String getBuildToolsVersion() {
+    public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
     }
     private List<File> sourceDirs;
     private List<File> importDirs;
 
     @InputFiles
-    FileTree getSourceFiles() {
+    public FileTree getSourceFiles() {
         FileTree src = null;
         List<File> sources = getSourceDirs();
         if (!sources.isEmpty()) {

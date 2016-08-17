@@ -91,7 +91,7 @@ public class TransformTask extends StreamBasedTask implements Context {
     }
 
     @Input
-    Map<String, Object> getOtherInputs() {
+    public Map<String, Object> getOtherInputs() {
         return transform.getParameterInputs();
     }
 

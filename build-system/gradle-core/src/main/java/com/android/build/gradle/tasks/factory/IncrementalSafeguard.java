@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import org.gradle.api.file.ConfigurableFileTree;
@@ -36,8 +35,6 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,7 +50,7 @@ public class IncrementalSafeguard extends BaseTask {
     // create an output directory so the task can be incremental.
     // we will end up storing a marker file.
     @OutputDirectory
-    File getGeneratedOutputDir() {
+    public File getGeneratedOutputDir() {
         return generatedOutputDir;
     }
 
