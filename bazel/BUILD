@@ -1,11 +1,3 @@
-java_import(
-    name = "prebuilts/studio-profiler-grpc-1.0-jarjar",
-    jars = [
-        "prebuilts/studio-profiler-grpc-1.0-jarjar.jar",
-    ],
-    visibility = ["//visibility:public"],
-)
-
 java_library(
   name = "utils",
   srcs = glob(["src/**/utils/*.java"]),
@@ -126,6 +118,20 @@ java_binary(
     runtime_deps = [":maven"],
 )
 
+
+java_binary(
+    name = "jarjar",
+    main_class = "com.tonicsystems.jarjar.Main",
+    runtime_deps = [
+      "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
+      "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-command/1.0.0:jar",
+      "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-core/1.0.0:jar",
+      "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
+      "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
+      "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.7:jar",
+    ],
+    visibility = ["//visibility:public"],
+)
 
 test_suite(
   name = "all_tests",
