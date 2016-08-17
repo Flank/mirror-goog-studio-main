@@ -125,6 +125,8 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     systemProperties['jar.path'] = jar.archivePath
     systemProperties['java.io.tmpdir'] = tempFile.absolutePath
 
+    environment testEnvironment
+
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
 
