@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A collection of modules with cyclic dependencies that form a stongly connected component.
+ * A collection of modules with cyclic dependencies that form a strongly connected component.
  */
 public class BazelModule {
 
