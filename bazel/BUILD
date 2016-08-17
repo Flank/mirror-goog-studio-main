@@ -81,7 +81,7 @@ java_import(
 test_suite(
   name = "all_tests",
   tests = [
-    "//tools/adt/idea:adt-ui_tests",
+    "//tools/adt/idea/adt-ui:adt-ui_tests",
     "//tools/adt/idea:android-common_tests",
     "//tools/analytics-library:analytics-publisher_tests",
     "//tools/analytics-library:analytics-shared_tests",

@@ -32,6 +32,7 @@ public class StudioConfiguration implements Configuration {
         bazel.createPackagesInDirectory("prebuilts/tools/common");
         bazel.createPackage("prebuilts");
         bazel.createPackage("tools/analytics-library");
+        bazel.createPackage("tools/adt/idea/adt-ui");
         bazel.createPackage("tools/adt/idea");
         bazel.createPackage("tools/data-binding");
 
@@ -49,7 +50,6 @@ public class StudioConfiguration implements Configuration {
 
         // TODO Fix this mapping of a prebuilt jar, to be built with bazel.
         bazel.createPackage("out/studio");
-
     }
 
     @Override
