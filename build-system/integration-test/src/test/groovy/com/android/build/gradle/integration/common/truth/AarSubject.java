@@ -102,7 +102,7 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject> {
         switch (scope) {
             case MAIN:
                 return searchForEntryinZip(expectedClassName, FN_CLASSES_JAR);
-            case ALL:
+            case MAIN_AND_SECONDARY:
                 if (searchForEntryinZip(expectedClassName, FN_CLASSES_JAR)) {
                     return true;
                 }

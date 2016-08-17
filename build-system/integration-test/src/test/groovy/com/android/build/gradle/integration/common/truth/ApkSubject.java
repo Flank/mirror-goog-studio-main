@@ -18,38 +18,34 @@ package com.android.build.gradle.integration.common.truth;
 
 import static com.android.SdkConstants.FN_APK_CLASSES_N_DEX;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.utils.DexUtils;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.core.ApkInfoParser;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
-import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.testutils.truth.IndirectSubject;
 import com.android.utils.StdLogger;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.common.io.LineProcessor;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.SubjectFactory;
-
-import org.junit.Assert;
-
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
+import org.junit.Assert;
 
 /**
  * Truth support for apk files.
@@ -57,14 +53,11 @@ import java.util.zip.ZipFile;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
 
-    private static final Pattern PATTERN_CLASS_DESC = Pattern.compile(
-            "^Class descriptor\\W*:\\W*'(L.+;)'$");
-
     private static final Pattern PATTERN_MAX_SDK_VERSION = Pattern.compile(
             "^maxSdkVersion\\W*:\\W*'(.+)'$");
 
     public static final SubjectFactory<ApkSubject, File> FACTORY =
-            new SubjectFactory<ApkSubject, File> () {
+            new SubjectFactory<ApkSubject, File>() {
                 @Override
                 public ApkSubject getSubject(
                         @NonNull FailureStrategy failureStrategy,
@@ -81,31 +74,12 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     }
 
     @NonNull
-    public List<String> entries() throws IOException {
-        ImmutableList.Builder<String> entryList = ImmutableList.builder();
-        try (ZipFile zipFile = new ZipFile(getSubject())) {
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            while (entries.hasMoreElements()) {
-                entryList.add(entries.nextElement().getName());
-            }
-        }
-        return entryList.build();
-    }
-
-    @NonNull
-    public IndirectSubject<DexFileSubject> hasMainDexFile() throws IOException {
+    public IndirectSubject<DexBackedDexFileSubject> hasMainDexFile() throws IOException {
         contains("classes.dex");
-        return new IndirectSubject<DexFileSubject>() {
-            @Override
-            @NonNull
-            public DexFileSubject that() {
-                // For Windows, we need to extract the classes.dex first due to b/28385192.
-                if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                    File dexFile = extractClassesDex(getSubject());
-                    return DexFileSubject.FACTORY.getSubject(failureStrategy, dexFile);
-                }
-                return DexFileSubject.FACTORY.getSubject(failureStrategy, getSubject());
-            }
+        return () -> {
+            byte[] dexBytes = extractContentAsByte("classes.dex");
+            DexBackedDexFile dexBackedDexFile = DexUtils.loadDex(dexBytes);
+            return DexBackedDexFileSubject.FACTORY.getSubject(failureStrategy, dexBackedDexFile);
         };
     }
 
@@ -119,7 +93,7 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
             Assert.fail(String.format("locales not found in badging output for %s", apk));
         }
 
-        return check().<String, List<String>>that(locales);
+        return check().that(locales);
     }
 
     public void hasPackageName(@NonNull String packageName) throws ProcessException {
@@ -175,63 +149,11 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     public IndirectSubject<DexClassSubject> hasClass(
             @NonNull final String expectedClassName,
             @NonNull final ClassFileScope scope) throws ProcessException, IOException {
-        if (!expectedClassName.startsWith("L") || !expectedClassName.endsWith(";")) {
-            throw new RuntimeException("class name must be in the format Lcom/foo/Main;");
+        DexBackedClassDef dexBackedClassDef = getDexClass(expectedClassName, scope);
+        if (dexBackedClassDef == null) {
+            fail("contains class", expectedClassName);
         }
-        IndirectSubject<DexClassSubject> classSubject;
-        switch (scope) {
-            case MAIN:
-                classSubject =
-                        extractEntryAndRunAction("classes.dex", findClassAction(expectedClassName));
-                if (classSubject != null) {
-                    return classSubject;
-                }
-                break;
-            case INSTANT_RUN:
-                // check first in the instant-run.zip file.
-                classSubject = extractEntryAndRunAction("instant-run.zip",
-                        allEntriesAction(findClassAction(expectedClassName)));
-                if (classSubject != null) {
-                    return classSubject;
-                }
-                break;
-            case ALL:
-                classSubject = extractEntryAndRunAction(
-                        "classes.dex", findClassAction(expectedClassName));
-                if (classSubject != null) {
-                    return classSubject;
-                }
-                // intended fall-through
-            case SECONDARY:
-                // while dexdump supports receiving directly an apk, this doesn't work for
-                // multi-dex.
-                // We're going to extract all the classes<N>.dex we find until one of them
-                // contains the class we're searching for.
-                try (ZipFile zipFile = new ZipFile(getSubject())) {
-                    int index = 2;
-                    String dexFileName = String.format(FN_APK_CLASSES_N_DEX, index);
-                    while (zipFile.getEntry(dexFileName) != null) {
-                        classSubject = extractEntryAndRunAction(dexFileName,
-                                findClassAction(expectedClassName));
-                        if (classSubject != null) {
-                            return classSubject;
-                        }
-
-                        // not found? switch to next index.
-                        index++;
-                        dexFileName = String.format(FN_APK_CLASSES_N_DEX, index);
-                    }
-                }
-                break;
-        }
-        fail("contains class", expectedClassName);
-        return new IndirectSubject<DexClassSubject>() {
-            @NonNull
-            @Override
-            public DexClassSubject that() {
-                return DexClassSubject.FACTORY.getSubject(failureStrategy, null);
-            }
-        };
+        return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, dexBackedClassDef);
     }
 
     /**
@@ -289,110 +211,63 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     }
 
     /**
-     * Creates an {@link ZipEntryAction} that will consider each extracted entry as a zip file,
-     * will enumerate such zip file entries and call an delegated action on each entry.
+     * Creates an {@link ZipEntryAction} that will consider each extracted entry as a zip file, will
+     * enumerate such zip file entries and call an delegated action on each entry.
      */
-    @Nullable
-    protected <T> ZipEntryAction<T> allEntriesAction(final ZipEntryAction<T> action) {
-        return new ZipEntryAction<T>() {
-            @Nullable
-            @Override
-            public T doOnZipEntry(File extractedEntry) throws ProcessException {
-
-                ZipFileSubject instantRunZip =
-                        new ZipFileSubject(failureStrategy, extractedEntry);
-
-                try {
-                    try (ZipFile zipFile = new ZipFile(extractedEntry)) {
-                        Enumeration<? extends ZipEntry> zipFileEntries = zipFile.entries();
-                        while (zipFileEntries.hasMoreElements()) {
-                            ZipEntry zipEntry = zipFileEntries.nextElement();
-                            T result = instantRunZip.extractEntryAndRunAction(
-                                    zipEntry.getName(), action);
-                            if (result != null) {
-                                return result;
-                            }
-                        }
+    @NonNull
+    protected static <T> ZipEntryAction<T> allEntriesAction(final ZipEntryAction<T> action) {
+        return entry -> {
+            try (ZipInputStream zipInputStream =
+                         new ZipInputStream(new ByteArrayInputStream(entry))) {
+                while (zipInputStream.getNextEntry() != null) {
+                    byte[] entryBytes = ByteStreams.toByteArray(zipInputStream);
+                    T result = action.doOnZipEntry(entryBytes);
+                    if (result != null) {
+                        return result;
                     }
-                } catch (IOException e) {
-                    throw new ProcessException(e);
                 }
-                return null;
+            } catch (IOException e) {
+                throw new ProcessException(e);
             }
-        };
-    }
-
-    private ZipEntryAction<IndirectSubject<DexClassSubject>> findClassAction(
-            final String expectedClassName) {
-
-        return new ZipEntryAction<IndirectSubject<DexClassSubject>>() {
-            @Nullable
-            @Override
-            public IndirectSubject<DexClassSubject> doOnZipEntry(File extractedEntry)
-                    throws ProcessException {
-
-                if (!checkFileForClassWithDexDump(
-                        expectedClassName, extractedEntry, SdkHelper.getDexDump())) {
-                    return null;
-                }
-                IndirectSubject<DexFileSubject> dexFile = getDexFile(extractedEntry);
-                try {
-                    return dexFile.that().hasClass(expectedClassName);
-                } catch (IOException e) {
-                    throw new ProcessException(e);
-                }
-            }
-        };
-    }
-
-    private ZipEntryAction<Boolean> hasClassAction(final String expectedClassName) {
-        return new ZipEntryAction<Boolean>() {
-            @Nullable
-            @Override
-            public Boolean doOnZipEntry(File extractedEntry) throws ProcessException {
-                return checkFileForClassWithDexDump(
-                        expectedClassName, extractedEntry, SdkHelper.getDexDump())
-                        ? Boolean.TRUE : null;
-
-            }
+            return null;
         };
     }
 
     /**
      * Returns true if the provided class is present in the file.
+     *
      * @param expectedClassName the class name in the format Lpkg1/pk2/Name;
-     * @param scope the scope in which to search for the class.
+     * @param scope             the scope in which to search for the class.
      */
     @Override
     protected boolean checkForClass(
             @NonNull final String expectedClassName,
             @NonNull final ClassFileScope scope)
             throws ProcessException, IOException {
-        if (!expectedClassName.startsWith("L") || !expectedClassName.endsWith(";")) {
-            throw new RuntimeException("class name must be in the format Lcom/foo/Main;");
+
+        return getDexClass(expectedClassName, scope) != null;
+    }
+
+
+    @Nullable
+    private DexBackedClassDef getDexClass(
+            @NonNull final String className,
+            @NonNull final ClassFileScope scope) throws IOException, ProcessException {
+        if (!className.startsWith("L") || !className.endsWith(";")) {
+            throw new IllegalArgumentException("class name must be in the format Lcom/foo/Main;");
         }
-
-        File apkFile = getSubject();
-
-        // get the dexdump exec
-        final File dexDumpExe = SdkHelper.getDexDump();
 
         switch (scope) {
             case MAIN:
-                return checkFileForClassWithDexDump(expectedClassName, apkFile, dexDumpExe);
+                byte[] classesDex = extractContentAsByte("classes.dex");
+                if (classesDex == null) {
+                    return null;
+                }
+                return getDexClass(classesDex, className);
             case INSTANT_RUN:
                 // check first in the instant-run.zip file.
-                Boolean result = extractEntryAndRunAction("instant-run.zip",
-                        allEntriesAction(hasClassAction(expectedClassName)));
-                if (result != null && result) {
-                    return true;
-                }
-                break;
-            case ALL:
-                if (checkFileForClassWithDexDump(expectedClassName, apkFile, dexDumpExe)) {
-                    return true;
-                }
-                // intended fall-through
+                return extractEntryAndRunAction("instant-run.zip",
+                        allEntriesAction(bytes -> getDexClass(bytes, className)));
             case SECONDARY:
                 // while dexdump supports receiving directly an apk, this doesn't work for
                 // multi-dex.
@@ -402,20 +277,27 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
                     int index = 2;
                     String dexFileName = String.format(FN_APK_CLASSES_N_DEX, index);
                     while (zipFile.getEntry(dexFileName) != null) {
-                        result = extractEntryAndRunAction(dexFileName,
-                                hasClassAction(expectedClassName));
-                        if (result != null && result) {
-                            return true;
+                        DexBackedClassDef result = extractEntryAndRunAction(
+                                dexFileName,
+                                bytes -> getDexClass(bytes, className));
+                        if (result != null) {
+                            return result;
                         }
                         // not found? switch to next index.
                         index++;
                         dexFileName = String.format(FN_APK_CLASSES_N_DEX, index);
                     }
                 }
-                break;
+                return null;
+            case MAIN_AND_SECONDARY:
+                DexBackedClassDef dexClass = getDexClass(className, ClassFileScope.MAIN);
+                if (dexClass != null) {
+                    return dexClass;
+                }
+                return getDexClass(className, ClassFileScope.SECONDARY);
+            default:
+                throw new IllegalArgumentException("unknown class file scope " + scope);
         }
-
-        return false;
     }
 
     @Override
@@ -427,7 +309,8 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     }
 
     /**
-     * Asserts the subject contains a java resources at the given path with the specified String content.
+     * Asserts the subject contains a java resources at the given path with the specified String
+     * content.
      *
      * Content is trimmed when compared.
      */
@@ -438,8 +321,8 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     }
 
     /**
-     * Asserts the subject contains a java resources at the given path with the specified
-     * byte array content.
+     * Asserts the subject contains a java resources at the given path with the specified byte array
+     * content.
      */
     @Override
     public void containsJavaResourceWithContent(@NonNull String path, @NonNull byte[] content)
@@ -447,55 +330,15 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
         containsFileWithContent(path, content);
     }
 
-    /**
-     * Run dex dump on a file (apk or dex file) to check for the presence of a given class.
-     * @param expectedClassName the name of the class to search for
-     * @param file the file to search
-     * @param dexDumpExe the dex dump exe
-     * @return true if the class was found
-     * @throws ProcessException
-     */
-    private boolean checkFileForClassWithDexDump(
-            @NonNull final String expectedClassName,
-            @NonNull File file,
-            @NonNull File dexDumpExe) throws ProcessException {
-        // For Windows, we need to extract the classes.dex first due to b/28385192.
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            if (file.getName().endsWith(SdkConstants.DOT_ANDROID_PACKAGE)) {
-                file = extractClassesDex(file);
+    @Nullable
+    private static DexBackedClassDef getDexClass(@NonNull byte[] classesDex, @NonNull String name) {
+        DexBackedDexFile dexFile = DexUtils.loadDex(classesDex);
+        for (DexBackedClassDef clazz : dexFile.getClasses()) {
+            if (clazz.getType().equals(name)) {
+                return clazz;
             }
         }
-
-        ProcessExecutor executor = new DefaultProcessExecutor(
-                new StdLogger(StdLogger.Level.ERROR));
-
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(dexDumpExe);
-        builder.addArgs(file.getAbsolutePath());
-
-        LineProcessor<Boolean> classDescriptor = new LineProcessor<Boolean>() {
-            Boolean result = false;
-
-            @Override
-            public boolean processLine(String line) throws IOException {
-                Matcher m = PATTERN_CLASS_DESC.matcher(line.trim());
-                if (m.matches()) {
-                    String className = m.group(1);
-                    if (expectedClassName.equals(className)) {
-                        result = true;
-                        return false; // stop processing
-                    }
-                }
-                return true; // continue processing
-            }
-
-            @Override
-            public Boolean getResult() {
-                return result;
-            }
-        };
-
-        return ApkHelper.runAndProcessOutput(builder.createProcess(), executor, classDescriptor);
+        return null;
     }
 
     @NonNull
@@ -529,29 +372,6 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
         }
 
         failWithRawMessage("maxSdkVersion not found in badging output for %s", getDisplaySubject());
-    }
-
-    private File extractClassesDex(File file) {
-        check().that(file).exists();
-        try (ZipFile zipFile = new ZipFile(file)) {
-            String path = "classes.dex";
-            InputStream classDexStream = zipFile.getInputStream(zipFile.getEntry(path));
-            if (classDexStream == null) {
-                failWithRawMessage(path + " entry not found !");
-                return null;
-            }
-            byte[] content = ByteStreams.toByteArray(classDexStream);
-            // write into tmp file
-            File dexFile = File.createTempFile("classes", ".dex");
-            Files.write(content, dexFile);
-            dexFile.deleteOnExit();
-            return dexFile;
-        } catch (IOException e) {
-            failWithRawMessage("Unable to extract classes.dex from apk '%s'\n%s",
-                    file.getAbsolutePath(),
-                    e.toString());
-            return null;
-        }
     }
 
     @Override

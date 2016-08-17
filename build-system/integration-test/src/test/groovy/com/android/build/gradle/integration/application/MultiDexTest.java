@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.ALL;
+import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY;
 import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.MAIN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
@@ -196,7 +196,7 @@ public class MultiDexTest {
         project.execute("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
         assertThatApk(project.getApk("ics", "debug"))
-                .containsClass("Lcom/android/tests/basic/NotUsed;", ALL);
+                .containsClass("Lcom/android/tests/basic/NotUsed;", MAIN_AND_SECONDARY);
         assertThatApk(project.getApk("ics", "debug"))
                 .doesNotContainClass("Lcom/android/tests/basic/NotUsed;", MAIN);
 
