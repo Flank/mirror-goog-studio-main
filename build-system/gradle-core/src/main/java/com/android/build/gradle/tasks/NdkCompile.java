@@ -160,7 +160,7 @@ public class NdkCompile extends NdkTask {
 
     @SkipWhenEmpty
     @InputFiles
-    FileTree getSource() {
+    public FileTree getSource() {
         FileTree src = null;
         List<File> sources = getSourceFolders();
         if (!sources.isEmpty()) {

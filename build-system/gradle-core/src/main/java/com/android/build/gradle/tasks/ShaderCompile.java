@@ -73,7 +73,7 @@ public class ShaderCompile extends BaseTask {
     private File ndkLocation;
 
     @InputFiles
-    FileTree getSourceFiles() {
+    public FileTree getSourceFiles() {
         FileTree src = null;
         File sourceDir = getSourceDir();
         if (sourceDir.isDirectory()) {

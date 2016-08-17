@@ -204,12 +204,12 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     /**
      * A synthetic input to allow gradle up-to-date checks to work.
      *
-     * Since List<AndroidLibrary> can't be used directly, as @Nested doesn't work on lists,
+     * Since {@code List<AndroidLibrary>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
     @SuppressWarnings("unused")
     @InputFiles
-    List<File> getLibraryManifests() {
+    public List<File> getLibraryManifests() {
         List<AndroidLibrary> libs = getLibraries();
         if (libs == null || libs.isEmpty()) {
             return Collections.emptyList();
