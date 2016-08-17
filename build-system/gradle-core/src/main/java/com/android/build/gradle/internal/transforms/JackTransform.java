@@ -44,6 +44,7 @@ import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
+import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.StringHelper;
 import com.android.utils.ILogger;
@@ -285,8 +286,14 @@ public class JackTransform extends Transform {
         options.setEcjOptionFile(scope.getJackEcjOptionsFile());
         options.setAdditionalParameters(config.getJackOptions().getAdditionalParameters());
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
-        boolean incremental = AbstractCompilesUtil
-                .isIncremental(project, scope, compileOptions, processorPath, LOG);
+
+        // Incremental compilation is disabled for buildtools < 24.0.2 due to b.android.com/220176.
+        boolean incremental =
+                AbstractCompilesUtil.isIncremental(
+                        project, scope, compileOptions, processorPath, LOG)
+                        && androidBuilder.getTargetInfo().getBuildTools().getRevision().compareTo(
+                                new Revision(24, 0, 2), Revision.PreviewComparison.IGNORE) >= 0 ;
+
         if (incremental) {
             String taskName = StringHelper.combineAsCamelCase(
                     ImmutableList.of(
