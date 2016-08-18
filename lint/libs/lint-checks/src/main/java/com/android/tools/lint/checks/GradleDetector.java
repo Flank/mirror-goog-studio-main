@@ -610,6 +610,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Old buildToolsVersion ")) {
                 return findSubstring(errorMessage, "Old buildToolsVersion ", ";");
             }
+            if (errorMessage.startsWith("Use Fabric Gradle ")) {
+                return findSubstring(errorMessage, "(was ", ")");
+            }
+
             // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
             return findSubstring(errorMessage, "targetSdkVersion (", ")");
         } else if (issue == STRING_INTEGER) {
@@ -659,6 +663,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Old buildToolsVersion ")) {
                 return findSubstring(errorMessage, " version is ", " ");
             }
+            if (errorMessage.startsWith("Use Fabric Gradle ")) {
+                return "1.21.6";
+            }
+
             // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
             return findSubstring(errorMessage, "compileSdkVersion (", ")");
         } else if (issue == STRING_INTEGER) {
@@ -893,6 +901,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new Revision(4, 3, 5));
+        } else if ("io.fabric.tools".equals(dependency.getGroupId()) &&
+                "gradle".equals(dependency.getArtifactId())) {
+            GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
+            if (parsed != null && parsed.compareTo("1.21.6") < 0) {
+                report(context, cookie, DEPENDENCY, "Use Fabric Gradle plugin version 1.21.6 or "
+                        + "later to improve Instant Run performance (was " +
+                        dependency.getRevision() + ")");
+            }
         }
 
         // Network check for really up to date libraries? Only done in batch mode
