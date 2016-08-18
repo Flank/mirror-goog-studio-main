@@ -310,8 +310,8 @@ public class DexTransform extends Transform {
                 final Set<String> hashs = Sets.newHashSet();
                 // input files to output file map
                 final Map<File, File> inputFiles = Maps.newHashMap();
-                // set of input files that are external libraries
-                final Set<File> externalLibs = Sets.newHashSet();
+                // set of input files that are external-library jar files
+                final Set<File> externalLibJarFiles = Sets.newHashSet();
                 // stuff to delete. Might be folders.
                 final List<File> deletedFiles = Lists.newArrayList();
 
@@ -339,9 +339,6 @@ public class DexTransform extends Transform {
                         File preDexFile = getPreDexFile(
                                 outputProvider, needMerge, perStreamDexFolder, directoryInput);
                         inputFiles.put(rootFolder, preDexFile);
-                        if (isExternalLibrary(directoryInput)) {
-                            externalLibs.add(rootFolder);
-                        }
                     }
                 }
 
@@ -357,8 +354,9 @@ public class DexTransform extends Transform {
                             File preDexFile = getPreDexFile(
                                     outputProvider, needMerge, perStreamDexFolder, jarInput);
                             inputFiles.put(jarInput.getFile(), preDexFile);
-                            if (isExternalLibrary(jarInput)) {
-                                externalLibs.add(jarInput.getFile());
+                            if (jarInput.getScopes()
+                                    .equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
+                                externalLibJarFiles.add(jarInput.getFile());
                             }
                             break;
                         }
@@ -374,7 +372,8 @@ public class DexTransform extends Transform {
                 }
 
                 logger.verbose("inputFiles : %s", Joiner.on(",").join(inputFiles.entrySet()));
-                logger.verbose("externalLibs %s: ", Joiner.on(",").join(externalLibs));
+                logger.verbose(
+                        "externalLibJarFiles %s: ", Joiner.on(",").join(externalLibJarFiles));
 
                 WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
@@ -385,7 +384,7 @@ public class DexTransform extends Transform {
                                     entry.getValue(),
                                     hashs,
                                     outputHandler,
-                                    externalLibs.contains(entry.getKey())
+                                    externalLibJarFiles.contains(entry.getKey())
                                             ? buildCache
                                             : Optional.empty());
                     logger.verbose("Adding PreDexTask for %s : %s", entry.getKey(), action);
@@ -514,38 +513,57 @@ public class DexTransform extends Transform {
             if (fileCache.isPresent()) {
                 // To use the cache, we need to specify all the inputs that affect the outcome of a
                 // pre-dex (see DxDexKey for an exhaustive list of these inputs)
-                FileCache.Inputs.Builder inputs = new FileCache.Inputs.Builder();
+                FileCache.Inputs.Builder buildCacheInputs = new FileCache.Inputs.Builder();
 
-                // If a file is exploded from an aar, we can use the file path relative to the
-                // "exploded-aar" directory as the unique ID of the file (i.e., if two files have
-                // the same relative file paths under "exploded-aar", their contents must be the
-                // same regardless of where the "exploded-aar" directories are located).
-                int explodedAarIndex = from.getPath().lastIndexOf("exploded-aar");
-                if (explodedAarIndex != -1) {
-                    inputs.putString(
-                            "exploded-aar-file",
-                            from.getPath()
-                                    .substring(explodedAarIndex + "exploded-aar".length() + 1));
+                // As a general rule, we use the file's path and hash to uniquely identify a file.
+                // However, certain types of files are usually copied/duplicated at different
+                // locations. To recognize those files as the same file, in addition to the file's
+                // hash, we extract a substring of the file's path that can serve as an identifier
+                // of the file.
+                if (from.getPath().contains("exploded-aar")) {
+                    // If the file is exploded from an aar file, we use the path relative to the
+                    // "exploded-aar" directory as the file's identifier, which includes the aar
+                    // artifact information (e.g., "exploded-aar/com.android.support/support-v4/
+                    // 23.3.0/jars/classes.jar")
+                    buildCacheInputs.putString(
+                            String.valueOf(FileCacheInputName.EXPLODED_AAR_FILE_PATH),
+                            from.getPath().substring(from.getPath().lastIndexOf("exploded-aar")));
+                } else if (from.getName().equals("instant-run.jar")) {
+                    // If the file is an instant-run.jar file, we use the the file name itself as
+                    // the file's identifier
+                    buildCacheInputs.putString(
+                            String.valueOf(FileCacheInputName.INSTANT_RUN_JAR_FILE_NAME),
+                            from.getName());
                 } else {
-                    inputs.putFilePath("file", from);
+                    // In all other cases, we use the file's path as the file's identifier
+                    buildCacheInputs.putFilePath(
+                            String.valueOf(FileCacheInputName.FILE_PATH), from);
                 }
-
-                inputs.putString(
-                                "buildToolsRevision",
+                // In all cases, in addition to the file's path, we always use the file's hash to
+                // identify an input file, and provide other input parameters to the cache
+                buildCacheInputs
+                        .putFileHash(String.valueOf(FileCacheInputName.FILE_HASH), from)
+                        .putString(
+                                String.valueOf(FileCacheInputName.BUILD_TOOLS_REVISION),
                                 androidBuilder
                                         .getTargetInfo()
                                         .getBuildTools()
                                         .getRevision()
                                         .toString())
-                        .putBoolean("jumboMode", dexOptions.getJumboMode())
-                        .putBoolean("optimize", optimize)
-                        .putBoolean("multiDex", multiDex);
+                        .putBoolean(
+                                String.valueOf(FileCacheInputName.JUMBO_MODE),
+                                dexOptions.getJumboMode())
+                        .putBoolean(String.valueOf(FileCacheInputName.OPTIMIZE), optimize)
+                        .putBoolean(String.valueOf(FileCacheInputName.MULTI_DEX), multiDex);
                 List<String> additionalParams = dexOptions.getAdditionalParameters();
                 for (int i = 0; i < additionalParams.size(); i++) {
-                    inputs.putString("additionalParameter" + (i + 1), additionalParams.get(i));
+                    buildCacheInputs.putString(
+                            String.valueOf(FileCacheInputName.ADDITIONAL_PARAMETERS)
+                                    + "[" + i + "]",
+                            additionalParams.get(i));
                 }
 
-                fileCache.get().createFile(to, inputs.build(), fileProducer);
+                fileCache.get().createFile(to, buildCacheInputs.build(), fileProducer);
             } else {
                 FileUtils.deletePath(to);
                 Files.createParentDirs(to);
@@ -560,6 +578,43 @@ public class DexTransform extends Transform {
 
             return null;
         }
+    }
+
+    /**
+     * Parameter name in a parameter name-value pair provided as input to {@link FileCache}.
+     *
+     * <p>Users of {@link FileCache} need to provide pairs of parameter names and values as inputs
+     * to the {@code FileCache}. This enum class provides the possible parameter names that are used
+     * by the {@link DexTransform.PreDexTask} class.
+     */
+    private enum FileCacheInputName {
+
+        /** Path of an input file. */
+        FILE_PATH,
+
+        /** Relative path of an input file exploded from an aar file. */
+        EXPLODED_AAR_FILE_PATH,
+
+        /** Name of an input file that is an instant-run.jar file. */
+        INSTANT_RUN_JAR_FILE_NAME,
+
+        /** Hash of an input file. */
+        FILE_HASH,
+
+        /** Revision of the build tools. */
+        BUILD_TOOLS_REVISION,
+
+        /** Whether jumbo mode is enabled. */
+        JUMBO_MODE,
+
+        /** Whether optimize is enabled. */
+        OPTIMIZE,
+
+        /** Whether multi-dex is enabled. */
+        MULTI_DEX,
+
+        /** List of additional parameters. */
+        ADDITIONAL_PARAMETERS
     }
 
     /**
@@ -647,12 +702,5 @@ public class DexTransform extends Transform {
      */
     private boolean getOptimize() {
         return MoreObjects.firstNonNull(dexOptions.getOptimize(), !debugMode);
-    }
-
-    /**
-     * Determines whether a content is an external library.
-     */
-    private static boolean isExternalLibrary(@NonNull QualifiedContent content) {
-        return content.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES));
     }
 }
