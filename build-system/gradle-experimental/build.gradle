@@ -1,4 +1,4 @@
-apply plugin: 'groovy'
+apply plugin: 'java'
 apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
 apply plugin: 'jacoco'
@@ -80,19 +80,18 @@ test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 }
 
-groovydoc {
+javadoc {
     exclude     "**/internal/**"
-    includePrivate false
 
-    docTitle "Gradle Plugin for Android"
-    header ""
-    footer "Copyright (C) 2012 The Android Open Source Project"
-    overview ""
+    options.docTitle "Gradle Plugin for Android"
+    options.header ""
+    options.footer "Copyright (C) 2012 The Android Open Source Project"
 }
 
-task javadocJar(type: Jar, dependsOn:groovydoc) {
+task javadocJar(type: Jar, dependsOn:javadoc) {
     classifier  'javadoc'
-    from        groovydoc.destinationDir
+    from        javadoc.destinationDir
+
 }
 
 tasks.withType(Javadoc) {
