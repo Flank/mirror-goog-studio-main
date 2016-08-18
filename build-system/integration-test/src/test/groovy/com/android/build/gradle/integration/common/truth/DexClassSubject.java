@@ -18,29 +18,29 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.utils.XmlHelper;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
-import org.w3c.dom.Node;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.jf.dexlib2.dexbacked.DexBackedField;
+import org.jf.dexlib2.dexbacked.DexBackedMethod;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-public class DexClassSubject extends Subject<DexClassSubject, Node> {
+public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef> {
 
-    public static final SubjectFactory<DexClassSubject, Node> FACTORY
-            = new SubjectFactory<DexClassSubject, Node>() {
+    public static final SubjectFactory<DexClassSubject, DexBackedClassDef> FACTORY
+            = new SubjectFactory<DexClassSubject, DexBackedClassDef>() {
         @Override
         public DexClassSubject getSubject(
                 @NonNull FailureStrategy failureStrategy,
-                @Nullable Node subject) {
+                @Nullable DexBackedClassDef subject) {
             return new DexClassSubject(failureStrategy, subject);
         }
     };
 
     private DexClassSubject(
             @NonNull FailureStrategy failureStrategy,
-            @Nullable Node subject) {
+            @Nullable DexBackedClassDef subject) {
         super(failureStrategy, subject);
     }
 
@@ -80,14 +80,24 @@ public class DexClassSubject extends Subject<DexClassSubject, Node> {
      * Should not be called when the subject is null.
      */
     private boolean checkHasMethod(@NonNull String name) {
-        return XmlHelper.findChildWithTagAndAttrs(getSubject(), "method", "name", name) != null;
+        for (DexBackedMethod method : getSubject().getMethods()) {
+            if (method.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Should not be called when the subject is null.
      */
     private boolean checkHasField(@NonNull String name) {
-        return XmlHelper.findChildWithTagAndAttrs(getSubject(), "field", "name", name) != null;
+        for (DexBackedField field : getSubject().getFields()) {
+            if (field.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean assertSubjectIsNonNull() {
@@ -102,7 +112,7 @@ public class DexClassSubject extends Subject<DexClassSubject, Node> {
     protected String getDisplaySubject() {
         String subjectName = null;
         if (getSubject() != null) {
-            subjectName = getSubject().getAttributes().getNamedItem("name").getTextContent();
+            subjectName = getSubject().getType();
         }
         if (internalCustomName() != null) {
             return internalCustomName() + " (<" + subjectName + ">)";

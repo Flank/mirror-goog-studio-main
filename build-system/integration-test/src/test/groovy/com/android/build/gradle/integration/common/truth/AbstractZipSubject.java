@@ -25,12 +25,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,16 +66,13 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void contains(@NonNull String path) throws IOException {
-        ZipFile zip = getZip();
-        if (zip == null) {
-            return;
-        }
-        try {
+        try (ZipFile zip = getZip()) {
+            if (zip == null) {
+                return;
+            }
             if (zip.getEntry(path) == null) {
                 failWithRawMessage("'%s' does not contain '%s'", zip.getName(), path);
             }
-        } finally {
-            zip.close();
         }
     }
 
@@ -85,16 +80,13 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
      * Asserts the zip file does not contains a file with the specified path.
      */
     public void doesNotContain(@NonNull String path) throws IOException {
-        ZipFile zip = getZip();
-        if (zip == null) {
-            return;
-        }
-        try {
+        try (ZipFile zip = getZip()) {
+            if (zip == null) {
+                return;
+            }
             if (zip.getEntry(path) != null) {
                 failWithRawMessage("'%s' unexpectedly contains '%s'", zip.getName(), path);
             }
-        } finally {
-            zip.close();
         }
     }
 
@@ -221,7 +213,7 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
 
     /**
      * Perform an action on a Zip file entry. The zip file entry is extracted from the zip file
-     * and stored to a temporary file passed to the {@link #doOnZipEntry(File)}.
+     * passed to the {@link #doOnZipEntry(byte[])}.
      * @param <T> the expected return typ
      */
     interface ZipEntryAction<T> {
@@ -229,16 +221,16 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
         /**
          * Perform an action on zip entry extracted to a temporary file. The file will only be
          * valid during the execution of the method.
-         * @param extractedEntry the extract zip entry as a {@link File}
+         * @param entry the zip entry content.
          * @return a result or null if no result could be provided.
          * @throws ProcessException
          */
         @Nullable
-        T doOnZipEntry(File extractedEntry) throws ProcessException;
+        T doOnZipEntry(byte[] entry) throws ProcessException;
     }
 
     /**
-     * Convenience method to extract an entry from the current zip file, save it as temporary file
+     * Convenience method to extract an entry from the current zip file,
      * and run a {@link ZipEntryAction} on it.
      * @param path the entry name in the subject's zip.
      * @param action the action to run on the extracted entry.
@@ -246,27 +238,16 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
      * @return result or null if it could not produce one.
      */
     @Nullable
-    protected <T> T extractEntryAndRunAction(String path, ZipEntryAction<T> action)
+    protected <T> T extractEntryAndRunAction(
+            @NonNull String path, @NonNull ZipEntryAction<T> action)
             throws IOException, ProcessException {
-        try (ZipFile zipFile = new ZipFile(getSubject())) {
-            InputStream classDexStream = getInputStream(zipFile, path);
+        try (ZipFile zipFile = new ZipFile(getSubject());
+             InputStream classDexStream = getInputStream(zipFile, path)) {
             if (classDexStream == null) {
                 throw new IOException(path + " entry not found !");
             }
-            try {
-                byte[] content = ByteStreams.toByteArray(classDexStream);
-                // write into tmp file
-                File dexFile = File.createTempFile("dex", "");
-                try {
-                    Files.write(content, dexFile);
-                    return action.doOnZipEntry(dexFile);
-                } finally {
-                    dexFile.delete();
-                }
-            } finally {
-                classDexStream.close();
-            }
-
+            byte[] content = ByteStreams.toByteArray(classDexStream);
+            return action.doOnZipEntry(content);
         }
     }
 }

@@ -30,6 +30,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import java.io.InputStream;
 import org.junit.Assert;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -54,9 +55,7 @@ public class ZipHelper {
 
     @Nullable
     public static File extractFile(File zipFile, String path) throws IOException {
-        ZipFile zip = null;
-        try {
-            zip = new ZipFile(zipFile);
+        try (ZipFile zip = new ZipFile(zipFile)) {
             ZipEntry entry = zip.getEntry(path);
             if (entry == null) {
                 return null;
@@ -69,13 +68,24 @@ public class ZipHelper {
             return apk;
         } catch (IOException e) {
             throw new IOException("Failed to open " + zipFile, e);
-        } finally {
-            if (zip != null) {
-                zip.close();
-            }
         }
     }
 
+    @Nullable
+    public static byte[] extractEntry(@NonNull File zipFile, @NonNull String path)
+            throws IOException {
+        try (ZipFile zip = new ZipFile(zipFile)) {
+            ZipEntry entry = zip.getEntry(path);
+            if (entry == null) {
+                return null;
+            }
+            try (InputStream stream = zip.getInputStream(entry)) {
+                return ByteStreams.toByteArray(stream);
+            }
+        } catch (IOException e) {
+            throw new IOException("Failed to open " + zipFile, e);
+        }
+    }
 
     /**
      * Checks that a zip file contains a specific file.

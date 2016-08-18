@@ -176,9 +176,9 @@ public class InstantRunChangeDeviceTest {
                 AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
                 .that().hasMethod("onCreate");
         apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.ALL);
+                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
         apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                AbstractAndroidSubject.ClassFileScope.ALL);
+                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
     }
 
     private void checkHotswappableApk(@NonNull File apk) throws Exception {
