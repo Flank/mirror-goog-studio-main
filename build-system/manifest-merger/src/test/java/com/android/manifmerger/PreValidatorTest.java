@@ -16,7 +16,7 @@
 
 package com.android.manifmerger;
 
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 
 import junit.framework.TestCase;
 

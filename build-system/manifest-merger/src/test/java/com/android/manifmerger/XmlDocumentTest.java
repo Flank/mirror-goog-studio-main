@@ -20,7 +20,7 @@ import static com.android.manifmerger.MergingReport.Record.Severity.ERROR;
 
 import com.android.SdkConstants;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
