@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,8 @@ public class JackProcessOptions {
     private Map<String, String> mAnnotationProcessorOptions = ImmutableMap.of();
     @Nullable
     private File coverageMetadataFile = null;
-
+    @Nullable
+    private String mEncoding = null;
     @NonNull
     private Map<String, String> mAdditionalParameters = Maps.newHashMap();
 
@@ -317,5 +319,14 @@ public class JackProcessOptions {
 
     public void setCoverageMetadataFile(@Nullable File coverageMetadataFile) {
         this.coverageMetadataFile = coverageMetadataFile;
+    }
+
+    @Nullable
+    public String getEncoding() {
+        return mEncoding;
+    }
+
+    public void setEncoding(@NonNull String encoding) {
+        mEncoding = encoding;
     }
 }

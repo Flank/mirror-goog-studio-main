@@ -68,6 +68,7 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             builder.addJvmArg("-Xmx1024M");
         }
 
+        builder.addJvmArg("-Dfile.encoding=" + options.getEncoding());
         builder.addArgs("-D", "jack.dex.optimize=" + Boolean.toString(options.getDexOptimize()));
 
         if (options.isDebugLog()) {

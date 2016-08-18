@@ -118,6 +118,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -1748,6 +1749,17 @@ public class AndroidBuilder {
                     config02.setProperty(
                             "jack.java.source.version",
                             options.getSourceCompatibility());
+                }
+
+                if (options.getEncoding() != null
+                        && !options.getEncoding().equals(Charset.defaultCharset().name())) {
+                    mLogger.warning(
+                            "Jack will use %s encoding for the source files. If you would like to "
+                                    + "specify a different one, add org.gradle.jvmargs="
+                                    + "-Dfile.encoding=<encoding> to the gradle.properties file."
+                                    + "Alternatively, set jackInProcess = false, and "
+                                    + "use android.compileOptions.encoding property.",
+                            Charset.defaultCharset().name());
                 }
 
                 if (options.getIncrementalDir() != null
