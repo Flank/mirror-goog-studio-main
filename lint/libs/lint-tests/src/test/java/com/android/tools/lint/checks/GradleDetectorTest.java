@@ -644,6 +644,29 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "}\n")));
     }
 
+    public void testOldBugSnag() throws Exception {
+        // This version of BugSnag triggered instant run full rebuilds
+        mEnabled = Collections.singleton(DEPENDENCY);
+        assertEquals(""
+                + "build.gradle:3: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.0) [GradleDependency]\n"
+                + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:4: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.1) [GradleDependency]\n"
+                + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
+
+                lintProject(source("build.gradle", ""
+                        + "buildscript {\n"
+                        + "  dependencies {\n"
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n" // Old
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n" // Old
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" // OK
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" // OK
+                        + "  }\n"
+                        + "}\n")));
+    }
+
     @Override
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
             @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
