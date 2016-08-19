@@ -32,10 +32,12 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -168,7 +170,11 @@ public class AnnotationProcessorTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n"
-                        + "${model_end}")
+                        + "${model_end}\n"
+                        + "dependencies {\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "    compile project(':lib')\n"
+                        + "}\n")
                 .addPattern(
                         "argument",
                         "argument \"value\", \"Hello\"",
@@ -179,11 +185,6 @@ public class AnnotationProcessorTest {
 
     @Test
     public void normalBuild() throws Exception {
-        Files.append("\n"
-                + "dependencies {\n"
-                + "    annotationProcessor project(':lib-compiler')\n"
-                + "    compile project(':lib')\n"
-                + "}\n", project.getSubproject(":app").getBuildFile(), Charsets.UTF_8 );
         project.execute("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
         assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
@@ -201,25 +202,48 @@ public class AnnotationProcessorTest {
         File emptyJar = project.getSubproject("app").file("empty.jar");
         assertThat(emptyJar.createNewFile()).isTrue();
 
-        Files.append(
-                "dependencies {\n"
-                        + "    compile project(':lib-compiler')\n"
-                        + "    annotationProcessor files('empty.jar')\n"
-                        + "}\n",
-                project.getSubproject(":app").getBuildFile(),
-                Charsets.UTF_8);
         project.execute("assembleDebug");
     }
 
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "dependencies {\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
-                        + "}\n");
         project.executeConnectedCheck();
+    }
+
+    @Test
+    public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
+        // check for jack and non-component plugin
+        Assume.assumeTrue(forJack && !forComponentPlugin);
+
+        GradleTestProject proc = project.getSubproject("lib-compiler");
+        TestFileUtils.appendToFile(
+                proc.getBuildFile(),
+                "repositories {\n"
+                        + "    maven { url System.env.CUSTOM_REPO }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.dagger:dagger:2.6'\n"
+                        + "}\n");
+
+        // update the annotation processor the reference enum that exists in 2.6 but not in 1.2.2
+        TestFileUtils.searchAndReplace(
+                FileUtils.join(
+                        proc.getMainSrcDir(), "com", "example", "annotation", "Processor.java"),
+                "\n}\\s*$",
+                "String s = dagger.Provides.Type.MAP.toString();" + "\n\n}");
+
+
+        // add older dagger to the buildscript classpath
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.squareup.dagger:dagger:1.2.2'\n"
+                        + "    }\n"
+                        + "}\n");
+
+        // make sure we resolve used class to the 2.6 version
+        project.execute("assembleDebug");
     }
 }
