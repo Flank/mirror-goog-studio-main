@@ -29,6 +29,8 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.testutils.incremental.FileRecord;
+import com.android.testutils.truth.FileRecordSubject;
 import com.android.testutils.truth.FileSubject;
 import com.android.testutils.truth.FileSubjectFactory;
 import com.android.testutils.truth.Java8OptionalSubject;
@@ -80,6 +82,11 @@ public class TruthHelper {
     @NonNull
     public static FileSubject assertThat(@Nullable File file) {
         return assert_().about(FileSubjectFactory.factory()).that(file);
+    }
+
+    @NonNull
+    public static FileRecordSubject assertThat(@NonNull FileRecord fileRecord) {
+        return assert_().about(FileRecordSubject.FACTORY).that(fileRecord);
     }
 
     @NonNull
