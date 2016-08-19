@@ -36,9 +36,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-process-services-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-process-services-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-process-services-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-process-services-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -403,9 +403,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -461,9 +461,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-base-services-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-base-services-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-base-services-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-base-services-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -508,9 +508,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-wrapper-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-wrapper-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-wrapper-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -566,9 +566,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-resources-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-resources-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-resources-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-resources-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -652,9 +652,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -771,9 +771,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-logging-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-logging-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-logging-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-logging-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -967,9 +967,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -999,16 +999,16 @@ iml_module(
         "//tools:idea.jps-model-impl[module]",
         "//tools:idea.jps-model-api[module]",
         "//tools:idea.jps-model-serialization[module]",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-resources-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-resources-3.0",
         "//tools:idea/lib/ant/lib/ant-commons-net",
         "//tools:idea/lib/ant/lib/ant-jmf",
         "//tools:idea/lib/ant/lib/ant-apache-resolver",
@@ -1084,9 +1084,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1117,30 +1117,30 @@ iml_module(
         "//tools:idea.MM_idea-ui[module]",
         "//tools:idea/lib/slf4j-api-1.7.10",
         "//tools:idea/lib/slf4j-log4j12-1.7.10",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-logging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-process-services-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-logging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-process-services-3.0",
         "//tools:idea/plugins/gradle/lib/guava-jdk5-17.0",
         "//tools:idea/lib/groovy-all-2.4.6",
     ],
     exports = [
         "//tools:idea/lib/slf4j-api-1.7.10",
         "//tools:idea/lib/slf4j-log4j12-1.7.10",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-logging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-process-services-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-logging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-process-services-3.0",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -1243,9 +1243,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1259,9 +1259,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-tooling-api-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-tooling-api-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-tooling-api-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1275,9 +1275,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-model-core-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-model-core-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-model-core-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-model-core-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1381,9 +1381,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1619,9 +1619,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1871,9 +1871,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -1987,17 +1987,17 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-cli-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-cli-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-cli-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-cli-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -2064,17 +2064,17 @@ iml_module(
         "//tools:idea/lib/swingx-core-1.6.2",
         "//tools:idea/lib/slf4j-api-1.7.10",
         "//tools:idea/lib/slf4j-log4j12-1.7.10",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-resources-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-cli-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-resources-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-cli-3.0",
         "//tools:idea/plugins/gradle/lib/guava-jdk5-17.0",
         "//tools:idea/plugins/gradle/lib/jsr305-1.3.9",
         "//tools:idea/plugins/gradle/lib/commons-io-1.4",
@@ -2112,17 +2112,17 @@ iml_module(
         "//tools:idea.gradle-tooling-extension-api",
         "//tools:idea/lib/slf4j-api-1.7.10",
         "//tools:idea/lib/slf4j-log4j12-1.7.10",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-resources-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-cli-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-resources-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-cli-3.0",
         "//tools:idea/plugins/gradle/lib/guava-jdk5-17.0",
         "//tools:idea/plugins/gradle/lib/commons-io-1.4",
     ],
@@ -2131,9 +2131,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-messaging-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-messaging-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-messaging-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-messaging-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -2204,9 +2204,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-base-services-groovy-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -2340,31 +2340,31 @@ iml_module(
         "//tools:idea.annotations[module]",
         "//tools:idea.external-system-rt[module]",
         "//tools:idea.gradle-tooling-extension-api[module]",
-        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-core-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-messaging-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-wrapper-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-2.14.1",
-        "//tools:idea/plugins/gradle/lib/gradle-native-2.14.1",
+        "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-model-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-wrapper-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-base-services-groovy-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-native-3.0",
         "//tools:idea/plugins/gradle/lib/guava-jdk5-17.0",
         "//tools:idea/lib/groovy-all-2.4.6",
         "//tools:idea/lib/gson-2.5",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-2.14.1",
-        "//tools:idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-2.14.1",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-3.0",
+        "//tools:idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-3.0",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -2434,9 +2434,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -2498,9 +2498,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -2864,9 +2864,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-model-groovy-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-model-groovy-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-model-groovy-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-model-groovy-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -3248,9 +3248,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-native-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-native-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-native-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-native-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -3304,9 +3304,9 @@ java_import(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -3598,9 +3598,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/lib/gradle-core-2.14.1",
+  name = "idea/plugins/gradle/lib/gradle-core-3.0",
   jars = [
-      "idea/plugins/gradle/lib/gradle-core-2.14.1.jar",
+      "idea/plugins/gradle/lib/gradle-core-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
@@ -3628,9 +3628,9 @@ iml_module(
 )
 
 java_import(
-  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-2.14.1",
+  name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-3.0",
   jars = [
-      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-2.14.1.jar",
+      "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
