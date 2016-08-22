@@ -12,6 +12,7 @@ iml_module(
         "//tools/base/sdklib:sdklib[module]",
         "//prebuilts/tools/common/m2:repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5[test]",
         "//tools/base/sdk-common:sdk-common[module]",
+        "//tools/base/testutils:testutils[module]",
     ],
     exports = ["//tools/base/sdklib:sdklib"],
     javacopts = ["-extra_checks:off"],
