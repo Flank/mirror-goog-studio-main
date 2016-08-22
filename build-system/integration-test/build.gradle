@@ -10,32 +10,32 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    testCompile project(':base:builder-model')
-    testCompile project(':base:builder')
-    testCompile project(':base:sdk-common')
-    testCompile project(':base:lint')
-    testCompile project(':base:instant-run:instant-run-client')
-    testCompile project(':base:testutils')
-    testCompile project(':base:testing-infrastructure:device-pool:device-provider')
+    compile project(':base:builder-model')
+    compile project(':base:builder')
+    compile project(':base:sdk-common')
+    compile project(':base:lint')
+    compile project(':base:instant-run:instant-run-client')
+    compile project(':base:testutils')
+    compile project(':base:testing-infrastructure:device-pool:device-provider')
 
-    testCompile "junit:junit:4.12"
-    testCompile 'commons-io:commons-io:2.4'
-    testCompile 'commons-lang:commons-lang:2.6'
+    compile "junit:junit:4.12"
+    compile 'commons-io:commons-io:2.4'
+    compile 'commons-lang:commons-lang:2.6'
     testCompile "com.google.protobuf:protobuf-java:2.5.0"
-    testCompile 'com.google.truth:truth:0.28'
+    compile 'com.google.truth:truth:0.28'
     testCompile "org.mockito:mockito-core:1.9.5"
-    testCompile('org.smali:dexlib2:2.1.3') {
+    compile('org.smali:dexlib2:2.1.3') {
         // commons-cli is not needed as we're not using dexlib from the command line.
         exclude group: 'commons-cli', module: 'commons-cli'
     }
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.
-    testCompile 'org.jacoco:org.jacoco.agent:0.7.5.201505241946'
+    compile 'org.jacoco:org.jacoco.agent:0.7.5.201505241946'
 
     // Add dependency on plugin code.  Exclude transitive dependencies to avoid conflict due to
     // Groovy versions.
-    testCompile(project(':base:gradle-core')) {
+    compile(project(':base:gradle-core')) {
         transitive = false
     }
     testCompile(project(':base:gradle')) {
@@ -164,6 +164,7 @@ task performanceTest(type: Test) {
     reports {
         junitXml.destination "${project.buildDir}/perf-results"
     }
+    outputs.upToDateWhen { false }
 }
 
 task buildTestDependencies {

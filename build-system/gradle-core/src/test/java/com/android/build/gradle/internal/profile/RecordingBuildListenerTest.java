@@ -19,18 +19,19 @@ package com.android.build.gradle.internal.profile;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.profile.AsyncRecorder;
-import com.android.builder.profile.ProcessRecorder;
 import com.android.builder.profile.ProcessRecorderFactory;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.ILogger;
-import com.google.common.collect.Maps;
+import com.google.common.base.Joiner;
+import com.google.common.jimfs.Jimfs;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 
@@ -42,7 +43,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -68,6 +73,8 @@ public class RecordingBuildListenerTest {
 
     @Mock
     ILogger logger;
+
+    private Path mProfileProtoFile;
 
     private static final class TestRecorder implements Recorder {
 
@@ -109,31 +116,6 @@ public class RecordingBuildListenerTest {
         }
     }
 
-    private static final class TestExecutionRecordWriter implements ProcessRecorder.ExecutionRecordWriter {
-
-        final List<AndroidStudioStats.GradleBuildProfileSpan> records =
-                new CopyOnWriteArrayList<>();
-        final Map<Long, Map<String, String>> attributes = Maps.newConcurrentMap();
-
-        @Override
-        public void write(@NonNull AndroidStudioStats.GradleBuildProfileSpan executionRecord,
-                @NonNull Map<String, String> executionAttributes) throws IOException {
-            records.add(executionRecord);
-            attributes.put(executionRecord.getId(), executionAttributes);
-        }
-
-        List<AndroidStudioStats.GradleBuildProfileSpan> getRecords() {
-            return records;
-        }
-
-        Map<String, String> getAttributes(long id) {
-            return attributes.get(id);
-        }
-
-        @Override
-        public void close() throws IOException {
-        }
-    }
 
     @Before
     public void setUp() {
@@ -143,6 +125,8 @@ public class RecordingBuildListenerTest {
         when(mTask.getProject()).thenReturn(mProject);
         when(mSecondTask.getName()).thenReturn("task2Name");
         when(mSecondTask.getProject()).thenReturn(mProject);
+        mProfileProtoFile = Jimfs.newFileSystem().getPath("profile_proto");
+        ProcessRecorderFactory.initializeForTests(mProfileProtoFile);
     }
 
     @Test
@@ -156,16 +140,10 @@ public class RecordingBuildListenerTest {
         AndroidStudioStats.GradleBuildProfileSpan record = recorder.records.get(0);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
-        //assertEquals(2, record.attributes.size());
-        //ensurePropertyValue(record.attributes, "task", "taskName");
-        //ensurePropertyValue(record.attributes, "project", "projectName");
     }
 
     @Test
-    public void singleThreadWithMultipleSpansInvocation() throws InterruptedException {
-
-        TestExecutionRecordWriter recordWriter = new TestExecutionRecordWriter();
-        ProcessRecorderFactory.initializeForTests(recordWriter);
+    public void singleThreadWithMultipleSpansInvocation() throws InterruptedException, IOException {
 
         RecordingBuildListener listener =
                 new RecordingBuildListener(ThreadRecorder.get());
@@ -183,24 +161,23 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(mTask, mTaskState);
         ProcessRecorderFactory.shutdown();
 
-        assertEquals(4, recordWriter.getRecords().size());
-        AndroidStudioStats.GradleBuildProfileSpan record = getRecordForId(recordWriter.getRecords(), 2);
-        Map<String, String> attributes = recordWriter.getAttributes(2);
-        assertEquals(0, record.getParentId());
-        assertEquals(1, attributes.size());
-        ensurePropertyValue(attributes, "project", ":projectName");
+        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        assertEquals("Span count", 2, profile.getSpanCount());
 
-        record = getRecordForId(recordWriter.getRecords(), 3);
+        AndroidStudioStats.GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
+        assertEquals(0, record.getParentId());
+
+        record = getRecordForId(profile.getSpanList(), 3);
         assertNotNull(record);
         assertEquals(2, record.getParentId());
         assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.getType());
     }
 
-    @Test
-    public void simulateTasksUnorderedLifecycleEventsDelivery() throws InterruptedException {
 
-        TestExecutionRecordWriter recordWriter = new TestExecutionRecordWriter();
-        ProcessRecorderFactory.initializeForTests(recordWriter);
+
+    @Test
+    public void simulateTasksUnorderedLifecycleEventsDelivery()
+            throws InterruptedException, IOException {
 
         RecordingBuildListener listener =
                 new RecordingBuildListener(AsyncRecorder.get());
@@ -219,46 +196,20 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(mSecondTask, mTaskState);
 
         ProcessRecorderFactory.shutdown();
+        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
 
-        assertEquals(5, recordWriter.getRecords().size());
+        assertEquals(3, profile.getSpanCount());
         AndroidStudioStats.GradleBuildProfileSpan record =
-                getRecordForId(recordWriter.getRecords(), 2);
+                getRecordForId(profile.getSpanList(), 2);
         assertEquals(1, record.getProject());
 
-        record = getRecordForId(recordWriter.getRecords(), 3);
+        record = getRecordForId(profile.getSpanList(), 3);
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
 
-        record = getRecordForId(recordWriter.getRecords(), 4);
+        record = getRecordForId(profile.getSpanList(), 4);
         assertNotNull(record);
         assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.getType());
-    }
-
-    @Test
-    public void testInitialAndFinalRecords() throws InterruptedException {
-
-        TestExecutionRecordWriter recordWriter = new TestExecutionRecordWriter();
-        ProcessRecorderFactory.initializeForTests(recordWriter);
-
-        ProcessRecorderFactory.shutdown();
-
-        assertEquals(2, recordWriter.getRecords().size());
-        for (AndroidStudioStats.GradleBuildProfileSpan  record : recordWriter.getRecords()) {
-            System.out.println(record);
-        }
-        AndroidStudioStats.GradleBuildProfileSpan record = getRecordForId(recordWriter.getRecords(), 1);
-        Map<String, String> attributes = recordWriter.getAttributes(1);
-        assertEquals(0, record.getParentId());
-        assertEquals(ExecutionType.INITIAL_METADATA, record.getType());
-        assertEquals(6, attributes.size());
-        ensurePropertyValue(attributes, "os_name", System.getProperty("os.name"));
-
-        record = getRecordForId(recordWriter.getRecords(), 2);
-        attributes = recordWriter.getAttributes(2);
-        assertNotNull(record);
-        assertEquals(0, record.getParentId());
-        assertEquals(3, attributes.size());
-        assertEquals(ExecutionType.FINAL_METADATA, record.getType());
     }
 
     @Test
@@ -357,17 +308,12 @@ public class RecordingBuildListenerTest {
     }
 
 
-    private static void ensurePropertyValue(
-            Map<String, String> properties, String name, String value) {
-
-        for (Map.Entry<String, String> property : properties.entrySet()) {
-            if (property.getKey().equals(name)){
-                assertEquals(value, property.getValue());
-            }
-        }
+    private AndroidStudioStats.GradleBuildProfile loadProfile() throws IOException {
+        return AndroidStudioStats.GradleBuildProfile.parseFrom(
+                Files.readAllBytes(mProfileProtoFile));
     }
 
-    @Nullable
+    @NonNull
     private static AndroidStudioStats.GradleBuildProfileSpan getRecordForId(
             @NonNull List<AndroidStudioStats.GradleBuildProfileSpan> records,
             long recordId) {
@@ -376,6 +322,8 @@ public class RecordingBuildListenerTest {
                 return record;
             }
         }
-        return null;
+        throw new AssertionError(
+                "No record with id " + recordId + " found in ["
+                        + Joiner.on(", ").join(records) + "]");
     }
 }

@@ -16,27 +16,15 @@
 
 package com.android.build.gradle.internal.profile;
 
-import static com.android.utils.NullLogger.getLogger;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.LibraryCache;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.builder.internal.compiler.JackConversionCache;
-import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.profile.AsyncRecorder;
 import com.android.builder.profile.ProcessRecorderFactory;
-import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
-import com.android.dx.command.dexer.Main;
-import com.android.ide.common.internal.ExecutorSingleton;
 
-import org.gradle.BuildAdapter;
-import org.gradle.BuildListener;
-import org.gradle.BuildResult;
 import org.gradle.api.Project;
-import org.gradle.api.initialization.Settings;
-import org.gradle.api.invocation.Gradle;
+import org.gradle.initialization.BuildCompletionListener;
 
 import java.io.File;
 
@@ -48,10 +36,10 @@ import java.io.File;
  */
 public final class ProfilerInitializer {
 
-    private static final Object sLOCK = new Object();
+    private static final Object LOCK = new Object();
 
     @Nullable
-    private static RecordingBuildListener sRecordingBuildListener;
+    private static volatile RecordingBuildListener sRecordingBuildListener;
 
     private ProfilerInitializer() {
         //Static singleton class.
@@ -63,33 +51,35 @@ public final class ProfilerInitializer {
      * @param project the current Gradle {@link Project}.
      */
     public static void init(@NonNull Project project) {
-        ProcessRecorderFactory.initialize(
-                project.getRootProject().getProjectDir(),
-                project.getGradle().getGradleVersion(),
-                new LoggerWrapper(project.getLogger()),
-                project.getRootProject().file("profiler" + System.currentTimeMillis() + ".json"));
-        synchronized (sLOCK) {
-            if (sRecordingBuildListener == null) {
-                sRecordingBuildListener = new RecordingBuildListener(AsyncRecorder.get());
-                project.getGradle().addListener(sRecordingBuildListener);
+        synchronized (LOCK) {
+            //noinspection VariableNotUsedInsideIf
+            if (sRecordingBuildListener != null) {
+                return;
             }
+            File benchmarkProfile = AndroidGradleOptions.getBenchmarkProfileFile(project);
+            ProcessRecorderFactory.initialize(
+                    project.getRootProject().getProjectDir(),
+                    project.getGradle().getGradleVersion(),
+                    new LoggerWrapper(project.getLogger()),
+                    benchmarkProfile);
+            sRecordingBuildListener = new RecordingBuildListener(AsyncRecorder.get());
+            project.getGradle().addListener(sRecordingBuildListener);
         }
 
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void buildFinished(@NonNull BuildResult buildResult) {
-                try {
-                    synchronized (sLOCK) {
-                        if (sRecordingBuildListener != null) {
-                            project.getGradle().removeListener(sRecordingBuildListener);
-                            sRecordingBuildListener = null;
-                        }
+        project.getGradle().addListener((BuildCompletionListener) () -> {
+            try {
+                synchronized (LOCK) {
+                    if (sRecordingBuildListener != null) {
+                        project.getGradle().removeListener(sRecordingBuildListener);
+                        sRecordingBuildListener = null;
+                        ProcessRecorderFactory.shutdown();
                     }
-                    ProcessRecorderFactory.shutdown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
             }
         });
     }
 }
+

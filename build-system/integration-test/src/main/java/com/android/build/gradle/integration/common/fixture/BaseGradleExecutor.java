@@ -40,9 +40,6 @@ import java.util.Locale;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
-    private static final String RECORD_BENCHMARK_NAME = "com.android.benchmark.name";
-    private static final String RECORD_BENCHMARK_MODE = "com.android.benchmark.mode";
-
     @NonNull
     final ProjectConnection mProjectConnection;
 
@@ -51,6 +48,14 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @NonNull
     final List<String> mArguments = Lists.newArrayList();
+
+    boolean mBenchmarkEnabled = false;
+
+    @Nullable
+    String mBenchmarkName;
+
+    @Nullable
+    BenchmarkMode mBenchmarkMode;
 
     boolean enableInfoLogging = true;
 
@@ -71,9 +76,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     public T recordBenchmark(
             @NonNull String benchmarkName,
             @NonNull BenchmarkMode benchmarkMode) {
-        mArguments.add("-P" + RECORD_BENCHMARK_NAME + "=" + benchmarkName);
-        mArguments.add("-P" + RECORD_BENCHMARK_MODE + "=" + benchmarkMode.name()
-                .toLowerCase(Locale.US));
+        mBenchmarkEnabled = true;
+        mBenchmarkName = benchmarkName;
+        mBenchmarkMode = benchmarkMode;
         return (T) this;
     }
 

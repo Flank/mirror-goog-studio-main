@@ -1069,5 +1069,6 @@
     <orderEntry type="module" module-name="analytics-protos" />
     <orderEntry type="library" scope="TEST" name="guava-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
+    <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
   </component>
 </module>

@@ -21,29 +21,25 @@ import static com.android.builder.profile.MemoryStats.getCurrentProperties;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.analytics.UsageTracker;
-import com.android.utils.ILogger;
-import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.gson.stream.JsonWriter;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProject.PluginGeneration;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Records all the {@link AndroidStudioStats.GradleBuildProfileSpan}s for a process,
- * in order it was received and sends then synchronously to a {@link JsonRecordWriter}.
+ * Records all the {@link AndroidStudioStats.GradleBuildProfileSpan}s for a process, in order it was
+ * received.
  */
 public class ProcessRecorder {
 
@@ -56,12 +52,7 @@ public class ProcessRecorder {
     private final LoadingCache<String, Project> mProjects;
 
     @Nullable
-    private final ExecutionRecordWriter mExecutionRecordWriter;
-
-    @Nullable
-    private String benchmarkName;
-    @Nullable
-    private String benchmarkMode;
+    private final Path mBenchmarkProfileOutputFile;
 
     private static final AtomicLong lastRecordId = new AtomicLong(1);
 
@@ -79,20 +70,9 @@ public class ProcessRecorder {
         return ProcessRecorderFactory.sINSTANCE.get();
     }
 
-    /**
-     * Abstraction for a {@link  AndroidStudioStats.GradleBuildProfileSpan } writer.
-     */
-    public interface ExecutionRecordWriter {
-        void write(
-                @NonNull AndroidStudioStats.GradleBuildProfileSpan executionRecord,
-                @NonNull Map<String, String> attributes) throws IOException;
-        void close() throws IOException;
-    }
 
-    ProcessRecorder(
-            @Nullable ExecutionRecordWriter outWriter,
-            @NonNull ILogger iLogger) {
-        mExecutionRecordWriter = outWriter;
+    ProcessRecorder(@Nullable Path benchmarkProfileOutputFile) {
+        mBenchmarkProfileOutputFile = benchmarkProfileOutputFile;
         mNameAnonymizer = new NameAnonymizer();
         mBuild = AndroidStudioStats.GradleBuildProfile.newBuilder();
         mStartMemoryStats = createAndRecordMemorySample();
@@ -111,11 +91,8 @@ public class ProcessRecorder {
     }
 
     /**
-     * Done with the recording processing, finish processing the outstanding
-     * {@link AndroidStudioStats.GradleBuildProfileSpan}
-     * publication and shutdowns the processing queue.
-     *
-     * @throws InterruptedException
+     * Done with the recording processing, finish processing the outstanding {@link
+     * AndroidStudioStats.GradleBuildProfileSpan} publication and shutdowns the processing queue.
      */
     void finish() throws InterruptedException {
         AndroidStudioStats.GradleBuildMemorySample memoryStats =
@@ -137,94 +114,30 @@ public class ProcessRecorder {
             }
         }
 
-        AndroidStudioStats.AndroidStudioEvent.Builder studioStats =
-                AndroidStudioStats.AndroidStudioEvent.newBuilder();
-        studioStats.setCategory(
-                AndroidStudioStats.AndroidStudioEvent.EventCategory.GRADLE);
-        studioStats.setKind(
-                AndroidStudioStats.AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE);
-        studioStats.setGradleBuildProfile(mBuild.build());
-
-        UsageTracker.getInstance().log(studioStats);
-
-        if (mExecutionRecordWriter != null) {
-            try {
-                writeDebugRecords(mExecutionRecordWriter);
+        if (mBenchmarkProfileOutputFile != null) {
+            // Internal benchmark. This code path is only invoked in tests.
+            try (BufferedOutputStream outputStream =
+                         new BufferedOutputStream(
+                                 Files.newOutputStream(
+                                         mBenchmarkProfileOutputFile,
+                                         StandardOpenOption.CREATE_NEW))) {
+                mBuild.build().writeTo(outputStream);
             } catch (IOException e) {
-                System.err.println(Throwables.getStackTraceAsString(e));
-            }
-        }
-    }
-
-    private void writeDebugRecords(@NonNull ExecutionRecordWriter writer) throws IOException {
-
-        // Initial metadata
-        ImmutableMap.Builder<String, String> properties = ImmutableMap.builder();
-        properties.put("build_id", UUID.randomUUID().toString());
-        properties.put("os_name", mBuild.getOsName());
-        properties.put("os_version", mBuild.getOsVersion());
-        properties.put("java_version", mBuild.getJavaVersion());
-        properties.put("java_vm_version", mBuild.getJavaVmVersion());
-        properties.put("max_memory", Long.toString(mBuild.getMaxMemory()));
-        if (benchmarkName != null) {
-            properties.put("benchmark_name", benchmarkName);
-        }
-        if (benchmarkMode != null) {
-            properties.put("benchmark_mode", benchmarkMode);
-        }
-        // Set next_gen_plugin to true as long as one of the project use the component model plugin.
-        for (AndroidStudioStats.GradleBuildProject.Builder project :
-                mBuild.getProjectBuilderList()) {
-            if (project.getPluginGeneration() == PluginGeneration.COMPONENT_MODEL) {
-                properties.put("next_gen_plugin", "true");
-                break;
-            }
-        }
-        writer.write(
-                AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
-                        .setId(1)
-                        .setStartTimeInMs(mStartMemoryStats.getTimestamp())
-                        .setType(
-                                AndroidStudioStats.GradleBuildProfileSpan.ExecutionType.INITIAL_METADATA)
-                        .build(),
-                properties.build());
-
-        //De-anonymize project names
-        Map<Long, Pair<String, Map<Long,String>>> originalNames =
-                mNameAnonymizer.createDeanonymizer();
-
-        // Spans
-        for (AndroidStudioStats.GradleBuildProfileSpan span : mBuild.getSpanList()) {
-            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-            if (span.getProject() != 0) {
-                Pair<String, Map<Long,String>> project = originalNames.get(span.getProject());
-                if (project != null) {
-                    builder.put("project", project.getFirst());
-                    if (span.getVariant() != 0) {
-                        String variant = project.getSecond().get(span.getVariant());
-                        if (variant != null) {
-                            builder.put("variant", variant);
-                        }
-                    }
-                }
+                throw new UncheckedIOException(e);
             }
 
-            writer.write(span, builder.build());
+        } else {
+            // Public build profile.
+            AndroidStudioStats.AndroidStudioEvent.Builder studioStats =
+                    AndroidStudioStats.AndroidStudioEvent.newBuilder();
+            studioStats.setCategory(
+                    AndroidStudioStats.AndroidStudioEvent.EventCategory.GRADLE);
+            studioStats.setKind(
+                    AndroidStudioStats.AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE);
+            studioStats.setGradleBuildProfile(mBuild.build());
+
+            UsageTracker.getInstance().log(studioStats);
         }
-
-        // Final metadata
-        writer.write(
-                AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
-                        .setId(ThreadRecorder.get().allocationRecordId())
-                        .setStartTimeInMs(mStartMemoryStats.getTimestamp())
-                        .setType(
-                                AndroidStudioStats.GradleBuildProfileSpan.ExecutionType.FINAL_METADATA)
-                        .build(),
-                ImmutableMap.of(
-                        "build_time", Long.toString(mBuild.getBuildTime()),
-                        "gc_count", Long.toString(mBuild.getGcCount()),
-                        "gc_time", Long.toString(mBuild.getGcTime())));
-
     }
 
     /**
@@ -262,14 +175,6 @@ public class ProcessRecorder {
         project.variants.put(variantName, properties);
     }
 
-    public static void setBenchmark(
-            @NonNull String benchmarkName,
-            @NonNull String benchmarkMode) {
-        ProcessRecorder recorder = get();
-        recorder.benchmarkName = benchmarkName;
-        recorder.benchmarkMode = benchmarkMode;
-    }
-
     private AndroidStudioStats.GradleBuildMemorySample createAndRecordMemorySample() {
         AndroidStudioStats.GradleBuildMemorySample stats = getCurrentProperties();
         if (stats != null) {
@@ -298,6 +203,7 @@ public class ProcessRecorder {
     }
 
     private static class Project {
+
         Project(long id) {
             properties = AndroidStudioStats.GradleBuildProject.newBuilder();
             properties.setId(id);
@@ -308,76 +214,4 @@ public class ProcessRecorder {
         final AndroidStudioStats.GradleBuildProject.Builder properties;
     }
 
-    /**
-     * Implementation of {@link ExecutionRecordWriter} that persist in json format.
-     */
-    static class JsonRecordWriter implements ExecutionRecordWriter {
-
-        @NonNull
-        private final Writer writer;
-
-        @NonNull
-        private final AtomicBoolean closed = new AtomicBoolean(false);
-
-        public JsonRecordWriter(@NonNull Writer writer) {
-            this.writer = writer;
-        }
-
-        @Override
-        public void write(
-                @NonNull AndroidStudioStats.GradleBuildProfileSpan executionRecord,
-                @NonNull Map<String, String> attributes)
-                throws IOException {
-
-            if (closed.get()) {
-                return;
-            }
-            // We want to keep the underlying stream open.
-            //noinspection IOResourceOpenedButNotSafelyClosed
-            JsonWriter mJsonWriter = new JsonWriter(writer);
-            mJsonWriter.beginObject();
-            {
-                mJsonWriter.name("id").value(executionRecord.getId());
-                mJsonWriter.name("parentId").value(executionRecord.getParentId());
-                mJsonWriter.name("startTimeInMs").value(executionRecord.getStartTimeInMs());
-                mJsonWriter.name("durationInMs").value(executionRecord.getDurationInMs());
-                String type = executionRecord.getType().toString();
-                if (executionRecord.hasTask()) {
-                    type = type + "_" + executionRecord.getTask().getType().toString();
-                } else if (executionRecord.hasTransform()) {
-                    type = type + "_" + executionRecord.getTransform().getType().toString();
-                }
-                mJsonWriter.name("type").value(type);
-                mJsonWriter.name("attributes");
-                mJsonWriter.beginArray();
-                {
-                    for (Map.Entry<String, String> entry: attributes.entrySet()) {
-                        mJsonWriter.beginObject();
-                        {
-                            mJsonWriter.name("name").value(entry.getKey());
-                            mJsonWriter.name("value").value(entry.getValue());
-                        }
-                        mJsonWriter.endObject();
-                    }
-                }
-                mJsonWriter.endArray();
-            }
-            mJsonWriter.endObject();
-            mJsonWriter.flush();
-
-            writer.append("\n");
-        }
-
-        @Override
-        public void close() throws IOException {
-            synchronized (this) {
-                if (closed.get()) {
-                    return;
-                }
-                closed.set(true);
-            }
-            writer.flush();
-            writer.close();
-        }
-    }
 }

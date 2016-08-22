@@ -309,12 +309,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         ProfilerInitializer.init(project);
 
-        String benchmarkName = AndroidGradleOptions.getBenchmarkName(project);
-        String benchmarkMode = AndroidGradleOptions.getBenchmarkMode(project);
-        if (benchmarkName != null && benchmarkMode != null) {
-            ProcessRecorder.setBenchmark(benchmarkName, benchmarkMode);
-        }
-
         AndroidStudioStats.GradleBuildProject.PluginType pluginType =
                 AndroidStudioStats.GradleBuildProject.PluginType.UNKNOWN_PLUGIN_TYPE;
         if (this instanceof AppPlugin) {
