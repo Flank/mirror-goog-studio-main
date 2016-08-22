@@ -2342,6 +2342,7 @@ iml_module(
         "//tools:idea.gradle-tooling-extension-api[module]",
         "//tools:idea/plugins/gradle/lib/gradle-tooling-api-3.0",
         "//tools:idea/plugins/gradle/lib/gradle-core-3.0",
+        "//tools:idea/plugins/gradle/lib/gradle-dependency-management-3.0",
         "//tools:idea/plugins/gradle/lib/gradle-model-core-3.0",
         "//tools:idea/plugins/gradle/lib/gradle-model-groovy-3.0",
         "//tools:idea/plugins/gradle/lib/gradle-messaging-3.0",
@@ -3601,6 +3602,14 @@ java_import(
   name = "idea/plugins/gradle/lib/gradle-core-3.0",
   jars = [
       "idea/plugins/gradle/lib/gradle-core-3.0.jar",
+    ],
+  visibility = ["//visibility:public"],
+)
+
+java_import(
+  name = "idea/plugins/gradle/lib/gradle-dependency-management-3.0",
+  jars = [
+      "idea/plugins/gradle/lib/gradle-dependency-management-3.0.jar",
     ],
   visibility = ["//visibility:public"],
 )
