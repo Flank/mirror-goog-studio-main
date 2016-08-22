@@ -36,6 +36,7 @@ import com.android.ide.common.res2.ResourceSet;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.LintCliClient;
@@ -64,9 +65,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.psi.EcjPsiBuilder;
-import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
@@ -102,9 +101,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1080,65 +1076,30 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Override
         public File findResource(@NonNull String relativePath) {
-            if (relativePath.equals("platform-tools/api/api-versions.xml")) {
-                // Look in the current Git repository and try to find it there
-                File rootDir = getRootDir();
-                if (rootDir != null) {
-                    File file = new File(rootDir, "development" + File.separator + "sdk"
-                            + File.separator + "api-versions.xml");
-                    if (file.exists()) {
-                        return file;
-                    }
+            if (relativePath.equals(ExternalAnnotationRepository.SDK_ANNOTATIONS_PATH)) {
+                File rootDir = TestUtils.getWorkspaceRoot();
+                File file = new File(rootDir, "tools/adt/idea/android/annotations");
+                if (!file.exists()) {
+                    throw new RuntimeException("File " + file + " not found");
                 }
-                // Look in an SDK install, if found
-                File home = getSdkHome();
-                if (home != null) {
-                    return new File(home, relativePath);
-                }
-            } else if (relativePath.equals(ExternalAnnotationRepository.SDK_ANNOTATIONS_PATH)) {
-                // Look in the current Git repository and try to find it there
-                File rootDir = getRootDir();
-                if (rootDir != null) {
-                    File file = new File(rootDir,
-                            "tools" + File.separator
-                            + "adt" + File.separator
-                            + "idea" + File.separator
-                            + "android" + File.separator
-                            + "annotations");
-                    if (file.exists()) {
-                        return file;
-                    }
-                }
-                // Look in an SDK install, if found
-                File home = getSdkHome();
-                if (home != null) {
-                    File file = new File(home, relativePath);
-                    return file.exists() ? file : null;
-                }
+                return file;
             } else if (relativePath.startsWith("tools/support/")) {
-                // Look in the current Git repository and try to find it there
                 String base = relativePath.substring("tools/support/".length());
-                File rootDir = getRootDir();
-                if (rootDir != null) {
-                    File file = new File(rootDir, "tools"
-                            + File.separator + "base"
-                            + File.separator + "files"
-                            + File.separator + "typos"
-                            + File.separator + base);
-                    if (file.exists()) {
-                        return file;
-                    }
+                File rootDir = TestUtils.getWorkspaceRoot();
+                File file = new File(rootDir, "tools/base/files/typos/" + base);
+                if (!file.exists()) {
+                    System.err.println("Warning: " + file + " not found");
+                    return null;
                 }
-                // Look in an SDK install, if found
-                File home = getSdkHome();
-                if (home != null) {
-                    return new File(home, relativePath);
+                return file;
+            } else if (relativePath.equals("platform-tools/api/api-versions.xml")) {
+                File file = new File(getSdkHome(), relativePath);
+                if (!file.exists()) {
+                    throw new RuntimeException("File " + file + " not found");
                 }
-            } else {
-                fail("Unit tests don't support arbitrary resource lookup yet.");
+                return file;
             }
-
-            return super.findResource(relativePath);
+            throw new RuntimeException("Resource " + relativePath + " not found.");
         }
 
         @NonNull
@@ -1339,43 +1300,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             return testSourceFolders;
         }
-    }
-
-    /**
-     * Returns the Android source tree root dir.
-     * @return the root dir or null if it couldn't be computed.
-     */
-    protected File getRootDir() {
-        CodeSource source = getClass().getProtectionDomain().getCodeSource();
-        if (source != null) {
-            URL location = source.getLocation();
-            try {
-                File dir = SdkUtils.urlToFile(location);
-                assertTrue(dir.getPath(), dir.exists());
-                while (dir != null) {
-                    File settingsGradle = new File(dir, "settings.gradle"); //$NON-NLS-1$
-                    if (settingsGradle.exists()) {
-                        return dir.getParentFile().getParentFile();
-                    }
-                    File lint = new File(dir, "lint");  //$NON-NLS-1$
-                    if (lint.exists() && new File(lint, "cli").exists()) { //$NON-NLS-1$
-                        return dir.getParentFile().getParentFile();
-                    }
-
-                    File tools = new File(dir, "tools");
-                    if (tools.exists() && FileUtils.join(tools, "base", "lint", "cli").exists()) {
-                        return dir;
-                    }
-                    dir = dir.getParentFile();
-                }
-
-                return null;
-            } catch (MalformedURLException e) {
-                fail(e.getLocalizedMessage());
-            }
-        }
-
-        return null;
     }
 
     public class TestConfiguration extends DefaultConfiguration {
