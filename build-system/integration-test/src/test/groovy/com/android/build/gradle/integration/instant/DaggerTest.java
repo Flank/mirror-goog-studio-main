@@ -141,7 +141,7 @@ public class DaggerTest {
             public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
                 InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
                 assertThatDex(artifact.getLocation())
-                        .hasClass(APP_MODULE_DESC)
+                        .containsClass(APP_MODULE_DESC)
                         .that().hasMethod(GET_MESSAGE);
             }
         });
@@ -160,7 +160,7 @@ public class DaggerTest {
         InstantRunArtifact artifact =
                 InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
-        assertThatDex(artifact.file).hasClass("Lcom/android/tests/AppModule$override;");
+        assertThatDex(artifact.file).containsClass("Lcom/android/tests/AppModule$override;");
     }
 
     @Test

@@ -114,7 +114,7 @@ public class DataBindingIncrementalTest {
         assertUpToDate(PROCESS_LAYOUTS_TASK, false);
 
         DexClassSubject bindingClass = assertThatApk(project.getApk("debug")).hasMainDexFile()
-                .that().hasClass(MAIN_ACTIVITY_BINDING_CLASS).that();
+                .that().containsClass(MAIN_ACTIVITY_BINDING_CLASS).that();
         bindingClass.doesNotHaveMethod("setFoo");
         bindingClass.hasMethod("setFoo2");
         assertRecompile();
@@ -130,7 +130,7 @@ public class DataBindingIncrementalTest {
         assertUpToDate(EXPORT_INFO_TASK, false);
         assertUpToDate(PROCESS_LAYOUTS_TASK, false);
         assertThatApk(project.getApk("debug")).hasMainDexFile()
-                .that().hasClass(MAIN_ACTIVITY_BINDING_CLASS)
+                .that().containsClass(MAIN_ACTIVITY_BINDING_CLASS)
                 .that().hasMethods("setFoo", "setFoo2");
         assertRecompile();
     }
@@ -147,7 +147,7 @@ public class DataBindingIncrementalTest {
         assertUpToDate(PROCESS_LAYOUTS_TASK, false);
 
         assertThatApk(project.getApk("debug")).hasMainDexFile()
-                .that().hasClass(MAIN_ACTIVITY_BINDING_CLASS)
+                .that().containsClass(MAIN_ACTIVITY_BINDING_CLASS)
                 .that().hasField("myTextView");
 
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30, "");
@@ -155,7 +155,7 @@ public class DataBindingIncrementalTest {
         assertUpToDate(EXPORT_INFO_TASK, false);
         assertUpToDate(PROCESS_LAYOUTS_TASK, false);
         assertThatApk(project.getApk("debug")).hasMainDexFile()
-                .that().hasClass(MAIN_ACTIVITY_BINDING_CLASS)
+                .that().containsClass(MAIN_ACTIVITY_BINDING_CLASS)
                 .that().doesNotHaveField("myTextView");
         assertRecompile();
     }
@@ -173,7 +173,7 @@ public class DataBindingIncrementalTest {
         assertUpToDate(PROCESS_LAYOUTS_TASK, false);
 
         assertThatApk(project.getApk("debug")).hasMainDexFile()
-                .that().hasClass("Landroid/databinding/testapp/databinding/Activity2Binding;")
+                .that().containsClass("Landroid/databinding/testapp/databinding/Activity2Binding;")
                 .that().hasMethod("setFoo");
         assertRecompile();
     }

@@ -101,7 +101,7 @@ public class ButterKnifeTest {
             public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
                 InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
                 assertThatDex(artifact.getLocation())
-                        .hasClass(ACTIVITY_DESC)
+                        .containsClass(ACTIVITY_DESC)
                         .that().hasMethod("getMessage");
             }
         });
@@ -121,7 +121,7 @@ public class ButterKnifeTest {
         InstantRunArtifact artifact =
                 InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
-        assertThatDex(artifact.file).hasClass("Lcom/example/bk/Activ$override;");
+        assertThatDex(artifact.file).containsClass("Lcom/example/bk/Activ$override;");
     }
 
     private void makeHotSwapChange(String change) throws Exception {

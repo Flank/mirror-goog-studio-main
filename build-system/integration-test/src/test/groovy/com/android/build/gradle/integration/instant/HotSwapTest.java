@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -30,7 +31,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.truth.DexFileSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
@@ -40,10 +40,7 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +48,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Smoke test for hot swap builds.
@@ -118,10 +120,10 @@ public class HotSwapTest {
         InstantRunArtifact artifact =
                 InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
-        expect.about(DexFileSubject.FACTORY)
-                .that(artifact.file)
-                .hasClass("Lcom/example/helloworld/HelloWorld$1$override;")
-                .that().hasMethod("call");
+        assertThatDex(artifact.file)
+                .containsClass("Lcom/example/helloworld/HelloWorld$1$override;")
+                .that()
+                .hasMethod("call");
     }
 
     @Test

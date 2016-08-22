@@ -40,7 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.zip.ZipFile;
+
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.junit.Assume;
 import org.junit.Before;
@@ -200,7 +200,7 @@ public class ColdSwapTest {
     private void checkUpdatedClassPresence(@Nullable DexBackedDexFile dex) throws Exception {
         expect.about(DexBackedDexFileSubject.FACTORY)
                 .that(dex)
-                .hasClass("Lcom/example/helloworld/HelloWorld;")
+                .containsClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethods("onCreate", "newMethod");
     }
