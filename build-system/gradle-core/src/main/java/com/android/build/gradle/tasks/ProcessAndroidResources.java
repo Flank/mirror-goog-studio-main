@@ -687,7 +687,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @Input
-    String getBuildToolsVersion() {
+    public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
     }
 

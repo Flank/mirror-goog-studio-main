@@ -201,11 +201,11 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         this.resultsDir = resultsDir;
     }
 
+    @OutputDirectory
     public File getCoverageDir() {
         return coverageDir;
     }
 
-    @OutputDirectory
     public void setCoverageDir(File coverageDir) {
         this.coverageDir = coverageDir;
     }

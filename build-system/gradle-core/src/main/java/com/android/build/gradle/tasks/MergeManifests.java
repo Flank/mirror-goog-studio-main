@@ -138,12 +138,12 @@ public class MergeManifests extends ManifestProcessorTask {
     /**
      * A synthetic input to allow gradle up-to-date checks to work.
      *
-     * Since List<{@link AndroidBundle}> can't be used directly, as @Nested doesn't work on lists,
+     * Since {@code List<AndroidBundle>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
     @SuppressWarnings("unused")
     @InputFiles
-    List<File> getBundleManifests() {
+    public List<File> getBundleManifests() {
         List<AndroidBundle> bundles = getBundles();
         if (bundles == null || bundles.isEmpty()) {
             return Collections.emptyList();

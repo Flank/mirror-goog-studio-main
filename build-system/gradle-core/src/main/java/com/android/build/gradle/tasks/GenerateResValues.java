@@ -68,7 +68,7 @@ public class GenerateResValues extends BaseTask {
 
     @SuppressWarnings("unused") // Synthetic input.
     @Input
-    List<String> getItemValues() {
+    public List<String> getItemValues() {
         List<Object> resolvedItems = getItems();
         List<String> list = Lists.newArrayListWithCapacity(resolvedItems.size() * 3);
 

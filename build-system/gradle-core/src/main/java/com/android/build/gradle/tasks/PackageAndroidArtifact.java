@@ -270,7 +270,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     }
 
     @Input
-    String getDexPackagingPolicy() {
+    public String getDexPackagingPolicy() {
         return dexPackagingPolicy.toString();
     }
 
