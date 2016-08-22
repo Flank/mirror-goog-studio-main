@@ -346,5 +346,6 @@ public class JackTransform extends Transform {
                 scope.getGlobalScope().getExtension().getCompileSdkVersion(),
                 true /*jackEnabled*/);
         options.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
+        options.setEncoding(compileOptions.getEncoding());
     }
 }
