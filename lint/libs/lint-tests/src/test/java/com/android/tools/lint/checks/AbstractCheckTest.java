@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -50,8 +51,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         String path = "data" + File.separator + relativePath; //$NON-NLS-1$
         InputStream stream = AbstractCheckTest.class.getResourceAsStream(path);
         if (stream == null) {
-            File root = getRootDir();
-            assertNotNull(root);
+            File root = TestUtils.getWorkspaceRoot();
             String pkg = AbstractCheckTest.class.getName();
             pkg = pkg.substring(0, pkg.lastIndexOf('.'));
             File f = new File(root,
