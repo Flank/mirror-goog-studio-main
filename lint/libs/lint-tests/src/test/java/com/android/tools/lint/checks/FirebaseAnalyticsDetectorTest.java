@@ -47,13 +47,12 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                 + "    }\n"
                 + "}");
         String expected = ""
-                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must only consist of letters, numbers and underscores (found a;) [InvalidAnalyticsEventName]\n"
+                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must only consist of letters, numbers and underscores (found a;) [InvalidAnalyticsName]\n"
                 + "        FirebaseAnalytics.getInstance(this).logEvent(\"a;\", new Bundle());\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
 
         String result = lintProject(mFirebaseAnalytics, mainActivity);
-
         assertEquals(expected, result);
     }
 
@@ -68,13 +67,12 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                 + "    }\n"
                 + "}");
         String expected = ""
-                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must be less than 32 characters (found 33) [InvalidAnalyticsEventName]\n"
+                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must be less than 32 characters (found 33) [InvalidAnalyticsName]\n"
                 + "        FirebaseAnalytics.getInstance(this).logEvent(\"123456789012345678901234567890123\", new Bundle());\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
 
         String result = lintProject(mFirebaseAnalytics, mainActivity);
-
         assertEquals(expected, result);
     }
 
@@ -90,13 +88,12 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                 + "    }\n"
                 + "}");
         String expected = ""
-                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must start with an alphabetic character (found ;) [InvalidAnalyticsEventName]\n"
+                + "src/test/pkg/MainActivity.java:6: Error: Analytics event name must start with an alphabetic character (found ;) [InvalidAnalyticsName]\n"
                 + "        FirebaseAnalytics.getInstance(this).logEvent(FOO, new Bundle());\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
 
         String result = lintProject(mFirebaseAnalytics, mainActivity);
-
         assertEquals(expected, result);
     }
 
@@ -113,7 +110,6 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
         String expected = "No warnings.";
 
         String result = lintProject(mFirebaseAnalytics, mainActivity);
-
         assertEquals(expected, result);
     }
 
@@ -131,7 +127,85 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
         String expected = "No warnings.";
 
         String result = lintProject(mFirebaseAnalytics, mainActivity);
+        assertEquals(expected, result);
+    }
 
+    public void testInvalidParameterName() throws Exception {
+        TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
+                + "package test.pkg;\n"
+                + "import android.os.Bundle;\n"
+                + "import com.google.firebase.analytics.FirebaseAnalytics;\n"
+                + "public class MainActivity {\n"
+                + "    public MainActivity() {\n"
+                + "        Bundle bundle = new Bundle();\n"
+                + "        bundle.putString(\"1234567890123456789012345\", \"foo\");\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "    }\n"
+                + "}");
+        String expected = ""
+                + "src/test/pkg/MainActivity.java:8: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "    src/test/pkg/MainActivity.java:7: Analytics event parameter name must be 24 characters or less (found 25)\n"
+                + "1 errors, 0 warnings\n";
+
+        String result = lintProject(mFirebaseAnalytics, mainActivity);
+        assertEquals(expected, result);
+    }
+
+    public void testInvalidParameterNameInClassField() throws Exception {
+        TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
+                + "package test.pkg;\n"
+                + "import android.os.Bundle;\n"
+                + "import com.google.firebase.analytics.FirebaseAnalytics;\n"
+                + "public class MainActivity {\n"
+                + "    private static final String PARAM_NAME = \"1234567890123456789012345\";\n"
+                + "    public MainActivity() {\n"
+                + "        Bundle bundle = new Bundle();\n"
+                + "        bundle.putString(PARAM_NAME, \"foo\");\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "    }\n"
+                + "}");
+        String expected = ""
+                + "src/test/pkg/MainActivity.java:9: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "    src/test/pkg/MainActivity.java:8: Analytics event parameter name must be 24 characters or less (found 25)\n"
+                + "1 errors, 0 warnings\n";
+
+        String result = lintProject(mFirebaseAnalytics, mainActivity);
+        assertEquals(expected, result);
+    }
+
+    public void testInvalidParameterNameInSeparateMethod() throws Exception {
+        TestFile util = java("src/test/pkg/Util.java", ""
+                + "package test.pkg;\n"
+                + "import android.os.Bundle;\n"
+                + "public class Util {\n"
+                + "    public static Bundle makeBundle() {\n"
+                + "      Bundle bundle = new Bundle();\n"
+                + "      bundle.putString(\"1234567890123456789012345\", \"foo\");\n"
+                + "      return bundle;\n"
+                + "    }\n"
+                + "}");
+        TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
+                + "package test.pkg;\n"
+                + "import android.os.Bundle;\n"
+                + "import com.google.firebase.analytics.FirebaseAnalytics;\n"
+                + "public class MainActivity {\n"
+                + "    public MainActivity() {\n"
+                + "        Bundle bundle = Util.makeBundle();\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "    }\n"
+                + "}");
+        String expected = ""
+                + "src/test/pkg/MainActivity.java:7: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "    src/test/pkg/Util.java:6: Analytics event parameter name must be 24 characters or less (found 25)\n"
+                + "1 errors, 0 warnings\n";
+
+        String result = lintProject(util, mFirebaseAnalytics, mainActivity);
         assertEquals(expected, result);
     }
 }

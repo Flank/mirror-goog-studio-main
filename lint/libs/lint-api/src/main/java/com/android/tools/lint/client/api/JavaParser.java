@@ -162,6 +162,7 @@ public abstract class JavaParser {
         TextRange range = element.getTextRange();
         PsiFile containingFile = element.getContainingFile();
         File file = context.file;
+        String contents = context.getContents();
         if (containingFile != context.getJavaFile()) {
             // Reporting an error in a different file.
             if (context.getDriver().getScope().size() == 1) {
@@ -173,8 +174,9 @@ public abstract class JavaParser {
                 return Location.NONE;
             }
             file = ioFile;
+            contents = containingFile.getText();
         }
-        return Location.create(file, context.getContents(), range.getStartOffset(),
+        return Location.create(file, contents, range.getStartOffset(),
                                range.getEndOffset());
     }
 
