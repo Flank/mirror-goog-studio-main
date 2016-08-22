@@ -1901,6 +1901,7 @@ public abstract class TaskManager {
             // from above and compute the main class list.
             MultiDexTransform multiDexTransform = new MultiDexTransform(
                     variantScope,
+                    extension.getDexOptions(),
                     null);
             multiDexClassListTask =
                     transformManager.addTransform(tasks, variantScope, multiDexTransform);
