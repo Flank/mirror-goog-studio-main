@@ -46,7 +46,7 @@ import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.devices.Storage.Unit;
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;

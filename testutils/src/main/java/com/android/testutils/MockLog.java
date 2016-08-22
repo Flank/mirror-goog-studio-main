@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.mock;
+package com.android.testutils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

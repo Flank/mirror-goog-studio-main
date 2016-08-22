@@ -26,7 +26,7 @@ import com.android.sdklib.TempSdkManager;
 import com.android.sdklib.devices.Device.Builder;
 import com.android.sdklib.devices.DeviceManager.DeviceFilter;
 import com.android.sdklib.devices.DeviceManager.DeviceStatus;
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
