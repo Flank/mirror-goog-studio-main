@@ -28,6 +28,9 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess") // Exposed in the DSL.
 public class DefaultDexOptions implements DexOptions {
 
+    public static final String OPTIMIZE_WARNING =
+            "Disabling dex optimization produces wrong local debug info, b.android.com/82031.";
+
     private boolean preDexLibraries = true;
 
     private boolean jumboMode = false;
@@ -38,8 +41,6 @@ public class DefaultDexOptions implements DexOptions {
     private boolean keepRuntimeAnnotatedClasses = true;
 
     private Integer threadCount = null;
-
-    private Boolean optimize = null;
 
     private String javaMaxHeapSize;
 
@@ -57,7 +58,6 @@ public class DefaultDexOptions implements DexOptions {
         result.setJavaMaxHeapSize(dexOptions.getJavaMaxHeapSize());
         result.setAdditionalParameters(dexOptions.getAdditionalParameters());
         result.setMaxProcessCount(dexOptions.getMaxProcessCount());
-        result.setOptimize(dexOptions.getOptimize());
         result.setKeepRuntimeAnnotatedClasses(
                 dexOptions.getKeepRuntimeAnnotatedClasses());
 
@@ -185,19 +185,14 @@ public class DefaultDexOptions implements DexOptions {
         this.maxProcessCount = maxProcessCount;
     }
 
-    public void setOptimize(Boolean optimize) {
-        this.optimize = optimize;
-    }
-
     /**
      * Whether to run the {@code dx} compiler with the {@code --no-optimize} flag.
      *
-     * <p>If not specified, debuggable builds will be compiled with optimizations turned off and
-     * release builds with optimizations turned on.
+     * @deprecated Dex is always optimized. This returns {@code true} always.
      */
+    @Deprecated
     @Nullable
-    @Override
     public Boolean getOptimize() {
-        return optimize;
+        return true;
     }
 }

@@ -47,7 +47,6 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
     @NonNull
     private final File mOutputFile;
     private boolean mVerbose = false;
-    private boolean mNoOptimize = false;
     private boolean mMultiDex = false;
     private File mMainDexList = null;
     private Set<File> mInputs = Sets.newHashSet();
@@ -59,16 +58,6 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
     @NonNull
     public DexProcessBuilder setVerbose(boolean verbose) {
         mVerbose = verbose;
-        return this;
-    }
-
-    @NonNull
-    public DexProcessBuilder setNoOptimize(
-            @SuppressWarnings("UnusedParameters") boolean noOptimize) {
-        // --no-optimize creates incorrect local debug information.  mNoOptimize should always be
-        // false.
-        // b.android.com/82031
-        //mNoOptimize = noOptimize;
         return this;
     }
 
@@ -103,10 +92,6 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
     public boolean isVerbose() {
         return mVerbose;
-    }
-
-    public boolean isNoOptimize() {
-        return mNoOptimize;
     }
 
     public boolean isMultiDex() {
@@ -161,12 +146,6 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
         if (dexOptions.getJumboMode()) {
             builder.addArgs("--force-jumbo");
-        }
-
-        if (mNoOptimize) {
-            builder.addArgs("--no-optimize");
-            throw new UnsupportedOperationException("Should be unreachable.  --no-optimize creates "
-                    + "incorrect local debug information.");
         }
 
         // only change thread count is build tools is 22.0.2+

@@ -41,7 +41,4 @@ public interface DexOptions {
 
     @NonNull
     List<String> getAdditionalParameters();
-
-    @Nullable
-    Boolean getOptimize();
 }

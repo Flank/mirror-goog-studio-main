@@ -119,7 +119,6 @@ public class DexByteCodeConverter {
             boolean multidex,
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
-            boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
@@ -138,7 +137,6 @@ public class DexByteCodeConverter {
         DexProcessBuilder builder = new DexProcessBuilder(outDexFolder);
 
         builder.setVerbose(mVerboseExec)
-                .setNoOptimize(!optimize)
                 .setMultiDex(multidex)
                 .setMainDexList(mainDexList)
                 .addInputs(verifiedInputs.build());
@@ -152,6 +150,10 @@ public class DexByteCodeConverter {
             @NonNull final ProcessOutputHandler processOutputHandler)
             throws ProcessException, IOException, InterruptedException {
         initDexExecutorService(dexOptions);
+
+        if (dexOptions.getAdditionalParameters().contains("--no-optimize")) {
+            mLogger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
+        }
 
         if (shouldDexInProcess(dexOptions, mTargetInfo.getBuildTools().getRevision())) {
             dexInProcess(builder, dexOptions, processOutputHandler);

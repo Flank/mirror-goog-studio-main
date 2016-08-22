@@ -192,7 +192,7 @@ public class DexTransform extends Transform {
 
             Map<String, Object> params = Maps.newHashMapWithExpectedSize(4);
 
-            params.put("optimize", getOptimize());
+            params.put("optimize", true);
             params.put("predex", dexOptions.getPreDexLibraries());
             params.put("jumbo", dexOptions.getJumboMode());
             params.put("multidex", multiDex);
@@ -277,7 +277,6 @@ public class DexTransform extends Transform {
                         multiDex,
                         mainDexListFile,
                         dexOptions,
-                        getOptimize(),
                         outputHandler);
 
                 for (File file : Files.fileTreeTraverser().breadthFirstTraversal(outputDir)) {
@@ -439,7 +438,6 @@ public class DexTransform extends Transform {
                             multiDex,
                             mainDexListFile,
                             dexOptions,
-                            getOptimize(),
                             outputHandler);
                 }
             }
@@ -488,8 +486,6 @@ public class DexTransform extends Transform {
                 hashs.add(hash);
             }
 
-            boolean optimize = getOptimize();
-
             IOExceptionConsumer<File> fileProducer = (File outputFile) -> {
                 if (multiDex) {
                     FileUtils.mkdirs(outputFile);
@@ -500,7 +496,6 @@ public class DexTransform extends Transform {
                             outputFile,
                             multiDex,
                             dexOptions,
-                            optimize,
                             outputHandler);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -553,7 +548,7 @@ public class DexTransform extends Transform {
                         .putBoolean(
                                 String.valueOf(FileCacheInputName.JUMBO_MODE),
                                 dexOptions.getJumboMode())
-                        .putBoolean(String.valueOf(FileCacheInputName.OPTIMIZE), optimize)
+                        .putBoolean(String.valueOf(FileCacheInputName.OPTIMIZE), true)
                         .putBoolean(String.valueOf(FileCacheInputName.MULTI_DEX), multiDex);
                 List<String> additionalParams = dexOptions.getAdditionalParameters();
                 for (int i = 0; i < additionalParams.size(); i++) {
@@ -692,15 +687,5 @@ public class DexTransform extends Transform {
         String suffix = multiDex ? "" : SdkConstants.DOT_JAR;
 
         return FileUtils.getDirectoryNameForJar(inputFile) + suffix;
-    }
-
-    /**
-     * Decides whether to run dx with optimizations.
-     *
-     * <p>Value from {@link DexOptions} is used if set, otherwise we check if the build is
-     * debuggable.
-     */
-    private boolean getOptimize() {
-        return MoreObjects.firstNonNull(dexOptions.getOptimize(), !debugMode);
     }
 }

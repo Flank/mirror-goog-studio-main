@@ -69,7 +69,6 @@ public class MergeDexAtomResClass extends BaseTask {
                     false,
                     null,
                     dexOptions,
-                    true,
                     outputHandler);
         } catch (Exception e) {
             throw new TransformException(e);

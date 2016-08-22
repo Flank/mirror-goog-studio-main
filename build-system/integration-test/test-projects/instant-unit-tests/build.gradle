@@ -122,7 +122,6 @@ class DexTask extends DefaultTask {
                 false /* multiDexEnabled */,
                 null /*getMainDexListFile */,
                 new com.android.build.gradle.internal.dsl.DexOptions(),
-                false /* optimize */,
                 new com.android.ide.common.process.LoggedProcessOutputHandler(
                         new com.android.build.gradle.internal.LoggerWrapper(getLogger())))
         Iterable<File> files =

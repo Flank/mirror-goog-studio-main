@@ -89,7 +89,8 @@ public class DexWrapper {
 
         // Other:
         args.verbose = processBuilder.isVerbose();
-        args.optimize = !processBuilder.isNoOptimize();
+        // due to b.android.com/82031
+        args.optimize = true;
         args.numThreads = Objects.firstNonNull(dexOptions.getThreadCount(), 4);
         args.forceJumbo = dexOptions.getJumboMode();
 

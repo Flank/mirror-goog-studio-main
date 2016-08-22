@@ -78,7 +78,6 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
      * @param outFile the output file or folder (if multi-dex is enabled), must exist
      * @param multiDex whether multi-dex is enabled
      * @param dexOptions the dex options to run pre-dex
-     * @param optimize whether to run dx with optimizations turned on
      * @throws IOException
      * @throws ProcessException
      * @throws InterruptedException
@@ -89,14 +88,13 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, ProcessException, InterruptedException {
         checkState(!multiDex || outFile.isDirectory());
         checkState(builder.getTargetInfo() != null);
 
         // Forcing optimize to true as it has no effect due to b.android.com/82031.
-        optimize = true;
+        boolean optimize = true;
 
         DxDexKey itemKey = DxDexKey.of(
                 inputFile,
@@ -133,7 +131,6 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
                         outFile,
                         multiDex,
                         dexOptions,
-                        optimize,
                         processOutputHandler);
 
                 item.getOutputFiles().clear();
