@@ -77,7 +77,12 @@ public class FastDeployRuntimeExtractorTask extends DefaultAndroidTask {
                 String name = entry.getName();
                 // don't extract metadata or classes supposed to be replaced by generated ones.
                 if (isValidForPackaging(name)) {
-                    jarOutputStream.putNextEntry(new ZipEntry(entry.getName()));
+                    ZipEntry copy = new ZipEntry(entry.getName());
+                    copy.setTime(entry.getTime());
+                    copy.setMethod(ZipEntry.STORED);
+                    copy.setSize(entry.getSize());
+                    copy.setCrc(entry.getCrc());
+                    jarOutputStream.putNextEntry(copy);
                     ByteStreams.copy(jarInputStream, jarOutputStream);
                     jarOutputStream.closeEntry();
                 }
