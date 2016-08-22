@@ -14,7 +14,6 @@ dependencies {
     compile 'org.bouncycastle:bcprov-jdk15on:1.48'
 
     testCompile 'junit:junit:4.12'
-    testCompile project(':base:sdklib').sourceSets.test.output
     testCompile project(':base:testutils')
     testCompile 'org.easymock:easymock:3.3'
     testCompile 'org.mockito:mockito-all:1.9.5'

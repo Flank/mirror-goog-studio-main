@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.manifmerger.MergingReport.MergedManifestKind;
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;

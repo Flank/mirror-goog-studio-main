@@ -18,7 +18,7 @@ package com.android.sdklib;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.EnvVar;
-import com.android.sdklib.mock.MockLog;
+import com.android.testutils.MockLog;
 
 import org.junit.rules.ExternalResource;
 
