@@ -292,7 +292,7 @@ public class JackTransform extends Transform {
                 AbstractCompilesUtil.isIncremental(
                         project, scope, compileOptions, processorPath, LOG)
                         && androidBuilder.getTargetInfo().getBuildTools().getRevision().compareTo(
-                                new Revision(24, 0, 2), Revision.PreviewComparison.IGNORE) >= 0 ;
+                                new Revision(24, 0, 3), Revision.PreviewComparison.IGNORE) >= 0 ;
 
         if (incremental) {
             String taskName = StringHelper.combineAsCamelCase(
