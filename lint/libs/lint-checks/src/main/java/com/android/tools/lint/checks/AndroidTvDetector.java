@@ -23,6 +23,7 @@ import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_REQUIRED;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY_ALIAS;
 import static com.android.xml.AndroidManifest.NODE_APPLICATION;
 import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 import static com.android.xml.AndroidManifest.NODE_INTENT;
@@ -283,6 +284,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
         return Arrays.asList(
                 NODE_APPLICATION,
                 NODE_ACTIVITY,
+                NODE_ACTIVITY_ALIAS,
                 NODE_USES_FEATURE,
                 NODE_USES_PERMISSION
         );
@@ -497,7 +499,9 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
             if (!mHasLeanbackSupport && hasLeanbackSupport(element)) {
                 mHasLeanbackSupport = true;
             }
-        } else if (NODE_ACTIVITY.equals(elementName) && hasLeanbackIntentFilter(element)) {
+        } else if ((NODE_ACTIVITY.equals(elementName)
+                || NODE_ACTIVITY_ALIAS.equals(elementName))
+                && hasLeanbackIntentFilter(element)) {
             mHasLeanbackLauncherActivity = true;
             // Since this activity has a leanback launcher intent filter,
             // Make sure it has a home screen banner
@@ -529,7 +533,6 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
     }
 
     private static boolean hasLeanbackIntentFilter(@NonNull Node activityNode) {
-        assert NODE_ACTIVITY.equals(activityNode.getNodeName()) : activityNode.getNodeName();
         // Visit every intent filter
         for (Element activityChild : LintUtils.getChildren(activityNode)) {
             if (NODE_INTENT.equals(activityChild.getNodeName())) {
