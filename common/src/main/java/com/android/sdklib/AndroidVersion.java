@@ -61,6 +61,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     /** First version to allow split apks */
     public static final AndroidVersion ALLOW_SPLIT_APK_INSTALLATION = new AndroidVersion(21, null);
 
+    /** First version to have multi-user support (JB-MR2, API 17) */
+    public static final AndroidVersion SUPPORTS_MULTI_USER = new AndroidVersion(17, null);
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */
