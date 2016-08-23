@@ -39,12 +39,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.Action;
@@ -943,6 +945,203 @@ public class TransformTaskTest extends TaskTestUtils {
     }
 
     @Test
+    public void incrementalComplexTypeJarInputInIntermediateStream()
+            throws TransformException, InterruptedException, IOException {
+        // create a stream and add it to the pipeline
+        File rootFolder = temporaryFolder.newFolder();
+
+        IntermediateStream projectClass = IntermediateStream.builder()
+                .addContentTypes(DefaultContentType.CLASSES)
+                .addContentTypes(ExtendedContentType.CLASSES_ENHANCED)
+                .addScopes(Scope.PROJECT)
+                .setRootLocation(rootFolder)
+                .setDependency("my dependency")
+                .build();
+        transformManager.addStream(projectClass);
+
+        // use the output version of this stream to create some content.
+        TransformOutputProvider output = projectClass.asOutput();
+        File addedJar = output.getContentLocation("added",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                projectClass.getScopes(), Format.JAR);
+        mkdirs(addedJar.getParentFile());
+        Files.write("foo", addedJar, Charsets.UTF_8);
+        File changedJar = output.getContentLocation("changed",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                projectClass.getScopes(), Format.JAR);
+        mkdirs(changedJar.getParentFile());
+        Files.write("foo", changedJar, Charsets.UTF_8);
+
+        // create the other input changes.
+        // use the output version of this stream to create some content.
+        File enhancedAddedJar = output.getContentLocation("added",
+                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                projectClass.getScopes(), Format.JAR);
+        mkdirs(addedJar.getParentFile());
+        Files.write("foo", addedJar, Charsets.UTF_8);
+        File enhancedChangedJar = output.getContentLocation("changed",
+                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                projectClass.getScopes(), Format.JAR);
+        mkdirs(changedJar.getParentFile());
+        Files.write("foo", changedJar, Charsets.UTF_8);
+        File enhancedRemovedJar = output.getContentLocation("removed",
+                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                projectClass.getScopes(), Format.JAR);
+
+        // no need to create a deleted jar. It's handled by a separate test.
+        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
+                addedJar, Status.ADDED,
+                changedJar, Status.CHANGED);
+
+        // create the transforms
+        TestTransform classesTransform = TestTransform.builder()
+                .setIncremental(true)
+                .setInputTypes(DefaultContentType.CLASSES)
+                .setScopes(Scope.PROJECT)
+                .build();
+
+        // add the transforms to the manager
+        AndroidTask<TransformTask> classesTask =
+                transformManager
+                        .addTransform(taskFactory, scope, classesTransform)
+                        .orElseThrow(mTransformTaskFailed);
+
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.named(classesTask.getName());
+        assertThat(transformTask).isNotNull();
+
+        // get the current output Stream in the transform manager.
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(2);
+
+        // call the task with incremental data
+        transformTask.transform(inputBuilder()
+                .incremental()
+                .addedFile(addedJar)
+                .addedFile(enhancedAddedJar)
+                .modifiedFile(changedJar)
+                .modifiedFile(enhancedChangedJar)
+                .removedFile(enhancedRemovedJar)
+                .build());
+
+        // check that was passed to the transform.
+        assertThat(classesTransform.isIncrementalInputs()).isTrue();
+
+        // and the jar input should be status ADDED
+        Collection<TransformInput> inputs = classesTransform.getInputs();
+        assertThat(inputs).hasSize(1);
+
+        TransformInput input = Iterables.getOnlyElement(inputs);
+        Collection<JarInput> jarInputs = input.getJarInputs();
+        assertThat(jarInputs).isNotNull();
+        assertThat(jarInputs).hasSize(jarMap.size());
+
+        for (JarInput jarInput : jarInputs) {
+            File file = jarInput.getFile();
+            assertThat(file).isIn(jarMap.keySet());
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+        }
+    }
+
+    @Test
+    public void incrementalComplexScopeJarInputInIntermediateStream()
+            throws TransformException, InterruptedException, IOException {
+        // create a stream and add it to the pipeline
+        File rootFolder = temporaryFolder.newFolder();
+
+        IntermediateStream projectClass = IntermediateStream.builder()
+                .addContentTypes(DefaultContentType.CLASSES)
+                .addScopes(Scope.PROJECT, Scope.SUB_PROJECTS)
+                .setRootLocation(rootFolder)
+                .setDependency("my dependency")
+                .build();
+        transformManager.addStream(projectClass);
+
+        // use the output version of this stream to create some content.
+        TransformOutputProvider output = projectClass.asOutput();
+        File addedJar = output.getContentLocation("added",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.PROJECT), Format.JAR);
+        mkdirs(addedJar.getParentFile());
+        Files.write("foo", addedJar, Charsets.UTF_8);
+        File changedJar = output.getContentLocation("changed",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.PROJECT), Format.JAR);
+        mkdirs(changedJar.getParentFile());
+        Files.write("foo", changedJar, Charsets.UTF_8);
+
+        // create the other input changes.
+        // use the output version of this stream to create some content.
+        File enhancedAddedJar = output.getContentLocation("added",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+        mkdirs(addedJar.getParentFile());
+        Files.write("foo", addedJar, Charsets.UTF_8);
+        File enhancedChangedJar = output.getContentLocation("changed",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+        mkdirs(changedJar.getParentFile());
+        Files.write("foo", changedJar, Charsets.UTF_8);
+        File enhancedRemovedJar = output.getContentLocation("removed",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+
+        // no need to create a deleted jar. It's handled by a separate test.
+        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
+                addedJar, Status.ADDED,
+                changedJar, Status.CHANGED);
+
+        // create the transforms
+        TestTransform classesTransform = TestTransform.builder()
+                .setIncremental(true)
+                .setInputTypes(DefaultContentType.CLASSES)
+                .setScopes(Scope.PROJECT)
+                .build();
+
+        // add the transforms to the manager
+        AndroidTask<TransformTask> classesTask =
+                transformManager
+                        .addTransform(taskFactory, scope, classesTransform)
+                        .orElseThrow(mTransformTaskFailed);
+
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.named(classesTask.getName());
+        assertThat(transformTask).isNotNull();
+
+        // get the current output Stream in the transform manager.
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(2);
+
+        // call the task with incremental data
+        transformTask.transform(inputBuilder()
+                .incremental()
+                .addedFile(addedJar)
+                .addedFile(enhancedAddedJar)
+                .modifiedFile(changedJar)
+                .modifiedFile(enhancedChangedJar)
+                .removedFile(enhancedRemovedJar)
+                .build());
+
+        // check that was passed to the transform.
+        assertThat(classesTransform.isIncrementalInputs()).isTrue();
+
+        // and the jar input should be status ADDED
+        Collection<TransformInput> inputs = classesTransform.getInputs();
+        assertThat(inputs).hasSize(1);
+
+        TransformInput input = Iterables.getOnlyElement(inputs);
+        Collection<JarInput> jarInputs = input.getJarInputs();
+        assertThat(jarInputs).isNotNull();
+        assertThat(jarInputs).hasSize(jarMap.size());
+
+        for (JarInput jarInput : jarInputs) {
+            File file = jarInput.getFile();
+            assertThat(file).isIn(jarMap.keySet());
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+        }
+    }
+
+    @Test
     public void incrementalFolderInputInOriginalStream()
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
@@ -1074,6 +1273,189 @@ public class TransformTaskTest extends TaskTestUtils {
         DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
         assertThat(singleDirectoryInput.getFile()).isEqualTo(outputFolder);
 
+        Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
+        assertThat(changedFiles).hasSize(3);
+        assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
+        assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
+        assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+    }
+
+    @Test
+    public void incrementalComplexTypesFolderInputInIntermediateStream()
+            throws TransformException, InterruptedException, IOException {
+        // create a stream and add it to the pipeline
+        File rootFolder = temporaryFolder.newFolder();
+
+        // this represents the output of the "previous" transform.
+        IntermediateStream projectClass = IntermediateStream.builder()
+                .addContentTypes(DefaultContentType.CLASSES, ExtendedContentType.CLASSES_ENHANCED)
+                .addScopes(Scope.PROJECT)
+                .setRootLocation(rootFolder)
+                .setDependency("my dependency")
+                .build();
+        transformManager.addStream(projectClass);
+
+        // use the output version of this stream to create some content.
+        // however, we split the output into 2 streams, one for each content type.
+        TransformOutputProvider output = projectClass.asOutput();
+        File classesOutput = output.getContentLocation("classes",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                projectClass.getScopes(), Format.DIRECTORY);
+        mkdirs(classesOutput);
+
+        // now create the other output folder.
+        File enhancedClassesOutput = output.getContentLocation("enhanced",
+                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                projectClass.getScopes(), Format.DIRECTORY);
+
+        // create the transform
+        TestTransform t = TestTransform.builder()
+                .setIncremental(true)
+                .setInputTypes(DefaultContentType.CLASSES)
+                .setScopes(Scope.PROJECT)
+                .build();
+
+        // add the transform to the manager
+        AndroidTask<TransformTask> task =
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        assertThat(transformTask).isNotNull();
+
+        // get the current output Stream in the transform manager.
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(2);
+
+        // call the task with incremental data
+        File addedFile = new File(classesOutput, "added");
+        File modifiedFile = new File(classesOutput, "modified");
+        File removedFile = new File(classesOutput, "removed");
+
+        // now add some changes in the second output folder, it should not be part of the
+        // incremental changes for this transform since it is not interested in that content type.
+        File enhancedRemoved = new File(enhancedClassesOutput, "removed");
+        File enhancedAdded = new File(enhancedClassesOutput, "added");
+        File enhancedModified = new File(enhancedClassesOutput, "modified");
+
+        transformTask.transform(inputBuilder()
+                .incremental()
+                .addedFile(addedFile)
+                .addedFile(enhancedAdded)
+                .modifiedFile(modifiedFile)
+                .modifiedFile(enhancedModified)
+                .removedFile(removedFile)
+                .removedFile(enhancedRemoved)
+                .build());
+
+        // check that was passed to the transform.
+        assertThat(t.isIncrementalInputs()).isTrue();
+
+        // don't test everything, the rest is tested in the tests above.
+        Collection<TransformInput> inputs = t.getInputs();
+        assertThat(inputs).hasSize(1);
+
+        TransformInput input = Iterables.getOnlyElement(inputs);
+        Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs();
+        assertThat(directoryInputs).isNotNull();
+        assertThat(directoryInputs).hasSize(1);
+
+        DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
+        assertThat(singleDirectoryInput.getFile()).isEqualTo(classesOutput);
+
+        // none of the entries specified in the "enhanced" folder should be passed as events.
+        Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
+        assertThat(changedFiles).hasSize(3);
+        assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
+        assertThat(changedFiles).containsEntry(modifiedFile, Status.CHANGED);
+        assertThat(changedFiles).containsEntry(removedFile, Status.REMOVED);
+    }
+
+    @Test
+    public void incrementalComplexScopeFolderInputInIntermediateStream()
+            throws TransformException, InterruptedException, IOException {
+        // create a stream and add it to the pipeline
+        File rootFolder = temporaryFolder.newFolder();
+
+        // this represents the output of the "previous" transform.
+        IntermediateStream projectClass = IntermediateStream.builder()
+                .addContentTypes(DefaultContentType.CLASSES)
+                .addScopes(Scope.PROJECT)
+                .addScopes(Scope.SUB_PROJECTS)
+                .setRootLocation(rootFolder)
+                .setDependency("my dependency")
+                .build();
+        transformManager.addStream(projectClass);
+
+        // use the output version of this stream to create some content.
+        // however, we split the output into 2 streams, one for each content type.
+        TransformOutputProvider output = projectClass.asOutput();
+        File classesOutput = output.getContentLocation("classes",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.PROJECT),
+                Format.DIRECTORY);
+        mkdirs(classesOutput);
+
+        // now create the other output folder.
+        File subProjectOutput = output.getContentLocation("enhanced",
+                ImmutableSet.of(DefaultContentType.CLASSES),
+                ImmutableSet.of(Scope.SUB_PROJECTS),
+                Format.DIRECTORY);
+
+        // create the transform
+        TestTransform t = TestTransform.builder()
+                .setIncremental(true)
+                .setInputTypes(DefaultContentType.CLASSES)
+                .setScopes(Scope.PROJECT)
+                .build();
+
+        // add the transform to the manager
+        AndroidTask<TransformTask> task =
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        assertThat(transformTask).isNotNull();
+
+        // get the current output Stream in the transform manager.
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(2);
+
+        // call the task with incremental data
+        File addedFile = new File(classesOutput, "added");
+        File modifiedFile = new File(classesOutput, "modified");
+        File removedFile = new File(classesOutput, "removed");
+
+        // now add some changes in the second output folder, it should not be part of the
+        // incremental changes for this transform since it is not interested in that content type.
+        File subProjectRemoved = new File(subProjectOutput, "removed");
+
+        transformTask.transform(inputBuilder()
+                .incremental()
+                .addedFile(addedFile)
+                .modifiedFile(modifiedFile)
+                .removedFile(removedFile)
+                .removedFile(subProjectRemoved)
+                .build());
+
+        // check that was passed to the transform.
+        assertThat(t.isIncrementalInputs()).isTrue();
+
+        // don't test everything, the rest is tested in the tests above.
+        Collection<TransformInput> inputs = t.getInputs();
+        assertThat(inputs).hasSize(1);
+
+        TransformInput input = Iterables.getOnlyElement(inputs);
+        Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs();
+        assertThat(directoryInputs).isNotNull();
+        assertThat(directoryInputs).hasSize(1);
+
+        DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
+        assertThat(singleDirectoryInput.getFile()).isEqualTo(classesOutput);
+
+        // none of the entries specified in the "subProject" folder should be passed as events.
         Map<File, Status> changedFiles = singleDirectoryInput.getChangedFiles();
         assertThat(changedFiles).hasSize(3);
         assertThat(changedFiles).containsEntry(addedFile, Status.ADDED);
