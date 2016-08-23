@@ -16,10 +16,11 @@
 
 package com.android.build.gradle.integration.performance;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.DexFileSubject;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
@@ -141,10 +142,10 @@ public class AntennaPodInstantRunPerformanceTest {
         InstantRunArtifact artifact =
                 InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
-        expect.about(DexFileSubject.FACTORY)
-                .that(artifact.file)
-                .hasClass("Lde/danoeh/antennapod/activity/MainActivity$override;")
-                .that().hasMethod("onStart");
+        assertThatDex(artifact.file)
+                .containsClass("Lde/danoeh/antennapod/activity/MainActivity$override;")
+                .that()
+                .hasMethod("onStart");
 
 
         // Test cold swap

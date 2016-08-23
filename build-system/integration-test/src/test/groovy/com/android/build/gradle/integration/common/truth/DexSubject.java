@@ -23,6 +23,8 @@ import java.io.IOException;
 
 public interface DexSubject {
 
-    IndirectSubject<DexClassSubject> hasClass(@NonNull String className)
+    IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
             throws ProcessException, IOException;
+
+    void containsClasses(@NonNull String... classNames) throws ProcessException, IOException;
 }

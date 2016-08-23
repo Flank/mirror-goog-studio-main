@@ -26,10 +26,6 @@ import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 
 public class DexFileSubject extends Subject<DexFileSubject, File> implements DexSubject {
 
@@ -61,8 +57,14 @@ public class DexFileSubject extends Subject<DexFileSubject, File> implements Dex
 
 
     @Override
-    public IndirectSubject<DexClassSubject> hasClass(@NonNull String className)
+    public IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
             throws ProcessException, IOException {
-        return getDelegate().hasClass(className);
+        return getDelegate().containsClass(className);
+    }
+
+    @Override
+    public void containsClasses(@NonNull String... classNames)
+            throws ProcessException, IOException {
+        getDelegate().containsClasses(classNames);
     }
 }

@@ -17,20 +17,20 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.getInstantRunModel;
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.truth.DexFileSubject;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -164,9 +164,7 @@ public class LibDependencyTest {
         assertThat(context.getArtifacts()).hasSize(1);
         InstantRunArtifact artifact = Iterables.getOnlyElement(context.getArtifacts());
         expect.that(artifact.type).isEqualTo(InstantRunArtifactType.RELOAD_DEX);
-        expect.about(DexFileSubject.FACTORY)
-                .that(artifact.file)
-                .hasClass("Lcom/android/tests/libstest/lib/Lib$override;");
+        assertThatDex(artifact.file).containsClass("Lcom/android/tests/libstest/lib/Lib$override;");
     }
 
 

@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.truth.DexFileSubject;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -218,12 +218,10 @@ public class ExternalBuildPluginTest {
         assertThat(lastBuild.getArtifacts()).hasSize(1);
         artifact = lastBuild.getArtifacts().get(0);
         assertThat(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.RELOAD_DEX);
-        assertThat(artifact.getLocation()).isNotNull();
-        File dexFile = artifact.getLocation();
-        assertThat(dexFile.exists()).isTrue();
-        DexFileSubject reloadDex = expect.about(DexFileSubject.FACTORY).that(dexFile);
-        reloadDex.hasClass("Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;").that();
-        reloadDex.hasClass("Lcom/example/jedo/blazeapp/MainActivity$override;").that();
+        assertThatDex(artifact.getLocation())
+                .containsClasses(
+                        "Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;",
+                        "Lcom/example/jedo/blazeapp/MainActivity$override;");
     }
 
     private static byte[] hotswapChange(byte[] inputClass) {

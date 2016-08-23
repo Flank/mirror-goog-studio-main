@@ -20,13 +20,20 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.truth.IndirectSubject;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-import java.io.IOException;
-import java.util.Set;
+
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, DexBackedDexFile>
@@ -47,12 +54,9 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
     }
 
     @Override
-    public IndirectSubject<DexClassSubject> hasClass(@NonNull String className)
+    public IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
             throws ProcessException, IOException {
-        if (!className.startsWith("L") || !className.endsWith(";")) {
-            throw new IllegalArgumentException(
-                    "class name must be in the format L" + "com/foo/Main;");
-        }
+        checkClassName(className);
 
         if (assertSubjectIsNonNull()) {
             Set<? extends DexBackedClassDef> classes = getSubject().getClasses();
@@ -67,12 +71,49 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
         return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, null);
     }
 
+    @Override
+    public void containsClasses(@NonNull String... expected) throws ProcessException, IOException {
+        for (String clazz : expected) {
+            checkClassName(clazz);
+        }
+
+        if (assertSubjectIsNonNull()) {
+            Set<String> actualClasses =
+                    getSubject()
+                            .getClasses()
+                            .stream()
+                            .map(DexBackedClassDef::getType)
+                            .collect(Collectors.toSet());
+
+            Sets.SetView<String> missing =
+                    Sets.difference(ImmutableSet.copyOf(expected), actualClasses);
+
+            if (!missing.isEmpty()) {
+                failWithBadResults(
+                        "contains classes", Arrays.toString(expected), "is missing", missing);
+            }
+        }
+    }
+
+    @Override
+    protected String getDisplaySubject() {
+        return "dex file";
+    }
 
     private boolean assertSubjectIsNonNull() {
         if (getSubject() == null) {
-            fail("Cannot assert about the contents of a dex file that does not exist.");
+            failWithRawMessage(
+                    "Cannot assert about the contents of a dex file that does not exist.");
             return false;
         }
         return true;
+    }
+
+
+    private static void checkClassName(@NonNull String className) {
+        Preconditions.checkArgument(
+                className.startsWith("L") && className.endsWith(";"),
+                "Class name '%s' must be in the type descriptor format, e.g. Lcom/foo/Main;",
+                className);
     }
 }
