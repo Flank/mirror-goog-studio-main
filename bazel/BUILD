@@ -92,7 +92,6 @@ test_suite(
     "//tools/base/build-system:manifest-merger_tests",
     "//tools/base/common:common_tests",
     "//tools/base/ddmlib:ddmlib_tests",
-    "//tools/base/device_validator:dvlib_tests",
     "//tools/base/draw9patch:draw9patch_tests",
     "//tools/base/instant-run:instant-run-client_tests",
     "//tools/base/layoutlib-api:layoutlib-api_tests",
