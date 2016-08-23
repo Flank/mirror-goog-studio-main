@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.FD_INSTANTAPP_METADATA;
 import static com.android.SdkConstants.FN_ATOM_METADATA;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.variant.AtomVariantOutputData;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.model.AndroidAtom;
 import com.android.utils.FileUtils;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.wireless.android.instantapps.iapk.AtomDependencyProto;
 import com.google.wireless.android.instantapps.iapk.AtomMetadataProto;
@@ -152,9 +154,12 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
                 atomMetadataBuilder.add(atom.getAtomMetadataFile());
             }
             generateAtomMetadata.setAtomMetadataDependency(atomMetadataBuilder.build());
-
             generateAtomMetadata.setAtomName(scope.getGlobalScope().getProject().getName());
-            generateAtomMetadata.setAtomVersion(variantOutputData.getVersionName());
+
+            String versionName = variantOutputData.getVersionName();
+            checkState(!Strings.isNullOrEmpty(versionName), "versionName is not specified.");
+            generateAtomMetadata.setAtomVersion(versionName);
+
             generateAtomMetadata.setAtomMetadataFolder(FileUtils.join(
                     scope.getVariantScope().getBaseBundleDir(),
                     FD_INSTANTAPP_METADATA));
