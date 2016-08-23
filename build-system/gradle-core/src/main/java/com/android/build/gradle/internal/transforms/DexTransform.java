@@ -52,7 +52,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -76,6 +75,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -456,23 +456,23 @@ public class DexTransform extends Transform {
         @NonNull
         private final ProcessOutputHandler outputHandler;
         @NonNull
-        private final Optional<FileCache> fileCache;
+        private final Optional<FileCache> buildCache;
 
         private PreDexTask(
                 @NonNull File from,
                 @NonNull File to,
                 @NonNull Set<String> hashs,
                 @NonNull ProcessOutputHandler outputHandler,
-                @NonNull Optional<FileCache> fileCache) {
+                @NonNull Optional<FileCache> buildCache) {
             this.from = from;
             this.to = to;
             this.hashs = hashs;
             this.outputHandler = outputHandler;
-            this.fileCache = fileCache;
+            this.buildCache = buildCache;
         }
 
         @Override
-        public Void call() throws IOException {
+        public Void call() throws Exception {
             logger.verbose("predex called for %s", from);
             // TODO remove once we can properly add a library as a dependency of its test.
             String hash = getFileHash(from);
@@ -486,26 +486,18 @@ public class DexTransform extends Transform {
                 hashs.add(hash);
             }
 
-            IOExceptionConsumer<File> fileProducer = (File outputFile) -> {
+            Callable<Void> fileProducer = () -> {
+                FileUtils.deletePath(to);
+                Files.createParentDirs(to);
                 if (multiDex) {
-                    FileUtils.mkdirs(outputFile);
+                    FileUtils.mkdirs(to);
                 }
-                try {
-                    androidBuilder.preDexLibrary(
-                            from,
-                            outputFile,
-                            multiDex,
-                            dexOptions,
-                            outputHandler);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } catch (ProcessException e) {
-                    throw new RuntimeException(e);
-                }
+                androidBuilder.preDexLibrary(from, to, multiDex, dexOptions, outputHandler);
+                return null;
             };
 
             // If the cache is available, run pre-dexing using the cache
-            if (fileCache.isPresent()) {
+            if (buildCache.isPresent()) {
                 // To use the cache, we need to specify all the inputs that affect the outcome of a
                 // pre-dex (see DxDexKey for an exhaustive list of these inputs)
                 FileCache.Inputs.Builder buildCacheInputs = new FileCache.Inputs.Builder();
@@ -558,11 +550,32 @@ public class DexTransform extends Transform {
                             additionalParams.get(i));
                 }
 
-                fileCache.get().createFile(to, buildCacheInputs.build(), fileProducer);
+                try {
+                    buildCache.get().createFile(to, buildCacheInputs.build(), fileProducer);
+                } catch (ExecutionException exception) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Unable to pre-dex '%1$s' to '%2$s'",
+                                    from.getAbsolutePath(),
+                                    to.getAbsolutePath()),
+                            exception);
+                } catch (Exception exception) {
+                    logger.warning(
+                            "Unable to pre-dex '%1$s' to '%2$s' using the build cache at '%3$s'\n"
+                                    + "Cause: %4$s\n"
+                                    + "Build cache is therefore temporarily disabled.\n"
+                                    + "Please fix the underlying cause if possible or file a bug.\n"
+                                    + "To suppress this warning, disable the build cache by setting"
+                                    + " android.enableBuildCache=false in the gradle.properties"
+                                    + " file.",
+                            from.getAbsolutePath(),
+                            to.getAbsolutePath(),
+                            buildCache.get().getCacheDirectory().getAbsolutePath(),
+                            exception.getMessage());
+                    fileProducer.call();
+                }
             } else {
-                FileUtils.deletePath(to);
-                Files.createParentDirs(to);
-                fileProducer.accept(to);
+                fileProducer.call();
             }
 
             for (File file : Files.fileTreeTraverser().breadthFirstTraversal(to)) {

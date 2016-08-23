@@ -444,6 +444,15 @@ public class AndroidGradleOptions {
             try {
                 return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
             } catch (Exception exception) {
+                project.getLogger().warn(
+                        "Unable to create the build cache at '{}'\n"
+                                + "Cause: {}\n"
+                                + "Build cache is therefore temporarily disabled.\n"
+                                + "Please fix the underlying cause if possible or file a bug.\n"
+                                + "To suppress this warning, disable the build cache by setting"
+                                + " android.enableBuildCache=false in the gradle.properties file.",
+                        buildCacheDir.getAbsolutePath(),
+                        exception.getMessage());
                 return Optional.empty();
             }
         } else {
