@@ -2088,7 +2088,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testSnackbarDuration() throws Exception {
+    // TODO: http://b.android.com/220686
+    public void ignore_testSnackbarDuration() throws Exception {
         assertEquals(""
                 + "src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFINITE, Snackbar.LENGTH_SHORT, Snackbar.LENGTH_LONG or value must be ≥ 1 (was -100) [WrongConstant]\n"
                 + "        makeSnackbar(-100); // ERROR\n"
