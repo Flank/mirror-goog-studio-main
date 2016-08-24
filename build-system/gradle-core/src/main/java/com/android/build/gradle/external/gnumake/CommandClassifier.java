@@ -36,7 +36,7 @@ import joptsimple.OptionSet;
 class CommandClassifier {
     // Native tool is static here to share with CCacheBuildTool
     @NonNull
-    final private static NativeCompilerBuildTool sNativeCompilerBuildTool =
+    private static final NativeCompilerBuildTool sNativeCompilerBuildTool =
             new NativeCompilerBuildTool();
 
     @NonNull
