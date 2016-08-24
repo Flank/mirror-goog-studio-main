@@ -80,5 +80,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="aether" level="project" />
+    <orderEntry type="library" name="guava-tools" level="project" />
   </component>
 </module>
