@@ -10,8 +10,7 @@ iml_module(
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
         "//tools/base/annotations:android-annotations[module]",
-        "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28[test]",
-        "//prebuilts/tools/common/m2:repository/com/google/truth/truth/0.28/truth-0.28-sources[test]",
+        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28:jar[test]",
     ],
     exports = [
         "//tools:idea/lib/guava-18.0",
