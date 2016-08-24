@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_FRAGMENT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_HEADER;
@@ -48,12 +49,14 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.SdkUtils;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -217,7 +220,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 }
                 className = attr.getValue();
                 classNameNode = attr;
-                pkg = context.getMainProject().getPackage();
+                pkg = context.getProject().getPackage();
             } else {
                 return;
             }
@@ -330,12 +333,14 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (context.getProject() == context.getMainProject() && mHaveClasses
-                && !context.getMainProject().isLibrary()
+        Project mainProject = context.getMainProject();
+        if (context.getProject() == mainProject && mHaveClasses
+                && !mainProject.isLibrary()
                 && mReferencedClasses != null && !mReferencedClasses.isEmpty()
                 && context.getDriver().getScope().contains(Scope.CLASS_FILE)) {
             List<String> classes = new ArrayList<String>(mReferencedClasses.keySet());
             Collections.sort(classes);
+            classLoop:
             for (String owner : classes) {
                 Location.Handle handle = mReferencedClasses.get(owner);
                 String fqcn = ClassContext.getFqcn(owner);
@@ -356,6 +361,22 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 // Ignore usages of platform libraries
                 if (owner.startsWith("android/")) { //$NON-NLS-1$
                     continue;
+                }
+
+                // Last sanity check: make sure we can't find the missing class as source
+                // anywhere either. This is relevant for example if we're running lint
+                // from Gradle across all variants but the source code hasn't been
+                // compiled for all the variants we're checking.
+                List<Project> all = Lists.newArrayList(mainProject.getAllLibraries());
+                all.add(mainProject);
+                for (Project project : all) {
+                    for (File root : project.getJavaSourceFolders()) {
+                        File source = new File(root, owner.replace('/', File.separatorChar)
+                                + DOT_JAVA);
+                        if (source.exists()) {
+                            continue classLoop;
+                        }
+                    }
                 }
 
                 String message = String.format(

@@ -293,7 +293,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
         );
 
         assertEquals(""
-                + "LibraryProject/AndroidManifest.xml:11: Error: Class referenced in the manifest, test.pkg.app.TestService, was not found in the project or the libraries [MissingRegistered]\n"
+                + "LibraryProject/AndroidManifest.xml:11: Error: Class referenced in the manifest, test.pkg.TestService, was not found in the project or the libraries [MissingRegistered]\n"
                 + "        <service android:name=\".TestService\" />\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
@@ -537,6 +537,27 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                         "bytecode/.classpath=>.classpath",
                         "bytecode/user_prefs_fragment.xml=>res/layout/user_prefs_fragment.xml",
                         "bytecode/ViewAndUpdatePreferencesActivity$UserPreferenceFragment.class.data=>bin/classes/course/examples/DataManagement/PreferenceActivity/ViewAndUpdatePreferencesActivity$UserPreferenceFragment.class"
+                ));
+    }
+
+    @SuppressWarnings("ClassNameDiffersFromFileName")
+    public void testMissingClassViaSource() throws Exception {
+        mScopes = null;
+        mEnabled = Sets.newHashSet(MISSING, INSTANTIATABLE, INNERCLASS);
+        assertEquals("No warnings.",
+
+                lintProject(
+                        copy("bytecode/.classpath", ".classpath"),
+                        xml("res/layout/user_prefs_fragment.xml", ""
+                                + "<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    class=\"course.examples.dataManagement.ViewAndUpdatePreferencesActivity\"\n"
+                                + "    android:id=\"@+id/userPreferenceFragment\">\n"
+                                + "</fragment>\n"),
+                        copy("bytecode/CustomView3.class.data", "bin/classes/test/bytecode/CustomView3.class"),
+                        java("src/course/examples/dataManagement/ViewAndUpdatePreferencesActivity.java", ""
+                                + "package course.examples.DataManagement;\n"
+                                + "public class ViewAndUpdatePreferencesActivity {\n"
+                                + "}\n")
                 ));
     }
 
