@@ -314,6 +314,22 @@ public class ApiDetector extends ResourceXmlDetector
                     ApiDetector.class,
                     Scope.RESOURCE_FILE_SCOPE));
 
+    /** Obsolete SDK_INT version check */
+    public static final Issue OBSOLETE_SDK = Issue.create(
+            "ObsoleteSdkInt", //$NON-NLS-1$
+            "Obsolete SDK_INT Version Check",
+
+            "This check flags version checks that are not necessary, because the " +
+            "`minSdkVersion` (or surrounding known API level) is already at least " +
+            "as high as the version checked for.",
+
+            Category.PERFORMANCE,
+            6,
+            Severity.WARNING,
+            new Implementation(
+                    ApiDetector.class,
+                    Scope.JAVA_FILE_SCOPE));
+
     private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
     private static final String REQ_API_VMSIG = "/RequiresApi;";
     private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";  //$NON-NLS-1$
@@ -325,7 +341,7 @@ public class ApiDetector extends ResourceXmlDetector
     private static final String TAG_ANIMATED_VECTOR = "animated-vector";
     private static final String TAG_ANIMATED_SELECTOR = "animated-selector";
 
-    private static final String SDK_INT = "SDK_INT";
+    public static final String SDK_INT = "SDK_INT";
     private static final String ANDROID_OS_BUILD_VERSION = "android/os/Build$VERSION";
 
     protected ApiLookup mApiDatabase;
@@ -2130,6 +2146,11 @@ public class ApiDetector extends ResourceXmlDetector
                 return false;
             }
             String name = field.getName();
+
+            if (SDK_INT.equals(name)) {
+                checkObsoleteSdkVersion(mContext, node);
+            }
+
             PsiClass containingClass = field.getContainingClass();
             if (containingClass == null || name == null) {
                 return false;
@@ -2642,7 +2663,7 @@ public class ApiDetector extends ResourceXmlDetector
                         PsiLiteralExpression lit = (PsiLiteralExpression)right;
                         Object value = lit.getValue();
                         if (value instanceof Integer) {
-                            level = ((Integer)value).intValue();
+                            level = (Integer) value;
                         }
                     }
                     if (level != -1) {
@@ -2677,6 +2698,95 @@ public class ApiDetector extends ResourceXmlDetector
         } else if (tokenType == JavaTokenType.ANDAND && (ifStatement != null && prev == ifStatement.getThenBranch())) {
             if (isAndedWithConditional(ifStatement.getCondition(), api, prev)) {
                 return true;
+            }
+        }
+        return null;
+    }
+
+    protected void checkObsoleteSdkVersion(@NonNull JavaContext context,
+            @NonNull PsiElement node) {
+        PsiBinaryExpression binary = PsiTreeUtil.getParentOfType(node,
+                PsiBinaryExpression.class, true);
+        if (binary != null) {
+            int minSdk = getMinSdk(context);
+            Boolean isConditional = isVersionCheckConditional(minSdk, binary);
+            if (isConditional != null) {
+                String message = isConditional ? "Unnecessary; SDK_INT is always >= " + minSdk :
+                        "Unnecessary; SDK_INT is never < " + minSdk;
+                context.report(OBSOLETE_SDK, binary, context.getLocation(binary),
+                        message);
+            }
+        }
+    }
+
+    /**
+     * Given an error message produced by this lint detector for the {@link #OBSOLETE_SDK} issue,
+     * returns the constant value (true, false or unknown) equivalent to the version check.
+     * <p>
+     * Intended for IDE quickfix implementations.
+     *
+     * @param errorMessage the error message associated with the error
+     * @param format the format of the error message
+     * @return the corresponding constant value, or null if not recognized
+     */
+    @Nullable
+    public static Boolean getVersionCheckConstant(@NonNull String errorMessage,
+            @NonNull TextFormat format) {
+        errorMessage = format.toText(errorMessage);
+        if (errorMessage.contains("always")) {
+            return true;
+        } else if (errorMessage.contains("never")) {
+            return false;
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static Boolean isVersionCheckConditional(int api,
+            @NonNull PsiBinaryExpression binary) {
+        IElementType tokenType = binary.getOperationTokenType();
+        if (tokenType == JavaTokenType.GT || tokenType == JavaTokenType.GE ||
+                tokenType == JavaTokenType.LE || tokenType == JavaTokenType.LT ||
+                tokenType == JavaTokenType.EQEQ) {
+            PsiExpression left = binary.getLOperand();
+            if (left instanceof PsiReferenceExpression) {
+                PsiReferenceExpression ref = (PsiReferenceExpression)left;
+                if (SDK_INT.equals(ref.getReferenceName())) {
+                    PsiExpression right = binary.getROperand();
+                    int level = -1;
+                    if (right instanceof PsiReferenceExpression) {
+                        PsiReferenceExpression ref2 = (PsiReferenceExpression)right;
+                        String codeName = ref2.getReferenceName();
+                        if (codeName == null) {
+                            return false;
+                        }
+                        level = SdkVersionInfo.getApiByBuildCode(codeName, true);
+                    } else if (right instanceof PsiLiteralExpression) {
+                        PsiLiteralExpression lit = (PsiLiteralExpression)right;
+                        Object value = lit.getValue();
+                        if (value instanceof Integer) {
+                            level = (Integer) value;
+                        }
+                    }
+                    if (level != -1) {
+                        if (tokenType == JavaTokenType.GE && level < api) {
+                            // SDK_INT >= ICE_CREAM_SANDWICH
+                            return true;
+                        }
+                        else if (tokenType == JavaTokenType.GT && level <= api -1) {
+                            // SDK_INT > ICE_CREAM_SANDWICH
+                            return true;
+                        }
+                        else if (tokenType == JavaTokenType.LE && level < api) {
+                            return false;
+                        }
+                        else if (tokenType == JavaTokenType.LT && level <= api) {
+                            // SDK_INT < ICE_CREAM_SANDWICH
+                            return false;
+                        }
+                    }
+                }
             }
         }
         return null;
