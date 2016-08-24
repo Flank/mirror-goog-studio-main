@@ -131,6 +131,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
     private static final String COMMIT_NOW = "commitNow";                             //$NON-NLS-1$
     private static final String APPLY = "apply";                                      //$NON-NLS-1$
     private static final String COMMIT_ALLOWING_LOSS = "commitAllowingStateLoss";     //$NON-NLS-1$
+    private static final String COMMIT_NOW_ALLOWING_LOSS = "commitNowAllowingStateLoss";//$NON-NLS-1$
     private static final String QUERY = "query";                                      //$NON-NLS-1$
     private static final String RAW_QUERY = "rawQuery";                               //$NON-NLS-1$
     private static final String QUERY_WITH_FACTORY = "queryWithFactory";              //$NON-NLS-1$
@@ -459,6 +460,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
         String methodName = call.getMethodExpression().getReferenceName();
         return (COMMIT.equals(methodName)
                     || COMMIT_ALLOWING_LOSS.equals(methodName)
+                    || COMMIT_NOW_ALLOWING_LOSS.equals(methodName)
                     || COMMIT_NOW.equals(methodName)) &&
                 isMethodOnFragmentClass(context, call,
                         FRAGMENT_TRANSACTION_CLS,
