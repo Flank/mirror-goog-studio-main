@@ -49,7 +49,7 @@ public class KotlinCompiler extends JarOutputCompiler {
         args.add("-d");
         args.add(outDir.getAbsolutePath());
         args.add("-cp");
-        args.add(classPath);
+        args.add(classPath.replaceAll(":", File.pathSeparator));
         args.addAll(files);
         CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[]{}));
     }
