@@ -256,6 +256,20 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             Severity.ERROR,
             IMPLEMENTATION);
 
+    public static final Issue BUNDLED_GMS = Issue.create(
+      "UseOfBundledGooglePlayServices",
+      "Use of bundled version of Google Play services",
+      "Google Play services SDK's can be selectively included, which enables a smaller APK size. " +
+      "Consider declaring dependencies on individual Google Play services SDK's. If you are " +
+      "using Firebase API's (http://firebase.google.com/docs/android/setup), Android Studio's " +
+      "Tools \\u2192 Firebase assistant window can automatically add just the dependencies " +
+      "needed for each feature.",
+      Category.PERFORMANCE,
+      4,
+      Severity.WARNING,
+      IMPLEMENTATION)
+      .addMoreInfo("http://developers.google.com/android/guides/setup#split");
+
     /** The Gradle plugin ID for Android applications */
     public static final String APP_PLUGIN_ID = "com.android.application";
     /** The Gradle plugin ID for Android libraries */
@@ -270,6 +284,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     public static final String GMS_GROUP_ID = "com.google.android.gms";
     public static final String GOOGLE_SUPPORT_GROUP_ID = "com.google.android.support";
     public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.support";
+    private static final GradleCoordinate PLAY_SERVICES_V650 =
+      GradleCoordinate.parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
 
     private int mMinSdkVersion;
     private int mCompileSdkVersion;
@@ -873,6 +889,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         + "can not be published with this version. Use version `%1$s` "
                         + "instead.", version);
                 report(context, cookie, COMPATIBILITY, message);
+
+            } else if (context.isEnabled(BUNDLED_GMS)
+              && PLAY_SERVICES_V650.isSameArtifact(dependency)
+              && COMPARE_PLUS_HIGHER.compare(dependency, PLAY_SERVICES_V650) >= 0) {
+                // Play services 6.5.0 is the first version to allow un-bundling, so if the user is
+                // at or above 6.5.0, recommend un-bundling
+                String message = "Avoid using bundled version of Google Play services SDK.";
+                report(context, cookie, BUNDLED_GMS, message);
             }
 
             checkPlayServices(context, dependency, cookie);

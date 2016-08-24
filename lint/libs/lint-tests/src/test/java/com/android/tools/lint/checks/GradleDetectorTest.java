@@ -33,6 +33,7 @@ import static com.android.tools.lint.checks.GradleDetector.getNamedDependency;
 import static com.android.tools.lint.checks.GradleDetector.getNewValue;
 import static com.android.tools.lint.checks.GradleDetector.getOldValue;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -74,7 +75,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-
+import org.junit.Assert;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -715,6 +716,21 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "dependencies {\n"
                         + "    testCompile 'com.android.support:support-annotations:24.0.0'\n"
                         + "    compile 'com.android.support:appcompat-v7:+'\n"
+                        + "}\n")));
+    }
+
+    public void testBundledGmsDependency() throws Exception {
+        Assert.assertThat(lintProject(source("build.gradle", ""
+                + "dependencies {\n"
+                + "    compile 'com.google.android.gms:play-services:8.5.6'\n"
+                + "}\n")), containsString(GradleDetector.BUNDLED_GMS.getId()));
+    }
+
+    public void testUnbundledGmsDependency() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(source("build.gradle", ""
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-auth:9.2.1'\n"
                         + "}\n")));
     }
 
