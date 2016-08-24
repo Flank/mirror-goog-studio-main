@@ -272,6 +272,9 @@ public class ManifestMerger2 {
                     MergingReport.Record.Severity.WARNING,
                     "Post merge validation failed");
         }
+
+        finalMergedDocument.clearNodeNamespaces();
+
         // finally optional features handling.
         processOptionalFeatures(finalMergedDocument, mergingReportBuilder);
 

@@ -32,6 +32,7 @@ import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -595,5 +597,41 @@ public class XmlDocument {
     @NonNull
     private static String permission(String permissionName) {
         return "android.permission." + permissionName;
+    }
+
+    /**
+     * Removes the android namespace from all nodes.
+     */
+    public void clearNodeNamespaces() {
+        clearNodeNamespaces(getRootNode().getXml());
+    }
+
+    /**
+     * Removes the android namespace from an element recursively.
+     *
+     * @param element the element
+     */
+    private void clearNodeNamespaces(Element element) {
+        String androidPrefix = XmlUtils.lookupNamespacePrefix(element, SdkConstants.ANDROID_URI);
+
+        System.out.println("Clear node namespaces: " + element.getNodeName());
+        String name = element.getNodeName();
+        int colonIdx = name.indexOf(':');
+        if (colonIdx != -1) {
+            String prefix = name.substring(0, colonIdx);
+            if (prefix.equals(androidPrefix)) {
+                String newName = name.substring(colonIdx + 1);
+                System.out.println("   Renaming: " + name + " to " + newName);
+                getXml().renameNode(element, null, newName);
+            }
+        }
+
+        NodeList childrenNodeList = element.getChildNodes();
+        for (int i = 0; i < childrenNodeList.getLength(); i++) {
+            Node n = childrenNodeList.item(i);
+            if (n instanceof Element) {
+                clearNodeNamespaces((Element) n);
+            }
+        }
     }
 }
