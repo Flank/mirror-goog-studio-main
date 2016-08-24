@@ -64,5 +64,6 @@ public abstract class JarOutputCompiler {
         return 0;
     }
 
-    protected abstract void compile(List<String> files, String classPath, File outDir);
+    protected abstract void compile(List<String> files, String classPath, File outDir)
+            throws IOException;
 }

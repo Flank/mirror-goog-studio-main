@@ -158,6 +158,48 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
     srcs = outs + rem
   )
 
+
+def _form_jar_impl(ctx):
+  all_deps = set(ctx.files.deps)
+  for this_dep in ctx.attr.deps:
+    if hasattr(this_dep, "java"):
+      # All the transitive dependencies are needed to compile forms
+      all_deps += this_dep.java.transitive_runtime_deps
+
+  class_jar = ctx.outputs.class_jar
+  args = ["-o", class_jar.path, "-cp", ":".join([dep.path for dep in all_deps])] + [src.path for src in ctx.files.srcs]
+
+  # Execute the command
+  ctx.action(
+      inputs = ctx.files.srcs + list(all_deps),
+      outputs = [class_jar],
+      mnemonic = "formc",
+      executable = ctx.executable._formc,
+      arguments = args,
+  )
+
+_form_jar = rule(
+    attrs = {
+        "srcs": attr.label_list(
+            non_empty = True,
+            allow_files = True,
+        ),
+        "deps": attr.label_list(
+            mandatory = False,
+            allow_files = FileType([".jar"]),
+        ),
+        "_formc": attr.label(
+            executable = True,
+            default = Label("//tools/base/bazel:formc"),
+            allow_files = True),
+    },
+    outputs = {
+        "class_jar": "lib%{name}.jar",
+    },
+    implementation = _form_jar_impl,
+)
+
+
 def _iml_resources(name, resources, srcs):
   res_exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store"]
   # Temporarily remove file names not supported by bazel
@@ -196,6 +238,8 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
   kotlins = native.glob([src + "/**/*.kt" for src in srcs], exclude=exclude)
   groovies = native.glob([src + "/**/*.groovy" for src in srcs], exclude=exclude)
   javas = native.glob([src + "/**/*.java" for src in srcs], exclude=exclude)
+  forms = native.glob([src + "/**/*.form" for src in srcs], exclude=exclude)
+
   jars = []
 
   if kotlins:
@@ -223,21 +267,31 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     javacopts += ["-sourcepath $(GENDIR)/$(location :" + stub + ")", "-implicit:none"]
 
   native.java_library(
-    name = name + ".javas",
+    name = name + ".javas" if not forms else name + ".pjavas",
     srcs = javas,
     javacopts = javacopts,
     visibility = visibility,
     deps = None if not javas else deps + ["@local_jdk//:langtools-neverlink"],
-    exports = exports,
     **kwargs
   )
+  if forms:
+    _form_jar(
+      name = name + ".javas",
+      srcs = ["lib" + name + ".pjavas.jar"] + forms,
+      deps = deps,
+    )
   jars += ["lib" + name + ".javas.jar"]
 
   native.java_import(
-    name = name,
+    name = name + ".imports",
     jars = jars,
+  )
+
+  native.java_library(
+    name = name,
+    runtime_deps = deps + [":" + name + ".imports"],
+    exports = exports + [":" + name + ".imports"],
     visibility = visibility,
-    exports = [":" + name + ".javas"],
   )
 
 
