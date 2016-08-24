@@ -17,20 +17,22 @@
 package com.android.tools.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 public class Unzipper {
 
+    byte[] buffer = new byte[1024 * 1024];
     /**
      * Unzips files from a zip file to the specified locations.
      * Each file putput needs to be individually specified. For example:
@@ -75,7 +77,6 @@ public class Unzipper {
     }
 
     private int unzip(File zipFile, Map<String, String> files) throws IOException {
-        byte[] buffer = new byte[1024 * 1024];
 
         try (ZipFile zip = new ZipFile(zipFile)) {
             for (Map.Entry<String, String> file : files.entrySet()) {
@@ -86,18 +87,41 @@ public class Unzipper {
                     return 1;
                 }
                 File outFile = new File(file.getValue());
-                if (!outFile.getParentFile().mkdirs()) {
+                File dirname = outFile.getParentFile();
+                if (!dirname.exists() && !dirname.mkdirs()) {
                     System.err.println("Cannot create directory for " + outFile.getAbsolutePath());
                 }
                 try (InputStream in = zip.getInputStream(entry);
                      FileOutputStream out = new FileOutputStream(outFile)) {
-                    int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, read);
-                    }
+                    copy(in, out);
                 }
             }
         }
         return 0;
+    }
+
+    private void copy(InputStream in, FileOutputStream out) throws IOException {
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
+
+    public void unzip(File zipFile, File outDir) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    File file = new File(outDir, entry.getName());
+                    File dirname = file.getParentFile();
+                    if (!dirname.exists() && !dirname.mkdirs()) {
+                        System.err.println("Cannot create directory for " + file.getAbsolutePath());
+                    }
+                    try (FileOutputStream os = new FileOutputStream(file)) {
+                        copy(zis, os);
+                    }
+                }
+            }
+        }
     }
 }
