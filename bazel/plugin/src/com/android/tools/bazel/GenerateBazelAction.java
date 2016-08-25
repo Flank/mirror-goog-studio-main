@@ -158,6 +158,10 @@ public class GenerateBazelAction extends AnAction {
                             if (libFile.getFileType() instanceof ArchiveFileType) {
                                 VirtualFile jar = JarFileSystem.getInstance().getVirtualFileForJar(libFile);
                                 if (jar != null) {
+                                    if (jar.getName().endsWith("-sources.jar")) {
+                                        continue;
+                                    }
+
                                     File jarFile = VfsUtil.virtualToIoFile(jar);
                                     String relJar = FileUtil.getRelativePath(workspace, jarFile);
                                     JavaImport imp = imports.get(relJar);
@@ -172,6 +176,8 @@ public class GenerateBazelAction extends AnAction {
                                                 Label pkgAndTarget = new Label(label);
                                                 jarPkg = new Package(null, pkgAndTarget.pkg);
                                                 target = pkgAndTarget.target;
+                                            } else if (relJar.startsWith("prebuilts/tools/common/m2")) {
+                                                target = "jar";
                                             } else {
                                                 target = packageRelative.replaceAll("\\.jar$", "");
                                             }

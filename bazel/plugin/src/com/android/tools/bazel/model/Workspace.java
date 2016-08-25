@@ -68,6 +68,15 @@ public class Workspace {
     }
 
     public Package findPackage(String rel) {
+        if (rel.startsWith("prebuilts/tools/common/m2")) {
+            String packageName = rel.substring(0, rel.lastIndexOf('/'));
+            Package result = packages.get(packageName);
+            if (result == null) {
+                result = new Package(this, packageName);
+            }
+            return result;
+        }
+
         if (!rel.endsWith("/")) {
             rel = rel + "/";
         }

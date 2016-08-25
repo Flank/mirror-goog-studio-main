@@ -30,18 +30,18 @@ public class JavaImport extends BazelRule {
     @Override
     public void generate(PrintWriter writer) {
         writer.append("java_import(\n");
-        writer.append("  name = \"").append(name).append("\",\n");
-        writer.append("  jars = [\n");
+        writer.append("    name = \"").append(name).append("\",\n");
+        writer.append("    jars = [\n");
         for (String jar : jars) {
-            writer.append("      \"").append(jar).append("\"").append(",\n");
+            writer.append("        \"").append(jar).append("\"").append(",\n");
         }
         for (BazelRule rule : dependencies) {
             if (!rule.isEmpty()) {
-                writer.append("      \"").append(rule.getLabel()).append("\"").append(",\n");
+                writer.append("        \"").append(rule.getLabel()).append("\"").append(",\n");
             }
         }
         writer.append("    ],\n");
-        writer.append("  visibility = [\"//visibility:public\"],\n");
+        writer.append("    visibility = [\"//visibility:public\"],\n");
         writer.append(")\n");
     }
 
