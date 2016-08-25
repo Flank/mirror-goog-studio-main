@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import com.android.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.*;
@@ -196,7 +197,8 @@ public class VirtualTimeScheduler implements ScheduledExecutorService {
      * Note that this executes the tasks in serial until one successfully completes. This falls within the
      * contract of the {@link ScheduledExecutorService} interface.
      **/
-    private <T> Future<T> invokeAnyAsFuture(Collection<? extends Callable<T>> tasks) {
+    @VisibleForTesting
+    <T> Future<T> invokeAnyAsFuture(Collection<? extends Callable<T>> tasks) {
         final SettableFuture<T> output = SettableFuture.create();
         submit(
                 () -> {
