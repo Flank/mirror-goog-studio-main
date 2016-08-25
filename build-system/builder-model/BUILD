@@ -5,6 +5,6 @@ java_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:android-annotations",
+        "//tools/base/annotations:studio.android-annotations",
     ],
 )
