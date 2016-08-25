@@ -1672,25 +1672,6 @@ public class AndroidBuilder {
         }
 
         if (isInProcess) {
-            final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
-            long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
-
-            if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
-                mLogger.warning(
-                        "\nA larger heap for the Gradle daemon is recommended for running "
-                                + "jack.\n\n"
-                                + "It currently has %1$d MB.\n"
-                                + "For faster builds, increase the maximum heap size for the "
-                                + "Gradle daemon to at least %2$s MB.\n"
-                                + "To do this set org.gradle.jvmargs=-Xmx%2$sM in the "
-                                + "project gradle.properties.\n"
-                                + "For more information see "
-                                + "https://docs.gradle.org/current/userguide/build_environment.html\n",
-                        maxMemory / (1024 * 1024),
-                        // Add -1 and + 1 to round up the division
-                        ((DEFAULT_SUGGESTED_HEAP_SIZE - 1) / (1024 * 1024)) + 1);
-            }
-
             convertByteCodeUsingJackApis(options);
         } else {
             convertByteCodeUsingJackCli(options, new LoggedProcessOutputHandler(getLogger()));
@@ -1827,15 +1808,17 @@ public class AndroidBuilder {
 
                 if (options.getCoverageMetadataFile() != null) {
                     if (isApi03Supported) {
-                        String coveragePluginPath = mTargetInfo.getBuildTools().getPath(
-                                BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
+                        String coveragePluginPath =
+                                mTargetInfo
+                                        .getBuildTools()
+                                        .getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
                         if (coveragePluginPath == null) {
                             mLogger.warning(
                                     "Unknown path id %s.  Disabling code coverage.",
                                     BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
                         } else {
                             File coveragePlugin = new File(coveragePluginPath);
-                            if (coveragePlugin.isFile()) {
+                            if (!coveragePlugin.isFile()) {
                                 mLogger.warning(
                                         "Unable to find coverage plugin '%s'.  Disabling code "
                                                 + "coverage.",

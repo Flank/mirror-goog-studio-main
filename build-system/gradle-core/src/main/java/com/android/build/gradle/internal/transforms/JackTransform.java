@@ -38,7 +38,9 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.JackPreDexTransform;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.v01.CompilationException;
@@ -46,8 +48,8 @@ import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
-import com.android.utils.StringHelper;
 import com.android.utils.ILogger;
+import com.android.utils.StringHelper;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -304,11 +306,25 @@ public class JackTransform extends Transform {
             options.setIncrementalDir(scope.getIncrementalDir(taskName));
         }
 
-
-        jackInProcess = config.getJackOptions().isJackInProcess();
+        //noinspection ConstantConditions - it is never null
+        jackInProcess = isInProcess(config.getJackOptions().isJackInProcess());
 
         if (config.getBuildType().isTestCoverageEnabled()) {
-            options.setCoverageMetadataFile(scope.getJackCoverageMetadataFile());
+            if (jackInProcess
+                    && JackProcessOptions.COVERAGE_BROKEN.contains(
+                            androidBuilder.getTargetInfo().getBuildTools().getRevision())) {
+                androidBuilder
+                        .getErrorReporter()
+                        .handleSyncWarning(
+                                null,
+                                SyncIssue.TYPE_GENERIC,
+                                "Test coverage is disabled for Jack in process. Please set"
+                                        + " android.defaultConfig.jackOptions.jackInProcess "
+                                        + "= false. Next versions of build tools will "
+                                        + "fix this issue.");
+            } else {
+                options.setCoverageMetadataFile(scope.getJackCoverageMetadataFile());
+            }
         }
 
         if (config.isMinifyEnabled()) {
@@ -347,5 +363,37 @@ public class JackTransform extends Transform {
                 true /*jackEnabled*/);
         options.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
         options.setEncoding(compileOptions.getEncoding());
+    }
+
+    /** Check if Jack is in process. This is depends on the DSL flag and available memory. */
+    private boolean isInProcess(boolean originalValue) {
+        if (!originalValue) {
+            // no need to check memory, we are running out of process
+            return false;
+        }
+        final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
+        long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
+
+        if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
+            androidBuilder
+                    .getLogger()
+                    .warning(
+                            "\nA larger heap for the Gradle daemon is recommended for running "
+                                    + "jack.\n\n"
+                                    + "It currently has %1$d MB.\n"
+                                    + "For faster builds, increase the maximum heap size for the "
+                                    + "Gradle daemon to at least %2$s MB.\n"
+                                    + "To do this set org.gradle.jvmargs=-Xmx%2$sM in the "
+                                    + "project gradle.properties.\n"
+                                    + "For more information see "
+                                    + "https://docs.gradle.org"
+                                    + "/current/userguide/build_environment.html\n",
+                            maxMemory / (1024 * 1024),
+                            // Add -1 and + 1 to round up the division
+                            ((DEFAULT_SUGGESTED_HEAP_SIZE - 1) / (1024 * 1024)) + 1);
+            return false;
+        } else {
+            return true;
+        }
     }
 }

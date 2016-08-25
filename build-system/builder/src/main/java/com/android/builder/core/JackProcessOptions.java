@@ -21,13 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import java.io.File;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Options for configuring Jack compilation.
@@ -39,9 +40,12 @@ public class JackProcessOptions {
     // Revision that Jack version Douarn is released.
     public static final Revision DOUARN_REV = new Revision(24, 0, 0);
 
+    // Revision with broken coverage plugin for in-process.
+    public static final Set<Revision> COVERAGE_BROKEN =
+            ImmutableSet.of(new Revision(24, 0, 0), new Revision(24, 0, 1));
+
     // Class name of the code coverage plugin.
-    public static final String COVERAGE_PLUGIN_NAME =
-            "com.android.jack.coverage.CodeCoveragePlugin";
+    public static final String COVERAGE_PLUGIN_NAME = "com.android.jack.coverage.CodeCoverage";
 
     private boolean mDebugLog = false;
     private boolean mVerbose = false;
