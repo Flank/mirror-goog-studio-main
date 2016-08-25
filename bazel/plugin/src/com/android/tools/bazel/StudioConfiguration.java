@@ -53,7 +53,14 @@ public class StudioConfiguration implements Configuration {
 
     @Override
     public String nameRule(String rel, String name) {
-        return rel.startsWith("tools/idea") ? "idea." + name : name;
+        String prefix = "";
+        if (rel.startsWith("tools/idea")) {
+            prefix = "idea.";
+        } else if (rel.startsWith("tools/base")) {
+            prefix = "studio.";
+        }
+
+        return prefix + name;
     }
 
     @Override
