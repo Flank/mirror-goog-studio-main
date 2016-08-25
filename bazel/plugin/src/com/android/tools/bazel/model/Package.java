@@ -17,6 +17,7 @@
 package com.android.tools.bazel.model;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.intellij.openapi.util.io.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +28,8 @@ public class Package {
 
     private final String name;
     private final Workspace workspace;
-    private Map<String, BazelRule> rules = Maps.newHashMap();
-    private Set<String> imports = new HashSet<>();
+    private Map<String, BazelRule> rules = Maps.newLinkedHashMap();
+    private Set<String> imports = Sets.newLinkedHashSet();
 
     public Package(Workspace workspace, String name) {
         this.workspace = workspace;

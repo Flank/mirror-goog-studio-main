@@ -34,7 +34,7 @@ interface Configuration {
 
     Map<String, String> getCopySpec();
 
-    Map<String, List<String>> getTestData();
+    Map<String, String> getTestData();
 
     Map<String, String> getTestTimeout();
 
