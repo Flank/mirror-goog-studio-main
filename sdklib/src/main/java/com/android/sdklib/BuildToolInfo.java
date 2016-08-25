@@ -168,6 +168,22 @@ public class BuildToolInfo {
         }
     }
 
+    /** Jack API versions. */
+    public enum JackApiVersion {
+        V2(2),
+        V3(3);
+
+        private final int mVersion;
+
+        JackApiVersion(int version) {
+            mVersion = version;
+        }
+
+        public int getVersion() {
+            return mVersion;
+        }
+    }
+
     /**
      * Creates a {@link BuildToolInfo} from a directory which follows the standard layout
      * convention.
@@ -379,6 +395,15 @@ public class BuildToolInfo {
             }
         }
         return true;
+    }
+
+    /** Gets the supported Jack API version for this build tools. */
+    public JackApiVersion getSupportedJackApi() {
+        if (getRevision().compareTo(JACK_COVERAGE_PLUGIN.mMinRevision) >= 0) {
+            return JackApiVersion.V3;
+        } else {
+            return JackApiVersion.V2;
+        }
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)

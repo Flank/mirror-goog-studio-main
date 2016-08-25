@@ -44,11 +44,6 @@ public class JackSmokeTest {
             .of("-Pcom.android.build.gradle.integratonTest.useJack=true",
                     "-PCUSTOM_BUILDTOOLS=" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION);
 
-    @Before
-    public void assumeJava7() {
-        assumeTrue("Jack needs java 7", JavaVersion.current().isJava7Compatible());
-    }
-
     @AfterClass
     public static void cleanUp() {
         sBasic = null;

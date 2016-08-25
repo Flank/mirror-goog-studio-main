@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -41,20 +40,12 @@ import java.util.regex.Pattern;
 public class JackCompilationOutputTest {
 
     @Rule
-    public Adb adb = new Adb();
-
-    @Rule
     public GradleTestProject sBasic = GradleTestProject.builder().withName("basic")
             .fromTestProject("basic").create();
 
     private static final List<String> JACK_OPTIONS = ImmutableList
             .of("-Pcom.android.build.gradle.integratonTest.useJack=true",
                     "-PCUSTOM_BUILDTOOLS=" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION);
-
-    @Before
-    public void assumeJava7() {
-        assumeTrue("Jack needs java 7", JavaVersion.current().isJava7Compatible());
-    }
 
     @Test
     public void checkErrorsAndWarningsInOutput() throws Exception {

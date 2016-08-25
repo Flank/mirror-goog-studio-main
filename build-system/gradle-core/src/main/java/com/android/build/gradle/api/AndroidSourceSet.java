@@ -105,6 +105,12 @@ public interface AndroidSourceSet {
     String getAnnotationProcessorConfigurationName();
 
     /**
+     * Returns the name of the Jack plugin classpath for this source set.
+     */
+    @NonNull
+    String getJackPluginConfigurationName();
+
+    /**
      * The Android Manifest file for this source set.
      *
      * @return the manifest. Never returns null.

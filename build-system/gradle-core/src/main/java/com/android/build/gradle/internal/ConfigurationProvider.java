@@ -37,4 +37,7 @@ public interface ConfigurationProvider {
 
     @NonNull
     Configuration getAnnotationProcessorConfiguration();
+
+    @NonNull
+    Configuration getJackPluginConfiguration();
 }

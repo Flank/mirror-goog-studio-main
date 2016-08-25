@@ -168,6 +168,16 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         }
     }
 
+    @NonNull
+    @Override
+    public String getJackPluginConfigurationName() {
+        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return "jackPlugin";
+        } else {
+            return String.format("%sJackPlugin", name);
+        }
+    }
+
     @Override
     @NonNull
     public AndroidSourceFile getManifest() {

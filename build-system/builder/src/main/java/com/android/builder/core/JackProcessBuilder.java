@@ -26,6 +26,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
+import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -41,9 +42,12 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
 
     @NonNull
     private final JackProcessOptions options;
+    @NonNull
+    private final ILogger logger;
 
-    public JackProcessBuilder(@NonNull JackProcessOptions options) {
+    public JackProcessBuilder(@NonNull JackProcessOptions options, @NonNull ILogger logger) {
         this.options = options;
+        this.logger = logger;
     }
 
     @NonNull
@@ -174,23 +178,40 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             }
         }
 
-        if (options.getCoverageMetadataFile() != null) {
-            if (buildToolInfo.getRevision().compareTo(JackProcessOptions.DOUARN_REV) >= 0) {
-                String coveragePluginPath = buildToolInfo.getPath(
-                        BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
-                builder.addArgs("--pluginpath", coveragePluginPath);
-                builder.addArgs("--plugin", JackProcessOptions.COVERAGE_PLUGIN_NAME);
-                builder.addArgs(
-                        "-D",
-                        "jack.coverage.metadata.file="
-                                + options.getCoverageMetadataFile().getAbsolutePath());
-            } else {
+        BuildToolInfo.JackApiVersion apiVersion = buildToolInfo.getSupportedJackApi();
+        if (apiVersion == BuildToolInfo.JackApiVersion.V2) {
+            if (options.getCoverageMetadataFile() != null) {
                 builder.addArgs("-D", "jack.coverage=true");
                 builder.addArgs(
                         "-D",
                         "jack.coverage.metadata.file="
                                 + options.getCoverageMetadataFile().getAbsolutePath());
-            };
+            }
+        } else {
+            if (options.getCoverageMetadataFile() != null) {
+                String coveragePluginPath =
+                        buildToolInfo.getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
+                if (coveragePluginPath == null || !new File(coveragePluginPath).isFile()) {
+                    logger.warning(
+                            "Unable to find coverage plugin '%s'.  Disabling code coverage.",
+                            coveragePluginPath);
+                } else {
+                    options.addJackPluginClassPath(new File(coveragePluginPath));
+                    options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
+                    builder.addArgs(
+                            "-D",
+                            "jack.coverage.metadata.file="
+                                    + options.getCoverageMetadataFile().getAbsolutePath());
+                }
+            }
+
+            if (!options.getJackPluginClassPath().isEmpty()) {
+                builder.addArgs(
+                        "--pluginpath", FileUtils.joinFilePaths(options.getJackPluginClassPath()));
+            }
+            if (!options.getJackPluginNames().isEmpty()) {
+                builder.addArgs("--plugin", Joiner.on(",").join(options.getJackPluginNames()));
+            }
         }
 
         // apply all additional params

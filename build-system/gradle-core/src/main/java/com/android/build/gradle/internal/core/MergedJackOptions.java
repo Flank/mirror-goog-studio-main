@@ -18,8 +18,10 @@ package com.android.build.gradle.internal.core;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,10 +36,14 @@ public class MergedJackOptions implements CoreJackOptions {
     @NonNull
     private Map<String, String> additionalParameters = Maps.newHashMap();
 
+    @NonNull
+    private List<String> pluginNames = Lists.newArrayList();
+
     public void reset() {
         isEnabledFlag = false;
         isJackInProcessFlag = true;
         additionalParameters.clear();
+        pluginNames.clear();
     }
 
     public void append(@NonNull CoreJackOptions that) {
@@ -50,6 +56,7 @@ public class MergedJackOptions implements CoreJackOptions {
             isJackInProcessFlag = that.isJackInProcess();
         }
         additionalParameters.putAll(that.getAdditionalParameters());
+        pluginNames.addAll(that.getPluginNames());
     }
 
     @Override
@@ -68,5 +75,11 @@ public class MergedJackOptions implements CoreJackOptions {
     @NonNull
     public Map<String, String> getAdditionalParameters() {
         return additionalParameters;
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPluginNames() {
+        return pluginNames;
     }
 }
