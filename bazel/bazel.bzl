@@ -402,7 +402,7 @@ def iml_module(name,
     name = name + "_tests",
     runtime_deps = [
       ":" + name + "_testlib",
-      "//tools/base/testutils:testutils",
+      "//tools/base/testutils:studio.testutils",
       "//tools/base/bazel:langtools",
     ],
     timeout = test_timeout,

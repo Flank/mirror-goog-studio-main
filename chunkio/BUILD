@@ -2,7 +2,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "chunkio",
+    name = "studio.chunkio",
     srcs = ["src/main/java"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],

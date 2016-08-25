@@ -1069,7 +1069,7 @@ iml_module(
         "//tools/analytics-library:analytics-tracker[module]",
         "//tools/analytics-library:analytics-shared[module]",
         "//tools/analytics-library:analytics-publisher[module]",
-        "//tools/base/common:common[module]",
+        "//tools/base/common:studio.common[module]",
         "//tools/analytics-library:analytics-protos[module]",
         "//tools:idea/lib/xmlrpc-2.0",
         "//tools:idea.tests_bootstrap[module]",

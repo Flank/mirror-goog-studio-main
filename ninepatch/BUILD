@@ -2,7 +2,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "ninepatch",
+    name = "studio.ninepatch",
     srcs = ["src/main/java"],
     test_srcs = [
         "src/test/java",
