@@ -565,10 +565,6 @@ public abstract class BaseExtension implements AndroidConfig {
         setDefaultPublishConfig(value);
     }
 
-    public void publishNonDefault(boolean value) {
-        publishNonDefault = value;
-    }
-
     /**
      * Name of the configuration used to build the default artifact of this project.
      *
@@ -593,6 +589,10 @@ public abstract class BaseExtension implements AndroidConfig {
     @Override
     public boolean getPublishNonDefault() {
         return publishNonDefault;
+    }
+
+    public void setPublishNonDefault(boolean publishNonDefault) {
+        this.publishNonDefault = publishNonDefault;
     }
 
     public void variantFilter(Action<VariantFilter> filter) {
