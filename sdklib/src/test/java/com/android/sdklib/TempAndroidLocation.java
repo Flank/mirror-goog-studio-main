@@ -18,72 +18,88 @@ package com.android.sdklib;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.EnvVar;
-import com.android.testutils.MockLog;
+import com.android.sdklib.internal.avd.AvdManager;
 
+import com.android.utils.FileUtils;
 import org.junit.rules.ExternalResource;
 
 import java.io.File;
-import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * {@link org.junit.rules.TestRule} that overrides the {@link AndroidLocation} to point to temp one.
  * <p>
  * This one doesn't create a temp fake SDK (see {@link TempSdkManager}.)
+ * Instead this is about setting up a temporary folder for android data as AVDs and other stored config files.
  */
 public class TempAndroidLocation extends ExternalResource {
 
-    private final String mAndroidHomeName;
-    private String mOldAndroidHomeProp;
-    private File mAndroidHome;
+    private final String mAndroidConfigHomeName;
+    private String mOldAndroidConfigHomeProp;
+    private String mOldAvdHomeProp;
+    private File mAndroidConfigHome;
+    private File mAvdHome;
 
-    public TempAndroidLocation(String androidHomeName) {
-        mAndroidHomeName = androidHomeName;
+    public TempAndroidLocation(String androidConfigHomeName) {
+        mAndroidConfigHomeName = androidConfigHomeName;
     }
 
     /**
-     * Sets up a {@link MockLog}, a fake SDK in a temporary directory
+     * Sets up a fake config folder in a temporary directory,
      * and an AVD Manager pointing to an initially-empty AVD directory.
      */
     @Override
     protected void before() throws Throwable {
-        makeFakeAndroidHome();
+        makeFakeAndroidConfigHome();
     }
 
     /**
-     * Removes the temporary SDK and AVD directories.
+     * Removes the temporary directories for AVDs and other config data.
      */
     @Override
     protected void after() {
-        tearDownAndroidHome();
+        tearDownAndroidConfigHome();
     }
 
-    private void makeFakeAndroidHome() throws IOException {
+    private void makeFakeAndroidConfigHome() throws Exception {
         // First we create a temp file to "reserve" the temp directory name we want to use.
-        mAndroidHome = File.createTempFile(mAndroidHomeName, null);
+        mAndroidConfigHome = File.createTempFile(mAndroidConfigHomeName, null);
+        mAvdHome = File.createTempFile("avd_" + mAndroidConfigHomeName, null);
         // Then erase the file and make the directory
-        mAndroidHome.delete();
-        mAndroidHome.mkdirs();
+        mAndroidConfigHome.delete();
+        mAndroidConfigHome.mkdirs();
+        mAvdHome.delete();
+        mAvdHome.mkdirs();
 
         // Set the system property that will force AndroidLocation to use this
-        mOldAndroidHomeProp = System.getProperty(EnvVar.ANDROID_SDK_HOME.getName());
-        System.setProperty(EnvVar.ANDROID_SDK_HOME.getName(), mAndroidHome.getAbsolutePath());
+        mOldAndroidConfigHomeProp = System.getProperty(EnvVar.ANDROID_SDK_HOME.getName());
+        mOldAvdHomeProp = System.getProperty(EnvVar.ANDROID_AVD_HOME.getName());
+        System.setProperty(EnvVar.ANDROID_SDK_HOME.getName(), mAndroidConfigHome.getAbsolutePath());
+        System.setProperty(EnvVar.ANDROID_AVD_HOME.getName(), mAvdHome.getAbsolutePath());
         AndroidLocation.resetFolder();
+
+        // Assert that we are using the ANDROID_AVD_HOME in AndroidLocation and AvdManager:
+        assertEquals(FileUtils.toSystemIndependentPath(mAvdHome.getPath() + File.separator),
+                     FileUtils.toSystemDependentPath(AndroidLocation.getAvdFolder()));
+        assertEquals(FileUtils.toSystemIndependentPath(mAvdHome.getPath() + File.separator),
+                     FileUtils.toSystemDependentPath(AvdManager.getBaseAvdFolder()));
     }
 
-    private void tearDownAndroidHome() {
-        if (mOldAndroidHomeProp == null) {
+    private void tearDownAndroidConfigHome() {
+        if (mOldAndroidConfigHomeProp == null) {
             System.clearProperty(EnvVar.ANDROID_SDK_HOME.getName());
         } else {
-            System.setProperty(EnvVar.ANDROID_SDK_HOME.getName(), mOldAndroidHomeProp);
+            System.setProperty(EnvVar.ANDROID_SDK_HOME.getName(), mOldAndroidConfigHomeProp);
         }
         AndroidLocation.resetFolder();
-        deleteDir(mAndroidHome);
+        deleteDir(mAndroidConfigHome);
     }
 
     /** Clear the .android home folder and reconstruct it empty. */
     private void clearAndroidHome() {
-        deleteDir(mAndroidHome);
-        mAndroidHome.mkdirs();
+        deleteDir(mAndroidConfigHome);
+        mAndroidConfigHome.mkdirs();
         AndroidLocation.resetFolder();
     }
 
