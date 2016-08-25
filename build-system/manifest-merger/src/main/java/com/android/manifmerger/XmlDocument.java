@@ -568,9 +568,7 @@ public class XmlDocument {
         if (xmlElementOptional.isPresent()) {
             return Optional.absent();
         }
-        Element elementNS = getXml()
-                .createElementNS(SdkConstants.ANDROID_URI, "android:" + nodeType.toXmlName());
-
+        Element elementNS = getXml().createElement(nodeType.toXmlName());
 
         ImmutableList<String> keyAttributesNames = nodeType.getNodeKeyResolver()
                 .getKeyAttributesNames();
