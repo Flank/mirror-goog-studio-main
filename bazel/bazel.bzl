@@ -412,3 +412,98 @@ def iml_module(name,
     test_class = test_class,
     visibility = ["//visibility:public"],
   )
+
+
+def _java_proto_library_impl(ctx):
+  srcjar = ctx.outputs.java_src
+  tmpjar = ctx.new_file(srcjar.basename + ".jar")
+  arguments = ["--java_out=" + tmpjar.path]
+  for proto in ctx.files.srcs:
+    arguments += [proto.path, "--proto_path=" + proto.dirname]
+
+  java_grpc_plugin = ctx.executable._protoc_grpc_plugin_java
+  arguments += [
+    "--plugin=protoc-gen-java_rpc=" + java_grpc_plugin.path,
+    "--java_rpc_out=" + tmpjar.path
+  ]
+
+  ctx.action(
+      mnemonic = "GenProto",
+      inputs = ctx.files.srcs + [ctx.executable._protoc_grpc_plugin_java],
+      outputs = [tmpjar],
+      arguments = arguments,
+      executable = ctx.executable._protoc
+  )
+  # This is required because protoc only understands .jar extensions, but Bazel
+  # requires source JAR files end in .srcjar.
+  ctx.action(
+      mnemonic = "FixProtoSrcJar",
+      inputs = [tmpjar],
+      outputs = [srcjar],
+      arguments = [srcjar.path + ".jar", srcjar.path],
+      command = "cp $1 $2")
+  return struct(files=set([srcjar]),
+                proto_srcs=ctx.files.srcs)
+
+_java_proto_library = rule(
+    attrs = {
+        "srcs": attr.label_list(
+            allow_files = FileType([".proto"]),
+        ),
+        "deps": attr.label_list(
+            allow_files = False,
+            providers = ["proto_src"],
+        ),
+        "_protoc": attr.label(
+            default = Label("//prebuilts/tools/common/m2:protoc"),
+            executable = True,
+        ),
+        "_protoc_grpc_plugin_java": attr.label(
+            default = Label("//prebuilts/tools/common/m2:grpc-plugin"),
+            executable = True,
+        ),
+    },
+    outputs = {
+        "java_src": "%{name}.srcjar",
+    },
+    output_to_genfiles = True,
+    implementation = _java_proto_library_impl,
+)
+
+def java_proto_library(name, srcs=None, deps=[], visibility=None):
+  proto_pkg = _java_proto_library(name=name + "_srcs",
+                                  srcs=srcs,
+                                  deps=deps)
+  native.java_library(
+      name  = name,
+      srcs = [proto_pkg.label()],
+      deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0-beta-2:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/0.13.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0:jar",
+      ],
+      visibility = visibility,
+  )
+
+# Usage:
+# java_jarjar(
+#     name = <the name of the rule. The output of the rule will be ${name}.jar.
+#     srcs = <a list of all the jars to jarjar and include into the output jar>
+#     rules = <the rule file to apply>
+# )
+#
+# TODO: This rule is using anarres jarjar which doesn't produce stable zips (timestamps)
+# jarjar is available in bazel but the current version is old and uses ASM4, so no Java8
+# will migrate to it when it's fixed.
+def java_jarjar(name, rules, srcs=[], visibility=None):
+  native.genrule(
+      name = name,
+      srcs = srcs + [rules],
+      outs = [name + ".jar"],
+      tools = ["//tools/base/bazel:jarjar"],
+      cmd = ("$(location //tools/base/bazel:jarjar) --rules " +
+             "$(location " + rules + ") " +
+             " ".join(["$(location " + src + ")" for src in srcs]) + " " +
+             "--output '$@'"),
+      visibility = visibility,
+)

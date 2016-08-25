@@ -64,7 +64,7 @@ public class StudioConfiguration implements Configuration {
         } else if (jar.equals("tools/vendor/google3/blaze/blaze-base/lib/proto_deps.jar")) {
             return "tools/vendor/google3/blaze/blaze-base:proto_deps";
         } else if (jar.equals("out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar")) {
-            return "tools/base/bazel:prebuilts/studio-profiler-grpc-1.0-jarjar";
+            return "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
         } else {
             return null;
         }
