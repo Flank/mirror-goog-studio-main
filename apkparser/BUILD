@@ -2,7 +2,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "binary-resources",
+    name = "studio.binary-resources",
     srcs = ["binary-resources/java"],
     test_srcs = ["binary-resources/javatests"],
     test_resources = ["binary-resources/testResources"],
@@ -12,7 +12,7 @@ iml_module(
         "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28:jar[test]",
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
-        "//tools/base/testutils:testutils[module, test]",
+        "//tools/base/testutils:studio.testutils[module, test]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],

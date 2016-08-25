@@ -2,12 +2,12 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "rpclib",
+    name = "studio.rpclib",
     srcs = ["src/main/java"],
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.util[module]",
-        "//tools/base/annotations:android-annotations[module]",
+        "//tools/base/annotations:studio.android-annotations[module]",
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
         "//tools:idea.platform-api[module]",

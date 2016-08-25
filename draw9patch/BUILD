@@ -2,7 +2,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "draw9patch",
+    name = "studio.draw9patch",
     srcs = [
         "src/main/java",
         "src/main/resources",

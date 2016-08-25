@@ -2,12 +2,12 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "repository",
+    name = "studio.repository",
     srcs = ["src/main/java"],
     test_srcs = ["src/test/java"],
     test_resources = ["src/test/resources"],
     deps = [
-        "//tools/base/annotations:android-annotations[module]",
+        "//tools/base/annotations:studio.android-annotations[module]",
         "//tools:idea/lib/guava-18.0",
         "//tools:idea/lib/junit[test]",
         "//tools:idea/lib/hamcrest-core-1.3[test]",

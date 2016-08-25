@@ -2,9 +2,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "chunkio-processor",
+    name = "studio.chunkio-processor",
     srcs = ["src"],
-    deps = ["//tools/base/chunkio:chunkio[module]"],
+    deps = ["//tools/base/chunkio:studio.chunkio[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
 )

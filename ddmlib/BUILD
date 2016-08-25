@@ -2,19 +2,19 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "ddmlib",
+    name = "studio.ddmlib",
     srcs = ["src/main/java"],
     test_srcs = ["src/test/java"],
     deps = [
-        "//tools/base/common:common[module]",
+        "//tools/base/common:studio.common[module]",
         "//prebuilts/tools/common/kxml2-tools:kxml2-2.3.0",
         "//prebuilts/tools/common/easymock-tools:easymock-3.1[test]",
         "//tools:idea/lib/hamcrest-core-1.3[test]",
         "//tools:idea/lib/junit-4.12[test]",
-        "//tools/base/testutils:testutils[module, test]",
+        "//tools/base/testutils:studio.testutils[module, test]",
     ],
     exports = [
-        "//tools/base/common:common",
+        "//tools/base/common:studio.common",
         "//prebuilts/tools/common/kxml2-tools:kxml2-2.3.0",
     ],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
