@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
@@ -32,16 +33,22 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
+import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.gradle.api.Project;
 
+import android.databinding.tool.DataBindingBuilder;
+
+import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -515,5 +522,18 @@ public class GradleVariantConfiguration
         } else {
             return super.getVersionCode();
         }
+    }
+
+    @NonNull
+    public ImmutableSet<File> getSubProjectDataBindingArtifactFolders() {
+        ImmutableSet.Builder<File> builder = ImmutableSet.builder();
+        for (AndroidLibrary androidLibrary : getFlatPackageAndroidLibraries()) {
+            File dataBindingDir = new File(androidLibrary.getFolder(),
+                    DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
+            if (dataBindingDir.exists()) {
+                builder.add(dataBindingDir);
+            }
+        }
+        return builder.build();
     }
 }

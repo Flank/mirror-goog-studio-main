@@ -243,10 +243,11 @@ public class ApplicationTaskManager extends TaskManager {
                     public Void call() {
                         CoreJackOptions jackOptions =
                                 variantData.getVariantConfiguration().getJackOptions();
-
+                        // create data binding merge task before the javac task so that it can
+                        // parse jars before any consumer
+                        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
                         AndroidTask<? extends JavaCompile> javacTask =
                                 createJavacTask(tasks, variantScope);
-
                         if (jackOptions.isEnabled()) {
                             AndroidTask<TransformTask> jackTask =
                                     createJackTask(tasks, variantScope, true /*compileJavaSource*/);

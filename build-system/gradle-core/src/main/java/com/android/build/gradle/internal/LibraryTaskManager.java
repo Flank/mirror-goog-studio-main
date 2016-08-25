@@ -270,6 +270,9 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath, variantName, new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
+                        // create data binding merge task before the javac task so that it can
+                        // parse jars before any consumer
+                        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
                         AndroidTask<? extends JavaCompile> javacTask =
                                 createJavacTask(tasks, variantScope);
                         addJavacClassesStream(variantScope);

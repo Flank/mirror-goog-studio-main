@@ -78,6 +78,8 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(
             ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
+    public static final Set<ContentType> DATA_BINDING_ARTIFACT = ImmutableSet.of(
+            ExtendedContentType.DATA_BINDING, CLASSES);
     public static final Set<Scope> SCOPE_FULL_PROJECT = Sets.immutableEnumSet(
             Scope.PROJECT,
             Scope.PROJECT_LOCAL_DEPS,

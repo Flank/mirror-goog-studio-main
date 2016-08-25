@@ -52,7 +52,12 @@ public enum ExtendedContentType implements ContentType {
      * This is zip file containing classes in jayce format.
      * If the library has been pre-dexed it will also contain the corresponding dex.
      */
-    JACK(0x8000);
+    JACK(0x8000),
+
+    /**
+     * The content is an artifact exported by the data binding compiler.
+     */
+    DATA_BINDING(0x10000);
 
 
     private final int value;

@@ -201,18 +201,12 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                     getVariantConfiguration().getOriginalApplicationId(),
                     taskManager.getDataBindingBuilder()
                             .createJavaFileWriter(scope.getClassOutputForDataBinding()),
-                    getVariantConfiguration().getMinSdkVersion().getApiLevel(),
-                    getType() == VariantType.LIBRARY,
-                    new LayoutXmlProcessor.OriginalFileLookup() {
-
-                        @Override
-                        public File getOriginalFileFor(File file) {
-                            SourceFile input = new SourceFile(file);
-                            SourceFile original = mergingLog.find(input);
-                            // merged log api returns the file back if original cannot be found.
-                            // it is not what we want so we alter the response.
-                            return original == input ? null : original.getSourceFile();
-                        }
+                    file -> {
+                        SourceFile input = new SourceFile(file);
+                        SourceFile original = mergingLog.find(input);
+                        // merged log api returns the file back if original cannot be found.
+                        // it is not what we want so we alter the response.
+                        return original == input ? null : original.getSourceFile();
                     }
             );
         }
