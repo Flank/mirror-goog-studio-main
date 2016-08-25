@@ -79,6 +79,7 @@ import com.android.io.StreamException;
 import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.JackProvider;
 import com.android.jack.api.v01.Api01CompilationTask;
+import com.android.jack.api.v01.ChainedException;
 import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.DebugInfoLevel;
@@ -98,6 +99,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.LineCollector;
 import com.android.utils.Pair;
+import com.android.utils.SdkUtils;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -105,6 +107,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -119,6 +122,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -130,6 +134,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -1871,12 +1877,54 @@ public class AndroidBuilder {
         try {
             compilationTask.run();
             mLogger.verbose("Jack created dex: %1$s", outputStream.toString());
-        } catch (CompilationException | ConfigurationException e) {
-            mLogger.error(e, outputStream.toString());
-            throw e;
-        } catch (UnrecoverableException e) {
+        } catch (ConfigurationException e) {
+            // chained exceptions are configuration exceptions, might contain useful info
+            for (ChainedException i: e) {
+                mLogger.error(null, i.getMessage());
+            }
+            throw new RuntimeException("Jack configuration exception occurred.");
+        }
+        catch (UnrecoverableException e) {
             mLogger.error(e, "Something out of Jack control has happened: " + e.getMessage());
             throw e;
+        } finally {
+            // always show Jack output, it might contain useful warnings/errors
+            processJackOutput(mLogger, outputStream);
+        }
+    }
+
+    private static void processJackOutput(
+            @NonNull ILogger logger, @NonNull OutputStream outputStream) {
+        Iterable<String> msgIterator =
+                Splitter.on(SdkUtils.getLineSeparator()).split(outputStream.toString());
+
+        for (String msg : msgIterator) {
+            if (msg.startsWith("ERROR") || msg.startsWith("WARNING")) {
+                // (ERROR|WARNING):file:position in file:message
+                // TODO add JackParser to process the output; it will be used on studio side as well
+                Pattern pattern = Pattern.compile("^(ERROR|WARNING):\\s*(.*):(\\d+):\\s*(.*)");
+                Matcher matcher = pattern.matcher(msg);
+                if (matcher.matches()) {
+                    String msgType = matcher.group(1);
+                    String content = matcher.group(4);
+
+                    if (msgType.equals("ERROR")) {
+                        logger.error(
+                                null,
+                                matcher.group(2) + ":" + matcher.group(3) + ": error: " + content);
+                    } else if (msgType.equals("WARNING")) {
+                        logger.warning(matcher.group(2) + ":" + matcher.group(3) + ": warning: "
+                                + content);
+                    }
+                } else if (msg.startsWith("ERROR")) {
+                    logger.error(null, msg);
+                } else {
+                    // starts with WARNING
+                    logger.warning(msg);
+                }
+            } else {
+                logger.info(msg);
+            }
         }
     }
 
