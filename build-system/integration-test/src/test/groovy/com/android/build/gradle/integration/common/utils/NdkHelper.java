@@ -41,7 +41,7 @@ public class NdkHelper {
         Revision ndkRevision = NdkHandler.findRevision(ndkDir);
         int major = ndkRevision != null ? ndkRevision.getMajor() : 10;
         // for r10 max platform is 21, r11 max is 24, r12 max platform is 24
-        ImmutableMap<Integer, Integer> perVersion = ImmutableMap.of(10, 21, 11, 24, 12, 24, 13, 24);
+        ImmutableMap<Integer, Integer> perVersion = ImmutableMap.of(10, 21, 11, 24, 12, 24);
         Integer ndkMaxVersion = perVersion.get(major);
         if (maxVersion.length() == 1 && Character.isLetter(maxVersion.charAt(0))) {
             // max version is a preview one, ndk supported on is def smaller
