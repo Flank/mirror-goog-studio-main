@@ -28,7 +28,6 @@ public class StudioConfiguration implements Configuration {
     public void configureWorkspace(Workspace bazel) {
         // Create packages in order of priority
         bazel.createPackagesInDirectory("prebuilts/studio");
-        bazel.createPackage("prebuilts/tools/common/m2");
         bazel.createPackagesInDirectory("prebuilts/tools/common");
         bazel.createPackage("prebuilts");
         bazel.createPackage("tools/analytics-library");
@@ -72,7 +71,7 @@ public class StudioConfiguration implements Configuration {
 
     @Override
     public List<String> getAdditionalImports() {
-        return ImmutableList.of("prebuilts/tools/common/m2:repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6");
+        return ImmutableList.of();
     }
 
     @Override
@@ -88,9 +87,10 @@ public class StudioConfiguration implements Configuration {
     }
 
     @Override
-    public Map<String, List<String>> getTestData() {
+    public Map<String, String> getTestData() {
         return ImmutableMap.of(
-                "android", ImmutableList.of("android/testData/**/*", "designer/testData/**/*")
+                "android", "glob([\"android/testData/**/*\", \"designer/testData/**/*\"])",
+                "ddmlib", "[\"//prebuilts/studio/sdk:platform-tools\"]"
         );
     }
 

@@ -7,9 +7,7 @@ iml_module(
         "dvlib/src/main/java",
         "dvlib/src/main/resources",
     ],
-    deps = [
-        "//tools/base/common:common[module]",
-    ],
+    deps = ["//tools/base/common:common[module]"],
     exports = ["//tools/base/common:common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
