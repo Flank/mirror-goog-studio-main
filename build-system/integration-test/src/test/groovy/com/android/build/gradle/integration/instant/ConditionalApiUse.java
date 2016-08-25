@@ -124,7 +124,7 @@ public class ConditionalApiUse {
 
         expect.about(DexFileSubject.FACTORY)
                 .that(reloadDexArtifact.file)
-                .containsClass("Lcom/android/tests/conditionalApiUse/MyException$override;")
+                .hasClass("Lcom/android/tests/conditionalApiUse/MyException$override;")
                 .that().hasMethod("toString");
     }
 
