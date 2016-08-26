@@ -1,0 +1,29 @@
+java_library(
+    name = "profile",
+    srcs = glob(["src/main/java/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/analytics-library:analytics-protos",
+        "//tools/analytics-library:tools.analytics-shared",
+        "//tools/analytics-library:tools.analytics-tracker",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+java_test(
+    name = "tests",
+    srcs = glob(["src/test/java/**"]),
+    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    deps = [
+        ":profile",
+        "//tools/analytics-library:analytics-protos",
+        "//tools/base/annotations",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-all",
+    ],
+)

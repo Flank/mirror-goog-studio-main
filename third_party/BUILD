@@ -7,9 +7,36 @@ java_library(
 )
 
 java_library(
+    name = "com.google.code.findbugs_jsr305",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar"],
+)
+
+java_library(
+    name = "com.google.code.gson_gson",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.2.4:jar"],
+)
+
+java_library(
     name = "com.google.guava_guava",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar"],
+)
+
+java_library(
+    name = "com.google.jimfs_jimfs",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        "//prebuilts/tools/common/m2/repository/com/google/jimfs/jimfs/1.1:jar",
+    ],
+)
+
+java_library(
+    name = "com.google.protobuf_protobuf-java",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/2.5.0:jar"],
 )
 
 java_library(
@@ -23,6 +50,12 @@ java_library(
 )
 
 java_library(
+    name = "com.intellij_annotations",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/intellij/annotations/12.0:jar"],
+)
+
+java_library(
     name = "com.squareup_javawriter",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.5.0:jar"],
@@ -31,7 +64,13 @@ java_library(
 java_library(
     name = "commons-codec_commons-codec",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4:jar"],
+)
+
+java_library(
+    name = "commons-logging_commons-logging",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar"],
 )
 
 java_library(
@@ -50,6 +89,18 @@ java_library(
 )
 
 java_library(
+    name = "nl.jqno.equalsverifier_equalsverifier",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/2.1.5:jar"],
+)
+
+java_library(
+    name = "org.apache.commons_commons-compress",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.8.1:jar"],
+)
+
+java_library(
     name = "org.apache.commons_commons-lang3",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar"],
@@ -60,15 +111,26 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         ":commons-codec_commons-codec",
+        ":commons-logging_commons-logging",
         ":org.apache.httpcomponents_httpcore",
-        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.2.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
     ],
 )
 
 java_library(
     name = "org.apache.httpcomponents_httpcore",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.2.5:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.1:jar"],
+)
+
+java_library(
+    name = "org.apache.httpcomponents_httpmime",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":commons-logging_commons-logging",
+        ":org.apache.httpcomponents_httpcore",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpmime/4.1:jar",
+    ],
 )
 
 java_library(

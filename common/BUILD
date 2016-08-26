@@ -18,3 +18,27 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
 )
+
+java_library(
+    name = "tools.common",
+    srcs = glob(["src/main/java/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+java_test(
+    name = "tools.tests",
+    srcs = glob(["src/test/java/**"]),
+    deps = [
+        ":tools.common",
+        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
+    ],
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+)

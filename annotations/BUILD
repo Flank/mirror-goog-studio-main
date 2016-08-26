@@ -7,3 +7,10 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
 )
+
+# TODO: Keep only only one rule in this BUILD file, since there's no real need for the split here.
+java_library(
+    name = "annotations",
+    srcs = glob(["src/main/java/**"]),
+    visibility = ["//visibility:public"],
+)

@@ -1,4 +1,3 @@
-# This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
@@ -16,4 +15,34 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "tools.repository",
+    # TODO: Why are the xml files not under resources?
+    srcs = glob(["src/main/java/**/*.java"]),
+    resources = glob(["src/main/java/**"], exclude = ["src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    # TODO: Why is MockFileOp in main sources?
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
+        "//tools/base/third_party:org.apache.commons_commons-compress",
+    ],
+)
+
+java_test(
+    name = "tools.tests",
+    srcs = glob(["src/test/java/**"]),
+    resources = glob(["src/test/resources/**"]),
+    deps = [
+        ":tools.repository",
+        "//tools/base/annotations",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.apache.commons_commons-compress",
+    ],
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
 )

@@ -1,4 +1,3 @@
-# This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
@@ -31,4 +30,50 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "tools.sdk-common",
+    srcs = glob(["src/main/java/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/build-system:tools.builder-test-api",
+        "//tools/base/common:tools.common",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
+        "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
+    ],
+    javacopts = ["-extra_checks:off"],
+)
+
+java_test(
+    name = "tools.tests",
+    srcs = glob(["src/test/java/**"]),
+    resources = glob(["src/test/resources/**"]),
+    deps = [
+        ":tools.sdk-common",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/build-system:tools.builder-test-api",
+        "//tools/base/common:tools.common",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.easymock_easymock",
+        "//tools/base/third_party:org.mockito_mockito-all",
+    ],
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
 )

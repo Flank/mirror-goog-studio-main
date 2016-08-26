@@ -1,4 +1,3 @@
-# This file has been automatically generated, please do not modify directly.
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
@@ -33,4 +32,64 @@ iml_module(
     exports = ["//tools/base/sdklib:studio.sdklib"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+)
+
+# TODO(bendowski): Move this to the right directory.
+java_library(
+    name = "tools.builder-test-api",
+    srcs = glob(["builder-test-api/src/main/java/**"]),
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_test(
+    name = "tools.builder-test-api_tests",
+    srcs = glob(["builder-test-api/src/test/java/**"]),
+    deps = [
+        ":tools.builder-test-api",
+        "//tools/base/third_party:junit_junit",
+    ],
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.builder-test-api_tests.jar"],
+)
+
+java_library(
+    name = "tools.manifest-merger",
+    srcs = glob(["manifest-merger/src/main/java/**"]),
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_test(
+    name = "tools.manifest-merger_tests",
+    # TODO: Why are the xml files not under resources?
+    srcs = glob(["manifest-merger/src/test/java/**/*.java"]),
+    resources = glob(["manifest-merger/src/test/java/**"], exclude = ["manifest-merger/src/test/java/**/*.java"]),
+    deps = [
+        ":tools.manifest-merger",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-all",
+    ],
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.manifest-merger_tests.jar"],
 )

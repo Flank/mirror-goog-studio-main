@@ -20,3 +20,31 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
 )
+
+java_library(
+    name = "tools.ddmlib",
+    srcs = glob(["src/main/java/**"]),
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:net.sf.kxml_kxml2",
+    ],
+    visibility = ["//visibility:public"],
+    javacopts = ["-extra_checks:off"],
+)
+
+java_test(
+    name = "tools.tests",
+    srcs = glob(["src/test/java/**"]),
+    deps = [
+        ":tools.ddmlib",
+        "//tools/base/annotations",
+        "//tools/base/third_party:org.easymock_easymock",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/testutils:tools.testutils",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    data = ["//prebuilts/studio/sdk:platform-tools"],
+)
