@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
+import static com.android.tools.lint.checks.ApiDetector.OBSOLETE_SDK;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static org.mockito.Mockito.mock;
@@ -1592,7 +1593,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ConditionalApiTest.java:45: Error: Call requires API level 21 (current min is 14): new android.animation.RectEvaluator [NewApi]\n"
                 + "            new RectEvaluator(rect); // ERROR\n"
                 + "                ~~~~~~~~~~~~~\n"
-                + "4 errors, 0 warnings\n",
+                + "src/test/pkg/ConditionalApiTest.java:27: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ConditionalApiTest.java:42: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "4 errors, 2 warnings\n",
 
                 lintProject(
                         "apicheck/classpath=>.classpath",
@@ -2687,6 +2694,77 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    @SuppressWarnings("all") // sample code
+    public void testObsoleteVersionCheck() throws Exception {
+        assertEquals(""
+                + "src/test/pkg/TestVersionCheck.java:7: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT >= 21) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:8: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT > 21) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:9: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT < 21) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:10: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT <= 21) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:13: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT >= 22) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:14: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT > 22) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:15: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT < 22) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:16: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT <= 22) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/TestVersionCheck.java:21: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                + "        if (Build.VERSION.SDK_INT < 23) { }\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 9 warnings\n",
+
+                lintProject(
+                        manifest().minSdk(23),
+                        java("src/test/pkg/TestVersionCheck.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.os.Build;\n"
+                                + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                                + "public class TestVersionCheck {\n"
+                                + "    public void something() {\n"
+                                + "        if (Build.VERSION.SDK_INT >= 21) { }\n"
+                                + "        if (Build.VERSION.SDK_INT > 21) { }\n"
+                                + "        if (Build.VERSION.SDK_INT < 21) { }\n"
+                                + "        if (Build.VERSION.SDK_INT <= 21) { }\n"
+                                + "        if (Build.VERSION.SDK_INT == 21) { }\n"
+                                + "\n"
+                                + "        if (Build.VERSION.SDK_INT >= 22) { }\n"
+                                + "        if (Build.VERSION.SDK_INT > 22) { }\n"
+                                + "        if (Build.VERSION.SDK_INT < 22) { }\n"
+                                + "        if (Build.VERSION.SDK_INT <= 22) { }\n"
+                                + "        if (Build.VERSION.SDK_INT == 22) { }\n"
+                                + "\n"
+                                + "        if (Build.VERSION.SDK_INT >= 23) { }\n"
+                                + "        if (Build.VERSION.SDK_INT > 23) { }\n"
+                                + "        if (Build.VERSION.SDK_INT < 23) { }\n"
+                                + "        if (Build.VERSION.SDK_INT <= 23) { }\n"
+                                + "        if (Build.VERSION.SDK_INT == 23) { }\n"
+                                + "\n"
+                                + "        if (Build.VERSION.SDK_INT >= 24) { }\n"
+                                + "        if (Build.VERSION.SDK_INT > 24) { }\n"
+                                + "        if (Build.VERSION.SDK_INT < 24) { }\n"
+                                + "        if (Build.VERSION.SDK_INT <= 24) { }\n"
+                                + "        if (Build.VERSION.SDK_INT == 24) { }\n"
+                                + "\n"
+                                + "    }\n"
+                                + "}\n"),
+                        mRequiresApi
+                ));
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
@@ -2709,6 +2787,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             int requiredVersion = ApiDetector.getRequiredVersion(issue, message, TEXT);
             assertTrue("Could not extract message tokens from \"" + message + "\"",
                     requiredVersion >= 1 && requiredVersion <= SdkVersionInfo.HIGHEST_KNOWN_API);
+        } else if (issue == OBSOLETE_SDK) {
+            assertNotNull(ApiDetector.getVersionCheckConstant(message, TEXT));
         }
     }
 }
