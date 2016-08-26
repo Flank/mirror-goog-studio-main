@@ -73,7 +73,7 @@ public class Package {
     }
 
     public BazelRule getRule(String name) {
-        return rules.get(name);
+        return rules.get(name.toLowerCase());
     }
 
     @NotNull
@@ -86,10 +86,10 @@ public class Package {
     }
 
     public void addRule(BazelRule rule) {
-        if (rules.get(rule.getName()) != null) {
+        if (rules.get(rule.getName().toLowerCase()) != null) {
             throw new IllegalStateException("Duplicated rule " + rule.getName());
         }
         imports.addAll(rule.getImports());
-        rules.put(rule.getName(), rule);
+        rules.put(rule.getName().toLowerCase(), rule);
     }
 }

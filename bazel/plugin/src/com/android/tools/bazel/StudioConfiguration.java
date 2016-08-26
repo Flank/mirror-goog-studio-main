@@ -37,6 +37,7 @@ public class StudioConfiguration implements Configuration {
 
         // Ideally we'd do this, but we repo copy it instead
         // bazel.createPackage("tools/idea");
+        bazel.createPackage("tools/idea/.idea/libraries");
         bazel.createPackage("tools/sherpa");
         bazel.createPackage("tools/studio/google/cloud/tools");
         bazel.createPackage("tools/studio/google/cloud/testing");

@@ -76,36 +76,6 @@ public class ImlModule extends BazelRule {
         dependencyTags.put(rule, tags);
     }
 
-    private void append(PrintWriter writer, String name, String value) {
-        append(writer, name, value, true);
-    }
-
-    private void append(PrintWriter writer, String name, String value, boolean quote) {
-        if (value != null) {
-            writer.append("    ")
-                  .append(name)
-                  .append(" = ")
-                  .append(quote ? "\"" : "")
-                  .append(value)
-                  .append(quote ? "\"" : "")
-                  .append(",\n");
-        }
-    }
-
-    private void append(PrintWriter writer, String name, Collection<? extends Object> collection) {
-        if (collection != null && !collection.isEmpty()) {
-            boolean single = collection.size() == 1;
-            writer.append("    ").append(name).append(" = ");
-            writer.append("[").append(single ? "" : "\n");
-            for (Object element : collection) {
-                writer.append(single ? "" : "        ");
-                writer.append("\"").append(element.toString()).append("\"");
-                writer.append(single ? "" : ",\n");
-            }
-            writer.append(single ?  "" : "    ").append("]").append(",\n");
-        }
-    }
-
     public void addSource(String source) {
         sources.add(source);
     }

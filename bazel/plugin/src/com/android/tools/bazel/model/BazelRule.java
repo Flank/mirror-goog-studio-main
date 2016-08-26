@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Set;
 
 public abstract class BazelRule {
@@ -77,5 +78,35 @@ public abstract class BazelRule {
 
     public Set<String> getImports() {
         return ImmutableSet.of();
+    }
+
+    protected void append(PrintWriter writer, String name, String value) {
+        append(writer, name, value, true);
+    }
+
+    protected void append(PrintWriter writer, String name, String value, boolean quote) {
+        if (value != null) {
+            writer.append("    ")
+                    .append(name)
+                    .append(" = ")
+                    .append(quote ? "\"" : "")
+                    .append(value)
+                    .append(quote ? "\"" : "")
+                    .append(",\n");
+        }
+    }
+
+    protected void append(PrintWriter writer, String name, Collection<? extends Object> collection) {
+        if (collection != null && !collection.isEmpty()) {
+            boolean single = collection.size() == 1;
+            writer.append("    ").append(name).append(" = ");
+            writer.append("[").append(single ? "" : "\n");
+            for (Object element : collection) {
+                writer.append(single ? "" : "        ");
+                writer.append("\"").append(element.toString()).append("\"");
+                writer.append(single ? "" : ",\n");
+            }
+            writer.append(single ?  "" : "    ").append("]").append(",\n");
+        }
     }
 }

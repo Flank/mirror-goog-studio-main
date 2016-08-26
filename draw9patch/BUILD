@@ -8,10 +8,7 @@ iml_module(
         "src/main/resources",
     ],
     test_srcs = ["src/test/java"],
-    deps = [
-        "//tools:idea/lib/hamcrest-core-1.3[test]",
-        "//tools:idea/lib/junit-4.12[test]",
-    ],
+    deps = ["//tools/idea/.idea/libraries:JUnit4[test]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
 )

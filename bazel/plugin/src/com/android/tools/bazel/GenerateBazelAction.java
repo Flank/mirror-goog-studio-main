@@ -16,10 +16,8 @@
 
 package com.android.tools.bazel;
 
-import com.android.tools.bazel.model.ImlModule;
-import com.android.tools.bazel.model.JavaImport;
+import com.android.tools.bazel.model.*;
 import com.android.tools.bazel.model.Package;
-import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.Maps;
 import com.intellij.compiler.CompilerConfiguration;
 import com.intellij.compiler.CompilerConfigurationImpl;
@@ -86,6 +84,7 @@ public class GenerateBazelAction extends AnAction {
         config.configureWorkspace(bazel);
 
         Map<String, JavaImport> imports = Maps.newHashMap();
+        Map<String, JavaLibrary> libraries = Maps.newHashMap();
         Map<Module, BazelModule> inverse = Maps.newHashMap();
 
         progress.append("Processing modules...").append("\n");
@@ -147,10 +146,35 @@ public class GenerateBazelAction extends AnAction {
 
         // 2nd pass: Dependencies.
         for (BazelModule module : modules) {
+
+            String rel = FileUtil.getRelativePath(workspace, module.getBaseDir());
+            Package pkg = bazel.findPackage(rel);
+
+            File librariesDir = new File(VfsUtil.virtualToIoFile(project.getBaseDir()), ".idea/libraries");
+            Package librariesPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, librariesDir));
+
+            int anonymousLib = 0;
             for (OrderEntry orderEntry : module.getOrderEntries()) {
                 if (orderEntry instanceof LibraryOrderEntry) {
                     // A dependency to a jar file
                     LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
+                    String libName = libraryEntry.getLibraryName();
+                    Package libPkg = librariesPkg;
+                    if (libName == null) {
+                        libPkg = pkg;
+                        libName = module.getName();
+                        String baseName = libName;
+                        while (libPkg.getRule(libName) != null) {
+                            libName = baseName + "_" + anonymousLib++;
+                        }
+                    }
+
+                    JavaLibrary libRule = libraries.get(libName.toLowerCase());
+                    if (libRule == null) {
+                        libRule = new JavaLibrary(libPkg, libName);
+                        libraries.put(libName.toLowerCase(), libRule);
+                    }
+
                     Library library = libraryEntry.getLibrary();
                     if (library != null) {
                         VirtualFile[] files = library.getFiles(OrderRootType.CLASSES);
@@ -189,16 +213,19 @@ public class GenerateBazelAction extends AnAction {
                                         }
                                     }
                                     if (imp != null) {
-                                        List<String> scopes = new LinkedList<>();
-                                        if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
-                                            scopes.add("test");
-                                        }
-                                        module.rule.addDependency(imp, libraryEntry.isExported(), scopes);
+                                        libRule.addDependency(imp, true);
                                     }
                                 } else {
                                     System.err.println("Cannot find file for: " + libFile);
                                 }
                             }
+                        }
+                        if (!libRule.isEmpty()) {
+                            List<String> scopes = new LinkedList<>();
+                            if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
+                                scopes.add("test");
+                            }
+                            module.rule.addDependency(libRule, libraryEntry.isExported(), scopes);
                         }
                     } else {
                         System.err.println("No library for entry " + libraryEntry);

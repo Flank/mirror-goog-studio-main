@@ -8,11 +8,10 @@ iml_module(
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
-        "//tools:idea/lib/hamcrest-core-1.3[test]",
-        "//tools:idea/lib/junit-4.12[test]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/sdk-common:studio.sdk-common[module]",
-        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar[test]",
-        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28:jar[test]",
+        "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:truth[test]",
     ],
     exports = [
         "//tools/base/common:studio.common",

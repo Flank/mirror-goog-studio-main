@@ -17,9 +17,8 @@ iml_module(
     deps = [
         "//tools/base/instant-run:studio.instant-run-common[module]",
         "//tools/base/ddmlib:studio.ddmlib[module]",
-        "//tools:idea/lib/hamcrest-core-1.3[test]",
-        "//tools:idea/lib/junit-4.12[test]",
-        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar[test]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:mockito[test]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
