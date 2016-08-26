@@ -31,14 +31,15 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 269;
+    static final int INITIAL_CAPACITY = 270;
 
     static {
-        List<Issue> issues = new ArrayList<Issue>(INITIAL_CAPACITY);
+        List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
 
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(AddJavascriptInterfaceDetector.ISSUE);
         issues.add(AlarmDetector.ISSUE);
+        issues.add(AllCapsDetector.ISSUE);
         issues.add(AllowAllHostnameVerifierDetector.ISSUE);
         issues.add(AlwaysShowActionDetector.ISSUE);
         issues.add(AndroidAutoDetector.INVALID_USES_TAG_ISSUE);
@@ -328,7 +329,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 85;
+                initialSize += 86;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
