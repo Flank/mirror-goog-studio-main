@@ -54,6 +54,9 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
     }
 
     public static void main(String[] args) throws IOException {
+        // Radar #5755208: Command line Java applications need a way to launch without a Dock icon.
+        System.setProperty("apple.awt.UIElement", "true");
+
         System.exit(new FormCompiler().run(Arrays.asList(args)));
     }
 
