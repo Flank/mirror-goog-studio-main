@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
@@ -69,6 +70,15 @@ class EcjPsiBinaryField extends EcjPsiBinaryElement implements PsiField, PsiModi
     @Override
     public void acceptChildren(@NonNull PsiElementVisitor visitor) {
         // Not exposing field initializers etc for binary elements
+    }
+
+    @Override
+    public PsiElement getParent() {
+        if (mBinding.declaringClass != null) {
+            return mManager.findClass(mBinding.declaringClass);
+        }
+
+        return null;
     }
 
     @NonNull

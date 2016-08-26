@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -283,6 +284,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
         public String sourceRelativePath;
         public String targetRelativePath;
         public String contents;
+        public byte[] bytes;
 
         public TestFile() {
         }
@@ -324,6 +326,8 @@ public abstract class BaseLintDetectorTest extends TestCase {
             InputStream stream;
             if (contents != null) {
                 stream = new ByteArrayInputStream(contents.getBytes(Charsets.UTF_8));
+            } else if (bytes != null) {
+                stream = new ByteArrayInputStream(bytes);
             } else {
                 stream = getTestResource(sourceRelativePath, true);
                 assertNotNull(sourceRelativePath + " does not exist", stream);
@@ -343,6 +347,8 @@ public abstract class BaseLintDetectorTest extends TestCase {
         public String getContents() {
             if (contents != null) {
                 return contents;
+            } else if (bytes != null) {
+                return Base64.getEncoder().encodeToString(bytes);
             } else if (sourceRelativePath != null) {
                 InputStream stream = getTestResource(sourceRelativePath, true);
                 if (stream != null) {
@@ -354,6 +360,11 @@ public abstract class BaseLintDetectorTest extends TestCase {
                 }
             }
             return null;
+        }
+
+        public TestFile withBytes(@NonNull byte[] bytes) {
+            this.bytes = bytes;
+            return this;
         }
     }
 

@@ -88,6 +88,9 @@ public class JavaContext extends Context {
     /** The parser which produced the parse tree */
     private final JavaParser mParser;
 
+    /** Whether this context is in a test source folder */
+    private boolean mTestSource;
+
     /**
      * Constructs a {@link JavaContext} for running lint on the given file, with
      * the given scope, in the given project reporting errors to the given
@@ -720,5 +723,15 @@ public class JavaContext extends Context {
             i++;
         }
         throw new IllegalArgumentException(Integer.toString(index));
+    }
+
+    /** Whether this compilation unit is in a test folder */
+    public boolean isTestSource() {
+        return mTestSource;
+    }
+
+    /** Sets whether this compilation unit is in a test folder */
+    public void setTestSource(boolean testSource) {
+        mTestSource = testSource;
     }
 }

@@ -103,6 +103,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -114,9 +115,8 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
-
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * Test case for lint detectors.
@@ -388,6 +388,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return file().to(to).withSource(source);
     }
 
+    /** Decodes base64 strings into binary data files */
+    @NonNull
+    public TestFile uudecode(@NonNull String to, @NonNull String code) {
+        byte[] bytes = Base64.getDecoder().decode(code);
+        return file().to(to).withBytes(bytes);
+    }
+
     @NonNull
     public TestFile copy(@NonNull String from, @NonNull String to) {
         return file().from(from).to(to);
@@ -580,7 +587,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     public static String toBase64(@NonNull byte[] bytes) {
-        String base64 = DatatypeConverter.printBase64Binary(bytes);
+        String base64 = Base64.getEncoder().encodeToString(bytes);
         return Joiner.on("\n").join(Splitter.fixedLength(60).split(base64));
     }
 
@@ -599,7 +606,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      */
     public BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
         encoded = encoded.replaceAll("\n", "");
-        final byte[] bytes = DatatypeConverter.parseBase64Binary(encoded);
+        final byte[] bytes = Base64.getDecoder().decode(encoded);
         return new BinaryTestFile(to, new BytecodeProducer() {
             @NonNull
             @Override
@@ -607,6 +614,22 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 return bytes;
             }
         });
+    }
+
+    /** Decodes base64 strings into gzip data, then decodes that into a data file */
+    @NonNull
+    public TestFile base64gzip(@NonNull String to, @NonNull String code) {
+        byte[] bytes = Base64.getDecoder().decode(code);
+
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+            GZIPInputStream stream = new GZIPInputStream(in);
+            bytes = ByteStreams.toByteArray(stream);
+        } catch (IOException ignore) {
+            // Can't happen on a ByteArrayInputStream
+        }
+
+        return file().to(to).withBytes(bytes);
     }
 
     public class BinaryTestFile extends TestFile {

@@ -24,6 +24,7 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiCodeBlock;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiMethod;
@@ -80,6 +81,15 @@ class EcjPsiBinaryMethod extends EcjPsiBinaryElement implements PsiMethod, PsiPa
     @Override
     public void acceptChildren(@NonNull PsiElementVisitor visitor) {
         // Not exposing method bodies for binary elements
+    }
+
+    @Override
+    public PsiElement getParent() {
+        if (mMethodBinding.declaringClass != null) {
+            return mManager.findClass(mMethodBinding.declaringClass);
+        }
+
+        return null;
     }
 
     @NonNull

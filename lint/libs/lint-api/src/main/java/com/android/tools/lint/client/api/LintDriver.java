@@ -1076,19 +1076,9 @@ public class LintDriver {
                     checkIndividualJavaFiles(project, main, checks, files);
                 } else {
                     List<File> sourceFolders = project.getJavaSourceFolders();
-                    if (mScope.contains(Scope.TEST_SOURCES)) {
-                        List<File> testFolders = project.getTestSourceFolders();
-                        if (!testFolders.isEmpty()) {
-                            List<File> combined = Lists.newArrayListWithExpectedSize(
-                                    sourceFolders.size() + testFolders.size());
-                            combined.addAll(sourceFolders);
-                            combined.addAll(testFolders);
-                            sourceFolders = combined;
-                        }
-                    }
-
-                    checkJava(project, main, sourceFolders, checks);
-
+                    List<File> testFolders = mScope.contains(Scope.TEST_SOURCES)
+                            ? project.getTestSourceFolders() : Collections.emptyList();
+                    checkJava(project, main, sourceFolders, testFolders, checks);
                 }
             }
         }
@@ -1528,6 +1518,7 @@ public class LintDriver {
             @NonNull Project project,
             @Nullable Project main,
             @NonNull List<File> sourceFolders,
+            @NonNull List<File> testSourceFolders,
             @NonNull List<Detector> checks) {
         JavaParser javaParser = mClient.getJavaParser(project);
         if (javaParser == null) {
@@ -1542,12 +1533,26 @@ public class LintDriver {
         for (File folder : sourceFolders) {
             gatherJavaFiles(folder, sources);
         }
-        if (!sources.isEmpty()) {
-            List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(sources.size());
-            for (File file : sources) {
-                JavaContext context = new JavaContext(this, project, main, file, javaParser);
-                contexts.add(context);
-            }
+
+        List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(2 * sources.size());
+        for (File file : sources) {
+            JavaContext context = new JavaContext(this, project, main, file, javaParser);
+            contexts.add(context);
+        }
+
+        // Test sources
+        sources.clear();
+        for (File folder : testSourceFolders) {
+            gatherJavaFiles(folder, sources);
+        }
+        for (File file : sources) {
+            JavaContext context = new JavaContext(this, project, main, file, javaParser);
+            context.setTestSource(true);
+            contexts.add(context);
+        }
+
+        // Visit all contexts
+        if (!contexts.isEmpty()) {
             visitJavaFiles(checks, javaParser, contexts);
         }
     }

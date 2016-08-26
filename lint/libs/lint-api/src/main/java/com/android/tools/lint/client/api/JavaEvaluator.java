@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.google.common.collect.Maps;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
@@ -37,6 +38,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
 
 import java.io.File;
+import java.util.Map;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
 public abstract class JavaEvaluator {
@@ -263,4 +265,53 @@ public abstract class JavaEvaluator {
 
     @Nullable
     public abstract File getFile(@NonNull PsiFile file);
+
+    /**
+     * Try to determine the path to the .jar file containing the element, <b>if</b> applicable
+     */
+    @Nullable
+    public abstract String findJarPath(@NonNull PsiElement element);
+
+
+    /** Cache for {@link #findGroup(PsiElement)} */
+    private Map<String,String> mJarToGroup;
+
+    /**
+     * Return the Gradle group id for the given element, <b>if</b> applicable. For example, for
+     * a method in the appcompat library, this would return "com.android.support".
+     */
+    @Nullable
+    public Object findGroup(@NonNull PsiElement element) {
+        String jarFile = findJarPath(element);
+        // Example:
+        // $PROJECT_DIRECTORY/app/build/intermediates/exploded-aar/com.android.support/
+        //          /appcompat-v7/25.0.0-SNAPSHOT/jars/classes.jar
+        // and we want to pick out "com.android.support"
+        if (jarFile != null) {
+            if (mJarToGroup == null) {
+                mJarToGroup = Maps.newHashMap();
+            }
+            String group = mJarToGroup.get(jarFile);
+            if (group == null) {
+                int index = jarFile.indexOf("exploded-aar");
+                if (index != -1) {
+                    index += 13; // "exploded-aar/".length()
+                    for (int i = index; i < jarFile.length(); i++) {
+                        char c = jarFile.charAt(i);
+                        if (c == '/' || c == File.separatorChar) {
+                            group = jarFile.substring(index, i);
+                            break;
+                        }
+                    }
+                }
+                if (group == null) {
+                    group = "";
+                }
+                mJarToGroup.put(jarFile, group);
+            }
+            return group.isEmpty() ? null : group;
+        }
+
+        return null;
+    }
 }

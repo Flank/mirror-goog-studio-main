@@ -37,6 +37,7 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 
@@ -55,7 +56,9 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.UnionTypeReference;
+import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
 import org.eclipse.jdt.internal.compiler.impl.CharConstant;
@@ -74,6 +77,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedFieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
@@ -85,6 +89,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +131,47 @@ public class EcjPsiManager {
                 .concurrencyLevel(1)
                 .makeMap();
         mTypeMap = Maps.newHashMapWithExpectedSize(50);
+    }
 
+    private final Map<PackageBinding,String> mGroupCache = Maps.newHashMap();
+
+    @Nullable
+    String getJarFile(@NonNull ReferenceBinding binding) {
+        if (binding.fPackage == null || binding.compoundName == null) {
+            return null;
+        }
+        String group = mGroupCache.get(binding.fPackage);
+        if (group != null) {
+            return group.isEmpty() ? null : group;
+        }
+
+        LookupEnvironment lookupEnvironment = mEcjResult.getLookupEnvironment();
+        if (lookupEnvironment == null) {
+            return null;
+        }
+        INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
+        if (nameEnvironment instanceof FileSystem) {
+            FileSystem fileSystem = (FileSystem) nameEnvironment;
+            String packageName = EcjPsiManager.getInternalName(binding.fPackage.compoundName);
+            try {
+                Field field = fileSystem.getClass().getDeclaredField("classpaths");
+                field.setAccessible(true);
+                FileSystem.Classpath[] classPaths = (FileSystem.Classpath[]) field.get(fileSystem);
+                for (FileSystem.Classpath cp : classPaths) {
+                    if (cp.isPackage(packageName)) {
+                        String path = cp.getPath();
+                        mGroupCache.put(binding.fPackage, path);
+                        return path;
+                    }
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        mGroupCache.put(binding.fPackage, "");
+        return null;
     }
 
     @NonNull
@@ -459,6 +504,11 @@ public class EcjPsiManager {
         return (PsiMethod) findElement(binding);
     }
 
+    @Nullable
+    public PsiPackage findPackage(@Nullable PackageBinding binding) {
+        return (PsiPackage) findElement(binding);
+    }
+
     @SuppressWarnings("VariableNotUsedInsideIf")
     @NonNull
     public PsiClass[] findClasses(@Nullable ReferenceBinding binding,
@@ -685,6 +735,11 @@ public class EcjPsiManager {
                 return null;
             }
             return new EcjPsiBinaryField(this, fieldBinding);
+        } else if (binding instanceof PackageBinding) {
+            PackageBinding packageBinding = (PackageBinding) binding;
+            PsiPackage pkg = new EcjPsiPackage(this, packageBinding);
+            registerElement(binding, pkg);
+            return pkg;
         } else {
             // Search in AST, e.g. to resolve local variables etc
             if (binding instanceof LocalVariableBinding) {
