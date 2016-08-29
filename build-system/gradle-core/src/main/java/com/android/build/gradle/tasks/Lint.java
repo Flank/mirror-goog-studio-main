@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -75,7 +76,8 @@ public class Lint extends BaseTask {
      * is a risky fix, we're putting it behind a flag now and as soon as we get some real
      * user testing, we should enable this by default and remove the old code.
      */
-    public static final boolean MODEL_LIBRARIES = Boolean.getBoolean(MODEL_LIBRARIES_PROPERTY);
+    public static final boolean MODEL_LIBRARIES =
+            !VALUE_FALSE.equals(System.getProperty(MODEL_LIBRARIES_PROPERTY));
 
     private static final Logger LOG = Logging.getLogger(Lint.class);
 

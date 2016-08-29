@@ -38,7 +38,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.SourceDirectorySet;
@@ -210,8 +209,8 @@ public class LintGradleProject extends Project {
     // TODO: Rename: this isn't really an "App" project (it could be a library) too; it's a "project"
     // (e.g. not a remote artifact) - LocalGradleProject
     private static class AppGradleProject extends LintGradleProject {
-        private AndroidProject mProject;
-        private Variant mVariant;
+        private final AndroidProject mProject;
+        private final Variant mVariant;
         private List<SourceProvider> mProviders;
         private List<SourceProvider> mTestProviders;
 
@@ -594,7 +593,7 @@ public class LintGradleProject extends Project {
     }
 
     private static class LibraryProject extends LintGradleProject {
-        private AndroidLibrary mLibrary;
+        private final AndroidLibrary mLibrary;
 
         private LibraryProject(
                 @NonNull LintGradleClient client,
@@ -754,14 +753,14 @@ public class LintGradleProject extends Project {
         public final Map<MavenCoordinates,Project> javaLibraryProjectsByCoordinate = Maps.newHashMap();
         public final Map<org.gradle.api.Project,AndroidProject> gradleProjects = Maps.newHashMap();
         public final List<File> customViewRuleJars = Lists.newArrayList();
-        private Set<Object> mSeen = Sets.newHashSet();
+        private final Set<Object> mSeen = Sets.newHashSet();
 
         public ProjectSearch() {
             assert Lint.MODEL_LIBRARIES;
         }
 
         @Nullable
-        private static AndroidProject createAndroidProject(@NonNull LintGradleClient client,
+        private static AndroidProject createAndroidProject(
                 @NonNull org.gradle.api.Project gradleProject) {
             PluginContainer pluginContainer = gradleProject.getPlugins();
             for (Plugin p : pluginContainer) {
@@ -783,7 +782,7 @@ public class LintGradleProject extends Project {
                 @NonNull org.gradle.api.Project gradleProject) {
             AndroidProject androidProject = gradleProjects.get(gradleProject);
             if (androidProject == null) {
-                androidProject = createAndroidProject(client, gradleProject);
+                androidProject = createAndroidProject(gradleProject);
                 if (androidProject != null) {
                     gradleProjects.put(gradleProject, androidProject);
                 }
@@ -797,11 +796,21 @@ public class LintGradleProject extends Project {
                 @NonNull String variantName) {
             AndroidProject androidProject = getAndroidProject(client, gradleProject);
             if (androidProject != null) {
-                for (Variant variant : androidProject.getVariants()) {
+                Collection<Variant> variants = androidProject.getVariants();
+                for (Variant variant : variants) {
                     if (variantName.equals(variant.getName())) {
                         return getProject(client, androidProject, variant, gradleProject);
                     }
                 }
+
+                // Just use the default variant.
+                // TODO: Use DSL to designate the default variants for this (not
+                // yet available, but planned.)
+                if (!variants.isEmpty()) {
+                    Variant defaultVariant = variants.iterator().next();
+                    return getProject(client, androidProject, defaultVariant, gradleProject);
+                }
+
                 // This shouldn't happen; we didn't get an AndroidProject for an expected
                 // variant name
                 assert false : variantName;
@@ -811,7 +820,7 @@ public class LintGradleProject extends Project {
             // don't have a Gradle model)
 
             JavaPluginConvention convention = gradleProject.getConvention()
-                    .getPlugin(JavaPluginConvention.class);
+                    .findPlugin(JavaPluginConvention.class);
             if (convention == null) {
                 return null;
             }
@@ -957,31 +966,34 @@ public class LintGradleProject extends Project {
             //noinspection deprecation
             Dependencies dependencies = variant.getMainArtifact().getDependencies();
             for (AndroidLibrary library : dependencies.getLibraries()) {
-                if (library.getProject() != null
-                        && gradleProject.findProject(library.getProject()) == gradleProject) {
-                    // Don't know why the dependencies for the model sometimes points to self...
-                    // Ignore these
+                if (library.getProject() != null) {
+                    // Handled below
                     continue;
                 }
                 lintProject.addDirectLibrary(getLibrary(client, library, gradleProject, variant));
             }
 
+            // Dependencies.getProjects() no longer passes project names in all cases, so
+            // look up from Gradle project directly
             List<String> processedProjects = null;
-            //noinspection deprecation
-            for (String projectName : dependencies.getProjects()) {
-                // At some point (2.2 according to the docs, but still not happening;
-                // possibly tied to a flag) the model will stop providing the projects
-                // here and will return them as part of getJavaLibraries. Therefore,
-                // we look in both places, but record them here such that we don't double
-                // count them.
-                if (processedProjects == null) {
-                    processedProjects = Lists.newArrayList();
-                }
-                processedProjects.add(projectName);
-                Project libLintProject = getProject(client, projectName, gradleProject,
-                        variant.getName());
-                if (libLintProject != null) {
-                    lintProject.addDirectLibrary(libLintProject);
+            ConfigurationContainer configurations = gradleProject.getConfigurations();
+            Configuration compile = configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME);
+            if (compile != null) {
+                for (Dependency dependency : compile.getDependencies()) {
+                    if (dependency instanceof ProjectDependency) {
+                        org.gradle.api.Project p =
+                                ((ProjectDependency) dependency).getDependencyProject();
+                        if (p != null) {
+                            Project depProject = getProject(client, p, variant.getName());
+                            if (depProject != null) {
+                                if (processedProjects == null) {
+                                    processedProjects = Lists.newArrayList();
+                                }
+                                processedProjects.add(p.getPath());
+                                lintProject.addDirectLibrary(depProject);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1000,9 +1012,6 @@ public class LintGradleProject extends Project {
                 }
                 lintProject.addDirectLibrary(getLibrary(client, library));
             }
-
-            //noinspection deprecation
-            assert dependencies.getProjects().isEmpty(); // should have been handled above
 
             return lintProject;
         }
@@ -1104,7 +1113,7 @@ public class LintGradleProject extends Project {
     }
 
     private static class JavaLibraryProject extends LintGradleProject {
-        private JavaLibrary mLibrary;
+        private final JavaLibrary mLibrary;
 
         private JavaLibraryProject(
                 @NonNull LintGradleClient client,
