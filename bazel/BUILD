@@ -112,6 +112,14 @@ java_binary(
 )
 
 java_binary(
+    name = "singlejar",
+    main_class = "com.android.tools.utils.SingleJar",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":utils"],
+)
+
+
+java_binary(
     name = "third_party_build_generator",
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],

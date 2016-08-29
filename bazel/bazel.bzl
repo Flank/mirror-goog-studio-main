@@ -282,15 +282,18 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     )
   jars += ["lib" + name + ".javas.jar"]
 
-  native.java_import(
-    name = name + ".imports",
-    jars = jars,
+  native.genrule(
+    name = name + ".deploy",
+    srcs = jars,
+    outs = [name + ".jar"],
+    tools = ["//tools/base/bazel:singlejar"],
+    cmd = "$(location //tools/base/bazel:singlejar) $@ $(SRCS)",
   )
 
   native.java_library(
     name = name,
-    runtime_deps = deps + [":" + name + ".imports"],
-    exports = exports + [":" + name + ".imports"],
+    runtime_deps = deps + [":" + name + ".deploy"],
+    exports = exports + [":" + name + ".deploy"],
     visibility = visibility,
   )
 
@@ -407,8 +410,7 @@ def iml_module(name,
     ],
     timeout = test_timeout,
     data = test_data,
-    #TODO support tests from all the three jars
-    jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.javas.jar"],
+    jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.jar"],
     test_class = test_class,
     visibility = ["//visibility:public"],
   )
@@ -506,4 +508,4 @@ def java_jarjar(name, rules, srcs=[], visibility=None):
              " ".join(["$(location " + src + ")" for src in srcs]) + " " +
              "--output '$@'"),
       visibility = visibility,
-)
+  )
