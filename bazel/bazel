@@ -1,35 +1,31 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
-"""Finds the appropriate bazel executable for the platform and passes along the arguments to bazel.
-"""
+"""Runs the bazel executable for the platform, passing args along."""
 
 import os
 import subprocess
 import sys
 
-_platform = sys.platform
 
-if _platform == "linux" or _platform == "linux2":
-  # Look for the WORKSPACE directory up from the current directory.
-  find_workspace_dir = os.getcwd();
-  while os.path.abspath(find_workspace_dir) != os.path.abspath('/') and \
-        not os.path.isfile(os.path.join(find_workspace_dir, 'WORKSPACE')):
-      find_workspace_dir = os.path.join(find_workspace_dir, os.pardir)
-  if os.path.isfile(os.path.join(find_workspace_dir, 'WORKSPACE')):
-    # We found the WORKSPACE file. Find bazel-real from that directory.
-    bazel_real = os.path.abspath(os.path.join(find_workspace_dir, 'tools', 'base', 'bazel',
-                                              'prebuilts', 'linux', 'bazel-real'))
-    try:
-      ret_val = subprocess.call([bazel_real] + sys.argv[1:])
-    except:
-      print 'ERROR: Failed to call bazel-real in WORKSPACE: %s' % bazel_real
-      sys.exit(1)
-    sys.exit(ret_val)
+def main():
+  workspace = find_workspace(os.getcwd())
+  if not workspace:
+    sys.exit('Must run %s within a workspace.' % os.path.basename(sys.argv[0]))
+  if sys.platform.startswith('linux'):
+    bazel = os.path.join(
+        workspace, 'tools', 'base', 'bazel', 'prebuilts', 'linux', 'bazel-real')
+    sys.exit(subprocess.call([bazel] + sys.argv[1:]))
   else:
-    print 'ERROR: Did not find WORKSPACE. Run bazel from inside a studio WORKSPACE.'
-    sys.exit(1)
-elif _platform == "darwin":
-    print 'NOT IMPLEMENTED: call bazel for mac'
-elif _platform == "win32":
-    print 'NOT IMPLEMENTED: call bazel for win'
+    sys.exit('Platform %s is not yet supported.' % sys.platform)
 
+
+def find_workspace(path):
+  if os.path.isfile(os.path.join(path, 'WORKSPACE')):
+    return path
+  else:
+    parent = os.path.dirname(path)
+    return None if parent == path else find_workspace(parent)
+
+
+if __name__ == '__main__':
+  main()
