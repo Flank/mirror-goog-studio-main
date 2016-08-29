@@ -197,7 +197,7 @@ public class ApplicationTaskManager extends TaskManager {
                     projectPath, variantName, new Recorder.Block<Void>() {
                         @Override
                         public Void call() {
-                            createNdkTasks(variantScope);
+                            createNdkTasks(tasks, variantScope);
                             return null;
                         }
                     });

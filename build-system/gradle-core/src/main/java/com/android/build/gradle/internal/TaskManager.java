@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
-import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -205,7 +204,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1273,61 +1271,24 @@ public abstract class TaskManager {
                 generator, scope, androidBuilder)).getName());
     }
 
-    public void createNdkTasks(@NonNull VariantScope scope) {
+    public void createNdkTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
         if (ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
                 extension.getExternalNativeBuild())) {
             return;
         }
 
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        NdkCompile ndkCompile = project.getTasks().create(
-                scope.getTaskName("compile", "Ndk"),
-                NdkCompile.class);
+        AndroidTask<NdkCompile> ndkCompileTask =
+                androidTasks.create(tasks, new NdkCompile.ConfigAction(scope));
 
-        ndkCompile.dependsOn(scope.getPreBuildTask().getName());
-
-        ndkCompile.setAndroidBuilder(androidBuilder);
-        ndkCompile.setVariantName(variantData.getName());
-        ndkCompile.setNdkDirectory(sdkHandler.getNdkFolder());
-        ndkCompile.setForTesting(variantData.getType().isForTesting());
-        variantData.ndkCompileTask = ndkCompile;
-        variantData.compileTask.dependsOn(variantData.ndkCompileTask);
-
-        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-
-        if (Boolean.TRUE.equals(variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-            ndkCompile.setNdkRenderScriptMode(true);
-            ndkCompile.dependsOn(variantData.renderscriptCompileTask);
-        } else {
-            ndkCompile.setNdkRenderScriptMode(false);
+        ndkCompileTask.dependsOn(tasks, scope.getPreBuildTask());
+        if (Boolean.TRUE.equals(
+                scope.getVariantData()
+                        .getVariantConfiguration()
+                        .getMergedFlavor()
+                        .getRenderscriptNdkModeEnabled())) {
+            ndkCompileTask.dependsOn(tasks, scope.getRenderscriptCompileTask());
         }
-
-        ConventionMappingHelper.map(ndkCompile, "sourceFolders", (Callable<List<File>>) () -> {
-            List<File> sourceList = variantConfig.getJniSourceList();
-            if (Boolean.TRUE.equals(
-                    variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-                sourceList.add(variantData.renderscriptCompileTask.getSourceOutputDir());
-            }
-
-            return sourceList;
-        });
-
-        ndkCompile.setGeneratedMakefile(new File(scope.getGlobalScope().getIntermediatesDir(),
-                "ndk/" + variantData.getVariantConfiguration().getDirName() + "/Android.mk"));
-
-        ConventionMappingHelper.map(ndkCompile, "ndkConfig",
-                (Callable<CoreNdkOptions>) variantConfig::getNdkConfig);
-
-        ConventionMappingHelper.map(ndkCompile, "debuggable",
-                (Callable<Boolean>) () -> variantConfig.getBuildType().isJniDebuggable());
-
-        ndkCompile.setObjFolder(new File(scope.getGlobalScope().getIntermediatesDir(),
-                "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj"));
-
-        Collection<File> ndkSoFolder = scope.getNdkSoFolder();
-        if (ndkSoFolder != null && !ndkSoFolder.isEmpty()) {
-            ndkCompile.setSoFolder(ndkSoFolder.iterator().next());
-        }
+        scope.getCompileTask().dependsOn(tasks, ndkCompileTask);
     }
 
     /**
@@ -1449,7 +1410,7 @@ public abstract class TaskManager {
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            createNdkTasks(variantScope);
+            createNdkTasks(tasks, variantScope);
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
