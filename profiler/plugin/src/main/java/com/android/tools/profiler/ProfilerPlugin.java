@@ -19,21 +19,16 @@ package com.android.tools.profiler;
 import com.android.build.api.transform.Transform;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.dsl.RepositoryHandler;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -45,8 +40,6 @@ public class ProfilerPlugin implements Plugin<Project> {
 
     private static final String PROPERTY_PROPERTIES_FILE = "android.profiler.properties";
     private static final String PROPERTY_ENABLED = "android.profiler.enabled";
-    private static final String PROPERTY_GAPID_ENABLED = "android.profiler.gapid.enabled";
-    private static final String PROPERTY_GAPID_TRACER_AAR = "android.profiler.gapid.tracer_aar";
     private static final String PROPERTY_SUPPORT_LIB_ENABLED
             = "android.profiler.supportLib.enabled";
     private static final String PROPERTY_INSTRUMENTATION_ENABLED
@@ -58,7 +51,6 @@ public class ProfilerPlugin implements Plugin<Project> {
         boolean enabled = getBoolean(properties, PROPERTY_ENABLED);
         if (enabled) {
             addProfilersLib(project, properties);
-            applyGapidOptions(project, properties);
             registerTransform(project, properties);
         }
     }
@@ -70,26 +62,6 @@ public class ProfilerPlugin implements Plugin<Project> {
                 return;
             }
             project.getDependencies().add("compile", "com.android.tools:studio-profiler-lib:1.0");
-        }
-    }
-
-    private void applyGapidOptions(Project project, Properties properties) {
-        if (getBoolean(properties, PROPERTY_GAPID_ENABLED)) {
-            String aarFileName = properties.getProperty(PROPERTY_GAPID_TRACER_AAR);
-            final File aarFile = (aarFileName == null) ? null : new File(aarFileName);
-            if (aarFile != null && aarFile.exists()) {
-                RepositoryHandler repositories = project.getRepositories();
-                repositories.add(repositories.flatDir(new HashMap<String, Object>() {{
-                    put("name", "gfxtracer");
-                    put("dirs", Arrays.asList(aarFile.getParentFile().getAbsolutePath()));
-                }}));
-                final String baseName = Files.getNameWithoutExtension(aarFileName), extension
-                        = Files.getFileExtension(aarFileName);
-                project.getDependencies().add("compile", new HashMap<String, String>() {{
-                    put("name", baseName);
-                    put("ext", extension);
-                }});
-            }
         }
     }
 
