@@ -6,8 +6,13 @@
 
     https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=${debugKeystoreSha1}%3B${packageName}
 
-    You can also add your credentials to an existing key, using this line:
-    ${debugKeystoreSha1};${packageName}
+    You can also add your credentials to an existing key, using these values:
+
+    Package name:
+    ${debugKeystoreSha1}
+
+    SHA-1 certificate fingerprint:
+    ${debugKeystoreSha1}
 
     Alternatively, follow the directions here:
     https://developers.google.com/maps/documentation/android/start#get-key
