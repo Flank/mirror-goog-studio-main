@@ -87,6 +87,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
                 + "    <application>\n"
                 + "        <activity android:name=\"com.example.android.TvActivity\">\n"
                 + "            <intent-filter>\n"
@@ -94,6 +95,29 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
                 + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
                 + "            </intent-filter>\n"
                 + "        </activity>\n"
+                + "    </application>\n"
+                + "</manifest>\n"));
+        assertEquals(expected, result);
+    }
+
+    public void testValidLeanbackActivityAlias() throws Exception {
+        mEnabled = Collections.singleton(MISSING_LEANBACK_LAUNCHER);
+        String expected = "No warnings.";
+        String result = lintProject(xml(FN_ANDROID_MANIFEST_XML, ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                + "    <application>\n"
+                + "        <activity android:name=\".ui.TvActivity\" />\n"
+                + "        <activity-alias "
+                + "            android:name=\".TvActivity\"\n"
+                + "            android:targetActivity=\".ui.TvActivity\">\n"
+                + "            <intent-filter>\n"
+                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
+                + "            </intent-filter>\n"
+                + "        </activity-alias>\n"
                 + "    </application>\n"
                 + "</manifest>\n"));
         assertEquals(expected, result);
