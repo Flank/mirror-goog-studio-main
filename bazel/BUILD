@@ -138,6 +138,7 @@ test_suite(
   tests = [
     "//tools/adt/idea/adt-ui:adt-ui_tests",
     "//tools/adt/idea:android-common_tests",
+    "//tools/adt/idea:android_tests",
     "//tools/analytics-library:analytics-publisher_tests",
     "//tools/analytics-library:analytics-shared_tests",
     "//tools/analytics-library:analytics-tracker_tests",
