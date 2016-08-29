@@ -32,7 +32,6 @@ import java.util.zip.ZipInputStream;
 
 public class Unzipper {
 
-    byte[] buffer = new byte[1024 * 1024];
     /**
      * Unzips files from a zip file to the specified locations.
      * Each file putput needs to be individually specified. For example:
@@ -93,18 +92,11 @@ public class Unzipper {
                 }
                 try (InputStream in = zip.getInputStream(entry);
                      FileOutputStream out = new FileOutputStream(outFile)) {
-                    copy(in, out);
+                    Utils.copy(in, out);
                 }
             }
         }
         return 0;
-    }
-
-    private void copy(InputStream in, FileOutputStream out) throws IOException {
-        int read;
-        while ((read = in.read(buffer)) != -1) {
-            out.write(buffer, 0, read);
-        }
     }
 
     public void unzip(File zipFile, File outDir) throws IOException {
@@ -118,7 +110,7 @@ public class Unzipper {
                         System.err.println("Cannot create directory for " + file.getAbsolutePath());
                     }
                     try (FileOutputStream os = new FileOutputStream(file)) {
-                        copy(zis, os);
+                        Utils.copy(zis, os);
                     }
                 }
             }
