@@ -21,8 +21,14 @@ import static com.android.SdkConstants.PLATFORM_WINDOWS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
+import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -54,6 +60,7 @@ import org.gradle.api.tasks.util.PatternSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -388,5 +395,79 @@ public class NdkCompile extends NdkTask {
                 getLdLibs() == null &&
                 getAbiFilters() == null &&
                 getStl() == null);
+    }
+
+    public static class ConfigAction implements TaskConfigAction<NdkCompile> {
+
+        @NonNull private final VariantScope variantScope;
+
+        public ConfigAction(@NonNull VariantScope variantScope) {
+            this.variantScope = variantScope;
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return variantScope.getTaskName("compile", "Ndk");
+        }
+
+        @NonNull
+        @Override
+        public Class<NdkCompile> getType() {
+            return NdkCompile.class;
+        }
+
+        @Override
+        public void execute(@NonNull NdkCompile ndkCompile) {
+            final BaseVariantData<? extends BaseVariantOutputData> variantData =
+                    variantScope.getVariantData();
+
+            ndkCompile.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
+            ndkCompile.setVariantName(variantData.getName());
+            ndkCompile.setNdkDirectory(
+                    variantScope.getGlobalScope().getSdkHandler().getNdkFolder());
+            ndkCompile.setForTesting(variantData.getType().isForTesting());
+            variantData.ndkCompileTask = ndkCompile;
+
+            final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
+            if (Boolean.TRUE
+                    .equals(variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
+                ndkCompile.setNdkRenderScriptMode(true);
+            } else {
+                ndkCompile.setNdkRenderScriptMode(false);
+            }
+
+            ConventionMappingHelper.map(ndkCompile, "sourceFolders", () -> {
+                List<File> sourceList = variantConfig.getJniSourceList();
+                if (Boolean.TRUE.equals(
+                        variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
+                    sourceList.add(variantData.renderscriptCompileTask.getSourceOutputDir());
+                }
+
+                return sourceList;
+            });
+
+            ndkCompile.setGeneratedMakefile(
+                    new File(
+                            variantScope.getGlobalScope().getIntermediatesDir(),
+                            "ndk/"
+                                    + variantData.getVariantConfiguration().getDirName()
+                                    + "/Android.mk"));
+
+            ConventionMappingHelper.map(ndkCompile, "ndkConfig", variantConfig::getNdkConfig);
+
+            ndkCompile.setDebuggable(variantConfig.getBuildType().isJniDebuggable());
+
+            ndkCompile.setObjFolder(
+                    new File(
+                            variantScope.getGlobalScope().getIntermediatesDir(),
+                            "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj"));
+
+            Collection<File> ndkSoFolder = variantScope.getNdkSoFolder();
+            if (ndkSoFolder != null && !ndkSoFolder.isEmpty()) {
+                ndkCompile.setSoFolder(ndkSoFolder.iterator().next());
+            }
+        }
     }
 }

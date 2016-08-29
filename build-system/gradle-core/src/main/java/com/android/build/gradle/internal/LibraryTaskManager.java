@@ -289,7 +289,7 @@ public class LibraryTaskManager extends TaskManager {
                     projectPath, variantName, new Recorder.Block<Void>() {
                         @Override
                         public Void call() throws Exception {
-                            createNdkTasks(variantScope);
+                            createNdkTasks(tasks, variantScope);
                             return null;
                         }
                     });
