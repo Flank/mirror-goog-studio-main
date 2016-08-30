@@ -591,4 +591,26 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                                 + "}\n")
                 ));
     }
+
+    @SuppressWarnings("ALL") // sample code with warnings
+    public void testCommitNowAllowingStateLoss() throws Exception {
+        // Handle transactions assigned to parameters (this used to not work)
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/CommitTest2.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.app.FragmentManager;\n"
+                                + "import android.app.FragmentTransaction;\n"
+                                + "\n"
+                                + "@SuppressWarnings(\"unused\")\n"
+                                + "public class CommitTest2 {\n"
+                                + "    private void navigateToFragment(FragmentManager supportFragmentManager) {\n"
+                                + "        FragmentTransaction transaction = supportFragmentManager.beginTransaction();\n"
+                                + "        transaction.commitNowAllowingStateLoss();\n"
+                                + "    }\n"
+                                + "}")));
+    }
+
+
 }
