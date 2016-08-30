@@ -14,8 +14,12 @@ def main():
   if sys.platform.startswith('linux'):
     bazel = os.path.join(
         workspace, 'tools', 'base', 'bazel', 'prebuilts', 'linux', 'bazel-real')
-    env = {'TERM': os.environ.get('TERM') or '', 'JAVA_HOME': os.path.join(
-        workspace, 'prebuilts', 'studio', 'jdk', 'linux')}
+    env = {
+        'CC': '/usr/bin/gcc',
+        'JAVA_HOME': os.path.join(
+            workspace, 'prebuilts', 'studio', 'jdk', 'linux'),
+        'TERM': os.environ.get('TERM') or '',
+    }
     sys.exit(subprocess.call([bazel] + sys.argv[1:], env=env))
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
