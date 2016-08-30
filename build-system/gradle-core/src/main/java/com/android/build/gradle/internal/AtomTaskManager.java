@@ -133,7 +133,7 @@ public class AtomTaskManager extends TaskManager {
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            createNdkTasks(variantScope);
+            createNdkTasks(tasks, variantScope);
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
