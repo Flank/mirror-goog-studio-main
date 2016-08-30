@@ -614,14 +614,12 @@ public class XmlDocument {
     private void clearNodeNamespaces(Element element) {
         String androidPrefix = XmlUtils.lookupNamespacePrefix(element, SdkConstants.ANDROID_URI);
 
-        System.out.println("Clear node namespaces: " + element.getNodeName());
         String name = element.getNodeName();
         int colonIdx = name.indexOf(':');
         if (colonIdx != -1) {
             String prefix = name.substring(0, colonIdx);
             if (prefix.equals(androidPrefix)) {
                 String newName = name.substring(colonIdx + 1);
-                System.out.println("   Renaming: " + name + " to " + newName);
                 getXml().renameNode(element, null, newName);
             }
         }
