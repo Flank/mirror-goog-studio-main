@@ -626,7 +626,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Old buildToolsVersion ")) {
                 return findSubstring(errorMessage, "Old buildToolsVersion ", ";");
             }
-            if (errorMessage.startsWith("Use Fabric Gradle ")) {
+            if (errorMessage.startsWith("Use Fabric Gradle ") ||
+                    errorMessage.startsWith("Use BugSnag ")) {
                 return findSubstring(errorMessage, "(was ", ")");
             }
 
@@ -681,6 +682,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
             if (errorMessage.startsWith("Use Fabric Gradle ")) {
                 return "1.21.6";
+            }
+            if (errorMessage.startsWith("Use BugSnag ")) {
+                return "2.1.2";
             }
 
             // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
@@ -930,6 +934,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
             if (parsed != null && parsed.compareTo("1.21.6") < 0) {
                 report(context, cookie, DEPENDENCY, "Use Fabric Gradle plugin version 1.21.6 or "
+                        + "later to improve Instant Run performance (was " +
+                        dependency.getRevision() + ")");
+            }
+        } else if ("com.bugsnag".equals(dependency.getGroupId()) &&
+                "bugsnag-android-gradle-plugin".equals(dependency.getArtifactId())) {
+            GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
+            if (parsed != null && parsed.compareTo("2.1.2") < 0) {
+                report(context, cookie, DEPENDENCY, "Use BugSnag Gradle plugin version 2.1.2 or "
                         + "later to improve Instant Run performance (was " +
                         dependency.getRevision() + ")");
             }
