@@ -34,7 +34,7 @@ import org.gradle.api.Project;
  * Interface for Variant Factory.
  *
  * While VariantManager is the general variant management, implementation of this interface
- * provides variant type (app, lib) specific implementation.
+ * provides variant type (app, lib, atom) specific implementation.
  */
 public interface VariantFactory {
 

@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.build.gradle.internal.LibraryCache;
-import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 
 import org.gradle.api.tasks.InputFile;

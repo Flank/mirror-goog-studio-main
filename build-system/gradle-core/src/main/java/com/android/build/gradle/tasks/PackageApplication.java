@@ -292,8 +292,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                     "outputFile",
                     packageApplication.inOldMode
                             ? packagingScope::getIntermediateApk
-                            : packagingScope::getOutputApk);
-
+                            : packagingScope::getOutputPackage);
             super.execute(packageApplication);
         }
     }

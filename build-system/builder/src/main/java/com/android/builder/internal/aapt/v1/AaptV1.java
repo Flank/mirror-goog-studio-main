@@ -128,7 +128,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
      * {@link QueuedCruncher} can be used.
      */
     @VisibleForTesting
-    static final Revision VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 0);
+    static final Revision VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 1);
 
     /**
      * Build tools.
@@ -276,8 +276,14 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             builder.addArgs("--pseudo-localize");
         }
 
-        // library specific options
+        // bundle specific options
+        boolean generateFinalIds = true;
         if (config.getVariantType() == VariantType.LIBRARY) {
+            generateFinalIds = false;
+        } else if (config.getVariantType() == VariantType.ATOM && config.getBaseFeature() != null) {
+            generateFinalIds = false;
+        }
+        if (!generateFinalIds) {
             builder.addArgs("--non-constant-id");
         }
 

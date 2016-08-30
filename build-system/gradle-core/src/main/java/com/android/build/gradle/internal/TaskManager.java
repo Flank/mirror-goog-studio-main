@@ -107,6 +107,7 @@ import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
 import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
+import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
@@ -219,6 +220,8 @@ public abstract class TaskManager {
 
     public static final String DIR_BUNDLES = "bundles";
 
+    public static final String DIR_ATOMBUNDLES = "atombundles";
+
     public static final String INSTALL_GROUP = "Install";
 
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
@@ -271,6 +274,8 @@ public abstract class TaskManager {
     protected static final String LINT_COMPILE = "compileLint";
 
     private static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
+
+    public static final String ATOM_SUFFIX = "Atom";
 
     private static final Revision MIN_REVISION_RS_COMPAT_64 = Revision.parseRevision("23.0.3");
 
@@ -532,13 +537,13 @@ public abstract class TaskManager {
     public void createMergeAppManifestsTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope) {
-        ApplicationVariantData appVariantData =
-                (ApplicationVariantData) variantScope.getVariantData();
-        Set<String> screenSizes = appVariantData.getCompatibleScreens();
+        AndroidArtifactVariantData<?> androidArtifactVariantData =
+                (AndroidArtifactVariantData) variantScope.getVariantData();
+        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated manifest
-        for (final BaseVariantOutputData vod : appVariantData.getOutputs()) {
+        for (final BaseVariantOutputData vod : androidArtifactVariantData.getOutputs()) {
             VariantOutputScope scope = vod.getScope();
 
             AndroidTask<CompatibleScreensManifest> csmTask = null;
@@ -1310,7 +1315,6 @@ public abstract class TaskManager {
                         scope.getGlobalScope().getProject(),
                         scope.getGlobalScope().getNdkHandler()));
     }
-
 
     /**
      * Creates the tasks to build unit tests.

@@ -48,6 +48,7 @@ import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.OldPackager;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.ApkCreatorFactory;
@@ -515,7 +516,7 @@ public class AndroidBuilder {
     public void mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
-            @NonNull List<? extends AndroidLibrary> libraries,
+            @NonNull List<? extends AndroidBundle> bundles,
             String packageOverride,
             int versionCode,
             String versionName,
@@ -537,7 +538,7 @@ public class AndroidBuilder {
                     .setPlaceHolderValues(placeHolders)
                     .addFlavorAndBuildTypeManifests(
                             manifestOverlays.toArray(new File[manifestOverlays.size()]))
-                    .addLibraryManifests(collectLibraries(libraries))
+                    .addBundleManifests(collectBundles(bundles))
                     .withFeatures(optionalFeatures.toArray(
                             new Invoker.Feature[optionalFeatures.size()]))
                     .setMergeReportFile(reportFile);
@@ -647,35 +648,35 @@ public class AndroidBuilder {
     }
 
     /**
-     * Collect the list of libraries' manifest files.
-     * @param libraries declared dependencies
-     * @return a list of files and names for the libraries' manifest files.
+     * Collect the list of bundles' manifest files.
+     * @param bundles declared dependencies
+     * @return a list of files and names for the bundles' manifest files.
      */
-    private static ImmutableList<Pair<String, File>> collectLibraries(
-            List<? extends AndroidLibrary> libraries) {
+    private static ImmutableList<Pair<String, File>> collectBundles(
+            List<? extends AndroidBundle> bundles) {
 
         ImmutableList.Builder<Pair<String, File>> manifestFiles = ImmutableList.builder();
-        if (libraries != null) {
-            collectLibraries(libraries, manifestFiles);
+        if (bundles != null) {
+            collectBundles(bundles, manifestFiles);
         }
         return manifestFiles.build();
     }
 
     /**
-     * recursively calculate the list of libraries to merge the manifests files from.
-     * @param libraries the dependencies
+     * recursively calculate the list of bundles to merge the manifests files from.
+     * @param bundles the dependencies
      * @param manifestFiles list of files and names identifiers for the libraries' manifest files.
      */
-    private static void collectLibraries(List<? extends AndroidLibrary> libraries,
+    private static void collectBundles(List<? extends AndroidBundle> bundles,
             ImmutableList.Builder<Pair<String, File>> manifestFiles) {
 
-        for (AndroidLibrary library : libraries) {
-            if (!library.isProvided()) {
-                manifestFiles.add(Pair.of(library.getName(), library.getManifest()));
-                List<? extends AndroidLibrary> manifestDependencies = library
+        for (AndroidBundle bundle : bundles) {
+            if (!bundle.isProvided()) {
+                manifestFiles.add(Pair.of(bundle.getName(), bundle.getManifest()));
+                List<? extends AndroidBundle> manifestDependencies = bundle
                         .getLibraryDependencies();
                 if (!manifestDependencies.isEmpty()) {
-                    collectLibraries(manifestDependencies, manifestFiles);
+                    collectBundles(manifestDependencies, manifestFiles);
                 }
             }
         }
@@ -793,7 +794,7 @@ public class AndroidBuilder {
                         generatedTestManifest, mLogger, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
                         .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
-                        .addLibraryManifests(collectLibraries(libraries))
+                        .addBundleManifests(collectBundles(libraries))
                         .setPlaceHolderValues(manifestPlaceholders)
                         .merge();
 
@@ -1001,13 +1002,20 @@ public class AndroidBuilder {
                     throw new RuntimeException(msg);
                 }
 
+                boolean generateFinalIds = true;
+                if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+                    generateFinalIds = false;
+                } else if (aaptConfig.getVariantType() == VariantType.ATOM
+                        && aaptConfig.getBaseFeature() != null) {
+                    generateFinalIds = false;
+                }
                 //noinspection ConstantConditions
                 SymbolWriter writer =
                         new SymbolWriter(
                                 aaptConfig.getSourceOutputDir().getAbsolutePath(),
                                 packageName,
                                 fullSymbolValues,
-                                aaptConfig.getVariantType() != VariantType.LIBRARY);
+                                generateFinalIds);
                 for (SymbolLoader symbolLoader : symbols) {
                     writer.addSymbolsToWrite(symbolLoader);
                 }

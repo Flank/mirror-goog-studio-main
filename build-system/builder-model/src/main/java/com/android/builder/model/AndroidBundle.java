@@ -76,4 +76,20 @@ public interface AndroidBundle extends Library {
     @NonNull
     File getJarFile();
 
+    /**
+     * Returns the location of the res folder.
+     *
+     * @return a File for the res folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    File getResFolder();
+
+    /**
+     * Returns the location of the assets folder.
+     *
+     * @return a File for the assets folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    File getAssetsFolder();
+
 }

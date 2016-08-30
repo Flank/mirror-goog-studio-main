@@ -170,14 +170,20 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return mVariantOutputScope.getTaskName(prefix, suffix);
+    }
+
+    @NonNull
+    @Override
     public Project getProject() {
         return mGlobalScope.getProject();
     }
 
     @NonNull
     @Override
-    public File getOutputApk() {
-        return mVariantOutputScope.getFinalApk();
+    public File getOutputPackage() {
+        return mVariantOutputScope.getFinalPackage();
     }
 
     @NonNull
@@ -196,6 +202,12 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
+    }
+
+    @Nullable
+    @Override
+    public File getAtomMetadataBaseFolder() {
+        return mVariantOutputScope.getAtomMetadataBaseFolder();
     }
 
     @NonNull

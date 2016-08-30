@@ -41,6 +41,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 
 import org.gradle.api.DefaultTask;
@@ -103,9 +104,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getDexOutputFolder();
 
+    @NonNull
+    File getDexOutputFolder(@NonNull AndroidAtom androidAtom);
+
     @Nullable
     BaseVariantData getTestedVariantData();
-
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();
@@ -115,6 +118,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getJavaOutputDir();
+
+    @NonNull
+    File getJavaOutputDir(@NonNull AndroidAtom androidAtom);
 
     @NonNull
     Iterable<File> getJavaOutputs();
@@ -166,6 +172,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
+    File getResourceBlameLogDir(@NonNull AndroidAtom androidAtom);
+
+    @NonNull
     File getMergeAssetsOutputDir();
 
     @NonNull
@@ -200,6 +209,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getRClassSourceOutputDir();
+
+    @NonNull
+    File getRClassSourceOutputDir(@NonNull AndroidAtom androidAtom);
 
     @NonNull
     File getAidlSourceOutputDir();
@@ -273,6 +285,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getPackageSplitAbiOutputFiles();
 
     @NonNull
+    File getPackageAtom(@NonNull AndroidAtom androidAtom);
+
+    @NonNull
     File getAaptFriendlyManifestOutputFile();
 
     @NonNull
@@ -292,6 +307,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAnnotationProcessorOutputDir();
+
+    @NonNull
+    File getMainJarOutputDir();
 
     AndroidTask<DefaultTask> getAssembleTask();
 

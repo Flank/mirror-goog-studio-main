@@ -261,8 +261,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 .add("name", getName())
                 .add("project", getProject())
                 .add("variant", variant)
-                .add("requestedCoordinates", getRequestedCoordinates())
-                .add("resolvedCoordinates", getResolvedCoordinates())
                 .add("bundle", bundle)
                 .add("folder", folder)
                 .add("manifest", manifest)

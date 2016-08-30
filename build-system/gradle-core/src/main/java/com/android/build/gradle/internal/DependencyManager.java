@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_JAR;
 import static com.android.build.gradle.internal.dependency.DependencyChecker.computeVersionLessCoordinateKey;
+import static com.android.builder.core.BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE;
 import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE;
 import static com.android.builder.core.ErrorReporter.EvaluationMode.STANDARD;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
@@ -27,27 +28,27 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.tasks.PrepareAtomTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.builder.dependency.AtomDependency;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.DependencyContainerImpl;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.SdkLibData;
-import com.android.repository.api.RepoManager;
-import com.android.repository.api.RepoPackage;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -107,6 +108,7 @@ public class DependencyManager {
     private boolean repositoriesUpdated = false;
 
     private final Map<String, PrepareLibraryTask> prepareLibTaskMap = Maps.newHashMap();
+    private final Map<String, PrepareAtomTask> prepareAtomTaskMap = Maps.newHashMap();
 
     public DependencyManager(
             @NonNull Project project,
@@ -125,6 +127,11 @@ public class DependencyManager {
         VariantDependencies variantDeps = variantData.getVariantDependency();
         for (AndroidLibrary androidLibrary : variantDeps.getCompileDependencies().getAndroidDependencies()) {
             addDependencyToPrepareTask(tasks, androidLibrary, prepareDependenciesTask,
+                    variantData.getScope().getPreBuildTask());
+        }
+
+        for (AndroidAtom androidAtom : variantDeps.getCompileDependencies().getAtomDependencies()) {
+            addDependencyToPrepareTask(tasks, androidAtom, prepareDependenciesTask,
                     variantData.getScope().getPreBuildTask());
         }
 
@@ -150,20 +157,53 @@ public class DependencyManager {
         }
     }
 
+    private void addDependencyToPrepareTask(
+            @NonNull TaskFactory tasks,
+            @NonNull AndroidAtom atom,
+            @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask,
+            @NonNull AndroidTask<DefaultTask> preBuildTask) {
+        PrepareAtomTask prepareAtomTask = prepareAtomTaskMap.get(atom.getResolvedCoordinates().toString());
+        if (prepareAtomTask != null) {
+            prepareDependenciesTask.dependsOn(tasks, prepareAtomTask);
+            prepareAtomTask.dependsOn(preBuildTask.getName());
+        }
+
+        for (AndroidAtom childAtom : atom.getAtomDependencies()) {
+            addDependencyToPrepareTask(tasks, childAtom, prepareDependenciesTask, preBuildTask);
+        }
+
+        for (AndroidLibrary childLib : atom.getLibraryDependencies()) {
+            addDependencyToPrepareTask(tasks, childLib, prepareDependenciesTask, preBuildTask);
+        }
+    }
+
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath) {
         Multimap<AndroidLibrary, Configuration> reverseLibMap = ArrayListMultimap.create();
+        Multimap<AndroidAtom, Configuration> reverseAtomMap = ArrayListMultimap.create();
 
-        resolveDependencyForConfig(variantDeps, testedVariantDeps, testedProjectPath, reverseLibMap);
+        resolveDependencyForConfig(
+                variantDeps,
+                testedVariantDeps,
+                testedProjectPath,
+                reverseLibMap,
+                reverseAtomMap);
 
         processLibraries(reverseLibMap);
+        processAtoms(reverseAtomMap);
     }
 
     private void processLibraries(@NonNull Multimap<AndroidLibrary, Configuration> reverseMap) {
         for (AndroidLibrary lib : reverseMap.keySet()) {
             setupPrepareLibraryTask(lib, reverseMap.get(lib));
+        }
+    }
+
+    private void processAtoms(@NonNull Multimap<AndroidAtom, Configuration> reverseMap) {
+        for (AndroidAtom atom : reverseMap.keySet()) {
+            setupPrepareAtomTask(atom, reverseMap.get(atom));
         }
     }
 
@@ -195,9 +235,38 @@ public class DependencyManager {
                 }
 
                 prepareLibraryTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
-            }
-*/
+            }*/
+    }
 
+    private void setupPrepareAtomTask(
+            @NonNull AndroidAtom androidAtom,
+            @Nullable Collection<Configuration> configurationList) {
+        Task task = maybeCreatePrepareAtomTask(androidAtom, project);
+
+        // Use the reverse map to find all the configurations that included this android
+        // library so that we can make sure they are built.
+        // TODO fix, this is not optimum as we bring in more dependencies than we should.
+        if (configurationList != null && !configurationList.isEmpty()) {
+            for (Configuration configuration: configurationList) {
+                task.dependsOn(configuration.getBuildDependencies());
+            }
+        }
+
+        // check if this library is created by a parent (this is based on the
+        // output file.
+        // TODO Fix this as it's fragile
+            /*
+            This is a somewhat better way but it doesn't work in some project with
+            weird setups...
+            Project parentProject = DependenciesImpl.getProject(atom.getBundle(), projects)
+            if (parentProject != null) {
+                String configName = atom.getProjectVariant()
+                if (configName == null) {
+                    configName = "default"
+                }
+
+                prepareAtomTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
+            }*/
     }
 
     /**
@@ -242,11 +311,54 @@ public class DependencyManager {
         return prepareLibraryTask;
     }
 
+    /**
+     * Handles the atom and returns a task to "prepare" the atom (ie unarchive it). The task
+     * will be reused for all projects using the same atp,.
+     *
+     * @param atom the atom.
+     * @param project the project
+     * @return the prepare task.
+     */
+    private PrepareAtomTask maybeCreatePrepareAtomTask(
+            @NonNull AndroidAtom atom,
+            @NonNull Project project) {
+        AtomDependency atomDependency = (AtomDependency) atom;
+
+        // create proper key for the map. atom here contains all the dependencies which
+        // are not relevant for the task (since the task only extract the aar which does not
+        // include the dependencies.
+        // However there is a possible case of a rewritten dependencies (with resolution strategy)
+        // where the aar here could have different dependencies, in which case we would still
+        // need the same task.
+        // So we extract a AbstractAtomDependency (no dependencies) from the AtomDependency to
+        // make the map key that doesn't take into account the dependencies.
+        String key = atom.getResolvedCoordinates().toString();
+
+        PrepareAtomTask prepareAtomTask = prepareAtomTaskMap.get(key);
+
+        if (prepareAtomTask == null) {
+            String bundleName = GUtil.toCamelCase(atomDependency.getName().replaceAll("\\:", " "));
+
+            prepareAtomTask = project.getTasks().create(
+                    "prepare" + bundleName + "Atom", PrepareAtomTask.class);
+
+            prepareAtomTask.setDescription("Prepare " + atomDependency.getName());
+            prepareAtomTask.setBundle(atomDependency.getBundle());
+            prepareAtomTask.setExplodedDir(atomDependency.getFolder());
+            prepareAtomTask.setVariantName("");
+
+            prepareAtomTaskMap.put(key, prepareAtomTask);
+        }
+
+        return prepareAtomTask;
+    }
+
     private void resolveDependencyForConfig(
             @NonNull final VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap) {
+            @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap) {
 
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
@@ -289,6 +401,7 @@ public class DependencyManager {
                     packageClasspath,
                     variantDeps,
                     reverseLibMap,
+                    reverseAtomMap,
                     currentUnresolvedDependencies,
                     testedProjectPath,
                     artifactSet,
@@ -307,6 +420,7 @@ public class DependencyManager {
                 compileClasspath,
                 variantDeps,
                 reverseLibMap,
+                reverseAtomMap,
                 currentUnresolvedDependencies,
                 testedProjectPath,
                 artifactSet,
@@ -334,6 +448,9 @@ public class DependencyManager {
             System.out.println("*** COMPILE DEPS ***");
             for (AndroidLibrary lib : compileDependencies.getAndroidDependencies()) {
                 System.out.println("LIB: " + lib);
+            }
+            for (AndroidAtom atom : compileDependencies.getAtomDependencies()) {
+                System.out.println("ATOM: " + atom);
             }
             for (JavaLibrary jar : compileDependencies.getJarDependencies()) {
                 System.out.println("JAR: " + jar);
@@ -375,6 +492,7 @@ public class DependencyManager {
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
             @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
@@ -387,11 +505,13 @@ public class DependencyManager {
         // keep a map of modules already processed so that we don't go through sections of the
         // graph that have been seen elsewhere.
         Map<ModuleVersionIdentifier, List<LibraryDependency>> foundLibraries = Maps.newHashMap();
+        Map<ModuleVersionIdentifier, List<AtomDependency>> foundAtoms = Maps.newHashMap();
         Map<ModuleVersionIdentifier, List<JarDependency>> foundJars = Maps.newHashMap();
 
         // get the graph for the Android and Jar dependencies. This does not include
         // local jars.
         List<LibraryDependency> libraryDependencies = Lists.newArrayList();
+        List<AtomDependency> atomDependencies = Lists.newArrayList();
         List<JarDependency> jarDependencies = Lists.newArrayList();
 
         Set<? extends DependencyResult> dependencyResultSet = configuration.getIncoming()
@@ -404,11 +524,14 @@ public class DependencyManager {
                         variantDeps,
                         configuration,
                         libraryDependencies,
+                        atomDependencies,
                         jarDependencies,
                         foundLibraries,
+                        foundAtoms,
                         foundJars,
                         artifacts,
                         reverseLibMap,
+                        reverseAtomMap,
                         currentUnresolvedDependencies,
                         testedProjectPath,
                         Collections.emptyList(),
@@ -478,7 +601,11 @@ public class DependencyManager {
             }
         }
 
-        return new DependencyContainerImpl(libraryDependencies, jarDependencies, localJars);
+        return new DependencyContainerImpl(
+                libraryDependencies,
+                atomDependencies,
+                jarDependencies,
+                localJars);
     }
 
     private void ensureConfigured(Configuration config) {
@@ -497,8 +624,6 @@ public class DependencyManager {
             }
         }
     }
-
-
 
     /**
      * Collects the resolved artifacts and returns a configuration which contains them. If the
@@ -615,11 +740,14 @@ public class DependencyManager {
             @NonNull VariantDependencies configDependencies,
             @NonNull Configuration configuration,
             @NonNull Collection<LibraryDependency> outLibraries,
+            @NonNull Collection<AtomDependency> outAtoms,
             @NonNull List<JarDependency> outJars,
             @NonNull Map<ModuleVersionIdentifier, List<LibraryDependency>> alreadyFoundLibraries,
+            @NonNull Map<ModuleVersionIdentifier, List<AtomDependency>> alreadyFoundAtoms,
             @NonNull Map<ModuleVersionIdentifier, List<JarDependency>> alreadyFoundJars,
             @NonNull Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
             @NonNull Multimap<AndroidLibrary, Configuration> reverseLibMap,
+            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull List<String> projectChain,
@@ -639,6 +767,7 @@ public class DependencyManager {
         }
 
         List<LibraryDependency> libsForThisModule = alreadyFoundLibraries.get(moduleVersion);
+        List<AtomDependency> atomsForThisModule = alreadyFoundAtoms.get(moduleVersion);
         List<JarDependency> jarsForThisModule = alreadyFoundJars.get(moduleVersion);
 
         if (libsForThisModule != null) {
@@ -650,7 +779,15 @@ public class DependencyManager {
             for (AndroidLibrary lib : libsForThisModule) {
                 reverseLibMap.put(lib, configuration);
             }
+        } else if (atomsForThisModule != null) {
+            if (DEBUG_DEPENDENCY) {
+                printIndent(indent, "FOUND ATOM: " + moduleVersion.getName());
+            }
+            outAtoms.addAll(atomsForThisModule);
 
+            for (AndroidAtom atom : atomsForThisModule) {
+                reverseAtomMap.put(atom, configuration);
+            }
         } else if (jarsForThisModule != null) {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "FOUND JAR: " + moduleVersion.getName());
@@ -660,7 +797,7 @@ public class DependencyManager {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "NOT FOUND: " + moduleVersion.getName());
             }
-            // new module! Might be a jar or a library
+            // new module! Might be a jar, an atom or a library
 
             // get the associated gradlepath
             ComponentIdentifier id = resolvedComponentResult.getId();
@@ -677,6 +814,7 @@ public class DependencyManager {
 
             // get the nested components first.
             List<LibraryDependency> nestedLibraries = Lists.newArrayList();
+            List<AtomDependency> nestedAtoms = Lists.newArrayList();
             List<JarDependency> nestedJars = Lists.newArrayList();
 
             Set<? extends DependencyResult> dependencies = resolvedComponentResult.getDependencies();
@@ -713,11 +851,14 @@ public class DependencyManager {
                             configDependencies,
                             configuration,
                             nestedLibraries,
+                            nestedAtoms,
                             nestedJars,
                             alreadyFoundLibraries,
+                            alreadyFoundAtoms,
                             alreadyFoundJars,
                             artifacts,
                             reverseLibMap,
+                            reverseAtomMap,
                             currentUnresolvedDependencies,
                             testedProjectPath,
                             newProjectChain,
@@ -736,6 +877,7 @@ public class DependencyManager {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "BACK2: " + moduleVersion.getName());
                 printIndent(indent, "NESTED LIBS: " + nestedLibraries.size());
+                printIndent(indent, "NESTED ATOMS: " + nestedAtoms.size());
                 printIndent(indent, "NESTED JARS: " + nestedJars.size());
             }
 
@@ -789,6 +931,70 @@ public class DependencyManager {
                         outLibraries.add(LibraryDependency);
                         reverseLibMap.put(LibraryDependency, configuration);
 
+                        // check this aar does not have a dependency on an atom, as this would
+                        // not work.
+                        if (!nestedAtoms.isEmpty()) {
+                            configDependencies.getChecker()
+                                    .handleIssue(
+                                            createMavenCoordinates(artifact).toString(),
+                                            SyncIssue.TYPE_AAR_DEPEND_ON_ATOM,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            String.format(
+                                                    "Module '%s' depends on one or more Android Atoms but is a library",
+                                                    moduleVersion));
+                        }
+                    } else if (EXT_ATOMBUNDLE_ARCHIVE.equals(artifact.getExtension())) {
+                        if (provided) {
+                            configDependencies.getChecker()
+                                    .handleIssue(
+                                            createMavenCoordinates(artifact).toString(),
+                                            SyncIssue.TYPE_ATOM_DEPENDENCY_PROVIDED,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            String.format(
+                                                    "Module '%s' is an Atom, which cannot be a provided dependency",
+                                                    moduleVersion));
+                        }
+                        if (DEBUG_DEPENDENCY) {
+                            printIndent(indent, "TYPE: ATOM");
+                        }
+                        if (atomsForThisModule == null) {
+                            atomsForThisModule = Lists.newArrayList();
+                            alreadyFoundAtoms.put(moduleVersion, atomsForThisModule);
+                        }
+
+                        // if this is a package scope, then skip the dependencies.
+                        if (scopeType == ScopeType.PACKAGE) {
+                            recursiveLibSkip(nestedLibraries);
+                            recursiveJavaSkip(nestedJars);
+                        }
+
+                        String path = computeArtifactPath(moduleVersion, artifact);
+                        String name = computeArtifactName(moduleVersion, artifact);
+
+                        if (DEBUG_DEPENDENCY) {
+                            printIndent(indent, "NAME: " + name);
+                            printIndent(indent, "PATH: " + path);
+                        }
+
+                        File explodedDir = project.file(project.getBuildDir() + "/" + FD_INTERMEDIATES + "/exploded-atombundle/" + path);
+
+                        @SuppressWarnings("unchecked")
+                        AtomDependency atomDependency = new AtomDependency(
+                                artifact.getFile(),
+                                explodedDir,
+                                nestedLibraries,
+                                nestedAtoms,
+                                nestedJars,
+                                moduleVersion.getName(), /* atomName */
+                                name,
+                                artifact.getClassifier(),
+                                gradlePath,
+                                null /*requestedCoordinates*/,
+                                mavenCoordinates);
+
+                        atomsForThisModule.add(atomDependency);
+                        outAtoms.add(atomDependency);
+                        reverseAtomMap.put(atomDependency, configuration);
                     } else if (EXT_JAR.equals(artifact.getExtension())) {
                         if (DEBUG_DEPENDENCY) {
                             printIndent(indent, "TYPE: JAR");
@@ -829,6 +1035,18 @@ public class DependencyManager {
                                                         "Module '%s' depends on one or more Android Libraries but is a jar",
                                                         moduleVersion));
                             }
+                        }
+
+                        // check this jar does not have a dependency on an atom, as this would not work.
+                        if (!nestedAtoms.isEmpty()) {
+                            configDependencies.getChecker()
+                                    .handleIssue(
+                                            createMavenCoordinates(artifact).toString(),
+                                            SyncIssue.TYPE_JAR_DEPEND_ON_ATOM,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            String.format(
+                                                    "Module '%s' depends on one or more Android Atoms but is a jar",
+                                                    moduleVersion));
                         }
 
                         if (jarsForThisModule == null) {

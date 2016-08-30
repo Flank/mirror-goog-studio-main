@@ -115,16 +115,28 @@ public interface PackagingScope {
     String getTaskName(@NonNull String name);
 
     @NonNull
-    Project getProject();
+    String getTaskName(@NonNull String prefix, @NonNull String suffix);
 
     @NonNull
-    File getOutputApk();
+    Project getProject();
 
+    /**
+     * Returns the output package file.
+     */
+    @NonNull
+    File getOutputPackage();
+
+    /**
+     * Returns the intermediate APK file.
+     */
     @NonNull
     File getIntermediateApk();
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();
+
+    @Nullable
+    File getAtomMetadataBaseFolder();
 
     @NonNull
     String getApplicationId();

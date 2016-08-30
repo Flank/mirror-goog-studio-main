@@ -20,11 +20,13 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_JARS;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.MavenCoordinatesImpl;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -52,19 +54,25 @@ import java.util.zip.ZipFile;
 final class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
 
+    private static final CreatingCache<AndroidAtom, AndroidAtomImpl> sAtomCache
+            = new CreatingCache<>(DependenciesImpl::convertAndroidAtom);
     private static final CreatingCache<AndroidLibrary, AndroidLibraryImpl> sLibCache
-            = new CreatingCache<AndroidLibrary, AndroidLibraryImpl>(DependenciesImpl::convertAndroidLibrary);
+            = new CreatingCache<>(DependenciesImpl::convertAndroidLibrary);
     private static final CreatingCache<JavaLibrary, JavaLibraryImpl> sJarCache
-            = new CreatingCache<JavaLibrary, JavaLibraryImpl>(DependenciesImpl::convertJarLibrary);
+            = new CreatingCache<>(DependenciesImpl::convertJarLibrary);
     private static final CreatingCache<JavaLibrary, JavaLibraryImpl> sFlatJarCache
-            = new CreatingCache<JavaLibrary, JavaLibraryImpl>(DependenciesImpl::convertFlatJarLibrary);
+            = new CreatingCache<>(DependenciesImpl::convertFlatJarLibrary);
 
+    @NonNull
+    private final List<AndroidAtom> atoms;
     @NonNull
     private final List<AndroidLibrary> libraries;
     @NonNull
     private final List<JavaLibrary> javaLibraries;
     @NonNull
     private final List<String> projects;
+    @Nullable
+    private final AndroidAtom baseAtom;
 
     private static int sModelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
 
@@ -73,6 +81,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
     }
 
     public static void clearCaches() {
+        sAtomCache.clear();
         sLibCache.clear();
         sJarCache.clear();
         sFlatJarCache.clear();
@@ -80,16 +89,27 @@ final class DependenciesImpl implements Dependencies, Serializable {
 
     @NonNull
     static DependenciesImpl getEmpty() {
-        return new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+        return new DependenciesImpl(
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                null);
     }
 
     @NonNull
     static DependenciesImpl cloneDependenciesForJavaArtifacts(@NonNull Dependencies dependencies) {
+        List<AndroidAtom> atoms = Collections.emptyList();
         List<AndroidLibrary> libraries = Collections.emptyList();
         List<JavaLibrary> javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
         List<String> projects = Collections.emptyList();
 
-        return new DependenciesImpl(libraries, javaLibraries, projects);
+        return new DependenciesImpl(
+                atoms,
+                libraries,
+                javaLibraries,
+                projects,
+                dependencies.getBaseAtom());
     }
 
     @NonNull
@@ -97,9 +117,13 @@ final class DependenciesImpl implements Dependencies, Serializable {
             @NonNull DependencyContainer dependencies,
             @NonNull VariantConfiguration variantConfiguration,
             @NonNull AndroidBuilder androidBuilder) {
+        List<AndroidAtom> clonedAndroidAtoms;
         List<AndroidLibrary> clonedAndroidLibraries;
         List<JavaLibrary> clonedJavaLibraries;
         List<String> clonedProjects = Lists.newArrayList();
+
+        List<AndroidAtom> androidAtoms = dependencies.getAtomDependencies();
+        clonedAndroidAtoms = Lists.newArrayListWithCapacity(androidAtoms.size());
 
         List<AndroidLibrary> androidLibraries = dependencies.getAndroidDependencies();
         clonedAndroidLibraries = Lists.newArrayListWithCapacity(androidLibraries.size());
@@ -108,6 +132,13 @@ final class DependenciesImpl implements Dependencies, Serializable {
         List<JavaLibrary> localJavaLibraries = dependencies.getLocalDependencies();
 
         clonedJavaLibraries = Lists.newArrayListWithExpectedSize(javaLibraries.size() + localJavaLibraries.size());
+
+        for (AndroidAtom atomImpl : androidAtoms) {
+            AndroidAtom clonedAtom = sAtomCache.get(atomImpl);
+            if (clonedAtom != null) {
+                clonedAndroidAtoms.add(clonedAtom);
+            }
+        }
 
         for (AndroidLibrary libImpl : androidLibraries) {
             AndroidLibrary clonedLib = sLibCache.get(libImpl);
@@ -144,7 +175,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
                     new JavaLibraryImpl(
                             localJavaLibrary.getJarFile(),
                             null /*project*/,
-                            ImmutableList.<JavaLibrary>of(),
+                            ImmutableList.of(),
                             localJavaLibrary.getRequestedCoordinates(),
                             localJavaLibrary.getResolvedCoordinates(),
                             localJavaLibrary.isSkipped(),
@@ -157,7 +188,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
                 clonedJavaLibraries.add(new JavaLibraryImpl(
                         supportJar,
                         null /*project*/,
-                        ImmutableList.<JavaLibrary>of(),
+                        ImmutableList.of(),
                         null,
                         new MavenCoordinatesImpl(
                                 "com.android.support",
@@ -168,10 +199,17 @@ final class DependenciesImpl implements Dependencies, Serializable {
             }
         }
 
+        // Finally, find the base atom, if present.
+        AndroidAtom baseAtom = null;
+        if (dependencies.getBaseAtom() != null)
+            baseAtom = sAtomCache.get(dependencies.getBaseAtom());
+
         return new DependenciesImpl(
+                clonedAndroidAtoms,
                 clonedAndroidLibraries,
                 clonedJavaLibraries,
-                clonedProjects);
+                clonedProjects,
+                baseAtom);
     }
 
     private static void handleFlatClonedAndroidLib(
@@ -210,12 +248,22 @@ final class DependenciesImpl implements Dependencies, Serializable {
     }
 
     private DependenciesImpl(
+            @NonNull List<AndroidAtom> atoms,
             @NonNull List<AndroidLibrary> libraries,
             @NonNull List<JavaLibrary> javaLibraries,
-            @NonNull List<String> projects) {
+            @NonNull List<String> projects,
+            @Nullable AndroidAtom baseAtom) {
+        this.atoms = atoms;
         this.libraries = libraries;
         this.javaLibraries = javaLibraries;
         this.projects = projects;
+        this.baseAtom = baseAtom;
+    }
+
+    @NonNull
+    @Override
+    public Collection<AndroidAtom> getAtoms() {
+        return atoms;
     }
 
     @NonNull
@@ -234,6 +282,55 @@ final class DependenciesImpl implements Dependencies, Serializable {
     @Override
     public List<String> getProjects() {
         return projects;
+    }
+
+    @Nullable
+    @Override
+    public AndroidAtom getBaseAtom() {
+        return baseAtom;
+    }
+
+    @NonNull
+    private static AndroidAtomImpl convertAndroidAtom(
+            @NonNull AndroidAtom atomDependency) {
+        List<? extends AndroidAtom> atomDeps = atomDependency.getAtomDependencies();
+        List<AndroidAtom> clonedAtomDeps = Lists.newArrayListWithCapacity(atomDeps.size());
+        for (AndroidAtom childAtom : atomDeps) {
+            AndroidAtom clonedAtom = sAtomCache.get(childAtom);
+            if (clonedAtom != null) {
+                clonedAtomDeps.add(clonedAtom);
+            }
+        }
+
+        List<? extends AndroidLibrary> libDeps = atomDependency.getLibraryDependencies();
+        List<AndroidLibrary> clonedLibDeps = Lists.newArrayListWithCapacity(libDeps.size());
+        for (AndroidLibrary childLib : libDeps) {
+            AndroidLibrary clonedLib = sLibCache.get(childLib);
+            if (clonedLib != null) {
+                clonedLibDeps.add(clonedLib);
+            }
+        }
+
+        // get the clones of the Java libraries
+        List<JavaLibrary> clonedJavaLibraries;
+        if (sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH) {
+            Collection<? extends JavaLibrary> jarDeps = atomDependency.getJavaDependencies();
+            clonedJavaLibraries = Lists.newArrayListWithCapacity(jarDeps.size());
+            for (JavaLibrary javaLibrary : jarDeps) {
+                JavaLibraryImpl clonedJar = sJarCache.get(javaLibrary);
+                if (clonedJar != null) {
+                    clonedJavaLibraries.add(clonedJar);
+                }
+            }
+        } else {
+            clonedJavaLibraries = ImmutableList.of();
+        }
+
+        return new AndroidAtomImpl(
+                atomDependency,
+                clonedAtomDeps,
+                clonedLibDeps,
+                clonedJavaLibraries);
     }
 
     @NonNull
@@ -373,9 +470,11 @@ final class DependenciesImpl implements Dependencies, Serializable {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DependenciesImpl{");
-        sb.append("libraries=").append(libraries);
+        sb.append("atoms=").append(atoms);
+        sb.append(", libraries=").append(libraries);
         sb.append(", javaLibraries=").append(javaLibraries);
         sb.append(", projects=").append(projects);
+        sb.append(", baseAtom=").append(baseAtom);
         sb.append('}');
         return sb.toString();
     }
@@ -389,13 +488,16 @@ final class DependenciesImpl implements Dependencies, Serializable {
             return false;
         }
         DependenciesImpl that = (DependenciesImpl) o;
-        return Objects.equals(libraries, that.libraries) &&
+        return Objects.equals(atoms, that.atoms) &&
+                Objects.equals(libraries, that.libraries) &&
                 Objects.equals(javaLibraries, that.javaLibraries) &&
-                Objects.equals(projects, that.projects);
+                Objects.equals(projects, that.projects) &&
+                Objects.equals(baseAtom, that.baseAtom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(libraries, javaLibraries, projects);
+        return Objects.hash(
+                atoms, libraries, javaLibraries, projects, baseAtom);
     }
 }

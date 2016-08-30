@@ -84,6 +84,10 @@ public final class SdkConstants {
     public static final String FN_APK_CLASSES_DEX = "classes.dex";                    //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex";                //$NON-NLS-1$
+    /** Atom metadata filename inside the atom. i.e. "atom-metadata" */
+    public static final String FN_ATOM_METADATA = "atom-metadata";                    //$NON-NLS-1$
+    /** Atom metadata filename inside the iapk. i.e. "instantapp-metadata" */
+    public static final String FN_INSTANTAPP_METADATA = "instantapp-metadata";        //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml";                            //$NON-NLS-1$
@@ -131,6 +135,8 @@ public final class SdkConstants {
     public static final String FN_INTENT_ACTIONS_SERVICE = "service_actions.txt";     //$NON-NLS-1$
     /** Intent category list file */
     public static final String FN_INTENT_CATEGORIES = "categories.txt";               //$NON-NLS-1$
+    /** Name of the lint library, i.e. "lint.jar" */
+    public static final String FN_LINT_JAR = "lint.jar";                              //$NON-NLS-1$
 
     /** annotations support jar */
     public static final String FN_ANNOTATIONS_JAR = "annotations.jar";                //$NON-NLS-1$
@@ -273,6 +279,8 @@ public final class SdkConstants {
     public static final String FN_GDBSERVER = "gdbserver";              //$NON-NLS-1$
     public static final String FN_GDB_SETUP = "gdb.setup";              //$NON-NLS-1$
 
+    /** proguard config file in a bundle. */
+    public static final String FN_PROGUARD_TXT = "proguard.txt";        //$NON-NLS-1$
     /** global Android proguard config file */
     public static final String FN_ANDROID_PROGUARD_FILE = "proguard-android.txt";   //$NON-NLS-1$
     /** global Android proguard config file with optimization enabled */
@@ -418,9 +426,20 @@ public final class SdkConstants {
     public static final String FD_ANDROID_SOURCES = "sources";          //$NON-NLS-1$
     /** Name of the addon libs folder. */
     public static final String FD_ADDON_LIBS = "libs";                  //$NON-NLS-1$
+    /** Name of the merged resources folder. */
+    public static final String FD_MERGED = "merged";                    //$NON-NLS-1$
+    /** Name of the output dex folder. */
+    public static final String FD_DEX = "dex";                          //$NON-NLS-1$
+    /** Name of the generated source folder. */
+    public static final String FD_SOURCE_GEN = "source";
+    /** Name of the generated R.class source folder */
+    public static final String FD_RES_CLASS = "r";
 
     /** Name of the cache folder in the $HOME/.android. */
     public static final String FD_CACHE = "cache";                      //$NON-NLS-1$
+
+    /** Name of the atom and instant-app metadata folder. */
+    public static final String FD_INSTANTAPP_METADATA = "metadata";     //$NON-NLS-1$
 
     /** API codename of a release (non preview) system image or platform. **/
     public static final String CODENAME_RELEASE = "REL";                //$NON-NLS-1$
@@ -752,6 +771,8 @@ public final class SdkConstants {
     public static final String FD_RES_XML = "xml"; //$NON-NLS-1$
     /** Default raw resource folder name, i.e. "raw" */
     public static final String FD_RES_RAW = "raw"; //$NON-NLS-1$
+    /** Base name for the resource package files */
+    public static final String FN_RES_BASE = "resources"; //$NON-NLS-1$
     /** Separator between the resource folder qualifier. */
     public static final String RES_QUALIFIER_SEP = "-"; //$NON-NLS-1$
     /** Namespace used in XML files for Android attributes */
@@ -1362,7 +1383,7 @@ public final class SdkConstants {
     public static final String EXT_RES = "ap_"; //$NON-NLS-1$
     /** Extension for pre-processable images. Right now pngs */
     public static final String EXT_PNG = "png"; //$NON-NLS-1$
-    /** Extension for Java heap dumps. */
+    /** Extension for Android archive files */
     public static final String EXT_HPROF = "hprof"; //$NON-NLS-1$
 
     private static final String DOT = "."; //$NON-NLS-1$

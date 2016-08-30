@@ -24,6 +24,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.internal.ClassFieldImpl;
+import com.android.builder.model.AndroidAtom;
+import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
@@ -718,7 +720,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the compile Android libraries, direct and transitive in a single flat list.
+     * Returns all the compile Android library dependencies, direct and transitive in a single
+     * flat list.
      */
     @NonNull
     public List<AndroidLibrary> getFlatCompileAndroidLibraries() {
@@ -726,7 +729,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the library dependencies, direct and transitive in a single flat list.
+     * Returns all the Android atom dependencies, direct and transitive in a single flat list.
+     * Since atoms can never be provided dependencies, the compile and package dependencies are the
+     * same for atoms.
+     */
+    @NonNull
+    public List<AndroidAtom> getFlatAndroidAtomsDependencies() {
+        return mFlatPackageDependencies.getAtomDependencies();
+    }
+
+    /**
+     * Returns all the package library dependencies, direct and transitive in a single flat list.
      */
     @NonNull
     public List<AndroidLibrary> getFlatPackageAndroidLibraries() {
@@ -1008,6 +1021,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                     mDefaultSourceProvider.getManifestFile().getAbsolutePath()));
         }
         return packageName;
+    }
+
+    /**
+     * Reads the split name from the manifest.
+     */
+    @Nullable
+    public String getSplitFromManifest() {
+        return getManifestAttributeSupplier().getSplit();
     }
 
     @Nullable
@@ -1327,6 +1348,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
      * {@link com.android.ide.common.res2.AssetMerger}.
      *
+     * @param generatedAssetFolders a list of generated assets folder
+     * @param includeDependencies true to include the library dependencies asset folders
+     *
      * @return a list ResourceSet.
      */
     @NonNull
@@ -1627,6 +1651,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         Set<File> classpath = Sets.newHashSetWithExpectedSize(
                 mFlatCompileDependencies.getJarDependencies().size() +
+                        mFlatCompileDependencies.getAtomDependencies().size() +
                         mFlatCompileDependencies.getLocalDependencies().size() +
                         mFlatCompileDependencies.getAndroidDependencies().size());
 
@@ -1635,6 +1660,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             for (File jarFile : android.getLocalJars()) {
                 classpath.add(jarFile);
             }
+        }
+
+        for (AndroidAtom atom : mFlatCompileDependencies.getAtomDependencies()) {
+            classpath.add(atom.getJarFile());
         }
 
         for (JavaLibrary javaLibrary : mFlatCompileDependencies.getJarDependencies()) {
@@ -2341,7 +2370,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns true if the variant output is a bundle.
      */
     public boolean isBundled() {
-        return mType == VariantType.LIBRARY;
+        return mType == VariantType.LIBRARY || mType == VariantType.ATOM;
     }
 
     @NonNull

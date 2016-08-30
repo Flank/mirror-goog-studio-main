@@ -887,7 +887,7 @@ public class ManifestMerger2 {
         }
 
         @NonNull
-        public Invoker addLibraryManifests(@NonNull List<Pair<String, File>> namesAndFiles) {
+        public Invoker addBundleManifests(@NonNull List<Pair<String, File>> namesAndFiles) {
             if (mMergeType == MergeType.LIBRARY && !namesAndFiles.isEmpty()) {
                 throw new IllegalStateException(
                         "Cannot add library dependencies manifests when creating a library");

@@ -16,7 +16,17 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.SdkConstants.DOT_ATOM;
+import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FD_CLASSES_OUTPUT;
+import static com.android.SdkConstants.FD_DEX;
+import static com.android.SdkConstants.FD_MERGED;
+import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_CLASS;
+import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
+import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -58,6 +68,8 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
+import com.android.builder.core.VariantType;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -259,6 +271,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        if (getVariantData().getType() == VariantType.ATOM)
+            suffix = ATOM_SUFFIX + suffix;
         return prefix + StringHelper.capitalize(getVariantConfiguration().getFullName()) + suffix;
     }
 
@@ -347,6 +361,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return new File(globalScope.getIntermediatesDir(), "/dex/" + getVariantConfiguration().getDirName());
     }
 
+    @NonNull
+    @Override
+    public File getDexOutputFolder(@NonNull AndroidAtom androidAtom) {
+        return FileUtils.join(globalScope.getIntermediatesDir(),
+                FD_DEX,
+                androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
+    }
+
     @Override
     @NonNull
     public File getReloadDexOutputFolder() {
@@ -386,6 +408,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getJavaOutputDir() {
         return new File(globalScope.getIntermediatesDir(), "/classes/" +
                 variantData.getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
+    public File getJavaOutputDir(@NonNull AndroidAtom androidAtom) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                FD_CLASSES_OUTPUT,
+                androidAtom.getAtomName() + "-" +
+                        variantData.getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -529,8 +561,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getDefaultMergeResourcesOutputDir() {
-        return new File(globalScope.getIntermediatesDir(),
-                "/res/merged/" + getVariantConfiguration().getDirName());
+        if (getVariantData().getType() == VariantType.ATOM) {
+            return FileUtils.join(getBaseBundleDir(), FD_RES);
+        } else {
+            return FileUtils.join(getGlobalScope().getIntermediatesDir(),
+                    FD_RES,
+                    FD_MERGED,
+                    getVariantConfiguration().getDirName());
+        }
     }
 
     @Override
@@ -556,13 +594,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         "blame", "res", getDirectorySegments()));
     }
 
+    @NonNull
+    @Override
+    public File getResourceBlameLogDir(@NonNull AndroidAtom androidAtom) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                StringHelper.toStrings(
+                        "blame", "res", androidAtom.getAtomName(), getDirectorySegments()));
+    }
+
     @Override
     @NonNull
     public File getMergeAssetsOutputDir() {
         return getVariantConfiguration().isBundled() ?
-                new File(getBaseBundleDir(), "assets") :
-                new File(globalScope.getIntermediatesDir(),
-                        "/assets/" + getVariantConfiguration().getDirName());
+                new File(getBaseBundleDir(), FD_ASSETS) :
+                FileUtils.join(globalScope.getIntermediatesDir(),
+                        FD_ASSETS, getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -667,6 +714,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getRClassSourceOutputDir() {
         return new File(globalScope.getGeneratedDir(),
                 "source/r/" + getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
+    public File getRClassSourceOutputDir(@NonNull AndroidAtom androidAtom) {
+        return FileUtils.join(
+                globalScope.getGeneratedDir(),
+                FD_SOURCE_GEN,
+                FD_RES_CLASS,
+                androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -830,6 +887,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
+    public File getPackageAtom(@NonNull AndroidAtom androidAtom) {
+        return new File(getMergeAssetsOutputDir(),
+                androidAtom.getAtomName() + DOT_ATOM);
+    }
+
+    @NonNull
+    @Override
     public File getAaptFriendlyManifestOutputFile() {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
@@ -882,9 +946,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBaseBundleDir() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                DIR_BUNDLES, getVariantConfiguration().getDirName());
+        return FileUtils.join(getGlobalScope().getIntermediatesDir(),
+                getVariantConfiguration().getType() == VariantType.ATOM ?
+                        DIR_ATOMBUNDLES : DIR_BUNDLES,
+                getDirName());
     }
 
     @NonNull
@@ -895,6 +960,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "source",
                 "apt",
                 getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
+    public File getMainJarOutputDir() {
+        if (getVariantConfiguration().getType() == VariantType.ATOM)
+            return getBaseBundleDir();
+        else
+            return FileUtils.join(globalScope.getIntermediatesDir(),
+                    "packaged",
+                    getVariantConfiguration().getDirName());
     }
 
     // Tasks getters/setters.

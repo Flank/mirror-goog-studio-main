@@ -189,13 +189,19 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return prefix + getFullVariantName() + suffix;
+    }
+
+    @NonNull
+    @Override
     public Project getProject() {
         return mProject;
     }
 
     @NonNull
     @Override
-    public File getOutputApk() {
+    public File getOutputPackage() {
         return getMainOutputFile().getOutputFile();
     }
 
@@ -215,6 +221,12 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
+    }
+
+    @Nullable
+    @Override
+    public File getAtomMetadataBaseFolder() {
+        return null;
     }
 
     @NonNull

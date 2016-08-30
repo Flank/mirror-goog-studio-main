@@ -20,10 +20,10 @@ import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_PROGUARD_TXT;
+import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
-import static com.android.builder.dependency.AbstractBundleDependency.FN_PROGUARD_TXT;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -202,7 +202,7 @@ public class LibraryTaskManager extends TaskManager {
                                         MergeResources mergeResourcesTask = (MergeResources) task;
                                         mergeResourcesTask.setPublicFile(FileUtils.join(
                                                 variantBundleDir,
-                                                SdkConstants.FN_PUBLIC_TXT
+                                                FN_PUBLIC_TXT
                                         ));
                                     }
                                 });

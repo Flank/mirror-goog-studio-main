@@ -196,8 +196,14 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
 //            builder.addArgs("--pseudo-localize");
         }
 
-        // library specific options
+        // bundle specific options
+        boolean generateFinalIds = true;
         if (config.getVariantType() == VariantType.LIBRARY) {
+            generateFinalIds = false;
+        } else if (config.getVariantType() == VariantType.ATOM && config.getBaseFeature() != null) {
+            generateFinalIds = false;
+        }
+        if (!generateFinalIds) {
             builder.addArgs("--static-lib");        // --non-constant-id
         }
 
