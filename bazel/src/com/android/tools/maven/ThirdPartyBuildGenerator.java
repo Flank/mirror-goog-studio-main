@@ -9,7 +9,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -18,6 +17,9 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import java.io.FileWriter;
@@ -52,6 +54,9 @@ public class ThirdPartyBuildGenerator {
                             "com.squareup:javawriter:2.5.0",
                             "net.sf.kxml:kxml2:2.3.0",
                             "org.apache.maven:maven-aether-provider:3.3.9",
+                            "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
+                            "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
+                            "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
                             "org.bouncycastle:bcpkix-jdk15on:1.48",
                             "org.bouncycastle:bcprov-jdk15on:1.48",
                             "org.ow2.asm:asm-tree:5.0.4",
@@ -103,7 +108,8 @@ public class ThirdPartyBuildGenerator {
     }
 
     private void generateBuildFile()
-            throws DependencyCollectionException, IOException, ArtifactDescriptorException {
+            throws DependencyCollectionException, IOException, ArtifactDescriptorException,
+                    DependencyResolutionException {
         SortedMap<String, Artifact> versions = computeEffectiveVersions();
 
         Files.createDirectories(mBuildFile.getParent());
@@ -123,7 +129,7 @@ public class ThirdPartyBuildGenerator {
 
                 Artifact artifact = entry.getValue();
                 deps.add(getJarTarget(artifact));
-                deps.addAll(getDirectDependencies(artifact));
+                deps.addAll(getDirectDependencies(artifact, versions.keySet()));
 
                 fileWriter.append(
                         String.format(
@@ -139,7 +145,7 @@ public class ThirdPartyBuildGenerator {
         }
     }
 
-    private List<String> getDirectDependencies(Artifact artifact)
+    private List<String> getDirectDependencies(Artifact artifact, Set<String> allArtifacts)
             throws ArtifactDescriptorException {
         ArtifactDescriptorResult artifactDescriptorResult =
                 mRepositorySystem.readArtifactDescriptor(
@@ -151,6 +157,8 @@ public class ThirdPartyBuildGenerator {
                 .stream()
                 .filter(dependency -> JavaScopes.COMPILE.equals(dependency.getScope()))
                 .filter(dependency -> !dependency.isOptional())
+                // This can be false, if a library was excluded using Maven exclusions.
+                .filter(dependency -> allArtifacts.contains(getRuleName(dependency.getArtifact())))
                 .map(dependency -> ":" + getRuleName(dependency.getArtifact()))
                 .collect(Collectors.toList());
     }
@@ -160,16 +168,20 @@ public class ThirdPartyBuildGenerator {
         return PREBUILTS_BAZEL_PACKAGE + jar.getParent() + ":" + JavaImportGenerator.RULE_NAME;
     }
 
-    private SortedMap<String, Artifact> computeEffectiveVersions() throws DependencyCollectionException {
-        CollectRequest request = new CollectRequest();
-        request.setDependencies(
+    private SortedMap<String, Artifact> computeEffectiveVersions()
+            throws DependencyCollectionException, DependencyResolutionException {
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setDependencies(
                 ALL_DEPENDENCIES
                         .stream()
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
                         .collect(Collectors.toList()));
 
-        CollectResult result =
-                mRepositorySystem.collectDependencies(mRepositorySystemSession, request);
+        collectRequest.setRepositories(AetherUtils.REPOSITORIES);
+
+        DependencyResult result =
+                mRepositorySystem.resolveDependencies(
+                        mRepositorySystemSession, new DependencyRequest(collectRequest, null));
 
         SortedMap<String, Artifact> versions = new TreeMap<>();
 
@@ -181,6 +193,7 @@ public class ThirdPartyBuildGenerator {
                                 Artifact artifact = node.getArtifact();
                                 if (artifact != null) {
                                     versions.put(getRuleName(artifact), artifact);
+                                    JavaImportGenerator.generateJavaImportRule(artifact);
                                 }
 
                                 return true;

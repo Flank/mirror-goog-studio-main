@@ -29,6 +29,12 @@ java_library(
 )
 
 java_library(
+    name = "commons-codec_commons-codec",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar"],
+)
+
+java_library(
     name = "junit_junit",
     visibility = ["//visibility:public"],
     exports = [
@@ -47,6 +53,22 @@ java_library(
     name = "org.apache.commons_commons-lang3",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar"],
+)
+
+java_library(
+    name = "org.apache.httpcomponents_httpclient",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":commons-codec_commons-codec",
+        ":org.apache.httpcomponents_httpcore",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.2.6:jar",
+    ],
+)
+
+java_library(
+    name = "org.apache.httpcomponents_httpcore",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.2.5:jar"],
 )
 
 java_library(
@@ -172,6 +194,17 @@ java_library(
 )
 
 java_library(
+    name = "org.eclipse.aether_aether-connector-basic",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.eclipse.aether_aether-api",
+        ":org.eclipse.aether_aether-spi",
+        ":org.eclipse.aether_aether-util",
+        "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-connector-basic/1.0.2.v20150114:jar",
+    ],
+)
+
+java_library(
     name = "org.eclipse.aether_aether-impl",
     visibility = ["//visibility:public"],
     exports = [
@@ -188,6 +221,30 @@ java_library(
     exports = [
         ":org.eclipse.aether_aether-api",
         "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-spi/1.0.2.v20150114:jar",
+    ],
+)
+
+java_library(
+    name = "org.eclipse.aether_aether-transport-file",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.eclipse.aether_aether-api",
+        ":org.eclipse.aether_aether-spi",
+        ":org.eclipse.aether_aether-util",
+        "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-file/1.0.2.v20150114:jar",
+    ],
+)
+
+java_library(
+    name = "org.eclipse.aether_aether-transport-http",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.apache.httpcomponents_httpclient",
+        ":org.eclipse.aether_aether-api",
+        ":org.eclipse.aether_aether-spi",
+        ":org.eclipse.aether_aether-util",
+        ":org.slf4j_jcl-over-slf4j",
+        "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114:jar",
     ],
 )
 
@@ -231,4 +288,19 @@ java_library(
         ":org.ow2.asm_asm",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4:jar",
     ],
+)
+
+java_library(
+    name = "org.slf4j_jcl-over-slf4j",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.slf4j_slf4j-api",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2:jar",
+    ],
+)
+
+java_library(
+    name = "org.slf4j_slf4j-api",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.6.2:jar"],
 )

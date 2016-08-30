@@ -2,11 +2,6 @@ package com.android.tools.maven;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -14,7 +9,15 @@ import org.apache.maven.model.building.FileModelSource;
 import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Binary that generates a BUILD file with a single java_import for every {@code *.pom} file in a
@@ -29,14 +32,12 @@ public class JavaImportGenerator {
 
         if (args.length != 1) {
             usage();
-            System.exit(1);
         }
 
         Path repoDirectory = Paths.get(args[0]);
         if (!repoDirectory.getFileName().toString().equals("repository")
                 || !repoDirectory.getParent().getFileName().toString().equals("m2")) {
             usage();
-            System.exit(1);
         }
 
         new JavaImportGenerator(repoDirectory).processPomFiles();
@@ -44,6 +45,7 @@ public class JavaImportGenerator {
 
     private static void usage() {
         System.err.println("Usage: JavaImportGenerator path/to/m2/repository");
+        System.exit(1);
     }
 
     private final Path mRepoDirectory;
@@ -59,13 +61,14 @@ public class JavaImportGenerator {
     private void processPomFiles() throws IOException, ArtifactDescriptorException {
         Files.walk(mRepoDirectory)
                 .filter(path -> hasExtension(path, ".pom"))
-                .forEach(pom -> {
-                    try {
-                        processPomFile(pom);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .forEach(
+                        pom -> {
+                            try {
+                                processPomFile(pom);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
 
         System.out.println();
     }
@@ -75,9 +78,6 @@ public class JavaImportGenerator {
     }
 
     private void processPomFile(Path pomFile) throws IOException {
-        Path directory = pomFile.getParent();
-        Path buildFile = directory.resolve("BUILD");
-
         DefaultModelBuildingRequest request = new DefaultModelBuildingRequest();
         request.setModelSource(new FileModelSource(pomFile.toFile()));
         request.setModelResolver(mModelResolver);
@@ -109,6 +109,25 @@ public class JavaImportGenerator {
             return;
         }
 
+        generateJavaImportRule(jarFile);
+    }
+
+    public static void generateJavaImportRule(Artifact artifact) {
+        Path jar = artifact.getFile().toPath();
+        Path buildFile = jar.getParent().resolve("BUILD");
+
+        if (!Files.exists(buildFile)) {
+            try {
+                generateJavaImportRule(jar);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
+    private static void generateJavaImportRule(Path jarFile) throws IOException {
+        Path directory = jarFile.getParent();
+        Path buildFile = directory.resolve("BUILD");
         if (Files.exists(buildFile)) {
             Files.delete(buildFile);
         }
