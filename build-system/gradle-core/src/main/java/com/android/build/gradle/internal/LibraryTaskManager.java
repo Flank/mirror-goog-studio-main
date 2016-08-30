@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
 import com.android.build.gradle.internal.tasks.LibraryJarTransform;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
@@ -348,13 +349,9 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         // copy lint.jar into the bundle folder
-        Copy lintCopy = project.getTasks().create(
-                variantScope.getTaskName("copy", "Lint"), Copy.class);
-        lintCopy.dependsOn(LINT_COMPILE);
-        lintCopy.from(new File(
-                globalScope.getIntermediatesDir(),
-                "lint/lint.jar"));
-        lintCopy.into(variantBundleDir);
+        AndroidTask<Copy> copyLintTask =
+                getAndroidTasks().create(tasks, new CopyLintConfigAction(variantScope));
+        copyLintTask.dependsOn(tasks, LINT_COMPILE);
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
         if (variantData.getVariantDependency().isAnnotationsPresent()) {
@@ -477,7 +474,7 @@ public class LibraryTaskManager extends TaskManager {
         bundle.dependsOn(
                 packageRes.getName(),
                 packageRenderscript,
-                lintCopy,
+                copyLintTask.getName(),
                 mergeProGuardFileTask,
                 // The below dependencies are redundant in a normal build as
                 // generateSources depends on them. When generateSourcesOnly is injected they are
