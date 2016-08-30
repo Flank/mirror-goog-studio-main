@@ -6,18 +6,22 @@ Native (C++) binaries and dependencies used by preformance tools insfrastructure
 
 ## To compile all the android and host binaries:
 ```
-../../../gradlew compileAndroid
+../../../gradlew compileAndroid(Debug|Release)
 ```
 ## To compile only the host binaries:
 ```
-../../../gradlew compileHost
+../../../gradlew compileHost(Debug|Release)
 ```
-## To run the host unit tests (If testdata/ is not updated, clear gen/):
+## To run the host unit tests:
 ```
-../../../gradlew checkHost
+../../../gradlew checkHost(Debug|Release)
+```
+## To run the lint checks:
+```
+../../../gradlew lintHost(Debug|Release)
 ```
 ## To compile for a specific ABI (arm64-v8a for example):
 ```
-../../../gradlew compileAndroidArm64-v8a
+../../../gradlew compileAndroidArm64V8a(Debug|Release)
 ```
 
