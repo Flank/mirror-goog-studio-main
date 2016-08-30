@@ -317,7 +317,7 @@ public class DexByteCodeConverter {
      * Returns the heap size that was specified by the -Xmx value from the user, or an approximated
      * value if the -Xmx value was not set or was set improperly.
      */
-    static long getUserDefinedHeapSize() {
+    public static long getUserDefinedHeapSize() {
         for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
             if (arg.startsWith("-Xmx")) {
                 Optional<Long> heapSize = parseSizeToBytes(arg.substring("-Xmx".length()));
