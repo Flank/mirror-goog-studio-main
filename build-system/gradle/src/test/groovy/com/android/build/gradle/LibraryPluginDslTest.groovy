@@ -82,6 +82,20 @@ public class LibraryPluginDslTest extends BaseTest {
         assertEquals("foo", signingConfig.storePassword)
     }
 
+    public void testPublishNonDefault() throws Exception {
+        Project project = ProjectBuilder.builder().withProjectDir(
+                new File(testDir, "basic")).build()
+
+        project.apply plugin: 'com.android.library'
+
+        project.android {
+            compileSdkVersion COMPILE_SDK_VERSION
+
+            publishNonDefault true
+            publishNonDefault = true
+        }
+    }
+
     private static void checkTestedVariant(@NonNull String variantName,
                                            @NonNull String testedVariantName,
                                            @NonNull Set<LibraryVariant> variants,
