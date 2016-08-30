@@ -147,7 +147,7 @@ public class EcjPsiBuilder {
     private static boolean sAddWhitespaceNodes = false;
     private static boolean sAddParentheses = false;
 
-    private static final char[] PACKAGE_INFO = "package-info".toCharArray();
+    static final char[] PACKAGE_INFO = "package-info".toCharArray();
 
     @NonNull
     private final EcjPsiManager mManager;

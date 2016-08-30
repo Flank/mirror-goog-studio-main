@@ -703,11 +703,11 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         when(container2.getBuildType()).thenReturn(type2);
 
                         SourceProvider debugProvider = mock(SourceProvider.class);
-                        when(debugProvider.getResDirectories()).thenReturn(Collections.<File>emptyList());
-                        when(debugProvider.getJavaDirectories()).thenReturn(Collections.<File>emptyList());
+                        when(debugProvider.getResDirectories()).thenReturn(Collections.emptyList());
+                        when(debugProvider.getJavaDirectories()).thenReturn(Collections.emptyList());
                         SourceProvider releaseProvider = mock(SourceProvider.class);
-                        when(releaseProvider.getResDirectories()).thenReturn(Collections.<File>emptyList());
-                        when(releaseProvider.getJavaDirectories()).thenReturn(Collections.<File>emptyList());
+                        when(releaseProvider.getResDirectories()).thenReturn(Collections.emptyList());
+                        when(releaseProvider.getJavaDirectories()).thenReturn(Collections.emptyList());
 
                         when(container1.getSourceProvider()).thenReturn(debugProvider);
                         when(container2.getSourceProvider()).thenReturn(releaseProvider);

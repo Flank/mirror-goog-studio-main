@@ -121,7 +121,6 @@ class EcjPsiBinaryAnnotation extends EcjPsiBinaryElement implements PsiAnnotatio
                 for (int i = 0; i < elementValuePairs.length; i++) {
                     ElementValuePair pair = elementValuePairs[i];
                     mPairs[i] = new EcjPsiBinaryNameValuePair(mManager, pair);
-
                 }
             } else {
                 mPairs = PsiNameValuePair.EMPTY_ARRAY;

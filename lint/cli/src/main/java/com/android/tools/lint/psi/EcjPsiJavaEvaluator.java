@@ -22,6 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
@@ -48,6 +49,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class EcjPsiJavaEvaluator extends JavaEvaluator {
     private final EcjPsiManager mManager;
@@ -515,6 +517,28 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         if (file instanceof EcjPsiJavaFile) {
             EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
             return javaFile.getIoFile();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String findJarPath(@NonNull PsiElement element) {
+        while (true) {
+            PsiElement cls = PsiTreeUtil.getParentOfType(element, PsiClass.class, true);
+            if (cls == null) {
+                if (element instanceof EcjPsiBinaryClass) {
+                    ReferenceBinding binding = ((EcjPsiBinaryClass) element).getTypeBinding();
+                    String jarFile = mManager.getJarFile(binding);
+                    if (jarFile != null) {
+                        return jarFile;
+                    }
+                }
+                break;
+            }
+
+            element = cls;
         }
 
         return null;

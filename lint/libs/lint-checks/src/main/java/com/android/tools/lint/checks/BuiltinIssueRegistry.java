@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 270;
+    static final int INITIAL_CAPACITY = 271;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -264,6 +264,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SupportAnnotationDetector.MISSING_PERMISSION);
         issues.add(SupportAnnotationDetector.RANGE);
         issues.add(SupportAnnotationDetector.RESOURCE_TYPE);
+        issues.add(SupportAnnotationDetector.RESTRICTED);
         issues.add(SupportAnnotationDetector.THREAD);
         issues.add(SupportAnnotationDetector.TYPE_DEF);
         issues.add(SystemPermissionsDetector.ISSUE);

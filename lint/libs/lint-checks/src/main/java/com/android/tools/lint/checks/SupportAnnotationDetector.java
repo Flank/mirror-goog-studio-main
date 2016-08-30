@@ -102,8 +102,10 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiModifierList;
+import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiNewExpression;
+import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiParenthesizedExpression;
@@ -128,6 +130,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -200,6 +203,26 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         6,
         Severity.ERROR,
         IMPLEMENTATION);
+
+    /** Using a restricted API */
+    public static final Issue RESTRICTED = Issue.create(
+            "RestrictedApi", //$NON-NLS-1$
+            "Restricted API",
+
+            "This API has been flagged with a restriction that has not been met.\n" +
+            "\n" +
+            "Examples of API restrictions:\n" +
+            "* Method can only be invoked by a subclass\n" +
+            "* Method can only be accessed from within the same library (defined by " +
+            " the Gradle library group id)\n." +
+            "* Method can only be accessed from tests.\n." +
+            "\n" +
+            "You can add your own API restrictions with the `@RestrictTo` annotation.",
+
+            Category.CORRECTNESS,
+            4,
+            Severity.ERROR,
+            IMPLEMENTATION);
 
     /** Method result should be used */
     public static final Issue CHECK_RESULT = Issue.create(
@@ -274,6 +297,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
     public static final String WORKER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "WorkerThread"; //$NON-NLS-1$
     public static final String BINDER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "BinderThread"; //$NON-NLS-1$
     public static final String ANY_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "AnyThread"; //$NON-NLS-1$
+    public static final String RESTRICT_TO_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RestrictTo"; //$NON-NLS-1$
+    public static final String VISIBLE_FOR_TESTING_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "VisibleForTesting"; //$NON-NLS-1$
     public static final String PERMISSION_ANNOTATION_READ = PERMISSION_ANNOTATION + ".Read"; //$NON-NLS-1$
     public static final String PERMISSION_ANNOTATION_WRITE = PERMISSION_ANNOTATION + ".Write"; //$NON-NLS-1$
 
@@ -317,6 +342,10 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         } else if (signature.endsWith(THREAD_SUFFIX)
                 && signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
             checkThreading(context, call, method, signature, annotation, allMethodAnnotations,
+                    allClassAnnotations);
+        } else if (signature.equals(RESTRICT_TO_ANNOTATION)) {
+            MyLintInspectionBridge bridge = new MyLintInspectionBridge(context);
+            checkRestrictTo(bridge, call, method, annotation, allMethodAnnotations,
                     allClassAnnotations);
         }
     }
@@ -413,6 +442,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             @NonNull PsiMethod method,
             @NonNull PsiExpression argument) {
         Operation operation = null;
+        //noinspection IfCanBeSwitch
         if (signature.equals(PERMISSION_ANNOTATION_READ)) {
             operation = READ;
         } else if (signature.equals(PERMISSION_ANNOTATION_WRITE)) {
@@ -640,7 +670,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /**
      * Visitor which looks through a method, up to a given call (the one requiring a
-     * permission) and checks whether it's preceeded by a call to checkPermission or
+     * permission) and checks whether it's preceded by a call to checkPermission or
      * checkCallingPermission or enforcePermission etc.
      * <p>
      * Currently it only looks for the presence of this check; it does not perform
@@ -814,6 +844,211 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         }
     }
 
+    private static boolean isTestContext(
+            @NonNull LintInspectionBridge context,
+            @NonNull PsiElement element) {
+        // (1) Is this compilation unit in a test source path?
+        if (context.isTestSource()) {
+            return true;
+        }
+
+        // (2) Is this AST node surrounded by a test-only annotation?
+        while (true) {
+            PsiModifierListOwner owner = PsiTreeUtil.getParentOfType(element,
+                    PsiModifierListOwner.class, true);
+            if (owner == null) {
+                break;
+            }
+
+            PsiModifierList modifierList = owner.getModifierList();
+            if (modifierList != null) {
+                for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+                    String name = annotation.getQualifiedName();
+                    if (RESTRICT_TO_ANNOTATION.equals(name)) {
+                        int restrictionScope = getRestrictionScope(annotation);
+                        if ((restrictionScope & RESTRICT_TO_TESTS) != 0) {
+                            return true;
+                        }
+                    } else if (VISIBLE_FOR_TESTING_ANNOTATION.equals(name)) {
+                        return true;
+                    }
+                }
+            }
+
+            element = owner;
+        }
+
+        return false;
+    }
+
+    // TODO: Test XML access of restricted classes
+    public static void checkRestrictTo(
+            @NonNull LintInspectionBridge bridge,
+            @NonNull PsiElement node,
+            @NonNull PsiMethod method,
+            @NonNull PsiAnnotation annotation,
+            @NonNull PsiAnnotation[] allMethodAnnotations,
+            @NonNull PsiAnnotation[] allClassAnnotations) {
+
+        if (!containsAnnotation(allMethodAnnotations, annotation)) {
+            // Found restriction or class or package: make sure we only check on the most
+            // specific scope, otherwise we report the same error multiple times
+            // or report errors on restrictions that have been redefined
+            if (containsRestrictionAnnotation(allMethodAnnotations)) {
+                return;
+            }
+            if (!containsAnnotation(allClassAnnotations, annotation) &&
+                    containsRestrictionAnnotation(allClassAnnotations)) {
+                return;
+            }
+
+        }
+
+        PsiClass containingClass = method.getContainingClass();
+        if (containingClass == null) {
+            return;
+        }
+
+        int scope = getRestrictionScope(annotation);
+        if ((scope & RESTRICT_TO_GROUP_ID )!= 0) {
+            JavaEvaluator evaluator = bridge.getEvaluator();
+            Object thisGroup = evaluator.findGroup(node);
+            Object methodGroup = evaluator.findGroup(method);
+            if (!Objects.equals(thisGroup, methodGroup) && methodGroup != null) {
+                String where = String.format("from within the same library "
+                                + "(groupId=%1$s)", methodGroup);
+                reportRestriction(annotation, where, containingClass, method, bridge,
+                        node);
+            }
+        }
+
+        if ((scope & RESTRICT_TO_TESTS )!= 0) {
+            if (!isTestContext(bridge, node)) {
+                reportRestriction(annotation, "from tests", containingClass, method, bridge, node);
+            }
+        }
+
+        if ((scope & RESTRICT_TO_SUBCLASSES )!= 0) {
+            String qualifiedName = containingClass.getQualifiedName();
+            if (qualifiedName != null) {
+                JavaEvaluator evaluator = bridge.getEvaluator();
+
+                PsiClass outer;
+                boolean isSubClass = false;
+                PsiElement prev = node;
+                while ((outer = PsiTreeUtil.getParentOfType(prev, PsiClass.class, true)) != null) {
+                    if (evaluator.inheritsFrom(outer, qualifiedName, false)) {
+                        isSubClass = true;
+                        break;
+                    }
+
+                    if (evaluator.isStatic(outer)) {
+                        break;
+                    }
+                    prev = outer;
+                }
+
+                if (!isSubClass) {
+                    reportRestriction(annotation, "from subclasses", containingClass, method,
+                            bridge, node);
+                }
+            }
+        }
+    }
+
+    private static void reportRestriction(
+            @NonNull PsiAnnotation annotation,
+            @NonNull String where,
+            @NonNull PsiClass containingClass,
+            @NonNull PsiMethod method,
+            @NonNull LintInspectionBridge bridge,
+            @NonNull PsiElement node) {
+        String api;
+        if (method.isConstructor()) {
+            api = method.getName() + " constructor";
+        } else {
+            api = containingClass.getName() + "." + method.getName();
+        }
+
+        PsiElement locationNode = node;
+        if (node instanceof PsiMethodCallExpression) {
+            PsiMethodCallExpression callExpression = (PsiMethodCallExpression) node;
+            PsiReferenceExpression methodExpression = callExpression.getMethodExpression();
+            PsiElement nameElement = methodExpression.getReferenceNameElement();
+            if (nameElement != null) {
+                locationNode = nameElement;
+            }
+
+            // If the annotation was reported on the class, and the left hand side
+            // expression is that class, use it as the name node?
+            if (annotation.getOwner() instanceof PsiModifierList) {
+                PsiModifierList modifierList = (PsiModifierList)annotation.getOwner();
+                PsiClass cls = null;
+                if (modifierList instanceof PsiClass) {
+                    // In the ECJ bridge we sometimes collapse modifier lists into
+                    // the same PSI instance as the class itself
+                    cls = (PsiClass) modifierList;
+                } else if (!(modifierList instanceof PsiMethod)) { // methods are collapsed too
+                    PsiElement parent = modifierList.getParent();
+                    if (parent instanceof PsiClass) {
+                        cls = (PsiClass) parent;
+                    }
+                }
+                if (cls != null) {
+                    PsiExpression qualifier = methodExpression.getQualifierExpression();
+                    String className = cls.getName();
+                    if (qualifier != null && qualifier.getText().equals(className)) {
+                        locationNode = qualifier;
+                        api = className;
+                    }
+                }
+            }
+        }
+
+        String message = api + " can only be called " + where;
+        bridge.report(RESTRICTED, locationNode, node, message);
+    }
+
+    /** {@code RestrictTo(RestrictTo.Scope.GROUP_ID} */
+    @SuppressWarnings("PointlessBitwiseExpression")
+    private static final int RESTRICT_TO_GROUP_ID   = 1 << 0;
+    /** {@code RestrictTo(RestrictTo.Scope.TESTS} */
+    private static final int RESTRICT_TO_TESTS      = 1 << 1;
+    /** {@code RestrictTo(RestrictTo.Scope.SUBCLASSES} */
+    private static final int RESTRICT_TO_SUBCLASSES = 1 << 2;
+
+    public static int getRestrictionScope(@NonNull PsiAnnotation annotation) {
+        PsiAnnotationMemberValue value = annotation.findAttributeValue(ATTR_VALUE);
+        return getRestrictionScope(value);
+    }
+
+    private static int getRestrictionScope(@Nullable PsiAnnotationMemberValue value) {
+        int scope = 0;
+        if (value != null) {
+            if (value instanceof PsiArrayInitializerMemberValue) {
+                PsiAnnotationMemberValue[] initializers = ((PsiArrayInitializerMemberValue) value)
+                        .getInitializers();
+                for (PsiAnnotationMemberValue initializer : initializers) {
+                    scope |= getRestrictionScope(initializer);
+                }
+            } else if (value instanceof PsiReferenceExpression) {
+                PsiElement resolved = ((PsiReferenceExpression) value).resolve();
+                if (resolved instanceof PsiField) {
+                    String name = ((PsiField) resolved).getName();
+                    if ("GROUP_ID".equals(name)) {
+                        scope |= RESTRICT_TO_GROUP_ID;
+                    } else if ("SUBCLASSES".equals(name)) {
+                        scope |= RESTRICT_TO_SUBCLASSES;
+                    } else if ("TESTS".equals(name)) {
+                        scope |= RESTRICT_TO_TESTS;
+                    }
+                }
+            }
+        }
+
+        return scope;
+    }
+
     private static void checkThreading(
             @NonNull JavaContext context,
             @NonNull PsiElement node,
@@ -887,6 +1122,17 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             @NonNull PsiAnnotation annotation) {
         for (PsiAnnotation a : array) {
             if (a == annotation) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean containsRestrictionAnnotation(@NonNull PsiAnnotation[] array) {
+        for (PsiAnnotation annotation : array) {
+            String signature = annotation.getQualifiedName();
+            if (RESTRICT_TO_ANNOTATION.equals(signature)) {
                 return true;
             }
         }
@@ -1103,6 +1349,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         EnumSet<ResourceType> actual = ResourceEvaluator.getResourceTypes(context.getEvaluator(),
                 argument);
 
+        //noinspection IfStatementWithIdenticalBranches
         if (actual == null && (!isNumber(argument) || isZero(argument) || isMinusOne(argument)) ) {
             return;
         } else if (actual != null && (!Sets.intersection(actual, expectedType).isEmpty()
@@ -1940,7 +2187,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        List<Class<? extends PsiElement>> types = new ArrayList<Class<? extends PsiElement>>(2);
+        List<Class<? extends PsiElement>> types = new ArrayList<>(2);
         types.add(PsiCallExpression.class);
         types.add(PsiEnumConstant.class);
         return types;
@@ -1977,7 +2224,6 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
         public void checkCall(PsiMethod method, PsiCall call) {
             JavaEvaluator evaluator = mContext.getEvaluator();
-
             PsiAnnotation[] methodAnnotations = evaluator.getAllAnnotations(method, true);
             methodAnnotations = filterRelevantAnnotations(evaluator, methodAnnotations);
 
@@ -1985,11 +2231,22 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             // down to all the methods in the class
             PsiClass containingClass = method.getContainingClass();
             PsiAnnotation[] classAnnotations;
+            PsiAnnotation[] pkgAnnotations;
             if (containingClass != null) {
                 classAnnotations = evaluator.getAllAnnotations(containingClass, true);
                 classAnnotations = filterRelevantAnnotations(evaluator, classAnnotations);
+
+                PsiElement parent = containingClass.getParent();
+                if (parent instanceof PsiPackage) {
+                    PsiPackage pkg = (PsiPackage) parent;
+                    pkgAnnotations = evaluator.getAllAnnotations(pkg, false);
+                    pkgAnnotations = filterRelevantAnnotations(evaluator, pkgAnnotations);
+                } else {
+                    pkgAnnotations = PsiAnnotation.EMPTY_ARRAY;
+                }
             } else {
                 classAnnotations = PsiAnnotation.EMPTY_ARRAY;
+                pkgAnnotations = PsiAnnotation.EMPTY_ARRAY;
             }
 
             for (PsiAnnotation annotation : methodAnnotations) {
@@ -1999,6 +2256,13 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
             if (classAnnotations.length > 0) {
                 for (PsiAnnotation annotation : classAnnotations) {
+                    checkMethodAnnotation(mContext, method, call, annotation, methodAnnotations,
+                            classAnnotations);
+                }
+            }
+
+            if (pkgAnnotations.length > 0) {
+                for (PsiAnnotation annotation : pkgAnnotations) {
                     checkMethodAnnotation(mContext, method, call, annotation, methodAnnotations,
                             classAnnotations);
                 }
@@ -2029,4 +2293,32 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             }
         }
     }
+
+    private static class MyLintInspectionBridge implements LintInspectionBridge {
+        public JavaContext context;
+
+        public MyLintInspectionBridge(@NonNull JavaContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public void report(
+                @NonNull Issue issue,
+                @NonNull PsiElement locationNode,
+                @NonNull PsiElement scopeNode,
+                @NonNull String message) {
+            context.report(issue, scopeNode, context.getLocation(locationNode), message);
+        }
+
+        @Override
+        public boolean isTestSource() {
+            return context.isTestSource();
+        }
+
+        @Override
+        public JavaEvaluator getEvaluator() {
+            return context.getEvaluator();
+        }
+    }
+
 }

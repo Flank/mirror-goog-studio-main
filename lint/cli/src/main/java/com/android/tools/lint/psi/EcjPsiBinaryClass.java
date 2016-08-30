@@ -494,6 +494,18 @@ class EcjPsiBinaryClass extends EcjPsiBinaryElement implements PsiClass, PsiModi
         return null;
     }
 
+    @Override
+    public PsiElement getParent() {
+        if (mTypeBinding.enclosingType() != null) {
+            return mManager.findClass(mTypeBinding.enclosingType());
+        }
+        if (mTypeBinding.fPackage != null) {
+            return mManager.findPackage(mTypeBinding.fPackage);
+        }
+
+        return null;
+    }
+
     @NonNull
     @Override
     public Collection<HierarchicalMethodSignature> getVisibleSignatures() {
