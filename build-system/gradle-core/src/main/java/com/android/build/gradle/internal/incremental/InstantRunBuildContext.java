@@ -330,15 +330,30 @@ public class InstantRunBuildContext {
      * @param verifierStatus
      */
     public void setVerifierStatus(@NonNull InstantRunVerifierStatus verifierStatus) {
+
+        LOG.info("Receiving verifier result: {}. Current Verifier/Build mode is {}/{}.",
+                verifierStatus,
+                currentBuild.getVerifierStatus(),
+                buildMode);
+
+        // get the new build mode for this verifier status as it may change the one we
+        // currently use.
+        InstantRunBuildMode newBuildMode = buildMode.combine(
+                verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
+
+        // if our current status is not set, or the new build mode is higher, reset everything.
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES
-                || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE) {
+                || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE
+                || newBuildMode != buildMode) {
             currentBuild.verifierStatus = verifierStatus;
+            buildMode = newBuildMode;
         }
         Preconditions.checkNotNull(patchingPolicy,
                 "setApiLevel should be called before setVerifierStatus");
-        buildMode = buildMode.combine(
-                verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
-        LOG.info("Got verifier result: {}. Build mode is now {}.", verifierStatus, buildMode);
+
+        LOG.info("Verifier result is now : {}. Build mode is now {}.",
+                currentBuild.getVerifierStatus(),
+                buildMode);
     }
 
     /**
