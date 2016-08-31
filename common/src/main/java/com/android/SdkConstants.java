@@ -1385,8 +1385,8 @@ public final class SdkConstants {
     public static final String EXT_RES = "ap_"; //$NON-NLS-1$
     /** Extension for pre-processable images. Right now pngs */
     public static final String EXT_PNG = "png"; //$NON-NLS-1$
-    /** Extension for Android archive files */
     public static final String EXT_HPROF = "hprof"; //$NON-NLS-1$
+    public static final String EXT_GZ = "gz"; //$NON-NLS-1$
 
     private static final String DOT = "."; //$NON-NLS-1$
 
