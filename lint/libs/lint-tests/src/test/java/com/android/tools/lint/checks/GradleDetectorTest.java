@@ -247,7 +247,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 18.0 [GradleDependency]\n"
+                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 19.0 [GradleDependency]\n"
                 + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
@@ -374,7 +374,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 18.0 [GradleDependency]\n"
+                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 19.0 [GradleDependency]\n"
                 + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
@@ -468,7 +468,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         mEnabled = Collections.singleton(DEPENDENCY);
         //noinspection all // Sample code
         assertEquals(""
-                + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.4 [GradleDependency]\n"
+                + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.7 [GradleDependency]\n"
                 + "    compile 'com.google.code.gson:gson:2.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
