@@ -265,6 +265,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     protected abstract Class<? extends BaseExtension> getExtensionClass();
+    @NonNull
+    protected abstract AndroidStudioStats.GradleBuildProject.PluginType getAnalyticsPluginType();
     protected abstract VariantFactory createVariantFactory();
     protected abstract TaskManager createTaskManager(
             @NonNull Project project,
@@ -309,19 +311,9 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         ProfilerInitializer.init(project);
 
-        AndroidStudioStats.GradleBuildProject.PluginType pluginType =
-                AndroidStudioStats.GradleBuildProject.PluginType.UNKNOWN_PLUGIN_TYPE;
-        if (this instanceof AppPlugin) {
-            pluginType = AndroidStudioStats.GradleBuildProject.PluginType.APPLICATION;
-        } else if (this instanceof LibraryPlugin) {
-            pluginType = AndroidStudioStats.GradleBuildProject.PluginType.LIBRARY;
-        } else if (this instanceof TestPlugin) {
-            pluginType = AndroidStudioStats.GradleBuildProject.PluginType.TEST;
-        }
-
         ProcessRecorder.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-                .setAndroidPlugin(pluginType)
+                .setAndroidPlugin(getAnalyticsPluginType())
                 .setPluginGeneration(
                         AndroidStudioStats.GradleBuildProject.PluginGeneration.FIRST);
 

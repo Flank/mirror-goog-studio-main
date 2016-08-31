@@ -831,8 +831,8 @@ public class VariantManager implements VariantModel {
                         .setUseJack(variantConfig.getJackOptions().isEnabled())
                         .setMinifyEnabled(variantConfig.isMinifyEnabled())
                         .setUseMultidex(variantConfig.isMultiDexEnabled())
-                        .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode());
-
+                        .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
+                        .setVariantType(variantData.getType().getAnalyticsVariantType());
 
                 if (variantFactory.hasTestScope()) {
                     TestVariantData unitTestVariantData = createTestVariantData(

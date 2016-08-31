@@ -20,27 +20,30 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.google.common.collect.ImmutableList;
+import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildVariant;
 
 /**
  * Type of a variant.
  */
 public enum VariantType {
-    DEFAULT(false),
-    INSTANTAPP(false),
-    LIBRARY(true),
-    ATOM(true),
+    DEFAULT(false, GradleBuildVariant.VariantType.APPLICATION),
+    INSTANTAPP(false, GradleBuildVariant.VariantType.INSTANTAPP),
+    LIBRARY(true, GradleBuildVariant.VariantType.LIBRARY),
+    ATOM(true, GradleBuildVariant.VariantType.ATOM),
     ANDROID_TEST(
             "androidTest",
             "AndroidTest",
             true,
             AndroidProject.ARTIFACT_ANDROID_TEST,
-            ArtifactMetaData.TYPE_ANDROID),
+            ArtifactMetaData.TYPE_ANDROID,
+            GradleBuildVariant.VariantType.ANDROID_TEST),
     UNIT_TEST(
             "test",
             "UnitTest",
             false,
             AndroidProject.ARTIFACT_UNIT_TEST,
-            ArtifactMetaData.TYPE_JAVA),
+            ArtifactMetaData.TYPE_JAVA,
+            GradleBuildVariant.VariantType.UNIT_TEST),
     ;
 
     public static ImmutableList<VariantType> getTestingTypes() {
@@ -60,9 +63,11 @@ public enum VariantType {
     private final String mArtifactName;
     private final int mArtifactType;
     private final boolean exportsDataBindingClassList;
+    private final GradleBuildVariant.VariantType mAnalyticsVariantType;
 
     /** App, Library or Atom variant. */
-    VariantType(boolean exportsDataBindingClassList) {
+    VariantType(boolean exportsDataBindingClassList,
+            GradleBuildVariant.VariantType analyticsVariantType) {
         this.mIsForTesting = false;
         this.mPrefix = "";
         this.mSuffix = "";
@@ -70,6 +75,7 @@ public enum VariantType {
         this.mArtifactType = ArtifactMetaData.TYPE_ANDROID;
         this.isSingleBuildType = false;
         this.exportsDataBindingClassList = exportsDataBindingClassList;
+        this.mAnalyticsVariantType = analyticsVariantType;
     }
 
     /** Testing variant. */
@@ -78,7 +84,8 @@ public enum VariantType {
             String suffix,
             boolean isSingleBuildType,
             String artifactName,
-            int artifactType) {
+            int artifactType,
+            GradleBuildVariant.VariantType analyticsVariantType) {
         this.mArtifactName = artifactName;
         this.mArtifactType = artifactType;
         this.mIsForTesting = true;
@@ -86,6 +93,7 @@ public enum VariantType {
         this.mSuffix = suffix;
         this.isSingleBuildType = isSingleBuildType;
         this.exportsDataBindingClassList = false;
+        this.mAnalyticsVariantType = analyticsVariantType;
     }
 
     /**
@@ -144,4 +152,10 @@ public enum VariantType {
         return exportsDataBindingClassList;
     }
 
+    /**
+     * Returns the corresponding variant type used by the analytics system.
+     */
+    public GradleBuildVariant.VariantType getAnalyticsVariantType() {
+        return mAnalyticsVariantType;
+    }
 }
