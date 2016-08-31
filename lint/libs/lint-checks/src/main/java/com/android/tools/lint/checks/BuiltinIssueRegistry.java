@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 271;
+    static final int INITIAL_CAPACITY = 275;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -247,6 +247,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SecurityDetector.WORLD_READABLE);
         issues.add(SecurityDetector.WORLD_WRITEABLE);
         issues.add(ServiceCastDetector.ISSUE);
+        issues.add(ServiceCastDetector.WIFI_MANAGER);
+        issues.add(ServiceCastDetector.WIFI_MANAGER_UNCERTAIN);
         issues.add(SetJavaScriptEnabledDetector.ISSUE);
         issues.add(SignatureOrSystemDetector.ISSUE);
         issues.add(SQLiteDetector.ISSUE);
