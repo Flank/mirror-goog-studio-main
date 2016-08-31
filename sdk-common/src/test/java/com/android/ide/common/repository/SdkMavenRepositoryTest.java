@@ -16,78 +16,57 @@
 
 package com.android.ide.common.repository;
 
+import com.android.annotations.NonNull;
 import com.android.repository.Revision;
+import com.android.repository.api.LocalPackage;
+import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoPackage;
+import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import junit.framework.TestCase;
 
 public class SdkMavenRepositoryTest extends TestCase {
     private static final File SDK_HOME = new File("/sdk");
 
     private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
+    private RepositoryPackages mRepositoryPackages = new RepositoryPackages();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         mFileOp = new MockFileOp();
-        mSdkHandler = new AndroidSdkHandler(SDK_HOME, mFileOp);
+        mSdkHandler = new AndroidSdkHandler(SDK_HOME, mFileOp,
+          new FakeRepoManager(SDK_HOME, mRepositoryPackages));
+    }
+
+    private void registerRepo(@NonNull String vendor) {
+        String path = String.format("extras;%s;m2repository", vendor);
+        // Create and add the package
+        Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
+        FakePackage pkg = new FakePackage(path, new Revision(1), null);
+        existing.put(path, pkg);
+        mRepositoryPackages.setLocalPkgInfos(existing);
+        // SdkMavenRepo requires that the path exists.
+        ProgressIndicator progress = new FakeProgressIndicator();
+        mFileOp.mkdirs(pkg.getInstallDir(mSdkHandler.getSdkManager(progress), progress));
     }
 
     private void registerAndroidRepo() {
-        mFileOp.recordExistingFile(
-                "/sdk/extras/android/m2repository/package.xml",
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                        + "<addon:sdk-addon xmlns:addon=\"http://schemas.android.com/sdk/android/repo/addon2/01\""
-                        + "                 xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" >"
-                        + "    <localPackage path=\"extras;android;m2repository\">"
-                        + "        <type-details xsi:type=\"addon:extraDetailsType\">"
-                        + "            <vendor>"
-                        + "                <id>android</id>"
-                        + "                <display>Android</display>"
-                        + "            </vendor>"
-                        + "        </type-details>"
-                        + "        <revision>"
-                        + "            <major>25</major>"
-                        + "            <minor>0</minor>"
-                        + "            <micro>0</micro>"
-                        + "        </revision>"
-                        + "        <display-name>Android Support Repository, rev 25</display-name>"
-                        + "    </localPackage>"
-                        + "</addon:sdk-addon>\n");
+        registerRepo("android");
     }
-
     private void registerGoogleRepo() {
-        mFileOp.recordExistingFile(
-                "/sdk/extras/google/m2repository/package.xml",
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                        + "<addon:sdk-addon xmlns:addon=\"http://schemas.android.com/sdk/android/repo/addon2/01\""
-                        + "                 xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" >"
-                        + "    <localPackage path=\"extras;google;m2repository\">"
-                        + "        <type-details xsi:type=\"addon:extraDetailsType\">"
-                        + "            <vendor>"
-                        + "                <id>google</id>"
-                        + "                <display>Google Inc.</display>"
-                        + "            </vendor>"
-                        + "        </type-details>"
-                        + "        <revision>"
-                        + "            <major>23</major>"
-                        + "            <minor>0</minor>"
-                        + "            <micro>0</micro>"
-                        + "        </revision>"
-                        + "        <display-name>Google Repository, rev 23</display-name>"
-                        + "    </localPackage>"
-                        + "</addon:sdk-addon>\n");
-
+        registerRepo("google");
     }
 
     public void testGetLocation() {

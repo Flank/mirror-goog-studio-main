@@ -18,6 +18,7 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.repository.api.FallbackLocalRepoLoader;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
@@ -33,17 +34,18 @@ import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
 import javax.xml.bind.JAXBException;
 
 /**
@@ -62,6 +64,13 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * adjust once the path of the current deepest package is known (e.g. maven packages).
      */
     private static final int MAX_SCAN_DEPTH = 10;
+
+    /**
+     * The name of the file where we store a hash of the known packages, used for invalidating the
+     * cache.
+     */
+    @VisibleForTesting
+    static final String KNOWN_PACKAGES_HASH_FN = ".knownPackages";
 
     /**
      * Cache of found packages.
@@ -107,51 +116,35 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         mFallback = fallback;
     }
 
-    /**
-     * Gets a hash of the known (suspected) package directories. In order to be as fast as possible
-     * this doesn't include the content of the packages or package metadata file, just the
-     * directories paths themselves.
-     */
-    @Override
-    @Nullable
-    public byte[] getLocalPackagesHash() {
-        Set<File> dirs = collectPackages();
-        try {
-            MessageDigest digester = MessageDigest.getInstance("md5");
-            for (File f : dirs) {
-                digester.update(f.getAbsolutePath().getBytes());
-            }
-            return digester.digest();
-        }
-        catch (NoSuchAlgorithmException e) {
-            // shouldn't happen
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * For our purposes, we use the update timestamp of the {@code package.xml} file.
-     */
-    @Override
-    public long getLatestPackageUpdateTime() {
-        long latest = 0;
-        for (File f : collectPackages()) {
-            long t = mFop.lastModified(f);
-            latest = t > latest ? t : latest;
-        }
-        return latest;
-    }
-
     @Override
     @NonNull
     public Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress) {
         if (mPackages == null) {
             Set<File> possiblePackageDirs = collectPackages();
             mPackages = parsePackages(possiblePackageDirs, progress);
+            if (!mPackages.isEmpty()) {
+                writeHashFile(getLocalPackagesHash());
+            }
         }
         return Collections.unmodifiableMap(mPackages);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * If {@code deepCheck} is {@code false}, we just check whether {@code .knownPackages} has
+     * been updated more recently than {@code lastLocalRefreshMs}.
+     * If {@code deepCheck} is {@code true}, we check whether the hash in {@code .knownPackages}
+     * accurately reflects the currently-installed packages (traversing the SDK directory tree to do
+     * so).
+     */
+    @Override
+    public boolean needsUpdate(long lastLocalRefreshMs, boolean deepCheck) {
+        boolean needsUpdate = checkKnownPackagesUpdateTime(lastLocalRefreshMs);
+        if (!needsUpdate && deepCheck) {
+            needsUpdate = updateKnownPackageHashFileIfNecessary();
+        }
+        return needsUpdate;
     }
 
     @NonNull
@@ -326,4 +319,118 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
             return p;
         }
     }
+
+    /**
+     * Gets a reference to the known packages file, creating it if necessary.
+     *
+     * @return The file, or {@code null} if it doesn't exist and couldn't be created.
+     */
+    @Nullable
+    private File getKnownPackagesHashFile(boolean create) {
+        File f = new File(mRoot, KNOWN_PACKAGES_HASH_FN);
+        if (!mFop.exists(f)) {
+            if (create) {
+                try {
+                    mFop.createNewFile(f);
+                } catch (IOException e) {
+                    return null;
+                }
+            }
+            else {
+                return null;
+            }
+        }
+        return f;
+    }
+
+    /**
+     * Updates the known packages file with the hash of the current packages.
+     *
+     * @return {@code true} if the existing hash does not match the expected one (that is, a reload
+     *         is required).
+     */
+    private boolean updateKnownPackageHashFileIfNecessary() {
+        File knownPackagesHashFile = getKnownPackagesHashFile(false);
+        if (knownPackagesHashFile != null) {
+            byte[] buf = null;
+            // If we haven't updated any package more recently than the file, check the file
+            // contents as well before updating. Otherwise we'll always update the file.
+            if (getLatestPackageUpdateTime() <= mFop.lastModified(knownPackagesHashFile)) {
+                try (DataInputStream is = new DataInputStream(mFop.newFileInputStream(knownPackagesHashFile))){
+                    buf = new byte[(int) mFop.length(knownPackagesHashFile)];
+                    is.readFully(buf);
+                }
+                catch (IOException e) {
+                    // nothing
+                }
+            }
+            byte[] localPackagesHash = getLocalPackagesHash();
+            if (!Arrays.equals(buf, localPackagesHash)) {
+                writeHashFile(localPackagesHash);
+                // Even if writing the hash file fails, we still know that we're out of date and
+                // should be reloaded, so still return true.
+                return true;
+            }
+        } else {
+            writeHashFile(getLocalPackagesHash());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Actually writes the data to the hash file.
+     */
+    private void writeHashFile(@NonNull byte[] buf) {
+        File knownPackagesHashFile = getKnownPackagesHashFile(true);
+        if (knownPackagesHashFile == null) {
+            return;
+        }
+        try (OutputStream os = new BufferedOutputStream(
+                mFop.newFileOutputStream(knownPackagesHashFile))) {
+            os.write(buf);
+        } catch (IOException e) {
+            // nothing
+        }
+    }
+
+    /**
+     * Check to see whether the known packages file has been updated since we last loaded the local
+     * repo.
+     *
+     * @return {@code true} if it has been updated (and thus we should reload our local packages).
+     */
+    private boolean checkKnownPackagesUpdateTime(long lastUpdate) {
+        File knownPackagesHashFile = getKnownPackagesHashFile(false);
+        return knownPackagesHashFile == null
+                || mFop.lastModified(knownPackagesHashFile) > lastUpdate;
+    }
+
+    /**
+     * Gets a hash of the known (suspected) package directories. In order to be as fast as possible
+     * this doesn't include the content of the packages or package metadata file, just the
+     * directories paths themselves.
+     */
+    @NonNull
+    private byte[] getLocalPackagesHash() {
+        Set<File> dirs = collectPackages();
+        Hasher digester = Hashing.md5().newHasher();
+        for (File f : dirs) {
+            digester.putBytes(f.getAbsolutePath().getBytes());
+        }
+        return digester.hash().asBytes();
+    }
+
+    /**
+     * Finds the latest update timestamp of a {@code package.xml} file under {@link #mRoot}.
+     */
+    private long getLatestPackageUpdateTime() {
+        long latest = 0;
+        for (File f : collectPackages()) {
+            long t = mFop.lastModified(new File(f, PACKAGE_XML_FN));
+            latest = t > latest ? t : latest;
+        }
+        return latest;
+    }
+
 }
