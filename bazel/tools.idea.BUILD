@@ -3572,3 +3572,9 @@ java_import(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "idea/java/jdkAnnotations",
+    srcs = glob(["idea/java/jdkAnnotations/**"]),
+    visibility = ["//visibility:public"],
+)
