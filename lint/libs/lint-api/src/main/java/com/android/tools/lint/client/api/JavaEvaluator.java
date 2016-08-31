@@ -32,10 +32,12 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
+import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.util.PsiTreeUtil;
 
 import java.io.File;
 import java.util.Map;
@@ -314,4 +316,7 @@ public abstract class JavaEvaluator {
 
         return null;
     }
+
+    @Nullable
+    public abstract PsiPackage getPackage(@NonNull PsiElement node);
 }

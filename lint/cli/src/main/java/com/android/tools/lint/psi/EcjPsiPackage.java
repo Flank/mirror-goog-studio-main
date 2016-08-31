@@ -164,4 +164,25 @@ class EcjPsiPackage extends EcjPsiBinaryElement implements PsiPackage, PsiModifi
     public PackageBinding getPackageBinding() {
         return mPackageBinding;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        EcjPsiPackage that = (EcjPsiPackage) o;
+
+        return mPackageBinding != null ? mPackageBinding.equals(that.mPackageBinding)
+                : that.mPackageBinding == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return mPackageBinding != null ? mPackageBinding.hashCode() : 0;
+    }
 }

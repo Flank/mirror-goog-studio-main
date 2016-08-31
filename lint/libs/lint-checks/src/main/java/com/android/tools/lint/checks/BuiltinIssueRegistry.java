@@ -269,6 +269,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SupportAnnotationDetector.RESTRICTED);
         issues.add(SupportAnnotationDetector.THREAD);
         issues.add(SupportAnnotationDetector.TYPE_DEF);
+        issues.add(SupportAnnotationDetector.TEST_VISIBILITY);
         issues.add(SystemPermissionsDetector.ISSUE);
         issues.add(TextFieldDetector.ISSUE);
         issues.add(TextViewDetector.ISSUE);

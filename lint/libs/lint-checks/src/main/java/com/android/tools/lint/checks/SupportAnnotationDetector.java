@@ -96,6 +96,7 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
@@ -224,6 +225,23 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             Severity.ERROR,
             IMPLEMENTATION);
 
+    /** Using a restricted API */
+    public static final Issue TEST_VISIBILITY = Issue.create(
+            "VisibleForTests", //$NON-NLS-1$
+            "Visible Only For Tests",
+
+            "With the `@VisibleForTesting` annotation you can specify an `otherwise=` " +
+            "attribute which specifies the intended visibility if the method had not " +
+            "been made more widely visible for the tests.\n" +
+            "\n" +
+            "This check looks for accesses from production code (e.g. not tests) where " +
+            "the access would not have been allowed with the intended production visibility.",
+
+            Category.CORRECTNESS,
+            4,
+            Severity.WARNING,
+            IMPLEMENTATION);
+
     /** Method result should be used */
     public static final Issue CHECK_RESULT = Issue.create(
         "CheckResult", //$NON-NLS-1$
@@ -314,6 +332,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
     public static final String ATTR_ALL_OF = "allOf";
     public static final String ATTR_ANY_OF = "anyOf";
     public static final String ATTR_CONDITIONAL = "conditional";
+    public static final String ATTR_OTHERWISE = "otherwise";
 
     /**
      * Constructs a new {@link SupportAnnotationDetector} check
@@ -347,6 +366,10 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             MyLintInspectionBridge bridge = new MyLintInspectionBridge(context);
             checkRestrictTo(bridge, call, method, annotation, allMethodAnnotations,
                     allClassAnnotations);
+        } else if (signature.equals(VISIBLE_FOR_TESTING_ANNOTATION)) {
+            MyLintInspectionBridge bridge = new MyLintInspectionBridge(context);
+            checkVisibleForTesting(bridge, call, method, annotation, allMethodAnnotations,
+                            allClassAnnotations);
         }
     }
 
@@ -881,6 +904,110 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         return false;
     }
 
+    public static void checkVisibleForTesting(
+      @NonNull LintInspectionBridge bridge,
+      @NonNull PsiElement node,
+      @NonNull PsiMethod method,
+      @NonNull PsiAnnotation annotation,
+      @NonNull PsiAnnotation[] allMethodAnnotations,
+      @NonNull PsiAnnotation[] allClassAnnotations) {
+
+        int visibility = getVisibilityForTesting(annotation);
+        if (visibility == VISIBILITY_NONE) { // not the default
+            checkRestrictTo(bridge, node, method, annotation, allMethodAnnotations,
+                    allClassAnnotations, RESTRICT_TO_TESTS);
+        } else {
+            // Check that the target method is available
+            // (1) private is available in the same compilation unit
+            // (2) package private is available in the same package
+            // (3) protected is available either from subclasses or in same package
+            PsiFile containingFile = node.getContainingFile();
+            PsiFile containingFile1 = method.getContainingFile();
+            if (Objects.equals(containingFile, containingFile1)) {
+                // Same compilation unit
+                return;
+            }
+            if (visibility == VISIBILITY_PRIVATE) {
+                if (!isTestContext(bridge, node)) {
+                    reportVisibilityError(bridge, node, "private");
+                }
+                return;
+            }
+
+            JavaEvaluator evaluator = bridge.getEvaluator();
+            PsiPackage pkg = evaluator.getPackage(node);
+            PsiPackage methodPackage = evaluator.getPackage(method);
+            if (Objects.equals(pkg, methodPackage)) {
+                // Same package
+                return;
+            }
+            if (visibility == VISIBILITY_PACKAGE_PRIVATE) {
+                if (!isTestContext(bridge, node)) {
+                    reportVisibilityError(bridge, node, "package private");
+                }
+                return;
+            }
+
+            assert visibility == VISIBILITY_PROTECTED;
+
+            PsiClass methodClass = method.getContainingClass();
+            PsiClass thisClass = PsiTreeUtil.getParentOfType(node, PsiClass.class, true);
+            if (thisClass == null || methodClass == null) {
+                return;
+            }
+            String qualifiedName = methodClass.getQualifiedName();
+            if (qualifiedName == null || evaluator.inheritsFrom(thisClass, qualifiedName, false)) {
+                return;
+            }
+
+            if (!isTestContext(bridge, node)) {
+                reportVisibilityError(bridge, node, "protected");
+            }
+        }
+    }
+
+    private static void reportVisibilityError(
+            @NonNull LintInspectionBridge bridge,
+            @NonNull PsiElement node,
+            @NonNull String desc) {
+        String message = String.format("This method should only be accessed from tests "
+                //+ "(intended visibility is %1$s)", desc);
+                + "or within %1$s scope", desc);
+        bridge.report(TEST_VISIBILITY, node, node, message);
+    }
+
+    // Must match constants in @VisibleForTesting:
+    private static final int VISIBILITY_PRIVATE           = 2;
+    private static final int VISIBILITY_PACKAGE_PRIVATE   = 3;
+    private static final int VISIBILITY_PROTECTED         = 4;
+    private static final int VISIBILITY_NONE              = 5;
+
+    public static int getVisibilityForTesting(@NonNull PsiAnnotation annotation) {
+        PsiAnnotationMemberValue value = annotation.findAttributeValue(ATTR_OTHERWISE);
+        if (value instanceof PsiLiteral) {
+            Object v = ((PsiLiteral) value).getValue();
+            if (v instanceof Integer) {
+                return (Integer)v;
+            }
+        } else if (value instanceof PsiReferenceExpression) {
+            // Not compiled; this is unlikely (but can happen when editing the support
+            // library project itself)
+            PsiReferenceExpression referenceExpression = (PsiReferenceExpression)value;
+            String name = referenceExpression.getReferenceName();
+            if ("NONE".equals(name)) {
+                return VISIBILITY_NONE;
+            } else if ("PRIVATE".equals(name)) {
+                return VISIBILITY_NONE;
+            } else if ("PROTECTED".equals(name)) {
+                return VISIBILITY_PROTECTED;
+            } else if ("PACKAGE_PRIVATE".equals(name)) {
+                return VISIBILITY_PACKAGE_PRIVATE;
+            }
+        }
+
+        return VISIBILITY_PRIVATE; // the default
+    }
+
     // TODO: Test XML access of restricted classes
     public static void checkRestrictTo(
             @NonNull LintInspectionBridge bridge,
@@ -889,6 +1016,21 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             @NonNull PsiAnnotation annotation,
             @NonNull PsiAnnotation[] allMethodAnnotations,
             @NonNull PsiAnnotation[] allClassAnnotations) {
+        int scope = getRestrictionScope(annotation);
+        if (scope != 0) {
+            checkRestrictTo(bridge, node, method, annotation, allMethodAnnotations,
+                    allClassAnnotations, scope);
+        }
+    }
+
+    private static void checkRestrictTo(
+            @NonNull LintInspectionBridge bridge,
+            @NonNull PsiElement node,
+            @NonNull PsiMethod method,
+            @NonNull PsiAnnotation annotation,
+            @NonNull PsiAnnotation[] allMethodAnnotations,
+            @NonNull PsiAnnotation[] allClassAnnotations,
+            int scope) {
 
         if (!containsAnnotation(allMethodAnnotations, annotation)) {
             // Found restriction or class or package: make sure we only check on the most
@@ -909,7 +1051,6 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             return;
         }
 
-        int scope = getRestrictionScope(annotation);
         if ((scope & RESTRICT_TO_GROUP_ID )!= 0) {
             JavaEvaluator evaluator = bridge.getEvaluator();
             Object thisGroup = evaluator.findGroup(node);
