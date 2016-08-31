@@ -46,6 +46,12 @@ public interface AndroidProject {
     // Sent in when external native projects models requires a refresh.
     String PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL = "android.injected.refresh.external.native.model";
 
+    // Sent by Studio 2.2+
+    // This property is sent when a run or debug is invoked.  APK built with this property should
+    // be marked with android:testOnly="true" in the AndroidManifest.xml such that it will be
+    // rejected by the Play store.
+    String PROPERTY_TEST_ONLY = "android.injected.testOnly";
+
     // Sent by Studio 1.5+
 
     // The "feature level" of the device that is targeted, as returned by

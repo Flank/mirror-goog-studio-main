@@ -20,9 +20,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.contains;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,7 +85,27 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkPreviewTargetUpdatesMinSdkVersion() throws IOException {
+    public void checkTestOnlyAttribute() {
+        flavors.executor()
+                .run("clean", "assembleF1FaDebug");
+
+        assertThat(flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml"))
+                .doesNotContain("android:testOnly=\"true\"");
+
+        flavors.executor()
+                .withProperty(AndroidProject.PROPERTY_TEST_ONLY, "true")
+                .run("clean", "assembleF1FaDebug");
+
+        assertThat(flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml"))
+                .contains("android:testOnly=\"true\"");
+    }
+
+    /**
+     * Check that setting targetSdkVersion to a preview version updates the minSdkVersion in
+     * the manifest.
+     */
+    @Test
+    public void checkPreviewTargetSdkVersion() throws IOException {
         GradleTestProject appProject = libsTest.getSubproject("app");
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
@@ -102,8 +124,12 @@ public class ManifestMergingTest {
                         "android:minSdkVersion=\"N\"");
     }
 
+    /**
+     * Check that setting minSdkVersion to a preview version updates the targetSdkVersion in
+     * the manifest.
+     */
     @Test
-    public void checkPreviewMinUpdatesTargetSdkVersion() throws IOException {
+    public void checkPreviewMinSdkVersion() throws IOException {
         GradleTestProject appProject = libsTest.getSubproject("app");
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),

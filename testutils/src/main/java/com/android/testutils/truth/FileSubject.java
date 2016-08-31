@@ -73,6 +73,10 @@ public class FileSubject extends Subject<FileSubject, File> {
         }
     }
 
+    public void contains(String expectedContent) {
+        containsAllOf(expectedContent);
+    }
+
     public void containsAllOf(String... expectedContents) {
         isFile();
 
@@ -99,6 +103,19 @@ public class FileSubject extends Subject<FileSubject, File> {
                         "byte[" + expectedContents.length + "]",
                         "is",
                         "byte[" + contents.length + "]");
+            }
+        } catch (IOException e) {
+            failWithRawMessage("Unable to read %s", getSubject());
+        }
+    }
+
+    public void doesNotContain(String expectedContent) {
+        isFile();
+
+        try {
+            String contents = Files.toString(getSubject(), Charsets.UTF_8);
+            if (contents.contains(expectedContent)) {
+                failWithBadResults("does not contains", expectedContent, "is", contents);
             }
         } catch (IOException e) {
             failWithRawMessage("Unable to read %s", getSubject());

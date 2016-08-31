@@ -695,6 +695,34 @@ public class ManifestMerger2SmallTest {
                         SdkConstants.ATTR_NAME).getNodeValue());
     }
 
+    @Test
+    public void testAddingTestOnlyAttribute() throws Exception {
+        String xml = ""
+                + "<manifest\n"
+                + "    package=\"com.foo.bar\""
+                + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                + "    <activity t:name=\"activityOne\"/>\n"
+                + "    <application t:name=\".applicationOne\" "
+                + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                + "</manifest>";
+
+        File inputFile = inputAsFile("testNoPlaceHolderReplacement", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport = ManifestMerger2
+                .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                .withFeatures(ManifestMerger2.Invoker.Feature.TEST_ONLY)
+                .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals("true",
+                xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION)
+                        .item(0).getAttributes()
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_TEST_ONLY)
+                        .getNodeValue());
+    }
+
     public static Optional<Element> getElementByTypeAndKey(Document xmlDocument, String nodeType, String key) {
         NodeList elementsByTagName = xmlDocument.getElementsByTagName(nodeType);
         for (int i = 0; i < elementsByTagName.getLength(); i++) {

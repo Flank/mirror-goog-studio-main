@@ -561,13 +561,20 @@ public abstract class TaskManager {
                 scope.setCompatibleScreensManifestTask(csmTask);
             }
 
-            List<ManifestMerger2.Invoker.Feature> optionalFeatures = getIncrementalMode(
-                    variantScope.getVariantConfiguration()) != IncrementalMode.NONE
-                    ? ImmutableList.of(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT)
-                    : ImmutableList.of();
+            ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
+                    ImmutableList.builder();
+            if (getIncrementalMode(
+                    variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+                optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
+            }
+            if (AndroidGradleOptions.getTestOnly(project)) {
+                optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
+            }
 
             AndroidTask<? extends ManifestProcessorTask> processManifestTask =
-                    androidTasks.create(tasks, getMergeManifestConfig(scope, optionalFeatures));
+                    androidTasks.create(
+                            tasks,
+                            getMergeManifestConfig(scope, optionalFeatures.build()));
             scope.setManifestProcessorTask(processManifestTask);
 
             processManifestTask.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
