@@ -58,7 +58,7 @@ void SendEnergyStats(WakeLockEvent::WakeLockType type,
   energy_service_stub.RecordWakeLockEvent(&context, request, &reply);
 }
 
-}  // namespace profiler
+}  // namespace
 
 extern "C" {
 

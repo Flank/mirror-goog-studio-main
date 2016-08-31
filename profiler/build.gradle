@@ -87,35 +87,22 @@ def createTasks(data, name, abi, buildType, project, host) {
       outputs.file "$gen/CMakeCache.txt"
   }
 
-  def compileAbi = createTask(project, host, "compile" + name + buildType) {
-      workingDir gen
-      args = ["--build", "$gen", "--target", "install/strip"]
-      executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
-      environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
-      // Always run this task as ninja's super fast dependency check takes care of it
-      outputs.upToDateWhen { return false; }
-  }
-  compileAbi.dependsOn configureAbi
+  createBuildTask(configureAbi, gen, project, host, "compile" + name + buildType, ["install/strip"])
+  createBuildTask(configureAbi, gen, project, host, "compileTools" + name + buildType, ["protoc", "grpc_cpp_plugin"])
+  createBuildTask(configureAbi, gen, project, host, "check" + name + buildType, ["check"])
+  createBuildTask(configureAbi, gen, project, host, "lint" + name + buildType, ["lint"])
+}
 
-  def compileToolsAbi = createTask(project, host, "compileTools" + name + buildType) {
+def createBuildTask(configAbi, gen, project, host, name, targets) {
+  def task = createTask(project, host, name) {
       workingDir gen
-      args = ["--build", "$gen", "--", "protoc", "grpc_cpp_plugin"]
+      args = ["--build", "$gen", "--"] + targets
       executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
       environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
       // Always run this task as ninja's super fast dependency check takes care of it
       outputs.upToDateWhen { return false; }
   }
-  compileToolsAbi.dependsOn configureAbi
-
-  def checkAbi = createTask(project, host, "check" + name + buildType) {
-      workingDir gen
-      args = ["--build", "$gen", "--target", "check"]
-      executable "$rootDir/../../../prebuilts/cmake/$host-x86/bin/cmake"
-      environment GOROOT: "$rootDir/../../../prebuilts/go/$host-x86"
-      // Always run this task as ninja's super fast dependency check takes care of it
-      outputs.upToDateWhen { return false; }
-  }
-  checkAbi.dependsOn configureAbi
+  task.dependsOn configAbi
 }
 
 def createTask(project, host, name, cl) {

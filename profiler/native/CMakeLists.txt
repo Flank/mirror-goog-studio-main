@@ -34,11 +34,12 @@ set(protobuf_WITH_ZLIB OFF CACHE BOOL "Build with zlib support") # Tell protobuf
 set(HAVE_ZLIB 1) # But still tell it to use it.
 
 # Include additional cmake modules after setting global variables
-include(cmake/clang-tidy.cmake)
 include(cmake/install.cmake)
 include(cmake/linker-script.cmake)
 include(cmake/proto_compile.cmake)
 include(cmake/test.cmake)
+
+include(cmake/lint.cmake) # It has to be after proto_compile as it depends on it
 
 # Set compiler flags used both for the profiler code and for its third party dependencies
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
