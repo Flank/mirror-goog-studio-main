@@ -27,6 +27,8 @@ size_t ProfilerFile::GetSize() const {
 bool ProfilerFile::Delete() const { return 0 == remove(path_.c_str()); }
 
 const string ProfilerFile::GetFileName() const {
+  if (path_.find("/") == string::npos) return path_;
+
   return path_.substr(path_.find_last_of("/") + 1);
 }
 }  // namespace profiler

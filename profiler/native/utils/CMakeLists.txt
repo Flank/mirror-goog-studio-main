@@ -1,13 +1,15 @@
 set(UTILS_SOURCES
     activity_manager.cc
-    trace.cc
+    app_base.cc
     bash_command.cc
     file_reader.cc
     installer.cc
     package_manager.cc
+    process_manager.cc
     profiler_file.cc
     stopwatch.cc
     tokenizer.cc
+    trace.cc
     fs/dir.cc
     fs/disk_file_system.cc
     fs/file.cc

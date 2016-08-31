@@ -21,6 +21,7 @@
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
+#include "utils/app_base.h"
 #include "utils/config.h"
 #include "utils/fs/path.h"
 #include "utils/trace.h"
@@ -32,6 +33,8 @@ int main(int argc, char** argv) {
 
   profiler::Trace::Init();
   profiler::Daemon daemon;
+
+  profiler::AppBase::Instance()->SetBase(argv[0]);
 
   profiler::GenericComponent generic_component{daemon};
   daemon.RegisterComponent(&generic_component);

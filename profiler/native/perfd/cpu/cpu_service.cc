@@ -15,7 +15,9 @@
  */
 #include "perfd/cpu/cpu_service.h"
 
+#include "perfd/cpu/simpleperf_manager.h"
 #include "utils/activity_manager.h"
+#include "utils/process_manager.h"
 #include "utils/trace.h"
 
 using grpc::ServerContext;
@@ -76,17 +78,35 @@ grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
 grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
-  // TODO: Move the activity manager to the daemon.
-  // It should be shared with everything in perfd.
-  ActivityManager am;
-  string trace_path;
-  string error;
-  auto mode = ActivityManager::SAMPLING;
-  if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
-    mode = ActivityManager::INSTRUMENTED;
+  Trace trace("CPU:StartProfilingApp");
+
+  ProcessManager process_manager;
+  pid_t pid = process_manager.GetPidForBinary(request->app_pkg_name());
+  if (pid < 0) {
+    response->set_error_message("App is not running.");
+    response->set_status(CpuProfilingAppStartResponse::FAILURE);
+    return Status::OK;
   }
-  bool success =
-      am.StartProfiling(mode, request->app_pkg_name(), &trace_path, &error);
+
+  bool success = false;
+  string error;
+  string trace_path;
+
+  if (request->profiler() == CpuProfilingAppStartRequest::SIMPLE_PERF) {
+    success = simplerperf_manager_.StartProfiling(request->app_pkg_name(),
+                                                  &trace_path, &error);
+  } else {
+    // TODO: Move the activity manager to the daemon.
+    // It should be shared with everything in perfd.
+    ActivityManager manager;
+    auto mode = ActivityManager::SAMPLING;
+    if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
+      mode = ActivityManager::INSTRUMENTED;
+    }
+    success = manager.StartProfiling(mode, request->app_pkg_name(), &trace_path,
+                                     &error);
+  }
+
   if (success) {
     response->set_trace_filename(trace_path);
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
@@ -100,9 +120,16 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 grpc::Status CpuServiceImpl::StopProfilingApp(
     ServerContext* context, const CpuProfilingAppStopRequest* request,
     CpuProfilingAppStopResponse* response) {
-  ActivityManager am;
   string error;
-  bool success = am.StopProfiling(request->app_pkg_name(), &error);
+  bool success = false;
+  if (request->profiler() == CpuProfilingAppStopRequest::SIMPLE_PERF) {
+    success =
+        simplerperf_manager_.StopProfiling(request->app_pkg_name(), &error);
+  } else {  // Profiler is ART
+    ActivityManager manager;
+    success = manager.StopProfiling(request->app_pkg_name(), &error);
+  }
+
   if (success) {
     response->set_status(CpuProfilingAppStopResponse::SUCCESS);
   } else {

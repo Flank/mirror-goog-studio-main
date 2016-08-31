@@ -33,7 +33,9 @@ class CpuProfilerComponent final : public ProfilerComponent {
  public:
   // Creates a CPU perfd component and starts sampling right away.
   explicit CpuProfilerComponent(const Daemon& daemon)
-      : usage_sampler_(daemon, &cache_), thread_monitor_(daemon, &cache_) {
+      : clock_(daemon.clock()), usage_sampler_(daemon, &cache_),
+        thread_monitor_(daemon, &cache_)
+         {
     collector_.Start();
   }
 
@@ -44,12 +46,13 @@ class CpuProfilerComponent final : public ProfilerComponent {
   grpc::Service* GetInternalService() override { return nullptr; }
 
  private:
+  const Clock& clock_;
   CpuCache cache_;
   CpuUsageSampler usage_sampler_;
   ThreadMonitor thread_monitor_;
   CpuCollector collector_{kDefaultCollectionIntervalUs, &usage_sampler_,
                           &thread_monitor_};
-  CpuServiceImpl public_service_{&cache_, &usage_sampler_,
+  CpuServiceImpl public_service_{clock_, &cache_, &usage_sampler_,
                                          &thread_monitor_};
 };
 

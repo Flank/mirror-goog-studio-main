@@ -27,16 +27,18 @@ class Installer {
  public:
   // input MUST NOT be null.
   explicit Installer(const char *app_package_name);
+  explicit Installer(const std::string &app_package_name);
 
   // Install (copy) an executable, taking care of renaming and write/read
-  // permission.
-  bool Install(const std::string &binary_path, std::string *error_string) const;
+  // permission. |binary_name| is the name of the executable to install
+  // which should be located in the same directory as the calling process's
+  // executable.
+  bool Install(const std::string &binary_name, std::string *error_string) const;
 
   // Uninstall (delete) an executable, taking care of write permission.
   bool Uninstall(const std::string &binary_path,
                  std::string *error_string) const;
 
- private:
   // Generates the absolute path an executable should be located on the
   // filesystem to be run-as.
   // Returns true on success, false on failure.
@@ -44,12 +46,12 @@ class Installer {
   bool GetInstallationPath(const std::string &executable_path,
                            std::string *install_path,
                            std::string *error_string) const;
-
   // Generate the name an executable should have when installed in an app data
   // folder.
   const std::string GetBinaryNameForPackage(
       const std::string &executable_filename) const;
 
+ private:
   const std::string app_package_name_;
 };
 }  // namespace profiler

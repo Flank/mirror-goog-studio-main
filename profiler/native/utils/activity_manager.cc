@@ -18,7 +18,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "utils/app_base.h"
 #include "utils/clock.h"
+#include "utils/trace.h"
 
 using std::string;
 
@@ -34,10 +36,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
                                      string *trace_path,
                                      string *error_string) const {
-  if (profiling_mode != SAMPLING) {
-    *error_string = "Only sampling profiler is currently supported";
-    return false;
-  }
+  Trace trace("CPU:StartProfiling ART");
   *trace_path = this->GenerateTracePath(app_package_name);
   string parameters;
   parameters.append("profile start ");
@@ -52,6 +51,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
 
 bool ActivityManager::StopProfiling(const string &app_package_name,
                                     string *error_string) const {
+  Trace trace("CPU:StopProfiling ART");
   string parameters;
   parameters.append("profile stop ");
   parameters.append(app_package_name);
@@ -71,7 +71,7 @@ std::string ActivityManager::GenerateTracePath(
   // And it should use the daemon's steady clock.
   SteadyClock clock;
   std::stringstream path;
-  path << "/data/local/tmp/";
+  path << AppBase::Instance()->GetBase();
   path << app_package_name;
   path << "-";
   path << clock.GetCurrentTime();

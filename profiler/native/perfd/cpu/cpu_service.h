@@ -22,17 +22,19 @@
 #include "perfd/cpu/cpu_usage_sampler.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "proto/cpu.grpc.pb.h"
+#include "perfd/cpu/simpleperf_manager.h"
 
 namespace profiler {
 
 // CPU profiler specific service for desktop clients (e.g., Android Studio).
 class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
-  CpuServiceImpl(CpuCache* cpu_cache, CpuUsageSampler* usage_sampler,
-                 ThreadMonitor* thread_monitor)
+  CpuServiceImpl(const Clock& clock, CpuCache* cpu_cache,
+                 CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor)
       : cache_(*cpu_cache),
         usage_sampler_(*usage_sampler),
-        thread_monitor_(*thread_monitor) {}
+        thread_monitor_(*thread_monitor),
+        simplerperf_manager_(clock){}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -66,6 +68,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
+  SimplePerfManager simplerperf_manager_;
 };
 
 }  // namespace profiler

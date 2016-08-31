@@ -53,7 +53,9 @@ bool BashCommandRunner::RunAndReadOutput(const string &cmd,
 
   while (!feof(pipe)) {
     if (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-      output->append(buffer);
+      if (output != nullptr) {
+        output->append(buffer);
+      }
     }
   }
   int ret = pclose(pipe);
