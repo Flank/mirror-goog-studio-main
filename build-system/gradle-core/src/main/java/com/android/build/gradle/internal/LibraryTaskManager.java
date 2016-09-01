@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_JNI;
-import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
@@ -41,6 +40,7 @@ import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
 import com.android.build.gradle.internal.tasks.LibraryJarTransform;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
+import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
@@ -310,20 +310,14 @@ public class LibraryTaskManager extends TaskManager {
         // merge jni libs.
         createMergeJniLibFoldersTasks(tasks, variantScope);
 
-        Sync packageRenderscript = ThreadRecorder.get().record(
+        AndroidTask<Sync> packageRenderscriptTask = ThreadRecorder.get().record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath, variantName, new Recorder.Block<Sync>() {
-                    @Override
-                    public Sync call() throws Exception {
-                        // package the renderscript header files files into the bundle folder
-                        Sync packageRenderscript = project.getTasks().create(
-                                variantScope.getTaskName("package", "Renderscript"), Sync.class);
-                        // package from 3 sources. the order is important to make sure the override works well.
-                        packageRenderscript.from(variantConfig.getRenderscriptSourceList())
-                                .include("**/*.rsh");
-                        packageRenderscript.into(new File(variantBundleDir, FD_RENDERSCRIPT));
-                        return packageRenderscript;
-                    }
+                projectPath,
+                variantName,
+                () -> {
+                    // package the renderscript header files files into the bundle folder
+                    return getAndroidTasks()
+                            .create(tasks, new PackageRenderscriptConfigAction(variantScope));
                 });
 
         // merge consumer proguard files from different build types and flavors
@@ -476,7 +470,7 @@ public class LibraryTaskManager extends TaskManager {
 
         bundle.dependsOn(
                 packageRes.getName(),
-                packageRenderscript,
+                packageRenderscriptTask.getName(),
                 copyLintTask.getName(),
                 mergeProGuardFileTask,
                 // The below dependencies are redundant in a normal build as
