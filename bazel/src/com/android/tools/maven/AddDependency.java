@@ -16,6 +16,7 @@
 
 package com.android.tools.maven;
 
+import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.collect.Lists;
 
 import org.eclipse.aether.RepositorySystem;
@@ -30,6 +31,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -43,21 +45,22 @@ import java.util.stream.Collectors;
  */
 public class AddDependency {
 
-    public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
+    public static void main(String[] argsArray) throws Exception {
+        List<String> args = Lists.newArrayList(argsArray);
+
+        Path repoDirectory;
+        if (!MavenUtils.isMavenCoordinate(args.get(0))) {
+            repoDirectory = Paths.get(args.get(0));
+            args.remove(0);
+        } else {
+            repoDirectory = WorkspaceUtils.findPrebuiltsRepository();
+        }
+
+        if (!Files.isDirectory(repoDirectory)) {
             usage();
         }
 
-        Path repoDirectory = Paths.get(args[0]);
-        if (!repoDirectory.getFileName().toString().equals("repository")
-                || !repoDirectory.getParent().getFileName().toString().equals("m2")) {
-            usage();
-        }
-
-        List<String> artifacts = Lists.newArrayList(args);
-        artifacts.remove(0); // First argument is the path to m2/repository
-
-        new AddDependency(repoDirectory).run(artifacts);
+        new AddDependency(repoDirectory).run(args);
     }
 
     private final RepositorySystem mRepositorySystem;
