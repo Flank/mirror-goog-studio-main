@@ -19,7 +19,6 @@ package com.android.builder.internal.utils;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -27,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -279,7 +280,12 @@ public final class ConcurrencyTester<F, T> {
                     }
                 } else {
                     // If no other action has started and there are no finishing actions, it means
-                    // that the actions are taking too long to start.
+                    // that the actions are taking too long to start. Let's quit.
+                    for (Optional<Throwable> throwable : threads.values()) {
+                        if (throwable.isPresent()) {
+                            throw new RuntimeException(throwable.get());
+                        }
+                    }
                     throw new RuntimeException("Actions are taking too long to start");
                 }
             }
@@ -313,7 +319,7 @@ public final class ConcurrencyTester<F, T> {
      */
     private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
             @NonNull List<IOExceptionRunnable> runnables) {
-        Map<Thread, Optional<Throwable>> threads = Maps.newConcurrentMap();
+        ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
         for (IOExceptionRunnable runnable : runnables) {
             Thread thread =
                     new Thread(() -> {
