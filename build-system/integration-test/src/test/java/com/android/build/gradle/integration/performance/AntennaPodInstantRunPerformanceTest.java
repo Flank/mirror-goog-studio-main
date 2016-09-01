@@ -108,6 +108,7 @@ public class AntennaPodInstantRunPerformanceTest {
         for (int i=0; i<4; i++) {
             project.executor()
                     .withInstantRun(23, coldswapMode, OptionalCompilationStep.RESTART_ONLY)
+                    .withEnableInfoLogging(false)
                     .run(":app:assembleDebug");
             project.executor().run("clean");
         }
@@ -129,6 +130,7 @@ public class AntennaPodInstantRunPerformanceTest {
         for (int i=0; i<3; i++) {
             makeHotSwapChange(i);
             project.executor()
+                    .withEnableInfoLogging(false)
                     .withInstantRun(23, coldswapMode)
                     .run("assembleDebug");
         }
@@ -152,6 +154,7 @@ public class AntennaPodInstantRunPerformanceTest {
         for (int i=0; i<2; i++) {
             makeColdSwapChange(i);
             project.executor()
+                    .withEnableInfoLogging(false)
                     .withInstantRun(23, coldswapMode)
                     .run(":app:assembleDebug");
         }

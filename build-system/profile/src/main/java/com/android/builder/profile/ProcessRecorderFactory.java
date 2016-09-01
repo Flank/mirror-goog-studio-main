@@ -25,19 +25,10 @@ import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Strings;
-import com.google.common.io.ByteStreams;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,14 +48,12 @@ public class ProcessRecorderFactory {
         synchronized (LOCK) {
 
             if (sINSTANCE.isInitialized()) {
-                sINSTANCE.get().finish();
-                sINSTANCE.uploadData();
+                sINSTANCE.processRecorder.finish();
             }
             sINSTANCE.processRecorder = null;
         }
     }
 
-    private static boolean sENABLED = !Strings.isNullOrEmpty(System.getenv("RECORD_SPANS"));
 
     @NonNull
     private ScheduledExecutorService mScheduledExecutorService = Executors.newScheduledThreadPool(1);
@@ -74,25 +63,6 @@ public class ProcessRecorderFactory {
     @Nullable
     private ILogger mLogger = null;
 
-    static boolean isEnabled() {
-        return sENABLED;
-    }
-
-    @VisibleForTesting
-    static void setEnabled(boolean enabled) {
-        sENABLED = enabled;
-    }
-
-    /**
-     * Sets the {@link ProcessRecorder.JsonRecordWriter }
-     * @param recordWriter
-     */
-    public synchronized void setRecordWriter(
-            @NonNull ProcessRecorder.ExecutionRecordWriter recordWriter) {
-        assertRecorderNotCreated();
-        this.recordWriter = recordWriter;
-    }
-
     /**
      * Set up the the ProcessRecorder. Idempotent for multi-project builds.
      *
@@ -101,23 +71,14 @@ public class ProcessRecorderFactory {
             @NonNull File projectPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            @NonNull File out) {
+            @Nullable File out) {
 
         synchronized (LOCK) {
             if (sINSTANCE.isInitialized()) {
                 return;
             }
             sINSTANCE.setLogger(logger);
-            if (isEnabled()) {
-                sINSTANCE.setOutputFile(out);
-                try {
-                    sINSTANCE.setRecordWriter(
-                            new ProcessRecorder.JsonRecordWriter(new FileWriter(out)));
-                } catch (IOException e) {
-                    // This can only happen in performance test mode.
-                    throw new RuntimeException("Unable to open json profile for writing", e);
-                }
-            }
+            sINSTANCE.setProfileOutputFile(out != null ? out.toPath() : null);
 
             ProcessRecorder recorder = sINSTANCE.get(); // Initialize the ProcessRecorder instance
 
@@ -171,15 +132,12 @@ public class ProcessRecorderFactory {
 
     @Nullable
     private ProcessRecorder processRecorder = null;
-    @Nullable
-    private ProcessRecorder.ExecutionRecordWriter recordWriter = null;
 
     @VisibleForTesting
-    public static void initializeForTests(ProcessRecorder.ExecutionRecordWriter recordWriter) {
+    public static void initializeForTests(@NonNull Path profileOutputFile) {
         sINSTANCE = new ProcessRecorderFactory();
+        sINSTANCE.setProfileOutputFile(profileOutputFile);
         ProcessRecorder.resetForTests();
-        setEnabled(true);
-        sINSTANCE.setRecordWriter(recordWriter);
         ProcessRecorder recorder = sINSTANCE.get(); // Initialize the ProcessRecorder instance
         setGlobalProperties(recorder,
                 new File("fake/path/to/test_project/"),
@@ -196,10 +154,10 @@ public class ProcessRecorderFactory {
         tracker.setMaxJournalSize(1000);
     }
 
-    private File outputFile = null;
+    private Path profileOutputFile = null;
 
-    private void setOutputFile(File outputFile) {
-        this.outputFile = outputFile;
+    private void setProfileOutputFile(Path outputFile) {
+        this.profileOutputFile = outputFile;
     }
 
     synchronized ProcessRecorder get() {
@@ -208,45 +166,10 @@ public class ProcessRecorderFactory {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
             initializeAnalytics(mLogger, mScheduledExecutorService);
-            processRecorder = new ProcessRecorder(recordWriter, mLogger);
+            processRecorder = new ProcessRecorder(profileOutputFile);
         }
 
         return processRecorder;
     }
 
-    private void uploadData() {
-
-        if (outputFile == null) {
-            return;
-        }
-        try {
-            URL u = new URL("http://android-devtools-logging.appspot.com/log/");
-            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            conn.setRequestProperty("Content-Length", String.valueOf(outputFile.length()));
-            try (InputStream is = new BufferedInputStream(new FileInputStream(outputFile));
-                 OutputStream os = conn.getOutputStream()) {
-                ByteStreams.copy(is, os);
-            }
-
-            String line;
-            try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-
-                while ((line = reader.readLine()) != null) {
-                    if (mLogger != null) {
-                        mLogger.verbose("From POST : " + line);
-                    }
-                }
-            }
-        } catch(Exception e) {
-            if (mLogger != null) {
-                mLogger.warning("An exception while generated while uploading the profiler data");
-                mLogger.error(e, "Exception while uploading the profiler data");
-            }
-        }
-    }
 }

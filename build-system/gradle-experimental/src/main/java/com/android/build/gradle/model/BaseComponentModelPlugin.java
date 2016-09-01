@@ -164,13 +164,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
     public void apply(Project project) {
         ExecutionConfigurationUtil.setThreadPoolSize(project);
 
-
-        String benchmarkName = AndroidGradleOptions.getBenchmarkName(project);
-        String benchmarkMode = AndroidGradleOptions.getBenchmarkMode(project);
-        if (benchmarkName != null && benchmarkMode != null) {
-            ProcessRecorder.setBenchmark(benchmarkName, benchmarkMode);
-        }
-
         project.getPlugins().apply(AndroidComponentModelPlugin.class);
         project.getPlugins().apply(JavaBasePlugin.class);
         project.getPlugins().apply(JacocoPlugin.class);

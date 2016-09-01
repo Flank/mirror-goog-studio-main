@@ -22,6 +22,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.File;
+import java.nio.file.Path;
+
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 
@@ -32,6 +34,11 @@ public class MoreTruth {
     @NonNull
     public static FileSubject assertThat(@Nullable File file) {
         return assert_().about(FileSubjectFactory.factory()).that(file);
+    }
+
+    @NonNull
+    public static PathSubject assertThat(@Nullable Path path) {
+        return assert_().about(PathSubject.FACTORY).that(path);
     }
 
     @NonNull

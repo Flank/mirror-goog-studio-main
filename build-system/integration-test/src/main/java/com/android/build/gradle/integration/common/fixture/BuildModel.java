@@ -33,6 +33,7 @@ import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.GradleTask;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -160,7 +161,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             @NonNull ProjectConnection connection,
             @NonNull BuildAction<Map<K, V>> action,
             int modelLevel) {
-
         BuildActionExecuter<Map<K, V>> executor = connection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(5);
@@ -184,12 +184,16 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
         setJvmArguments(executor);
 
-        executor.withArguments(Iterables.toArray(arguments, String.class));
-
         executor.setStandardOutput(System.out);
         executor.setStandardError(System.err);
 
-        return executor.run();
+        try (GradleProfileUploader uploader =
+                     new GradleProfileUploader(mBenchmarkEnabled, mBenchmarkName, mBenchmarkMode)) {
+            executor.withArguments(Iterables.toArray(uploader.appendArg(arguments), String.class));
+            return executor.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void assertNoSyncIssues(AndroidProject project) {

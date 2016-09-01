@@ -38,7 +38,7 @@ public interface Recorder {
      *
      * @param <T> the type of result produced by executing this block of code.
      */
-    abstract class Block<T> implements Callable<T> {
+    interface Block<T> extends Callable<T> {
 
         /**
          * Notification that an exception was raised during the {@link #call()} method invocation.
@@ -48,19 +48,12 @@ public interface Recorder {
          *
          * @param e the exception raised during the {@link #call()} execution.
          */
-        public void handleException(@NonNull Exception e) {
-            // by default we rethrow as a runtime exception, subclasses should override for more
-            // precise handling.
+        default void handleException(@NonNull Exception e) {
+            // by default we rethrow as a runtime exception, implementations should override for
+            // more precise handling.
             throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
         }
     }
-
-    Block<Void> EMPTY_BLOCK = new Block<Void>() {
-        @Override
-        public Void call() throws Exception {
-            return null;
-        }
-    };
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link

@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.UninstallOnClose;
+import com.android.build.gradle.integration.common.utils.UninstallOnClose;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.Packaging;

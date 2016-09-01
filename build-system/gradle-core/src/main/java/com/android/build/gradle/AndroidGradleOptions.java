@@ -60,9 +60,7 @@ public class AndroidGradleOptions {
     private static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
             "android.disableResourceValidation";
 
-    // TODO: Drop the "com." prefix, for consistency.
-    private static final String PROPERTY_BENCHMARK_NAME = "com.android.benchmark.name";
-    private static final String PROPERTY_BENCHMARK_MODE = "com.android.benchmark.mode";
+    public static final String PROPERTY_BENCHMARK_PROFILE_FILE = "android.benchmark.profile.file";
 
     public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
             "android.incrementalJavaCompile";
@@ -130,13 +128,9 @@ public class AndroidGradleOptions {
     }
 
     @Nullable
-    public static String getBenchmarkName(@NonNull Project project) {
-        return getString(project, PROPERTY_BENCHMARK_NAME);
-    }
-
-    @Nullable
-    public static String getBenchmarkMode(@NonNull Project project) {
-        return getString(project, PROPERTY_BENCHMARK_MODE);
+    public static File getBenchmarkProfileFile(@NonNull Project project) {
+        String path = getString(project, PROPERTY_BENCHMARK_PROFILE_FILE);
+        return path != null ? new File(path) : null;
     }
 
     public static boolean invokedFromIde(@NonNull Project project) {

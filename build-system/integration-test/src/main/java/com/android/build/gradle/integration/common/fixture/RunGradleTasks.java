@@ -164,19 +164,25 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         System.out.println("[GradleTestProject] Executing tasks: gradle "
                 + Joiner.on(' ').join(args) + " " + Joiner.on(' ').join(tasksList));
 
+
         BuildLauncher launcher = mProjectConnection.newBuild()
-                .forTasks(Iterables.toArray(tasksList, String.class))
-                .withArguments(Iterables.toArray(args, String.class));
+                .forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
 
         launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
         launcher.setStandardError(new TeeOutputStream(stderr, System.err));
 
-        WaitingResultHandler handler = new WaitingResultHandler();
-        launcher.run(handler);
-
-        GradleConnectionException failure = handler.waitForResult();
+        GradleConnectionException failure;
+        try (GradleProfileUploader uploader =
+                     new GradleProfileUploader(mBenchmarkEnabled, mBenchmarkName, mBenchmarkMode)) {
+            launcher.withArguments(Iterables.toArray(uploader.appendArg(args), String.class));
+            WaitingResultHandler handler = new WaitingResultHandler();
+            launcher.run(handler);
+            failure = handler.waitForResult();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         if (mExpectingFailure && failure == null) {
             throw new AssertionError("Expecting build to fail");
         } else if (!mExpectingFailure && failure != null) {

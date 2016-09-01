@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common;
+package com.android.build.gradle.integration.common.utils;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;

@@ -14,7 +14,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="profile" exported="" />
-    <orderEntry type="module" module-name="protos" exported="" />
     <orderEntry type="module" module-name="builder-test-api" exported="" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="module" module-name="ddmlib" exported="" />
@@ -32,5 +31,6 @@
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="builder-model" exported="" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
+    <orderEntry type="module" module-name="analytics-protos" exported="" />
   </component>
 </module>
