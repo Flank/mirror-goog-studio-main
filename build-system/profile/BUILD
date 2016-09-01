@@ -25,5 +25,7 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/idea/.idea/libraries:jimfs",
+        "//tools/idea/.idea/libraries:truth",
     ],
 )
