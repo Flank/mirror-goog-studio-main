@@ -64,7 +64,7 @@ java_library(
 java_library(
     name = "commons-codec_commons-codec",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar"],
 )
 
 java_library(
@@ -113,14 +113,14 @@ java_library(
         ":commons-codec_commons-codec",
         ":commons-logging_commons-logging",
         ":org.apache.httpcomponents_httpcore",
-        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.2.6:jar",
     ],
 )
 
 java_library(
     name = "org.apache.httpcomponents_httpcore",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.1:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.2.5:jar"],
 )
 
 java_library(

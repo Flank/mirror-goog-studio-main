@@ -27,13 +27,12 @@ import java.util.List;
 
 /** Constructs Aether objects. */
 class AetherUtils {
-
-    public static final RemoteRepository MAVEN_CENTRAL =
+    static final RemoteRepository MAVEN_CENTRAL =
             new RemoteRepository.Builder(
                             "Maven Central", "default", "https://repo1.maven.org/maven2/")
                     .build();
 
-    public static final ImmutableList<RemoteRepository> REPOSITORIES =
+    static final ImmutableList<RemoteRepository> REPOSITORIES =
             ImmutableList.of(MAVEN_CENTRAL);
 
     static RepositorySystem getRepositorySystem() {
@@ -76,4 +75,6 @@ class AetherUtils {
 
         return session;
     }
+
+    private AetherUtils() {}
 }

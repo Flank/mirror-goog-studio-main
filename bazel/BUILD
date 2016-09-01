@@ -105,6 +105,7 @@ java_library(
     name = "maven",
     srcs = glob(["src/**/maven/*.java"]),
     deps = [
+        ":utils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
         "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
@@ -112,24 +113,52 @@ java_library(
     ],
 )
 
-# Run without any arguments to see usage instructions.
+# See README.md
 java_binary(
     name = "java_import_generator",
     main_class = "com.android.tools.maven.JavaImportGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
-    # TODO: how to pass the path to workspace as argument?
 )
 
-# Run without any arguments to see usage instructions.
+# See README.md
 java_binary(
     name = "third_party_build_generator",
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
+    args = [
+            "com.google.code.findbugs:jsr305:1.3.9",
+            "com.google.code.gson:gson:2.2.4",
+            "com.google.guava:guava:19.0",
+            "com.google.jimfs:jimfs:1.1",
+            "com.google.protobuf:protobuf-java:2.5.0",
+            "com.intellij:annotations:12.0",
+            "com.squareup:javawriter:2.5.0",
+            "net.sf.kxml:kxml2:2.3.0",
+            "org.apache.commons:commons-compress:1.8.1",
+            "org.apache.httpcomponents:httpclient:4.1.1",
+            "org.apache.httpcomponents:httpmime:4.1",
+            "org.apache.maven:maven-aether-provider:3.3.9",
+            "org.bouncycastle:bcpkix-jdk15on:1.48",
+            "org.bouncycastle:bcprov-jdk15on:1.48",
+            "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
+            "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
+            "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
+            "org.ow2.asm:asm-tree:5.0.4",
+            "org.ow2.asm:asm:5.0.4",
+
+            # Include test dependencies here as well, so that we take them into
+            # consideration when computing version numbers.
+            "com.google.truth:truth:0.28",
+            "junit:junit:4.12",
+            "nl.jqno.equalsverifier:equalsverifier:2.1.5",
+            "org.easymock:easymock:3.3",
+            "org.mockito:mockito-all:1.9.5",
+    ],
 )
 
-# Run without any arguments to see usage instructions.
+# See README.md
 java_binary(
     name = "add_dependency",
     main_class = "com.android.tools.maven.AddDependency",
