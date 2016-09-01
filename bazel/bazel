@@ -20,9 +20,19 @@ def main():
             workspace, 'prebuilts', 'studio', 'jdk', 'linux'),
         'TERM': os.environ.get('TERM') or '',
     }
-    sys.exit(subprocess.call([bazel] + sys.argv[1:], env=env))
+  elif sys.platform == 'darwin':
+    bazel = os.path.join(
+        workspace, 'tools', 'base', 'bazel', 'prebuilts', 'mac', 'bazel-real')
+    env = {
+        'CC': '/usr/bin/gcc',
+        'JAVA_HOME': os.path.join(
+            workspace, 'prebuilts', 'studio', 'jdk', 'mac', 'Contents', 'Home'),
+        'TERM': os.environ.get('TERM') or '',
+    }
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
+
+  sys.exit(subprocess.call([bazel] + sys.argv[1:], env=env))
 
 
 def find_workspace(path):
