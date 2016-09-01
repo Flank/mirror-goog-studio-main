@@ -113,7 +113,8 @@ public class ManifestMerger2Test {
             "78_removeAll",
             "78b_removeAllActivities",
             "79_custom_node.xml",
-            "80_remove_ns_in_nodes"
+            "80_remove_ns_in_nodes",
+            "81_do_not_duplicate_xmlns_in_nodes",
     };
 
 

@@ -182,6 +182,18 @@ public class XmlUtils {
                         return nsPrefix;
                     }
                     visited.add(nsPrefix);
+                } else if (attr.getPrefix() == null
+                        && attr.getNodeName().startsWith(XMLNS_PREFIX)) {
+                    // It seems to be possible for the attribute to not have the namespace prefix
+                    // i.e. attr.getPrefix() returns null and getLocalName returns null, but the
+                    // node name is xmlns:foo. This is a ugly workaround, but it works.
+                    String uri = attr.getNodeValue();
+                    nsPrefix = attr.getNodeName().substring(XMLNS_PREFIX.length());
+                    // Is this the URI we are looking for? If yes, we found its prefix.
+                    if (nsUri.equals(uri)) {
+                        return nsPrefix;
+                    }
+                    visited.add(nsPrefix);
                 }
             }
         }
