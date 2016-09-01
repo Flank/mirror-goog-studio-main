@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
-import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
@@ -36,7 +35,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
@@ -66,8 +64,6 @@ import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfi
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Zip;
@@ -82,14 +78,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 /**
  * TaskManager for creating tasks in an Android library project.
  */
 public class LibraryTaskManager extends TaskManager {
 
-    private static final String ANNOTATIONS = "annotations";
+    public static final String ANNOTATIONS = "annotations";
 
     private Task assembleDefault;
 
@@ -355,11 +350,16 @@ public class LibraryTaskManager extends TaskManager {
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
         if (variantData.getVariantDependency().isAnnotationsPresent()) {
-            libVariantData.generateAnnotationsTask =
-                    createExtractAnnotations(project, variantData);
-        }
-        if (libVariantData.generateAnnotationsTask != null && !generateSourcesOnly) {
-            bundle.dependsOn(libVariantData.generateAnnotationsTask);
+            AndroidTask<ExtractAnnotations> extractAnnotationsTask =
+                    getAndroidTasks()
+                            .create(
+                                    tasks,
+                                    new ExtractAnnotations.ConfigAction(
+                                            project, getExtension(), variantScope));
+            extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
+            if (!generateSourcesOnly) {
+                bundle.dependsOn(extractAnnotationsTask.getName());
+            }
         }
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
@@ -591,54 +591,6 @@ public class LibraryTaskManager extends TaskManager {
             return TransformManager.SCOPE_FULL_PROJECT;
         }
         return TransformManager.SCOPE_FULL_LIBRARY;
-    }
-
-    public ExtractAnnotations createExtractAnnotations(
-            final Project project,
-            final BaseVariantData variantData) {
-        final GradleVariantConfiguration config = variantData.getVariantConfiguration();
-
-        final ExtractAnnotations task = project.getTasks().create(
-                variantData.getScope().getTaskName("extract", "Annotations"),
-                ExtractAnnotations.class);
-        task.setDescription(
-                "Extracts Android annotations for the " + variantData.getVariantConfiguration()
-                        .getFullName()
-                        + " variant into the archive file");
-        task.setGroup(BasePlugin.BUILD_GROUP);
-        task.setVariant(variantData);
-        task.setDestinationDir(new File(
-                variantData.getScope().getGlobalScope().getIntermediatesDir(),
-                ANNOTATIONS + "/" + config.getDirName()));
-        task.setOutput(new File(task.getDestinationDir(), FN_ANNOTATIONS_ZIP));
-        task.getTypedefFile(variantData.getScope().getTypedefFile());
-        task.setClassDir(variantData.getScope().getJavaOutputDir());
-        task.setSource(variantData.getJavaSources());
-        task.setEncoding(getExtension().getCompileOptions().getEncoding());
-        task.setSourceCompatibility(
-                getExtension().getCompileOptions().getSourceCompatibility().toString());
-        ConventionMappingHelper.map(task, "classpath", new Callable<ConfigurableFileCollection>() {
-            @Override
-            public ConfigurableFileCollection call() throws Exception {
-                return project.files(androidBuilder.getCompileClasspath(config));
-            }
-        });
-        task.dependsOn(variantData.getScope().getJavacTask().getName());
-
-        // Setup the boot classpath just before the task actually runs since this will
-        // force the sdk to be parsed. (Same as in compileTask)
-        task.doFirst(new Action<Task>() {
-            @Override
-            public void execute(Task task) {
-                if (task instanceof ExtractAnnotations) {
-                    ExtractAnnotations extractAnnotations = (ExtractAnnotations) task;
-                    extractAnnotations.setBootClasspath(
-                            androidBuilder.getBootClasspathAsStrings(false));
-                }
-            }
-        });
-
-        return task;
     }
 
     private Task getAssembleDefault() {
