@@ -2,11 +2,12 @@
 
 #include <dirent.h>
 #include <stdlib.h>
+#include <string.h>
 #include <functional>
 #include <iostream>
 #include <memory>
 
-#include <utils/fs/disk_file_system.h>
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/trace.h"
 
