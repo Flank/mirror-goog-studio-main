@@ -591,6 +591,54 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testOverlayMerge() throws Exception {
+        String xmlInput = ""
+                     + "<manifest\n"
+                     + "    package=\"com.foo.example\""
+                     + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                     + "    <activity t:name=\"activityOne\"/>\n"
+                     + "    <application t:name=\".applicationOne\" "
+                     + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                     + "</manifest>";
+
+        // Overlays can't have a package
+        String xmlToMerge = ""
+                     + "<manifest\n"
+                     + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                     + "    <application>\n"
+                     + "        <activity t:name=\"activityTwo\"/>\n"
+                     + "    </application>\n"
+                     + "</manifest>";
+
+        File inputFile = inputAsFile("testOverlayMerge", xmlInput);
+        final File tempFile = new File(inputFile.getParentFile(), "nevercreated.xml");
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport = ManifestMerger2
+          .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+          .withFeatures(ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS, ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+          .addLibraryManifest(tempFile)
+          .asType(XmlDocument.Type.OVERLAY)
+          .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
+              @Override
+              protected InputStream getInputStream(@NonNull File file) throws FileNotFoundException {
+                  String text = (file == inputFile) ? xmlInput : xmlToMerge;
+                  return new ByteArrayInputStream(text.getBytes(Charsets.UTF_8));
+              }
+          })
+          .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals("com.foo.example", xmlDocument.getElementsByTagName("manifest")
+          .item(0).getAttributes().getNamedItem("package").getNodeValue());
+
+        NodeList activityList = xmlDocument.getElementsByTagName("activity");
+        assertEquals(".activityOne", activityList.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
+        assertEquals(".activityTwo", activityList.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
+    }
+
+    @Test
     public void testInstantRunReplacement() throws Exception {
         String xml = ""
                 + "<manifest\n"

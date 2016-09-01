@@ -74,6 +74,8 @@ public class ManifestMerger2 {
     @NonNull
     private final MergeType mMergeType;
     @NonNull
+    private final XmlDocument.Type mDocumentType;
+    @NonNull
     private final Optional<File> mReportFile;
     @NonNull
     private final FileStreamProvider mFileStreamProvider;
@@ -87,6 +89,7 @@ public class ManifestMerger2 {
             @NonNull Map<String, Object> placeHolderValues,
             @NonNull KeyBasedValueResolver<ManifestSystemProperty> systemPropertiesResolver,
             @NonNull MergeType mergeType,
+            @NonNull XmlDocument.Type documentType,
             @NonNull Optional<File> reportFile,
             @NonNull FileStreamProvider fileStreamProvider) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
@@ -97,6 +100,7 @@ public class ManifestMerger2 {
         this.mFlavorsAndBuildTypeFiles = flavorsAndBuildTypeFiles;
         this.mOptionalFeatures = optionalFeatures;
         this.mMergeType = mergeType;
+        this.mDocumentType = documentType;
         this.mReportFile = reportFile;
         this.mFileStreamProvider = fileStreamProvider;
     }
@@ -125,7 +129,7 @@ public class ManifestMerger2 {
                 new ManifestInfo(
                         mManifestFile.getName(),
                         mManifestFile,
-                        XmlDocument.Type.MAIN,
+                        mDocumentType,
                         Optional.<String>absent() /* mainManifestPackageName */),
                 selectors,
                 mergingReportBuilder);
@@ -133,7 +137,7 @@ public class ManifestMerger2 {
         // first do we have a package declaration in the main manifest ?
         Optional<XmlAttribute> mainPackageAttribute =
                 loadedMainManifestInfo.getXmlDocument().getPackage();
-        if (!mainPackageAttribute.isPresent()) {
+        if (mDocumentType != XmlDocument.Type.OVERLAY && !mainPackageAttribute.isPresent()) {
             mergingReportBuilder.addMessage(
                     loadedMainManifestInfo.getXmlDocument().getSourceFile(),
                     MergingReport.Record.Severity.ERROR,
@@ -628,7 +632,7 @@ public class ManifestMerger2 {
     public static Invoker newMerger(@NonNull File mainManifestFile,
             @NonNull ILogger logger,
             @NonNull MergeType mergeType) {
-        return new Invoker(mainManifestFile, logger, mergeType);
+        return new Invoker(mainManifestFile, logger, mergeType, XmlDocument.Type.MAIN);
     }
 
     /**
@@ -753,6 +757,7 @@ public class ManifestMerger2 {
                 new ImmutableList.Builder<Feature>();
         @NonNull
         private final MergeType mMergeType;
+        @NonNull private  XmlDocument.Type mDocumentType;
         @Nullable private File mReportFile;
 
         @Nullable
@@ -852,10 +857,12 @@ public class ManifestMerger2 {
         private Invoker(
                 @NonNull File mainManifestFile,
                 @NonNull ILogger logger,
-                @NonNull MergeType mergeType) {
+                @NonNull MergeType mergeType,
+                @NonNull XmlDocument.Type documentType) {
             this.mMainManifestFile = Preconditions.checkNotNull(mainManifestFile);
             this.mLogger = logger;
             this.mMergeType = mergeType;
+            this.mDocumentType = documentType;
         }
 
         /**
@@ -961,6 +968,18 @@ public class ManifestMerger2 {
         }
 
         /**
+         * Specify if the file being merged is an overlay (flavor). If not called,
+         * the merging process will assume a master manifest merge. The master manifest needs
+         * to have a package and some other mandatory fields like "uses-sdk", etc.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker asType(XmlDocument.Type type) {
+            mDocumentType = type;
+            return this;
+        }
+
+        /**
          * Perform the merging and return the result.
          *
          * @return an instance of {@link com.android.manifmerger.MergingReport} that will give
@@ -999,6 +1018,7 @@ public class ManifestMerger2 {
                             mPlaceholders.build(),
                             new MapBasedKeyBasedValueResolver<ManifestSystemProperty>(systemProperties),
                             mMergeType,
+                            mDocumentType,
                             Optional.fromNullable(mReportFile),
                             fileStreamProvider);
             return manifestMerger.merge();

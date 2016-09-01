@@ -61,7 +61,7 @@ public class XmlDocument {
     /**
      * The document type.
      */
-    enum Type {
+    public enum Type {
         /**
          * A manifest overlay as found in the build types and variants.
          */
