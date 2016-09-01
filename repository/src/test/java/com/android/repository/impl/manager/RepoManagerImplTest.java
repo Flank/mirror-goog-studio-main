@@ -18,38 +18,106 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
-import com.android.repository.api.RepoPackage;
+import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDownloader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
 import java.io.File;
-import java.util.HashMap;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 /**
  * Tests for {@link RepoManagerImpl}.
  */
 public class RepoManagerImplTest extends TestCase {
+
+    private static final String LOCAL_PACKAGE =
+            "<repo:repository\n"
+            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <localPackage path=\"foo\" obsolete=\"true\">\n"
+            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+            + "        <revision>\n"
+            + "            <major>1</major>\n"
+            + "        </revision>\n"
+            + "        <display-name>Test package</display-name>\n"
+            + "    </localPackage>\n"
+            + "</repo:repository>";
+
+    private static final String LOCAL_PACKAGE_2 = "<repo:repository\n"
+            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <localPackage path=\"bar\" obsolete=\"true\">\n"
+            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+            + "        <revision>\n"
+            + "            <major>1</major>\n"
+            + "        </revision>\n"
+            + "        <display-name>Test package 2</display-name>\n"
+            + "    </localPackage>\n"
+            + "</repo:repository>";
+
+    private static final String REMOTE_REPO = "<repo:repository\n"
+            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <remotePackage path=\"dummy;foo\">\n"
+            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+            + "        <revision>\n"
+            + "            <major>2</major>\n"
+            + "        </revision>\n"
+            + "        <display-name>Test package</display-name>\n"
+            + "        <archives>\n"
+            + "            <archive>\n"
+            + "                <complete>\n"
+            + "                    <size>1234</size>\n"
+            + "                    <checksum>4321432143214321432143214321432143214321</checksum>\n"
+            + "                    <url>http://example.com/arch1</url>\n"
+            + "                </complete>\n"
+            + "            </archive>\n"
+            + "        </archives>\n"
+            + "    </remotePackage>\n"
+            + "</repo:repository>";
+
+    private static final String REMOTE_REPO_2 = "<repo:repository\n"
+            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <remotePackage path=\"dummy;bar\">\n"
+            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+            + "        <revision>\n"
+            + "            <major>3</major>\n"
+            + "        </revision>\n"
+            + "        <display-name>Test package</display-name>\n"
+            + "        <archives>\n"
+            + "            <archive>\n"
+            + "                <complete>\n"
+            + "                    <size>1234</size>\n"
+            + "                    <checksum>4321432143214321432143214321432143214321</checksum>\n"
+            + "                    <url>http://example.com/arch1</url>\n"
+            + "                </complete>\n"
+            + "            </archive>\n"
+            + "        </archives>\n"
+            + "    </remotePackage>\n"
+            + "</repo:repository>";
 
     // test load with local and remote, dummy loaders, callbacks called in order
     public void testLoadOperationsInOrder() throws Exception {
@@ -57,18 +125,31 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory(new OrderTestLoader(1, counter, false));
-        RepoManager.RepoLoadedCallback localCallback =
-                packages -> assertEquals(2, counter.addAndGet(1));
+        RepoManager.RepoLoadedCallback localCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                assertEquals(2, counter.addAndGet(1));
+            }
+        };
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory(new OrderTestLoader(3, counter, false));
-        RepoManager.RepoLoadedCallback remoteCallback =
-                packages -> assertEquals(4, counter.addAndGet(1));
-        Runnable errorCallback = Assert::fail;
+        RepoManager.RepoLoadedCallback remoteCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                assertEquals(4, counter.addAndGet(1));
+            }
+        };
+       Runnable errorCallback = new Runnable() {
+            @Override
+            public void run() {
+                fail();
+            }
+        };
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
         mgr.setLocalPath(new File("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.of()));
+                ImmutableList.<RepositorySource>of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
                 ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
@@ -82,22 +163,37 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory(new OrderTestLoader(1, counter, false));
-        RepoManager.RepoLoadedCallback localCallback =
-                packages -> assertEquals(2, counter.addAndGet(1));
+        RepoManager.RepoLoadedCallback localCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                assertEquals(2, counter.addAndGet(1));
+            }
+        };
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory(new OrderTestLoader(3, counter, true));
-        RepoManager.RepoLoadedCallback remoteCallback = packages -> fail();
-        Runnable errorCallback = () -> assertEquals(4, counter.addAndGet(1));
+        RepoManager.RepoLoadedCallback remoteCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                fail();
+            }
+        };
+        Runnable errorCallback = new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(4, counter.addAndGet(1));
+            }
+        };
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
         mgr.setLocalPath(new File("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.of()));
+                ImmutableList.<RepositorySource>of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         try {
             mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // expected
         }
         assertEquals(4, counter.get());
@@ -110,21 +206,37 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory(new OrderTestLoader(1, counter, true));
-        RepoManager.RepoLoadedCallback localCallback = packages -> fail();
+        RepoManager.RepoLoadedCallback localCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                fail();
+            }
+        };
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory(new OrderTestLoader(3, counter, false));
-        RepoManager.RepoLoadedCallback remoteCallback = packages -> fail();
-        Runnable errorCallback = () -> assertEquals(2, counter.addAndGet(1));
+        RepoManager.RepoLoadedCallback remoteCallback = new RepoManager.RepoLoadedCallback() {
+            @Override
+            public void doRun(@NonNull RepositoryPackages packages) {
+                fail();
+            }
+        };
+        Runnable errorCallback = new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(2, counter.addAndGet(1));
+            }
+        };
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
         mgr.setLocalPath(new File("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.of()));
+                ImmutableList.<RepositorySource>of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         try {
             mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
                     ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // expected
         }
         assertEquals(2, counter.get());
@@ -202,19 +314,14 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicBoolean remoteDidRun = new AtomicBoolean(false);
 
         TestLoaderFactory localRunningFactory = new TestLoaderFactory(
-                new RunningLoader(localDidRun) {
-                    @Override
-                    public boolean needsUpdate(long lastLocalRefreshMs, boolean deepCheck) {
-                        return false;
-                    }
-                });
+                new RunningLoader(localDidRun));
         TestLoaderFactory remoteRunningFactory = new TestLoaderFactory(
                 new RunningLoader(remoteDidRun));
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localRunningFactory, remoteRunningFactory);
         mgr.setLocalPath(new File("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
-                ImmutableList.of()));
+                ImmutableList.<RepositorySource>of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         mgr.load(0, null, null, null, runner, null, null, true);
         assertTrue(localDidRun.compareAndSet(true, false));
@@ -227,10 +334,10 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(localDidRun.get());
         assertFalse(remoteDidRun.get());
 
-        // remote should run since we've specified a downloader
+        // we should run since we've specified a downloader
         mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner,
                 new FakeDownloader(fop), null, true);
-        assertFalse(localDidRun.compareAndSet(true, false));
+        assertTrue(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
 
         // now neither should run because of caching
@@ -245,84 +352,88 @@ public class RepoManagerImplTest extends TestCase {
         assertTrue(remoteDidRun.compareAndSet(true, false));
     }
 
-    // test that we do the local repo needsUpdate check correctly
+    // test load happens if hash file is newer
+    public void testHashFile() throws Exception {
+        MockFileOp fop = new MockFileOp();
+        final AtomicBoolean localDidRun = new AtomicBoolean(false);
+
+        TestLoaderFactory localRunningFactory = new TestLoaderFactory(
+                new RunningLoader(localDidRun) {
+                    @Override
+                    public long getLatestPackageUpdateTime() {
+                        return 1234;
+                    }
+
+                    @Nullable
+                    @Override
+                    public byte[] getLocalPackagesHash() {
+                        return "foo".getBytes();
+                    }
+                });
+
+        RepoManagerImpl mgr = new RepoManagerImpl(fop, localRunningFactory,
+                new TestLoaderFactory());
+        File repoRoot = new File("/repo");
+        fop.mkdirs(repoRoot);
+        mgr.setLocalPath(repoRoot);
+        mgr.registerSourceProvider(new FakeRepositorySourceProvider(
+                ImmutableList.<RepositorySource>of()));
+        FakeProgressRunner runner = new FakeProgressRunner();
+        mgr.load(0, null, null, null, runner, null, null, true);
+        assertTrue(localDidRun.compareAndSet(true, false));
+
+        File hashFile = new File(repoRoot, RepoManagerImpl.KNOWN_PACKAGES_HASH_FN);
+        assertEquals("foo", fop.toString(hashFile,
+                Charset.defaultCharset()));
+
+        // test that a newer timestamp causes reload
+        fop.setLastModified(hashFile, System.currentTimeMillis() + 100);
+        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
+                true);
+        assertTrue(localDidRun.compareAndSet(true, false));
+    }
+
+    // test package change + invalidate makes load happen
     public void testCheckForNewPackages() throws Exception {
         MockFileOp fop = new MockFileOp();
-        AtomicBoolean didRun = new AtomicBoolean(false);
-        final AtomicBoolean shallowResult = new AtomicBoolean(false);
-        final AtomicBoolean deepResult = new AtomicBoolean(false);
-        RunningLoader loader = new RunningLoader(didRun) {
-            @Override
-            public boolean needsUpdate(long lastLocalRefreshMs, boolean deepCheck) {
-                return shallowResult.get() || (deepCheck && deepResult.get());
-            }
-        };
-
-        RepoManager mgr = new RepoManagerImpl(fop, new TestLoaderFactory(loader), null);
+        fop.recordExistingFile("/repo/foo", LOCAL_PACKAGE);
+        RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/repo"));
         FakeProgressRunner runner = new FakeProgressRunner();
+        // First time we should load
+        assertTrue(
+                mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null,
+                        null, true));
 
-        // First time we should load, despite not being out of date
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
-        assertTrue(didRun.compareAndSet(true, false));
+        fop.recordExistingFile("/repo/bar", LOCAL_PACKAGE_2);
+        // while we've created a new package, we didn't scan for it yet
+        assertFalse(mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null,
+                null, true));
 
-        // With default timeout, we shouldn't run again
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
-        assertFalse(didRun.get());
+        // now we scan for it
+        assertTrue(mgr.reloadLocalIfNeeded(runner.getProgressIndicator()));
 
-        // Now with shallow check, we should run
-        shallowResult.set(true);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
-        assertTrue(didRun.compareAndSet(true, false));
-
-        // With deep check only we shouldn't run
-        shallowResult.set(false);
-        deepResult.set(true);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
-        assertFalse(didRun.get());
-
-        // now we do the deep check and should run.
-        mgr.reloadLocalIfNeeded(runner.getProgressIndicator());
-        assertTrue(didRun.compareAndSet(true, false));
-
-        // check again that we won't reload because of caching
-        shallowResult.set(false);
-        deepResult.set(false);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null,
-                null, true);
-        assertFalse(didRun.get());
+        // caching keeps us from loading again
+        assertFalse(mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null,
+                null, true));
     }
+
 
     // test local/remote change listeners
     public void testChangeListeners() throws Exception {
         MockFileOp fop = new MockFileOp();
-        final Map<String, LocalPackage> localPackages = Maps.newHashMap();
-        DummyLoader localLoader = new DummyLoader(localPackages);
-        localPackages.put("foo", new FakePackage("foo", new Revision(1), null));
-
-        final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
-        DummyLoader remoteLoader = new DummyLoader(remotePackages);
-        remotePackages.put("foo", new FakePackage("foo", new Revision(2), null));
-
-        TestLoaderFactory localFactory = new TestLoaderFactory(localLoader);
-        TestLoaderFactory remoteFactory = new TestLoaderFactory(remoteLoader);
-        RepoManager mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
+        fop.recordExistingFile("/repo/foo/package.xml", LOCAL_PACKAGE);
+        RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/repo"));
-
         FakeProgressRunner runner = new FakeProgressRunner();
         FakeDownloader downloader = new FakeDownloader(fop);
-
-        @SuppressWarnings("ConstantConditions")
+        String repoUrl = "http://example.com/repo.xml";
+        downloader.registerUrl(new URL(repoUrl), REMOTE_REPO.getBytes());
         RepositorySourceProvider provider = new FakeRepositorySourceProvider(
-                ImmutableList.of(
-                        new SimpleRepositorySource("foo", "source", true,
-                                ImmutableList.of(), null)));
+                ImmutableList.<RepositorySource>of(
+                        new SimpleRepositorySource(repoUrl, "source", true,
+                                ImmutableList.of(RepoManager.getGenericModule()), null)));
         mgr.registerSourceProvider(provider);
-        // Initial load to set current state
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         AtomicBoolean localRan = new AtomicBoolean(false);
         AtomicBoolean remoteRan = new AtomicBoolean(false);
@@ -335,13 +446,13 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakePackage("bar", new Revision(1), null));
+        fop.recordExistingFile("/repo/bar/package.xml", LOCAL_PACKAGE_2);
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());
 
         // update remote and ensure the remote listener fired
-        remotePackages.put("baz", new FakePackage("baz", new Revision(1), null));
+        downloader.registerUrl(new URL(repoUrl), REMOTE_REPO_2.getBytes());
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertFalse(localRan.get());
         assertTrue(remoteRan.compareAndSet(true, false));
@@ -363,7 +474,6 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     private static class RunningCallback implements RepoManager.RepoLoadedCallback {
-
         private final AtomicBoolean mDidRun;
 
         private RunningCallback(AtomicBoolean didRun) {
@@ -378,38 +488,32 @@ public class RepoManagerImplTest extends TestCase {
 
     private static class DummyLoader implements LocalRepoLoader, RemoteRepoLoader {
 
-        private final Map<String, ? extends RepoPackage> mPackages;
-
-        public DummyLoader() {
-            mPackages = new HashMap<>();
-        }
-
-        public DummyLoader(@NonNull Map<String, ? extends RepoPackage> packages) {
-            mPackages = packages;
+        @Override
+        public long getLatestPackageUpdateTime() {
+            return 0;
         }
 
         @NonNull
         @Override
         public Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress) {
-            //noinspection unchecked
             return run();
         }
 
+        @Nullable
         @Override
-        public boolean needsUpdate(long lastLocalRefreshMs, boolean deepCheck) {
-            return true;
+        public byte[] getLocalPackagesHash() {
+            return new byte[0];
         }
 
         @NonNull
         @Override
         public Map<String, RemotePackage> fetchPackages(@NonNull ProgressIndicator progress,
                 @NonNull Downloader downloader, @Nullable SettingsController settings) {
-            //noinspection unchecked
             return run();
         }
 
         protected Map run() {
-            return mPackages;
+            return Maps.newHashMap();
         }
     }
 

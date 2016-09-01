@@ -42,15 +42,9 @@ import java.util.Set;
  * A fake {@link RepoManager}, for use in unit tests.
  */
 public class FakeRepoManager extends RepoManager {
-    private RepositoryPackages mPackages;
-    private File mLocalPath;
+    RepositoryPackages mPackages;
 
-    public FakeRepoManager(@Nullable File localPath, @NonNull RepositoryPackages packages) {
-        mLocalPath = localPath;
-        mPackages = packages;
-    }
-
-    public FakeRepoManager(@NonNull RepositoryPackages packages) {
+    public FakeRepoManager(RepositoryPackages packages) {
         mPackages = packages;
     }
 
@@ -67,13 +61,13 @@ public class FakeRepoManager extends RepoManager {
 
     @Override
     public void setLocalPath(@Nullable File path) {
-        mLocalPath = path;
+
     }
 
     @Nullable
     @Override
     public File getLocalPath() {
-        return mLocalPath;
+        return null;
     }
 
     @Override
@@ -104,12 +98,12 @@ public class FakeRepoManager extends RepoManager {
     }
 
     @Override
-    public void load(long cacheExpirationMs,
+    public boolean load(long cacheExpirationMs,
             @Nullable List<RepoLoadedCallback> onLocalComplete,
             @Nullable List<RepoLoadedCallback> onSuccess,
             @Nullable List<Runnable> onError, @NonNull ProgressRunner runner,
             @Nullable Downloader downloader, @Nullable SettingsController settings, boolean sync) {
-
+        return false;
     }
 
     @Override

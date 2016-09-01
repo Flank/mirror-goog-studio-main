@@ -28,12 +28,14 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.google.common.collect.ImmutableList;
+
+import org.w3c.dom.ls.LSResourceResolver;
+
 import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * Primary interface for interacting with repository packages.
@@ -71,7 +73,6 @@ import org.w3c.dom.ls.LSResourceResolver;
  * To use the loaded packages, get an {@link RepositoryPackages} object from {@link #getPackages()}.
  */
 public abstract class RepoManager {
-
     /**
      * After loading the repository, this is the amount of time that must pass before we consider it
      * to be stale and need to be reloaded.
@@ -107,12 +108,12 @@ public abstract class RepoManager {
      * The base {@link SchemaModule} that is created by {@code RepoManagerImpl} itself.
      */
     private static SchemaModule<CommonFactory> sCommonModule;
-
     static {
         try {
             sCommonModule = new SchemaModule<>(COMMON_OBJECT_FACTORY_PATTERN, COMMON_XSD_PATTERN,
                     RepoManager.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // This should never happen unless there's something wrong with the common repo schema.
             assert false : "Failed to create SchemaModule: " + e;
         }
@@ -122,20 +123,20 @@ public abstract class RepoManager {
      * The {@link SchemaModule} that contains an implementation of {@link GenericType}.
      */
     private static SchemaModule<GenericFactory> sGenericModule;
-
     static {
         try {
             sGenericModule = new SchemaModule<>(GENERIC_OBJECT_FACTORY_PATTERN, GENERIC_XSD_PATTERN,
                     RepoManager.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // This should never happen unless there's something wrong with the generic repo schema.
             assert false : "Failed to create SchemaModule: " + e;
         }
     }
 
     /**
-     * @param fop The {@link FileOp} to use for local filesystem operations. Probably {@link
-     *            FileOpUtils#create()} unless part of a unit test.
+     * @param fop The {@link FileOp} to use for local filesystem operations. Probably
+     *            {@link FileOpUtils#create()} unless part of a unit test.
      * @return A new {@code RepoManager}.
      */
     @NonNull
@@ -258,8 +259,11 @@ public abstract class RepoManager {
      *                          can be used to process the completed results).
      *
      * TODO: throw exception if cancelled
+     *
+     * @return {@code true} if a load was performed. {@code false} if cached results were fresh
+     * enough.
      */
-    public abstract void load(long cacheExpirationMs,
+    public abstract boolean load(long cacheExpirationMs,
             @Nullable List<RepoLoadedCallback> onLocalComplete,
             @Nullable List<RepoLoadedCallback> onSuccess,
             @Nullable List<Runnable> onError,
@@ -280,11 +284,9 @@ public abstract class RepoManager {
      *                          repositories themselves.
      * @param settings          The settings to use during the load, including for example proxy
      *                          settings used when fetching remote files.
-     * @return {@code true} if the load was successful (including if cached results were returned),
-     * false otherwise.
+     * @return {@code true} if the load was successful (including if cached results were returned), false otherwise.
      */
-    public final boolean loadSynchronously(long cacheExpirationMs,
-            @NonNull final ProgressIndicator progress,
+    public final boolean loadSynchronously(long cacheExpirationMs, @NonNull final ProgressIndicator progress,
             @Nullable Downloader downloader, @Nullable SettingsController settings) {
         final AtomicBoolean result = new AtomicBoolean(true);
         load(cacheExpirationMs, null, null, ImmutableList.of(
@@ -293,7 +295,6 @@ public abstract class RepoManager {
 
         return result.get();
     }
-
     /**
      * Causes cached results to be considered expired. The next time {@link #load(long, List, List,
      * List, ProgressRunner, Downloader, SettingsController, boolean)} is called, a complete load
@@ -303,19 +304,20 @@ public abstract class RepoManager {
 
     /**
      * Causes the cached results of the local repositories to be considered expired. The next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called, the load will be done only for the local repositories, the remotes being
-     * loaded from the cache if possible.
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController, boolean)}
+     * is called, the load will be done only for the local repositories, the remotes being loaded
+     * from the cache if possible.
      */
     public abstract void markLocalCacheInvalid();
 
     /**
-     * Check to see if there have been any changes to the local repo since the last load. This
-     * includes scanning the local repo for packages, but does not involve any reading or parsing of
-     * package metadata files. If there have been any changes, or if the cache is older than the
-     * default timeout, the local packages will be reloaded.
+     * Check to see if there have been any changes to the local repo since the last load.
+     * This includes scanning the local repo for packages, but does not involve any reading or
+     * parsing of package metadata files.
+     * If there have been any changes, or if the cache is older than the default timeout,
+     * the local packages will be reloaded.
      *
-     * @return {@code true} if the load was successful, {@code false} otherwise}.
+     * @return {@code true} if a reload is done, {@code false} otherwise.
      */
     public abstract boolean reloadLocalIfNeeded(@NonNull ProgressIndicator progress);
 
@@ -334,8 +336,8 @@ public abstract class RepoManager {
 
     /**
      * Registers a listener that will be called whenever the local packages are reloaded and have
-     * changed. The {@link RepositoryPackages} instance passed to the callback will contain only the
-     * local packages.
+     * changed. The {@link RepositoryPackages} instance passed to the callback will contain only
+     * the local packages.
      */
     public abstract void registerLocalChangeListener(@NonNull RepoLoadedCallback listener);
 
@@ -349,7 +351,7 @@ public abstract class RepoManager {
      * Record that the given package is in the process of being installed by the given installer.
      */
     public abstract void installBeginning(@NonNull RepoPackage repoPackage,
-            @NonNull PackageOperation installer);
+      @NonNull PackageOperation installer);
 
     /**
      * Record that the given package is no longer in the process of being installed (that is,
@@ -362,8 +364,7 @@ public abstract class RepoManager {
      * {@code null} if there is none.
      */
     @Nullable
-    public abstract PackageOperation getInProgressInstallOperation(
-            @NonNull RepoPackage remotePackage);
+    public abstract PackageOperation getInProgressInstallOperation(@NonNull RepoPackage remotePackage);
 
     /**
      * Callback for when repository load is completed/partially completed.
@@ -373,14 +374,13 @@ public abstract class RepoManager {
         /**
          * @param packages The packages that have been loaded so far. When this callback is used in
          *                 the {@code onLocalComplete} argument to {@link #load(long, List, List,
-         *                 List, ProgressRunner, Downloader, SettingsController, boolean)} {@code
-         *                 packages} will only include local packages.
+         *                 List, ProgressRunner, Downloader, SettingsController, boolean)}
+         *                 {@code packages} will only include local packages.
          */
         void doRun(@NonNull RepositoryPackages packages);
     }
 
     protected static class DummyProgressRunner implements ProgressRunner {
-
         private final ProgressIndicator mProgress;
 
         public DummyProgressRunner(@NonNull ProgressIndicator progress) {
