@@ -815,7 +815,13 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
             + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
             + "@Retention(CLASS)\n"
             + "public @interface VisibleForTesting {\n"
-            + "}\n");
+            + "    int otherwise() default PRIVATE;\n"
+            + "    int PRIVATE = 2;\n"
+            + "    int PACKAGE_PRIVATE = 3;\n"
+            + "    int PROTECTED = 4;\n"
+            + "    int NONE = 5;\n"
+            + "}");
+
     private final TestFile mColorResAnnotation = createResAnnotation("Color");
     private final TestFile mStringResAnnotation = createResAnnotation("String");
     private final TestFile mStyleResAnnotation = createResAnnotation("Style");
@@ -2405,6 +2411,89 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "}\n"),
                         mRestrictToAnnotation,
                         mVisibleForTestingAnnotation));
+    }
+
+    public void testVisibleForTesting() throws Exception {
+        assertEquals(""
+                + "src/test/otherpkg/OtherPkg.java:11: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]\n"
+                + "        new ProductionCode().testHelper6(); // ERROR\n"
+                + "                             ~~~~~~~~~~~\n"
+                + "src/test/pkg/ProductionCode.java:27: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]\n"
+                + "            testHelper6(); // ERROR: should only be called from tests\n"
+                + "            ~~~~~~~~~~~\n"
+                + "src/test/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]\n"
+                + "        new ProductionCode().testHelper3(); // ERROR\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]\n"
+                + "        new ProductionCode().testHelper4(); // ERROR\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/otherpkg/OtherPkg.java:10: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]\n"
+                + "        new ProductionCode().testHelper5(); // ERROR\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "2 errors, 3 warnings\n",
+                lintProject(
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.support.annotation.VisibleForTesting;\n"
+                                + "\n"
+                                + "public class ProductionCode {\n"
+                                + "    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)\n"
+                                + "    public void testHelper3() {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)\n"
+                                + "    public void testHelper4() {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)\n"
+                                + "    public void testHelper5() {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @VisibleForTesting(otherwise = VisibleForTesting.NONE)\n"
+                                + "    public void testHelper6() {\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private class Local {\n"
+                                + "        private void localProductionCode() {\n"
+                                + "            testHelper3();\n"
+                                + "            testHelper4();\n"
+                                + "            testHelper5();\n"
+                                + "            testHelper6(); // ERROR: should only be called from tests\n"
+                                + "            \n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"),
+                        java(""
+                                + "package test.otherpkg;\n"
+                                + "\n"
+                                + "import android.support.annotation.VisibleForTesting;\n"
+                                + "import test.pkg.ProductionCode;\n"
+                                + "\n"
+                                + "public class OtherPkg {\n"
+                                + "    public void test() {\n"
+                                + "        new ProductionCode().testHelper3(); // ERROR\n"
+                                + "        new ProductionCode().testHelper4(); // ERROR\n"
+                                + "        new ProductionCode().testHelper5(); // ERROR\n"
+                                + "        new ProductionCode().testHelper6(); // ERROR\n"
+                                + "        \n"
+                                + "    }\n"
+                                + "}\n"),
+                        // test/ prefix makes it a test folder entry:
+                        java("test/test/pkg/UnitTest.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "public class UnitTest {\n"
+                                + "    public void test() {\n"
+                                + "        new ProductionCode().testHelper3(); // OK\n"
+                                + "        new ProductionCode().testHelper4(); // OK\n"
+                                + "        new ProductionCode().testHelper5(); // OK\n"
+                                + "        new ProductionCode().testHelper6(); // OK\n"
+                                + "        \n"
+                                + "    }\n"
+                                + "}\n"),
+                        mVisibleForTestingAnnotation
+                ));
     }
 
     // TODO: http://b.android.com/220686

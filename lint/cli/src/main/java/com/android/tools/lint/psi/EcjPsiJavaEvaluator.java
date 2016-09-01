@@ -31,6 +31,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
+import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -543,4 +544,23 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
 
         return null;
     }
+
+    @Override
+    @Nullable
+    public PsiPackage getPackage(@NonNull PsiElement node) {
+        PsiClass cls = PsiTreeUtil.getParentOfType(node, PsiClass.class, false);
+        ReferenceBinding binding;
+        if (cls instanceof EcjPsiClass) {
+            EcjPsiClass ecjPsiClass = (EcjPsiClass) cls;
+            binding = ecjPsiClass.getBinding();
+        } else if (cls instanceof EcjPsiBinaryClass) {
+            EcjPsiBinaryClass ecjPsiClass = (EcjPsiBinaryClass) cls;
+            binding = ecjPsiClass.getTypeBinding();
+        } else {
+            return null;
+        }
+
+        return binding != null ? mManager.findPackage(binding.fPackage) : null;
+    }
+
 }
