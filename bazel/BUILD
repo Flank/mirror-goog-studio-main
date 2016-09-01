@@ -94,15 +94,25 @@ java_import(
   visibility = ["//visibility:public"],
 )
 
+java_binary(
+    name = "singlejar",
+    main_class = "com.android.tools.utils.SingleJar",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":utils"],
+)
+
 java_library(
     name = "maven",
     srcs = glob(["src/**/maven/*.java"]),
     deps = [
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
+        "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
     ],
 )
 
+# Run without any arguments to see usage instructions.
 java_binary(
     name = "java_import_generator",
     main_class = "com.android.tools.maven.JavaImportGenerator",
@@ -111,17 +121,18 @@ java_binary(
     # TODO: how to pass the path to workspace as argument?
 )
 
-java_binary(
-    name = "singlejar",
-    main_class = "com.android.tools.utils.SingleJar",
-    visibility = ["//visibility:public"],
-    runtime_deps = [":utils"],
-)
-
-
+# Run without any arguments to see usage instructions.
 java_binary(
     name = "third_party_build_generator",
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
+)
+
+# Run without any arguments to see usage instructions.
+java_binary(
+    name = "add_dependency",
+    main_class = "com.android.tools.maven.AddDependency",
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
 )
