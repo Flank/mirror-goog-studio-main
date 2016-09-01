@@ -44,4 +44,11 @@ public class ExtendedContentTypeTest {
             }
         }
     }
+
+    @Test
+    public void testBitMaskUniqueness() {
+        BitMaskTestUtils.checkScopeBitMaskUnique(
+                ExtendedContentType.getAllContentTypes(),
+                ContentType::getValue);
+    }
 }
