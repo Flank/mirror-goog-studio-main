@@ -110,7 +110,8 @@ public class XmlContext extends ResourceContext {
      */
     @NonNull
     public Location getLocation(@NonNull Node textNode, int begin, int end) {
-        assert textNode.getNodeType() == Node.TEXT_NODE;
+        assert textNode.getNodeType() == Node.TEXT_NODE
+                || textNode.getNodeType() == Node.COMMENT_NODE;
         return mParser.getLocation(this, textNode, begin, end);
     }
 

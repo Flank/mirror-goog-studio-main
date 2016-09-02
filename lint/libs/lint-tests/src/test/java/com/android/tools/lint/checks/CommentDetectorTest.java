@@ -50,4 +50,21 @@ public class CommentDetectorTest extends AbstractCheckTest {
 
         lintProject("src/test/pkg/SdCardTest.java.txt=>src/test/pkg/SdCardTest.java"));
     }
+
+    public void testXml() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=207168
+        // StopShip doesn't work in XML
+        assertEquals(""
+                + "res/layout/foo.xml:1: Warning: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                + "<!-- STOPSHIP implement this first -->\n"
+                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+
+                lintProject(xml("res/layout/foo.xml", ""
+                        + "<!-- STOPSHIP implement this first -->\n"
+                        + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"0dip\"\n"
+                        + "    android:layout_height=\"0dip\"\n"
+                        + "    android:visibility=\"gone\" />")));
+    }
 }

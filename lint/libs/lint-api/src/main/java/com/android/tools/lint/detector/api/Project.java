@@ -1470,14 +1470,4 @@ public class Project {
     public LintClient getClient() {
         return mClient;
     }
-
-    /**
-     * Returns the compile target to use for this project
-     *
-     * @return the compile target to use to build this project
-     */
-    @Nullable
-    public IAndroidTarget getCompileTarget() {
-        return mClient.getCompileTarget(this);
-    }
 }
