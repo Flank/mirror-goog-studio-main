@@ -65,8 +65,8 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
                 androidDependencies,
                 jarDependencies,
                 name,
-                projectPath,
                 variantName,
+                projectPath,
                 requestedCoordinates,
                 resolvedCoordinates);
         this.mAtomName = atomName;
