@@ -17,11 +17,9 @@
 package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoPackage;
-
 import java.util.Map;
 
 /**
@@ -29,17 +27,6 @@ import java.util.Map;
  */
 public interface LocalRepoLoader {
 
-    /**
-     * Gets a hash of the known (suspected) package directories. Implementations should be as fast
-     * as possible, and as such avoid actually reading/parsing files.
-     */
-    @Nullable
-    byte[] getLocalPackagesHash();
-
-    /**
-     * Gets the update timestamp of the most-recently updated installed package.
-     */
-    long getLatestPackageUpdateTime();
 
     /**
      * Gets our packages, loading them if necessary.
@@ -51,4 +38,14 @@ public interface LocalRepoLoader {
      */
     @NonNull
     Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress);
+
+    /**
+     * Checks whether it looks like we need to be reloaded.
+     *
+     * @param lastLocalRefreshMs The last time a load was done
+     * @param deepCheck How vigorously to check. If {@code false}, the check should be quite fast.
+     *                  If {@code true} it should still be reasonably fast, but less so.
+     * @return {@code true} if a reload is needed, {@code false} otherwise.
+     */
+    boolean needsUpdate(long lastLocalRefreshMs, boolean deepCheck);
 }
