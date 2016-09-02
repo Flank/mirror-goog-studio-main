@@ -440,23 +440,6 @@ public class DefaultSdkLoader implements SdkLoader {
         // we resort to installing/updating the old big repositories.
         if (artifactPackages.size() != repositoryPaths.size()
                 || installResults.values().contains(InstallResultType.INSTALL_FAIL)) {
-            // Check if there is a Google Repository dependency. If not, we don't install/update
-            // the Google repository. If there is one, we update both repositories, since
-            // the (maven) packages in the Google repo have dependencies (declared in *.pom files)
-            // on packages from the Android repo.
-            boolean googleRepositoryRequired = false;
-
-            for (String repoPath : repositoryPaths) {
-                GradleCoordinate coordinate = SdkMavenRepository.getCoordinateFromSdkPath(repoPath);
-                if (coordinate != null) {
-                    String group = coordinate.getGroupId();
-                    if (group != null
-                            && group.startsWith(SdkConstants.GOOGLE_SUPPORT_ARTIFACT_PREFIX)) {
-                        googleRepositoryRequired = true;
-                    }
-                }
-            }
-
             UpdatablePackage googleRepositoryPackage =
                     repoManager
                             .getPackages()
@@ -470,7 +453,11 @@ public class DefaultSdkLoader implements SdkLoader {
                             .getConsolidatedPkgs()
                             .get(SdkMavenRepository.ANDROID.getPackageId());
 
-            if (googleRepositoryRequired && (!googleRepositoryPackage.hasLocal()
+            // Check if there is a Google Repository dependency. If not, we don't install/update
+            // the Google repository. If there is one, we update both repositories, since
+            // the (maven) packages in the Google repo have dependencies (declared in *.pom files)
+            // on packages from the Android repo.
+            if (isInGoogleRepository(repositoryPaths) && (!googleRepositoryPackage.hasLocal()
                     || googleRepositoryPackage.isUpdate())) {
                 installResults.putAll(
                         installRemotePackages(
@@ -487,8 +474,7 @@ public class DefaultSdkLoader implements SdkLoader {
                 }
             }
 
-            if (!androidRepositoryPackage.hasLocal()
-                    || androidRepositoryPackage.isUpdate()) {
+            if (!androidRepositoryPackage.hasLocal() || androidRepositoryPackage.isUpdate()) {
                 installResults.putAll(
                         installRemotePackages(
                                 ImmutableList.of(androidRepositoryPackage.getRemote()),
@@ -509,6 +495,21 @@ public class DefaultSdkLoader implements SdkLoader {
         }
 
         return repositoriesBuilder.build();
+    }
+
+    private static boolean isInGoogleRepository(List<String> repoPaths) {
+        for (String repoPath : repoPaths) {
+            GradleCoordinate coordinate = SdkMavenRepository.getCoordinateFromSdkPath(repoPath);
+            if (coordinate != null) {
+                String group = coordinate.getGroupId();
+                if (group != null &&
+                        (group.startsWith(SdkConstants.GOOGLE_SUPPORT_ARTIFACT_PREFIX) ||
+                                group.startsWith(SdkConstants.FIREBASE_ARTIFACT_PREFIX))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
