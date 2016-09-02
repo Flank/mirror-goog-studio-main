@@ -23,9 +23,9 @@ java_test(
         ":profile",
         "//tools/analytics-library:analytics-protos",
         "//tools/base/annotations",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-all",
-        "//tools/idea/.idea/libraries:jimfs",
-        "//tools/idea/.idea/libraries:truth",
     ],
 )
