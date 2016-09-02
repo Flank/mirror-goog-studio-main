@@ -37,6 +37,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -266,8 +268,8 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
         builder.addEnvironments(mEnvironment);
 
         String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
-        if (aapt == null || !new File(aapt).isFile()) {
-            throw new IllegalStateException("aapt is missing");
+        if (aapt == null || !Files.isExecutable(Paths.get(aapt))) {
+            throw new IllegalStateException(aapt + " is missing or is not executable.");
         }
 
         builder.setExecutable(aapt);

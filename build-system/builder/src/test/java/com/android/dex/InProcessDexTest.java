@@ -19,8 +19,6 @@ package com.android.dex;
 import static org.junit.Assert.assertTrue;
 
 import com.android.dx.command.dexer.Main;
-import com.android.testutils.TestUtils;
-import com.android.utils.FileUtils;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +26,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class InProcessDexTest {
 
@@ -69,8 +68,9 @@ public class InProcessDexTest {
 
     private File copyFromDexResourcesToDir(String resourceName) throws IOException {
         File testFolder = mTemporaryFolder.newFolder();
-        File resourceFile = new File(TestUtils.getRoot("dex"), resourceName);
-        FileUtils.copyFile(resourceFile, new File(testFolder, "classes.dex"));
+        Files.copy(
+                InProcessDexTest.class.getResourceAsStream("/testData/dex/" + resourceName),
+                testFolder.toPath().resolve("classes.dex"));
 
         return testFolder;
     }

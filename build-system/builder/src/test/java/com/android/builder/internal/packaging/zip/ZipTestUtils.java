@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 import com.google.common.io.Files;
 
 import org.junit.rules.TemporaryFolder;
@@ -42,7 +42,7 @@ class ZipTestUtils {
      */
     @NonNull
     static File rsrcFile(@NonNull String rsrcName) {
-        File packagingRoot = TestUtils.getRoot("packaging");
+        File packagingRoot = TestResources.getDirectory("/testData/packaging");
         String rsrcPath = packagingRoot.getAbsolutePath() + "/" + rsrcName;
         File rsrcFile = new File(rsrcPath);
         assertTrue(rsrcFile.isFile());

@@ -28,3 +28,4 @@ tools/*
 !platforms/android-24
 !platform-tools/adb
 !platform-tools/adb.exe
+!build-tools/*

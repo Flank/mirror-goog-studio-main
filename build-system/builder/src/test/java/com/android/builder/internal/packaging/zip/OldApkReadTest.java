@@ -19,7 +19,7 @@ package com.android.builder.internal.packaging.zip;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 
 import org.junit.Test;
 
@@ -29,9 +29,7 @@ public class OldApkReadTest {
 
     @Test
     public void testReadOldApk() throws Exception {
-        File packagingRoot = TestUtils.getRoot("packaging");
-        String apkPath = packagingRoot.getAbsolutePath() + "/test.apk";
-        File apkFile = new File(apkPath);
+        File apkFile = TestResources.getFile("/testData/packaging/test.apk");
         assertTrue(apkFile.exists());
 
         try (ZFile zf = new ZFile(apkFile, new ZFileOptions())) {

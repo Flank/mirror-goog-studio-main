@@ -124,8 +124,12 @@ public class JarTestSuiteRunner extends Suite {
     }
 
     private static boolean seemsLikeJUnit4(Class<?> aClass) {
+        if (Modifier.isAbstract(aClass.getModifiers())) {
+            return false;
+        }
+
         Predicate<Method> hasTestAnnotation = method -> method.isAnnotationPresent(Test.class);
         return aClass.isAnnotationPresent(RunWith.class)
-                || Arrays.asList(aClass.getMethods()).stream().anyMatch(hasTestAnnotation);
+                || Arrays.stream(aClass.getMethods()).anyMatch(hasTestAnnotation);
     }
 }

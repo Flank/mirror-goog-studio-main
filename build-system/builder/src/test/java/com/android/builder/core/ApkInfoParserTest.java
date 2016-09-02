@@ -16,21 +16,20 @@
 
 package com.android.builder.core;
 
-import com.android.testutils.TestUtils;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.google.common.io.Resources;
 
 import junit.framework.TestCase;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ApkInfoParserTest extends TestCase {
 
     public void testPre21Output() throws Exception {
-        File file = new File(TestUtils.getRoot("core"), "aapt20.txt");
-        List<String> lines = Files.readLines(file, Charsets.UTF_8);
-
+        List<String> lines =
+                Resources.readLines(
+                        Resources.getResource("testData/core/aapt20.txt"),
+                        StandardCharsets.UTF_8);
         ApkInfoParser.ApkInfo apkInfo = ApkInfoParser.getApkInfo(lines);
 
         assertNotNull(apkInfo);
@@ -40,8 +39,10 @@ public class ApkInfoParserTest extends TestCase {
     }
 
     public void testPost21Output() throws Exception {
-        File file = new File(TestUtils.getRoot("core"), "aapt21.txt");
-        List<String> lines = Files.readLines(file, Charsets.UTF_8);
+        List<String> lines =
+                Resources.readLines(
+                        Resources.getResource("testData/core/aapt21.txt"),
+                        StandardCharsets.UTF_8);
 
         ApkInfoParser.ApkInfo apkInfo = ApkInfoParser.getApkInfo(lines);
 

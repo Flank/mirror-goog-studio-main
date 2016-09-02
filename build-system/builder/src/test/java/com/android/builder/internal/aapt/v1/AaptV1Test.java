@@ -45,6 +45,11 @@ import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,9 +58,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link AaptV1}.
@@ -78,7 +80,8 @@ public class AaptV1Test {
      * SDK handler that can obtain SDKs.
      */
     @NonNull
-    private final AndroidSdkHandler mSdkHandler = AndroidSdkHandler.getInstance(TestUtils.getSdkDir());
+    private final AndroidSdkHandler mSdkHandler =
+            AndroidSdkHandler.getInstance(TestUtils.getSdk());
 
     /**
      * Logger to use.
