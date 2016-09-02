@@ -548,4 +548,39 @@ public final class FileUtils {
             return filePathLength > 4096;
         }
     }
+
+    /**
+     * Returns the modified canonical path of a file with consideration of the case sensitivity of
+     * the underlying file system.
+     *
+     * <p>This method addresses the scenario where we want to compute a unique path of a file such
+     * that two files with different computed paths are guaranteed to be different physical files,
+     * and vice versa. In such cases, using Java's {@link File#getCanonicalPath()} would not work
+     * because in case-insensitive file systems like Windows, two files having different canonical
+     * paths may actually refer to the same physical file (e.g., {@code "/foo"} and {@code "/Foo"}).
+     *
+     * <p>To address this issue, this method first detects whether the underlying file system is
+     * case-sensitive or not. If it is, this method returns the canonical path of the file, as would
+     * be returned by {@link File#getCanonicalPath()}. If it isn't, this method returns the
+     * lower-case canonical path of the file.
+     */
+    @NonNull
+    public static String getCaseSensitivityAwareCanonicalPath(@NonNull File file)
+            throws IOException {
+        boolean isFileSystemCaseSensitive = !new File("a").equals(new File("A"));
+        if (isFileSystemCaseSensitive) {
+            return file.getCanonicalPath();
+        } else {
+            // In a case-insensitive file system, Java's File.equals() compares the files by
+            // converting individual characters of the file paths first to uppercase, then to
+            // lowercase, and then compares each pair of characters one by one. The following
+            // implementation mimics that behavior.
+            String canonicalPath = file.getCanonicalPath();
+            char[] chars = new char[canonicalPath.length()];
+            for (int i = 0; i < chars.length; i++) {
+                chars[i] = Character.toLowerCase(Character.toUpperCase(canonicalPath.charAt(i)));
+            }
+            return String.valueOf(chars);
+        }
+    }
 }

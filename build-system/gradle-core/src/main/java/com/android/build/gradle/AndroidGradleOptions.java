@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 /**
@@ -415,10 +416,17 @@ public class AndroidGradleOptions {
     }
 
     @NonNull
-    public static FileCache getBuildCache(@NonNull Project project) {
-        return isBuildCacheEnabled(project)
-                ? FileCache.withInterProcessLocking(getBuildCacheDir(project))
-                : FileCache.NO_CACHE;
+    public static Optional<FileCache> getBuildCache(@NonNull Project project) {
+        if (isBuildCacheEnabled(project)) {
+            File buildCacheDir = getBuildCacheDir(project);
+            try {
+                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
+            } catch (Exception exception) {
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
     }
 
     public static Channel getSdkChannel(@NonNull Project project) {

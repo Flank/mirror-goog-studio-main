@@ -147,6 +147,23 @@ public class FileUtilsTest {
     }
 
     @Test
+    public void testGetCaseSensitivityAwareCanonicalPath() throws IOException {
+        assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo/bar/..")))
+                .isEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")));
+        assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
+                .isNotEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("bar")));
+
+        boolean isFileSystemCaseSensitive = !new File("a").equals(new File("A"));
+        if (isFileSystemCaseSensitive) {
+            assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
+                    .isNotEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("Foo")));
+        } else {
+            assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
+                    .isEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("Foo")));
+        }
+    }
+
+    @Test
     public void testRelativePossiblyNonExistingPath() throws IOException {
         File inputDir = new File("/folders/1/5/main");
         File folder = new File(inputDir, "com/obsidian/v4/tv/home/playback");
