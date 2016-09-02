@@ -222,7 +222,25 @@ public class TestUtils {
         }
 
         String hostDir = osType.getFolderName();
-        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir + "/" + path);
+        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir + (path.isEmpty() ? path : "/" + path));
+    }
+
+    /**
+     * Return the SDK directory.
+     *
+     * @throws IllegalStateException if the current OS is not supported.
+     * @throws IllegalArgumentException if the path results in a file not found.
+     *
+     * @return a valid File object pointing at the SDK directory.
+     */
+    @NonNull
+    public static File getSdk() {
+        return getSdkFile("");
+    }
+
+    @NonNull
+    public static String getLatestAndroidPlatform() {
+        return "android-24";
     }
 
     /**
