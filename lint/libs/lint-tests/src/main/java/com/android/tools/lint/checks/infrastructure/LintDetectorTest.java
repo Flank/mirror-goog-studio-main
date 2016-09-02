@@ -307,12 +307,18 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      *
      * @return The output of the lint check. On Windows, this transforms all directory separators to
      * the unix-style forward slash.
+     * @deprecated Use {@link #lintProject(TestFile...)} instead
      */
+    @Deprecated
     protected String lintProject(String... relativePaths) throws Exception {
         File projectDir = getProjectDir(null, relativePaths);
         return checkLint(Collections.singletonList(projectDir));
     }
 
+    /**
+     * @deprecated Use {@link #lintProjectIncrementally(String, TestFile...)} instead
+     */
+    @Deprecated
     protected String lintProjectIncrementally(String currentFile, String... relativePaths)
             throws Exception {
         File projectDir = getProjectDir(null, relativePaths);
