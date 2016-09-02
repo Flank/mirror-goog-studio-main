@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -705,6 +706,30 @@ public final class AndroidSdkHandler {
     }
 
     /**
+     * Returns the highest available version of the given package that is contained by the given
+     * range, or null if no such version was found.
+     */
+    @Nullable
+    public LocalPackage getPackageInRange(
+            @NonNull String prefix,
+            @NonNull Range<Revision> range,
+            @NonNull ProgressIndicator progressIndicator) {
+
+        Collection<LocalPackage> allBuildTools =
+                getSdkManager(progressIndicator)
+                        .getPackages()
+                        .getLocalPackagesForPrefix(prefix);
+
+        return allBuildTools
+                .stream()
+                .filter(p -> range.contains(p.getVersion()))
+                // Consider highest versions first:
+                .sorted(Comparator.comparing(LocalPackage::getVersion).reversed())
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Gets a {@link BuildToolInfo} corresponding to the newest installed build tool
      * {@link RepoPackage}, or {@code null} if none are installed (or if the {@code allowPreview}
      * parameter is false and there was non-preview version available)
@@ -726,9 +751,7 @@ public final class AndroidSdkHandler {
             return null;
         }
 
-        BuildToolInfo latestBuildTool = BuildToolInfo.fromStandardDirectoryLayout(
-                latestBuildToolPackage.getVersion(),
-                latestBuildToolPackage.getLocation());
+        BuildToolInfo latestBuildTool = BuildToolInfo.fromLocalPackage(latestBuildToolPackage);
 
         // Don't cache if preview.
         if (!latestBuildToolPackage.getVersion().isPreview()) {
@@ -756,7 +779,7 @@ public final class AndroidSdkHandler {
         if (p == null) {
             return null;
         }
-        return BuildToolInfo.fromStandardDirectoryLayout(p.getVersion(), p.getLocation());
+        return BuildToolInfo.fromLocalPackage(p);
     }
 
     /**

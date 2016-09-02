@@ -24,7 +24,6 @@ import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Maps;
@@ -90,7 +89,7 @@ public class NinePatchAaptProcessorTest {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         ProcessExecutor processExecutor = new DefaultProcessExecutor(logger);
         ProcessOutputHandler processOutputHandler = new LoggedProcessOutputHandler(logger);
-        File aapt = NinePatchAaptProcessorTestUtils.getAapt(Revision.parseRevision("22.0.1"));
+        File aapt = NinePatchAaptProcessorTestUtils.getAapt();
         return new AaptCruncher(aapt.getAbsolutePath(), processExecutor, processOutputHandler);
     }
 

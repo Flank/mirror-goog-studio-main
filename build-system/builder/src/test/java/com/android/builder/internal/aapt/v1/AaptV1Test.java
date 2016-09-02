@@ -17,12 +17,14 @@
 package com.android.builder.internal.aapt.v1;
 
 import static com.android.testutils.TestUtils.eventually;
+import static com.google.common.base.Verify.verifyNotNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
@@ -43,7 +45,9 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Range;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -97,6 +101,17 @@ public class AaptV1Test {
     private final AndroidTargetManager mTargetManager =
             new AndroidTargetManager(mSdkHandler, new FileOpImpl());
 
+    @NonNull
+    private final BuildToolInfo buildToolInfo =
+            BuildToolInfo.fromLocalPackage(
+                    Verify.verifyNotNull(
+                            mSdkHandler.getPackageInRange(
+                                    SdkConstants.FD_BUILD_TOOLS,
+                                    Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT),
+                                    mProgressIndicator),
+                            "Build tools above %s not found",
+                            AaptV1.VERSION_FOR_SERVER_AAPT.toShortString()));
+
     /**
      * Dummy aapt options.
      */
@@ -133,43 +148,36 @@ public class AaptV1Test {
      */
     @NonNull
     private Aapt makeAapt() throws Exception {
-        return makeAapt(AaptV1.PngProcessMode.ALL, AaptV1.VERSION_FOR_SERVER_AAPT);
+        return makeAapt(AaptV1.PngProcessMode.ALL, Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT));
     }
 
     /**
      * Creates the {@link Aapt} instance.
      *
      * @param mode the PNG processing mode
-     * @param rev the revision of the build tools to use
+     * @param revisionRange range of revisions of the build tools that can be used
      * @return the instance
      * @throws Exception failed to create the {@link Aapt} instance
      */
     @NonNull
-    private Aapt makeAapt(@NonNull AaptV1.PngProcessMode mode, @NonNull Revision rev)
+    private Aapt makeAapt(
+            @NonNull AaptV1.PngProcessMode mode,
+            @NonNull Range<Revision> revisionRange)
             throws Exception {
         return new AaptV1(
                 new DefaultProcessExecutor(mLogger),
                 new LoggedProcessOutputHandler(mLogger),
-                getBuildToolInfo(rev),
+                BuildToolInfo.fromLocalPackage(
+                        verifyNotNull(
+                                mSdkHandler.getPackageInRange(
+                                        SdkConstants.FD_BUILD_TOOLS,
+                                        revisionRange,
+                                        mProgressIndicator),
+                                "Build tools in range %s not found.",
+                                revisionRange)),
                 mLogger,
                 mode,
                 0);
-    }
-
-    /**
-     * Obtains the build tools information for a revision.
-     *
-     * @param rev the revision
-     * @return the build tools
-     */
-    @NonNull
-    private BuildToolInfo getBuildToolInfo(@NonNull Revision rev) {
-        BuildToolInfo buildToolInfo = mSdkHandler.getBuildToolInfo(rev, mProgressIndicator);
-        if (buildToolInfo == null) {
-            throw new RuntimeException("Test requires build-tools " + rev.toShortString());
-        }
-
-        return buildToolInfo;
     }
 
     @Test
@@ -315,7 +323,7 @@ public class AaptV1Test {
 
         AaptPackageConfig config = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target23)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(buildToolInfo)
                 .setLogger(mLogger)
                 .setManifestFile(manifestFile)
                 .setOptions(mDummyOptions)
@@ -368,7 +376,7 @@ public class AaptV1Test {
 
         AaptPackageConfig config = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target23)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(buildToolInfo)
                 .setLogger(mLogger)
                 .setManifestFile(manifestFile)
                 .setOptions(mDummyOptions)
@@ -438,7 +446,7 @@ public class AaptV1Test {
         // Build base resource package and its R class.
         AaptPackageConfig baseConfig = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target24)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(buildToolInfo)
                 .setLogger(mLogger)
                 .setManifestFile(baseManifestFile)
                 .setOptions(mDummyOptions)
@@ -499,7 +507,7 @@ public class AaptV1Test {
         // Build feature A resource package and its R class.
         AaptPackageConfig featAConfig = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target24)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(buildToolInfo)
                 .setLogger(mLogger)
                 .setManifestFile(featAManifestFile)
                 .setOptions(mDummyOptions)
@@ -563,7 +571,7 @@ public class AaptV1Test {
         // Build feature B resource package and its R class.
         AaptPackageConfig featBConfig = new AaptPackageConfig.Builder()
                 .setAndroidTarget(target24)
-                .setBuildToolInfo(getBuildToolInfo(AaptV1.VERSION_FOR_SERVER_AAPT))
+                .setBuildToolInfo(buildToolInfo)
                 .setLogger(mLogger)
                 .setManifestFile(featBManifestFile)
                 .setOptions(mDummyOptions)

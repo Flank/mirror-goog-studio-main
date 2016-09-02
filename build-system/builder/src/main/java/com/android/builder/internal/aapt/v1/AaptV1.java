@@ -118,7 +118,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
      * {@link QueuedCruncher} can be used.
      */
     @VisibleForTesting
-    static final Revision VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 1);
+    public static final Revision VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 1);
 
     /**
      * Build tools.

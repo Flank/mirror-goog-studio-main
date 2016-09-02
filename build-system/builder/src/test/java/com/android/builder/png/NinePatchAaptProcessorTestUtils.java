@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.repository.Revision;
@@ -29,9 +30,11 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
 import com.google.common.io.Files;
 import com.google.common.truth.TestVerb;
 
@@ -40,12 +43,8 @@ import org.junit.Assume;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -60,27 +59,33 @@ import javax.imageio.ImageIO;
  */
 public class NinePatchAaptProcessorTestUtils {
 
-
-    /**
-     * Signature of a PNG file.
-     */
+    /** Signature of a PNG file. */
     public static final byte[] SIGNATURE = new byte[]{
             (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
-    /**
-     * Returns the lastest build tools that's at least the passed version.
-     * @param revision the minimum required build tools version.
-     * @return the latest build tools.
-     * @throws RuntimeException if the latest build tools is older than revision.
-     */
-    static File getAapt(Revision revision) {
+    /** Returns the aapt binary to use. */
+    static File getAapt() {
         FakeProgressIndicator progress = new FakeProgressIndicator();
+
+        Range<Revision> workingRange =
+                Range.closedOpen(
+                        // Minimum version with server mode.
+                        AaptV1.VERSION_FOR_SERVER_AAPT,
+                        // 24.* changed something in the cruncher code, which makes
+                        // the golden files we compare against no longer match.
+                        new Revision(24, 0, 0));
+
         BuildToolInfo buildToolInfo =
-                AndroidSdkHandler.getInstance(TestUtils.getSdk())
-                        .getBuildToolInfo(revision, progress);
-        if (buildToolInfo == null) {
-            throw new RuntimeException("Test requires build-tools " + revision.toShortString());
-        }
+                BuildToolInfo.fromLocalPackage(
+                        Verify.verifyNotNull(
+                                AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                                        .getPackageInRange(
+                                                SdkConstants.FD_BUILD_TOOLS,
+                                                workingRange,
+                                                progress),
+                                "Build tools in %s required.",
+                                workingRange));
+
         return new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
     }
 
@@ -112,7 +117,6 @@ public class NinePatchAaptProcessorTestUtils {
             File crunched = new File(sourceAndCrunched.getKey().getParent(),
                     sourceAndCrunched.getKey().getName() + getControlFileSuffix());
 
-            //copyFile(sourceAndCrunched.getValue(), crunched);
             Map<String, Chunk> testedChunks =
                     compareChunks(expect, crunched, sourceAndCrunched.getValue());
 
@@ -128,20 +132,6 @@ public class NinePatchAaptProcessorTestUtils {
 
     protected static String getControlFileSuffix() {
         return ".crunched.aapt";
-    }
-
-    private static void copyFile(File source, File dest)
-            throws IOException {
-        FileChannel inputChannel = null;
-        FileChannel outputChannel = null;
-        try {
-            inputChannel = new FileInputStream(source).getChannel();
-            outputChannel = new FileOutputStream(dest).getChannel();
-            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-        } finally {
-            inputChannel.close();
-            outputChannel.close();
-        }
     }
 
 
@@ -188,12 +178,9 @@ public class NinePatchAaptProcessorTestUtils {
         File pngFolder = getPngFolder();
         File ninePatchFolder = new File(pngFolder, "ninepatch");
 
-        File[] files = ninePatchFolder.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.getPath().endsWith(SdkConstants.DOT_9PNG);
-            }
-        });
+        File[] files =
+                ninePatchFolder.listFiles(file -> file.getPath().endsWith(SdkConstants.DOT_9PNG));
+
         if (files != null) {
             ImmutableList.Builder<Object[]> params = ImmutableList.builder();
             for (File file : files) {
