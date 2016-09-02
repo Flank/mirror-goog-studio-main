@@ -37,7 +37,8 @@ service CpuService {
   }
 
   // Starts recording app stacktraces of a running app.
-  // Does nothing if the app is already being profiled.
+  // Does nothing if the app is already being profiled with SimplePerf.
+  // Returns an error if the app is already being profiled with ART.
   rpc StartProfilingApp(CpuProfilingAppStartRequest)
       returns (CpuProfilingAppStartResponse) {
   }

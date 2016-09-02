@@ -103,9 +103,9 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   SetThreadName("HeapDump");
 
   std::string unusedOutput;
-  ActivityManager am;
+  ActivityManager* am = ActivityManager::Instance();
 
-  bool result = am.TriggerHeapDump(pid_, file_path, &unusedOutput);
+  bool result = am->TriggerHeapDump(pid_, file_path, &unusedOutput);
   if (!memory_cache_.EndHeapDumpSample(clock_.GetCurrentTime(), result)) {
     Log::V("EndHeapDumpSample failed.");
   }
