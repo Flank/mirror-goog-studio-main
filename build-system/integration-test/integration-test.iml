@@ -19,7 +19,6 @@
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="module" module-name="instant-run-common" />
     <orderEntry type="module" module-name="device-provider" />
-    <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -34,6 +33,7 @@
     <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="module" module-name="testutils" />
     <orderEntry type="library" name="JUnit4" level="project" />
-    <orderEntry type="module" module-name="analytics-protos" scope="TEST" />
+    <orderEntry type="module" module-name="analytics-protos-base" scope="TEST" />
+    <orderEntry type="library" name="protobuf" level="project" />
   </component>
 </module>
