@@ -25,5 +25,6 @@ tools/*
 
 # Whitelisting begins here
 
+!platforms/android-24
 !platform-tools/adb
 !platform-tools/adb.exe
