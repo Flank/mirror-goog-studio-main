@@ -26,12 +26,37 @@ public class MissingIdDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(
-        "res/layout/fragment.xml:7: Warning: This <fragment> tag should specify an id or a tag to preserve state across activity restarts [MissingId]\n" +
-        "    <fragment\n" +
-        "    ^\n" +
-        "0 errors, 1 warnings\n",
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/fragment.xml:7: Warning: This <fragment> tag should specify an id or a tag to preserve state across activity restarts [MissingId]\n"
+                + "    <fragment\n"
+                + "    ^\n"
+                + "0 errors, 1 warnings\n",
 
-        lintProject("res/layout/fragment.xml"));
+        lintProject(xml("res/layout/fragment.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "    <fragment\n"
+                            + "        android:name=\"android.app.ListFragment\"\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "    <fragment\n"
+                            + "        android:name=\"android.app.DialogFragment\"\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:tag=\"mytag\" />\n"
+                            + "\n"
+                            + "    <fragment\n"
+                            + "        android:id=\"@+id/fragment3\"\n"
+                            + "        android:name=\"android.preference.PreferenceFragment\"\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n")));
     }
 }

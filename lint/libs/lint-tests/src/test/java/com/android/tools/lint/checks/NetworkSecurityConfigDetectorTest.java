@@ -30,17 +30,17 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
 
 
     public void testInvalidElementAndMissingDomain() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:4: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
-                        + "     <include domain=\"file\"/>\n"
-                        + "      ~~~~~~~\n"
-                        + "res/xml/network_config.xml:7: Error: Nested <domain-config> elements are not allowed in base-config [NetworkSecurityConfig]\n"
-                        + "         <domain-config>\n"
-                        + "          ^\n"
-                        + "res/xml/network_config.xml:12: Error: No <domain> elements in <domain-config> [NetworkSecurityConfig]\n"
-                        + "     <domain-config>\n"
-                        + "      ^\n"
-                        + "3 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:4: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
+                + "     <include domain=\"file\"/>\n"
+                + "      ~~~~~~~\n"
+                + "res/xml/network_config.xml:7: Error: Nested <domain-config> elements are not allowed in base-config [NetworkSecurityConfig]\n"
+                + "         <domain-config>\n"
+                + "          ^\n"
+                + "res/xml/network_config.xml:12: Error: No <domain> elements in <domain-config> [NetworkSecurityConfig]\n"
+                + "     <domain-config>\n"
+                + "      ^\n"
+                + "3 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -59,14 +59,14 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTrustAnchors() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:7: Error: Unknown certificates src attribute. Expecting system, user or an @resource value [NetworkSecurityConfig]\n"
-                        + "            <certificates src=\"raw/extras\"/>\n"
-                        + "                               ~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:9: Error: Missing src attribute [NetworkSecurityConfig]\n"
-                        + "            <certificates/>\n"
-                        + "             ~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:7: Error: Unknown certificates src attribute. Expecting system, user or an @resource value [NetworkSecurityConfig]\n"
+                + "            <certificates src=\"raw/extras\"/>\n"
+                + "                               ~~~~~~~~~~\n"
+                + "res/xml/network_config.xml:9: Error: Missing src attribute [NetworkSecurityConfig]\n"
+                + "            <certificates/>\n"
+                + "             ~~~~~~~~~~~~\n"
+                + "2 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -118,11 +118,11 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingBackupPin() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:5: Warning: A backup <pin> declaration is highly recommended [MissingBackupPin]\n"
-                        + "        <pin-set>\n"
-                        + "         ^\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:5: Warning: A backup <pin> declaration is highly recommended [MissingBackupPin]\n"
+                + "        <pin-set>\n"
+                + "         ^\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -137,12 +137,12 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidMultiplePinSetElements() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:10: Error: Multiple <pin-set> elements are not allowed [NetworkSecurityConfig]\n"
-                        + "        <pin-set>\n"
-                        + "         ^\n"
-                        + "    res/xml/network_config.xml:5: Already declared here\n"
-                        + "1 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:10: Error: Multiple <pin-set> elements are not allowed [NetworkSecurityConfig]\n"
+                + "        <pin-set>\n"
+                + "         ^\n"
+                + "    res/xml/network_config.xml:5: Already declared here\n"
+                + "1 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -161,16 +161,16 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testNestedDomainConfigsWithDuplicateDomains() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:6: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
-                        + "        <domain includeSubdomains=\"true\">www.Example.com</domain>\n"
-                        + "                                         ^\n"
-                        + "    res/xml/network_config.xml:4: Already declared here\n"
-                        + "res/xml/network_config.xml:13: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
-                        + "            <domain includeSubdomains=\"true\">www.example.com</domain>\n"
-                        + "                                             ^\n"
-                        + "    res/xml/network_config.xml:4: Already declared here\n"
-                        + "2 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:6: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
+                + "        <domain includeSubdomains=\"true\">www.Example.com</domain>\n"
+                + "                                         ^\n"
+                + "    res/xml/network_config.xml:4: Already declared here\n"
+                + "res/xml/network_config.xml:13: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
+                + "            <domain includeSubdomains=\"true\">www.example.com</domain>\n"
+                + "                                             ^\n"
+                + "    res/xml/network_config.xml:4: Already declared here\n"
+                + "2 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -192,14 +192,14 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTrustAnchorsWithMissingCAResource() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:6: Error: Missing src resource. [NetworkSecurityConfig]\n"
-                        + "            <certificates src=\"@raw/my_ca\"/>\n"
-                        + "                               ~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:11: Error: Missing src resource. [NetworkSecurityConfig]\n"
-                        + "            <certificates src=\"@raw/debug_cas\"/>\n"
-                        + "                               ~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:6: Error: Missing src resource. [NetworkSecurityConfig]\n"
+                + "            <certificates src=\"@raw/my_ca\"/>\n"
+                + "                               ~~~~~~~~~~\n"
+                + "res/xml/network_config.xml:11: Error: Missing src resource. [NetworkSecurityConfig]\n"
+                + "            <certificates src=\"@raw/debug_cas\"/>\n"
+                + "                               ~~~~~~~~~~~~~~\n"
+                + "2 errors, 0 warnings\n",
                 lintProjectIncrementally(
                         "res/xml/network_config.xml",
                          xml("res/xml/network_config.xml", ""
@@ -242,41 +242,41 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTyposInBaseTags() throws Exception {
-        assertEquals(
-                "res/xml/network_config.xml:3: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
-                        + "     <include domain=\"file\"/>\n"
-                        + "      ~~~~~~~\n"
-                        + "res/xml/network_config.xml:4: Error: Misspelled tag <base-cnofig>: Did you mean base-config ? [NetworkSecurityConfig]\n"
-                        + "     <base-cnofig>\n"
-                        + "      ^\n"
-                        + "res/xml/network_config.xml:6: Error: Misspelled attribute clearTxtTrafficPermitted: Did you mean cleartextTrafficPermitted ? [NetworkSecurityConfig]\n"
-                        + "     <domain-config invalidattr=\"true\" clearTxtTrafficPermitted=\"true\">\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:7: Error: Misspelled attribute includeSubdomain: Did you mean includeSubdomains ? [NetworkSecurityConfig]\n"
-                        + "        <domain includeSubdomain='true'>android.com</domain>\n"
-                        + "                ~~~~~~~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:8: Error: Misspelled tag <trustAnchor>: Did you mean trust-anchors ? [NetworkSecurityConfig]\n"
-                        + "        <trustAnchor>\n"
-                        + "         ^\n"
-                        + "res/xml/network_config.xml:15: Error: Misspelled tag <ceritficates>: Did you mean certificates ? [NetworkSecurityConfig]\n"
-                        + "            <ceritficates src=\"@raw/debug_cas\"/>\n"
-                        + "             ~~~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:21: Error: Misspelled attribute source: Did you mean src ? [NetworkSecurityConfig]\n"
-                        + "            <certificates source=\"@raw/debug_cas\"/>\n"
-                        + "                          ~~~~~~\n"
-                        + "res/xml/network_config.xml:24: Error: Misspelled attribute dgest: Did you mean digest ? [NetworkSecurityConfig]\n"
-                        + "            <pin dgest=\"SHA-256\">7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=</pin>\n"
-                        + "                 ~~~~~\n"
-                        + "res/xml/network_config.xml:25: Error: Misspelled tag <pln>: Did you mean pin ? [NetworkSecurityConfig]\n"
-                        + "            <pln digest=\"SHA-256\">fwza0LRMXouZHRC8Ei+4PyuldPDcf3UKgO/04cDM1oE=</pln>\n"
-                        + "             ~~~\n"
-                        + "res/xml/network_config.xml:29: Error: Unexpected element <test-overrides> [NetworkSecurityConfig]\n"
-                        + "     <test-overrides>\n"
-                        + "      ^\n"
-                        + "res/xml/network_config.xml:32: Error: Misspelled tag <debug-ovrrides>: Did you mean debug-overrides ? [NetworkSecurityConfig]\n"
-                        + "     <debug-ovrrides></debug-ovrrides>\n"
-                        + "      ~~~~~~~~~~~~~~\n"
-                        + "11 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:3: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
+                + "     <include domain=\"file\"/>\n"
+                + "      ~~~~~~~\n"
+                + "res/xml/network_config.xml:4: Error: Misspelled tag <base-cnofig>: Did you mean base-config ? [NetworkSecurityConfig]\n"
+                + "     <base-cnofig>\n"
+                + "      ^\n"
+                + "res/xml/network_config.xml:6: Error: Misspelled attribute clearTxtTrafficPermitted: Did you mean cleartextTrafficPermitted ? [NetworkSecurityConfig]\n"
+                + "     <domain-config invalidattr=\"true\" clearTxtTrafficPermitted=\"true\">\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/xml/network_config.xml:7: Error: Misspelled attribute includeSubdomain: Did you mean includeSubdomains ? [NetworkSecurityConfig]\n"
+                + "        <domain includeSubdomain='true'>android.com</domain>\n"
+                + "                ~~~~~~~~~~~~~~~~\n"
+                + "res/xml/network_config.xml:8: Error: Misspelled tag <trustAnchor>: Did you mean trust-anchors ? [NetworkSecurityConfig]\n"
+                + "        <trustAnchor>\n"
+                + "         ^\n"
+                + "res/xml/network_config.xml:15: Error: Misspelled tag <ceritficates>: Did you mean certificates ? [NetworkSecurityConfig]\n"
+                + "            <ceritficates src=\"@raw/debug_cas\"/>\n"
+                + "             ~~~~~~~~~~~~\n"
+                + "res/xml/network_config.xml:21: Error: Misspelled attribute source: Did you mean src ? [NetworkSecurityConfig]\n"
+                + "            <certificates source=\"@raw/debug_cas\"/>\n"
+                + "                          ~~~~~~\n"
+                + "res/xml/network_config.xml:24: Error: Misspelled attribute dgest: Did you mean digest ? [NetworkSecurityConfig]\n"
+                + "            <pin dgest=\"SHA-256\">7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=</pin>\n"
+                + "                 ~~~~~\n"
+                + "res/xml/network_config.xml:25: Error: Misspelled tag <pln>: Did you mean pin ? [NetworkSecurityConfig]\n"
+                + "            <pln digest=\"SHA-256\">fwza0LRMXouZHRC8Ei+4PyuldPDcf3UKgO/04cDM1oE=</pln>\n"
+                + "             ~~~\n"
+                + "res/xml/network_config.xml:29: Error: Unexpected element <test-overrides> [NetworkSecurityConfig]\n"
+                + "     <test-overrides>\n"
+                + "      ^\n"
+                + "res/xml/network_config.xml:32: Error: Misspelled tag <debug-ovrrides>: Did you mean debug-overrides ? [NetworkSecurityConfig]\n"
+                + "     <debug-ovrrides></debug-ovrrides>\n"
+                + "      ~~~~~~~~~~~~~~\n"
+                + "11 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
@@ -315,20 +315,20 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
 
     public void testConfigDuplicatesMessage() throws Exception {
         // Note that the _debug.xml resource can contain only <debug-overrides> elements
-        assertEquals(
-                "res/xml/network_config.xml:5: Error: Expecting at most 1 <base-config> [NetworkSecurityConfig]\n"
-                        + "    <base-config>\n"
-                        + "     ^\n"
-                        + "    res/xml/network_config.xml:3: Already declared here\n"
-                        + "res/xml/network_config.xml:12: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
-                        + "    <debug-overrides>\n"
-                        + "     ^\n"
-                        + "    res/xml/network_config.xml:7: Already declared here\n"
-                        + "res/xml/network_config_debug.xml:3: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
-                        + "    <debug-overrides>\n"
-                        + "     ^\n"
-                        + "    res/xml/network_config.xml:7: Already declared here\n"
-                        + "3 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/xml/network_config.xml:5: Error: Expecting at most 1 <base-config> [NetworkSecurityConfig]\n"
+                + "    <base-config>\n"
+                + "     ^\n"
+                + "    res/xml/network_config.xml:3: Already declared here\n"
+                + "res/xml/network_config.xml:12: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
+                + "    <debug-overrides>\n"
+                + "     ^\n"
+                + "    res/xml/network_config.xml:7: Already declared here\n"
+                + "res/xml/network_config_debug.xml:3: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
+                + "    <debug-overrides>\n"
+                + "     ^\n"
+                + "    res/xml/network_config.xml:7: Already declared here\n"
+                + "3 errors, 0 warnings\n",
                 lintProject(xml("res/xml/network_config_debug.xml", ""
                                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                 + "<network-security-config>\n"

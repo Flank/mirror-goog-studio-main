@@ -30,7 +30,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
-                lintFiles("res/layout/negative_margins.xml"));
+                lintFiles(mNegative_margins));
     }
 
     public void testIncrementalInLayout() throws Exception {
@@ -44,7 +44,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "0 errors, 2 warnings\n",
                 lintProjectIncrementally(
                         "res/layout/negative_margins.xml",
-                        "res/values/negative_margins.xml", "res/layout/negative_margins.xml"));
+                        mNegative_margins2, mNegative_margins));
     }
 
     public void testValuesWithoutRepositorySupport() throws Exception {
@@ -53,7 +53,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
                 + "                                                 ^\n"
                 + "0 errors, 1 warnings\n",
-                lintFiles("res/values/negative_margins.xml"));
+                lintFiles(mNegative_margins2));
     }
 
     public void testIncrementalInValues() throws Exception {
@@ -67,7 +67,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "0 errors, 2 warnings\n",
                 lintProjectIncrementally(
                         "res/values/negative_margins.xml",
-                        "res/values/negative_margins.xml", "res/layout/negative_margins.xml"));
+                        mNegative_margins2, mNegative_margins));
     }
 
     public void testBatch() throws Exception {
@@ -83,6 +83,42 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 3 warnings\n",
 
-            lintFiles("res/values/negative_margins.xml", "res/layout/negative_margins.xml"));
+            lintFiles(mNegative_margins2, mNegative_margins));
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mNegative_margins = xml("res/layout/negative_margins.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<GridLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "            xmlns:tools=\"http://schemas.android.com/tools\"\n"
+            + "            android:layout_width=\"match_parent\"\n"
+            + "            android:layout_height=\"match_parent\"\n"
+            + "            android:orientation=\"vertical\">\n"
+            + "\n"
+            + "    <TextView android:layout_margin=\"1dp\"/> <!-- OK -->\n"
+            + "    <TextView android:layout_marginLeft=\"1dp\"/> <!-- OK -->\n"
+            + "    <TextView android:layout_marginLeft=\"0dp\"/> <!-- OK -->\n"
+            + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
+            + "    <TextView android:layout_marginTop=\"@dimen/positive\"/> <!-- OK -->\n"
+            + "    <TextView android:layout_marginTop=\"@dimen/negative\"/> <!-- WARNING -->\n"
+            + "    <TextView android:paddingLeft=\"-1dp\"/> <!-- OK -->\n"
+            + "    <TextView android:layout_marginTop=\"-1dp\" tools:ignore=\"NegativeMargin\"/> <!-- SUPPRESSED -->\n"
+            + "\n"
+            + "</GridLayout>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mNegative_margins2 = xml("res/values/negative_margins.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<resources>\n"
+            + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
+            + "    <dimen name=\"positive\">16dp</dimen>\n"
+            + "    <dimen name=\"negative\">-16dp</dimen>\n"
+            + "\n"
+            + "    <style name=\"MyStyle\">\n"
+            + "        <item name=\"android:layout_margin\">5dp</item> <!-- OK -->\n"
+            + "        <item name=\"android:layout_marginLeft\">@dimen/positive</item> <!-- OK -->\n"
+            + "        <item name=\"android:layout_marginTop\">@dimen/negative</item> <!-- WARNING -->\n"
+            + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
+            + "    </style>\n"
+            + "</resources>\n");
 }

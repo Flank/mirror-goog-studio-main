@@ -26,12 +26,32 @@ public class NestedScrollingWidgetDetectorTest extends AbstractCheckTest {
     }
 
     public void testNested() throws Exception {
-        assertEquals(
-            "res/layout/scrolling.xml:13: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]\n" +
-            "  <ListView\n" +
-            "  ^\n" +
-            "0 errors, 1 warnings\n",
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/scrolling.xml:13: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]\n"
+                + "  <ListView\n"
+                + "  ^\n"
+                + "0 errors, 1 warnings\n",
 
-            lintFiles("res/layout/scrolling.xml"));
+            lintFiles(xml("res/layout/scrolling.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<ScrollView\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "\t<LinearLayout\n"
+                            + "\t    android:layout_width=\"match_parent\"\n"
+                            + "\t    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "\t\t<ListView\n"
+                            + "\t\t    android:layout_width=\"match_parent\"\n"
+                            + "\t\t    android:layout_height=\"match_parent\" />\n"
+                            + "\n"
+                            + "\t</LinearLayout>\n"
+                            + "\n"
+                            + "</ScrollView>\n")));
     }
 }

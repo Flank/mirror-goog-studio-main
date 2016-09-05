@@ -27,11 +27,16 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         // See issue b.android.com/65103
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/values-zh-rCN/bom.xml:3: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]\n"
-                + " <string name=\"hanping_chinese\uFEFF_lite\uFEFF_app_name\">(Translated name)</string>\n"
+                + " <string name=\"hanping_chinese\ufeff_lite\ufeff_app_name\">(Translated name)</string>\n"
                 + "         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
-                lintProject("res/values-zh-rCN/bom.xml"));
+                lintProject(xml("res/values-zh-rCN/bom.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\t<string name=\"hanping_chinese\ufeff_lite\ufeff_app_name\">(Translated name)</string>\n"
+                            + "</resources>\n")));
     }
 }

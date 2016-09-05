@@ -92,6 +92,6 @@ public class ViewTagDetectorTest extends AbstractCheckTest {
 
             lintProject(
                     mViewTagTest,
-                    copy("apicheck/minsdk14.xml", "AndroidManifest.xml")));
+                    manifest().minSdk(14)));
     }
 }

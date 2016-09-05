@@ -1,7 +1,0 @@
-package test.pkg;
-
-import android.preference.PreferenceActivity;
-
-public class PreferenceActivitySubclass extends PreferenceActivity {
-
-}

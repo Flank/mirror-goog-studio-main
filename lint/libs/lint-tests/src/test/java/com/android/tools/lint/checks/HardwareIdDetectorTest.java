@@ -26,13 +26,12 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testBluetoothAdapterGetAddressCall() throws Exception {
-        assertEquals(
-                "src/test/pkg/AppUtils.java:8: Warning: Using getAddress to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return adapter.getAddress();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/AppUtils.java:8: Warning: Using getAddress to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return adapter.getAddress();\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath", ".classpath"),
                         java("src/test/pkg/AppUtils.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"
@@ -50,7 +49,6 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "No warnings.",
                 lintProject(
-                        copy("bytecode/.classpath", ".classpath"),
                         java("src/com/google/android/gms/common/GooglePlayServicesNotAvailableException.java", ""
                                 + "package com.google.android.gms.common;\n"
                                 + "public class GooglePlayServicesNotAvailableException extends Exception {\n"
@@ -88,13 +86,12 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testGetAndroidId() throws Exception {
-        assertEquals(
-                "src/test/pkg/AppUtils.java:9: Warning: Using getString to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return Settings.Secure.getString(context.getContentResolver(), androidId);\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/AppUtils.java:9: Warning: Using getString to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return Settings.Secure.getString(context.getContentResolver(), androidId);\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath", ".classpath"),
                         java("src/test/pkg/AppUtils.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"
@@ -110,13 +107,12 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testWifiInfoGetMacAddress() throws Exception {
-        assertEquals(
-                "src/test/pkg/AppUtils.java:8: Warning: Using getMacAddress to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return info.getMacAddress();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/AppUtils.java:8: Warning: Using getMacAddress to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return info.getMacAddress();\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath", ".classpath"),
                         java("src/test/pkg/AppUtils.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"
@@ -131,22 +127,21 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testTelephoneManagerIdentifierCalls() throws Exception {
-        assertEquals(
-                "src/test/pkg/AppUtils.java:8: Warning: Using getDeviceId to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return info.getDeviceId();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:11: Warning: Using getLine1Number to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return info.getLine1Number();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:14: Warning: Using getSimSerialNumber to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return info.getSimSerialNumber();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:17: Warning: Using getSubscriberId to get device identifiers is not recommended. [HardwareIds]\n"
-                        + "        return info.getSubscriberId();\n"
-                        + "               ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/AppUtils.java:8: Warning: Using getDeviceId to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return info.getDeviceId();\n"
+                + "               ~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/AppUtils.java:11: Warning: Using getLine1Number to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return info.getLine1Number();\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/AppUtils.java:14: Warning: Using getSimSerialNumber to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return info.getSimSerialNumber();\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/AppUtils.java:17: Warning: Using getSubscriberId to get device identifiers is not recommended. [HardwareIds]\n"
+                + "        return info.getSubscriberId();\n"
+                + "               ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath", ".classpath"),
                         java("src/test/pkg/AppUtils.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"

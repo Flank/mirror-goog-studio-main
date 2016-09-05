@@ -26,12 +26,25 @@ public class ScrollViewChildDetectorTest extends AbstractCheckTest {
     }
 
     public void testScrollView() throws Exception {
-        assertEquals(
-                "res/layout/wrong_dimension.xml:10: Warning: This LinearLayout should use android:layout_width=\"wrap_content\" [ScrollViewSize]\n" +
-                "     android:layout_width=\"match_parent\"\n" +
-                "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings\n" +
-                "",
-                lintFiles("res/layout/wrong_dimension.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/wrong_dimension.xml:10: Warning: This LinearLayout should use android:layout_width=\"wrap_content\" [ScrollViewSize]\n"
+                + "     android:layout_width=\"match_parent\"\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+                lintFiles(xml("res/layout/wrong_dimension.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<HorizontalScrollView\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "\t<LinearLayout\n"
+                            + "\t    android:layout_width=\"match_parent\"\n"
+                            + "\t    android:layout_height=\"match_parent\" />\n"
+                            + "\n"
+                            + "</HorizontalScrollView>\n")));
     }
 }

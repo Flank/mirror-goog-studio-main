@@ -164,22 +164,22 @@ public class RecyclerViewDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("all")
     public void testExecuteBindings() throws Exception {
         assertEquals(""
-                        + "src/test/pkg/RecyclerViewTest2.java:32: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
-                        + "            holder.dataBinder.someMethod(); // ERROR - no pending call\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/RecyclerViewTest2.java:40: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
-                        + "            holder.dataBinder.someMethod(); // ERROR: After call\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/RecyclerViewTest2.java:48: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
-                        + "                holder.dataBinder.someMethod(); // ERROR: can't reach pending\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/RecyclerViewTest2.java:116: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
-                        + "                holder.dataBinder.someMethod(); // ERROR\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/RecyclerViewTest2.java:139: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
-                        + "                    holder.dataBinder.someMethod(); // ERROR: no fallthrough\n"
-                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "5 errors, 0 warnings\n",
+                + "src/test/pkg/RecyclerViewTest2.java:32: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
+                + "            holder.dataBinder.someMethod(); // ERROR - no pending call\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RecyclerViewTest2.java:40: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
+                + "            holder.dataBinder.someMethod(); // ERROR: After call\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RecyclerViewTest2.java:48: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
+                + "                holder.dataBinder.someMethod(); // ERROR: can't reach pending\n"
+                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RecyclerViewTest2.java:116: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
+                + "                holder.dataBinder.someMethod(); // ERROR\n"
+                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/RecyclerViewTest2.java:139: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]\n"
+                + "                    holder.dataBinder.someMethod(); // ERROR: no fallthrough\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "5 errors, 0 warnings\n",
                 lintProject(java("src/test/pkg/RecyclerViewTest2.java", ""
                         + "package test.pkg;\n"
                         + "\n"
@@ -358,7 +358,7 @@ public class RecyclerViewDetectorTest extends AbstractCheckTest {
         return new RecyclerViewDetector();
     }
 
-    private TestFile mRecyclerViewStub = java("src/android/support/v7/widget/RecyclerView.java", ""
+    private final TestFile mRecyclerViewStub = java("src/android/support/v7/widget/RecyclerView.java", ""
             + "package android.support.v7.widget;\n"
             + "\n"
             + "import android.content.Context;\n"

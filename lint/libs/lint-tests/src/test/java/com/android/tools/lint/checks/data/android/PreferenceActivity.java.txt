@@ -1,9 +1,0 @@
-package android.preference;
-
-import android.app.Activity;
-
-/**
- * A mock PreferenceActivity for use in tests.
- */
-public class PreferenceActivity extends Activity {
-}

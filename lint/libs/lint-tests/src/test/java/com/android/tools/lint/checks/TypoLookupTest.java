@@ -196,10 +196,9 @@ public class TypoLookupTest extends AbstractCheckTest {
             File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
             assertTrue(locale, f != null && f.exists());
 
-            Set<String> typos = new HashSet<String>(2000);
+            Set<String> typos = new HashSet<>(2000);
             List<String> lines = Files.readLines(f, Charsets.UTF_8);
-            for (int i = 0, n = lines.size(); i < n; i++) {
-                String line = lines.get(i);
+            for (String line : lines) {
                 if (line.isEmpty() || line.trim().startsWith("#")) { //$NON-NLS-1$
                     continue;
                 }
@@ -210,9 +209,9 @@ public class TypoLookupTest extends AbstractCheckTest {
                 }
                 String typo = line.substring(0, index).trim();
                 typos.add(typo);
-           }
+            }
 
-            List<String> words = new ArrayList<String>(typos);
+            List<String> words = new ArrayList<>(typos);
 
             // Make sure that the two comparison methods agree on all the strings
             // (which should be in a semi-random order now that they're in a set ordered
@@ -298,8 +297,8 @@ public class TypoLookupTest extends AbstractCheckTest {
         File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
         assertTrue(locale, f != null && f.exists());
 
-        Set<String> typos = new HashSet<String>(2000);
-        List<Pattern> patterns = new ArrayList<Pattern>(100);
+        Set<String> typos = new HashSet<>(2000);
+        List<Pattern> patterns = new ArrayList<>(100);
 
         List<String> lines = Files.readLines(f, Charsets.UTF_8);
         for (int i = 0, n = lines.size(); i < n; i++) {
@@ -322,7 +321,7 @@ public class TypoLookupTest extends AbstractCheckTest {
             }
 
             if (replacements.indexOf(',') != -1) {
-                Set<String> seen = new HashSet<String>();
+                Set<String> seen = new HashSet<>();
                 for (String s : Splitter.on(',').omitEmptyStrings().split(replacements)) {
                     if (seen.contains(s)) {
                         seen.add(s);
@@ -387,17 +386,16 @@ public class TypoLookupTest extends AbstractCheckTest {
         assertNotNull(db.getTypos("Andriod".getBytes(Charsets.UTF_8), 0, "Andriod".length()));
     }
 
-    private void fixDictionary(File original) throws Exception {
+    private static void fixDictionary(File original) throws Exception {
         File fixed = new File(original.getParentFile(), "fixed-" + original.getName());
 
-        Map<String, Integer> typos = new HashMap<String, Integer>(2000);
-        List<Pattern> patterns = new ArrayList<Pattern>(100);
+        Map<String, Integer> typos = new HashMap<>(2000);
+        List<Pattern> patterns = new ArrayList<>(100);
         List<String> lines = Files.readLines(original, Charsets.UTF_8);
-        List<String> output = new ArrayList<String>(lines.size());
+        List<String> output = new ArrayList<>(lines.size());
 
         wordLoop:
-        for (int i = 0, n = lines.size(); i < n; i++) {
-            String line = lines.get(i);
+        for (String line : lines) {
             if (line.isEmpty() || line.trim().startsWith("#")) { //$NON-NLS-1$
                 output.add(line);
                 continue;
@@ -425,8 +423,8 @@ public class TypoLookupTest extends AbstractCheckTest {
 
             // Ensure that all the replacements are unique
             if (replacements.indexOf(',') != -1) {
-                Set<String> seen = new HashSet<String>();
-                List<String> out = new ArrayList<String>();
+                Set<String> seen = new HashSet<>();
+                List<String> out = new ArrayList<>();
                 boolean rewrite = false;
                 for (String s : Splitter.on(',').omitEmptyStrings().split(replacements)) {
                     if (seen.contains(s)) {
@@ -483,7 +481,7 @@ public class TypoLookupTest extends AbstractCheckTest {
                 assertTrue(prev.startsWith(typo));
                 // Append new replacements and put back into the list
                 // (unless they're already listed as replacements)
-                Set<String> seen = new HashSet<String>();
+                Set<String> seen = new HashSet<>();
                 for (String s : Splitter.on(',').split(prev.substring(prev.indexOf(SEPARATOR)
                         + 2))) {
                     seen.add(s);

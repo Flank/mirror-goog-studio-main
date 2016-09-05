@@ -63,7 +63,7 @@ public class BuiltinIssueRegistryTest extends TestCase {
 
     public void testUnique() {
         // Check that ids are unique
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new HashSet<>();
         for (Issue issue : new BuiltinIssueRegistry().getIssues()) {
             String id = issue.getId();
             assertTrue("Duplicate id " + id, !ids.contains(id));

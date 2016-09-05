@@ -26,27 +26,65 @@ public class NfcTechListDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
-            + "res/xml/nfc_tech_list_formatted.xml:6: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
-            + "android.nfc.tech.NfcA\n"
-            + "^\n"
-            + "res/xml/nfc_tech_list_formatted.xml:12: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
-            + "android.nfc.tech.MifareUltralight\n"
-            + "^\n"
-            + "res/xml/nfc_tech_list_formatted.xml:18: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
-            + "android.nfc.tech.ndefformatable\n"
-            + "^\n"
-            + "3 errors, 0 warnings\n",
+                + "res/xml/nfc_tech_list_formatted.xml:6: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
+                + "android.nfc.tech.NfcA\n"
+                + "^\n"
+                + "res/xml/nfc_tech_list_formatted.xml:12: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
+                + "android.nfc.tech.MifareUltralight\n"
+                + "^\n"
+                + "res/xml/nfc_tech_list_formatted.xml:18: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]\n"
+                + "android.nfc.tech.ndefformatable\n"
+                + "^\n"
+                + "3 errors, 0 warnings\n",
 
             lintProject(
-                    "res/xml/nfc_tech_list_formatted.xml"));
+                    xml("res/xml/nfc_tech_list_formatted.xml", ""
+                            + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\" >\n"
+                            + "\n"
+                            + "    <!-- capture anything using NfcF -->\n"
+                            + "    <tech-list>\n"
+                            + "        <tech>\n"
+                            + "android.nfc.tech.NfcA\n"
+                            + "        </tech>\n"
+                            + "    </tech-list>\n"
+                            + "    <!-- OR -->\n"
+                            + "    <tech-list>\n"
+                            + "        <tech>\n"
+                            + "android.nfc.tech.MifareUltralight\n"
+                            + "        </tech>\n"
+                            + "    </tech-list>\n"
+                            + "    <!-- OR -->\n"
+                            + "    <tech-list>\n"
+                            + "        <tech>\n"
+                            + "android.nfc.tech.ndefformatable\n"
+                            + "        </tech>\n"
+                            + "    </tech-list>\n"
+                            + "\n"
+                            + "</resources>\n")));
     }
 
     public void testOk() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
 
             lintProject(
-                    "res/xml/nfc_tech_list.xml"));
+                    xml("res/xml/nfc_tech_list.xml", ""
+                            + " <resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "     <!-- capture anything using NfcF -->\n"
+                            + "     <tech-list>\n"
+                            + "         <tech>android.nfc.tech.NfcA</tech>\n"
+                            + "     </tech-list>\n"
+                            + "     <!-- OR -->\n"
+                            + "     <tech-list>\n"
+                            + "          <tech>android.nfc.tech.MifareUltralight</tech>\n"
+                            + "     </tech-list>\n"
+                            + "     <!-- OR -->\n"
+                            + "      <tech-list>\n"
+                            + "          <tech>android.nfc.tech.ndefformatable</tech>\n"
+                            + "     </tech-list>\n"
+                            + " </resources>\n")));
     }
 }

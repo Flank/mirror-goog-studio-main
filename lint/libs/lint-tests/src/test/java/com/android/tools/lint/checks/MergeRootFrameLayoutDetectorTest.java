@@ -33,43 +33,101 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
     }
 
     public void testMergeRefFromJava() throws Exception {
-        assertEquals(
-            "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n" +
-            "<FrameLayout\n" +
-            "^\n" +
-            "0 errors, 1 warnings\n" +
-            "",
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
+                + "<FrameLayout\n"
+                + "^\n"
+                + "0 errors, 1 warnings\n",
             lintProject(
-                    "res/layout/simple.xml",
-                    "src/test/pkg/ImportFrameActivity.java.txt=>src/test/pkg/ImportFrameActivity.java"
+                    mSimple,
+                    java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import foo.bar.R;\n"
+                            + "import android.app.Activity;\n"
+                            + "import android.os.Bundle;\n"
+                            + "\n"
+                            + "public class ImportFrameActivity extends Activity {\n"
+                            + "    @Override\n"
+                            + "    public void onCreate(Bundle savedInstanceState) {\n"
+                            + "        super.onCreate(savedInstanceState);\n"
+                            + "        setContentView(R.layout.simple);\n"
+                            + "    }\n"
+                            + "}\n")
                     ));
     }
 
     public void testMergeRefFromInclude() throws Exception {
-        assertEquals(
-            "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n" +
-            "<FrameLayout\n" +
-            "^\n" +
-            "0 errors, 1 warnings\n" +
-            "",
+        assertEquals(""
+                + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
+                + "<FrameLayout\n"
+                + "^\n"
+                + "0 errors, 1 warnings\n",
             lintProject(
-                    "res/layout/simple.xml",
-                    "res/layout/simpleinclude.xml"
+                    mSimple,
+                    mSimpleinclude
                     ));
     }
 
     public void testMergeRefFromIncludeSuppressed() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
                 lintProject(
-                        "res/layout/simple_ignore.xml=>res/layout/simple.xml",
-                        "res/layout/simpleinclude.xml"
+                        xml("res/layout/simple.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<FrameLayout\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    tools:ignore=\"MergeRootFrame\" />\n"),
+                        mSimpleinclude
                         ));
     }
 
     public void testNotIncluded() throws Exception {
         assertEquals(
                 "No warnings.",
-                lintProject("res/layout/simple.xml"));
+                lintProject(mSimple));
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mSimple = xml("res/layout/simple.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "\n"
+            + "<FrameLayout\n"
+            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "\n"
+            + "    android:layout_width=\"match_parent\"\n"
+            + "    android:layout_height=\"match_parent\" />\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mSimpleinclude = xml("res/layout/simpleinclude.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    android:layout_width=\"match_parent\"\n"
+            + "    android:layout_height=\"match_parent\"\n"
+            + "    android:orientation=\"vertical\" >\n"
+            + "\n"
+            + "    <include\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        layout=\"@layout/simple\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button1\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button2\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "</LinearLayout>\n");
 }

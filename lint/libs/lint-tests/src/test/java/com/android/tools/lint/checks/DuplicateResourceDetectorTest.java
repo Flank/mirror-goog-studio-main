@@ -34,26 +34,27 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(
-        "res/values/customattr2.xml:2: Error: ContentFrame has already been defined in this folder [DuplicateDefinition]\n" +
-        "    <declare-styleable name=\"ContentFrame\">\n" +
-        "                       ~~~~~~~~~~~~~~~~~~~\n" +
-        "    res/values/customattr.xml:2: Previously defined here\n" +
-        "res/values/strings2.xml:19: Error: wallpaper_instructions has already been defined in this folder [DuplicateDefinition]\n" +
-        "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n" +
-        "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-        "    res/values/strings.xml:29: Previously defined here\n" +
-        "2 errors, 0 warnings\n",
+        assertEquals(""
+                + "res/values/customattr2.xml:2: Error: ContentFrame has already been defined in this folder [DuplicateDefinition]\n"
+                + "    <declare-styleable name=\"ContentFrame\">\n"
+                + "                       ~~~~~~~~~~~~~~~~~~~\n"
+                + "    res/values/customattr.xml:2: Previously defined here\n"
+                + "res/values/strings2.xml:19: Error: wallpaper_instructions has already been defined in this folder [DuplicateDefinition]\n"
+                + "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "    res/values/strings.xml:29: Previously defined here\n"
+                + "2 errors, 0 warnings\n",
 
         lintProject(
-                "res/values/strings.xml",
-                "res/values-land/strings.xml=>res/values/strings2.xml",
-                "res/values-cs/strings.xml",
-                "res/values/customattr.xml",
-                "res/values/customattr.xml=>res/values/customattr2.xml"));
+                mStrings,
+                mStrings2,
+                mStrings3,
+                mCustomattr,
+                mCustomattr2));
     }
 
     public void testDotAliases() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/values/duplicate-strings2.xml:5: Error: app_name has already been defined in this folder (app_name is equivalent to app.name) [DuplicateDefinition]\n"
                 + "    <string name=\"app.name\">App Name 1</string>\n"
@@ -62,10 +63,19 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 + "1 errors, 0 warnings\n",
 
                 lintProject(
-                        "res/values/duplicate-strings2.xml"));
+                        xml("res/values/duplicate-strings2.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\n"
+                            + "    <string name=\"app_name\">App Name</string>\n"
+                            + "    <string name=\"app.name\">App Name 1</string>\n"
+                            + "\n"
+                            + "</resources>\n"
+                            + "\n")));
     }
 
     public void testSameFile() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/values/duplicate-strings.xml:6: Error: app_name has already been defined in this folder [DuplicateDefinition]\n"
                 + "    <string name=\"app_name\">App Name 1</string>\n"
@@ -74,10 +84,21 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 + "1 errors, 0 warnings\n",
 
                 lintProject(
-                        "res/values/duplicate-strings.xml"));
+                        xml("res/values/duplicate-strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\n"
+                            + "    <string name=\"app_name\">App Name</string>\n"
+                            + "    <string name=\"hello_world\">Hello world!</string>\n"
+                            + "    <string name=\"app_name\">App Name 1</string>\n"
+                            + "    <string name=\"app_name2\">App Name 2</string>\n"
+                            + "\n"
+                            + "</resources>\n"
+                            + "\n")));
     }
 
     public void testStyleItems() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/values/duplicate-items.xml:7: Error: android:textColor has already been defined in this <style> [DuplicateDefinition]\n"
                 + "        <item name=\"android:textColor\">#ff0000</item>\n"
@@ -90,26 +111,106 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 + "2 errors, 0 warnings\n",
 
                 lintProject(
-                        "res/values/duplicate-items.xml"));
+                        xml("res/values/duplicate-items.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\n"
+                            + "    <style name=\"DetailsPage_BuyButton\" parent=\"@style/DetailsPage_Button\">\n"
+                            + "        <item name=\"android:textColor\">@color/buy_button</item>\n"
+                            + "        <item name=\"android:background\">@drawable/details_page_buy_button</item>\n"
+                            + "        <item name=\"android:textColor\">#ff0000</item>\n"
+                            + "    </style>\n"
+                            + "\n"
+                            + "    <declare-styleable name=\"ContentFrame\">\n"
+                            + "        <attr name=\"content\" format=\"reference\" />\n"
+                            + "        <attr name=\"contentId\" format=\"reference\" />\n"
+                            + "        <attr name=\"contentId\" format=\"integer\" />\n"
+                            + "    </declare-styleable>\n"
+                            + "\n"
+                            + "</resources>\n"
+                            + "\n")));
     }
 
     public void testOk() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
         "No warnings.",
 
         lintProject(
-                "res/values/strings.xml",
-                "res/values-cs/strings.xml",
-                "res/values-de-rDE/strings.xml",
-                "res/values-es/strings.xml",
-                "res/values-es-rUS/strings.xml",
-                "res/values-land/strings.xml",
-                "res/values-cs/arrays.xml",
-                "res/values-es/donottranslate.xml",
-                "res/values-nl-rNL/strings.xml"));
+                mStrings,
+                mStrings3,
+                xml("res/values-de-rDE/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "    <string name=\"home_title\">\"Startseite\"</string>\n"
+                            + "    <string name=\"show_all_apps\">\"Alle\"</string>\n"
+                            + "    <string name=\"menu_wallpaper\">\"Bildschirmhintergrund\"</string>\n"
+                            + "    <string name=\"menu_search\">\"Suchen\"</string>\n"
+                            + "    <!-- no translation found for menu_settings (1769059051084007158) -->\n"
+                            + "    <skip />\n"
+                            + "    <string name=\"wallpaper_instructions\">\"Tippen Sie auf Bild, um Porträt-Bildschirmhintergrund einzustellen\"</string>\n"
+                            + "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n"
+                            + "</resources>\n"),
+                xml("res/values-es/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "    <string name=\"home_title\">\"Casa\"</string>\n"
+                            + "    <string name=\"show_all_apps\">\"Todo\"</string>\n"
+                            + "    <string name=\"menu_wallpaper\">\"Papel tapiz\"</string>\n"
+                            + "    <string name=\"menu_search\">\"Búsqueda\"</string>\n"
+                            + "    <!-- no translation found for menu_settings (1769059051084007158) -->\n"
+                            + "    <skip />\n"
+                            + "    <string name=\"wallpaper_instructions\">\"Puntee en la imagen para establecer papel tapiz vertical\"</string>\n"
+                            + "\n"
+                            + "  <string-array name=\"security_questions\">\n"
+                            + "    <item>\"Comida favorita\"</item>\n"
+                            + "    <item>\"Ciudad de nacimiento\"</item>\n"
+                            + "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n"
+                            + "    <item>\"Nombre de tu colegio\"</item>\n"
+                            + "  </string-array>\n"
+                            + "</resources>\n"),
+                xml("res/values-es-rUS/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "    <string name=\"menu_search\">\"Búsqueda\"</string>\n"
+                            + "</resources>\n"),
+                mStrings4,
+                xml("res/values-cs/arrays.xml", ""
+                            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "  <string-array name=\"security_questions\">\n"
+                            + "    <item>\"Oblíbené jídlo?\"</item>\n"
+                            + "    <item>\"M\u011bsto narození.\"</item>\n"
+                            + "    <item>\"Jméno nejlep\u0161ího kamaráda z d\u011btství?\"</item>\n"
+                            + "    <item>\"Název st\u0159ední \u0161koly\"</item>\n"
+                            + "  </string-array>\n"
+                            + "</resources>\n"),
+                xml("res/values-es/donottranslate.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "    <string name=\"full_wday_month_day_no_year\">EEEE, d MMMM</string>\n"
+                            + "</resources>\n"),
+                xml("res/values-nl-rNL/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                            + "    <string name=\"home_title\">\"Start\"</string>\n"
+                            + "    <!-- Commented out in the unit test to generate extra warnings:\n"
+                            + "    <string name=\"show_all_apps\">\"Alles\"</string>\n"
+                            + "    <string name=\"menu_wallpaper\">\"Achtergrond\"</string>\n"
+                            + "    -->\n"
+                            + "    <string name=\"menu_search\">\"Zoeken\"</string>\n"
+                            + "    <!-- no translation found for menu_settings (1769059051084007158) -->\n"
+                            + "    <skip />\n"
+                            + "    <string name=\"wallpaper_instructions\">\"Tik op afbeelding om portretachtergrond in te stellen\"</string>\n"
+                            + "</resources>\n")));
     }
 
     public void testResourceAliases() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/values/refs.xml:3: Error: Unexpected resource reference type; expected value of type @string/ [ReferenceType]\n"
                 + "    <item name=\"invalid1\" type=\"string\">@layout/other</item>\n"
@@ -125,7 +226,23 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 + "                                              ^\n"
                 + "4 errors, 0 warnings\n",
 
-            lintProject("res/values/refs.xml"));
+            lintProject(xml("res/values/refs.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "    <item name=\"invalid1\" type=\"string\">@layout/other</item>\n"
+                            + "    <item name=\"invalid1\" type=\"drawable\">\n"
+                            + "          @layout/other\n"
+                            + "    </item>\n"
+                            + "    <item name=\"string1\" type=\"string\">Plain String</item>\n"
+                            + "    <item name=\"string2\" type=\"string\">@string/indirect</item>\n"
+                            + "    <string name=\"string3\">@string/indirect</string>\n"
+                            + "    <string name=\"invalid4\">@layout/indirect</string>\n"
+                            + "    <item name=\"other2\" type=\"layout\">@layout/indirect2</item>\n"
+                            + "    <item name=\"indirect2\" type=\"layout\">  @layout/indirect1 </item>\n"
+                            + "    <item name=\"indirect1\" type=\"layout\">@layout/to</item>\n"
+                            + "    <item name=\"colorAsDrawable\" type=\"drawable\">@color/my_color</item>\n"
+                            + "    <item name=\"drawableAsColor\" type=\"color\">@drawable/my_drawable</item>\n"
+                            + "</resources>\n")));
     }
 
     public void testPublic() throws Exception {
@@ -154,9 +271,14 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
 
     public void testMipmapDrawable() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=109892
+        //noinspection all // Sample code
         assertEquals("No warnings.",
 
-                lintProject("res/values/refs2.xml"));
+                lintProject(xml("res/values/refs2.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "    <drawable name=\"ic_shortcut_resource_name\">@mipmap/ic_shortcut_resource_name</drawable>\n"
+                            + "</resources>\n")));
     }
 
     @Override
@@ -166,4 +288,118 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
             assertNotNull(message, DuplicateResourceDetector.getExpectedType(message, TEXT));
         }
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mCustomattr = xml("res/values/customattr.xml", ""
+            + "<resources>\n"
+            + "    <declare-styleable name=\"ContentFrame\">\n"
+            + "        <attr name=\"content\" format=\"reference\" />\n"
+            + "        <attr name=\"contentId\" format=\"reference\" />\n"
+            + "    </declare-styleable>\n"
+            + "</resources>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mCustomattr2 = xml("res/values/customattr2.xml", ""
+            + "<resources>\n"
+            + "    <declare-styleable name=\"ContentFrame\">\n"
+            + "        <attr name=\"content\" format=\"reference\" />\n"
+            + "        <attr name=\"contentId\" format=\"reference\" />\n"
+            + "    </declare-styleable>\n"
+            + "</resources>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mStrings = xml("res/values/strings.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<!-- Copyright (C) 2007 The Android Open Source Project\n"
+            + "\n"
+            + "     Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+            + "     you may not use this file except in compliance with the License.\n"
+            + "     You may obtain a copy of the License at\n"
+            + "\n"
+            + "          http://www.apache.org/licenses/LICENSE-2.0\n"
+            + "\n"
+            + "     Unless required by applicable law or agreed to in writing, software\n"
+            + "     distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+            + "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+            + "     See the License for the specific language governing permissions and\n"
+            + "     limitations under the License.\n"
+            + "-->\n"
+            + "\n"
+            + "<resources>\n"
+            + "    <!-- Home -->\n"
+            + "    <string name=\"home_title\">Home Sample</string>\n"
+            + "    <string name=\"show_all_apps\">All</string>\n"
+            + "\n"
+            + "    <!-- Home Menus -->\n"
+            + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
+            + "    <string name=\"menu_search\">Search</string>\n"
+            + "    <string name=\"menu_settings\">Settings</string>\n"
+            + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+            + "\n"
+            + "    <!-- Wallpaper -->\n"
+            + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+            + "</resources>\n"
+            + "\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mStrings2 = xml("res/values/strings2.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<!-- Copyright (C) 2007 The Android Open Source Project\n"
+            + "\n"
+            + "     Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+            + "     you may not use this file except in compliance with the License.\n"
+            + "     You may obtain a copy of the License at\n"
+            + "\n"
+            + "          http://www.apache.org/licenses/LICENSE-2.0\n"
+            + "\n"
+            + "     Unless required by applicable law or agreed to in writing, software\n"
+            + "     distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+            + "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+            + "     See the License for the specific language governing permissions and\n"
+            + "     limitations under the License.\n"
+            + "-->\n"
+            + "\n"
+            + "<resources>\n"
+            + "    <!-- Wallpaper -->\n"
+            + "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n"
+            + "</resources>\n"
+            + "\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mStrings3 = xml("res/values-cs/strings.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+            + "    <string name=\"home_title\">\"Dom\u016f\"</string>\n"
+            + "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n"
+            + "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n"
+            + "    <string name=\"menu_search\">\"Hledat\"</string>\n"
+            + "    <!-- no translation found for menu_settings (1769059051084007158) -->\n"
+            + "    <skip />\n"
+            + "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n"
+            + "</resources>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mStrings4 = xml("res/values-land/strings.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<!-- Copyright (C) 2007 The Android Open Source Project\n"
+            + "\n"
+            + "     Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+            + "     you may not use this file except in compliance with the License.\n"
+            + "     You may obtain a copy of the License at\n"
+            + "\n"
+            + "          http://www.apache.org/licenses/LICENSE-2.0\n"
+            + "\n"
+            + "     Unless required by applicable law or agreed to in writing, software\n"
+            + "     distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+            + "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+            + "     See the License for the specific language governing permissions and\n"
+            + "     limitations under the License.\n"
+            + "-->\n"
+            + "\n"
+            + "<resources>\n"
+            + "    <!-- Wallpaper -->\n"
+            + "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n"
+            + "</resources>\n"
+            + "\n");
 }

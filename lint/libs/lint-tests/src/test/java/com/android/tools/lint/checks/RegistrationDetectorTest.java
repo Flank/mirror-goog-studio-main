@@ -179,13 +179,13 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
         return new RegistrationDetector();
     }
 
-    private TestFile mTestActivity = java("src/test/pkg/TestActivity.java", ""
+    private final TestFile mTestActivity = java("src/test/pkg/TestActivity.java", ""
             + "package test.pkg;\n"
             + "import android.app.Activity;\n"
             + "public class TestActivity extends Activity {\n"
             + "}\n");
 
-    private TestFile mTestService = java("src/test/pkg/TestService.java", ""
+    private final TestFile mTestService = java("src/test/pkg/TestService.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.app.Service;\n"
@@ -201,7 +201,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
             + "\n"
             + "}\n");
 
-    private TestFile mTestProvider = java("src/test/pkg/TestProvider.java", "package test.pkg;\n"
+    private final TestFile mTestProvider = java("src/test/pkg/TestProvider.java", "package test.pkg;\n"
             + "\n"
             + "import android.content.ContentProvider;\n"
             + "import android.content.ContentValues;\n"
@@ -242,13 +242,13 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-    private TestFile mTestProvider2 = java("src/test/pkg/TestProvider2.java", ""
+    private final TestFile mTestProvider2 = java("src/test/pkg/TestProvider2.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "public class TestProvider2 extends TestProvider {\n"
             + "}\n");
 
-    private TestFile mTestReceiver = java("src/test/pkg/TestReceiver.java", ""
+    private final TestFile mTestReceiver = java("src/test/pkg/TestReceiver.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.content.BroadcastReceiver;\n"
@@ -271,7 +271,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-    private TestFile mApplication = java("src/test/pkg/MyApplication.java", ""
+    private final TestFile mApplication = java("src/test/pkg/MyApplication.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.app.Application;\n"
@@ -279,7 +279,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
             + "public class MyApplication extends Application {\n"
             + "}\n");
 
-    private TestFile mSuppressedApplication = java("src/test/pkg/MySuppressedApplication.java", ""
+    private final TestFile mSuppressedApplication = java("src/test/pkg/MySuppressedApplication.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.app.Application;\n"

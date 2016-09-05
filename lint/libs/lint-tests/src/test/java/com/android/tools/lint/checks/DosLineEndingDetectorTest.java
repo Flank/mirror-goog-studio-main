@@ -26,24 +26,63 @@ public class DosLineEndingDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(
-            "res/layout/crcrlf.xml:4: Error: Incorrect line ending: found carriage return (\\r) without corresponding newline (\\n) [MangledCRLF]\n" +
-            "    android:layout_height=\"match_parent\" >\r\n" +
-            "^\n" +
-            "1 errors, 0 warnings\n",
-            lintProject("res/layout/crcrlf.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/crcrlf.xml:4: Error: Incorrect line ending: found carriage return (\\r) without corresponding newline (\\n) [MangledCRLF]\n"
+                + "    android:layout_height=\"match_parent\" >\r\n"
+                + "^\n"
+                + "1 errors, 0 warnings\n",
+            lintProject(base64gzip("res/layout/crcrlf.xml", ""
+                            + "H4sIAAAAAAAAAI2Ry2rDMBBF9wb/g9EHWHtjB7LLItmEkK0Z5KEaKktGGtdx"
+                            + "vz7yA5qE1o12uvdc5lWe0QDTFx5hdD1nt9bYUIBtvKOmEpq5K6QMSmMLIV/1"
+                            + "XLlWQvcpPQa5aiJNsviWPDtnwmZ6JtbMqhdmbqEeqGFdiRZY6boDj5Z/BzXS"
+                            + "h+YXMtulSbrg5QVvfCUclu/fpQYPXa2c5Z9SG+Xeo1V00R+cp++IgqkE+x7/"
+                            + "46/omdQGzXGkShzQGPfgztss5p4mOz8B2b2KZyUeRSanlSSlfD51FO+BbabY"
+                            + "/QEAAA==")));
     }
 
     public void testIgnore() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
-            lintProject("res/layout/crcrlf_ignore.xml"));
+            lintProject(base64gzip("res/layout/crcrlf_ignore.xml", ""
+                            + "H4sIAAAAAAAAAI2SwWrEIBCG7wt5h+ADxHuIpaVQeti9LGWvYTBDHGpUdHaz"
+                            + "26evmwTaQprWg+Dv9+vvOM0RLTBdcA83f+byOliXanBd9NQpYZhDLWXSBgdI"
+                            + "1aJX2g8SwruMmOSiiWJX5jH72XubNt0TsXgWvbZThHakjo0SA7A2bYCIjtdB"
+                            + "g9QbXiWn42vqnY+oxAFcb7F7Pu5fRPlQ7IoZat7wyifCcV7+HmWMEFrtHX9d"
+                            + "sBHnf7TOuxhffaSPjIJVguMZ/+JPGJn0Bs35SUo8Jo7k+vxHoXUwfAfnykzx"
+                            + "7mR1AHJPOncA8U2U8l6diV2bG/mzWzL8CZ0ik0FAAgAA")));
     }
 
     public void testNegative() throws Exception {
         // Make sure we don't get warnings for a correct file
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
-            lintProject("res/layout/layout1.xml"));
+            lintProject(xml("res/layout/layout1.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "    <include\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        layout=\"@layout/layout2\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button1\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button2\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n")));
     }
 }

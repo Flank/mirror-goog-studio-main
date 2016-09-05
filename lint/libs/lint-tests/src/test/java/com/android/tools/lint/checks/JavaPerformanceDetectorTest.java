@@ -331,6 +331,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     }
 
     public void testLongSparseArray() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/LongSparseArray.java:10: Warning: Use new LongSparseArray(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Long, String> myStringMap = new HashMap<Long, String>();\n"
@@ -338,11 +339,12 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n",
 
                 lintProject(
-                    "apicheck/minsdk17.xml=>AndroidManifest.xml",
-                    "src/test/pkg/LongSparseArray.java.txt=>src/test/pkg/LongSparseArray.java"));
+                    manifest().minSdk(17),
+                    mLongSparseArray));
     }
 
     public void testLongSparseSupportLibArray() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/LongSparseArray.java:10: Warning: Use new android.support.v4.util.LongSparseArray(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Long, String> myStringMap = new HashMap<Long, String>();\n"
@@ -350,20 +352,23 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n",
 
                 lintProject(
-                        "src/test/pkg/LongSparseArray.java.txt=>src/test/pkg/LongSparseArray.java",
-                        "bytecode/classes.jar=>libs/android-support-v4.jar"));
+                        mLongSparseArray,
+                        jar("libs/android-support-v4.jar") // just a placeholder
+                ));
     }
 
     public void testNoLongSparseArray() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
 
                 lintProject(
-                    "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                    "src/test/pkg/LongSparseArray.java.txt=>src/test/pkg/LongSparseArray.java"));
+                    manifest().minSdk(1),
+                    mLongSparseArray));
     }
 
     public void testSparseLongArray1() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseLongArray(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
@@ -371,12 +376,13 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n",
 
                 lintProject(
-                        "apicheck/minsdk19.xml=>AndroidManifest.xml",
-                        "src/test/pkg/SparseLongArray.java.txt=>src/test/pkg/SparseLongArray.java"));
+                        manifest().minSdk(19),
+                        mSparseLongArray));
     }
 
     public void testSparseLongArray2() throws Exception {
         // Note -- it's offering a SparseArray, not a SparseLongArray!
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
@@ -384,7 +390,37 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n",
 
                 lintProject(
-                        "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                        "src/test/pkg/SparseLongArray.java.txt=>src/test/pkg/SparseLongArray.java"));
+                        manifest().minSdk(1),
+                        mSparseLongArray));
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mLongSparseArray = java(""
+            + "package test.pkg;\n"
+            + "\n"
+            + "import java.util.HashMap;\n"
+            + "import java.util.Map;\n"
+            + "\n"
+            + "import android.content.Context;\n"
+            + "\n"
+            + "public class LongSparseArray {\n"
+            + "    public void test() { // but only minSdkVersion >= 17\n"
+            + "        Map<Long, String> myStringMap = new HashMap<Long, String>();\n"
+            + "    }\n"
+            + "}\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mSparseLongArray = java(""
+            + "package test.pkg;\n"
+            + "\n"
+            + "import java.util.HashMap;\n"
+            + "import java.util.Map;\n"
+            + "\n"
+            + "import android.content.Context;\n"
+            + "\n"
+            + "public class SparseLongArray {\n"
+            + "    public void test() { // but only minSdkVersion >= 18\n"
+            + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
+            + "    }\n"
+            + "}\n");
 }

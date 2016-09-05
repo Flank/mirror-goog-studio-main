@@ -93,8 +93,17 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
 
             lintProject(
                     mLayoutInflationTest,
-                    copy("res/layout/textsize.xml", "res/layout/your_layout.xml"),
-                    copy("res/layout/listseparator.xml", "res/layout-port/your_layout.xml")));
+                    xml("res/layout/your_layout.xml", "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    android:id=\"@+id/LinearLayout1\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    android:orientation=\"vertical\" />\n"),
+                    xml("res/layout-port/your_layout.xml", ""
+                            + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:id=\"@id/text1\"\n"
+                            + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n")
+            ));
     }
 
     public void testNoLayoutParams() throws Exception {
@@ -102,7 +111,11 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
 
                 lintProject(
                         mLayoutInflationTest,
-                        copy("res/layout/listseparator.xml", "res/layout/your_layout.xml")));
+                        xml("res/layout/your_layout.xml", ""
+                                + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    android:id=\"@id/text1\"\n"
+                                + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n")
+            ));
     }
 
     public void testHasLayoutParams() throws IOException, XmlPullParserException {

@@ -26,12 +26,20 @@ public class ExtraTextDetectorTest extends AbstractCheckTest {
     }
 
     public void testBroken() throws Exception {
-        assertEquals(
-            "res/layout/broken.xml:6: Warning: Unexpected text found in layout file: \"ImageButton android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_heigh...\" [ExtraText]\n" +
-            "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n" +
-            "    ^\n" +
-            "0 errors, 1 warnings\n" +
-            "",
-            lintProject("res/layout/broken.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/broken.xml:6: Warning: Unexpected text found in layout file: \"ImageButton android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_heigh...\" [ExtraText]\n"
+                + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                + "    ^\n"
+                + "0 errors, 1 warnings\n",
+            lintProject(xml("res/layout/broken.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
+                            + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                            + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+                            + "    ImageButton android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+                            + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                            + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
+                            + "</LinearLayout>\n")));
     }
 }

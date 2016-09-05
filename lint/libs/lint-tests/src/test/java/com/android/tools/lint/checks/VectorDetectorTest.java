@@ -99,7 +99,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 + "0 errors, 8 warnings\n",
                 lintProject(
                         xml("res/drawable/foo.xml", VECTOR),
-                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                        manifest().minSdk(14)
                 ));
     }
 
@@ -107,7 +107,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         assertEquals("No warnings.",
             lintProject(
                     xml("res/drawable/foo.xml", VECTOR),
-                    copy("apicheck/minsdk21.xml", "AndroidManifest.xml")
+                    manifest().minSdk(21)
         ));
     }
 
@@ -115,7 +115,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         assertEquals("No warnings.",
                 lintProject(
                         xml("res/drawable-v21/foo.xml", VECTOR),
-                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                        manifest().minSdk(14)
                 ));
     }
 
@@ -133,7 +133,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                                 + "\n"
                                 + "</vector>"
                                 + ""),
-                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                        manifest().minSdk(14)
                 ));
     }
 
@@ -142,7 +142,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         assertEquals("No warnings.",
                 lintProject(
                         xml("res/drawable/foo.xml", VECTOR),
-                        copy("apicheck/minsdk14.xml", "AndroidManifest.xml")
+                        manifest().minSdk(14)
                 ));
     }
 

@@ -26,62 +26,232 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
     }
 
     public void testUseless() throws Exception {
-        assertEquals(
-            "res/layout/useless.xml:85: Warning: This FrameLayout view is useless (no children, no background, no id, no style) [UselessLeaf]\n" +
-            "    <FrameLayout\n" +
-            "    ^\n" +
-            "res/layout/useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent is useless [UselessParent]\n" +
-            "        <LinearLayout\n" +
-            "        ^\n" +
-            "res/layout/useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n" +
-            "        <LinearLayout\n" +
-            "        ^\n" +
-            "res/layout/useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n" +
-            "        <LinearLayout\n" +
-            "        ^\n" +
-            "0 errors, 4 warnings\n" +
-            "",
-            lintFiles("res/layout/useless.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/useless.xml:85: Warning: This FrameLayout view is useless (no children, no background, no id, no style) [UselessLeaf]\n"
+                + "    <FrameLayout\n"
+                + "    ^\n"
+                + "res/layout/useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent is useless [UselessParent]\n"
+                + "        <LinearLayout\n"
+                + "        ^\n"
+                + "res/layout/useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n"
+                + "        <LinearLayout\n"
+                + "        ^\n"
+                + "res/layout/useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]\n"
+                + "        <LinearLayout\n"
+                + "        ^\n"
+                + "0 errors, 4 warnings\n",
+            lintFiles(xml("res/layout/useless.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "    <!-- Neither parent nor child define background: delete is okay -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:id=\"@+id/LinearLayout\"\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "        <LinearLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "            <TextView\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\" />\n"
+                            + "        </LinearLayout>\n"
+                            + "    </FrameLayout>\n"
+                            + "\n"
+                            + "    <!-- Both define background: cannot be deleted -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\"\n"
+                            + "        android:background=\"@drawable/bg\" >\n"
+                            + "\n"
+                            + "        <LinearLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"match_parent\"\n"
+                            + "            android:background=\"@drawable/bg\" >\n"
+                            + "\n"
+                            + "            <TextView\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\" />\n"
+                            + "        </LinearLayout>\n"
+                            + "    </FrameLayout>\n"
+                            + "\n"
+                            + "    <!-- Only child defines background: delete is okay -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "        <LinearLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"match_parent\"\n"
+                            + "            android:background=\"@drawable/bg\" >\n"
+                            + "\n"
+                            + "            <TextView\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\" />\n"
+                            + "        </LinearLayout>\n"
+                            + "    </FrameLayout>\n"
+                            + "\n"
+                            + "    <!-- Only parent defines background: delete is okay -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\"\n"
+                            + "        android:background=\"@drawable/bg\" >\n"
+                            + "\n"
+                            + "        <LinearLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "            <TextView\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\" />\n"
+                            + "        </LinearLayout>\n"
+                            + "    </FrameLayout>\n"
+                            + "\n"
+                            + "    <!-- Leaf cannot be deleted because it has a background -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\"\n"
+                            + "        android:background=\"@drawable/bg\" >\n"
+                            + "    </FrameLayout>\n"
+                            + "\n"
+                            + "    <!-- Useless leaf -->\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\" >\n"
+                            + "    </FrameLayout>\n"
+                            + "</merge>\n")));
     }
 
     public void testTabHost() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
 
-            lintFiles("res/layout/useless2.xml"));
+            lintFiles(xml("res/layout/useless2.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<TabHost xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "    <LinearLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"match_parent\"\n"
+                            + "        android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "        <TabWidget\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "        <FrameLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"0px\"\n"
+                            + "            android:layout_weight=\"1\" >\n"
+                            + "\n"
+                            + "            <Button\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\" />\n"
+                            + "        </FrameLayout>\n"
+                            + "    </LinearLayout>\n"
+                            + "\n"
+                            + "</TabHost>\n")));
     }
 
     public void testStyleAttribute() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
 
-            lintFiles("res/layout/useless3.xml"));
+            lintFiles(xml("res/layout/useless3.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<TableRow\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    style=\"@style/keyboard_table_row\">\n"
+                            + "</TableRow>\n")));
     }
 
     public void testUselessLeafRoot() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
 
-            lintFiles("res/layout/breadcrumbs_in_fragment.xml"));
+            lintFiles(xml("res/layout/breadcrumbs_in_fragment.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"0dip\"\n"
+                            + "    android:layout_height=\"0dip\"\n"
+                            + "    android:visibility=\"gone\" />\n")));
     }
 
     public void testUseless65519() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=65519
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
 
-                lintFiles("res/layout/useless4.xml"));
+                lintFiles(xml("res/layout/useless4.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "             android:layout_width=\"match_parent\"\n"
+                            + "             android:layout_height=\"match_parent\"\n"
+                            + "             android:background=\"@drawable/detail_panel_counter_bg\">\n"
+                            + "\n"
+                            + "    <LinearLayout\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:padding=\"5dp\">\n"
+                            + "\n"
+                            + "        <View\n"
+                            + "            android:layout_width=\"5dp\"\n"
+                            + "            android:layout_height=\"5dp\" />\n"
+                            + "\n"
+                            + "        <View\n"
+                            + "            android:layout_width=\"5dp\"\n"
+                            + "            android:layout_height=\"5dp\" />\n"
+                            + "    </LinearLayout>\n"
+                            + "</FrameLayout>\n")));
     }
 
     public void testUselessWithPaddingAttrs() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=205250
-        assertEquals(
-                "res/layout/useless5.xml:7: Warning: This RelativeLayout layout or its FrameLayout parent is useless [UselessParent]\n" +
-                "    <RelativeLayout\n" +
-                "    ^\n" +
-                "0 errors, 1 warnings\n",
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/useless5.xml:7: Warning: This RelativeLayout layout or its FrameLayout parent is useless [UselessParent]\n"
+                + "    <RelativeLayout\n"
+                + "    ^\n"
+                + "0 errors, 1 warnings\n",
 
-                lintFiles("res/layout/useless5.xml"));
+                lintFiles(xml("res/layout/useless5.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "             android:layout_width=\"match_parent\"\n"
+                            + "             android:layout_height=\"wrap_content\">\n"
+                            + "\n"
+                            + "    <RelativeLayout\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:paddingBottom=\"16dp\"\n"
+                            + "            android:paddingLeft=\"16dp\"\n"
+                            + "            android:paddingRight=\"16dp\"\n"
+                            + "            android:paddingTop=\"16dp\">\n"
+                            + "\n"
+                            + "        <TextView\n"
+                            + "                android:layout_width=\"wrap_content\"\n"
+                            + "                android:layout_height=\"wrap_content\"/>\n"
+                            + "    </RelativeLayout>\n"
+                            + "</FrameLayout>\n")));
     }
 
     public void testUselessParentWithStyleAttribute() throws Exception {

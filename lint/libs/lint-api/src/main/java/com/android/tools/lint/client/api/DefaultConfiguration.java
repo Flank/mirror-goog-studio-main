@@ -536,7 +536,7 @@ public class DefaultConfiguration extends Configuration {
                 }
             }
 
-            writer.write("</lint>");                                     //$NON-NLS-1$
+            writer.write("</lint>\n");                                     //$NON-NLS-1$
             writer.close();
 
             // Move file into place: move current version to lint.xml~ (removing the old ~ file

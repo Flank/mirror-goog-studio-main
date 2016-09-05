@@ -102,11 +102,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -150,11 +150,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -187,11 +187,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             AppLinksAutoVerifyDetector.sMockData = data;
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(404, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -225,11 +225,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -263,11 +263,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_MALFORMED_URL, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -301,11 +301,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -339,11 +339,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_NOT_FOUND, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -377,11 +377,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -415,11 +415,11 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_JSON_PARSE_FAIL, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -522,20 +522,20 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("https://www.example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
-                            + "                <data android:host=\"www.example.com\" />\n"
-                            + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
-                            + "                <data android:host=\"www.example.com\" />\n"
-                            + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "2 errors, 2 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
+                + "                <data android:host=\"www.example.com\" />\n"
+                + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                + "                <data android:host=\"www.example.com\" />\n"
+                + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "2 errors, 2 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -573,14 +573,14 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
             data.put("http://www.example.com", new AppLinksAutoVerifyDetector.HttpResult(
                     AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
-            assertEquals(
-                    "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"www.example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 2 warnings\n",
+            assertEquals(""
+                + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"www.example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -663,10 +663,10 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
             assertEquals(""
-                    + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
-                    + "                    android:host=\"${intentFilterHost}\"\n"
-                    + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "0 errors, 1 warnings\n",
+                + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                + "                    android:host=\"${intentFilterHost}\"\n"
+                + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                     lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

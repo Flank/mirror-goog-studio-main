@@ -27,11 +27,11 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     }
 
     public void testLintWarningOnSingleGetSignaturesFlag() throws Exception {
-        assertEquals(
-                "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                        + "            .getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES);\n"
-                        + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "            .getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES);\n"
+                + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
                         java("src/test/pkg/GetSignaturesSingleFlagTest.java", ""
                                 + "package test.pkg;\n"
@@ -49,11 +49,11 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     }
 
     public void testLintWarningOnGetSignaturesFlagInBitwiseOrExpression() throws Exception {
-        assertEquals(
-            "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                    + "            .getPackageInfo(\"some.pkg\", GET_GIDS | GET_SIGNATURES | GET_PROVIDERS);\n"
-                    + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "            .getPackageInfo(\"some.pkg\", GET_GIDS | GET_SIGNATURES | GET_PROVIDERS);\n"
+                + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
             lintProject(
                 java("src/test/pkg/GetSignaturesBitwiseOrTest.java", ""
                         + "package test.pkg;\n"
@@ -73,11 +73,11 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     }
 
     public void testLintWarningOnGetSignaturesFlagInBitwiseXorExpression() throws Exception {
-        assertEquals(
-                "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                        + "        getPackageManager().getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES ^ 0x0);\n"
-                        + "                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "        getPackageManager().getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES ^ 0x0);\n"
+                + "                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
                         java("src/test/pkg/GetSignaturesBitwiseXorTest.java", ""
                                 + "package test.pkg;\n"
@@ -94,11 +94,11 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     }
 
     public void testLintWarningOnGetSignaturesFlagInBitwiseAndExpression() throws Exception {
-        assertEquals(
-                "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                        + "            Integer.MAX_VALUE & PackageManager.GET_SIGNATURES);\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "            Integer.MAX_VALUE & PackageManager.GET_SIGNATURES);\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
                         java("src/test/pkg/GetSignaturesBitwiseAndTest.java", ""
                                 + "package test.pkg;\n"
@@ -116,11 +116,11 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     }
 
     public void testLintWarningOnFlagsInStaticField() throws Exception {
-        assertEquals(
-                "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                        + "        getPackageManager().getPackageInfo(\"some.pkg\", FLAGS);\n"
-                        + "                                                       ~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "        getPackageManager().getPackageInfo(\"some.pkg\", FLAGS);\n"
+                + "                                                       ~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
                         java("src/test/pkg/GetSignaturesStaticFieldTest.java", ""
                                 + "package test.pkg;\n"
@@ -139,10 +139,10 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
 
     public void testNoLintWarningOnFlagsInLocalVariable() throws Exception {
         assertEquals(""
-                        + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
-                        + "        getPackageManager().getPackageInfo(\"some.pkg\", flags);\n"
-                        + "                                                       ~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+                + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "        getPackageManager().getPackageInfo(\"some.pkg\", flags);\n"
+                + "                                                       ~~~~~\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
                         java("src/test/pkg/GetSignaturesLocalVariableTest.java", ""
                                 + "package test.pkg;\n"

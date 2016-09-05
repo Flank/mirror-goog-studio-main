@@ -27,10 +27,10 @@ public class ItemDecoratorDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(""
-            + "src/com/example/android/supportv7/widget/decorator/DividerItemDecoration.java:11: Warning: Replace with android.support.v7.widget.DividerItemDecoration? [DuplicateDivider]\n"
-            + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
-            + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
-            + "0 errors, 1 warnings\n",
+                + "src/com/example/android/supportv7/widget/decorator/DividerItemDecoration.java:11: Warning: Replace with android.support.v7.widget.DividerItemDecoration? [DuplicateDivider]\n"
+                + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
+                + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
             lintProject(
                     java(""
                             + "package com.example.android.supportv7.widget.decorator;\n"

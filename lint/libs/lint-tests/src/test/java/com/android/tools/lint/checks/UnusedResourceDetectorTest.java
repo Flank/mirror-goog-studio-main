@@ -38,6 +38,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.ImmutableMap;
 
+import org.intellij.lang.annotations.Language;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +73,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testUnused() throws Exception {
         mEnableIds = false;
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/accessibility.xml:2: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n"
                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
@@ -87,20 +90,45 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 4 warnings\n",
 
             lintProject(
-                "res/values/strings2.xml",
-                "res/layout/layout1.xml=>res/layout/main.xml",
-                "res/layout/layout1.xml=>res/layout/other.xml",
+                    mStrings2,
+                    mLayout1,
+                    xml("res/layout/other.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "    <include\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        layout=\"@layout/layout2\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button1\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button2\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n"),
 
-                // Rename .txt files to .java
-                "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
-                "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",
-                "AndroidManifest.xml",
-                "res/layout/accessibility.xml"));
+                    // Rename .txt files to .java
+                    mTest,
+                    mR,
+                    manifest().minSdk(14),
+                    mAccessibility));
     }
 
     public void testUnusedIds() throws Exception {
         mEnableIds = true;
 
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/accessibility.xml:2: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n"
                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
@@ -120,10 +148,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 5 warnings\n",
 
             lintProject(
-                "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
-                "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",
-                "AndroidManifest.xml",
-                "res/layout/accessibility.xml"));
+                mTest,
+                mR,
+                manifest().minSdk(14),
+                mAccessibility));
     }
 
     public void testImplicitFragmentUsage() throws Exception {
@@ -154,7 +182,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testArrayReference() throws Exception {
         mEnableIds = false;
         assertEquals(""
-                // The string is unused, but only because the array referencing it is unused too.
                 + "res/values/arrayusage.xml:2: Warning: The resource R.string.my_item appears to be unused [UnusedResources]\n"
                 + "<string name=\"my_item\">An Item</string>\n"
                 + "        ~~~~~~~~~~~~~~\n"
@@ -191,6 +218,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testAttrs() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/customattrlayout.xml:2: Warning: The resource R.layout.customattrlayout appears to be unused [UnusedResources]\n"
                 + "<foo.bar.ContentFrame\n"
@@ -198,64 +226,120 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n",
 
             lintProject(
-                "res/values/customattr.xml",
-                "res/layout/customattrlayout.xml",
-                "unusedR.java.txt=>gen/my/pkg/R.java",
-                "AndroidManifest.xml"));
+                xml("res/values/customattr.xml", ""
+                            + "<resources>\n"
+                            + "    <declare-styleable name=\"ContentFrame\">\n"
+                            + "        <attr name=\"content\" format=\"reference\" />\n"
+                            + "        <attr name=\"contentId\" format=\"reference\" />\n"
+                            + "    </declare-styleable>\n"
+                            + "</resources>\n"),
+                xml("res/layout/customattrlayout.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<foo.bar.ContentFrame\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:foobar=\"http://schemas.android.com/apk/res/foo.bar\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\"\n"
+                            + "    foobar:contentId=\"@+id/test\" />\n"),
+                java(""
+                            + "/* AUTO-GENERATED FILE.  DO NOT MODIFY.\n"
+                            + " *\n"
+                            + " * This class was automatically generated by the\n"
+                            + " * aapt tool from the resource data it found.  It\n"
+                            + " * should not be modified by hand.\n"
+                            + " */\n"
+                            + "\n"
+                            + "package my.pkg;\n"
+                            + "\n"
+                            + "public final class R {\n"
+                            + "    public static final class attr {\n"
+                            + "        public static final int contentId=0x7f020000;\n"
+                            + "    }\n"
+                            + "}\n"),
+                manifest().minSdk(14)));
     }
 
     public void testMultiProjectIgnoreLibraries() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
            "No warnings.",
 
             lintProject(
                 // Master project
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java",
+                manifest().pkg("foo.master").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject"),
+                java(""
+                            + "package foo.main;\n"
+                            + "\n"
+                            + "public class MainCode {\n"
+                            + "    static {\n"
+                            + "        System.out.println(R.string.string2);\n"
+                            + "    }\n"
+                            + "}\n"),
 
                 // Library project
-                "multiproject/library-manifest.xml=>../LibraryProject/AndroidManifest.xml",
-                "multiproject/library.properties=>../LibraryProject/project.properties",
-                "multiproject/LibraryCode.java.txt=>../LibraryProject/src/foo/library/LibraryCode.java",
-                "multiproject/strings.xml=>../LibraryProject/res/values/strings.xml"
+                manifest().pkg("foo.library").minSdk(14),
+                source("../LibraryProject/project.properties", ""
+                            + "target=android-14\n"
+                            + "android.library=true\n"),
+                mLibraryCode,
+                xml("../LibraryProject/res/values/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\n"
+                            + "    <string name=\"app_name\">LibraryProject</string>\n"
+                            + "    <string name=\"string1\">String 1</string>\n"
+                            + "    <string name=\"string2\">String 2</string>\n"
+                            + "    <string name=\"string3\">String 3</string>\n"
+                            + "\n"
+                            + "</resources>\n")
             ));
     }
 
     public void testMultiProject() throws Exception {
         File master = getProjectDir("MasterProject",
                 // Master project
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+                manifest().pkg("foo.master").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject"),
+                mMainCode
         );
         File library = getProjectDir("LibraryProject",
                 // Library project
-                "multiproject/library-manifest.xml=>AndroidManifest.xml",
-                "multiproject/library.properties=>project.properties",
-                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
-                "multiproject/strings.xml=>res/values/strings.xml"
+                mLibraryManifest,
+                projectProperties().library(true).compileSdk(14),
+                mLibraryCode,
+                mLibraryStrings
         );
-        assertEquals(
-           // string1 is defined and used in the library project
-           // string2 is defined in the library project and used in the master project
-           // string3 is defined in the library project and not used anywhere
-           "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
-           "    <string name=\"string3\">String 3</string>\n" +
-           "            ~~~~~~~~~~~~~~\n" +
-           "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                + "    <string name=\"string3\">String 3</string>\n"
+                + "            ~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
 
            checkLint(Arrays.asList(master, library)).replace("/TESTROOT/", ""));
     }
 
     public void testFqcnReference() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
            "No warnings.",
 
             lintProject(
-                "res/layout/layout1.xml=>res/layout/main.xml",
-                "src/test/pkg/UnusedReference.java.txt=>src/test/pkg/UnusedReference.java",
-                "AndroidManifest.xml"));
+                mLayout1,
+                java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.app.Activity;\n"
+                            + "import android.os.Bundle;\n"
+                            + "\n"
+                            + "public class UnusedReference extends Activity {\n"
+                            + "    @Override\n"
+                            + "    public void onCreate(Bundle savedInstanceState) {\n"
+                            + "        super.onCreate(savedInstanceState);\n"
+                            + "        setContentView(test.pkg.R.layout.main);\n"
+                            + "    }\n"
+                            + "}\n"),
+                manifest().minSdk(14)));
     }
 
     /* Not sure about this -- why would we ignore drawable XML?
@@ -274,9 +358,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         //noinspection ClassNameDiffersFromFileName
         assertEquals("No warnings.",
             lintProject(
-                copy("res/values/strings4.xml"),
-                copy("res/values/plurals.xml"),
-                copy("AndroidManifest.xml"),
+                xml("res/values/strings4.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                        + "    <string name=\"hello\">Hello</string>\n"
+                        + "</resources>\n"),
+                xml("res/values/plurals.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <plurals name=\"my_plural\">\n"
+                        + "        <item quantity=\"one\">@string/hello</item>\n"
+                        + "        <item quantity=\"few\">@string/hello</item>\n"
+                        + "        <item quantity=\"other\">@string/hello</item>\n"
+                        + "    </plurals>\n"
+                        + "</resources>\n"),
                 java("src/test/pkg/Test.java", ""
                         + "package test.pkg;\n"
                         + "public class Test {\n"
@@ -292,24 +387,22 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
         File master = getProjectDir("MasterProject",
                 // Master project
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+                manifest().pkg("foo.master").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject"),
+                mMainCode
         );
         File library = getProjectDir("LibraryProject",
                 // Library project
-                "multiproject/library-manifest.xml=>AndroidManifest.xml",
-                "multiproject/library.properties=>project.properties",
-                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
-                "multiproject/strings.xml=>res/values/strings.xml"
+                mLibraryManifest,
+                projectProperties().library(true).compileSdk(14),
+                mLibraryCode,
+                mLibraryStrings
         );
-        assertEquals(
-           // The strings are all referenced in the library project's manifest file
-           // which in this project is merged in
-           "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n" +
-           "    <string name=\"string3\">String 3</string>\n" +
-           "            ~~~~~~~~~~~~~~\n" +
-           "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                + "    <string name=\"string3\">String 3</string>\n"
+                + "            ~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
 
            checkLint(Arrays.asList(master, library)).replace("/TESTROOT/", ""));
     }
@@ -318,16 +411,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         // http://code.google.com/p/android/issues/detail?id=36952
         File master = getProjectDir("MasterProject",
                 // Master project
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main-merge.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+                manifest().pkg("foo.master").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject").property("manifestmerger.enabled", "true"),
+                mMainCode
         );
+
         File library = getProjectDir("LibraryProject",
                 // Library project
-                "multiproject/library-manifest.xml=>AndroidManifest.xml",
-                "multiproject/library.properties=>project.properties",
-                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
-                "multiproject/strings.xml=>res/values/strings.xml"
+                mLibraryManifest,
+                projectProperties().library(true).compileSdk(14),
+                mLibraryCode,
+                mLibraryStrings
         );
         assertEquals(
            // The strings are all referenced in the library project's manifest file
@@ -340,43 +434,98 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testCornerCase() throws Exception {
         // See http://code.google.com/p/projectlombok/issues/detail?id=415
         mEnableIds = true;
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
 
              lintProject(
-                 "src/test/pkg/Foo.java.txt=>src/test/pkg/Foo.java",
-                 "AndroidManifest.xml"));
+                 java(""
+                            + "// http://code.google.com/p/projectlombok/issues/detail?id=415\n"
+                            + "package test.pkg;\n"
+                            + "public class X {\n"
+                            + "  public void X(Y parent) {\n"
+                            + "    parent.new Z(parent.getW()).execute();\n"
+                            + "  }\n"
+                            + "}\n"),
+                 manifest().minSdk(14)));
     }
 
     public void testAnalytics() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=42565
         mEnableIds = false;
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
 
                 lintProject(
-                        "res/values/analytics.xml"
+                        xml("res/values/analytics.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
+                            + "<resources>\n"
+                            + "  <!--Replace placeholder ID with your tracking ID-->\n"
+                            + "  <string name=\"ga_trackingId\">UA-12345678-1</string>\n"
+                            + "\n"
+                            + "  <!--Enable Activity tracking-->\n"
+                            + "  <bool name=\"ga_autoActivityTracking\">true</bool>\n"
+                            + "\n"
+                            + "  <!--Enable automatic exception tracking-->\n"
+                            + "  <bool name=\"ga_reportUncaughtExceptions\">true</bool>\n"
+                            + "\n"
+                            + "  <!-- The screen names that will appear in your reporting -->\n"
+                            + "  <string name=\"com.example.app.BaseActivity\">Home</string>\n"
+                            + "  <string name=\"com.example.app.PrefsActivity\">Preferences</string>\n"
+                            + "  <string name=\"test.pkg.OnClickActivity\">Clicks</string>\n"
+                            + "</resources>\n")
         ));
     }
 
     public void testIntegers() throws Exception {
         // See https://code.google.com/p/android/issues/detail?id=53995
         mEnableIds = true;
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
 
                 lintProject(
-                        "res/values/integers.xml",
-                        "res/anim/slide_in_out.xml"
+                        xml("res/values/integers.xml", ""
+                            + "<resources>\n"
+                            + "    <item name=\"bar_display_duration\" type=\"integer\">3600</item>\n"
+                            + "    <item name=\"bar_slide_out_duration\" type=\"integer\">2400</item>\n"
+                            + "</resources>\n"),
+                        xml("res/anim/slide_in_out.xml", ""
+                            + "<set xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "     xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "     tools:ignore=\"UnusedResources\">\n"
+                            + "    <translate\n"
+                            + "      android:duration=\"@integer/bar_slide_out_duration\"\n"
+                            + "      android:startOffset=\"@integer/bar_display_duration\" />\n"
+                            + "</set>\n"
+                            + "\n")
                 ));
     }
 
     public void testIntegerArrays() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=59761
         mEnableIds = false;
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
-                lintProject("res/values/integer_arrays.xml=>res/values/integer_arrays.xml"));
+                lintProject(xml("res/values/integer_arrays.xml", ""
+                            + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                            + "    <dimen name=\"used\">16dp</dimen>\n"
+                            + "\n"
+                            + "    <integer-array name=\"iconsets_array_ids\" tools:ignore=\"UnusedResources\">\n"
+                            + "        <item>@array/iconset_pixelmixer_basic</item>\n"
+                            + "        <item>@array/iconset_dryicons_coquette</item>\n"
+                            + "    </integer-array>\n"
+                            + "\n"
+                            + "    <integer-array name=\"iconset_pixelmixer_basic\">\n"
+                            + "        <item>@dimen/used</item>\n"
+                            + "    </integer-array>\n"
+                            + "\n"
+                            + "    <integer-array name=\"iconset_dryicons_coquette\">\n"
+                            + "        <item>@dimen/used</item>\n"
+                            + "    </integer-array>\n"
+                            + "</resources>\n")));
     }
 
     public void testUnitTestReferences() throws Exception {
@@ -384,18 +533,18 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=79066
         mEnableIds = false;
+
         //noinspection ClassNameDiffersFromFileName
         assertEquals("No warnings.",
 
                 lintProject(
-                        copy("res/values/strings2.xml"),
-                        copy("res/layout/layout1.xml", "res/layout/main.xml"),
-                        copy("res/layout/layout1.xml", "res/layout/other.xml"),
-
-                        copy("src/my/pkg/Test.java.txt", "src/my/pkg/Test.java"),
-                        copy("gen/my/pkg/R.java.txt", "gen/my/pkg/R.java"),
-                        copy("AndroidManifest.xml"),
-                        copy("res/layout/accessibility.xml"),
+                        mStrings2,
+                        mLayout1,
+                        mOther,
+                        mTest,
+                        mR,
+                        manifest(),
+                        mAccessibility,
 
                         // Add unit test source which references resources which would otherwise
                         // be marked as unused
@@ -494,15 +643,30 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testDynamicResources() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
-                        + "UnusedResourceDetectorTest_testDynamicResources: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
-                        + "UnusedResourceDetectorTest_testDynamicResources: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
-                        + "0 errors, 2 warnings\n",
+                + "UnusedResourceDetectorTest_testDynamicResources: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
+                + "UnusedResourceDetectorTest_testDynamicResources: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
+                + "0 errors, 2 warnings\n",
 
                 lintProject(
-                        "res/layout/layout1.xml=>res/layout/main.xml",
-                        "src/test/pkg/UnusedReferenceDynamic.java.txt=>src/test/pkg/UnusedReferenceDynamic.java",
-                        "AndroidManifest.xml"));
+                        mLayout1,
+                        java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.app.Activity;\n"
+                            + "import android.os.Bundle;\n"
+                            + "import android.support.design.widget.Snackbar;\n"
+                            + "\n"
+                            + "public class UnusedReferenceDynamic extends Activity {\n"
+                            + "    @Override\n"
+                            + "    public void onCreate(Bundle savedInstanceState) {\n"
+                            + "        super.onCreate(savedInstanceState);\n"
+                            + "        setContentView(test.pkg.R.layout.main);\n"
+                            + "        Snackbar.make(view, R.string.xyz, Snackbar.LENGTH_LONG);\n"
+                            + "    }\n"
+                            + "}\n"),
+                        manifest().minSdk(14)));
     }
 
     public void testStaticImport() throws Exception {
@@ -744,4 +908,157 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
             @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
         assertNotNull(message, UnusedResourceDetector.getUnusedResource(message, TEXT));
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mAccessibility = xml("res/layout/accessibility.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
+            + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+            + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+            + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
+            + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "</LinearLayout>\n");
+
+    @Language("XML")
+    private static final String LAYOUT_XML = ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    android:layout_width=\"match_parent\"\n"
+            + "    android:layout_height=\"match_parent\"\n"
+            + "    android:orientation=\"vertical\" >\n"
+            + "\n"
+            + "    <include\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        layout=\"@layout/layout2\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button1\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button2\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "</LinearLayout>\n";
+
+
+    private TestFile mLayout1 = xml("res/layout/main.xml", LAYOUT_XML);
+    private TestFile mOther = xml("res/layout/other.xml", LAYOUT_XML);
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mR = java(""
+            + "package my.pkg;\n"
+            + "\n"
+            + "public final class R {\n"
+            + "    public static final class attr {\n"
+            + "    }\n"
+            + "    public static final class drawable {\n"
+            + "        public static final int ic_launcher=0x7f020000;\n"
+            + "    }\n"
+            + "    public static final class id {\n"
+            + "        public static final int button1=0x7f050000;\n"
+            + "        public static final int button2=0x7f050004;\n"
+            + "        public static final int imageView1=0x7f050003;\n"
+            + "        public static final int include1=0x7f050005;\n"
+            + "        public static final int linearLayout1=0x7f050001;\n"
+            + "        public static final int linearLayout2=0x7f050002;\n"
+            + "    }\n"
+            + "    public static final class layout {\n"
+            + "        public static final int main=0x7f030000;\n"
+            + "        public static final int other=0x7f030001;\n"
+            + "    }\n"
+            + "    public static final class string {\n"
+            + "        public static final int app_name=0x7f040001;\n"
+            + "        public static final int hello=0x7f040000;\n"
+            + "    }\n"
+            + "}\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mTest = java(""
+            + "package my.pgk;\n"
+            + "\n"
+            + "class Test {\n"
+            + "   private static String s = \" R.id.button1 \\\" \"; // R.id.button1 should not be considered referenced\n"
+            + "   static {\n"
+            + "       System.out.println(R.id.button2);\n"
+            + "       char c = '\"';\n"
+            + "       System.out.println(R.id.linearLayout1);\n"
+            + "   }\n"
+            + "}\n");
+
+    private TestFile mLibraryManifest = xml("AndroidManifest.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    package=\"foo.library\"\n"
+            + "    android:versionCode=\"1\"\n"
+            + "    android:versionName=\"1.0\" >\n"
+            + "\n"
+            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+            + "\n"
+            + "    <application\n"
+            + "        android:icon=\"@drawable/ic_launcher\"\n"
+            + "        android:label=\"@string/app_name\" >\n"
+            + "        <activity\n"
+            + "            android:name=\".LibraryProjectActivity\"\n"
+            + "            android:label=\"@string/app_name\" >\n"
+            + "            <intent-filter>\n"
+            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+            + "\n"
+            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+            + "            </intent-filter>\n"
+            + "        </activity>\n"
+            + "\n"
+            + "        <!-- Dummy string references for unused resource check -->\n"
+            + "        <meta-data\n"
+            + "            android:name=\"com.google.android.backup.api_key\"\n"
+            + "            android:value=\"@string/string3\" />\n"
+            + "        <meta-data\n"
+            + "            android:name=\"foo\"\n"
+            + "            android:value=\"@string/string1\" />\n"
+            + "    </application>\n"
+            + "\n"
+            + "</manifest>\n");
+
+    private TestFile mLibraryStrings = xml("res/values/strings.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<resources>\n"
+            + "\n"
+            + "    <string name=\"app_name\">LibraryProject</string>\n"
+            + "    <string name=\"string1\">String 1</string>\n"
+            + "    <string name=\"string2\">String 2</string>\n"
+            + "    <string name=\"string3\">String 3</string>\n"
+            + "\n"
+            + "</resources>\n");
+
+    private TestFile mLibraryCode = java("src/foo/library/LibraryCode.java", ""
+            + "package foo.library;\n"
+            + "\n"
+            + "public class LibraryCode {\n"
+            + "    static {\n"
+            + "        System.out.println(R.string.string1);\n"
+            + "    }\n"
+            + "}\n");
+
+    private TestFile mMainCode = java("src/foo/main/MainCode.java", ""
+            + "package foo.main;\n"
+            + "\n"
+            + "public class MainCode {\n"
+            + "    static {\n"
+            + "        System.out.println(R.string.string2);\n"
+            + "    }\n"
+            + "}\n");
+
+    private TestFile mStrings2 = xml("res/values/strings2.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<resources>\n"
+            + "    <string name=\"hello\">Hello</string>\n"
+            + "</resources>\n"
+            + "\n");
 }

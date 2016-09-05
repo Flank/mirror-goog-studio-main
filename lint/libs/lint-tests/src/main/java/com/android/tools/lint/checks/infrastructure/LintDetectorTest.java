@@ -18,7 +18,11 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_JPEG;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.utils.SdkUtils.escapePropertyValue;
@@ -66,6 +70,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.utils.ILogger;
+import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
@@ -92,8 +97,12 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -105,7 +114,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +124,10 @@ import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+
+import javax.imageio.ImageIO;
 
 /**
  * Test case for lint detectors.
@@ -195,8 +206,24 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
+    protected String lintFiles(TestFile... relativePaths) throws Exception {
+        List<File> files = new ArrayList<>();
+        File targetDir = getTargetDir();
+        for (TestFile testFile : relativePaths) {
+            File file = testFile.createFile(targetDir);
+            assertNotNull(file);
+            files.add(file);
+        }
+
+        return lintFiles(targetDir, files);
+    }
+
+    /**
+     * @deprecated Use {@link #lintFiles(TestFile...)} instead
+     */
+    @Deprecated
     protected String lintFiles(String... relativePaths) throws Exception {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         File targetDir = getTargetDir();
         for (String relativePath : relativePaths) {
             File file = getTestfile(targetDir, relativePath);
@@ -204,18 +231,19 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             files.add(file);
         }
 
-        Collections.sort(files, new Comparator<File>() {
-            @Override
-            public int compare(File file1, File file2) {
-                ResourceFolderType folder1 = ResourceFolderType.getFolderType(
-                        file1.getParentFile().getName());
-                ResourceFolderType folder2 = ResourceFolderType.getFolderType(
-                        file2.getParentFile().getName());
-                if (folder1 != null && folder2 != null && folder1 != folder2) {
-                    return folder1.compareTo(folder2);
-                }
-                return file1.compareTo(file2);
+        return lintFiles(targetDir, files);
+    }
+
+    private String lintFiles(File targetDir, List<File> files) throws Exception {
+        Collections.sort(files, (file1, file2) -> {
+            ResourceFolderType folder1 = ResourceFolderType.getFolderType(
+                    file1.getParentFile().getName());
+            ResourceFolderType folder2 = ResourceFolderType.getFolderType(
+                    file2.getParentFile().getName());
+            if (folder1 != null && folder2 != null && folder1 != folder2) {
+                return folder1.compareTo(folder2);
             }
+            return file1.compareTo(file2);
         });
 
         addManifestFile(targetDir);
@@ -373,7 +401,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
     private static final Pattern CLASS_PATTERN = Pattern
-            .compile("\\s*(\\S+)\\s*(extends.*)?(implements.*)?\\{");
+            .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{", Pattern.MULTILINE);
 
     @NonNull
     public TestFile java(@NonNull @Language("JAVA") String source) {
@@ -383,7 +411,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         String pkg = matcher.group(1).trim();
         matcher = CLASS_PATTERN.matcher(source);
         assertTrue("Couldn't find class declaration in source", matcher.find());
-        String cls = matcher.group(1).trim();
+        String cls = matcher.group(2).trim();
         String to = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
 
         return file().to(to).withSource(source);
@@ -394,11 +422,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return file().to(to).withSource(source);
     }
 
-    /** Decodes base64 strings into binary data files */
     @NonNull
-    public TestFile uudecode(@NonNull String to, @NonNull String code) {
-        byte[] bytes = Base64.getDecoder().decode(code);
-        return file().to(to).withBytes(bytes);
+    public TestFile copy(@NonNull String from) {
+        return file().from(from).to(from);
     }
 
     @NonNull
@@ -433,6 +459,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         public ManifestTestFile permissions(String... permissions) {
             this.permissions = permissions;
+            return this;
+        }
+
+        public ManifestTestFile pkg(String pkg) {
+            this.pkg = pkg;
             return this;
         }
 
@@ -592,19 +623,52 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return new BinaryTestFile(to, producer);
     }
 
+    @NonNull
+    public BinaryTestFile bytes(@NonNull String to, @NonNull byte[] bytes) {
+        BytecodeProducer producer = new BytecodeProducer() {
+            @NonNull
+            @Override
+            public byte[] produce() {
+                return bytes;
+            }
+        };
+        return new BinaryTestFile(to, producer);
+    }
+
     public static String toBase64(@NonNull byte[] bytes) {
         String base64 = Base64.getEncoder().encodeToString(bytes);
-        return Joiner.on("\n").join(Splitter.fixedLength(60).split(base64));
+        return "\"\"\n+ \""
+                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+    }
+
+    public static String toBase64gzip(@NonNull byte[] bytes) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (GZIPOutputStream stream = new GZIPOutputStream(out)) {
+                stream.write(bytes);
+            }
+            bytes = out.toByteArray();
+        } catch (IOException ignore) {
+            // Can't happen on a ByteArrayInputStream
+        }
+
+        String base64 = Base64.getEncoder().encodeToString(bytes);
+        return "\"\"\n+ \""
+                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
         return toBase64(Files.toByteArray(file));
     }
 
+    public static String toBase64gzip(@NonNull File file) throws IOException {
+        return toBase64gzip(Files.toByteArray(file));
+    }
+
     /**
      * Creates a test file from the given base64 data. To create this data, use {@link
-     * #toBase64(File)} or {@link #toBase64(byte[])}, for example via <pre>{@code assertEquals("",
-     * toBase64(new File("path/to/your.class")));} </pre>
+     * #toBase64(File)} or {@link #toBase64(byte[])}, for example via
+     * <pre>{@code assertEquals("", toBase64(new File("path/to/your.class")));}</pre>
      *
      * @param to      the file to write as
      * @param encoded the encoded data
@@ -622,10 +686,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         });
     }
 
-    /** Decodes base64 strings into gzip data, then decodes that into a data file */
+    /**
+     * Decodes base64 strings into gzip data, then decodes that into a data file.
+     * To create this data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])},
+     * for example via
+     * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
+     */
     @NonNull
-    public TestFile base64gzip(@NonNull String to, @NonNull String code) {
-        byte[] bytes = Base64.getDecoder().decode(code);
+    public TestFile base64gzip(@NonNull String to, @NonNull String encoded) {
+        encoded = encoded.replaceAll("\n", "");
+        byte[] bytes = Base64.getDecoder().decode(encoded);
 
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(bytes);
@@ -636,6 +706,23 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         return file().to(to).withBytes(bytes);
+    }
+
+    public TestFile classpath(String... extraLibraries) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(""
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<classpath>\n"
+                + "\t<classpathentry kind=\"src\" path=\"src\"/>\n"
+                + "\t<classpathentry kind=\"src\" path=\"gen\"/>\n"
+                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.ANDROID_FRAMEWORK\"/>\n"
+                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.LIBRARIES\"/>\n"
+                + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n");
+        for (String path : extraLibraries) {
+            sb.append("\t<classpathentry kind=\"lib\" path=\"").append(path).append("\"/>\n");
+        }
+        sb.append("</classpath>\n");
+        return source(".classpath", sb.toString());
     }
 
     public class BinaryTestFile extends TestFile {
@@ -688,6 +775,86 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         JarTestFile jar = new JarTestFile(to);
         jar.files(files);
         return jar;
+    }
+
+    public ImageTestFile image(@NonNull String to, int width, int height) {
+        return new ImageTestFile(to, width, height);
+    }
+
+    protected static boolean imageFormatSupported(@NonNull String format) {
+        if ("PNG".equals(format)) {
+            // Always supported
+            return true;
+        }
+        try {
+            // Can't just look through ImageIO.getWriterFormatNames() -- it lies.
+            // (For example, on some systems it will claim to support JPG but then
+            // throw an exception when actually used.)
+            ImageIO.write(new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB), format,
+                    new ByteArrayOutputStream());
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    public class ImageTestFile extends BinaryTestFile {
+        private final BufferedImage mImage;
+        private String mFormat;
+
+        public ImageTestFile(@NonNull String to, int width, int height) {
+            super(to, new BytecodeProducer());
+
+            if (SdkUtils.endsWithIgnoreCase(to, DOT_PNG)) {
+                mFormat = "PNG";
+            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_JPG) || SdkUtils.endsWithIgnoreCase(to, DOT_JPEG)) {
+                mFormat = "JPG";
+            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_GIF)) {
+                mFormat = "GIF";
+            }
+            mImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        }
+
+        @NonNull
+        public ImageTestFile fill(int argb) {
+            return fill(0, 0, mImage.getWidth(), mImage.getHeight(), argb);
+        }
+
+        @NonNull
+        public ImageTestFile fill(int x, int y, int width, int height, int argb) {
+            Graphics2D graphics = mImage.createGraphics();
+            graphics.setColor(new Color(argb, true));
+            graphics.fillRect(x, y, width, height);
+            graphics.dispose();
+            return this;
+        }
+
+        @NonNull
+        public ImageTestFile text(int x, int y, String s, int argb) {
+            Graphics2D graphics = mImage.createGraphics();
+            graphics.setColor(new Color(argb, true));
+            graphics.drawString(s, x, y);
+            graphics.dispose();
+            return this;
+        }
+
+        @Override
+        public byte[] getBinaryContents() {
+            assertNotNull("Must set image type", mFormat);
+            ByteArrayOutputStream output = new ByteArrayOutputStream(2048);
+            try {
+                ImageIO.write(mImage, mFormat, output);
+            } catch (IOException e) {
+                fail(e.getLocalizedMessage() + " writing " + output + " in format " + mFormat);
+            }
+
+            return output.toByteArray();
+        }
+
+        public ImageTestFile format(String format) {
+            this.mFormat = format;
+            return this;
+        }
     }
 
     public class JarTestFile extends TestFile {
@@ -788,12 +955,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
-    @NonNull
-    public TestFile copy(@NonNull String from) {
-        return file().from(from).to(from);
-    }
-
-    /** Creates a project directory structure from the given files */
+    /**
+     * Creates a project directory structure from the given files
+     *
+     * @deprecated Use {@link #getProjectDir(String, TestFile...)} instead
+     */
+    @Deprecated
     protected File getProjectDir(String name, String ...relativePaths) throws Exception {
         assertFalse("getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
@@ -1117,7 +1284,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 File rootDir = TestUtils.getWorkspaceRoot();
                 File file = new File(rootDir, "tools/base/files/typos/" + base);
                 if (!file.exists()) {
-                    System.err.println("Warning: " + file + " not found");
                     return null;
                 }
                 return file;

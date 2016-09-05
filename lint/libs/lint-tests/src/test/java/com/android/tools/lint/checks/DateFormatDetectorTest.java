@@ -29,17 +29,17 @@ public class DateFormatDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
     public void test() throws Exception {
-        assertEquals(
-            "src/test/pkg/LocaleTest.java:32: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n" +
-            "        new SimpleDateFormat(); // WRONG\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/LocaleTest.java:33: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n" +
-            "        new SimpleDateFormat(\"yyyy-MM-dd\"); // WRONG\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/LocaleTest.java:34: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n" +
-            "        new SimpleDateFormat(\"yyyy-MM-dd\", DateFormatSymbols.getInstance()); // WRONG\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 3 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/LocaleTest.java:32: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n"
+                + "        new SimpleDateFormat(); // WRONG\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/LocaleTest.java:33: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n"
+                + "        new SimpleDateFormat(\"yyyy-MM-dd\"); // WRONG\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/LocaleTest.java:34: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n"
+                + "        new SimpleDateFormat(\"yyyy-MM-dd\", DateFormatSymbols.getInstance()); // WRONG\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings\n",
 
             lintProject(
                     manifest().minSdk(19),

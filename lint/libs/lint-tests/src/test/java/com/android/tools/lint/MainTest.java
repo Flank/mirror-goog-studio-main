@@ -25,6 +25,8 @@ import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 
+import org.intellij.lang.annotations.Language;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -121,7 +123,7 @@ public class MainTest extends AbstractCheckTest {
                 "ContentDescription",
                 "--disable",
                 "LintError",
-                getProjectDir(null, "res/layout/accessibility.xml").getPath()
+                getProjectDir(null, mAccessibility).getPath()
 
         });
     }
@@ -226,7 +228,9 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testMultipleProjects() throws Exception {
-        File project = getProjectDir(null, "bytecode/classes.jar=>libs/classes.jar");
+        File project = getProjectDir(null,
+                jar("libs/classes.jar")); // dummy file
+
         checkDriver(
         "",
         "The --sources, --classpath, --libraries and --resources arguments can only be used with a single project\n",
@@ -248,8 +252,8 @@ public class MainTest extends AbstractCheckTest {
 
     public void testCustomResourceDirs() throws Exception {
         File project = getProjectDir(null,
-                "res/layout/accessibility.xml=>myres1/layout/accessibility1.xml",
-                "res/layout/accessibility.xml=>myres2/layout/accessibility1.xml"
+                mAccessibility2,
+                mAccessibility3
         );
 
         checkDriver(
@@ -289,8 +293,8 @@ public class MainTest extends AbstractCheckTest {
 
     public void testPathList() throws Exception {
         File project = getProjectDir(null,
-                "res/layout/accessibility.xml=>myres1/layout/accessibility1.xml",
-                "res/layout/accessibility.xml=>myres2/layout/accessibility1.xml"
+                mAccessibility2,
+                mAccessibility3
         );
 
         checkDriver(
@@ -330,9 +334,9 @@ public class MainTest extends AbstractCheckTest {
 
     public void testClassPath() throws Exception {
         File project = getProjectDir(null,
-                "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
-                "bytecode/GetterTest.jar.data=>bin/classes.jar"
+                manifest().minSdk(1),
+                mGetterTest,
+                mGetterTest2
         );
         checkDriver(
         "\n" +
@@ -372,9 +376,9 @@ public class MainTest extends AbstractCheckTest {
 
     public void testLibraries() throws Exception {
         File project = getProjectDir(null,
-                "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                "bytecode/GetterTest.java.txt=>src/test/bytecode/GetterTest.java",
-                "bytecode/GetterTest.jar.data=>bin/classes.jar"
+                manifest().minSdk(1),
+                mGetterTest,
+                mGetterTest2
         );
         checkDriver(
         "\n" +
@@ -455,9 +459,10 @@ public class MainTest extends AbstractCheckTest {
 
     public void testGradle() throws Exception {
         File project = getProjectDir(null,
-                "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                "multiproject/library.properties=>build.gradle", // dummy; only name counts
-                "apicheck/ApiCallTest.class.data=>bin/classes/foo/bar/ApiCallTest.class"
+                manifest().minSdk(1),
+                source("build.gradle", ""), // dummy; only name counts
+                // dummy to ensure we have .class files
+                source("bin/classes/foo/bar/ApiCallTest.class", "")
         );
         checkDriver(""
                 + "\n"
@@ -479,7 +484,7 @@ public class MainTest extends AbstractCheckTest {
 
     public void testValidateOutput() throws Exception {
         File project = getProjectDir(null,
-                "res/layout/accessibility.xml=>myres1/layout/accessibility1.xml"
+                mAccessibility2
         );
 
         File outputDir = new File(project, "build");
@@ -557,4 +562,109 @@ public class MainTest extends AbstractCheckTest {
     protected boolean isEnabled(Issue issue) {
         return true;
     }
+
+    @Language("XML")
+    private static final String ACCESSIBILITY_XML = ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
+            + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+            + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+            + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
+            + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+            + "</LinearLayout>\n";
+
+    private TestFile mAccessibility = xml("res/layout/accessibility.xml", ACCESSIBILITY_XML);
+
+    private TestFile mAccessibility2 = xml("myres1/layout/accessibility1.xml", ACCESSIBILITY_XML);
+
+    private TestFile mAccessibility3 = xml("myres2/layout/accessibility1.xml", ACCESSIBILITY_XML);
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mGetterTest = java(""
+            + "package test.bytecode;\n"
+            + "\n"
+            + "public class GetterTest {\n"
+            + "\tprivate int mFoo1;\n"
+            + "\tprivate String mFoo2;\n"
+            + "\tprivate int mBar1;\n"
+            + "\tprivate static int sFoo4;\n"
+            + "\n"
+            + "\tpublic int getFoo1() {\n"
+            + "\t\treturn mFoo1;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic String getFoo2() {\n"
+            + "\t\treturn mFoo2;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic int isBar1() {\n"
+            + "\t\treturn mBar1;\n"
+            + "\t}\n"
+            + "\n"
+            + "\t// Not \"plain\" getters:\n"
+            + "\n"
+            + "\tpublic String getFoo3() {\n"
+            + "\t\t// NOT a plain getter\n"
+            + "\t\tif (mFoo2 == null) {\n"
+            + "\t\t\tmFoo2 = \"\";\n"
+            + "\t\t}\n"
+            + "\t\treturn mFoo2;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic int getFoo4() {\n"
+            + "\t\t// NOT a plain getter (using static)\n"
+            + "\t\treturn sFoo4;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic int getFoo5(int x) {\n"
+            + "\t\t// NOT a plain getter (has extra argument)\n"
+            + "\t\treturn sFoo4;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic int isBar2(String s) {\n"
+            + "\t\t// NOT a plain getter (has extra argument)\n"
+            + "\t\treturn mFoo1;\n"
+            + "\t}\n"
+            + "\n"
+            + "\tpublic void test() {\n"
+            + "\t\tgetFoo1();\n"
+            + "\t\tgetFoo2();\n"
+            + "\t\tgetFoo3();\n"
+            + "\t\tgetFoo4();\n"
+            + "\t\tgetFoo5(42);\n"
+            + "\t\tisBar1();\n"
+            + "\t\tisBar2(\"foo\");\n"
+            + "\t\tthis.getFoo1();\n"
+            + "\t\tthis.getFoo2();\n"
+            + "\t\tthis.getFoo3();\n"
+            + "\t\tthis.getFoo4();\n"
+            + "\t}\n"
+            + "}\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mGetterTest2 = base64gzip("bin/classes.jar", ""
+            + "H4sIAAAAAAAAAAvwZmYRYeAAQoFoOwcGJMDJwMLg6xriqOvp56b/7xQDAzND"
+            + "gDc7B0iKCaokAKdmESCGa/Z19PN0cw0O0fN1++x75rSPt67eRV5vXa1zZ85v"
+            + "DjK4YvzgaZGel6+Op+/F0lUsnDNeSh6RjtTKsBATebJEq+KZ6uvMT0UfixjB"
+            + "tk83XmlkAzTbBmo7F8Q6NNtZgbgktbhEH7cSPpiSpMqS1OT8lFR9hGfQ1cph"
+            + "qHVPLSlJLQoBiukl5yQWF5cGxeYLOYrYMuf8LODq2LJty62krYdWLV16wak7"
+            + "d5EnL+dVdp/KuIKja3WzE7K/5P+wrglYbPrxYLhw/ZSP9xJ3q26onbmz+L3t"
+            + "83mWxvX///7iXdDx14CJqbjPsoDrbX/fzY3xM1vTlz2e8Xf6FG5llQk2Zvek"
+            + "W4UXX9fdkyE/W9bdwdp2w1texsDyx4scVhXevF7yK2z97tNH1d3mS21lNJ3K"
+            + "siwr7HzRN5amnX8mOrzQPNut2NFyxNSj0eXwq5nnz/vdNrmfMX+GT3Z5z2Tl"
+            + "xfkfb/q2zTG/5qBweYeXRS9fuW/6iklpVxcL7NBcmHhq9YRnJXr2K2dFi6sc"
+            + "6pgQl31A/MGV3M4XHFXGTWsYni6f3XexsjpjT/HWnV+Fkt95HnEzSA2at/r5"
+            + "SZOPD5tmh5x5oua6Yhnj/Sl5wsqrTDtN0iyips84bOPu2rk0MWRShGTYdpWw"
+            + "wvmLu44opSndUGSPu222PEuo8gXTxmW1197PYBfj9ou5te2Y1YSl5xRq+wWY"
+            + "ciRcGcuc3waW9n3cmvHc+tLujdwlWhf8pjlcrlf6F7pVPXNu0EmFdZe12nk9"
+            + "HrLdsNl1ieWHdZp9f2PyvoSig+xzfhqx9f1uEq9Vvy81f84nVv3Kyfwro79+"
+            + "fGLf8WrlU/kTMSc4tJbtKCqeZ3NGIK2wxfCp0b3AvUmzJmnPW2caHv5C+l3f"
+            + "6VN9E1psIr980NvmVP2A682qQ+f4XutNWzxnFfc/RT3vq6kfayezK5vMcl8c"
+            + "aLcoQ67q/6PJrwN97Y8vFtNljTOruJnz0vPWKZn87V9Cvsrs1t2/7fT7EJW4"
+            + "OhPe11/0zSYs8JGaHeHAeVpjMmu0SfVsLdGuVTeOnuuIND2/5nhX4Xt7UEY4"
+            + "ZPg5Pw+YD7lZQRmBkUmEATUjwrIoKBejApQ8ja4VOX+JoGizxZGjQSZwMeDO"
+            + "hwiwG5ErcWvhQ9FyD0suRTgYpBc5HORQ9HIxEsq1Ad6sbBBnsjJYAFUfYQbx"
+            + "AFJZ3LASBQAA");
 }

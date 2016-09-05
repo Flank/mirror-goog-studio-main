@@ -26,18 +26,43 @@ public class HardcodedDebugModeDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(
-            "AndroidManifest.xml:10: Error: Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one [HardcodedDebugMode]\n" +
-            "        android:debuggable=\"true\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n" +
-            "",
-            lintProject("debuggable.xml=>AndroidManifest.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "AndroidManifest.xml:10: Error: Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one [HardcodedDebugMode]\n"
+                + "        android:debuggable=\"true\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+            lintProject(xml("AndroidManifest.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    package=\"foo.bar2\"\n"
+                            + "    android:versionCode=\"1\"\n"
+                            + "    android:versionName=\"1.0\" >\n"
+                            + "\n"
+                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                            + "\n"
+                            + "    <application\n"
+                            + "        android:debuggable=\"true\"\n"
+                            + "        android:icon=\"@drawable/ic_launcher\"\n"
+                            + "        android:label=\"@string/app_name\" >\n"
+                            + "        <activity\n"
+                            + "            android:label=\"@string/app_name\"\n"
+                            + "            android:name=\".Foo2Activity\" >\n"
+                            + "            <intent-filter >\n"
+                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                            + "\n"
+                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                            + "            </intent-filter>\n"
+                            + "        </activity>\n"
+                            + "    </application>\n"
+                            + "\n"
+                            + "</manifest>\n")));
     }
 
     public void testOk() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
-                lintProject("AndroidManifest.xml"));
+                lintProject(manifest().minSdk(14)));
     }
 }

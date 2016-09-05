@@ -51,7 +51,6 @@ public class BadHostnameVerifierDetectorTest extends AbstractCheckTest {
                                 + "    </application>\n"
                                 + "\n"
                                 + "</manifest>\n"),
-                        copy("res/values/strings.xml"),
                         java("src/test/pkg/InsecureHostnameVerifier.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"
@@ -155,7 +154,6 @@ public class BadHostnameVerifierDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        copy("res/values/strings.xml"),
                         java("src/test/pkg/ExampleHostnameVerifier.java", ""
                                 + "package test.pkg;\n"
                                         + "\n"

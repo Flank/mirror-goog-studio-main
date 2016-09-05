@@ -26,15 +26,14 @@ public class TrustAllX509TrustManagerDetectorTest extends AbstractCheckTest {
     }
 
     public void testBroken() throws Exception {
-        assertEquals(
-            "src/test/pkg/InsecureTLSIntentService.java:22: Warning: checkClientTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]\n" +
-            "        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {\n" +
-            "                    ~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/InsecureTLSIntentService.java:26: Warning: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]\n" +
-            "        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws CertificateException {\n" +
-            "                    ~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 2 warnings\n" +
-            "",
+        assertEquals(""
+                + "src/test/pkg/InsecureTLSIntentService.java:22: Warning: checkClientTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]\n"
+                + "        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {\n"
+                + "                    ~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/InsecureTLSIntentService.java:26: Warning: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]\n"
+                + "        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws CertificateException {\n"
+                + "                    ~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
             lintProject(
                     xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

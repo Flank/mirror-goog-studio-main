@@ -32,7 +32,7 @@ import java.util.List;
 public abstract class AbstractCheckTest extends LintDetectorTest {
     @Override
     protected List<Issue> getIssues() {
-        List<Issue> issues = new ArrayList<Issue>();
+        List<Issue> issues = new ArrayList<>();
         Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
         // Get the list of issues from the registry and filter out others, to make sure
         // issues are properly registered

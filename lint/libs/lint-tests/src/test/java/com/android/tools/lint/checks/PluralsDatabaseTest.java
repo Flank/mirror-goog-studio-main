@@ -98,7 +98,7 @@ public class PluralsDatabaseTest extends TestCase {
      * dump out updated data structures for the database.
      */
     public void testDatabaseAccurate() {
-        List<String> languages = new ArrayList<String>(LocaleManager.getLanguageCodes());
+        List<String> languages = new ArrayList<>(LocaleManager.getLanguageCodes());
         Collections.sort(languages);
         PluralsTextDatabase db = PluralsTextDatabase.get();
         db.ensureInitialized();
@@ -140,7 +140,7 @@ public class PluralsDatabaseTest extends TestCase {
     }
 
     private static void dumpDatabaseTables() {
-        List<String> languages = new ArrayList<String>(LocaleManager.getLanguageCodes());
+        List<String> languages = new ArrayList<>(LocaleManager.getLanguageCodes());
         Collections.sort(languages);
         PluralsTextDatabase db = PluralsTextDatabase.get();
         db.ensureInitialized();
@@ -358,7 +358,7 @@ public class PluralsDatabaseTest extends TestCase {
             Map<String, Integer> indices,
             Map<String, String> setsWithExamples) {
 
-        List<String> sorted = new ArrayList<String>(setsWithExamples.keySet());
+        List<String> sorted = new ArrayList<>(setsWithExamples.keySet());
         Collections.sort(sorted);
 
         StringBuilder sb = new StringBuilder();

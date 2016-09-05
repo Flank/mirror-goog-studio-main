@@ -38,16 +38,18 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
 
     /** Check that vulnerable versions in cordova.js are flagged*/
     public void testVulnerableCordovaVersionInJS() throws Exception {
-        assertEquals("assets/www/cordova.js: Warning: You are using a vulnerable version of Cordova: 3.7.1 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "assets/www/cordova.js: Warning: You are using a vulnerable version of Cordova: 3.7.1 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(source("assets/www/cordova.js", ""
                         + ";(function() {\n"
                         + "var CORDOVA_JS_BUILD_LABEL = '3.7.1-dev';\n"
                         + "})();\n")
                 ));
 
-        assertEquals("assets/www/cordova.js: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "assets/www/cordova.js: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(source("assets/www/cordova.js", ""
                         + ";(function() {\n"
                         + "var PLATFORM_VERSION_BUILD_LABEL = '4.0.0';\n"
@@ -57,8 +59,9 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
 
     /** Test to ensure that cordova.js.X.X.android is also detected. */
     public void testVulnerableCordovaVersionInJS2() throws Exception {
-        assertEquals("assets/www/cordova.js.4.0.android: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "assets/www/cordova.js.4.0.android: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(source("assets/www/cordova.js.4.0.android", ""
                         + ";(function() {\n"
                         + "var CORDOVA_JS_BUILD_LABEL = '4.0.0';"
@@ -68,12 +71,17 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
 
     /** Check whether the detector picks up the version from the Device class. */
     public void testVulnerableCordovaVersionInClasses() throws Exception {
-        assertEquals("bin/classes/org/apache/cordova/Device.class: Warning: You are using a vulnerable version of Cordova: 2.7.0 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "bin/classes/org/apache/cordova/Device.class: Warning: You are using a vulnerable version of Cordova: 2.7.0 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath",".classpath"),
-                        copy("bytecode/Device.class.data",
-                                "bin/classes/org/apache/cordova/Device.class")
+                        base64gzip("bin/classes/org/apache/cordova/Device.class", ""
+                                + "H4sIAAAAAAAAAF2PvU7DQBCEZxP/xyTB0FCARAcUNkpDQUQDooqgCEp/vpzM"
+                                + "RcaHDsfvFVEgUfAAPBRibSKQaGb35r4d7X5+vX8AmGA/gotRgHEIB7s+Eh97"
+                                + "hKE0dmkasVD2RZuKkMxWohFZKaoim9dWV8UlwZvqStdXhP7J6YLgXJulIoxm"
+                                + "ulJ366dc2QeRl+wEU1luyWhu1laqW936gxvVaKnSNjpGgJDgTtKL9DyGB59w"
+                                + "YGyRiWchH1W2XSj7GSGM//a5z1dK1jjmA1y+iRC249z1uOdU1ohfh1yJq3v2"
+                                + "Btp04IDV60yHwfgXPeo8/kt6r+j/Z13WnS5++A0madraRwEAAA==")
                 ));
     }
 
@@ -83,12 +91,17 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
      * declared only in the JS.
      */
     public void testVulnerableVersionInBothJsAndClasses() throws Exception {
-        assertEquals("bin/classes/org/apache/cordova/Device.class: Warning: You are using a vulnerable version of Cordova: 2.7.0 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "bin/classes/org/apache/cordova/Device.class: Warning: You are using a vulnerable version of Cordova: 2.7.0 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath",".classpath"),
-                        copy("bytecode/Device.class.data",
-                                "bin/classes/org/apache/cordova/Device.class"),
+                        base64gzip("bin/classes/org/apache/cordova/Device.class", ""
+                                + "H4sIAAAAAAAAAF2PvU7DQBCEZxP/xyTB0FCARAcUNkpDQUQDooqgCEp/vpzM"
+                                + "RcaHDsfvFVEgUfAAPBRibSKQaGb35r4d7X5+vX8AmGA/gotRgHEIB7s+Eh97"
+                                + "hKE0dmkasVD2RZuKkMxWohFZKaoim9dWV8UlwZvqStdXhP7J6YLgXJulIoxm"
+                                + "ulJ366dc2QeRl+wEU1luyWhu1laqW936gxvVaKnSNjpGgJDgTtKL9DyGB59w"
+                                + "YGyRiWchH1W2XSj7GSGM//a5z1dK1jjmA1y+iRC249z1uOdU1ohfh1yJq3v2"
+                                + "Btp04IDV60yHwfgXPeo8/kt6r+j/Z13WnS5++A0madraRwEAAA=="),
                         source("assets/www/cordova.js.4.0.android", ""
                                 + ";(function() {\n"
                                 + "var CORDOVA_JS_BUILD_LABEL = '4.0.1';\n"
@@ -99,12 +112,18 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
 
     /** Ensure that the version string is read from the CordovaWebView.class. */
     public void testVulnerableVersionInWebView() throws Exception {
-        assertEquals("bin/classes/org/apache/cordova/CordovaWebView.class: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
-                        + "0 errors, 1 warnings\n",
+        assertEquals(""
+                + "bin/classes/org/apache/cordova/CordovaWebView.class: Warning: You are using a vulnerable version of Cordova: 4.0.0 [VulnerableCordovaVersion]\n"
+                + "0 errors, 1 warnings\n",
                 lintProject(
-                        copy("bytecode/.classpath",".classpath"),
-                        copy("bytecode/CordovaWebView.class.data",
-                                "bin/classes/org/apache/cordova/CordovaWebView.class")));
+                        base64gzip("bin/classes/org/apache/cordova/CordovaWebView.class", ""
+                                + "yv66vgAAADIAEgoAAwAOBwAPBwAQAQAPQ09SRE9WQV9WRVJTSU9OAQASTGph\n"
+                                + "dmEvbGFuZy9TdHJpbmc7AQANQ29uc3RhbnRWYWx1ZQgAEQEABjxpbml0PgEA\n"
+                                + "AygpVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBAApTb3VyY2VGaWxlAQAT\n"
+                                + "Q29yZG92YVdlYlZpZXcuamF2YQwACAAJAQAhb3JnL2FwYWNoZS9jb3Jkb3Zh\n"
+                                + "L0NvcmRvdmFXZWJWaWV3AQAQamF2YS9sYW5nL09iamVjdAEABTQuMC4wACEA\n"
+                                + "AgADAAAAAQAZAAQABQABAAYAAAACAAcAAQABAAgACQABAAoAAAAdAAEAAQAA\n"
+                                + "AAUqtwABsQAAAAEACwAAAAYAAQAAAAMAAQAMAAAAAgAN")));
 
     }
 }

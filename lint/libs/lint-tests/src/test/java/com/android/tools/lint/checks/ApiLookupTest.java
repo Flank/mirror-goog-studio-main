@@ -201,7 +201,7 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     private File mCacheDir;
     @SuppressWarnings("StringBufferField")
-    private StringBuilder mLogBuffer = new StringBuilder();
+    private final StringBuilder mLogBuffer = new StringBuilder();
 
     @SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed",
             "ResultOfMethodCallIgnored"})

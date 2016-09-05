@@ -34,29 +34,29 @@ public class SslCertificateSocketFactoryDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
     public void test() throws Exception {
-        assertEquals(
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:21: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet, 80);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:22: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet4, 80);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:23: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet6, 80);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:24: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet, 80, inet, 2000);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:25: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet4, 80, inet, 2000);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:26: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n" +
-                "        sf.createSocket(inet6, 80, inet, 2000);\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/SSLCertificateSocketFactoryTest.java:29: Warning: Use of SSLCertificateSocketFactory.getInsecure() can cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryGetInsecure]\n" +
-                "                SSLCertificateSocketFactory.getInsecure(-1,null));\n" +
-                "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 7 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:21: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet, 80);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:22: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet4, 80);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:23: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet6, 80);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:24: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet, 80, inet, 2000);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:25: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet4, 80, inet, 2000);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:26: Warning: Use of SSLCertificateSocketFactory.createSocket() with an InetAddress parameter can cause insecure network traffic due to trusting arbitrary hostnames in TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryCreateSocket]\n"
+                + "        sf.createSocket(inet6, 80, inet, 2000);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/SSLCertificateSocketFactoryTest.java:29: Warning: Use of SSLCertificateSocketFactory.getInsecure() can cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [SSLCertificateSocketFactoryGetInsecure]\n"
+                + "                SSLCertificateSocketFactory.getInsecure(-1,null));\n"
+                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 7 warnings\n",
                 lintProject(java("src/test/pkg/SSLCertificateSocketFactoryTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"

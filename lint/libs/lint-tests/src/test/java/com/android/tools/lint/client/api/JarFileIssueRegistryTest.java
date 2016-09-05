@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.client.api.CustomRuleTest.LINT_JAR_BASE64_GZIP;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
@@ -41,8 +43,8 @@ public class JarFileIssueRegistryTest extends AbstractCheckTest {
 
     public void testCached() throws Exception {
         File targetDir = TestUtils.createTempDirDeletedOnExit();
-        File file1 = getTestfile(targetDir, "rules/appcompat.jar.data");
-        File file2 = getTestfile(targetDir, "apicheck/unsupported.jar.data");
+        File file1 = base64gzip("lint.jar", LINT_JAR_BASE64_GZIP).createFile(targetDir);
+        File file2 = jar("unsupported.jar").createFile(targetDir);
         assertTrue(file1.getPath(), file1.exists());
         final StringWriter mLoggedWarnings = new StringWriter();
         TestLintClient client = new TestLintClient() {

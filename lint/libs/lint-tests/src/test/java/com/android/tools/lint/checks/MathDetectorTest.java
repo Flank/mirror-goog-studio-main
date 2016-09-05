@@ -22,7 +22,7 @@ import com.android.tools.lint.detector.api.Detector;
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class MathDetectorTest extends AbstractCheckTest {
 
-    private TestFile mTestFile = java("src/test/bytecode/MathTest.java", ""
+    private final TestFile mTestFile = java("src/test/bytecode/MathTest.java", ""
             + "package test.bytecode;\n"
             + "\n"
             + "import android.util.FloatMath;\n"
@@ -101,7 +101,7 @@ public class MathDetectorTest extends AbstractCheckTest {
             lintProject(
                     mTestFile,
                     projectProperties().compileSdk(compileSdkVersion),
-                    copy("apicheck/minsdk14.xml", "AndroidManifest.xml")));
+                    manifest().minSdk(14)));
     }
 
     public void testNoWarningsPreFroyo() throws Exception {
@@ -114,7 +114,7 @@ public class MathDetectorTest extends AbstractCheckTest {
 
             lintProject(mTestFile,
                     projectProperties().compileSdk(compileSdkVersion),
-                    copy("apicheck/minsdk2.xml", "AndroidManifest.xml")));
+                    manifest().minSdk(2)));
     }
 
 }

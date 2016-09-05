@@ -139,10 +139,10 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
 
     public void testSrcCompat_incremental() throws Exception {
         assertEquals(""
-                        + "res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
-                        + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
-                        + "               ~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
+                + "res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
+                + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
+                + "               ~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
                 lintProjectIncrementally(
                         "res/layout/main_activity.xml",
                         xml("res/drawable/foo.xml", VECTOR),

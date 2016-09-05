@@ -26,14 +26,14 @@ public class UnsafeNativeCodeDetectorTest extends AbstractCheckTest {
     }
 
     public void testLoad() throws Exception {
-        assertEquals(
-                "src/test/pkg/Load.java:12: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n" +
-                "            Runtime.getRuntime().load(\"/data/data/test.pkg/files/libhello.so\");\n" +
-                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "src/test/pkg/Load.java:14: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n" +
-                "            System.load(\"/data/data/test.pkg/files/libhello.so\");\n" +
-                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 2 warnings\n",
+        assertEquals(""
+                + "src/test/pkg/Load.java:12: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n"
+                + "            Runtime.getRuntime().load(\"/data/data/test.pkg/files/libhello.so\");\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/Load.java:14: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n"
+                + "            System.load(\"/data/data/test.pkg/files/libhello.so\");\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
                 lintProject(java("src/test/pkg/Load.java", ""
                         + "package test.pkg;\n"
                         + "\n"
@@ -59,6 +59,7 @@ public class UnsafeNativeCodeDetectorTest extends AbstractCheckTest {
     }
 
     public void testNativeCode() throws Exception {
+        byte[] dummyBytesWithElfHeader = {(byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46, 0};
         assertEquals(""
                 + "assets/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
                 + "res/raw/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
@@ -66,15 +67,17 @@ public class UnsafeNativeCodeDetectorTest extends AbstractCheckTest {
                 + "res/raw/libhello-jni.so: Warning: Shared libraries should not be placed in the res or assets directories. Please use the features of your development environment to place shared libraries in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
                 + "0 errors, 4 warnings\n",
                lintProject(
-                       copy("res/raw/hello"),
-                       copy("res/raw/libhello-jni.so"),
-                       copy("res/raw/hello", "assets/hello"),
-                       copy("res/raw/libhello-jni.so", "assets/libhello-jni.so"),
-                       copy("lib/armeabi/hello"),
-                       copy("lib/armeabi/libhello-jni.so")));
+                       bytes("res/raw/hello", dummyBytesWithElfHeader),
+                       bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
+                       bytes("assets/hello", dummyBytesWithElfHeader),
+                       bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
+                       bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
+                       bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)));
     }
 
     public void testNoWorkInInteractiveMode() throws Exception {
+        byte[] dummyBytesWithElfHeader = {(byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46, 0};
+
         // Make sure we don't scan through all resource folders when just incrementally
         // editing a Java file
         assertEquals(
@@ -84,11 +87,12 @@ public class UnsafeNativeCodeDetectorTest extends AbstractCheckTest {
                         java("src/test/pkg/Load.java", ""
                                 + "package test.pkg;\n"
                                 + "public class Load { }\n"),
-                        copy("res/raw/hello"),
-                        copy("res/raw/libhello-jni.so"),
-                        copy("res/raw/hello", "assets/hello"),
-                        copy("res/raw/libhello-jni.so", "assets/libhello-jni.so"),
-                        copy("lib/armeabi/hello"),
-                        copy("lib/armeabi/libhello-jni.so")));
+
+                        bytes("res/raw/hello", dummyBytesWithElfHeader),
+                        bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
+                        bytes("assets/hello", dummyBytesWithElfHeader),
+                        bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
+                        bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
+                        bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)));
     }
 }

@@ -76,6 +76,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.junit.Assert;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -237,72 +238,134 @@ public class GradleDetectorTest extends AbstractCheckTest {
     public void test() throws Exception {
         mEnabled = Sets.newHashSet(COMPATIBILITY, DEPRECATED, DEPENDENCY, PLUS);
         assertEquals(""
-            + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
-            + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:1: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
-            + "apply plugin: 'android'\n"
-            + "~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
-            + "    buildToolsVersion \"19.0.0\"\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 18.0 [GradleDependency]\n"
-            + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
-            + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n"
-            + "    compile 'com.google.android.support:wearable:1.2.0'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:27: Warning: A newer version of com.android.support:multidex than 1.0.0 is available: 1.0.1 [GradleDependency]\n"
-            + "    compile 'com.android.support:multidex:1.0.0'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n"
-            + "    androidTestCompile 'com.android.support.test:runner:0.3'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
-            + "    compile 'com.android.support:appcompat-v7:+'\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "1 errors, 8 warnings\n",
+                + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
+                + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:1: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
+                + "apply plugin: 'android'\n"
+                + "~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
+                + "    buildToolsVersion \"19.0.0\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 18.0 [GradleDependency]\n"
+                + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
+                + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n"
+                + "    compile 'com.google.android.support:wearable:1.2.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:27: Warning: A newer version of com.android.support:multidex than 1.0.0 is available: 1.0.1 [GradleDependency]\n"
+                + "    compile 'com.android.support:multidex:1.0.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n"
+                + "    androidTestCompile 'com.android.support.test:runner:0.3'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
+                + "    compile 'com.android.support:appcompat-v7:+'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 8 warnings\n",
 
-            lintProject("gradle/Dependencies.gradle=>build.gradle"));
+            lintProject(mDependencies));
     }
 
     public void testCompatibility() throws Exception {
         mEnabled = Collections.singleton(COMPATIBILITY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:16: Error: This support library should not use a lower version (18) than the targetSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:support-v4:18.0.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
 
-                lintProject("gradle/Compatibility.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 18\n"
+                            + "    buildToolsVersion \"19.0.0\"\n"
+                            + "\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion 7\n"
+                            + "        targetSdkVersion 19\n"
+                            + "        versionCode 1\n"
+                            + "        versionName \"1.0\"\n"
+                            + "    }\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.android.support:support-v4:18.0.0'\n"
+                            + "    compile 'com.android.support.test:espresso:0.2'\n"
+                            + "    compile 'com.android.support:multidex:1.0.1'\n"
+                            + "    compile 'com.android.support:multidex-instrumentation:1.0.1'\n"
+                            + "\n"
+                            + "    // Suppressed:\n"
+                            + "    //noinspection GradleCompatible\n"
+                            + "    compile 'com.android.support:support-v4:18.0.0'\n"
+                            + "}\n")));
     }
 
     public void testIncompatiblePlugin() throws Exception {
         mEnabled = Collections.singleton(GRADLE_PLUGIN_COMPATIBILITY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
                 + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
 
-                lintProject("gradle/IncompatiblePlugin.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "buildscript {\n"
+                            + "  repositories {\n"
+                            + "    mavenCentral()\n"
+                            + "  }\n"
+                            + "  dependencies {\n"
+                            + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
+                            + "  }\n"
+                            + "}\n"
+                            + "\n"
+                            + "allprojects {\n"
+                            + "  repositories {\n"
+                            + "    mavenCentral()\n"
+                            + "  }\n"
+                            + "}\n")));
     }
 
     public void testSetter() throws Exception {
         mEnabled = Collections.singleton(GRADLE_GETTER);
+        //noinspection all // Sample code
         assertEquals(""
-                        + "build.gradle:18: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
-                        + "        versionCode getVersionCode\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "build.gradle:19: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
-                        + "        versionName getVersionName\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n",
+                + "build.gradle:18: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
+                + "        versionCode getVersionCode\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:19: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
+                + "        versionName getVersionName\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "2 errors, 0 warnings\n",
 
-                lintProject("gradle/Setter.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "def getVersionName() {\n"
+                            + "    \"1.0\"\n"
+                            + "}\n"
+                            + "\n"
+                            + "def getVersionCode() {\n"
+                            + "    50\n"
+                            + "}\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "    buildToolsVersion \"19.0.0\"\n"
+                            + "\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion 7\n"
+                            + "        targetSdkVersion 17\n"
+                            + "        versionCode getVersionCode\n"
+                            + "        versionName getVersionName\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testDependencies() throws Exception {
@@ -328,76 +391,150 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 6 warnings\n",
 
-                lintProject("gradle/Dependencies.gradle=>build.gradle"));
+                lintProject(mDependencies));
     }
 
     public void testLongHandDependencies() throws Exception {
         mEnabled = Collections.singleton(DEPENDENCY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:9: Warning: A newer version of com.android.support:support-v4 than 19.0 is available: 21.0.2 [GradleDependency]\n"
                 + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/DependenciesProps.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "    buildToolsVersion \"19.1\"\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
+                            + "}\n")));
     }
 
     public void testDependenciesMinSdkVersion() throws Exception {
         mEnabled = Collections.singleton(DEPENDENCY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/Dependencies14.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion 15\n"
+                            + "        targetSdkVersion 17\n"
+                            + "    }\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.android.support:appcompat-v7:+'\n"
+                            + "}\n")));
     }
 
     public void testDependenciesMinSdkVersionLollipop() throws Exception {
         mEnabled = Collections.singleton(DEPENDENCY);
+        //noinspection all // Sample code
         assertEquals("No warnings.",
-                lintProject("gradle/Dependencies14_21.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 21\n"
+                            + "\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion 15\n"
+                            + "        targetSdkVersion 17\n"
+                            + "    }\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.android.support:appcompat-v7:+'\n"
+                            + "}\n")));
     }
 
     public void testDependenciesNoMicroVersion() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=77594
         mEnabled = Collections.singleton(DEPENDENCY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.4 [GradleDependency]\n"
                 + "    compile 'com.google.code.gson:gson:2.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/DependenciesGson.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion 15\n"
+                            + "        targetSdkVersion 17\n"
+                            + "    }\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.google.code.gson:gson:2.2'\n"
+                            + "}\n")));
     }
 
     public void testPaths() throws Exception {
         mEnabled = Collections.singleton(PATH);
+        //noinspection all // Sample code
         assertEquals(""
-                        + "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n"
-                        + "    compile files('my\\\\libs\\\\http.jar')\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "build.gradle:5: Warning: Avoid using absolute paths in .gradle files [GradlePath]\n"
-                        + "    compile files('/libs/android-support-v4.jar')\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
+                + "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n"
+                + "    compile files('my\\\\libs\\\\http.jar')\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:5: Warning: Avoid using absolute paths in .gradle files [GradlePath]\n"
+                + "    compile files('/libs/android-support-v4.jar')\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
 
-                lintProject("gradle/Paths.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile files('my\\\\libs\\\\http.jar')\n"
+                            + "    compile files('/libs/android-support-v4.jar')\n"
+                            + "}\n")));
     }
 
     public void testIdSuffix() throws Exception {
         mEnabled = Collections.singleton(PATH);
+        //noinspection all // Sample code
         assertEquals(""
-                        + "build.gradle:6: Warning: Application ID suffix should probably start with a \".\" [GradlePath]\n"
-                        + "            applicationIdSuffix \"debug\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+                + "build.gradle:6: Warning: Application ID suffix should probably start with a \".\" [GradlePath]\n"
+                + "            applicationIdSuffix \"debug\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/IdSuffix.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    buildTypes {\n"
+                            + "        debug {\n"
+                            + "            applicationIdSuffix \"debug\"\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testPackage() throws Exception {
         mEnabled = Collections.singleton(DEPRECATED);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:5: Warning: Deprecated: Replace 'packageName' with 'applicationId' [GradleDeprecated]\n"
                 + "        packageName 'my.pkg'\n"
@@ -407,11 +544,24 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 2 warnings\n",
 
-                lintProject("gradle/Package.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    defaultConfig {\n"
+                            + "        packageName 'my.pkg'\n"
+                            + "    }\n"
+                            + "    buildTypes {\n"
+                            + "        debug {\n"
+                            + "            packageNameSuffix \".debug\"\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testPlus() throws Exception {
         mEnabled = Collections.singleton(PLUS);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:9: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
@@ -425,56 +575,102 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "0 errors, 3 warnings\n",
 
 
-                lintProject("gradle/Plus.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "    buildToolsVersion \"19.0.1\"\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.android.support:appcompat-v7:+'\n"
+                            + "    compile group: 'com.android.support', name: 'support-v4', version: '21.0.+'\n"
+                            + "    compile 'com.android.support:appcompat-v7:+@aar'\n"
+                            + "}\n")));
     }
 
     public void testStringInt() throws Exception {
         mEnabled = Collections.singleton(STRING_INTEGER);
+        //noinspection all // Sample code
         assertEquals(""
-                        + "build.gradle:4: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n"
-                        + "    compileSdkVersion '19'\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "build.gradle:7: Error: Use an integer rather than a string here (replace '8' with just 8) [StringShouldBeInt]\n"
-                        + "        minSdkVersion '8'\n"
-                        + "        ~~~~~~~~~~~~~~~~~\n"
-                        + "build.gradle:8: Error: Use an integer rather than a string here (replace '16' with just 16) [StringShouldBeInt]\n"
-                        + "        targetSdkVersion '16'\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n",
+                + "build.gradle:4: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n"
+                + "    compileSdkVersion '19'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:7: Error: Use an integer rather than a string here (replace '8' with just 8) [StringShouldBeInt]\n"
+                + "        minSdkVersion '8'\n"
+                + "        ~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:8: Error: Use an integer rather than a string here (replace '16' with just 16) [StringShouldBeInt]\n"
+                + "        targetSdkVersion '16'\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~\n"
+                + "3 errors, 0 warnings\n",
 
-                lintProject("gradle/StringInt.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion '19'\n"
+                            + "    buildToolsVersion \"19.0.1\"\n"
+                            + "    defaultConfig {\n"
+                            + "        minSdkVersion '8'\n"
+                            + "        targetSdkVersion '16'\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testSuppressLine2() throws Exception {
         mEnabled = null;
+        //noinspection all // Sample code
         assertEquals("No warnings.",
 
-                lintProject("gradle/SuppressLine2.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "//noinspection GradleDeprecated\n"
+                            + "apply plugin: 'android'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "}\n")));
     }
 
     public void testDeprecatedPluginId() throws Exception {
         mEnabled = Sets.newHashSet(DEPRECATED);
+        //noinspection all // Sample code
         assertEquals(""
-                        + "build.gradle:4: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
-                        + "apply plugin: 'android'\n"
-                        + "~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "build.gradle:5: Warning: 'android-library' is deprecated; use 'com.android.library' instead [GradleDeprecated]\n"
-                        + "apply plugin: 'android-library'\n"
-                        + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
+                + "build.gradle:4: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
+                + "apply plugin: 'android'\n"
+                + "~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:5: Warning: 'android-library' is deprecated; use 'com.android.library' instead [GradleDeprecated]\n"
+                + "apply plugin: 'android-library'\n"
+                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
 
-                lintProject("gradle/DeprecatedPluginId.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "apply plugin: 'com.android.library'\n"
+                            + "apply plugin: 'java'\n"
+                            + "apply plugin: 'android'\n"
+                            + "apply plugin: 'android-library'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "}\n")));
     }
 
     public void testIgnoresGStringsInDependencies() throws Exception {
         mEnabled = null;
+        //noinspection all // Sample code
         assertEquals("No warnings.",
 
-                lintProject("gradle/IgnoresGStringsInDependencies.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "buildscript {\n"
+                            + "  ext.androidGradleVersion = '0.11.0'\n"
+                            + "  dependencies {\n"
+                            + "    classpath \"com.android.tools.build:gradle:$androidGradleVersion\"\n"
+                            + "  }\n"
+                            + "}\n")));
     }
 
     public void testAccidentalOctal() throws Exception {
         mEnabled = Collections.singleton(ACCIDENTAL_OCTAL);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:13: Error: The leading 0 turns this number into octal which is probably not what was intended (interpreted as 8) [AccidentalOctal]\n"
                 + "        versionCode 010\n"
@@ -484,18 +680,43 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n",
 
-                lintProject("gradle/AccidentalOctal.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    defaultConfig {\n"
+                            + "        // Ok: not octal\n"
+                            + "        versionCode 1\n"
+                            + "        versionCode 10\n"
+                            + "        versionCode 100\n"
+                            + "        // ok: octal == decimal\n"
+                            + "        versionCode 01\n"
+                            + "\n"
+                            + "        // Errors\n"
+                            + "        versionCode 010\n"
+                            + "\n"
+                            + "        // Lint Groovy Bug:\n"
+                            + "        versionCode 01 // line suffix comments are not handled correctly\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testBadPlayServicesVersion() throws Exception {
         mEnabled = Collections.singleton(COMPATIBILITY);
+        //noinspection all // Sample code
         assertEquals(""
                 + "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 6.1.71 instead. [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
 
-                lintProject("gradle/PlayServices.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'android'\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.google.android.gms:play-services:4.4.+'\n"
+                            + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
+                            + "}\n")));
     }
 
     public void testRemoteVersions() throws Exception {
@@ -508,16 +729,28 @@ public class GradleDetectorTest extends AbstractCheckTest {
             data.put("http://search.maven.org/solrsearch/select?q=g:%22com.squareup.dagger%22+AND+a:%22dagger%22&core=gav&rows=1&wt=json",
                     "{\"responseHeader\":{\"status\":0,\"QTime\":1,\"params\":{\"fl\":\"id,g,a,v,p,ec,timestamp,tags\",\"sort\":\"score desc,timestamp desc,g asc,a asc,v desc\",\"indent\":\"off\",\"q\":\"g:\\\"com.squareup.dagger\\\" AND a:\\\"dagger\\\"\",\"core\":\"gav\",\"wt\":\"json\",\"rows\":\"1\",\"version\":\"2.2\"}},\"response\":{\"numFound\":5,\"start\":0,\"docs\":[{\"id\":\"com.squareup.dagger:dagger:1.2.1\",\"g\":\"com.squareup.dagger\",\"a\":\"dagger\",\"v\":\"1.2.1\",\"p\":\"jar\",\"timestamp\":1392614597000,\"tags\":[\"dependency\",\"android\",\"injector\",\"java\",\"fast\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\"-tests.jar\",\".jar\",\".pom\"]}]}}");
 
+            //noinspection all // Sample code
             assertEquals(""
-                    + "build.gradle:9: Warning: A newer version of joda-time:joda-time than 2.1 is available: 2.3 [NewerVersionAvailable]\n"
-                    + "    compile 'joda-time:joda-time:2.1'\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "build.gradle:10: Warning: A newer version of com.squareup.dagger:dagger than 1.2.0 is available: 1.2.1 [NewerVersionAvailable]\n"
-                    + "    compile 'com.squareup.dagger:dagger:1.2.0'\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "0 errors, 2 warnings\n",
+                + "build.gradle:9: Warning: A newer version of joda-time:joda-time than 2.1 is available: 2.3 [NewerVersionAvailable]\n"
+                + "    compile 'joda-time:joda-time:2.1'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:10: Warning: A newer version of com.squareup.dagger:dagger than 1.2.0 is available: 1.2.1 [NewerVersionAvailable]\n"
+                + "    compile 'com.squareup.dagger:dagger:1.2.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
 
-                    lintProject("gradle/RemoteVersions.gradle=>build.gradle"));
+                    lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "    buildToolsVersion \"19.0.0\"\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'joda-time:joda-time:2.1'\n"
+                            + "    compile 'com.squareup.dagger:dagger:1.2.0'\n"
+                            + "}\n")));
         } finally {
             GradleDetector.sMockData = null;
         }
@@ -534,16 +767,28 @@ public class GradleDetectorTest extends AbstractCheckTest {
             data.put("http://search.maven.org/solrsearch/select?q=g:%22com.google.guava%22+AND+a:%22guava%22&core=gav&wt=json",
                     "{\"responseHeader\":{\"status\":0,\"QTime\":1,\"params\":{\"fl\":\"id,g,a,v,p,ec,timestamp,tags\",\"sort\":\"score desc,timestamp desc,g asc,a asc,v desc\",\"indent\":\"off\",\"q\":\"g:\\\"com.google.guava\\\" AND a:\\\"guava\\\"\",\"core\":\"gav\",\"wt\":\"json\",\"version\":\"2.2\"}},\"response\":{\"numFound\":38,\"start\":0,\"docs\":[{\"id\":\"com.google.guava:guava:18.0-rc1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"18.0-rc1\",\"p\":\"bundle\",\"timestamp\":1407266204000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:17.0\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"17.0\",\"p\":\"bundle\",\"timestamp\":1398199666000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:17.0-rc2\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"17.0-rc2\",\"p\":\"bundle\",\"timestamp\":1397162341000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:17.0-rc1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"17.0-rc1\",\"p\":\"bundle\",\"timestamp\":1396985408000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:16.0.1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"16.0.1\",\"p\":\"bundle\",\"timestamp\":1391467528000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:16.0\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"16.0\",\"p\":\"bundle\",\"timestamp\":1389995088000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:16.0-rc1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"16.0-rc1\",\"p\":\"bundle\",\"timestamp\":1387495574000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"dependency\",\"that\",\"more\",\"utility\",\"guava\",\"javax\",\"only\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:15.0\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"15.0\",\"p\":\"bundle\",\"timestamp\":1378497169000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"inject\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"that\",\"more\",\"utility\",\"guava\",\"dependencies\",\"javax\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\",\"-cdi1.0.jar\"]},{\"id\":\"com.google.guava:guava:15.0-rc1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"15.0-rc1\",\"p\":\"bundle\",\"timestamp\":1377542588000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"inject\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"that\",\"more\",\"utility\",\"guava\",\"dependencies\",\"javax\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]},{\"id\":\"com.google.guava:guava:14.0.1\",\"g\":\"com.google.guava\",\"a\":\"guava\",\"v\":\"14.0.1\",\"p\":\"bundle\",\"timestamp\":1363305439000,\"tags\":[\"spec\",\"libraries\",\"classes\",\"google\",\"inject\",\"code\",\"expanded\",\"much\",\"include\",\"annotation\",\"that\",\"more\",\"utility\",\"guava\",\"dependencies\",\"javax\",\"core\",\"suite\",\"collections\"],\"ec\":[\"-javadoc.jar\",\"-sources.jar\",\".jar\",\"-site.jar\",\".pom\"]}]}}");
 
+            //noinspection all // Sample code
             assertEquals(""
-                    + "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 17.0 [NewerVersionAvailable]\n"
-                    + "    compile 'com.google.guava:guava:11.0.2'\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0.0-rc1 [NewerVersionAvailable]\n"
-                    + "    compile 'com.google.guava:guava:16.0-rc1'\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "0 errors, 2 warnings\n",
+                + "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 17.0 [NewerVersionAvailable]\n"
+                + "    compile 'com.google.guava:guava:11.0.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0.0-rc1 [NewerVersionAvailable]\n"
+                + "    compile 'com.google.guava:guava:16.0-rc1'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n",
 
-                    lintProject("gradle/RemoteVersions2.gradle=>build.gradle"));
+                    lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 19\n"
+                            + "    buildToolsVersion \"19.0.0\"\n"
+                            + "}\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile 'com.google.guava:guava:11.0.2'\n"
+                            + "    compile 'com.google.guava:guava:16.0-rc1'\n"
+                            + "}\n")));
         } finally {
             GradleDetector.sMockData = null;
         }
@@ -556,65 +801,86 @@ public class GradleDetectorTest extends AbstractCheckTest {
         if (!GRADLE_PLUGIN_RECOMMENDED_VERSION.startsWith("1.0.0-rc")) {
             return;
         }
+        //noinspection all // Sample code
         assertEquals(""
                         + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 1.0.0-rc0 is available: " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradleDependency]\n"
                         + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/PreviewDependencies.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "buildscript {\n"
+                            + "    repositories {\n"
+                            + "        jcenter()\n"
+                            + "    }\n"
+                            + "    dependencies {\n"
+                            + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
+                            + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
+                            + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
+                            + "    }\n"
+                            + "}\n"
+                            + "\n"
+                            + "allprojects {\n"
+                            + "    repositories {\n"
+                            + "        jcenter()\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testDependenciesInVariables() throws Exception {
         mEnabled = Collections.singleton(DEPENDENCY);
+        //noinspection all // Sample code
         assertEquals(""
-                    + "build.gradle:10: Warning: A newer version of com.google.android.gms:play-services-wearable than 5.0.77 is available: 6.1.71 [GradleDependency]\n"
-                    + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "0 errors, 1 warnings\n",
+                + "build.gradle:10: Warning: A newer version of com.google.android.gms:play-services-wearable than 5.0.77 is available: 6.1.71 [GradleDependency]\n"
+                + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
 
-                lintProject("gradle/DependenciesVariable.gradle=>build.gradle"));
+                lintProject(source("build.gradle", ""
+                            + "apply plugin: 'com.android.application'\n"
+                            + "\n"
+                            + "android {\n"
+                            + "    compileSdkVersion 21\n"
+                            + "}\n"
+                            + "\n"
+                            + "final GPS_VERSION = '5.0.77'\n"
+                            + "\n"
+                            + "dependencies {\n"
+                            + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
+                            + "}\n")));
     }
 
     public void testPlayServiceConsistency() throws Exception {
         // Requires custom model mocks
         mEnabled = Collections.singleton(COMPATIBILITY);
         assertEquals(""
-                + "build.gradle:4: Error: All com.google.android.gms libraries must use the "
-                + "exact same version specification (mixing versions can lead to runtime "
-                + "crashes). Found versions 7.5.0, 7.3.0. Examples include "
-                + "com.google.android.gms:play-services-wearable:7.5.0 and "
-                + "com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
+                + "build.gradle:4: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
 
                 lintProjectIncrementally("build.gradle",
-                        "gradle/PlayServices2.gradle=>build.gradle"));
+                        mPlayServices2));
     }
 
     public void testPlayServiceConsistencyNonIncremental() throws Exception {
         // Requires custom model mocks
         mEnabled = Collections.singleton(COMPATIBILITY);
         assertEquals(""
-                        + "build.gradle: Error: All com.google.android.gms libraries must use "
-                        + "the exact same version specification (mixing versions can lead to "
-                        + "runtime crashes). Found versions 7.5.0, 7.3.0. Examples include "
-                        + "com.google.android.gms:play-services-wearable:7.5.0 and "
-                        + "com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
-                        + "1 errors, 0 warnings\n",
+                + "build.gradle: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
+                + "1 errors, 0 warnings\n",
 
-                lintProject("gradle/PlayServices2.gradle=>build.gradle"));
+                lintProject(mPlayServices2));
     }
 
 
     public void testWrongQuotes() throws Exception {
         mEnabled = Collections.singleton(NOT_INTERPOLATED);
         assertEquals(""
-                        + "build.gradle:5: Error: It looks like you are trying to substitute a version variable, but using single quotes ('). For Groovy string interpolation you must use double quotes (\"). [NotInterpolated]\n"
-                        + "    compile 'com.android.support:design:${supportLibVersion}'\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
+                + "build.gradle:5: Error: It looks like you are trying to substitute a version variable, but using single quotes ('). For Groovy string interpolation you must use double quotes (\"). [NotInterpolated]\n"
+                + "    compile 'com.android.support:design:${supportLibVersion}'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
 
                 lintProject(source("build.gradle", ""
                         + "ext {\n"
@@ -965,7 +1231,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
             List<ASTNode> astNodes = new AstBuilder().buildFromString(source);
             GroovyCodeVisitor visitor = new CodeVisitorSupport() {
-                private List<MethodCallExpression> mMethodCallStack = Lists.newArrayList();
+                private final List<MethodCallExpression> mMethodCallStack = Lists.newArrayList();
                 @Override
                 public void visitMethodCallExpression(MethodCallExpression expression) {
                     mMethodCallStack.add(expression);
@@ -1129,4 +1395,46 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     new DefaultPosition(toLine, toColumn, offsets.getSecond()));
         }
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mDependencies = source("build.gradle", ""
+            + "apply plugin: 'android'\n"
+            + "\n"
+            + "android {\n"
+            + "    compileSdkVersion 19\n"
+            + "    buildToolsVersion \"19.0.0\"\n"
+            + "\n"
+            + "    defaultConfig {\n"
+            + "        minSdkVersion 7\n"
+            + "        targetSdkVersion 17\n"
+            + "        versionCode 1\n"
+            + "        versionName \"1.0\"\n"
+            + "    }\n"
+            + "\n"
+            + "    productFlavors {\n"
+            + "        free {\n"
+            + "        }\n"
+            + "        pro {\n"
+            + "        }\n"
+            + "    }\n"
+            + "}\n"
+            + "\n"
+            + "dependencies {\n"
+            + "    compile 'com.android.support:appcompat-v7:+'\n"
+            + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
+            + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
+            + "    compile 'com.google.android.support:wearable:1.2.0'\n"
+            + "    compile 'com.android.support:multidex:1.0.0'\n"
+            + "\n"
+            + "    androidTestCompile 'com.android.support.test:runner:0.3'\n"
+            + "}\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mPlayServices2 = source("build.gradle", ""
+            + "apply plugin: 'android'\n"
+            + "\n"
+            + "dependencies {\n"
+            + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
+            + "    compile 'com.google.android.gms:play-services-location:7.3.0'\n"
+            + "}\n");
 }

@@ -38,7 +38,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                     + "    <uses name=\"media\"/>\n"
                     + "</automotiveApp>\n");
 
-    private BaseLintDetectorTest.TestFile mValidAutoAndroidXml = xml(FN_ANDROID_MANIFEST_XML, ""
+    private final BaseLintDetectorTest.TestFile mValidAutoAndroidXml = xml(FN_ANDROID_MANIFEST_XML, ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
             + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"
@@ -70,7 +70,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</manifest>\n");
 
-    private Set<Issue> mEnabled = new HashSet<Issue>();
+    private Set<Issue> mEnabled = new HashSet<>();
 
     @Override
     protected Detector getDetector() {
@@ -192,7 +192,6 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                 + "1 errors, 0 warnings\n";
 
         String result = lintProject(
-                copy("bytecode/.classpath", ".classpath"),
                 mValidAutoAndroidXml,
                 mValidAutomotiveDescriptor,
                 java("src/com/example/android/uamp/MSessionCallback.java", ""
@@ -215,7 +214,6 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
         String expected = "No warnings.";
 
         String result = lintProject(
-                copy("bytecode/.classpath", ".classpath"),
                 mValidAutoAndroidXml,
                 mValidAutomotiveDescriptor,
                 java("src/com/example/android/uamp/MSessionCallback.java", ""

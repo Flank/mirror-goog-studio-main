@@ -26,26 +26,80 @@ public class UseCompoundDrawableDetectorTest extends AbstractCheckTest {
     }
 
     public void testCompound() throws Exception {
-        assertEquals(
-            "res/layout/compound.xml:3: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]\n" +
-            "<LinearLayout\n" +
-            "^\n" +
-            "0 errors, 1 warnings\n" +
-            "",
-            lintFiles("res/layout/compound.xml"));
+        //noinspection all // Sample code
+        assertEquals(""
+                + "res/layout/compound.xml:3: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]\n"
+                + "<LinearLayout\n"
+                + "^\n"
+                + "0 errors, 1 warnings\n",
+            lintFiles(xml("res/layout/compound.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<LinearLayout\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "    <ImageView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n")));
     }
 
     public void testCompound2() throws Exception {
         // Ignore layouts that set a custom background
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
-                lintFiles("res/layout/compound2.xml"));
+                lintFiles(xml("res/layout/compound2.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<LinearLayout\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:background=\"@android:drawable/ic_dialog_alert\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "    <ImageView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n")));
     }
 
     public void testCompound3() throws Exception {
         // Ignore layouts that set an image scale type
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
-                lintFiles("res/layout/compound3.xml"));
+                lintFiles(xml("res/layout/compound3.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<LinearLayout\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "    <ImageView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:scaleType=\"fitStart\" />\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "</LinearLayout>\n")));
     }
 }

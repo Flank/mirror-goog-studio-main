@@ -38,18 +38,43 @@ public class ProjectTest extends AbstractCheckTest {
     public void testCycle() throws Exception {
         // Ensure that a cycle in library project dependencies doesn't cause
         // infinite directory traversal
+        //noinspection all // Sample code
         File master = getProjectDir("MasterProject",
                 // Master project
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java"
+                manifest().pkg("foo.master").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject"),
+                java(""
+                            + "package foo.main;\n"
+                            + "\n"
+                            + "public class MainCode {\n"
+                            + "    static {\n"
+                            + "        System.out.println(R.string.string2);\n"
+                            + "    }\n"
+                            + "}\n")
         );
+        //noinspection all // Sample code
         File library = getProjectDir("LibraryProject",
                 // Library project
-                "multiproject/library-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties", // RECURSIVE - points to self
-                "multiproject/LibraryCode.java.txt=>src/foo/library/LibraryCode.java",
-                "multiproject/strings.xml=>res/values/strings.xml"
+                manifest().pkg("foo.library").minSdk(14),
+                projectProperties().property("android.library.reference.1", "../LibraryProject"), // RECURSIVE - points to self
+                java(""
+                            + "package foo.library;\n"
+                            + "\n"
+                            + "public class LibraryCode {\n"
+                            + "    static {\n"
+                            + "        System.out.println(R.string.string1);\n"
+                            + "    }\n"
+                            + "}\n"),
+                xml("res/values/strings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "\n"
+                            + "    <string name=\"app_name\">LibraryProject</string>\n"
+                            + "    <string name=\"string1\">String 1</string>\n"
+                            + "    <string name=\"string2\">String 2</string>\n"
+                            + "    <string name=\"string3\">String 3</string>\n"
+                            + "\n"
+                            + "</resources>\n")
         );
 
         assertEquals(""
@@ -149,10 +174,9 @@ public class ProjectTest extends AbstractCheckTest {
 
     public void testDependsOn1() throws Exception {
         File dir = getProjectDir("MyProject",
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java",
-                "bytecode/classes.jar=>libs/android-support-v4.jar"
+                projectProperties(),
+                manifest().minSdk(14),
+                jar("libs/android-support-v4.jar") // just a placeholder
         );
         TestClient client = new TestClient();
         TestProject project1 = new TestProject(client, dir);
@@ -163,10 +187,9 @@ public class ProjectTest extends AbstractCheckTest {
 
     public void testDependsOn2() throws Exception {
         File dir = getProjectDir("MyProject",
-                "multiproject/main-manifest.xml=>AndroidManifest.xml",
-                "multiproject/main.properties=>project.properties",
-                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java",
-                "bytecode/classes.jar=>libs/support-v4-13.0.0-f5279ca6f213451a9dfb870f714ce6e6.jar"
+                projectProperties(),
+                manifest().minSdk(14),
+                jar("libs/support-v4-13.0.0-f5279ca6f213451a9dfb870f714ce6e6.jar") // just a placeholder
         );
         TestClient client = new TestClient();
         TestProject project1 = new TestProject(client, dir);

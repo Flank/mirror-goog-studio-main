@@ -22,50 +22,87 @@ import com.android.tools.lint.detector.api.Detector;
 public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     public void testNotGradleProject() throws Exception {
         assertEquals("No warnings.",
-                lintProject("res/menu/showAction1.xml"));
+                lintProject(mShowAction1));
     }
 
     public void testNoAppCompat() throws Exception {
         assertEquals(""
-            + "res/menu/showAction1.xml:6: Error: Should use android:showAsAction when not using the appcompat library [AppCompatResource]\n"
-            + "        app:showAsAction=\"never\" />\n"
-            + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "1 errors, 0 warnings\n",
+                + "res/menu/showAction1.xml:6: Error: Should use android:showAsAction when not using the appcompat library [AppCompatResource]\n"
+                + "        app:showAsAction=\"never\" />\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
             lintProject(
-                    "res/menu/showAction1.xml",
-                    "multiproject/library.properties=>build.gradle")); // dummy; only name counts
+                    mShowAction1,
+                    mLibrary)); // dummy; only name counts
     }
 
     public void testCorrectAppCompat() throws Exception {
         assertEquals("No warnings.",
                 lintProject(
-                        "res/menu/showAction1.xml",
-                        "bytecode/classes.jar=>libs/appcompat-v7-18.0.0.jar",
-                        "multiproject/library.properties=>build.gradle")); // dummy; only name counts
+                        mShowAction1,
+                        mAppCompatJar,
+                        mLibrary)); // dummy; only name counts
     }
 
     public void testWrongAppCompat() throws Exception {
         assertEquals(""
-            + "res/menu/showAction2.xml:5: Error: Should use app:showAsAction with the appcompat library with xmlns:app=\"http://schemas.android.com/apk/res-auto\" [AppCompatResource]\n"
-            + "        android:showAsAction=\"never\" />\n"
-            + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "1 errors, 0 warnings\n",
+                + "res/menu/showAction2.xml:5: Error: Should use app:showAsAction with the appcompat library with xmlns:app=\"http://schemas.android.com/apk/res-auto\" [AppCompatResource]\n"
+                + "        android:showAsAction=\"never\" />\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
         lintProject(
-                "res/menu/showAction2.xml",
-                "bytecode/classes.jar=>libs/appcompat-v7-18.0.0.jar",
-                "multiproject/library.properties=>build.gradle")); // dummy; only name counts
+                mShowAction2,
+                mAppCompatJar,
+                mLibrary)); // dummy; only name counts
     }
 
     public void testAppCompatV14() throws Exception {
         assertEquals("No warnings.",
                 lintProject(
-                        "res/menu/showAction2.xml=>res/menu-v14/showAction2.xml",
-                        "bytecode/classes.jar=>libs/appcompat-v7-18.0.0.jar",
-                        "multiproject/library.properties=>build.gradle")); // dummy; only name counts
+                        mShowAction2_class,
+                        mAppCompatJar,
+                        mLibrary)); // dummy; only name counts
     }
 
     @Override
     protected Detector getDetector() {
         return new AppCompatResourceDetector();
     }
+
+    // Dummy file
+    private final TestFile mAppCompatJar = base64gzip("libs/appcompat-v7-18.0.0.jar", "");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mLibrary = source("build.gradle", "");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mShowAction1 = xml("res/menu/showAction1.xml", ""
+            + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
+            + "    <item android:id=\"@+id/action_settings\"\n"
+            + "        android:title=\"@string/action_settings\"\n"
+            + "        android:orderInCategory=\"100\"\n"
+            + "        app:showAsAction=\"never\" />\n"
+            + "</menu>\n"
+            + "\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mShowAction2 = xml("res/menu/showAction2.xml", ""
+            + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+            + "    <item android:id=\"@+id/action_settings\"\n"
+            + "        android:title=\"@string/action_settings\"\n"
+            + "        android:orderInCategory=\"100\"\n"
+            + "        android:showAsAction=\"never\" />\n"
+            + "</menu>\n"
+            + "\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mShowAction2_class = xml("res/menu-v14/showAction2.xml", ""
+            + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+            + "    <item android:id=\"@+id/action_settings\"\n"
+            + "        android:title=\"@string/action_settings\"\n"
+            + "        android:orderInCategory=\"100\"\n"
+            + "        android:showAsAction=\"never\" />\n"
+            + "</menu>\n"
+            + "\n");
 }

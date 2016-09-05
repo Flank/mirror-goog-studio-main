@@ -15,6 +15,9 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
+import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_JAR_PATH;
+
 import com.android.tools.lint.detector.api.Detector;
 
 public class CallSuperDetectorTest extends AbstractCheckTest {
@@ -24,6 +27,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
     }
 
     public void testCallSuper() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/CallSuperTest.java:11: Error: Overriding method should call super.test1 [MissingSuperCall]\n"
                 + "        protected void test1() { // ERROR\n"
@@ -45,8 +49,111 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 + "                       ~~~~~\n"
                 + "6 errors, 0 warnings\n",
 
-                lintProject("src/test/pkg/CallSuperTest.java.txt=>src/test/pkg/CallSuperTest.java",
-                        "src/android/support/annotation/CallSuper.java.txt=>src/android/support/annotation/CallSuper.java"));
+                lintProject(java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.support.annotation.CallSuper;\n"
+                            + "\n"
+                            + "import java.util.List;\n"
+                            + "import java.util.Map;\n"
+                            + "\n"
+                            + "@SuppressWarnings(\"UnusedDeclaration\")\n"
+                            + "public class CallSuperTest {\n"
+                            + "    private static class Child extends Parent {\n"
+                            + "        protected void test1() { // ERROR\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test2() { // ERROR\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test3() { // ERROR\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test4(int arg) { // ERROR\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test4(String arg) { // OK\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test5(int arg1, boolean arg2, Map<List<String>,?> arg3,  // ERROR\n"
+                            + "                             int[][] arg4, int... arg5) {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test5() { // ERROR\n"
+                            + "            super.test6(); // (wrong super)\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test6() { // OK\n"
+                            + "            int x = 5;\n"
+                            + "            super.test6();\n"
+                            + "            System.out.println(x);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class Parent extends ParentParent {\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test1() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test3() {\n"
+                            + "            super.test3();\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test4(int arg) {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        protected void test4(String arg) {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test5() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test5(int arg1, boolean arg2, Map<List<String>,?> arg3,\n"
+                            + "                             int[][] arg4, int... arg5) {\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class ParentParent extends ParentParentParent {\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test2() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test3() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test6() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "        @CallSuper\n"
+                            + "        protected void test7() {\n"
+                            + "        }\n"
+                            + "\n"
+                            + "\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class ParentParentParent {\n"
+                            + "\n"
+                            + "    }\n"
+                            + "}\n"),
+                        java(""
+                            + "package android.support.annotation;\n"
+                            + "\n"
+                            + "import java.lang.annotation.Retention;\n"
+                            + "import java.lang.annotation.Target;\n"
+                            + "\n"
+                            + "import static java.lang.annotation.ElementType.CONSTRUCTOR;\n"
+                            + "import static java.lang.annotation.ElementType.METHOD;\n"
+                            + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
+                            + "\n"
+                            + "@Retention(CLASS)\n"
+                            + "@Target({METHOD,CONSTRUCTOR})\n"
+                            + "public @interface CallSuper {\n"
+                            + "}\n")));
     }
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
@@ -92,11 +199,13 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 + "\n"
                 + "    }\n"
                 + "}\n"),
-                copy("src/android/support/annotation/CallSuper.java.txt",
-                        "src/android/support/annotation/CallSuper.java")));
+                classpath(SUPPORT_JAR_PATH),
+                base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP)
+            ));
     }
 
     public void testDetachFromWindow() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/DetachedFromWindow.java:7: Error: Overriding method should call super.onDetachedFromWindow [MissingSuperCall]\n"
                 + "        protected void onDetachedFromWindow() {\n"
@@ -106,11 +215,57 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 + "                       ~~~~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n",
 
-                lintProject("src/test/pkg/DetachedFromWindow.java.txt=>" +
-                        "src/test/pkg/DetachedFromWindow.java"));
+                lintProject(java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.view.View;\n"
+                            + "\n"
+                            + "public class DetachedFromWindow {\n"
+                            + "    private static class Test1 extends ViewWithDefaultConstructor {\n"
+                            + "        protected void onDetachedFromWindow() {\n"
+                            + "            // Error\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class Test2 extends ViewWithDefaultConstructor {\n"
+                            + "        protected void onDetachedFromWindow(int foo) {\n"
+                            + "            // OK: not overriding the right method\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class Test3 extends ViewWithDefaultConstructor {\n"
+                            + "        protected void onDetachedFromWindow() {\n"
+                            + "            // OK: Calling super\n"
+                            + "            super.onDetachedFromWindow();\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class Test4 extends ViewWithDefaultConstructor {\n"
+                            + "        protected void onDetachedFromWindow() {\n"
+                            + "            // Error: missing detach call\n"
+                            + "            int x = 1;\n"
+                            + "            x++;\n"
+                            + "            System.out.println(x);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class Test5 extends Object {\n"
+                            + "        protected void onDetachedFromWindow() {\n"
+                            + "            // OK - not in a view\n"
+                            + "            // Regression test for http://b.android.com/73571\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    public class ViewWithDefaultConstructor extends View {\n"
+                            + "        public ViewWithDefaultConstructor() {\n"
+                            + "            super(null);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n")));
     }
 
     public void testWatchFaceVisibility() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/WatchFaceTest.java:9: Error: Overriding method should call super.onVisibilityChanged [MissingSuperCall]\n"
                 + "        public void onVisibilityChanged(boolean visible) { // ERROR: Missing super call\n"
@@ -118,9 +273,65 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 + "1 errors, 0 warnings\n",
 
                 lintProject(
-                        "src/test/pkg/WatchFaceTest.java.txt=>src/test/pkg/WatchFaceTest.java",
-                        "stubs/WatchFaceService.java.txt=>src/android/support/wearable/watchface/WatchFaceService.java",
-                        "stubs/CanvasWatchFaceService.java.txt=>src/android/support/wearable/watchface/CanvasWatchFaceService.java"
+                        java(""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.support.wearable.watchface.CanvasWatchFaceService;\n"
+                            + "\n"
+                            + "@SuppressWarnings(\"UnusedDeclaration\")\n"
+                            + "public class WatchFaceTest extends CanvasWatchFaceService {\n"
+                            + "    private static class MyEngine1 extends CanvasWatchFaceService.Engine {\n"
+                            + "        @Override\n"
+                            + "        public void onVisibilityChanged(boolean visible) { // ERROR: Missing super call\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class MyEngine2 extends CanvasWatchFaceService.Engine {\n"
+                            + "        @Override\n"
+                            + "        public void onVisibilityChanged(boolean visible) { // OK: Super called\n"
+                            + "            super.onVisibilityChanged(visible);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class MyEngine3 extends CanvasWatchFaceService.Engine {\n"
+                            + "        @Override\n"
+                            + "        public void onVisibilityChanged(boolean visible) { // OK: Super called sometimes\n"
+                            + "            boolean something = System.currentTimeMillis() % 1 != 0;\n"
+                            + "            if (visible && something) {\n"
+                            + "                super.onVisibilityChanged(true);\n"
+                            + "            }\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class MyEngine4 extends CanvasWatchFaceService.Engine {\n"
+                            + "        public void onVisibilityChanged() { // OK: Different signature\n"
+                            + "        }\n"
+                            + "        public void onVisibilityChanged(int flags) { // OK: Different signature\n"
+                            + "        }\n"
+                            + "        public void onVisibilityChanged(boolean visible, int flags) { // OK: Different signature\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n"),
+                        java(""
+                            + "package android.support.wearable.watchface;\n"
+                            + "\n"
+                            + "// Unit testing stub\n"
+                            + "public class WatchFaceService {\n"
+                            + "    public static class Engine {\n"
+                            + "        public void onVisibilityChanged(boolean visible) {\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n"),
+                        java(""
+                            + "package android.support.wearable.watchface;\n"
+                            + "\n"
+                            + "public class CanvasWatchFaceService extends WatchFaceService {\n"
+                            + "    public static class Engine extends WatchFaceService.Engine {\n"
+                            + "        public void onVisibilityChanged(boolean visible) {\n"
+                            + "            super.onVisibilityChanged(visible);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n")
                 ));
     }
 }

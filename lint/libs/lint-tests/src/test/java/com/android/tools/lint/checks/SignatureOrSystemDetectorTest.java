@@ -27,21 +27,70 @@ public class SignatureOrSystemDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoWarningOnProtectionLevelsOtherThanSignatureOrSystem() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
             "No warnings.",
             lintProject(
-                "protection_level_ok.xml=>AndroidManifest.xml")
+                xml("AndroidManifest.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "          package=\"foo.bar2\"\n"
+                            + "          android:versionCode=\"1\"\n"
+                            + "          android:versionName=\"1.0\" >\n"
+                            + "\n"
+                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                            + "\n"
+                            + "    <permission android:name=\"foo.permission.NORMAL\"\n"
+                            + "                android:label=\"@string/foo\"\n"
+                            + "                android:description=\"@string/foo\"\n"
+                            + "                android:protectionLevel=\"normal\"/>\n"
+                            + "    <permission android:name=\"foo.permission.DANGEROUS\"\n"
+                            + "                android:label=\"@string/foo\"\n"
+                            + "                android:description=\"@string/foo\"\n"
+                            + "                android:protectionLevel=\"dangerous\"/>\n"
+                            + "    <permission android:name=\"foo.permission.SIGNATURE\"\n"
+                            + "                android:label=\"@string/foo\"\n"
+                            + "                android:description=\"@string/foo\"\n"
+                            + "                android:protectionLevel=\"signature\"/>\n"
+                            + "\n"
+                            + "    <application\n"
+                            + "            android:icon=\"@drawable/ic_launcher\"\n"
+                            + "            android:label=\"@string/app_name\" >\n"
+                            + "    </application>\n"
+                            + "\n"
+                            + "</manifest>\n"))
         );
     }
 
     public void testWarningOnSignatureOrSystemProtectionLevel() throws Exception {
-        assertEquals(
-            "AndroidManifest.xml:13: Warning: protectionLevel should probably not be set to signatureOrSystem [SignatureOrSystemPermissions]\n"
+        //noinspection all // Sample code
+        assertEquals(""
+                + "AndroidManifest.xml:13: Warning: protectionLevel should probably not be set to signatureOrSystem [SignatureOrSystemPermissions]\n"
                 + "                android:protectionLevel=\"signatureOrSystem\"/>\n"
                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",
             lintProject(
-                "protection_level_fail.xml=>AndroidManifest.xml")
+                xml("AndroidManifest.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "          package=\"foo.bar2\"\n"
+                            + "          android:versionCode=\"1\"\n"
+                            + "          android:versionName=\"1.0\" >\n"
+                            + "\n"
+                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                            + "\n"
+                            + "    <permission android:name=\"foo.permission.SIGNATURE_OR_SYSTEM\"\n"
+                            + "                android:label=\"@string/foo\"\n"
+                            + "                android:description=\"@string/foo\"\n"
+                            + "                android:protectionLevel=\"signatureOrSystem\"/>\n"
+                            + "\n"
+                            + "    <application\n"
+                            + "            android:icon=\"@drawable/ic_launcher\"\n"
+                            + "            android:label=\"@string/app_name\" >\n"
+                            + "    </application>\n"
+                            + "\n"
+                            + "</manifest>\n"))
         );
     }
 }

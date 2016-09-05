@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.tools.lint.EcjParser.equalsCompound;
 import static com.android.tools.lint.EcjParser.startsWithCompound;
 import static com.android.tools.lint.client.api.JavaParser.ResolvedClass;
@@ -26,6 +27,7 @@ import static com.android.tools.lint.client.api.JavaParser.ResolvedVariable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.SdCardDetector;
@@ -36,11 +38,6 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtilsTest;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.PsiJavaFile;
 
 import org.intellij.lang.annotations.Language;
 import org.junit.Assert;
@@ -90,7 +87,33 @@ public class EcjParserTest extends AbstractCheckTest {
         assertEquals(
                 "No warnings.",
 
-                lintProject("src/test/pkg/TryCatchHang.java.txt=>src/test/pkg/TryCatchHang.java"));
+                lintProject(java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public final class TryCatchHang {\n"
+                        + "    public void foo() {\n"
+                        + "        try {\n"
+                        + "            getClass().getField(\"\").getInt(null);\n"
+                        + "        }\n"
+                        + "        catch(IllegalAccessException | NoSuchFieldException xc) {\n"
+                        + "                throw new RuntimeException( xc );\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        try {\n"
+                        + "                getClass().getField(\"\").getInt(null);\n"
+                        + "        }\n"
+                        + "        catch (NoSuchFieldException | IllegalAccessException xc) {\n"
+                        + "            throw new RuntimeException( xc );\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        try {\n"
+                        + "            getClass().getField(\"\").getInt(null);\n"
+                        + "        }\n"
+                        + "        catch (IllegalAccessException | NoSuchFieldException xc) {\n"
+                        + "            throw new RuntimeException(xc);\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}")));
     }
 
     public void testKitKatLanguageFeatures() throws Exception {

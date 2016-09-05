@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.MENU_TYPE;
 import static com.android.tools.lint.checks.AndroidTvDetector.IMPLIED_TOUCHSCREEN_HARDWARE;
 import static com.android.tools.lint.checks.AndroidTvDetector.MISSING_BANNER;
 import static com.android.tools.lint.checks.AndroidTvDetector.MISSING_LEANBACK_LAUNCHER;
@@ -38,7 +37,7 @@ import java.util.Set;
 @SuppressWarnings("javadoc")
 public class AndroidTvDetectorTest extends AbstractCheckTest {
 
-    private Set<Issue> mEnabled = new HashSet<Issue>();
+    private Set<Issue> mEnabled = new HashSet<>();
 
     @Override
     protected Detector getDetector() {

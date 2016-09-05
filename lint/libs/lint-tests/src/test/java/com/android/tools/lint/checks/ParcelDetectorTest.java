@@ -25,6 +25,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/bytecode/MyParcelable1.java:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
                 + "public class MyParcelable1 implements Parcelable {\n"
@@ -32,19 +33,93 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                 + "1 errors, 0 warnings\n",
 
             lintProject(
-                "bytecode/.classpath=>.classpath",
-                "bytecode/AndroidManifest.xml=>AndroidManifest.xml",
-                "bytecode/MyParcelable1.java.txt=>src/test/bytecode/MyParcelable1.java",
-                "bytecode/MyParcelable2.java.txt=>src/test/bytecode/MyParcelable2.java",
-                "bytecode/MyParcelable3.java.txt=>src/test/bytecode/MyParcelable3.java",
-                "bytecode/MyParcelable4.java.txt=>src/test/bytecode/MyParcelable4.java",
-                "bytecode/MyParcelable5.java.txt=>src/test/bytecode/MyParcelable5.java",
-                "bytecode/MyParcelable1.class.data=>bin/classes/test/bytecode/MyParcelable1.class",
-                "bytecode/MyParcelable2.class.data=>bin/classes/test/bytecode/MyParcelable2.class",
-                "bytecode/MyParcelable2$1.class.data=>bin/classes/test/bytecode/MyParcelable2$1.class",
-                "bytecode/MyParcelable3.class.data=>bin/classes/test/bytecode/MyParcelable3.class",
-                "bytecode/MyParcelable4.class.data=>bin/classes/test/bytecode/MyParcelable4.class",
-                "bytecode/MyParcelable5.class.data=>bin/classes/test/bytecode/MyParcelable5.class"
+                classpath(),
+                manifest().minSdk(10),
+                java(""
+                            + "package test.bytecode;\n"
+                            + "\n"
+                            + "import android.os.Parcel;\n"
+                            + "import android.os.Parcelable;\n"
+                            + "\n"
+                            + "public class MyParcelable1 implements Parcelable {\n"
+                            + "\t@Override\n"
+                            + "\tpublic int describeContents() {\n"
+                            + "\t\treturn 0;\n"
+                            + "\t}\n"
+                            + "\n"
+                            + "\t@Override\n"
+                            + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                            + "\t}\n"
+                            + "}\n"),
+                java(""
+                            + "package test.bytecode;\n"
+                            + "\n"
+                            + "import android.os.Parcel;\n"
+                            + "import android.os.Parcelable;\n"
+                            + "\n"
+                            + "public class MyParcelable2 implements Parcelable {\n"
+                            + "\tpublic static final Parcelable.Creator<MyParcelable2> CREATOR = new Parcelable.Creator<MyParcelable2>() {\n"
+                            + "\t\tpublic MyParcelable2 createFromParcel(Parcel in) {\n"
+                            + "\t\t\treturn new MyParcelable2();\n"
+                            + "\t\t}\n"
+                            + "\n"
+                            + "\t\tpublic MyParcelable2[] newArray(int size) {\n"
+                            + "\t\t\treturn new MyParcelable2[size];\n"
+                            + "\t\t}\n"
+                            + "\t};\n"
+                            + "\n"
+                            + "\t@Override\n"
+                            + "\tpublic int describeContents() {\n"
+                            + "\t\treturn 0;\n"
+                            + "\t}\n"
+                            + "\n"
+                            + "\t@Override\n"
+                            + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                            + "\t}\n"
+                            + "}\n"),
+                java(""
+                            + "package test.bytecode;\n"
+                            + "\n"
+                            + "import android.os.Parcel;\n"
+                            + "import android.os.Parcelable;\n"
+                            + "\n"
+                            + "public class MyParcelable3 implements Parcelable {\n"
+                            + "\tpublic static final int CREATOR = 0; // Wrong type\n"
+                            + "\n"
+                            + "\t@Override\n"
+                            + "\tpublic int describeContents() {\n"
+                            + "\t\treturn 0;\n"
+                            + "\t}\n"
+                            + "\n"
+                            + "\t@Override\n"
+                            + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                            + "\t}\n"
+                            + "}\n"),
+                java(""
+                            + "package test.bytecode;\n"
+                            + "\n"
+                            + "import android.os.Parcel;\n"
+                            + "import android.os.Parcelable;\n"
+                            + "\n"
+                            + "public abstract class MyParcelable4 implements Parcelable {\n"
+                            + "    @Override\n"
+                            + "    public int describeContents() {\n"
+                            + "        return 0;\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    @Override\n"
+                            + "    public void writeToParcel(Parcel arg0, int arg1) {\n"
+                            + "    }\n"
+                            + "}\n"),
+                java(""
+                            + "package test.bytecode;\n"
+                            + "\n"
+                            + "import android.os.Parcelable;\n"
+                            + "\n"
+                            + "public interface MyParcelable5 extends Parcelable {\n"
+                            + "    @Override\n"
+                            + "    public int describeContents();\n"
+                            + "}\n")
                 ));
     }
 

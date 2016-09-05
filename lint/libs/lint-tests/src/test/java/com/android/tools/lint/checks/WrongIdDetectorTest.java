@@ -26,47 +26,45 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(
-            "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n" +
-            "        android:layout_alignBottom=\"@+id/button5\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean my_id2 ? [UnknownId]\n" +
-            "        android:layout_alignRight=\"@+id/my_id3\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean my_id2 ? [UnknownId]\n" +
-            "        android:layout_alignTop=\"@+id/my_id1\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignLeft=\"@+id/my_id2\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "3 errors, 1 warnings\n" +
-            "",
+        assertEquals(""
+                + "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n"
+                + "        android:layout_alignBottom=\"@+id/button5\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean my_id2 ? [UnknownId]\n"
+                + "        android:layout_alignRight=\"@+id/my_id3\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean my_id2 ? [UnknownId]\n"
+                + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "3 errors, 1 warnings\n",
 
             lintProject(
-                    "wrongid/layout1.xml=>res/layout/layout1.xml",
-                    "wrongid/layout2.xml=>res/layout/layout2.xml",
-                    "wrongid/ids.xml=>res/values/ids.xml"
+                    mLayout1,
+                    mLayout2,
+                    mIds
         ));
     }
 
     public void testSingleFile() throws Exception {
-        assertEquals(
-            "res/layout/layout1.xml:14: Warning: The id \"button5\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignBottom=\"@+id/button5\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignLeft=\"@+id/my_id2\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:17: Warning: The id \"my_id3\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignRight=\"@+id/my_id3\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:18: Warning: The id \"my_id1\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignTop=\"@+id/my_id1\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 4 warnings\n" +
-            "",
+        assertEquals(""
+                + "res/layout/layout1.xml:14: Warning: The id \"button5\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignBottom=\"@+id/button5\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:17: Warning: The id \"my_id3\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignRight=\"@+id/my_id3\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:18: Warning: The id \"my_id1\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n",
 
-            lintFiles("wrongid/layout1.xml=>res/layout/layout1.xml"));
+            lintFiles(mLayout1));
     }
 
     public void testSuppressed() throws Exception {
@@ -74,9 +72,9 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
             "No warnings.",
 
             lintProject(
-                    "wrongid/ignorelayout1.xml=>res/layout/layout1.xml",
-                    "wrongid/layout2.xml=>res/layout/layout2.xml",
-                    "wrongid/ids.xml=>res/values/ids.xml"
+                    mIgnorelayout1,
+                    mLayout2,
+                    mIds
         ));
     }
 
@@ -84,18 +82,37 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
         assertEquals(
             "No warnings.",
 
-            lintFiles("wrongid/ignorelayout1.xml=>res/layout/layout1.xml"));
+            lintFiles(mIgnorelayout1));
     }
 
     public void testNewIdPrefix() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
 
-                lintFiles("res/layout/default_item_badges.xml",
-                          "res/layout/detailed_item.xml"));
+                lintFiles(xml("res/layout/default_item_badges.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:id=\"@+id/video_badges\"\n"
+                            + "    android:layout_width=\"wrap_content\"\n"
+                            + "    android:layout_height=\"wrap_content\" />\n"),
+                          xml("res/layout/detailed_item.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<RelativeLayout\n"
+                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"wrap_content\" >\n"
+                            + "\n"
+                            + "    <FrameLayout\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_below=\"@id/video_badges\" />\n"
+                            + "\n"
+                            + "</RelativeLayout>\n")));
     }
 
     public void testSiblings() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/siblings.xml:55: Error: @id/button5 is not a sibling in the same RelativeLayout [NotSibling]\n"
                 + "        android:layout_alignTop=\"@id/button5\"\n"
@@ -111,11 +128,79 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "4 errors, 0 warnings\n",
 
-                lintFiles("res/layout/siblings.xml"));
+                lintFiles(xml("res/layout/siblings.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<!--\n"
+                            + "  ~ Copyright (C) 2013 The Android Open Source Project\n"
+                            + "  ~\n"
+                            + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                            + "  ~ you may not use this file except in compliance with the License.\n"
+                            + "  ~ You may obtain a copy of the License at\n"
+                            + "  ~\n"
+                            + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
+                            + "  ~\n"
+                            + "  ~ Unless required by applicable law or agreed to in writing, software\n"
+                            + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+                            + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+                            + "  ~ See the License for the specific language governing permissions and\n"
+                            + "  ~ limitations under the License.\n"
+                            + "  -->\n"
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button4\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_alignParentLeft=\"true\"\n"
+                            + "        android:layout_alignParentTop=\"true\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <LinearLayout\n"
+                            + "        android:id=\"@+id/linearLayout1\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_below=\"@+id/button4\"\n"
+                            + "        android:layout_toRightOf=\"@+id/button4\"\n"
+                            + "        android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "        <Button\n"
+                            + "            android:id=\"@+id/button5\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:text=\"Button\" />\n"
+                            + "\n"
+                            + "        <Button\n"
+                            + "            android:id=\"@id/button6\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:text=\"Button\" />\n"
+                            + "    </LinearLayout>\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button7\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_alignTop=\"@id/button5\"\n"
+                            + "        android:layout_toRightOf=\"@id/button6\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/button8\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_alignTop=\"@+id/button5\"\n"
+                            + "        android:layout_toRightOf=\"@+id/button6\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "</RelativeLayout>\n")));
     }
 
     public void testInvalidIds1() throws Exception {
         // See https://code.google.com/p/android/issues/detail?id=56029
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/invalid_ids.xml:23: Error: ID definitions must be of the form @+id/name; try using @+id/menu_Reload [InvalidId]\n"
                 + "        android:id=\"@+menu/Reload\"\n"
@@ -131,11 +216,61 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "4 errors, 0 warnings\n",
 
-                lintFiles("res/layout/invalid_ids.xml"));
+                lintFiles(xml("res/layout/invalid_ids.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<!--\n"
+                            + "  ~ Copyright (C) 2013 The Android Open Source Project\n"
+                            + "  ~\n"
+                            + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                            + "  ~ you may not use this file except in compliance with the License.\n"
+                            + "  ~ You may obtain a copy of the License at\n"
+                            + "  ~\n"
+                            + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
+                            + "  ~\n"
+                            + "  ~ Unless required by applicable law or agreed to in writing, software\n"
+                            + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+                            + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+                            + "  ~ See the License for the specific language governing permissions and\n"
+                            + "  ~ limitations under the License.\n"
+                            + "  -->\n"
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+menu/Reload\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_alignParentLeft=\"true\"\n"
+                            + "        android:layout_alignParentTop=\"true\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <LinearLayout\n"
+                            + "        android:id=\"@+/id_foo\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:orientation=\"vertical\" >\n"
+                            + "\n"
+                            + "        <Button\n"
+                            + "            android:id=\"@+myid/button5\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:text=\"Button\" />\n"
+                            + "\n"
+                            + "        <Button\n"
+                            + "            android:id=\"@+string/whatevs\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:text=\"Button\" />\n"
+                            + "    </LinearLayout>\n"
+                            + "\n"
+                            + "</RelativeLayout>\n")));
     }
 
     public void testInvalidIds2() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=65244
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/invalid_ids2.xml:8: Error: ID definitions must be of the form @+id/name; try using @+id/btn_skip [InvalidId]\n"
                 + "        android:id=\"@+id/btn/skip\"\n"
@@ -145,44 +280,77 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n",
 
-                lintFiles("res/layout/invalid_ids2.xml"));
+                lintFiles(xml("res/layout/invalid_ids2.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" >\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/btn/skip\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_alignParentLeft=\"true\"\n"
+                            + "        android:layout_alignParentTop=\"true\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "    <Button\n"
+                            + "        android:id=\"@+id/\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:text=\"Button\" />\n"
+                            + "\n"
+                            + "</RelativeLayout>\n")));
     }
 
     public void testIncremental() throws Exception {
-        assertEquals(
-            "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n" +
-            "        android:layout_alignBottom=\"@+id/button5\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean one of {my_id1, my_id2} ? [UnknownId]\n" +
-            "        android:layout_alignRight=\"@+id/my_id3\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean one of {my_id2, my_id3} ? [UnknownId]\n" +
-            "        android:layout_alignTop=\"@+id/my_id1\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n" +
-            "        android:layout_alignLeft=\"@+id/my_id2\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "3 errors, 1 warnings\n",
+        assertEquals(""
+                + "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n"
+                + "        android:layout_alignBottom=\"@+id/button5\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean one of {my_id1, my_id2} ? [UnknownId]\n"
+                + "        android:layout_alignRight=\"@+id/my_id3\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean one of {my_id2, my_id3} ? [UnknownId]\n"
+                + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n"
+                + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "3 errors, 1 warnings\n",
 
             lintProjectIncrementally(
                     "res/layout/layout1.xml",
 
-                    "wrongid/layout1.xml=>res/layout/layout1.xml",
-                    "wrongid/layout2.xml=>res/layout/layout2.xml",
-                    "wrongid/ids.xml=>res/values/ids.xml"
+                    mLayout1,
+                    mLayout2,
+                    mIds
             ));
     }
 
     public void testSelfReference() throws Exception {
         // Make sure we highlight direct references to self
         // Regression test for https://code.google.com/p/android/issues/detail?id=136103
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/layout3.xml:9: Error: Cannot be relative to self: id=tv_portfolio_title, layout_below=tv_portfolio_title [NotSibling]\n"
                 + "        android:layout_below=\"@+id/tv_portfolio_title\"/>\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
 
-                lintFiles("wrongid/layout3.xml=>res/layout/layout3.xml"));
+                lintFiles(xml("res/layout/layout3.xml", ""
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    xmlns:tools=\"http://schemas.android.com/tools\" android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\" android:paddingLeft=\"@dimen/activity_horizontal_margin\">\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:id=\"@+id/tv_portfolio_title\"\n"
+                            + "        android:layout_width=\"match_parent\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:layout_below=\"@+id/tv_portfolio_title\"/>\n"
+                            + "</RelativeLayout>\n"
+                            + "\n")));
     }
 
     public void testPercent() throws Exception {
@@ -254,4 +422,127 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                         + "        android:id=\"@+id/button5\" />\n"
                         + "</android.support.constraint.ConstraintLayout>")));
     }
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mIds = xml("res/values/ids.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<resources>\n"
+            + "\n"
+            + "    <item name=\"my_id1\" type=\"id\"/>\n"
+            + "\n"
+            + "</resources>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mIgnorelayout1 = xml("res/layout/layout1.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+            + "    android:id=\"@+id/RelativeLayout1\"\n"
+            + "    android:layout_width=\"fill_parent\"\n"
+            + "    android:layout_height=\"fill_parent\"\n"
+            + "    android:orientation=\"vertical\" >\n"
+            + "\n"
+            + "    <!-- my_id1 is defined in ids.xml, my_id2 is defined in main2, my_id3 does not exist -->\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button1\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignBottom=\"@+id/button5\"\n"
+            + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
+            + "        android:layout_alignParentTop=\"true\"\n"
+            + "        android:layout_alignRight=\"@+id/my_id3\"\n"
+            + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+            + "        android:text=\"Button\"\n"
+            + "        tools:ignore=\"UnknownIdInLayout,UnknownId\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button2\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button1\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button3\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button2\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button4\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button3\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "</RelativeLayout>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mLayout1 = xml("res/layout/layout1.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    android:id=\"@+id/RelativeLayout1\"\n"
+            + "    android:layout_width=\"fill_parent\"\n"
+            + "    android:layout_height=\"fill_parent\"\n"
+            + "    android:orientation=\"vertical\" >\n"
+            + "\n"
+            + "    <!-- my_id1 is defined in ids.xml, my_id2 is defined in main2, my_id3 does not exist -->\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button1\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignBottom=\"@+id/button5\"\n"
+            + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
+            + "        android:layout_alignParentTop=\"true\"\n"
+            + "        android:layout_alignRight=\"@+id/my_id3\"\n"
+            + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button2\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button1\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button3\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button2\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/button4\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:layout_alignParentLeft=\"true\"\n"
+            + "        android:layout_below=\"@+id/button3\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "</RelativeLayout>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mLayout2 = xml("res/layout/layout2.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    android:layout_width=\"match_parent\"\n"
+            + "    android:layout_height=\"match_parent\"\n"
+            + "    android:orientation=\"vertical\" >\n"
+            + "\n"
+            + "    <Button\n"
+            + "        android:id=\"@+id/my_id2\"\n"
+            + "        android:layout_width=\"wrap_content\"\n"
+            + "        android:layout_height=\"wrap_content\"\n"
+            + "        android:text=\"Button\" />\n"
+            + "\n"
+            + "</LinearLayout>\n");
 }

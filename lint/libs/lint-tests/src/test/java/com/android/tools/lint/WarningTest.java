@@ -40,10 +40,53 @@ public class WarningTest extends AbstractCheckTest {
 
     public void testComparator() throws Exception {
         File projectDir = getProjectDir(null, // Rename .txt files to .java
-                "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
-                "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",
-                "AndroidManifest.xml",
-                "res/layout/accessibility.xml");
+                java(""
+                            + "package my.pgk;\n"
+                            + "\n"
+                            + "class Test {\n"
+                            + "   private static String s = \" R.id.button1 \\\" \"; // R.id.button1 should not be considered referenced\n"
+                            + "   static {\n"
+                            + "       System.out.println(R.id.button2);\n"
+                            + "       char c = '\"';\n"
+                            + "       System.out.println(R.id.linearLayout1);\n"
+                            + "   }\n"
+                            + "}\n"),
+                java(""
+                            + "package my.pkg;\n"
+                            + "public final class R {\n"
+                            + "    public static final class attr {\n"
+                            + "    }\n"
+                            + "    public static final class drawable {\n"
+                            + "        public static final int ic_launcher=0x7f020000;\n"
+                            + "    }\n"
+                            + "    public static final class id {\n"
+                            + "        public static final int button1=0x7f050000;\n"
+                            + "        public static final int button2=0x7f050004;\n"
+                            + "        public static final int imageView1=0x7f050003;\n"
+                            + "        public static final int include1=0x7f050005;\n"
+                            + "        public static final int linearLayout1=0x7f050001;\n"
+                            + "        public static final int linearLayout2=0x7f050002;\n"
+                            + "    }\n"
+                            + "    public static final class layout {\n"
+                            + "        public static final int main=0x7f030000;\n"
+                            + "        public static final int other=0x7f030001;\n"
+                            + "    }\n"
+                            + "    public static final class string {\n"
+                            + "        public static final int app_name=0x7f040001;\n"
+                            + "        public static final int hello=0x7f040000;\n"
+                            + "    }\n"
+                            + "}\n"),
+                manifest().minSdk(14),
+                xml("res/layout/accessibility.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
+                            + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                            + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+                            + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+                            + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                            + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
+                            + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
+                            + "</LinearLayout>\n"));
 
         final AtomicReference<List<Warning>> warningsHolder = new AtomicReference<List<Warning>>();
         TestLintClient lintClient = new TestLintClient() {
