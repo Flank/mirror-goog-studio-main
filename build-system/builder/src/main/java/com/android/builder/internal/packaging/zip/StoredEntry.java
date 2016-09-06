@@ -473,9 +473,11 @@ public class StoredEntry {
         ZipField.F4 uncompressedField = new ZipField.F4(compressedField.endOffset(),
                 "Uncompressed size");
 
-        crc32Field.verify(ddBytes, mCdh.getCrc32());
-        compressedField.verify(ddBytes, compressInfo.getCompressedSize());
-        uncompressedField.verify(ddBytes, mCdh.getUncompressedSize());
+        if (!mFile.getSkipDataDescriptorVerification()) {
+            crc32Field.verify(ddBytes, mCdh.getCrc32());
+            compressedField.verify(ddBytes, compressInfo.getCompressedSize());
+            uncompressedField.verify(ddBytes, mCdh.getUncompressedSize());
+        }
     }
 
     /**

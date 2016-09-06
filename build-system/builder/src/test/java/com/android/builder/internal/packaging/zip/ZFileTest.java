@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.builder.internal.packaging.zip.compress.DeflateExecutionCompressor;
@@ -32,6 +33,7 @@ import com.android.builder.internal.packaging.zip.utils.RandomAccessFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -1346,6 +1348,72 @@ public class ZFileTest {
 
             assertEquals(largeFileOffset, newSmallFile2Offset);
             assertEquals(largeFileTotalSize, sf2Entry.getLocalExtra().size());
+        }
+    }
+
+    @Test
+    public void detectIncorrectCRC32InLocalHeader() throws Exception {
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+
+        /*
+         * Zip files created by ZFile never have data descriptors so we need to create one using
+         * java's zip.
+         */
+        try (
+                FileOutputStream fos = new FileOutputStream(zipFile);
+                ZipOutputStream zos = new ZipOutputStream(fos)) {
+            ZipEntry ze = new ZipEntry("foo");
+            zos.putNextEntry(ze);
+            byte[] randomBytes = new byte[512];
+            new Random().nextBytes(randomBytes);
+            zos.write(randomBytes);
+        }
+
+        /*
+         * Open the zip file and compute where the local header CRC32 is.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            StoredEntry se = zf.get("foo");
+            assertNotNull(se);
+            long cdOffset = zf.getCentralDirectoryOffset();
+
+            /*
+             * Twelve bytes from the CD offset, we have the start of the CRC32 of the zip entry.
+             * Corrupt it.
+             */
+            byte[] crc = new byte[4];
+            zf.directFullyRead(cdOffset - 12, crc);
+            crc[0]++;
+            zf.directWrite(cdOffset - 12, crc);
+        }
+
+        /*
+         * Now open the zip file and it should fail.
+         */
+        try {
+            new ZFile(zipFile);
+            fail();
+        } catch (IOException e) {
+            /*
+             * We should be complaining about the CRC32 somewhere...
+             */
+            boolean foundCrc32Complain = false;
+
+            assertTrue(
+                    Throwables.getCausalChain(e).stream()
+                            .map(Throwable::getMessage)
+                            .anyMatch(s -> s.contains("CRC32")));
+        }
+
+        /*
+         * But opening with data validation skip should work.
+         */
+        ZFileOptions options = new ZFileOptions();
+        options.setSkipDataDescriptionValidation(true);
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            /*
+             * Nothing to do.
+             */
         }
     }
 }
