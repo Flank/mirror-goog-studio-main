@@ -101,7 +101,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      */
     public <T> T getSingle(@NonNull Class<T> modelClass) {
         Map<String, T> modelMap = buildModel(
-                mProjectConnection,
+                projectConnection,
                 new GetAndroidModelAction<>(modelClass),
                 modelLevel);
 
@@ -134,7 +134,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         boolean isMultithreaded = !NativeAndroidProject.class.equals(modelClass);
 
         return buildModel(
-                mProjectConnection,
+                projectConnection,
                 new GetAndroidModelAction<>(modelClass, isMultithreaded),
                 modelLevel);
     }
@@ -142,7 +142,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /** Return a list of all task names of the project. */
     @NonNull
     public List<String> getTaskList() {
-        GradleProject project = mProjectConnection.getModel(GradleProject.class);
+        GradleProject project = projectConnection.getModel(GradleProject.class);
         return project.getTasks().stream()
                 .map(GradleTask::getName)
                 .collect(Collectors.toList());
@@ -188,7 +188,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         executor.setStandardError(System.err);
 
         try (GradleProfileUploader uploader =
-                     new GradleProfileUploader(mBenchmarkEnabled, mBenchmarkName, mBenchmarkMode)) {
+                     new GradleProfileUploader(benchmarkEnabled, benchmark, benchmarkMode)) {
             executor.withArguments(Iterables.toArray(uploader.appendArg(arguments), String.class));
             return executor.run();
         } catch (IOException e) {
