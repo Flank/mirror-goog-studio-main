@@ -265,6 +265,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getGeneratedClassListOutputFileForDataBinding();
 
     @NonNull
+    File getBundleFolderForDataBinding();
+
+    @NonNull
     File getProguardOutputFolder();
 
     @NonNull
@@ -379,16 +382,15 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setGenerateResValuesTask(AndroidTask<GenerateResValues> generateResValuesTask);
 
     @Nullable
-    AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportInfoTask();
-
-    void setDataBindingExportInfoTask(
-            @Nullable AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportInfoTask);
-
-    @Nullable
     AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask();
 
     void setDataBindingProcessLayoutsTask(
             @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask);
+
+    void setDataBindingMergeArtifactsTask(
+            @Nullable AndroidTask<TransformTask> mergeArtifactsTask);
+
+    AndroidTask<TransformTask> getDataBindingMergeArtifactsTask();
 
     AndroidTask<Sync> getProcessJavaResourcesTask();
 

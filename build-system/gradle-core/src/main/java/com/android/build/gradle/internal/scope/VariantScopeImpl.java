@@ -44,13 +44,11 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -78,7 +76,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
-import com.android.sdklib.repository.targets.AndroidTargetManager;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
@@ -94,6 +91,8 @@ import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
+
+import android.databinding.tool.DataBindingBuilder;
 
 import java.io.File;
 import java.util.Collection;
@@ -154,9 +153,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private AndroidTask<MergeSourceSetFolders> mergeJniLibsFolderTask;
 
     @Nullable
-    private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportInfoTask;
-    @Nullable
     private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
+    @Nullable
+    private AndroidTask<TransformTask> dataBindingMergeBindingArtifactsTask;
 
     /** @see BaseVariantData#javaCompilerTask */
     @Nullable
@@ -290,18 +289,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
-    public AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportInfoTask() {
-        return dataBindingExportInfoTask;
-    }
-
-    @Override
-    public void setDataBindingExportInfoTask(
-            @Nullable AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportInfoTask) {
-        this.dataBindingExportInfoTask = dataBindingExportInfoTask;
-    }
-
-    @Nullable
-    @Override
     public AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask() {
         return dataBindingProcessLayoutsTask;
     }
@@ -310,6 +297,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setDataBindingProcessLayoutsTask(
             @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask) {
         this.dataBindingProcessLayoutsTask = dataBindingProcessLayoutsTask;
+    }
+
+    @Override
+    public void setDataBindingMergeArtifactsTask(
+            @Nullable AndroidTask<TransformTask> mergeArtifactsTask) {
+        this.dataBindingMergeBindingArtifactsTask = mergeArtifactsTask;
+    }
+
+    @Nullable
+    @Override
+    public AndroidTask<TransformTask> getDataBindingMergeArtifactsTask() {
+        return dataBindingMergeBindingArtifactsTask;
     }
 
     @Override
@@ -813,6 +812,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public File getGeneratedClassListOutputFileForDataBinding() {
         return new File(getLayoutInfoOutputForDataBinding(), "_generated.txt");
+    }
+
+    @NonNull
+    @Override
+    public File getBundleFolderForDataBinding() {
+        return new File(getBaseBundleDir(), DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
     }
 
     @Override

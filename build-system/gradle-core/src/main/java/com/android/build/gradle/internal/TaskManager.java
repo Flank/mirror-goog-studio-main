@@ -91,7 +91,7 @@ import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingExportDependencyJarsTransform;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
 import com.android.build.gradle.internal.test.TestDataImpl;
@@ -196,6 +196,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import android.databinding.tool.DataBindingBuilder;
+import android.databinding.tool.DataBindingCompilerArgs;
+import android.databinding.tool.LayoutXmlProcessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -460,6 +462,17 @@ public abstract class TaskManager {
                         .collect(Collectors.toSet()))
                 .setDependencies(dependencies)
                 .build());
+
+        // data binding related artifacts for external libs
+        if (extension.getDataBinding().isEnabled()) {
+            transformManager.addStream(OriginalStream.builder()
+                    .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
+                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                    .setFolders(config::getSubProjectDataBindingArtifactFolders)
+                    .setDependencies(dependencies)
+                    .build()
+            );
+        }
 
         transformManager.addStream(OriginalStream.builder()
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
@@ -1418,7 +1431,9 @@ public abstract class TaskManager {
 
         // add tasks to merge jni libs.
         createMergeJniLibFoldersTasks(tasks, variantScope);
-
+        // create data binding merge task before the javac task so that it can
+        // parse jars before any consumer
+        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
         // Add a task to compile the test application
         CoreJackOptions jackOptions = variantData.getVariantConfiguration().getJackOptions();
         if (jackOptions.isEnabled()) {
@@ -2062,18 +2077,6 @@ public abstract class TaskManager {
                             .setDependency(scope.getTestedVariantData().getScope().getJavaCompilerTask().getName())
                             .build());
         }
-        AndroidTask<TransformTask> exportJarsForDataBindingTask;
-        if (extension.getDataBinding().isEnabled()) {
-            exportJarsForDataBindingTask =
-                    scope.getTransformManager()
-                            .addTransform(
-                                    tasks,
-                                    scope,
-                                    new DataBindingExportDependencyJarsTransform(scope))
-                            .orElse(null);
-        } else {
-            exportJarsForDataBindingTask = null;
-        }
         // ----- Create PreDex tasks for libraries -----
         JackPreDexTransform preDexPackagedTransform = new JackPreDexTransform(
                 androidBuilder,
@@ -2082,8 +2085,6 @@ public abstract class TaskManager {
                 true);
         Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
-        packageTask.ifPresent(t -> t.optionalDependsOn(tasks, exportJarsForDataBindingTask));
-
         AndroidTask jacocoTask = getJacocoAgentTask(tasks);
         packageTask.ifPresent(t ->
                 t.optionalDependsOn(
@@ -2146,13 +2147,69 @@ public abstract class TaskManager {
         return jackTask;
     }
 
+    /**
+     * Must be called before the javac task is created so that we it can be earlier in the transform
+     * pipeline.
+     */
+    protected void createDataBindingMergeArtifactsTaskIfNecessary(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        if (!extension.getDataBinding().isEnabled()) {
+            return;
+        }
+        setDataBindingAnnotationProcessorParams(variantScope);
+        AndroidTask<TransformTask> existing = variantScope
+                .getDataBindingMergeArtifactsTask();
+        if (existing != null) {
+            return;
+        }
+        Optional<AndroidTask<TransformTask>> dataBindingMergeTask;
+        dataBindingMergeTask = variantScope
+                .getTransformManager()
+                .addTransform(tasks, variantScope,
+                        new DataBindingMergeArtifactsTransform(getLogger(), variantScope));
+        variantScope.setDataBindingMergeArtifactsTask(dataBindingMergeTask.get());
+    }
+
     protected void createDataBindingTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
         boolean isJack = Boolean.TRUE.equals(
                 scope.getVariantConfiguration().getJackOptions().isEnabled());
         if (isJack) {
             getLogger().warn("Using Data Binding with Jack compiler is an experimental feature.");
         }
-        CoreJavaCompileOptions javaCompileOptions = scope.getVariantData().getVariantConfiguration()
+        dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
+        AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
+                .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
+        scope.setDataBindingProcessLayoutsTask(processLayoutsTask);
+
+        scope.getGenerateRClassTask().dependsOn(tasks, processLayoutsTask);
+        processLayoutsTask.dependsOn(tasks, scope.getMergeResourcesTask());
+
+        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
+                .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope));
+
+        exportBuildInfo.dependsOn(tasks, processLayoutsTask);
+        exportBuildInfo.dependsOn(tasks, scope.getSourceGenTask());
+
+        AndroidTask<? extends Task> javaCompilerTask = scope.getJavaCompilerTask();
+        if (javaCompilerTask != null) {
+            javaCompilerTask.dependsOn(tasks, exportBuildInfo);
+            javaCompilerTask.dependsOn(tasks, scope.getDataBindingMergeArtifactsTask());
+        }
+
+        // support for split apk
+        for (BaseVariantOutputData baseVariantOutputData : scope.getVariantData().getOutputs()) {
+            final ProcessAndroidResources processResTask =
+                    baseVariantOutputData.processResourcesTask;
+            if (processResTask != null) {
+                processResTask.dependsOn(processLayoutsTask.getName());
+            }
+        }
+    }
+
+    private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
+        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+        CoreJavaCompileOptions javaCompileOptions = variantConfiguration
                 .getJavaCompileOptions();
         CoreAnnotationProcessorOptions processorOptions = javaCompileOptions
                 .getAnnotationProcessorOptions();
@@ -2163,45 +2220,31 @@ public abstract class TaskManager {
                     && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 ots.className(DataBindingBuilder.PROCESSOR_NAME);
             }
-            // TODO eventually javac path will use this as well.
-            if (isJack) {
-                ots.argument(DataBindingBuilder.BUILD_FOLDER_NAME,
-                        scope.getBuildFolderForDataBindingCompiler().getAbsolutePath());
+            String packageName = variantConfiguration.getOriginalApplicationId();
+
+            final DataBindingCompilerArgs.Type type;
+            if (variantData.getType() == VariantType.LIBRARY) {
+                type = DataBindingCompilerArgs.Type.LIBRARY;
+            } else {
+                type = DataBindingCompilerArgs.Type.APPLICATION;
             }
+            int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
+            DataBindingCompilerArgs args = DataBindingCompilerArgs.builder()
+                    .bundleFolder(scope.getBundleFolderForDataBinding())
+                    .buildFolder(scope.getBuildFolderForDataBindingCompiler())
+                    .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
+                    .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
+                    .exportClassListTo(variantData.getType().isExportDataBindingClassList() ?
+                                    scope.getGeneratedClassListOutputFileForDataBinding() : null)
+                    .printEncodedErrorLogs(dataBindingBuilder.getPrintMachineReadableOutput())
+                    .modulePackage(packageName)
+                    .minApi(minApi)
+                    .type(type)
+                    .build();
+            ots.arguments(args.toMap());
         } else {
             getLogger().error("Cannot setup data binding for %s because java compiler options"
                     + " is not an instance of AnnotationProcessorOptions", processorOptions);
-            return;
-        }
-
-        dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
-        AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
-                .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
-        scope.setDataBindingProcessLayoutsTask(processLayoutsTask);
-
-        scope.getGenerateRClassTask().dependsOn(tasks, processLayoutsTask);
-        processLayoutsTask.dependsOn(tasks, scope.getMergeResourcesTask());
-
-        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
-                .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope,
-                        dataBindingBuilder.getPrintMachineReadableOutput()));
-        scope.setDataBindingExportInfoTask(exportBuildInfo);
-
-        exportBuildInfo.dependsOn(tasks, processLayoutsTask);
-        AndroidTask<? extends Task> javaCompilerTask = scope.getJavaCompilerTask();
-        if (javaCompilerTask != null) {
-            javaCompilerTask.dependsOn(tasks, exportBuildInfo);
-        }
-
-        setupCompileTaskDependencies(tasks, scope, exportBuildInfo);
-
-        // support for split apk
-        for (BaseVariantOutputData baseVariantOutputData : scope.getVariantData().getOutputs()) {
-            final ProcessAndroidResources processResTask =
-                    baseVariantOutputData.processResourcesTask;
-            if (processResTask != null) {
-                processResTask.dependsOn(processLayoutsTask.getName());
-            }
         }
     }
 

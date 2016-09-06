@@ -134,26 +134,6 @@ public class JackPreDexTransform extends Transform {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         checkNotNull(outputProvider);
 
-        for (File file : TransformInputUtil.getDirectories(transformInvocation.getInputs())) {
-            JackProcessOptions options = new JackProcessOptions();
-            options.setImportFiles(ImmutableList.of(file));
-            File outDirectory = outputProvider.getContentLocation(
-                    file.getName(),
-                    getOutputTypes(),
-                    getScopes(),
-                    Format.DIRECTORY);
-            options.setDexOutputDirectory(outDirectory);
-            options.setJavaMaxHeapSize(javaMaxHeapSize);
-            options.setAdditionalParameters(coreJackOptions.getAdditionalParameters());
-
-            JackConversionCache.getCache().convertLibrary(
-                    androidBuilder,
-                    file,
-                    outDirectory,
-                    options,
-                    coreJackOptions.isJackInProcess());
-        }
-
         Iterable<File> jarInputs = forPackagedLibs
                 ? TransformInputUtil.getJarFiles(transformInvocation.getInputs())
                 : Iterables.concat(
