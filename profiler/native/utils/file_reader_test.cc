@@ -17,28 +17,36 @@
 
 #include <gtest/gtest.h>
 
+// When using bazel to build, testdata directory needs to be set, since the
+// files are not moved to the root, as it happens when using CMake.
+#ifdef BAZEL
+#define UTILS_TEST_DATA_ROOT "tools/base/profiler/native/testdata/utils/"
+#else
+#define UTILS_TEST_DATA_ROOT ""
+#endif
+
 using profiler::FileReader;
 
 TEST(Read, FileSizeIsSmallerThanPageSize) {
   std::string content;
-  FileReader::Read("file_reader_small.txt", &content);
+  FileReader::Read(UTILS_TEST_DATA_ROOT "file_reader_small.txt", &content);
   EXPECT_EQ(37u, content.size());
 }
 
 TEST(Read, ReadFileSizeLargerThanBufferSize) {
   std::string content;
-  FileReader::Read("file_reader_large.txt", &content);
+  FileReader::Read(UTILS_TEST_DATA_ROOT "file_reader_large.txt", &content);
   EXPECT_EQ(5264u, content.size());
 }
 
 TEST(Read, ReadFileAbsent) {
   std::string content;
-  EXPECT_FALSE(FileReader::Read("file_reader_absent.txt", &content));
+  EXPECT_FALSE(FileReader::Read(UTILS_TEST_DATA_ROOT "file_reader_absent.txt", &content));
 }
 
 TEST(ReadToLines, MultipleLineBreakChars) {
   std::vector<std::string> lines;
-  FileReader::Read("file_reader_multiple_lines.txt", &lines);
+  FileReader::Read(UTILS_TEST_DATA_ROOT "file_reader_multiple_lines.txt", &lines);
   EXPECT_EQ(2u, lines.size());
   EXPECT_EQ("It contains two lines.", lines.at(0));
   EXPECT_EQ("This is the second line.", lines.at(1));
