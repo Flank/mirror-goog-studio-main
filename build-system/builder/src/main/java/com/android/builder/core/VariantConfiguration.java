@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
@@ -546,14 +545,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mFlavors.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
-
-        if (mFlavors.size() == 1) {
-            mMergedFlavor =
-                    DefaultProductFlavor.mergeWithDefaultConfig(mMergedFlavor, productFlavor);
-        } else {
-            mMergedFlavor =
-                    DefaultProductFlavor.mergeFlavors(productFlavor, mMergedFlavor);
-        }
+        mMergedFlavor = DefaultProductFlavor.mergeFlavors(mMergedFlavor, productFlavor);
 
         return this;
     }
