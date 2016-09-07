@@ -221,7 +221,7 @@ test_suite(
     "//tools/base/testutils:tools.tests",
     "//tools/data-binding:db-compilerCommon_tests",
     "//tools:idea.extensions_tests",
-    "//tools:idea.forms-compiler_tests",
+  # "//tools:idea.forms-compiler_tests", # Passes on linux, flaky on some make configurations.
     "//tools:idea.lang-api_tests",
   ],
 )
