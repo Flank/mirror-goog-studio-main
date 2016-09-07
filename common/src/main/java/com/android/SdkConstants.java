@@ -1864,4 +1864,6 @@ public final class SdkConstants {
     public static final String ANDROID_SUPPORT_ARTIFACT_PREFIX = "com.android.";
     /** Prefix of the Google Repository path */
     public static final String GOOGLE_SUPPORT_ARTIFACT_PREFIX = "com.google.android.";
+    /** Prefix of firebase groupIds */
+    public static final String FIREBASE_ARTIFACT_PREFIX = "com.google.firebase.";
 }

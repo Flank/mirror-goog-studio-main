@@ -724,7 +724,8 @@ public class DependencyManager {
 
     private boolean isGoogleOwnedDependency(ModuleVersionSelector selector) {
         return selector.getGroup().startsWith(SdkConstants.ANDROID_SUPPORT_ARTIFACT_PREFIX)
-                ||  selector.getGroup().startsWith(SdkConstants.GOOGLE_SUPPORT_ARTIFACT_PREFIX);
+                || selector.getGroup().startsWith(SdkConstants.GOOGLE_SUPPORT_ARTIFACT_PREFIX)
+                || selector.getGroup().startsWith(SdkConstants.FIREBASE_ARTIFACT_PREFIX);
     }
 
     private static void printIndent(int indent, @NonNull String message) {
