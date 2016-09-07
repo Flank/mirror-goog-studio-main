@@ -39,6 +39,7 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.UpdatablePackage;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.AndroidTargetHash;
@@ -82,6 +83,7 @@ public class DefaultSdkLoader implements SdkLoader {
     private AndroidSdkHandler mSdkHandler;
     private SdkInfo mSdkInfo;
     private final ImmutableList<File> mRepositories;
+    private final  FileOp mFileOp = FileOpUtils.create();
 
     public static synchronized SdkLoader getLoader(
             @NonNull File sdkLocation) {
@@ -457,24 +459,34 @@ public class DefaultSdkLoader implements SdkLoader {
             // the Google repository. If there is one, we update both repositories, since
             // the (maven) packages in the Google repo have dependencies (declared in *.pom files)
             // on packages from the Android repo.
-            if (isInGoogleRepository(repositoryPaths) && (!googleRepositoryPackage.hasLocal()
-                    || googleRepositoryPackage.isUpdate())) {
-                installResults.putAll(
-                        installRemotePackages(
-                                ImmutableList.of(googleRepositoryPackage.getRemote()),
-                                repoManager,
-                                sdkLibData.getDownloader(),
-                                progress));
-
-                if (installResults.get(googleRepositoryPackage.getRemote())
-                        .equals(InstallResultType.SUCCESS)) {
-                    File googleRepo = SdkMavenRepository.GOOGLE
-                            .getRepositoryLocation(mSdkLocation, true, FileOpUtils.create());
+            if (isInGoogleRepository(repositoryPaths)) {
+                // If a Google package is already there and there is no update, it means we've
+                // already done this step, but the list of repositories wasn't updated, so just add
+                // the repo again.
+                if (googleRepositoryPackage.hasLocal() && !googleRepositoryPackage.isUpdate()) {
+                    File googleRepo = getMavenRepoAsFile(SdkMavenRepository.GOOGLE);
                     repositoriesBuilder.add(googleRepo);
+                } else {
+                    installResults.putAll(
+                            installRemotePackages(
+                                    ImmutableList.of(googleRepositoryPackage.getRemote()),
+                                    repoManager,
+                                    sdkLibData.getDownloader(),
+                                    progress));
+
+                    if (installResults.get(googleRepositoryPackage.getRemote())
+                            .equals(InstallResultType.SUCCESS)) {
+                        File googleRepo = getMavenRepoAsFile(SdkMavenRepository.GOOGLE);
+                        repositoriesBuilder.add(googleRepo);
+                    }
                 }
             }
 
-            if (!androidRepositoryPackage.hasLocal() || androidRepositoryPackage.isUpdate()) {
+            // The same as above.
+            if (androidRepositoryPackage.hasLocal() && !androidRepositoryPackage.isUpdate()) {
+                File androidRepo = getMavenRepoAsFile(SdkMavenRepository.ANDROID);
+                repositoriesBuilder.add(androidRepo);
+            } else {
                 installResults.putAll(
                         installRemotePackages(
                                 ImmutableList.of(androidRepositoryPackage.getRemote()),
@@ -485,9 +497,7 @@ public class DefaultSdkLoader implements SdkLoader {
                 if (installResults
                         .get(androidRepositoryPackage.getRemote())
                         .equals(InstallResultType.SUCCESS)) {
-                    File androidRepo =
-                            SdkMavenRepository.ANDROID.getRepositoryLocation(
-                                    mSdkLocation, true, FileOpUtils.create());
+                    File androidRepo = getMavenRepoAsFile(SdkMavenRepository.ANDROID);
                     repositoriesBuilder.add(androidRepo);
                 }
             }
@@ -495,6 +505,10 @@ public class DefaultSdkLoader implements SdkLoader {
         }
 
         return repositoriesBuilder.build();
+    }
+
+    private File getMavenRepoAsFile(SdkMavenRepository mavenRepository) {
+        return mavenRepository.getRepositoryLocation(mSdkLocation, true, mFileOp);
     }
 
     private static boolean isInGoogleRepository(List<String> repoPaths) {
