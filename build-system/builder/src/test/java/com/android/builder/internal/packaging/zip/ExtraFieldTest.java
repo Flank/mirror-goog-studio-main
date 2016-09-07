@@ -63,7 +63,7 @@ public class ExtraFieldTest {
     }
 
     @Parameterized.Parameters
-    public static Object[][] getParameters() {
+    public static ImmutableList<Object[]> getParameters() {
         Function<StoredEntry, ExtraField> localGet = StoredEntry::getLocalExtra;
         BiConsumer<StoredEntry, ExtraField> localSet = (se, ef) -> {
             try {
@@ -83,11 +83,9 @@ public class ExtraFieldTest {
             }
         };
 
-
-        return new Object[][] {
-                { localGet, localSet },
-                { centralGet, centralSet },
-        };
+        return ImmutableList.of(
+                new Object[]{ localGet, localSet },
+                new Object[]{ centralGet, centralSet });
     }
 
     @Test

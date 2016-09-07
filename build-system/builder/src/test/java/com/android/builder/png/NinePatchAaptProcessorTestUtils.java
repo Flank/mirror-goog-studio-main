@@ -26,6 +26,7 @@ import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -75,16 +76,16 @@ public class NinePatchAaptProcessorTestUtils {
     static File getAapt(Revision revision) {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo =
-                AndroidSdkHandler.getInstance(TestUtils.getSdkDir()).getBuildToolInfo(
-                        revision, progress);
+                AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                        .getBuildToolInfo(revision, progress);
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools " + revision.toShortString());
         }
         return new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
     }
 
-
-    public static void tearDownAndCheck(int cruncherKey,
+    public static void tearDownAndCheck(
+            int cruncherKey,
             @NonNull Map<File, File> sourceAndCrunchedFiles,
             @NonNull PngCruncher cruncher,
             @NonNull AtomicLong classStartTime,
@@ -296,7 +297,7 @@ public class NinePatchAaptProcessorTestUtils {
 
     @NonNull
     protected static File getPngFolder() {
-        File folder = TestUtils.getRoot("png");
+        File folder = TestResources.getDirectory("/testData/png");
         assertTrue(folder.isDirectory());
         return folder;
     }
@@ -311,6 +312,7 @@ public class NinePatchAaptProcessorTestUtils {
         } catch (IOException e) {
             System.err.println(Throwables.getStackTraceAsString(e));
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             System.err.println(Throwables.getStackTraceAsString(e));
         }
     }

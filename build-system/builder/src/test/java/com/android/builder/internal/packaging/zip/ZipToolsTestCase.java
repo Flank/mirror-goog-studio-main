@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -77,20 +76,13 @@ public abstract class ZipToolsTestCase {
         mToolStoresDirectories = toolStoresDirectories;
     }
 
-    private static File rsrcFile(@NonNull String name) {
-        File packagingRoot = TestUtils.getRoot("packaging");
-        String rsrcPath = packagingRoot.getAbsolutePath() + "/" + name;
-        File rsrcFile = new File(rsrcPath);
-        return rsrcFile;
-    }
-
     private File cloneZipFile() throws Exception {
         File zfile = mTemporaryFolder.newFile("file.zip");
-        Files.copy(rsrcFile(mZipFile), zfile);
+        Files.copy(ZipTestUtils.rsrcFile(mZipFile), zfile);
         return zfile;
     }
 
-    private void assertFileInZip(@NonNull ZFile zfile, @NonNull String name) throws Exception {
+    private static void assertFileInZip(@NonNull ZFile zfile, @NonNull String name) throws Exception {
         StoredEntry root = zfile.get(name);
         assertNotNull(root);
 
@@ -98,7 +90,7 @@ public abstract class ZipToolsTestCase {
         byte[] inZipData = ByteStreams.toByteArray(is);
         is.close();
 
-        byte[] inFileData = Files.toByteArray(rsrcFile(name));
+        byte[] inFileData = Files.toByteArray(ZipTestUtils.rsrcFile(name));
         assertArrayEquals(inFileData, inZipData);
     }
 
@@ -139,14 +131,14 @@ public abstract class ZipToolsTestCase {
 
         File zfile = new File (mTemporaryFolder.getRoot(), "zfile.zip");
         try (ZFile zf = new ZFile(zfile, options)) {
-            zf.add("root", new FileInputStream(rsrcFile("root")));
+            zf.add("root", new FileInputStream(ZipTestUtils.rsrcFile("root")));
             zf.add("images/", new ByteArrayInputStream(new byte[0]));
-            zf.add("images/lena.png", new FileInputStream(rsrcFile("images/lena.png")));
+            zf.add("images/lena.png", new FileInputStream(ZipTestUtils.rsrcFile("images/lena.png")));
             zf.add("text-files/", new ByteArrayInputStream(new byte[0]));
-            zf.add("text-files/rfc2460.txt", new FileInputStream(rsrcFile(
-                    "text-files/rfc2460.txt")));
+            zf.add("text-files/rfc2460.txt", new FileInputStream(
+                    ZipTestUtils.rsrcFile("text-files/rfc2460.txt")));
             zf.add("text-files/wikipedia.html",
-                    new FileInputStream(rsrcFile("text-files/wikipedia.html")));
+                    new FileInputStream(ZipTestUtils.rsrcFile("text-files/wikipedia.html")));
         }
 
         List<String> command = Lists.newArrayList(mUnzipCommand);
@@ -183,13 +175,13 @@ public abstract class ZipToolsTestCase {
 
         assertSize(new String[] { "images/", "images" }, 0, sizes);
         assertSize(new String[] { "text-files/", "text-files"}, 0, sizes);
-        assertSize(new String[] { "root" }, rsrcFile("root").length(), sizes);
+        assertSize(new String[] { "root" }, ZipTestUtils.rsrcFile("root").length(), sizes);
         assertSize(new String[] { "images/lena.png", "images\\lena.png" },
-                rsrcFile("images/lena.png").length(), sizes);
+                ZipTestUtils.rsrcFile("images/lena.png").length(), sizes);
         assertSize(new String[] { "text-files/rfc2460.txt", "text-files\\rfc2460.txt" },
-                rsrcFile("text-files/rfc2460.txt").length(), sizes);
+                ZipTestUtils.rsrcFile("text-files/rfc2460.txt").length(), sizes);
         assertSize(new String[] { "text-files/wikipedia.html", "text-files\\wikipedia.html" },
-                rsrcFile("text-files/wikipedia.html").length(), sizes);
+                ZipTestUtils.rsrcFile("text-files/wikipedia.html").length(), sizes);
     }
 
     private static void assertSize(String[] names, long size, Map<String, Integer> sizes) {

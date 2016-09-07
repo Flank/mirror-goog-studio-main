@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.incremental;
 
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 
 import junit.framework.TestCase;
 
@@ -86,8 +86,8 @@ public class DependencyDataTest extends TestCase {
         assertEquals("/path/to/project/build/source/aidl/debug/com/example/IService.java", outputs.get(0));
     }
 
-    private DependencyData getData(String name) throws IOException {
-        File depFile = new File(TestUtils.getRoot("dependencyData"), name);
+    private static DependencyData getData(String name) throws IOException {
+        File depFile = TestResources.getFile("/testData/dependencyData/" + name);
         DependencyData data = DependencyData.parseDependencyFile(depFile);
         assertNotNull(data);
         return data;

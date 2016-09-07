@@ -30,13 +30,13 @@ java_library(
     ],
 )
 
-# TODO: Add build-tools to the SDK in prebuilts to make this pass.
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
     javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
+    resources = glob(["src/test/resources/**"]),
     deps = [
         ":builder",
         "//tools/base/annotations",
@@ -54,4 +54,14 @@ java_test(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.mockito_mockito-all",
     ],
+    data = [
+        "//prebuilts/studio/sdk:build-tools/20.0.0",
+        "//prebuilts/studio/sdk:build-tools/21.0.0",
+        "//prebuilts/studio/sdk:build-tools/22.0.1",
+        "//prebuilts/studio/sdk:build-tools/23.0.0",
+        "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:platforms/android-19.minimal",
+        "//prebuilts/studio/sdk:platforms/android-21.minimal",
+        "//prebuilts/studio/sdk:platforms/latest.minimal",
+    ]
 )

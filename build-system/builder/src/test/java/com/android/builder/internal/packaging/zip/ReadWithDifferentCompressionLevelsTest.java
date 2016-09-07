@@ -18,7 +18,7 @@ package com.android.builder.internal.packaging.zip;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 
 import org.junit.Test;
 
@@ -28,9 +28,10 @@ public class ReadWithDifferentCompressionLevelsTest {
 
     @Test
     public void readL9() throws Exception {
-        File packagingRoot = TestUtils.getRoot("packaging");
-        String rsrcPath = packagingRoot.getAbsolutePath() + "/l9.zip";
-        File l9File = new File(rsrcPath);
+        File l9File =
+                TestResources.getFile(
+                        ReadWithDifferentCompressionLevelsTest.class,
+                        "/testData/packaging/l9.zip");
 
         try (ZFile read = new ZFile(l9File, new ZFileOptions())) {
             assertNotNull(read.get("text-files/rfc2460.txt"));
@@ -39,9 +40,10 @@ public class ReadWithDifferentCompressionLevelsTest {
 
     @Test
     public void readL1() throws Exception {
-        File packagingRoot = TestUtils.getRoot("packaging");
-        String rsrcPath = packagingRoot.getAbsolutePath() + "/l1.zip";
-        File l1File = new File(rsrcPath);
+        File l1File =
+                TestResources.getFile(
+                        ReadWithDifferentCompressionLevelsTest.class,
+                        "/testData/packaging/l1.zip");
 
         try (ZFile read = new ZFile(l1File, new ZFileOptions())) {
             assertNotNull(read.get("text-files/rfc2460.txt"));

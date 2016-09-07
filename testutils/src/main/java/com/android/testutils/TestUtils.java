@@ -21,9 +21,11 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
+
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.IOException;
-import junit.framework.TestCase;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -241,29 +243,6 @@ public class TestUtils {
     @NonNull
     public static String getLatestAndroidPlatform() {
         return "android-24";
-    }
-
-    /**
-     * Returns the SDK directory as built from the Android source tree. This requires that the
-     * ANDROID_HOME environment variable is set, or else it will throw an exception.
-     *
-     * @return the SDK directory
-     *
-     * @deprecated Tests are incrementally being migrated to use a checked-in development SDK
-     * instead. Use {@link #getSdkFile(String)} instead.
-     */
-    @NonNull
-    @Deprecated
-    public static File getSdkDir() {
-        String androidHome = System.getenv("ANDROID_HOME");
-        if (androidHome != null) {
-            File f = new File(androidHome);
-            if (f.isDirectory()) {
-                return f;
-            }
-        }
-
-        throw new IllegalStateException("SDK directory not defined with ANDROID_HOME");
     }
 
     /**

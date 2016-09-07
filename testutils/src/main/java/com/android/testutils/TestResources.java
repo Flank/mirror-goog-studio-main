@@ -16,8 +16,9 @@
 
 package com.android.testutils;
 
-import com.google.common.io.Resources;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +36,17 @@ public final class TestResources {
     private TestResources() {}
 
     /**
+     * Variant of {@link #getFile(Class, String)} that only works with absolute paths, so doesn't
+     * need a "context" class.
+     *
+     * @see #getFile(Class, String)
+     */
+    public static File getFile(String name) {
+        Preconditions.checkArgument(name.startsWith("/"), "'%s' is not an absolute path.", name);
+        return getFile(TestResources.class, name);
+    }
+
+    /**
      * Returns a file from class resources. If original resource is not file, a temp file is created
      * and returned with resource stream content; the temp file will be deleted when program exits.
      *
@@ -49,12 +61,16 @@ public final class TestResources {
         }
 
         try {
-            File tempFile = File.createTempFile(name, null);
-            try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
-                Resources.copy(url, outputStream);
-                tempFile.deleteOnExit();
-                return tempFile;
-            }
+            // Put the file in a temporary directory, so that the file itself can have its original
+            // name.
+            File tempDir = Files.createTempDir();
+            File tempFile = new File(tempDir, name);
+            tempFile.deleteOnExit();
+            tempDir.deleteOnExit();
+
+            Files.createParentDirs(tempFile);
+            Resources.asByteSource(url).copyTo(Files.asByteSink(tempFile));
+            return tempFile;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,6 +99,17 @@ public final class TestResources {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Variant of {@link #getDirectory(Class, String)} that only works with absolute paths, so
+     * doesn't need a "context" class.
+     *
+     * @see #getDirectory(Class, String)
+     */
+    public static File getDirectory(String name) {
+        Preconditions.checkArgument(name.startsWith("/"), "'%s' is not an absolute path.", name);
+        return getDirectory(TestResources.class, name);
     }
 
     /**

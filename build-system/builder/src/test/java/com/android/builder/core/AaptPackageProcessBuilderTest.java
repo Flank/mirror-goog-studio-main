@@ -16,19 +16,16 @@
 
 package com.android.builder.core;
 
-import com.android.annotations.NonNull;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidLibrary;
 import com.android.ide.common.process.ProcessInfo;
 import com.android.repository.Revision;
-import com.android.repository.api.LocalPackage;
-import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.AndroidTargetManager;
+import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +59,7 @@ public class AaptPackageProcessBuilderTest extends TestCase {
         super.setUp();
         MockitoAnnotations.initMocks(this);
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(getSdkDir());
+        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(TestUtils.getSdk());
         mBuildToolInfo = handler.getLatestBuildTool(progress, false);
         if (mBuildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools 21");
@@ -652,25 +649,8 @@ public class AaptPackageProcessBuilderTest extends TestCase {
         assertEquals("bar", env.get("foo"));
     }
 
-    /**
-     * Returns the SDK folder as built from the Android source tree.
-     * @return the SDK
-     */
-    @NonNull
-    protected static File getSdkDir() {
-        String androidHome = System.getenv("ANDROID_HOME");
-        if (androidHome != null) {
-            File f = new File(androidHome);
-            if (f.isDirectory()) {
-                return f;
-            }
-        }
-
-        throw new IllegalStateException("SDK not defined with ANDROID_HOME");
-    }
-
     private static BuildToolInfo getBuildToolInfo(Revision revision) {
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(getSdkDir());
+        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(TestUtils.getSdk());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo = handler.getBuildToolInfo(revision, progress);
         if (buildToolInfo == null) {
@@ -680,7 +660,7 @@ public class AaptPackageProcessBuilderTest extends TestCase {
     }
 
     private static Collection<IAndroidTarget> getTargets() {
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(getSdkDir());
+        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(TestUtils.getSdk());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         Collection<IAndroidTarget> targets = handler.getAndroidTargetManager(progress)
                 .getTargets(progress);

@@ -25,16 +25,21 @@ import com.android.builder.internal.packaging.zip.ZFile;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Set;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.internal.util.collections.Sets;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Set;
+
 public class ManifestGenerationTest {
+
+    private static final String WIKI_PATH = "/testData/packaging/text-files/wikipedia.html";
+
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
@@ -78,14 +83,10 @@ public class ManifestGenerationTest {
         File zip = new File(mTemporaryFolder.getRoot(), "f.zip");
         try (Closer closer = Closer.create()) {
             ZFile zf = closer.register(new ZFile(zip));
-            zf.add("wiki",
-                    closer.register(
-                            new FileInputStream(
-                                    new File(
-                                            TestUtils.getRoot(
-                                                    "packaging",
-                                                    "text-files"),
-                                            "wikipedia.html"))));
+
+            try (InputStream wiki = getClass().getResourceAsStream(WIKI_PATH)) {
+                zf.add("wiki", wiki);
+            }
 
             ManifestGenerationExtension extension =
                     new ManifestGenerationExtension("Me, of course", "Myself");
@@ -118,14 +119,11 @@ public class ManifestGenerationTest {
         File zip = new File(mTemporaryFolder.getRoot(), "f.zip");
         try (Closer closer = Closer.create()) {
             ZFile zf = closer.register(new ZFile(zip));
-            zf.add("wiki",
-                    closer.register(
-                            new FileInputStream(
-                                    new File(
-                                            TestUtils.getRoot(
-                                                    "packaging",
-                                                    "text-files"),
-                                            "wikipedia.html"))));
+
+            try (InputStream wiki = getClass().getResourceAsStream(WIKI_PATH)) {
+                zf.add("wiki", wiki);
+            }
+
             zf.close();
 
             ManifestGenerationExtension extension =
@@ -164,14 +162,9 @@ public class ManifestGenerationTest {
                     new ManifestGenerationExtension("Me, of course", "Myself");
             extension.register(zf);
 
-            zf.add("wiki",
-                    closer.register(
-                            new FileInputStream(
-                                    new File(
-                                            TestUtils.getRoot(
-                                                    "packaging",
-                                                    "text-files"),
-                                            "wikipedia.html"))));
+            try (InputStream wiki = getClass().getResourceAsStream(WIKI_PATH)) {
+                zf.add("wiki", wiki);
+            }
 
             zf.close();
 

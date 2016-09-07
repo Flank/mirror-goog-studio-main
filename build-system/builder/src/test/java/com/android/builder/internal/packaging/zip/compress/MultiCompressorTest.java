@@ -25,7 +25,7 @@ import com.android.builder.internal.packaging.zip.CompressionMethod;
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.ZFile;
 import com.android.builder.internal.packaging.zip.ZFileOptions;
-import com.android.testutils.TestUtils;
+import com.android.testutils.TestResources;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -42,8 +42,9 @@ public class MultiCompressorTest {
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     private byte[] getCompressibleData() throws Exception {
-        File packagingRoot = TestUtils.getRoot("packaging");
-        File textFiles = new File(packagingRoot, "text-files");
+        File textFiles =
+                TestResources.getDirectory(
+                        MultiCompressorTest.class, "/testData/packaging/text-files");
         assertTrue(textFiles.isDirectory());
         File wikipediaFile = new File(textFiles, "wikipedia.html");
         assertTrue(wikipediaFile.isFile());
