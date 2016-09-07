@@ -23,15 +23,20 @@ import com.android.repository.api.Installer;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.PackageOperation;
+import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.Uninstaller;
+import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,12 +63,57 @@ public class SdkDownloader {
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(settings.getLocalPath());
         RepoManager mgr = handler.getSdkManager(progress);
 
-        if (settings.isInstallAction()) {
-            installPackages(settings, progress, handler, mgr);
+        if (settings.isList()) {
+            listPackages(progress, handler, mgr, settings);
         } else {
-            uninstallPackages(settings, progress, handler, mgr);
+            if (settings.isInstallAction()) {
+                installPackages(settings, progress, handler, mgr);
+            }
+            else {
+                uninstallPackages(settings, progress, handler, mgr);
+            }
         }
-        progress.logInfo("done");
+        System.out.println("done");
+    }
+
+    private static void listPackages(@NonNull ProgressIndicator progress,
+            @NonNull AndroidSdkHandler handler, @NonNull RepoManager mgr,
+            @NonNull Settings settings) {
+        LegacyDownloader downloader = new LegacyDownloader(handler.getFileOp());
+        mgr.loadSynchronously(0, progress, downloader, settings);
+
+        System.out.println("Installed packages:");
+        RepositoryPackages packages = mgr.getPackages();
+        int maxPath = 0;
+        int maxDescription = 0;
+        int maxLocation = 0;
+
+        for (LocalPackage p : packages.getLocalPackages().values()) {
+            maxPath = Math.max(maxPath, p.getPath().length());
+            maxDescription = Math.max(maxDescription, p.getDisplayName().length());
+            maxLocation = Math.max(maxLocation,
+                    FileUtils.relativePath(p.getLocation(), mgr.getLocalPath()).length());
+        }
+        String pattern = String.format("  %%-%ds %%-%ds %%-%ds", maxPath, maxDescription, maxLocation);
+        String separator = "-------";
+        System.out.printf(pattern, separator, separator, separator);
+        for (LocalPackage p : Sets.newTreeSet(packages.getLocalPackages().values())) {
+            System.out.printf(pattern, p.getPath(), p.getDisplayName(),
+                    FileUtils.relativePath(p.getLocation(), mgr.getLocalPath()));
+        }
+        System.out.println();
+
+        for (RemotePackage p : packages.getRemotePackages().values()) {
+            maxPath = Math.max(maxPath, p.getPath().length());
+            maxDescription = Math.max(maxDescription, p.getDisplayName().length());
+        }
+        pattern = String.format("  %%-%ds %%-%ds", maxPath, maxDescription);
+
+        System.out.println("Available packages:");
+        System.out.printf(pattern, separator, separator);
+        for (RemotePackage p : Sets.newTreeSet(packages.getRemotePackages().values())) {
+            System.out.printf(pattern, p.getPath(), p.getDisplayName());
+        }
     }
 
     private static void installPackages(
@@ -137,16 +187,24 @@ public class SdkDownloader {
     }
 
     private static void usageAndExit() {
-        System.err.println("Usage: java com.android.sdklib.tool.SdkDownloader \\");
-        System.err.println("  --uninstall");
-        System.err.println("  --update [--channel=<channelId>] <sdk path>");
-        System.err.println("  [--channel=<channelId>] <sdk path> "
-                + "[--package_file <package-file>] <packages>...");
+        System.err.println("Usage: ");
+        System.err.println("  sdk-downloader [--uninstall] [--update] [--channel=<channelId>] \\");
+        System.err.println("    [--package_file <package-file>] <sdk path> [<packages>...]");
+        System.err.println("  sdk-downloader --list <sdk path>");
         System.err.println();
-        System.err.println("<package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or "
+        System.err.println("In its first form, installs, uninstalls, or updates packages.");
+        System.err.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or "
                 + "\"platforms;android-23\")");
-        System.err.println("<package-file> is a text file where each line is a sdk-style path");
-        System.err.println("<channelId> is the id of the least stable channel to check");
+        System.err.println("    <package-file> is a text file where each line is a sdk-style path "
+                + " of a package to install or uninstall.");
+        System.err.println("    Multiple --package_file arguments may be specified in combination "
+                + "with explicit paths.");
+        System.err.println("    If --update is specified, currently installed packages are "
+                + "updated, and no further processing is done.");
+        System.err.println("    <channelId> is the id of the least stable channel to check");
+        System.err.println();
+        System.err.println("In its second form, all installed and available packages are printed "
+                + "out.");
         System.err.println();
         System.err.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
                 + "  \"macosx\", or \"linux\", packages will be downloaded for that OS");
@@ -159,12 +217,14 @@ public class SdkDownloader {
         private static final String UNINSTALL_ARG = "--uninstall";
         private static final String UPDATE_ARG = "--update";
         private static final String PKG_FILE_ARG = "--package_file=";
+        private static final String LIST_ARG = "--list";
 
         private File mLocalPath;
         private List<String> mPackages = new ArrayList<>();
         private int mChannel = 0;
         private boolean mIsInstall = true;
         private boolean mIsUpdate = false;
+        private boolean mIsList = false;
 
         @Nullable
         public static Settings createSettings(@NonNull String[] args) {
@@ -174,6 +234,8 @@ public class SdkDownloader {
                     result.mIsInstall = false;
                 } else if (arg.equals(UPDATE_ARG)) {
                     result.mIsUpdate = true;
+                } else if (arg.equals(LIST_ARG)) {
+                    result.mIsList = true;
                 } else if (arg.startsWith(CHANNEL_ARG)) {
                     try {
                         result.mChannel = Integer.parseInt(arg.substring(CHANNEL_ARG.length()));
@@ -205,7 +267,8 @@ public class SdkDownloader {
                     result.mPackages.add(arg);
                 }
             }
-            if (result.mLocalPath == null || (result.mPackages.isEmpty() && !result.mIsUpdate)) {
+            if (result.mLocalPath == null ||
+                    !result.mPackages.isEmpty() == (result.mIsUpdate || result.mIsList)) {
                 return null;
             }
             return result;
@@ -247,5 +310,9 @@ public class SdkDownloader {
         }
 
         private Settings() {}
+
+        public boolean isList() {
+            return mIsList;
+        }
     }
 }
