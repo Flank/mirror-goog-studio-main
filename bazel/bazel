@@ -16,7 +16,7 @@ def main():
     jdk_subdir = 'linux'
   elif sys.platform == 'darwin':
     platform = 'mac'
-    jdk_subdir = os.path.join('mac', 'Contents', 'Home'),
+    jdk_subdir = os.path.join('mac', 'Contents', 'Home')
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
