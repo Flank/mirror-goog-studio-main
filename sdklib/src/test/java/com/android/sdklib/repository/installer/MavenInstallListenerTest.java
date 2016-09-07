@@ -74,8 +74,7 @@ public class MavenInstallListenerTest extends TestCase {
                     + "  <name>test package 1 version 1.2.3</name>\n"
                     + "</project>";
 
-    // http://ag/1394998
-    public void ignore_testInstallFirst() throws Exception {
+    public void testInstallFirst() throws Exception {
         File root = new File("/repo");
         MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl(fop);
@@ -163,8 +162,7 @@ public class MavenInstallListenerTest extends TestCase {
 
     }
 
-    // http://ag/1394998
-    public void ignore_testInstallAdditional() throws Exception {
+    public void testInstallAdditional() throws Exception {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile("/repo/m2repository/com/android/group1/artifact1/maven-metadata.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -269,8 +267,7 @@ public class MavenInstallListenerTest extends TestCase {
         assertEquals(new Revision(3), newPkg.getVersion());
     }
 
-    // http://ag/1394998
-    public void ignore_testRemove() throws Exception {
+    public void testRemove() throws Exception {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.2.3/package.xml",

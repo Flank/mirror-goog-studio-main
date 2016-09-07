@@ -44,6 +44,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
@@ -320,10 +321,13 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
     @XmlRootElement(name = "project", namespace = "http://maven.apache.org/POM/4.0.0")
     private static class PackageInfo {
 
+        @XmlElement(namespace = "http://maven.apache.org/POM/4.0.0")
         public String artifactId;
 
+        @XmlElement(namespace = "http://maven.apache.org/POM/4.0.0")
         public String groupId;
 
+        @XmlElement(namespace = "http://maven.apache.org/POM/4.0.0")
         public String version;
     }
 }
