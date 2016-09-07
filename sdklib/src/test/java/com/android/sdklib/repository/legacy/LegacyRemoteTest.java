@@ -92,6 +92,7 @@ public class LegacyRemoteTest extends TestCase {
         Assert.assertEquals(12, packages.getNewPkgs().size());
 
         settings.setChannel(Channel.create(1));
+        mgr.markInvalid();
         mgr.load(0, Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
                 Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
                 Lists.<Runnable>newArrayList(), runner, downloader, settings, true);
