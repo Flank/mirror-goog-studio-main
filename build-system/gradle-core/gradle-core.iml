@@ -1065,10 +1065,10 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="protobuf" level="project" />
-    <orderEntry type="module" module-name="analytics-protos" />
+    <orderEntry type="module" module-name="analytics-protos-base" />
     <orderEntry type="library" scope="TEST" name="guava-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
+    <orderEntry type="library" name="protobuf" level="project" />
   </component>
 </module>
