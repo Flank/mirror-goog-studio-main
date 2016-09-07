@@ -12,26 +12,22 @@ def main():
   if not workspace:
     sys.exit('Must run %s within a workspace.' % os.path.basename(sys.argv[0]))
   if sys.platform.startswith('linux'):
-    bazel = os.path.join(
-        workspace, 'tools', 'base', 'bazel', 'prebuilts', 'linux', 'bazel-real')
-    env = {
-        'CC': '/usr/bin/gcc',
-        'JAVA_HOME': os.path.join(
-            workspace, 'prebuilts', 'studio', 'jdk', 'linux'),
-        'TERM': os.environ.get('TERM') or '',
-    }
+    platform = 'linux'
+    jdk_subdir = 'linux'
   elif sys.platform == 'darwin':
-    bazel = os.path.join(
-        workspace, 'tools', 'base', 'bazel', 'prebuilts', 'mac', 'bazel-real')
-    env = {
-        'CC': '/usr/bin/gcc',
-        'JAVA_HOME': os.path.join(
-            workspace, 'prebuilts', 'studio', 'jdk', 'mac', 'Contents', 'Home'),
-        'TERM': os.environ.get('TERM') or '',
-    }
+    platform = 'mac'
+    jdk_subdir = os.path.join('mac', 'Contents', 'Home'),
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
+  bazel = os.path.join(
+      workspace, 'tools', 'base', 'bazel', 'prebuilts', platform, 'bazel-real')
+  env = {
+      'CC': '/usr/bin/gcc',
+      'JAVA_HOME': os.path.join(
+          workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir),
+      'TERM': os.environ.get('TERM') or '',
+  }
   sys.exit(subprocess.call([bazel] + sys.argv[1:], env=env))
 
 
