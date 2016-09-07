@@ -248,8 +248,9 @@ public abstract class Detector {
 
         /**
          * Returns a list of fully qualified names for super classes that this
-         * detector cares about. If not null, this detector will *only* be called
-         * if the current class is a subclass of one of the specified superclasses.
+         * detector cares about. If not null, this detector will be called if
+         * the current class is a subclass of one of the specified
+         * superclasses.
          *
          * @return a list of fully qualified names
          */

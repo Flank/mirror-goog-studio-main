@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 281;
+    static final int INITIAL_CAPACITY = 285;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -107,6 +107,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ExtraTextDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(FirebaseAnalyticsDetector.INVALID_NAME);
+        issues.add(FirebaseMessagingDetector.MISSING_TOKEN_REFRESH);
         issues.add(FullBackupContentDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);

@@ -196,7 +196,6 @@ public class JavaPsiVisitor {
                     }
                     list.add(v);
                 }
-                continue;
             }
 
             List<Class<? extends PsiElement>> nodePsiTypes = detector.getApplicablePsiTypes();
@@ -264,7 +263,8 @@ public class JavaPsiVisitor {
 
             if (detector.appliesToResourceRefs()) {
                 mResourceFieldDetectors.add(v);
-            } else if ((referenceNames == null || referenceNames.isEmpty())
+            } else if ((applicableSuperClasses == null || applicableSuperClasses.isEmpty())
+                    && (referenceNames == null || referenceNames.isEmpty())
                     && (nodePsiTypes == null || nodePsiTypes.isEmpty())
                     && (types == null || types.isEmpty())) {
                 mFullTreeDetectors.add(v);
