@@ -126,6 +126,10 @@ public interface IDevice extends IShellEnabledDevice {
             }
             return null;
         }
+
+        public String getState() {
+            return mState;
+        }
     }
 
     /**

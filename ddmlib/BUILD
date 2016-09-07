@@ -5,6 +5,7 @@ iml_module(
     name = "studio.ddmlib",
     srcs = ["src/main/java"],
     test_srcs = ["src/test/java"],
+    test_resources = ["src/test/resources"],
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/idea/.idea/libraries:kxml2",
