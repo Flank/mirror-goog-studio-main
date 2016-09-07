@@ -42,5 +42,6 @@
     <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="apkzlib" />
     <orderEntry type="module" module-name="instant-run-instrumentation" />
+    <orderEntry type="module" module-name="apksig" scope="TEST" />
   </component>
 </module>

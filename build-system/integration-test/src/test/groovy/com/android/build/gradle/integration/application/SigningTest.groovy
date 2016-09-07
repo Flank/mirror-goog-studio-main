@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.apksig.ApkVerifier
+import com.android.apksig.ApkVerifier.IssueWithParams
+import com.android.apksig.zip.ZipFormatException
 import com.android.apkzlib.sign.DigestAlgorithm
 import com.android.apkzlib.sign.SignatureAlgorithm
 import com.android.build.gradle.integration.common.category.DeviceTests
@@ -38,6 +41,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.Range
 import com.google.common.io.Resources
 import groovy.transform.CompileStatic
+import java.security.NoSuchAlgorithmException
 import org.hamcrest.Matcher
 import org.junit.Assume
 import org.junit.Before
@@ -58,6 +62,9 @@ import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PA
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V1_ENABLED
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V2_ENABLED
 import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertTrue
+import static org.junit.Assert.fail
 
 /**
  * Integration test for all signing-related features.
@@ -83,7 +90,12 @@ class SigningTest {
         parameters.add([
                 "dsa_keystore.jks",
                 "CERT.DSA",
-                SignatureAlgorithm.DSA.minSdkVersion] as Object[]);
+                // TODO: Switch back to SignatureAlgorithm.DSA.minSdkVersion once packaging code
+                // uses apksig library.
+                // DSA signatures are supported for APKs since API Level 1. However, packaging
+                // code outputs a form of DSA signatures which aren't supported prior to API
+                // Level 9.
+                9] as Object[]);
         parameters.add([
                 "ec_keystore.jks",
                 "CERT.EC",
@@ -174,7 +186,11 @@ class SigningTest {
     @Test
     void "signing DSL"() throws Exception {
         execute("assembleDebug")
-        assertThatZip(project.getApk("debug")).contains("META-INF/$certEntryName")
+        File apk = project.getApk("debug")
+        assertThatZip(apk).contains("META-INF/$certEntryName")
+        assertThatZip(apk).contains("META-INF/CERT.SF")
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
     }
 
     @Test
@@ -187,9 +203,13 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD)
 
         project.executor().withArguments(args).run("assembleRelease")
+        File apk = project.getApk("release")
 
         // Check for signing file inside the archive.
-        assertThatZip(project.getApk("release")).contains("META-INF/$certEntryName")
+        assertThatZip(apk).contains("META-INF/$certEntryName")
+        assertThatZip(apk).contains("META-INF/CERT.SF")
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
     }
 
     @Test
@@ -362,8 +382,12 @@ class SigningTest {
 
         // Toggles not specified -- testing their default values
         execute("clean", "assembleDebug")
+        assertThatApk(apk).contains("META-INF/$certEntryName")
         assertThatApk(apk).contains("META-INF/CERT.SF")
         assertThatApk(apk).containsApkSigningBlock()
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
+        assertTrue(verificationResult.isVerifiedUsingV2Scheme())
 
         // Specified: v1SigningEnabled false, v2SigningEnabled false
         TestFileUtils.searchAndReplace(
@@ -372,8 +396,10 @@ class SigningTest {
                 "customDebug {\nv1SigningEnabled false\nv2SigningEnabled false")
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
+        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
         assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
         assertThatApk(apk).doesNotContainApkSigningBlock()
+        assertApkSignaturesDoNotVerify(apk, minSdkVersion)
 
         // Specified: v1SigningEnabled true, v2SigningEnabled false
         TestFileUtils.searchAndReplace(
@@ -382,8 +408,12 @@ class SigningTest {
                 "v1SigningEnabled true")
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
+        assertThatApk(apk).contains("META-INF/$certEntryName")
         assertThatApk(apk).contains("META-INF/CERT.SF")
         assertThatApk(apk).doesNotContainApkSigningBlock()
+        verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
+        assertFalse(verificationResult.isVerifiedUsingV2Scheme())
 
         // Specified: v1SigningEnabled false, v2SigningEnabled true
         TestFileUtils.searchAndReplace(
@@ -396,8 +426,14 @@ class SigningTest {
                 "v2SigningEnabled true")
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
+        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
         assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
         assertThatApk(apk).containsApkSigningBlock()
+        // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
+        assertApkSignaturesDoNotVerify(apk, Math.min(23, minSdkVersion))
+        verificationResult = assertApkSignaturesVerify(apk, Math.max(24, minSdkVersion))
+        assertFalse(verificationResult.isVerifiedUsingV1Scheme())
+        assertTrue(verificationResult.isVerifiedUsingV2Scheme())
 
         // Specified: v1SigningEnabled true, v2SigningEnabled true
         TestFileUtils.searchAndReplace(
@@ -406,8 +442,12 @@ class SigningTest {
                 "v1SigningEnabled true")
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
+        assertThatApk(apk).contains("META-INF/$certEntryName")
         assertThatApk(apk).contains("META-INF/CERT.SF")
         assertThatApk(apk).containsApkSigningBlock()
+        verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
+        assertTrue(verificationResult.isVerifiedUsingV2Scheme())
     }
 
     @Test
@@ -425,7 +465,11 @@ class SigningTest {
         File apk = project.getApk("release")
 
         assertThatApk(apk).contains("META-INF/$certEntryName")
+        assertThatApk(apk).contains("META-INF/CERT.SF")
         assertThatApk(apk).doesNotContainApkSigningBlock()
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme())
+        assertFalse(verificationResult.isVerifiedUsingV2Scheme())
     }
 
     @Test
@@ -443,6 +487,49 @@ class SigningTest {
         File apk = project.getApk("release")
 
         assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
+        assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
         assertThatApk(apk).containsApkSigningBlock()
+        // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
+        assertApkSignaturesDoNotVerify(apk, 23)
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24))
+        assertFalse(verificationResult.isVerifiedUsingV1Scheme())
+        assertTrue(verificationResult.isVerifiedUsingV2Scheme())
+    }
+
+    private static ApkVerifier.Result assertApkSignaturesVerify(File apk, int minSdkVersion)
+            throws IOException, NoSuchAlgorithmException, ZipFormatException {
+        ApkVerifier.Result result =
+                new ApkVerifier.Builder(apk)
+                        .setMinCheckedPlatformVersion(minSdkVersion)
+                        .build()
+                        .verify()
+        if (result.isVerified()) {
+            return result
+        }
+
+        List<IssueWithParams> errors = new ArrayList<>()
+        errors.addAll(result.getErrors())
+        for (ApkVerifier.Result.V1SchemeSignerInfo signer : result.getV1SchemeSigners()) {
+            errors.addAll(signer.getErrors())
+        }
+        for (ApkVerifier.Result.V2SchemeSignerInfo signer : result.getV2SchemeSigners()) {
+            errors.addAll(signer.getErrors())
+        }
+        fail("APK signatures failed to verify. " + errors.size() + " error(s): " + errors)
+    }
+
+    private static ApkVerifier.Result assertApkSignaturesDoNotVerify(File apk, int minSdkVersion)
+            throws IOException, NoSuchAlgorithmException, ZipFormatException {
+        ApkVerifier.Result result =
+                new ApkVerifier.Builder(apk)
+                        .setMinCheckedPlatformVersion(minSdkVersion)
+                        .build()
+                        .verify()
+        if (result.isVerified()) {
+            fail("APK signatures unexpectedly verified")
+            return null
+        }
+        return result
     }
 }
