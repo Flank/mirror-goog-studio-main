@@ -94,18 +94,26 @@ public class NativeAndroidProjectSubject
     }
 
     @NonNull
-    private Set<Path> getIntermediates() throws IOException {
+    private Set<File> getIntermediatesFolders(@NonNull  String baseFolder) {
         Set<File> intermediatesFolders = Sets.newHashSet();
         for (NativeArtifact artifact : getSubject().getArtifacts()) {
             File intermediatesBaseFolder = artifact.getOutputFile();
             File externalNativeBuildFolder;
             do {
+                if (intermediatesBaseFolder.getName().equals("project")) {
+                    return intermediatesFolders;
+                }
                 intermediatesBaseFolder = intermediatesBaseFolder.getParentFile();
-                externalNativeBuildFolder = new File(intermediatesBaseFolder,
-                        ".externalNativeBuild");
+                externalNativeBuildFolder = new File(intermediatesBaseFolder, baseFolder);
             } while(!externalNativeBuildFolder.isDirectory());
             intermediatesFolders.add(externalNativeBuildFolder);
         }
+        return intermediatesFolders;
+    }
+
+    @NonNull
+    private Set<Path> getIntermediates(String baseFolder) throws IOException {
+        Set<File> intermediatesFolders = getIntermediatesFolders(baseFolder);
 
         Set<Path> intermediates = Sets.newHashSet();
         for (File intermediatesFolder : intermediatesFolders) {
@@ -118,8 +126,9 @@ public class NativeAndroidProjectSubject
     }
 
     @NonNull
-    private Set<String> getIntermediatesNames(String extension) throws IOException {
-        Set<Path> intermediates = getIntermediates();
+    private Set<String> getIntermediatesNames(String extension,
+            String baseFolder) throws IOException {
+        Set<Path> intermediates = getIntermediates(baseFolder);
         Set<String> names = Sets.newHashSet();
         for (Path intermediate : intermediates) {
             if (intermediate.getFileName().toString().endsWith(extension)) {
@@ -130,15 +139,18 @@ public class NativeAndroidProjectSubject
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    private void hasExactOutputFiles(String extension, String... baseName) throws IOException {
-        Set<String> intermediateNames = getIntermediatesNames(extension);
+    private void hasExactOutputFiles(
+            String extension,
+            String baseFolder,
+            String... baseName) throws IOException {
+        Set<String> intermediateNames = getIntermediatesNames(extension, baseFolder);
         Set<String> expected = Sets.newHashSet(baseName);
         Set<String> expectedNotFound = Sets.newHashSet();
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
             failWithRawMessage("Not true that %s build intermediates was %s. Set %s was missing %s",
-                    getDisplaySubject(),
+                    getIntermediatesFolders(baseFolder),
                     expected,
                     intermediateNames,
                     expectedNotFound);
@@ -149,22 +161,27 @@ public class NativeAndroidProjectSubject
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
             failWithRawMessage("Not true that %s build intermediates was %s. It had extras %s",
-                    getDisplaySubject(),
+                    getIntermediatesFolders(baseFolder),
                     expected,
                     foundNotExpected);
         }
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void hasExactObjectFiles(String... baseName) throws IOException {
-        hasExactOutputFiles(".o", baseName);
+    public void hasExactObjectFilesInBuildFolder(String... baseName) throws IOException {
+        hasExactOutputFiles(".o", "build", baseName);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void hasExactSharedObjectFiles(String... baseName) throws IOException {
-        hasExactOutputFiles(".so", baseName);
+    public void hasExactObjectFilesInExternalNativeBuildFolder(
+            String... baseName) throws IOException {
+        hasExactOutputFiles(".o", ".externalNativeBuild", baseName);
     }
 
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasExactSharedObjectFilesInBuildFolder(String... baseName) throws IOException {
+        hasExactOutputFiles(".so", "build", baseName);
+    }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasBuildOutputCountEqualTo(int expectedCount) {
