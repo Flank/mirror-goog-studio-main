@@ -36,7 +36,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.tools.lint.psi.EcjPsiJavaEvaluator;
 import com.android.tools.lint.psi.EcjPsiManager;
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;

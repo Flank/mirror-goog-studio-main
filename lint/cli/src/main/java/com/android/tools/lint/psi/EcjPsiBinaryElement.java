@@ -22,6 +22,8 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiInvalidElementAccessException;
 
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 
@@ -88,6 +90,11 @@ abstract class EcjPsiBinaryElement extends EcjPsiElement implements PsiCompiledE
 
     @Override
     public PsiElement getMirror() {
+        return null;
+    }
+
+    @Override
+    public PsiFile getContainingFile() throws PsiInvalidElementAccessException {
         return null;
     }
 }

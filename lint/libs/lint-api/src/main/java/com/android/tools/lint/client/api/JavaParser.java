@@ -220,9 +220,14 @@ public abstract class JavaParser {
             @NonNull PsiElement to,
             int toDelta) {
         String contents = context.getContents();
-        int start = Math.max(0, from.getTextRange().getStartOffset() + fromDelta);
+        TextRange fromRange = from.getTextRange();
+        int start = Math.max(0, fromRange.getStartOffset() + fromDelta);
         int end = Math.min(contents == null ? Integer.MAX_VALUE : contents.length(),
                 to.getTextRange().getEndOffset() + toDelta);
+        if (end <= start) {
+            // Some AST nodes don't have proper bounds, such as empty parameter lists
+            return Location.create(context.file, contents, start, fromRange.getEndOffset());
+        }
         return Location.create(context.file, contents, start, end);
     }
 
