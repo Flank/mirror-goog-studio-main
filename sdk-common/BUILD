@@ -55,7 +55,7 @@ java_library(
 
 java_test(
     name = "tools.tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = glob(["src/test/java/**/*.java"]),
     resources = glob(["src/test/resources/**"]),
     deps = [
         ":tools.sdk-common",
