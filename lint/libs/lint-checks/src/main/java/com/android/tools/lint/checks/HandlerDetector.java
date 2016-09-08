@@ -130,7 +130,6 @@ public class HandlerDetector extends Detector implements JavaPsiScanner {
             name = declaration.getQualifiedName();
         }
 
-        //noinspection VariableNotUsedInsideIf
         context.report(ISSUE, locationNode, location, String.format(
                 "This Handler class should be static or leaks might occur (%1$s)",
                 name));

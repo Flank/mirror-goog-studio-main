@@ -147,6 +147,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InefficientWeightDetector.NESTED_WEIGHTS);
         issues.add(InefficientWeightDetector.ORIENTATION);
         issues.add(InefficientWeightDetector.WRONG_0DP);
+        issues.add(ItemDecoratorDetector.ISSUE);
         issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(InvalidPackageDetector.ISSUE);
         issues.add(JavaPerformanceDetector.PAINT_ALLOC);
