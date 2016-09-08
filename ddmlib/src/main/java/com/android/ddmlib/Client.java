@@ -463,6 +463,15 @@ public class Client extends JdwpAgent {
     }
 
     /**
+     * Refreshes the name data for a given Client. This is required as the InstantApp runtime will
+     * initially return a generic process name which can then be refreshed to retrieve the correct
+     * package name.
+     */
+    public void refreshName() throws IOException {
+        HandleHello.sendHelloCommands(this, SERVER_PROTOCOL_VERSION);
+    }
+
+    /**
      * Returns whether any heap update is enabled.
      * @see #setHeapUpdateEnabled(boolean)
      */
