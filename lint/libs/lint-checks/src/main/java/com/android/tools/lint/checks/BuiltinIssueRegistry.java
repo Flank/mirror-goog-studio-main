@@ -186,6 +186,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestResourceDetector.ISSUE);
         issues.add(ManifestTypoDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
+        issues.add(MergeMarkerDetector.ISSUE);
         issues.add(MergeRootFrameLayoutDetector.ISSUE);
         issues.add(MissingClassDetector.INNERCLASS);
         issues.add(MissingClassDetector.INSTANTIATABLE);
