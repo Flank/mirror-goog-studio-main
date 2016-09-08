@@ -2,6 +2,13 @@ import com.android.tools.internal.testing.DevicePool;
 
 apply plugin: 'groovy'
 apply plugin: 'jacoco'
+apply plugin: 'com.google.protobuf'
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+}
 
 repositories {
     maven { url = uri(rootProject.cloneArtifacts.repository) }
@@ -10,6 +17,7 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
+    compile project(':analytics-library:protos')
     compile project(':base:builder-model')
     compile project(':base:builder')
     compile project(':base:sdk-common')
@@ -21,8 +29,11 @@ dependencies {
     compile "junit:junit:4.12"
     compile 'commons-io:commons-io:2.4'
     compile 'commons-lang:commons-lang:2.6'
-    testCompile "com.google.protobuf:protobuf-java:2.5.0"
+    compile "com.google.protobuf:protobuf-java:3.0.0"
+    compile "com.google.protobuf:protobuf-java-util:3.0.0"
     compile 'com.google.truth:truth:0.28'
+    compile 'com.google.api-client:google-api-client:1.22.0'
+    compile 'com.google.apis:google-api-services-storage:v1-rev82-1.22.0'
     testCompile "org.mockito:mockito-core:1.9.5"
     compile('org.smali:dexlib2:2.1.3') {
         // commons-cli is not needed as we're not using dexlib from the command line.
@@ -44,6 +55,11 @@ dependencies {
     testCompile(project(':base:gradle-experimental')) {
         transitive = false
     }
+}
+
+configurations {
+    // google-api-client depends on guava-jdk5.
+    compile.exclude group: 'com.google.guava', module: 'guava-jdk5'
 }
 
 def testEnvironment = System.getenv().findAll {it.value != null}

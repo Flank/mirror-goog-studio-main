@@ -20,70 +20,62 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.integration.performance.BenchmarkMode;
-import com.android.builder.profile.ThreadRecorder;
-import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
+import com.android.builder.Version;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.storage.Storage;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.stream.JsonWriter;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.primitives.Longs;
+import com.google.protobuf.util.Timestamps;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
- * Temporary implementation of the legacy json uploader for performance tests.
- *
- * <p>Uploads when {@code RECORD_SPANS} is set.
- *
- * <p>Will go away in a few weeks once we switch to uploading proto files.
- *
- * <p>Most of this implementation is simply moved from the production profile.
+ * Uploads profiling data to Google Storage from the gradle performance tests.
  */
-@Deprecated
 public class GradleProfileUploader implements Closeable {
 
-    private static boolean ENABLED = !Strings.isNullOrEmpty(System.getenv("RECORD_SPANS"));
+    private static final String STORAGE_SCOPE =
+            "https://www.googleapis.com/auth/devstorage.read_write";
 
-    private static final ILogger LOGGER = new StdLogger(StdLogger.Level.VERBOSE);
+    private static final String STORAGE_BUCKET = "android-gradle-logging-benchmark-results";
 
-    @NonNull
-    private static Uploader sUploader = GradleProfileUploader::uploadData;
+    @NonNull private static Uploader sUploader = GradleProfileUploader::uploadData;
 
     private final boolean enabled;
 
-    @Nullable
-    private final String benchmarkName;
+    @Nullable private final Logging.Benchmark benchmark;
 
-    @Nullable
-    private final BenchmarkMode benchmarkMode;
+    @Nullable private final Logging.BenchmarkMode benchmarkMode;
 
     private Path temporaryFile;
 
     public GradleProfileUploader(
             boolean enabled,
-            @Nullable String benchmarkName,
-            @Nullable BenchmarkMode benchmarkMode) {
+            @Nullable Logging.Benchmark benchmark,
+            @Nullable Logging.BenchmarkMode benchmarkMode) {
         this.enabled = enabled;
-        this.benchmarkName = benchmarkName;
+        this.benchmark = benchmark;
         this.benchmarkMode = benchmarkMode;
     }
 
@@ -99,7 +91,7 @@ public class GradleProfileUploader implements Closeable {
         }
         try {
             temporaryFile = Files.createTempDirectory("gradle_profile_proto")
-                    .resolve("profile.proto");
+                    .resolve("profile.rawproto");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -131,9 +123,46 @@ public class GradleProfileUploader implements Closeable {
             throw new RuntimeException("Profile infrastructure failure: "
                     + "Profile " + temporaryFile + " should have been written.");
         }
-        Preconditions.checkNotNull(benchmarkName);
+        Preconditions.checkNotNull(benchmark);
         Preconditions.checkNotNull(benchmarkMode);
-        sUploader.uploadData(temporaryFile, benchmarkName, benchmarkMode);
+
+        AndroidStudioStats.GradleBuildProfile profile =
+                    AndroidStudioStats.GradleBuildProfile.parseFrom(
+                            Files.readAllBytes(temporaryFile));
+        Files.delete(temporaryFile);
+        Files.delete(temporaryFile.getParent());
+
+        Logging.GradleBenchmarkResult.Builder gradleBenchmarkResult =
+                Logging.GradleBenchmarkResult.newBuilder()
+                        .setProfile(profile)
+                        .setResultId(UUID.randomUUID().toString())
+                        .setBenchmark(benchmark)
+                        .setBenchmarkMode(benchmarkMode)
+                        .setHostname(InetAddress.getLocalHost().getHostName())
+                        .setTimestamp(Timestamps.fromMillis(System.currentTimeMillis()));
+
+        String userName = System.getProperty("user.name");
+        if (userName != null) {
+            gradleBenchmarkResult.setUsername(userName);
+        }
+
+        String buildBotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
+        if (buildBotBuildNumber != null) {
+            Logging.GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
+                    Logging.GradleBenchmarkResult.ScheduledBuild.newBuilder();
+            Long buildNumber = Longs.tryParse(buildBotBuildNumber);
+            if (buildNumber != null) {
+                scheduledBuild.setBuildbotBuildNumber(buildNumber);
+            }
+            gradleBenchmarkResult.setScheduledBuild(scheduledBuild);
+        } else {
+            Logging.GradleBenchmarkResult.Experiment.Builder experiment =
+                    Logging.GradleBenchmarkResult.Experiment.newBuilder();
+            // TODO: way to set experiment comment
+            gradleBenchmarkResult.setExperiment(experiment);
+        }
+
+        sUploader.uploadData(gradleBenchmarkResult.build());
     }
 
     /**
@@ -147,165 +176,50 @@ public class GradleProfileUploader implements Closeable {
     @VisibleForTesting
     public interface Uploader {
 
-        void uploadData(
-                @NonNull Path outputFile,
-                @NonNull String benchmarkName,
-                @NonNull BenchmarkMode benchmarkMode) throws IOException;
+        void uploadData(@NonNull Logging.GradleBenchmarkResult result) throws IOException;
     }
 
-    private static void uploadData(@NonNull Path outputFile,
-            @NonNull String benchmarkName,
-            @NonNull BenchmarkMode benchmarkMode) throws IOException {
-        if (!ENABLED) {
-            LOGGER.info("RECORD_SPANS is not set, not uploading or deleting the profile."
-                    + "Profile file: %1Ss.", outputFile);
-            return;
-        }
-
-        try (Closeable ignored = () -> {
-            Files.delete(outputFile);
-            Files.delete(outputFile.getParent());
-        }) {
-            LOGGER.info("Uploading profile %1$s", outputFile);
-            URL u = new URL("http://android-devtools-logging.appspot.com/log/");
-            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            byte[] data = convertToJson(outputFile, benchmarkName, benchmarkMode);
-
-            conn.setRequestProperty("Content-Length", String.valueOf(data.length));
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(data);
-            }
-
-            String line;
-            try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-
-                while ((line = reader.readLine()) != null) {
-                    LOGGER.verbose("From POST : " + line);
-                }
-            }
-            conn.disconnect();
-            LOGGER.info("Upload complete.");
-        }
-    }
-
-    //TODO: remove once infra accepts a proto directly
-    private static byte[] convertToJson(
-            @NonNull Path outputFile,
-            @NonNull String benchmarkName,
-            @NonNull BenchmarkMode benchmarkMode) throws IOException {
-        AndroidStudioStats.GradleBuildProfile profile =
-                AndroidStudioStats.GradleBuildProfile.parseFrom(Files.readAllBytes(outputFile));
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeDebugRecords(new OutputStreamWriter(baos), profile, benchmarkName, benchmarkMode);
-        return baos.toByteArray();
-    }
-
-
-    private static void writeDebugRecords(
-            @NonNull Writer writer,
-            @NonNull AndroidStudioStats.GradleBuildProfile profile,
-            @NonNull String benchmarkName,
-            @NonNull BenchmarkMode benchmarkMode) throws IOException {
-        ImmutableMap.Builder<String, String> properties = ImmutableMap.builder();
-        properties.put("build_id", UUID.randomUUID().toString());
-        properties.put("os_name", profile.getOsName());
-        properties.put("os_version", profile.getOsVersion());
-        properties.put("java_version", profile.getJavaVersion());
-        properties.put("java_vm_version", profile.getJavaVmVersion());
-        properties.put("max_memory", Long.toString(profile.getMaxMemory()));
-        if (benchmarkName != null) {
-            properties.put("benchmark_name", benchmarkName);
-        }
-        if (benchmarkMode != null) {
-            properties.put("benchmark_mode", benchmarkMode.toString());
-        }
-        // Set next_gen_plugin to true as long as one of the project use the component model plugin.
-        for (AndroidStudioStats.GradleBuildProject project :
-                profile.getProjectList()) {
-            if (project.getPluginGeneration()
-                    == AndroidStudioStats.GradleBuildProject.PluginGeneration.COMPONENT_MODEL) {
-                properties.put("next_gen_plugin", "true");
-                break;
-            }
-        }
-        write(writer,
-                AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
-                        .setId(1)
-                        .setStartTimeInMs(profile.getMemorySample(0).getTimestamp())
-                        .setType(
-                                AndroidStudioStats.GradleBuildProfileSpan.ExecutionType.INITIAL_METADATA)
-                        .build(),
-                properties.build());
-        // Spans
-        for (AndroidStudioStats.GradleBuildProfileSpan span : profile.getSpanList()) {
-            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-            if (span.getProject() != 0) {
-                builder.put("project", Long.toString(span.getProject()));
-                if (span.getVariant() != 0) {
-                    builder.put("variant", Long.toString(span.getVariant()));
-                }
-            }
-            write(writer, span, builder.build());
-        }
-        // Final metadata
-        write(writer,
-                AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
-                        .setId(ThreadRecorder.get().allocationRecordId())
-                        .setStartTimeInMs(profile.getMemorySample(0).getTimestamp())
-                        .setType(
-                                AndroidStudioStats.GradleBuildProfileSpan.ExecutionType.FINAL_METADATA)
-                        .build(),
-                ImmutableMap.of(
-                        "build_time", Long.toString(profile.getBuildTime()),
-                        "gc_count", Long.toString(profile.getGcCount()),
-                        "gc_time", Long.toString(profile.getGcTime())));
-    }
-
-    private static void write(
-            @NonNull Writer writer,
-            @NonNull AndroidStudioStats.GradleBuildProfileSpan executionRecord,
-            @NonNull Map<String, String> attributes)
+    private static void uploadData(@NonNull Logging.GradleBenchmarkResult result)
             throws IOException {
-        // We want to keep the underlying stream open.
-        //noinspection IOResourceOpenedButNotSafelyClosed
-        JsonWriter mJsonWriter = new JsonWriter(writer);
-        mJsonWriter.beginObject();
-        {
-            mJsonWriter.name("id").value(executionRecord.getId());
-            mJsonWriter.name("parentId").value(executionRecord.getParentId());
-            mJsonWriter.name("startTimeInMs").value(executionRecord.getStartTimeInMs());
-            mJsonWriter.name("durationInMs").value(executionRecord.getDurationInMs());
-            String type = executionRecord.getType().toString();
-            if (executionRecord.hasTask()) {
-                type = type + "_" + executionRecord.getTask().getType().toString();
-            } else if (executionRecord.hasTransform()) {
-                type = type + "_" + executionRecord.getTransform().getType().toString();
-            }
-            mJsonWriter.name("type").value(type);
-            mJsonWriter.name("attributes");
-            mJsonWriter.beginArray();
-            {
-                for (Map.Entry<String, String> entry : attributes.entrySet()) {
-                    mJsonWriter.beginObject();
-                    {
-                        mJsonWriter.name("name").value(entry.getKey());
-                        mJsonWriter.name("value").value(entry.getValue());
-                    }
-                    mJsonWriter.endObject();
-                }
-            }
-            mJsonWriter.endArray();
+        GoogleCredential credential;
+        try {
+            credential =
+                    GoogleCredential.getApplicationDefault()
+                            .createScoped(Collections.singleton(STORAGE_SCOPE));
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Authentication failed:\n "
+                            + "see https://cloud.google.com/storage/docs/xml-api/java-samples"
+                            + "#setup-env\n"
+                            + "And run $ gcloud beta auth application-default login",
+                    e);
         }
-        mJsonWriter.endObject();
-        mJsonWriter.flush();
-        writer.append("\n");
-    }
 
+        HttpTransport httpTransport;
+        try {
+            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        } catch (GeneralSecurityException e) {
+            throw new IOException(e);
+        }
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+
+        Storage storage =
+                new Storage.Builder(httpTransport, jsonFactory, credential)
+                        .setApplicationName(
+                                "Android-Gradle-Plugin-Performance-Test-Upload/"
+                                        + Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                        .build();
+
+        byte[] bytes = result.toByteArray();
+
+        InputStreamContent content =
+                new InputStreamContent("application/octet-stream", new ByteArrayInputStream(bytes));
+
+        Instant timestamp = Instant.ofEpochMilli(Timestamps.toMillis(result.getTimestamp()));
+        HashCode sha1 = Hashing.sha1().hashBytes(bytes);
+
+        String name = DateTimeFormatter.ISO_INSTANT.format(timestamp) + "_" + sha1.toString();
+
+        storage.objects().insert(STORAGE_BUCKET, null, content).setName(name).execute();
+    }
 }

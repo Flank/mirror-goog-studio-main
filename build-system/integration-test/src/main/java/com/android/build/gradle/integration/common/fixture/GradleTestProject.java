@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.performance.BenchmarkMode;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -688,22 +687,8 @@ public class GradleTestProject implements TestRule {
         lastBuild = executor().withArguments(arguments).run(tasks);
     }
 
-    public void executeWithBenchmark(
-            @NonNull String benchmarkName,
-            @NonNull BenchmarkMode benchmarkMode,
-            @NonNull String... tasks) {
-        lastBuild = executor().recordBenchmark(benchmarkName, benchmarkMode).run(tasks);
-    }
-
     public GradleConnectionException executeExpectingFailure(@NonNull String... tasks) {
         lastBuild =  executor().expectFailure().run(tasks);
-        return lastBuild.getException();
-    }
-
-    public GradleConnectionException executeExpectingFailure(
-            @NonNull final List<String> arguments,
-            @NonNull String... tasks) {
-        lastBuild = executor().expectFailure().withArguments(arguments).run(tasks);
         return lastBuild.getException();
     }
 

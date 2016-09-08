@@ -159,13 +159,13 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             mPackaging.mFlagValue));
         }
 
-        args.addAll(mArguments);
+        args.addAll(arguments);
 
         System.out.println("[GradleTestProject] Executing tasks: gradle "
                 + Joiner.on(' ').join(args) + " " + Joiner.on(' ').join(tasksList));
 
 
-        BuildLauncher launcher = mProjectConnection.newBuild()
+        BuildLauncher launcher = projectConnection.newBuild()
                 .forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
@@ -175,7 +175,7 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         GradleConnectionException failure;
         try (GradleProfileUploader uploader =
-                     new GradleProfileUploader(mBenchmarkEnabled, mBenchmarkName, mBenchmarkMode)) {
+                     new GradleProfileUploader(benchmarkEnabled, benchmark, benchmarkMode)) {
             launcher.withArguments(Iterables.toArray(uploader.appendArg(args), String.class));
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
@@ -258,7 +258,7 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         for (OptionalCompilationStep step : flags) {
             optionalSteps.append(',').append(step);
         }
-        mArguments.add(optionalSteps.toString());
+        arguments.add(optionalSteps.toString());
     }
 
 }

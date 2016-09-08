@@ -32,6 +32,8 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,12 +66,10 @@ public class AntennaPodInstantRunPerformanceTest {
             @NonNull DexInProcess dexInProcess) {
         this.coldswapMode = coldswapMode;
         this.dexInProcess = dexInProcess;
-        benchmarkName = "AntennaPod_" + dexInProcess + "_" + coldswapMode;
     }
 
     private final ColdswapMode coldswapMode;
     private final DexInProcess dexInProcess;
-    private final String benchmarkName;
 
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
@@ -100,7 +100,7 @@ public class AntennaPodInstantRunPerformanceTest {
 
     @Test
     public void runBenchmarks() throws Exception {
-        project.execute("clean");
+        project.executor().withEnableInfoLogging(false).run("clean");
         InstantRun instantRunModel = InstantRunTestUtils
                 .getInstantRunModel(project.model().getMulti().get(":app"));
 
@@ -114,15 +114,17 @@ public class AntennaPodInstantRunPerformanceTest {
         }
 
         project.executor()
-                .recordBenchmark(benchmarkName, BenchmarkMode.INSTANT_RUN_FULL_BUILD)
+                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.INSTANT_RUN_FULL_BUILD)
                 .withInstantRun(23, coldswapMode, OptionalCompilationStep.RESTART_ONLY)
+                .withEnableInfoLogging(false)
                 .run(":app:assembleDebug");
 
         // Test the incremental build
         makeHotSwapChange(50);
         project.executor()
-                .recordBenchmark(benchmarkName, BenchmarkMode.INSTANT_RUN_BUILD_INC_JAVA)
+                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.INSTANT_RUN_BUILD_INC_JAVA)
                 .withInstantRun(23, coldswapMode, OptionalCompilationStep.RESTART_ONLY)
+                .withEnableInfoLogging(false)
                 .run(":app:assembleDebug");
 
         // The second build with retrolambda in this case has a spurious new inner class.
@@ -132,13 +134,15 @@ public class AntennaPodInstantRunPerformanceTest {
             project.executor()
                     .withEnableInfoLogging(false)
                     .withInstantRun(23, coldswapMode)
+                    .withEnableInfoLogging(false)
                     .run("assembleDebug");
         }
         makeHotSwapChange(100);
 
         project.executor()
-                .recordBenchmark(benchmarkName, BenchmarkMode.INSTANT_RUN_HOT_SWAP)
+                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.INSTANT_RUN_HOT_SWAP)
                 .withInstantRun(23, coldswapMode)
+                .withEnableInfoLogging(false)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact =
@@ -156,13 +160,15 @@ public class AntennaPodInstantRunPerformanceTest {
             project.executor()
                     .withEnableInfoLogging(false)
                     .withInstantRun(23, coldswapMode)
+                    .withEnableInfoLogging(false)
                     .run(":app:assembleDebug");
         }
         makeColdSwapChange(100);
 
         project.executor()
-                .recordBenchmark(benchmarkName, BenchmarkMode.INSTANT_RUN_COLD_SWAP)
+                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.INSTANT_RUN_COLD_SWAP)
                 .withInstantRun(23, coldswapMode)
+                .withEnableInfoLogging(false)
                 .run(":app:assembleDebug");
 
         List<InstantRunArtifact> coldSwapArtifact =

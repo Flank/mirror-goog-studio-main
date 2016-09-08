@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
-import com.android.build.gradle.integration.performance.BenchmarkMode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
@@ -30,7 +30,6 @@ import org.gradle.tooling.ProjectConnection;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Common flags shared by {@link BuildModel} and {@link RunGradleTasks}.
@@ -41,21 +40,21 @@ import java.util.Locale;
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @NonNull
-    final ProjectConnection mProjectConnection;
+    final ProjectConnection projectConnection;
 
     @Nullable
     private String heapSize;
 
     @NonNull
-    final List<String> mArguments = Lists.newArrayList();
+    final List<String> arguments = Lists.newArrayList();
 
-    boolean mBenchmarkEnabled = false;
-
-    @Nullable
-    String mBenchmarkName;
+    boolean benchmarkEnabled = false;
 
     @Nullable
-    BenchmarkMode mBenchmarkMode;
+    Logging.Benchmark benchmark;
+
+    @Nullable
+    Logging.BenchmarkMode benchmarkMode;
 
     boolean enableInfoLogging = true;
 
@@ -63,9 +62,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull ProjectConnection projectConnection,
             @NonNull File buildDotGradleFile,
             @Nullable String heapSize) {
-        mProjectConnection = projectConnection;
+        this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getName().equals("build.gradle")) {
-            mArguments.add("--build-file=" + buildDotGradleFile.getPath());
+            arguments.add("--build-file=" + buildDotGradleFile.getPath());
         }
         this.heapSize = heapSize;
     }
@@ -74,11 +73,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      * Upload this builds detailed profile as a benchmark.
      */
     public T recordBenchmark(
-            @NonNull String benchmarkName,
-            @NonNull BenchmarkMode benchmarkMode) {
-        mBenchmarkEnabled = true;
-        mBenchmarkName = benchmarkName;
-        mBenchmarkMode = benchmarkMode;
+            @NonNull Logging.Benchmark benchmark,
+            @NonNull Logging.BenchmarkMode benchmarkMode) {
+        this.benchmarkEnabled = true;
+        this.benchmark = benchmark;
+        this.benchmarkMode = benchmarkMode;
         return (T) this;
     }
 
@@ -86,7 +85,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      * Add additional build arguments.
      */
     public T withArguments(@NonNull List<String> arguments) {
-        this.mArguments.addAll(arguments);
+        this.arguments.addAll(arguments);
         return (T) this;
     }
 
@@ -94,7 +93,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      * Add an additional build argument.
      */
     public T withArgument(String argument) {
-        mArguments.add(argument);
+        arguments.add(argument);
         return (T) this;
     }
 

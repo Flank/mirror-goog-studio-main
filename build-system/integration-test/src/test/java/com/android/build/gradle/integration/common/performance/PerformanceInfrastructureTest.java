@@ -16,22 +16,21 @@
 
 package com.android.build.gradle.integration.common.performance;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleProfileUploader;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.performance.BenchmarkMode;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
+import com.android.ide.common.util.ReferenceHolder;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 /**
  * Smoke test for the performance test infrastructure.
@@ -39,7 +38,7 @@ import java.nio.file.Path;
 public class PerformanceInfrastructureTest {
 
     private static final GradleProfileUploader.Uploader ASSERT_NO_UPLOAD =
-            (outputFile, benchmarkName, benchmarkMode) -> {
+            profile -> {
                 throw new AssertionError("Should not be called");
             };
 
@@ -63,17 +62,13 @@ public class PerformanceInfrastructureTest {
     }
 
     private void getModelWithProfile() throws IOException {
-        Path profileFile = mTemporaryFolder.newFolder().toPath().resolve("profile_proto");
+        ReferenceHolder<Logging.GradleBenchmarkResult> result = ReferenceHolder.empty();
 
-        GradleProfileUploader.setUploader(
-                (outputFile, benchmarkName, benchmarkMode) -> Files.copy(outputFile, profileFile));
+        GradleProfileUploader.setUploader(result::setValue);
 
-        project.model().recordBenchmark("fake_benchmark", BenchmarkMode.SYNC).getSingle();
+        project.model().recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.SYNC).getSingle();
 
-        assertThat(profileFile).exists();
-        AndroidStudioStats.GradleBuildProfile profile =
-                AndroidStudioStats.GradleBuildProfile.parseFrom(Files.readAllBytes(profileFile));
-        assertThat(profile.getSpanCount()).isGreaterThan(0);
+        assertThat(result.getValue().getProfile().getSpanCount()).isGreaterThan(0);
 
     }
 
@@ -83,19 +78,15 @@ public class PerformanceInfrastructureTest {
     }
 
     private void buildWithProfile() throws IOException {
-        Path profileFile = mTemporaryFolder.newFolder().toPath().resolve("profile_proto");
+        ReferenceHolder<Logging.GradleBenchmarkResult> result = ReferenceHolder.empty();
 
-        GradleProfileUploader.setUploader(
-                (outputFile, benchmarkName, benchmarkMode) -> Files.copy(outputFile, profileFile));
+        GradleProfileUploader.setUploader(result::setValue);
 
         project.executor()
-                .recordBenchmark("fake_benchmark", BenchmarkMode.BUILD_FULL)
+                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.BUILD_FULL)
                 .run("assembleDebug");
 
-        assertThat(profileFile).exists();
-        AndroidStudioStats.GradleBuildProfile profile =
-                AndroidStudioStats.GradleBuildProfile.parseFrom(Files.readAllBytes(profileFile));
-        assertThat(profile.getSpanCount()).isGreaterThan(0);
+        assertThat(result.getValue().getProfile().getSpanCount()).isGreaterThan(0);
     }
 
     private void buildWithoutProfile() {

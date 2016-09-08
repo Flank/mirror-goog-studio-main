@@ -1,0 +1,78 @@
+// TODO: Automate the import of this proto.
+// Includes rewriting the import of studio_stats.proto
+syntax = "proto3";
+
+package android.gradle;
+
+//option java_api_version = 2;
+option java_package = "com.google.wireless.android.sdk.gradlelogging.proto";
+
+import "studio_stats.proto";
+import "google/protobuf/timestamp.proto";
+
+message GradleBenchmarkResult {
+  // Profile itself.
+  android_studio.GradleBuildProfile profile = 1;
+
+  // Unique ID of this result, in case we want to inspect it in Dremel.
+  string result_id = 8;
+
+  // All metadata about how the profile was obtained.
+  google.protobuf.Timestamp timestamp = 2;
+  BenchmarkMode benchmark_mode = 3;
+  Benchmark benchmark = 4;
+
+  // Describes the reason this build took place.
+  oneof build {
+    // Build was run on the buildbot, according to schedule.
+    ScheduledBuild scheduled_build = 5;
+
+    // Build was run as a (local?) experiment, it should be ignored when
+    // aggregating data.
+    Experiment experiment = 6;
+  }
+
+  message ScheduledBuild {
+    int64 buildbot_build_number = 1;
+
+    enum Bot {
+      // This is the bot we currently have.
+      SHARED_LINUX_BOT = 0;
+    }
+  }
+
+  message Experiment {
+    string comment = 1;
+  }
+
+  // Hostname of the machine that ran the build.
+  string hostname = 7;
+  string username = 9;
+
+  // NEXT TAG: 10
+}
+
+enum Benchmark {
+  UNKNOWN_BENCHMARK = 0;
+
+  // Used currently for go/gradle-perf:
+  ANTENNA_POD = 1;
+}
+
+enum BenchmarkMode {
+  // Benchmark_mode is optional, this value means it was not set.
+  MODE_UNSPECIFIED = 0;
+  // These must be kept in sync with the enum
+  // com.android.build.gradle.integration.performance.BenchmarkMode in
+  // studio-master-dev
+  EVALUATION = 1;
+  SYNC = 2;
+  BUILD_FULL = 3;
+  BUILD_INC_JAVA = 4;
+  BUILD_INC_RES_EDIT = 5;
+  BUILD_INC_RES_ADD = 6;
+  INSTANT_RUN_FULL_BUILD = 7;
+  INSTANT_RUN_BUILD_INC_JAVA = 8;
+  INSTANT_RUN_COLD_SWAP = 9;
+  INSTANT_RUN_HOT_SWAP = 10;
+}
