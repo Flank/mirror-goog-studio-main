@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -39,6 +38,9 @@ import com.android.build.gradle.tasks.GenerateAtomMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
+import com.android.builder.profile.ThreadRecorder;
+import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -57,7 +59,7 @@ public class AtomTaskManager extends TaskManager {
 
     private Task assembleDefault;
 
-    public AtomTaskManager (
+    public AtomTaskManager(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
@@ -83,8 +85,10 @@ public class AtomTaskManager extends TaskManager {
             @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
         assert variantData instanceof AtomVariantData;
 
+        final String projectPath = project.getPath();
+        final String variantName = variantData.getName();
+
         final VariantScope variantScope = variantData.getScope();
-        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         final File variantBundleDir = variantScope.getBaseBundleDir();
 
         createAnchorTasks(tasks, variantScope);
@@ -94,46 +98,85 @@ public class AtomTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        createMergeLibManifestsTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                projectPath, variantName, () -> {
+                    createMergeLibManifestsTask(tasks, variantScope);
+                    return null;
+                });
+
         // Add a task to create the res values
-        createGenerateResValuesTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
+                projectPath, variantName, () -> {
+                    createGenerateResValuesTask(tasks, variantScope);
+                    return null;
+                });
 
         // Add a task to compile renderscript files.
-        createRenderscriptTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
+                projectPath, variantName, () -> {
+                    createRenderscriptTask(tasks, variantScope);
+                    return null;
+                });
 
         // Create a merge task to merge the resources from this atom and its dependencies. This
         // will get packaged in the atombundle.
-        createMergeResourcesTask(
-                tasks,
-                variantScope,
-                true /*process9patch*/);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
+                projectPath, variantName, () -> {
+                    createMergeResourcesTask(tasks, variantScope);
+                    return null;
+                });
 
         // Add a task to merge the assets folders
-        createMergeAssetsTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
+                projectPath, variantName, () -> {
+                    createMergeAssetsTask(tasks, variantScope);
+                    return null;
+                });
 
         // Add a task to create the BuildConfig class
-        createBuildConfigTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
+                projectPath, variantName, () -> {
+                    createBuildConfigTask(tasks, variantScope);
+                    return null;
+                });
 
-        if (variantScope.getVariantConfiguration().getPackageDependencies().getBaseAtom() == null) {
-            // If this is the base atom, compile the .ap_ that will get packaged in the atombundle.
-            createApkProcessResTask(tasks, variantScope);
-        } else {
-            // If this is not the base atom, add a task to generate the resource source files,
-            // directing the location of the r.txt file to be directly in the atombundle.
-            createProcessResTask(tasks, variantScope, variantBundleDir,
-                    false /*generateResourcePackage*/);
-        }
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                projectPath, variantName, () -> {
+                    if (variantScope.getVariantConfiguration().getPackageDependencies()
+                            .getBaseAtom() == null) {
+                        // If this is the base atom, compile the .ap_ that will get packaged in the atombundle.
+                        createApkProcessResTask(tasks, variantScope);
+                    } else {
+                        // If this is not the base atom, add a task to generate the resource source files,
+                        // directing the location of the r.txt file to be directly in the atombundle.
+                        createProcessResTask(tasks, variantScope, variantBundleDir,
+                                false /*generateResourcePackage*/);
+                    }
 
-        // process java resources
-        createProcessJavaResTasks(tasks, variantScope);
+                    // process java resources
+                    createProcessJavaResTasks(tasks, variantScope);
+                    return null;
+                });
 
-        createAidlTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_AIDL_TASK,
+                projectPath, variantName, () -> {
+                    createAidlTask(tasks, variantScope);
+                    return null;
+                });
 
-        createShaderTask(tasks, variantScope);
+        ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_SHADER_TASK,
+                projectPath, variantName, () -> {
+                    createShaderTask(tasks, variantScope);
+                    return null;
+                });
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            createNdkTasks(tasks, variantScope);
+            ThreadRecorder.get().record(ExecutionType.ATOM_TASK_MANAGER_CREATE_NDK_TASK,
+                    projectPath, variantName, () -> {
+                        createNdkTasks(tasks, variantScope);
+                        return null;
+                    });
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
@@ -143,48 +186,70 @@ public class AtomTaskManager extends TaskManager {
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
+        // Add external native build tasks
+        ThreadRecorder.get().record(
+                ExecutionType.ATOM_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
+                projectPath, variantName, () -> {
+                    createExternalNativeBuildJsonGenerators(variantScope);
+                    createExternalNativeBuildTasks(tasks, variantScope);
+                    return null;
+                });
+
         // Add a task to merge the jni libs folders
-        createMergeJniLibFoldersTasks(tasks, variantScope);
+        ThreadRecorder.get()
+                .record(ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
+                        projectPath, variantName, () -> {
+                            createMergeJniLibFoldersTasks(tasks, variantScope);
+                            return null;
+                        });
 
         // Add a compile task
-        // First, build the .class files with javac and compile the jar.
-        AndroidTask<? extends JavaCompile> javacTask =
-                createJavacTask(tasks, variantScope);
-        addJavacClassesStream(variantScope);
-        setJavaCompilerTask(javacTask, tasks, variantScope);
-        getAndroidTasks().create(tasks,
-                new AndroidJarTask.JarClassesConfigAction(variantScope));
+        ThreadRecorder.get().record(
+                ExecutionType.ATOM_TASK_MANAGER_CREATE_COMPILE_TASK,
+                projectPath, variantName, () -> {
+                    // First, build the .class files with javac and compile the jar.
+                    AndroidTask<? extends JavaCompile> javacTask =
+                            createJavacTask(tasks, variantScope);
 
-        // Then, build the dex with jack if enabled.
-        // TODO: This means recompiling everything twice if jack is enabled.
-        CoreJackOptions jackOptions =
-                variantData.getVariantConfiguration().getJackOptions();
-        if (jackOptions.isEnabled()) {
-            AndroidTask<TransformTask> jackTask =
-                    createJackTask(tasks, variantScope, true /*compileJavaSource*/);
-            setJavaCompilerTask(jackTask, tasks, variantScope);
-        } else {
-            // Prevent the use of java 1.8 without jack, which would otherwise cause an
-            // internal javac error.
-            if(variantScope.getGlobalScope().getExtension().getCompileOptions()
-                    .getTargetCompatibility().isJava8Compatible()) {
-                // Only warn for users of retrolambda and dexguard
-                if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
-                        || project.getPlugins().hasPlugin("dexguard")) {
-                    getLogger().warn("Jack is disabled, but one of the plugins you "
-                            + "are using supports Java 8 language features.");
-                } else {
-                    androidBuilder.getErrorReporter().handleSyncError(
-                            variantScope.getVariantConfiguration().getFullName(),
-                            SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
-                            "Jack is required to support java 8 language features. "
-                                    + "Either enable Jack or remove "
-                                    + "sourceCompatibility JavaVersion.VERSION_1_8."
-                    );
-                }
-            }
-            createPostCompilationTasks(tasks, variantScope);
-        }
+                    addJavacClassesStream(variantScope);
+
+                    setJavaCompilerTask(javacTask, tasks, variantScope);
+
+                    getAndroidTasks().create(tasks,
+                            new AndroidJarTask.JarClassesConfigAction(variantScope));
+
+                    // Then, build the dex with jack if enabled.
+                    // TODO: This means recompiling everything twice if jack is enabled.
+                    CoreJackOptions jackOptions =
+                            variantData.getVariantConfiguration().getJackOptions();
+                    if (jackOptions.isEnabled()) {
+                        AndroidTask<TransformTask> jackTask =
+                                createJackTask(tasks, variantScope, true /*compileJavaSource*/);
+                        setJavaCompilerTask(jackTask, tasks, variantScope);
+                    } else {
+                        // Prevent the use of java 1.8 without jack, which would otherwise cause an
+                        // internal javac error.
+                        if (variantScope.getGlobalScope().getExtension().getCompileOptions()
+                                .getTargetCompatibility().isJava8Compatible()) {
+                            // Only warn for users of retrolambda and dexguard
+                            if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
+                                    || project.getPlugins().hasPlugin("dexguard")) {
+                                getLogger().warn("Jack is disabled, but one of the plugins you "
+                                        + "are using supports Java 8 language features.");
+                            } else {
+                                androidBuilder.getErrorReporter().handleSyncError(
+                                        variantScope.getVariantConfiguration().getFullName(),
+                                        SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
+                                        "Jack is required to support java 8 language features. "
+                                                + "Either enable Jack or remove "
+                                                + "sourceCompatibility JavaVersion.VERSION_1_8."
+                                );
+                            }
+                        }
+                        createPostCompilationTasks(tasks, variantScope);
+                    }
+                    return null;
+                });
 
         // Add data binding tasks if enabled
         if (extension.getDataBinding().isEnabled()) {
@@ -193,9 +258,20 @@ public class AtomTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(tasks, variantScope);
 
-        createAtomBundlingTasks(tasks, variantScope);
+        ThreadRecorder.get().record(
+                ExecutionType.ATOM_TASK_MANAGER_CREATE_BUNDLING_TASK,
+                projectPath, variantName, () -> {
+                    createAtomBundlingTasks(tasks, variantScope);
+                    return null;
+                });
 
-        createLintTasks(tasks, variantScope);
+        // create the lint tasks.
+        ThreadRecorder.get().record(
+                ExecutionType.ATOM_TASK_MANAGER_CREATE_LINT_TASK,
+                projectPath, variantName, () -> {
+                    createLintTasks(tasks, variantScope);
+                    return null;
+                });
     }
 
     private void createAtomBundlingTasks(

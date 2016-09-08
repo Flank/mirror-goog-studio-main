@@ -26,6 +26,8 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 
 import com.android.builder.model.AndroidProject;
+import com.google.wireless.android.sdk.stats.AndroidStudioStats;
+
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -48,6 +50,12 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     public Class<? extends BaseExtension> getExtensionClass() {
         return LibraryExtension.class;
+    }
+
+    @NonNull
+    @Override
+    protected AndroidStudioStats.GradleBuildProject.PluginType getAnalyticsPluginType() {
+        return AndroidStudioStats.GradleBuildProject.PluginType.LIBRARY;
     }
 
     @Override
