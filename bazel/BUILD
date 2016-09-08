@@ -195,6 +195,7 @@ test_suite(
     "//tools/base/apkparser:studio.binary-resources_tests",
     "//tools/base/asset-studio:studio.assetstudio_tests",
     "//tools/base/jack/jack-api:tests",
+    "//tools/base/build-system/builder:tests",
     "//tools/base/build-system/profile:tests",
     "//tools/base/build-system:studio.builder-test-api_tests",
     "//tools/base/build-system:studio.manifest-merger_tests",
