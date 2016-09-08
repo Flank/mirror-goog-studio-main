@@ -354,6 +354,7 @@ def iml_module(name,
     resources=[],
     test_resources=[],
     deps=[],
+    test_runtime_deps=[],
     visibility=[],
     exports=[],
     javacopts=[],
@@ -403,7 +404,7 @@ def iml_module(name,
 
   native.java_test(
     name = name + "_tests",
-    runtime_deps = [
+    runtime_deps = test_runtime_deps + [
       ":" + name + "_testlib",
       "//tools/base/testutils:studio.testutils",
       "//tools/base/bazel:langtools",
