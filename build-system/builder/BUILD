@@ -60,8 +60,8 @@ java_test(
         "//prebuilts/studio/sdk:build-tools/22.0.1",
         "//prebuilts/studio/sdk:build-tools/23.0.0",
         "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/android-19.minimal",
-        "//prebuilts/studio/sdk:platforms/android-21.minimal",
-        "//prebuilts/studio/sdk:platforms/latest.minimal",
+        "//prebuilts/studio/sdk:platforms/android-19",
+        "//prebuilts/studio/sdk:platforms/android-21",
+        "//prebuilts/studio/sdk:platforms/latest",
     ]
 )

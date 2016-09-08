@@ -509,3 +509,25 @@ def java_jarjar(name, rules, srcs=[], visibility=None):
              "--output '$@'"),
       visibility = visibility,
   )
+
+# Creates a filegroup for a given platform directory in the SDK.
+#
+# It excludes files that are not necessary for testing and take up space in the sandbox.
+def platform_filegroup(name, visibility = ["//visibility:public"]):
+  pattern = "*/" + name
+
+  native.filegroup(
+      name = name,
+      srcs = native.glob(
+          include = [pattern + "/**"],
+          exclude = [
+              pattern + "/skins/**",
+
+              # These excludes may be problematic for layoutlib in the
+              # future.
+              pattern + "/data/res/**",
+              pattern + "/data/fonts/**",
+          ]
+      ),
+      visibility = visibility
+   )

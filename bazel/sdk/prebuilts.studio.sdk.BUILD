@@ -1,3 +1,5 @@
+load("//tools/base/bazel:bazel.bzl", "platform_filegroup")
+
 filegroup(
     name = "platform-tools",
     srcs = glob(
@@ -12,66 +14,24 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-# This contains only top-level files, no skins or resources. This way we limit
-# the number of symlinks required in the sandbox, working around the limit on
-# symlinks number (as well as improving performance somewhat).
-filegroup(
-    name = "platforms/latest.minimal",
-    srcs = [":platforms/android-24.minimal"],
-    visibility = ["//visibility:public"],
-)
-
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
-filegroup(
+platform_filegroup(
     name = "platforms/android-24",
-    srcs = glob(
-        include = ["*/platforms/android-24/**"],
-    ),
+    visibility = [
+        "//tools/base/build-system/builder:__pkg__",
+    ],
 )
 
-filegroup(
-    name = "platforms/android-24.minimal",
-    srcs = glob(
-        include = ["*/platforms/android-24/*"],
-    ),
-)
-
-filegroup(
+platform_filegroup(
     name = "platforms/android-21",
-    srcs = glob(
-        include = ["*/platforms/android-21/**"],
-    ),
     visibility = [
         "//tools/base/build-system/builder:__pkg__",
     ],
 )
 
-filegroup(
-    name = "platforms/android-21.minimal",
-    srcs = glob(
-        include = ["*/platforms/android-21/*"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-filegroup(
+platform_filegroup(
     name = "platforms/android-19",
-    srcs = glob(
-        include = ["*/platforms/android-19/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-filegroup(
-    name = "platforms/android-19.minimal",
-    srcs = glob(
-        include = ["*/platforms/android-19/*"],
-    ),
     visibility = [
         "//tools/base/build-system/builder:__pkg__",
     ],
