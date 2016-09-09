@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.FD_BUILD_TOOLS;
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
 import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
+import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
@@ -874,7 +875,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             @NonNull Context context,
             @NonNull GradleCoordinate dependency,
             @NonNull Object cookie) {
-        if (dependency.getGroupId() != null && dependency.getGroupId().startsWith("com.android.support")) {
+        if (dependency.getGroupId() != null && dependency.getGroupId().startsWith(SUPPORT_LIB_GROUP_ID)) {
             checkSupportLibraries(context, dependency, cookie);
             if (mMinSdkVersion >= 14 && "appcompat-v7".equals(dependency.getArtifactId())
                   && mCompileSdkVersion >= 1 && mCompileSdkVersion < 21) {
@@ -1167,7 +1168,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         // For artifacts that follow the platform numbering scheme, check that it matches the SDK
         // versions used.
-        if ("com.android.support".equals(groupId)
+        if (SUPPORT_LIB_GROUP_ID.equals(groupId)
                 && !artifactId.startsWith("multidex")
                 // Support annotation libraries work with any compileSdkVersion
                 && !artifactId.equals("support-annotations")) {
@@ -1201,6 +1202,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } else {
             checkLocalMavenVersions(context, dependency, cookie, groupId, artifactId,
                     repository);
+
+            if (!mCheckedSupportLibs) {
+                mCheckedSupportLibs = true;
+                if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                    // Incremental editing: try flagging them in this file!
+                    checkConsistentSupportLibraries(context, cookie);
+                }
+            }
         }
     }
 
@@ -1210,6 +1219,13 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      * single dependency declaration
      */
     private boolean mCheckedGms;
+
+    /**
+     * If incrementally editing a single build.gradle file, tracks whether we've already
+     * transitively checked support library versions such that we don't flag the same
+     * error on every single dependency declaration
+     */
+    private boolean mCheckedSupportLibs;
 
     private void checkPlayServices(Context context, GradleCoordinate dependency, Object cookie) {
         String groupId = dependency.getGroupId();
@@ -1240,8 +1256,18 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
     }
 
+    private void checkConsistentSupportLibraries(@NonNull Context context,
+            @Nullable Object cookie) {
+        checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID);
+    }
+
     private void checkConsistentPlayServices(@NonNull Context context,
             @Nullable Object cookie) {
+        checkConsistentLibraries(context, cookie, GMS_GROUP_ID);
+    }
+
+    private void checkConsistentLibraries(@NonNull Context context,
+            @Nullable Object cookie, @NonNull String groupId) {
         // Make sure we're using a consistent version across all play services libraries
         // (b/22709708)
 
@@ -1260,7 +1286,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         libraries = compileDependencies.getLibraries();
         Multimap<String, MavenCoordinates> versionToCoordinate = ArrayListMultimap.create();
         for (AndroidLibrary library : libraries) {
-            addGmsLibraryVersions(versionToCoordinate, library);
+            addLibraryVersions(versionToCoordinate, library, groupId);
         }
         Set<String> versions = versionToCoordinate.keySet();
         if (versions.size() > 1) {
@@ -1271,10 +1297,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             // Not using toString because in the IDE, these are model proxies which display garbage output
             String example1 = c1.getGroupId() + ":" + c1.getArtifactId() + ":" + c1 .getVersion();
             String example2 = c2.getGroupId() + ":" + c2.getArtifactId() + ":" + c2 .getVersion();
-            String message = "All com.google.android.gms libraries must use the exact same "
-                + "version specification (mixing versions can lead to runtime crashes). "
-                + "Found versions " + Joiner.on(", ").join(sortedVersions) + ". "
-                + "Examples include " + example1 + " and " + example2;
+            String message = "All " + groupId + " libraries must use the exact same "
+                    + "version specification (mixing versions can lead to runtime crashes). "
+                    + "Found versions " + Joiner.on(", ").join(sortedVersions) + ". "
+                    + "Examples include " + example1 + " and " + example2;
 
             if (cookie != null) {
                 report(context, cookie, COMPATIBILITY, message);
@@ -1284,15 +1310,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
     }
 
-    private static void addGmsLibraryVersions(@NonNull Multimap<String, MavenCoordinates> versions,
-            @NonNull AndroidLibrary library) {
+    private static void addLibraryVersions(@NonNull Multimap<String, MavenCoordinates> versions,
+            @NonNull AndroidLibrary library, @NonNull String groupId) {
         MavenCoordinates coordinates = library.getResolvedCoordinates();
-        if (coordinates != null && coordinates.getGroupId().equals(GMS_GROUP_ID)) {
+        if (coordinates.getGroupId().equals(groupId)) {
             versions.put(coordinates.getVersion(), coordinates);
         }
 
         for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addGmsLibraryVersions(versions, dependency);
+            addLibraryVersions(versions, dependency, groupId);
         }
     }
 
@@ -1302,6 +1328,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 // Full analysis? Don't tie check to any specific Gradle DSL element
                 context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             checkConsistentPlayServices(context, null);
+            checkConsistentSupportLibraries(context, null);
         }
     }
 

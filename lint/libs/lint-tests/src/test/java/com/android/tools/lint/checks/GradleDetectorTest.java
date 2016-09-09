@@ -44,6 +44,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
+import com.android.ide.common.repository.GradleCoordinate;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
@@ -593,6 +594,44 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         "gradle/PlayServices2.gradle=>build.gradle"));
     }
 
+    public void testSupportLibraryConsistency() throws Exception {
+        // Requires custom model mocks
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                    + "build.gradle:4: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:appcompat-v7:24.2 [GradleCompatible]\n"
+                    + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                    + "1 errors, 0 warnings\n",
+                lintProjectIncrementally("build.gradle",
+                        source("build.gradle", ""
+                                + "apply plugin: 'android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                                + "    compile \"com.android.support:support-v13:24.1\"\n"
+                                + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
+                                + "    compile \"com.android.support:cardview-v7:24.2\""
+                                + "}\n")));
+    }
+
+    public void testSupportLibraryConsistencyNonIncremental() throws Exception {
+        // Requires custom model mocks
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                    + "build.gradle: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:appcompat-v7:24.2 [GradleCompatible]\n"
+                    + "1 errors, 0 warnings\n",
+                lintProject(
+                        source("build.gradle", ""
+                                + "apply plugin: 'android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                                + "    compile \"com.android.support:support-v13:24.1\"\n"
+                                + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
+                                + "    compile \"com.android.support:cardview-v7:24.2\""
+                                + "}\n")));
+    }
+
     public void testPlayServiceConsistencyNonIncremental() throws Exception {
         // Requires custom model mocks
         mEnabled = Collections.singleton(COMPATIBILITY);
@@ -890,27 +929,51 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         com.google.android.gms:play-services-location:7.3.0
                         com.google.android.gms:play-services-wearable:7.5.0
                          */
-                            MavenCoordinates coordinates1 = mock(MavenCoordinates.class);
-                            when(coordinates1.getGroupId()).thenReturn("com.google.android.gms");
-                            when(coordinates1.getArtifactId()).thenReturn("play-services-location");
-                            when(coordinates1.getVersion()).thenReturn("7.3.0");
-                            when(coordinates1.toString()).thenReturn("com.google.android.gms:play-services-location:7.3.0");
+                            List<AndroidLibrary> libraries = Arrays.asList(
+                                createMockLibrary("com.google.android.gms:play-services-location:7.3.0"),
+                                createMockLibrary("com.google.android.gms:play-services-wearable:7.5.0")
+                            );
 
-                            MavenCoordinates coordinates2 = mock(MavenCoordinates.class);
-                            when(coordinates2.getGroupId()).thenReturn("com.google.android.gms");
-                            when(coordinates2.getArtifactId()).thenReturn("play-services-wearable");
-                            when(coordinates2.getVersion()).thenReturn("7.5.0");
-                            when(coordinates2.toString()).thenReturn("com.google.android.gms:play-services-wearable:7.5.0");
+                            Dependencies dependencies = mock(Dependencies.class);
+                            when(dependencies.getLibraries()).thenReturn(libraries);
 
-                            AndroidLibrary library1 = mock(AndroidLibrary.class);
-                            when(library1.getResolvedCoordinates()).thenReturn(coordinates1);
-                            when(library1.getLintJar()).thenReturn(new File("lint.jar"));
+                            AndroidArtifact artifact = mock(AndroidArtifact.class);
+                            when(artifact.getDependencies()).thenReturn(dependencies);
+                            when(artifact.getCompileDependencies()).thenReturn(dependencies);
 
-                            AndroidLibrary library2 = mock(AndroidLibrary.class);
-                            when(library2.getResolvedCoordinates()).thenReturn(coordinates2);
-                            when(library2.getLintJar()).thenReturn(new File("lint.jar"));
+                            Variant variant = mock(Variant.class);
+                            when(variant.getMainArtifact()).thenReturn(artifact);
+                            return variant;
+                        }
+                    };
+                }
 
-                            List<AndroidLibrary> libraries = Arrays.asList(library1, library2);
+                if ("testSupportLibraryConsistency".equals(getName())
+                        || "testSupportLibraryConsistencyNonIncremental".equals(getName())) {
+                    return new Project(this, dir, referenceDir) {
+                        @Override
+                        public boolean isGradleProject() {
+                            return true;
+                        }
+
+                        @Nullable
+                        @Override
+                        public Variant getCurrentVariant() {
+                        /*
+                        Simulate variant which has an AndroidLibrary with
+                        resolved coordinates
+
+                        compile "com.android.support:appcompat-v7:24.2"
+                        compile "com.android.support:support-v13:24.1"
+                        compile "com.android.support:preference-v7:25.0-SNAPSHOT"
+                        compile "com.android.support:cardview-v7:24.2"
+                         */
+                            List<AndroidLibrary> libraries = Arrays.asList(
+                                    createMockLibrary("com.android.support:appcompat-v7:24.2"),
+                                    createMockLibrary("com.android.support:support-v13:24.1"),
+                                    createMockLibrary("com.android.support:preference-v7:25.0-SNAPSHOT"),
+                                    createMockLibrary("com.android.support:cardview-v7:24.2")
+                            );
 
                             Dependencies dependencies = mock(Dependencies.class);
                             when(dependencies.getLibraries()).thenReturn(libraries);
@@ -927,6 +990,22 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 }
 
                 return super.createProject(dir, referenceDir);
+            }
+
+            private AndroidLibrary createMockLibrary(String s) {
+                GradleCoordinate coordinate = GradleCoordinate.parseCoordinateString(s);
+                assertNotNull(coordinate);
+                MavenCoordinates mavenCoordinates = mock(MavenCoordinates.class);
+                when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
+                when(mavenCoordinates.getArtifactId()).thenReturn(coordinate.getArtifactId());
+                when(mavenCoordinates.getVersion()).thenReturn(coordinate.getRevision());
+                when(mavenCoordinates.toString()).thenReturn(s);
+
+                AndroidLibrary library1 = mock(AndroidLibrary.class);
+                when(library1.getResolvedCoordinates()).thenReturn(mavenCoordinates);
+                when(library1.getLintJar()).thenReturn(new File("lint.jar"));
+
+                return library1;
             }
         };
     }
