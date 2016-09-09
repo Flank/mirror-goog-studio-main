@@ -17,36 +17,44 @@
 
 #include <gtest/gtest.h>
 
+// When using bazel to build, testdata directory needs to be set, since the
+// files are not moved to the root, as it happens when using CMake.
+#ifdef BAZEL
+#define UTILS_TEST_DATA_ROOT "tools/base/profiler/native/testdata/utils/"
+#else
+#define UTILS_TEST_DATA_ROOT ""
+#endif
+
 using profiler::UidFetcher;
 
 TEST(GetUidStringFromPidFile, UidFoundAfterPrefix) {
-  std::string file_name("uid_found_after_prefix.txt");
+  std::string file_name(UTILS_TEST_DATA_ROOT "uid_found_after_prefix.txt");
   std::string content;
   EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
 }
 
 TEST(GetUidStringFromPidFile, UidFoundAfterPrefixAndEmptySpaces) {
-  std::string file_name("uid_found_after_prefix_and_spaces.txt");
+  std::string file_name(UTILS_TEST_DATA_ROOT "uid_found_after_prefix_and_spaces.txt");
   std::string content;
   EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
 }
 
 TEST(GetUidStringFromPidFile, UidNotFoundAsPrefixIsMissing) {
-  std::string file_name("uid_missing.txt");
+  std::string file_name(UTILS_TEST_DATA_ROOT "uid_missing.txt");
   std::string content;
   EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }
 
 TEST(GetUidStringFromPidFile, UidNotFoundAsNegativeNumber) {
-  std::string file_name("uid_negative_number.txt");
+  std::string file_name(UTILS_TEST_DATA_ROOT "uid_negative_number.txt");
   std::string content;
   EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }
 
 TEST(GetUidStringFromPidFile, UidNotFoundAsLetters) {
-  std::string file_name("uid_invalid_letters.txt");
+  std::string file_name(UTILS_TEST_DATA_ROOT "uid_invalid_letters.txt");
   std::string content;
   EXPECT_FALSE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
 }

@@ -212,6 +212,7 @@ test_suite(
     "//tools/base/ninepatch:studio.ninepatch_tests",
     "//tools/base/perflib:studio.perflib_tests",
     "//tools/base/pixelprobe:studio.pixelprobe_tests",
+    "//tools/base/profiler/native/utils:profiler_utils_test",
     "//tools/base/repository:studio.repository_tests",
     "//tools/base/repository:tools.tests",
     "//tools/base/sdk-common:studio.sdk-common_tests",
