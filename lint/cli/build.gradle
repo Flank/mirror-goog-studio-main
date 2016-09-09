@@ -1,6 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'jacoco'
 apply plugin: 'sdk-java-lib'
+apply plugin: 'application'
+
+mainClassName = 'com.android.tools.lint.Main'
+applicationDefaultJvmArgs = ["-Xmx1024m"]
 
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint'
@@ -21,16 +25,27 @@ test {
 }
 
 sdk {
-    linux {
-        item('etc/lint') { executable true }
-    }
-    mac {
-        item('etc/lint') { executable true }
+/*    common {
+        item(new File(buildDir, "libs")) {
+            into "lib"
+            notice null
+        }
+    }*/
+    common(mac, linux) {
+        item(new File(buildDir, "scripts/lint")) {
+            into "bin"
+            notice null
+        }
     }
     windows {
-        item 'etc/lint.bat'
+        item(new File(buildDir, "scripts/lint.bat")) {
+            into "bin"
+            notice null
+        }
     }
 }
+
+sdkJar.dependsOn(startScripts)
 
 // configure the manifest of the sdkJar task.
 sdkJar.manifest.attributes("Main-Class": "com.android.tools.lint.Main")

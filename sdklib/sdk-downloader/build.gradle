@@ -16,6 +16,7 @@
 
 apply plugin: 'application'
 apply plugin: 'java'
+apply plugin: 'sdk-files'
 
 mainClassName = "com.android.sdklib.tool.SdkDownloader"
 applicationDefaultJvmArgs = ["-ea"]
@@ -25,4 +26,25 @@ dependencies {
     compile project(':base:sdklib')
 }
 
-defaultTasks 'installDist'
+sdk {
+    common {
+        item(new File(buildDir, "libs")) {
+            into "lib"
+            notice null
+        }
+    }
+    common(mac, linux) {
+        item(new File(buildDir, "scripts/sdk-downloader")) {
+            into "bin"
+            notice null
+        }
+    }
+    windows {
+        item(new File(buildDir, "scripts/sdk-downloader.bat")) {
+            into "bin"
+            notice null
+        }
+    }
+}
+
+rootProject.tasks['makeSdk'].dependsOn(startScripts)
