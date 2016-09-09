@@ -62,6 +62,12 @@ public class ZFileOptions {
     private boolean mAutoSortFiles;
 
     /**
+     * Should validation of the data descriptors of entries be skipped? See
+     * {@link #getSkipDataDescriptorValidation()}
+     */
+    private boolean mSkipDataDescriptionValidation;
+
+    /**
      * Creates a new options object. All options are set to their defaults.
      */
     public ZFileOptions() {
@@ -176,5 +182,27 @@ public class ZFileOptions {
      */
     public void setAutoSortFiles(boolean autoSortFiles) {
         mAutoSortFiles = autoSortFiles;
+    }
+
+    /**
+     * Should data descriptor validation be skipped? This should generally be
+     * set to false. However, some tools (proguard -- http://b.android.com/221057) generate zips
+     * with incorrect data descriptors and to open the zips we need to skip the validation of data
+     * descriptors.
+     *
+     * @return should data descriptors be validated?
+     */
+    public boolean getSkipDataDescriptorValidation() {
+        return mSkipDataDescriptionValidation;
+    }
+
+    /**
+     * Sets whether data descriptors validation should be skipped. See
+     * {@link #getSkipDataDescriptorValidation()}.
+     *
+     * @param skip should validation be skipped?
+     */
+    public void setSkipDataDescriptionValidation(boolean skip) {
+        mSkipDataDescriptionValidation = skip;
     }
 }

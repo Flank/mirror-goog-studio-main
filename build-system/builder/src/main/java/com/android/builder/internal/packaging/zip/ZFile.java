@@ -367,6 +367,12 @@ public class ZFile implements Closeable {
      */
     private boolean mAutoSortFiles;
 
+    /**
+     * Should data descriptor verification be skipped? See
+     * {@link ZFileOptions#getSkipDataDescriptorValidation()}.
+     */
+    private boolean mSkipDataDescriptorVerification;
+
 
     /**
      * Creates a new zip file. If the zip file does not exist, then no file is created at this
@@ -408,6 +414,7 @@ public class ZFile implements Closeable {
         mCompressor = options.getCompressor();
         mCoverEmptySpaceUsingExtraField = options.getCoverEmptySpaceUsingExtraField();
         mAutoSortFiles = options.getAutoSortFiles();
+        mSkipDataDescriptorVerification = options.getSkipDataDescriptorValidation();
 
         /*
          * These two values will be overwritten by openReadOnly() below if the file exists.
@@ -697,8 +704,11 @@ public class ZFile implements Closeable {
         byte[] directoryData = new byte[Ints.checkedCast(dirSize)];
         directFullyRead(eocd.getDirectoryOffset(), directoryData);
 
-        CentralDirectory directory = CentralDirectory.makeFromData(ByteBuffer.wrap(directoryData),
-                eocd.getTotalRecords(), this);
+        CentralDirectory directory =
+                CentralDirectory.makeFromData(
+                        ByteBuffer.wrap(directoryData),
+                        eocd.getTotalRecords(),
+                        this);
         if (eocd.getDirectorySize() > 0) {
             mDirectoryEntry = mMap.add(eocd.getDirectoryOffset(), eocd.getDirectoryOffset()
                     + eocd.getDirectorySize(), directory);
@@ -2335,6 +2345,15 @@ public class ZFile implements Closeable {
     @NonNull
     public File getFile() {
         return mFile;
+    }
+
+    /**
+     * Checks whether data description verification should be skipped.
+     *
+     * @return should it be skipped?
+     */
+    boolean getSkipDataDescriptorVerification() {
+        return mSkipDataDescriptorVerification;
     }
 
     /**

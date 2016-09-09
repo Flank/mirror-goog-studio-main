@@ -74,6 +74,11 @@ public final class ApkCreatorFactories {
         options.setNoTimestamps(!keepTimestamps);
         options.setCoverEmptySpaceUsingExtraField(true);
 
+        /*
+         * Work around proguard CRC corruption bug (http://b.android.com/221057).
+         */
+        options.setSkipDataDescriptionValidation(true);
+
         ThreadPoolExecutor compressionExecutor =
                 new ThreadPoolExecutor(
                         0, /* Number of always alive threads */
