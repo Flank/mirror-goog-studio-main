@@ -1641,7 +1641,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getCompileClasspath() {
 
-        Set<File> classpath = Sets.newHashSetWithExpectedSize(
+        Set<File> classpath = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatCompileDependencies.getJarDependencies().size() +
                         mFlatCompileDependencies.getAtomDependencies().size() +
                         mFlatCompileDependencies.getLocalDependencies().size() +
@@ -1679,7 +1679,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public Set<File> getAllPackagedJars() {
         Set<File> localJars = getLocalPackagedJars();
 
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getJarDependencies().size() +
                         localJars.size() +
                         mFlatPackageDependencies.getAndroidDependencies().size());
@@ -1717,7 +1717,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getExternalPackagedJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getJarDependencies().size() +
                         mFlatPackageDependencies.getAndroidDependencies().size());
 
@@ -1758,7 +1758,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getExternalPackagedJniJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getJarDependencies().size());
 
         for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
@@ -1780,7 +1780,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getLocalPackagedJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getLocalDependencies().size());
 
         for (JavaLibrary jar : mFlatPackageDependencies.getLocalDependencies()) {
@@ -1800,7 +1800,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getSubProjectPackagedJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getJarDependencies().size() +
                         mFlatPackageDependencies.getAndroidDependencies().size());
 
@@ -1833,7 +1833,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getSubProjectLocalPackagedJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getAndroidDependencies().size());
 
         for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
@@ -1857,7 +1857,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getSubProjectJniLibFolders() {
-        Set<File> jniDirectories = Sets.newHashSetWithExpectedSize(
+        Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getAndroidDependencies().size());
 
         for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
@@ -1880,7 +1880,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getSubProjectPackagedJniJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getJarDependencies().size());
 
         for (JavaLibrary ja : mFlatPackageDependencies.getJarDependencies()) {
@@ -1902,7 +1902,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getExternalAarJniLibFolders() {
-        Set<File> jniDirectories = Sets.newHashSetWithExpectedSize(
+        Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getAndroidDependencies().size());
 
         for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
@@ -1925,7 +1925,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<File> getProvidedOnlyJars() {
-        Set<File> jars = Sets.newHashSetWithExpectedSize(
+        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
                 mFlatPackageDependencies.getAndroidDependencies().size() +
                         mFlatPackageDependencies.getJarDependencies().size() +
                         mFlatPackageDependencies.getLocalDependencies().size());
@@ -2196,7 +2196,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getProguardFiles(boolean includeLibraries, List<File> defaultProguardConfig) {
-        Set<File> fullList = Sets.newHashSet();
+        Set<File> fullList = Sets.newLinkedHashSet();
 
         // add the config files from the build type, main config and flavors
         fullList.addAll(mDefaultConfig.getProguardFiles());
@@ -2228,7 +2228,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Set<File> getTestProguardFiles() {
-        Set<File> fullList = Sets.newHashSet();
+        Set<File> fullList = Sets.newLinkedHashSet();
 
         // add the config files from the build type, main config and flavors
         fullList.addAll(mDefaultConfig.getTestProguardFiles());
