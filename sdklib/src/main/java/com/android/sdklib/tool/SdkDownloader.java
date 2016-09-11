@@ -29,6 +29,7 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.Uninstaller;
+import com.android.repository.api.UpdatablePackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -43,6 +44,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -97,16 +99,16 @@ public class SdkDownloader {
         localTable.addColumn("Location",
                 p -> FileUtils.relativePath(p.getLocation(), mgr.getLocalPath()), 15, 15);
 
-        System.out.println("Installed Packages:");
-        localTable.print(locals, System.out);
-        System.out.println();
-
-        if (settings.includeObsolete() && !localObsoletes.isEmpty()) {
-            System.out.println("Installed Obsolete Packages:");
-            localTable.print(localObsoletes, System.out);
-            System.out.println();
+        if (!locals.isEmpty()) {
+            System.out.println("Installed Packages:");
+            localTable.print(locals, System.out);
         }
 
+        if (settings.includeObsolete() && !localObsoletes.isEmpty()) {
+            System.out.println();
+            System.out.println("Installed Obsolete Packages:");
+            localTable.print(localObsoletes, System.out);
+        }
 
         Collection<RemotePackage> remotes = new TreeSet<>(packages.getRemotePackages().values());
         Collection<RemotePackage> remoteObsoletes = new TreeSet<>(remotes);
@@ -118,13 +120,27 @@ public class SdkDownloader {
         remoteTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
         remoteTable.addColumn("Description", RepoPackage::getDisplayName, 30, 0);
 
-        System.out.println("Available Packages:");
-        remoteTable.print(remotes, System.out);
-
+        if (!remotes.isEmpty()) {
+            System.out.println();
+            System.out.println("Available Packages:");
+            remoteTable.print(remotes, System.out);
+        }
         if (settings.includeObsolete() && !remoteObsoletes.isEmpty()) {
             System.out.println();
             System.out.println("Available Obsolete Packages:");
             remoteTable.print(remoteObsoletes, System.out);
+        }
+
+        Set<UpdatablePackage> updates = new TreeSet<>(packages.getUpdatedPkgs());
+        if (!updates.isEmpty()) {
+            System.out.println();
+            System.out.println("Available Updates:");
+            TableFormatter<UpdatablePackage> updateTable = new TableFormatter<>();
+            updateTable.addColumn("ID", UpdatablePackage::getPath, 30, 30);
+            updateTable.addColumn("Installed", p -> p.getLocal().getVersion().toString(), 20, 0);
+            updateTable.addColumn("Available", p -> p.getRemote().getVersion().toString(), 20, 0);
+
+            updateTable.print(updates, System.out);
         }
     }
 
