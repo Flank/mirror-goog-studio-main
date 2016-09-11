@@ -21,12 +21,21 @@ import com.android.sdklib.tool.SdkDownloader;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A utility class which manages updating an Android SDK for all supported platforms at the same
@@ -74,22 +83,25 @@ public final class DevSdkUpdater {
         System.out.println();
         System.out.println("Valid options:");
         System.out.println("  --help                  Prints this information and quits");
-        System.out.println("  --gitignore <file>      Copies <file> as .gitignore to within each ");
-        System.out.println("                          of the target SDK directories");
         System.out.println("  --package <pkg>         A single SDK path to update/download,");
         System.out.println("                          e.g. build-tools;23.0.1 or platform-tools");
-        System.out.println("  --package-file <file>   A file where each line is an SDK path");
+        System.out.println("                          Filters using a glob syntax can be");
+        System.out.println("                          included after a colon,");
+        System.out.println("                          e.g. platform-tools:{adb*,systrace/**}");
+        System.out.println("                          Here, 'adb*' matches 'adb' and 'adb.exe'");
+        System.out.println("                          and 'systrace/**' matches all dir contents");
+        System.out.println("  --package-file <file>   A file where each line is an SDK package");
         System.out.println();
         System.out.println("Example usages:");
         System.out.println();
         System.out.println("  # Updating a bunch of packages");
         System.out.println("  $ DevSdkUpdater \\");
-        System.out.println("    --gitignore sdk.gitignore --package-file dev-sdk-packages \\");
+        System.out.println("    --package-file dev-sdk-packages \\");
         System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
         System.out.println();
-        System.out.println("  # Updating a single package");
+        System.out.println("  # Updating to only the top folder of a single package");
         System.out.println("  $ DevSdkUpdater \\");
-        System.out.println("    --package \"build-tools;23.0.1\" \\");
+        System.out.println("    --package \"build-tools;23.0.1:*\" \\");
         System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
         System.out.println();
     }
@@ -97,30 +109,17 @@ public final class DevSdkUpdater {
     private static Status run(String[] args) throws IOException {
 
         File sdkDest = null;
-        File gitIgnoreFile = null;
-        List<String> packages = new ArrayList<>();
+        List<String> packageLines = new ArrayList<>();
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
             if (arg.equals("--help")) {
                 usage();
                 return Status.SUCCESS;
-            } else if (arg.equals("--gitignore")) {
-                ++i;
-                try {
-                    gitIgnoreFile = new File(args[i]);
-                    if (!gitIgnoreFile.exists()) {
-                        usage("Invalid gitignore file specified: " + args[i]);
-                        return Status.ERROR;
-                    }
-                } catch (ArrayIndexOutOfBoundsException ignored) {
-                    usage("Gitignore file not set");
-                    return Status.ERROR;
-                }
             } else if (arg.equals("--package-file")) {
                 ++i;
                 try {
                     try {
-                        packages.addAll(Files.readAllLines(Paths.get(args[i])));
+                        packageLines.addAll(Files.readAllLines(Paths.get(args[i])));
                     } catch (Exception e) {
                         usage("Could not successfully read package-file: " + args[i] +
                                 "\n\nException: " + e);
@@ -133,7 +132,7 @@ public final class DevSdkUpdater {
             } else if (arg.equals("--package")) {
                 ++i;
                 try {
-                    packages.add(args[i]);
+                    packageLines.add(args[i]);
                 } catch (ArrayIndexOutOfBoundsException ignored) {
                     usage("Package not set");
                     return Status.ERROR;
@@ -155,7 +154,7 @@ public final class DevSdkUpdater {
                     return Status.ERROR;
                 }
             } else {
-                usage("Uknown option: " + arg);
+                usage("Unknown option: " + arg);
                 return Status.ERROR;
             }
         }
@@ -165,43 +164,37 @@ public final class DevSdkUpdater {
             return Status.ERROR;
         }
 
-        if (gitIgnoreFile == null && packages.isEmpty()) {
-            usage("--gitignore and/or --package-file must be set");
+        if (packageLines.isEmpty()) {
+            usage("No packages were specified by --package or --package-file");
             return Status.ERROR;
         }
 
-        if (gitIgnoreFile != null) {
-            System.out.print("Copying " + gitIgnoreFile.getPath() + " to SDK folders... ");
-            System.out.flush();
-            copyGitIgnore(gitIgnoreFile, sdkDest);
-            System.out.println("done!");
-        }
-
-        if (!packages.isEmpty()) {
-            System.out.println("Delegating work to SDK downloader for all SDK folders...");
-            downloadSdkPackages(sdkDest, packages);
-            System.out.println("done!");
-        }
+        System.out.println("Downloading SDKs...");
+        downloadSdkPackages(sdkDest, packageLines);
+        System.out.println("done!");
 
         return Status.SUCCESS;
     }
 
-    private static void copyGitIgnore(File gitIgnoreSrc, File sdkDest) {
-        for (OsEntry osEntry : OS_ENTRIES) {
-            File osSdkDest = new File(sdkDest, osEntry.mFolder);
-            File gitIgnoreDest = new File(osSdkDest, ".gitignore");
-            try {
-                Files.copy(gitIgnoreSrc.toPath(), gitIgnoreDest.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                System.err.println(
-                        "Failed to copy to: " + gitIgnoreDest.getPath() + "\n\n" + "Exception: "
-                                + e);
+    /**
+     * @param packageLines A list of package entries with an (optional) filter appended to them,
+     *                     e.g. "platform-tools:adb*"
+     */
+    private static void downloadSdkPackages(File sdkDest, List<String> packageLines)
+            throws IOException {
+        List<String> packages = new ArrayList<>(); // Just the packages, with filters stripped
+        // The following is a package -> filter mapping (if a filter present)
+        // If no filter is found, then all downloaded files will be kept
+        Map<String, String> filters = new HashMap<>();
+
+        for (String packageLine : packageLines) {
+            String[] packageFilters = packageLine.split(":", 2);
+            packages.add(packageFilters[0]);
+            if (packageFilters.length > 1) {
+                filters.put(packageFilters[0], packageFilters[1]);
             }
         }
-    }
 
-    private static void downloadSdkPackages(File sdkDest, List<String> packages) {
         for (OsEntry osEntry : OS_ENTRIES) {
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
             // Delegate download operation to SdkDownloader program
@@ -212,6 +205,60 @@ public final class DevSdkUpdater {
 
             Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
             SdkDownloader.main(args.stream().toArray(String[]::new));
+        }
+
+        if (!filters.isEmpty()) {
+            filterSdkFiles(sdkDest, filters);
+        }
+    }
+
+    /**
+     * Given an SDK root directory and a mappings of package -> filters, walk through each SDK
+     * package and remove files that don't match the filters. This will also remove any directories
+     * left empty as a result of the filtering.
+     */
+    private static void filterSdkFiles(File sdkRoot, Map<String, String> filters)
+            throws IOException {
+        FileSystem fs = FileSystems.getDefault();
+        for (Map.Entry<String, String> pkgFilterEntry : filters.entrySet()) {
+            String pkg = pkgFilterEntry.getKey();
+            String pkgFilter = pkgFilterEntry.getValue();
+
+            PathMatcher pm = fs.getPathMatcher("glob:" + pkgFilter);
+            System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, pkgFilter));
+            System.out.flush();
+            for (OsEntry osEntry : OS_ENTRIES) {
+                File osSdkDest = new File(sdkRoot, osEntry.mFolder);
+                // Convert package format to path format, e.g. a;b;c -> a/b/c
+                File pkgRoot = new File(osSdkDest, pkg.replaceAll(";", "/"));
+
+                Files.walkFileTree(pkgRoot.toPath(), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file,
+                            BasicFileAttributes attrs) throws IOException {
+                        Path relPath = pkgRoot.toPath().relativize(file);
+                        if (!pm.matches(relPath)) {
+                            Files.delete(file);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                            throws IOException {
+                        boolean isDirectoryEmpty;
+                        try (DirectoryStream<Path> dirStream =
+                                     Files.newDirectoryStream(dir)) {
+                            isDirectoryEmpty = !dirStream.iterator().hasNext();
+                        }
+                        if (isDirectoryEmpty) {
+                            Files.delete(dir);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+            System.out.println("done!");
         }
     }
 
@@ -235,7 +282,7 @@ public final class DevSdkUpdater {
 
         /**
          * Subfolders that the SDKs will be installed within, usually but not always
-         * the same as {@link mName}
+         * the same as {@link #mName}
          */
         public final String mFolder;
 

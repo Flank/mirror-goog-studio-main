@@ -12,7 +12,6 @@ Files of interest:
 |   |   |
 |---|---|
 | `dev-sdk-packages` | A list of all SDK components needed by the Studio codebase |
-| `sdk.gitignore` | A master gitignore to be copied into all SDKs |
 | `prebuilts.studio.sdk.BUILD` | Bazel rules for breaking the SDK up into its parts|
 | `src/...` | Source for a utility that updates the SDK for all hosts |
 | `all_sdks_manifest.xml` | An manifest extender which pulls down all SDKs into your local repo |
@@ -90,24 +89,20 @@ build-tools;24.0.0
 This file will be used to update and download SDK components. For future maintainers, please keep it
 up to date if you need to add any new SDK packages.
 
-## sdk.gitignore
+## Filtering SDKs
 
 As of the time of writing this document, the development SDK, raw, is 2.5G (per each host, or
 7.5G total). This is bound to grow larger over time. However, we may only need a fraction of the
 actual SDK. For example, ddmlib tests only need the `adb` binary and nothing else from
 `platform-tools`.
 
-If only there was a way to filter out files that we didn't care about...
+Therefore, the `dev-sdk-updater` binary supports adding an optional filter-by-glob for each package.
+To accomplish this, append a filter after a colon to the desired package, e.g.
+`platform-tools:adb*`. Use curly braces if you need to list multiple globs,
+e.g. `{pattern1,pattern2}`, which will match if _any_ of the patterns match.
 
-Of course, that's where `.gitignore` comes in. We use git's ignore functionality to blacklist
-almost all of the SDK, only exposing the parts of it our codebase actually needs.
-
-The only issue here is that all three git repositories should share the exact same `.gitignore`
-file. For example, if `linux` and `darwin` had different `.gitignore`s, a test on one platform might find a
-file while the other platform fails.
-
-If anyone ever needs to modify the `.gitignore` rules, they should edit the master file living here
-and run `dev-sdk-updater` (see below) to copy them over.
+See the [official docs on globs](http://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob)
+and `dev-sdk-updater --help` for more details.
 
 ## Updating the development SDK
 
@@ -167,37 +162,12 @@ Next, we'll need to run SDK tools to fetch the new data.
 ```
 $ cd /path/to/studio-master-dev/
 
-$ bazel build //tools/base/bazel/sdk:dev-sdk-updater
-$ ./bazel-bin/tools/base/bazel/sdk/dev-sdk-updater \
-  --package-file tools/base/bazel/sdk/dev-sdk-packages \
-  --dest prebuilts/studio/sdk
+$ bazel run -- //tools/base/bazel/sdk:dev-sdk-updater
+  --package-file `pwd`/tools/base/bazel/sdk/dev-sdk-packages \
+  --dest `pwd`/prebuilts/studio/sdk
 ```
 
-### Modify sdk.gitignore
-
-At this point, our new build-tools directory isn't showing up because it's being ignored by git!
-
-Let's modify `sdk.gitignore`. At the end, let's add a `!` whitelist entry:
-
-```
-...
-!build-tools/19.0.3
-```
-
-_See also: [gitignore docs](https://git-scm.com/docs/gitignore)_
-
-And finally, let's propagate those changes:
-
-```
-$ cd /path/to/studio-master-dev/
-
-$ bazel build //tools/base/bazel/sdk:dev-sdk-updater
-$ ./bazel-bin/tools/base/bazel/sdk/dev-sdk-updater \
-  --gitignore tools/base/bazel/sdk/sdk.gitignore \
-  --dest prebuilts/studio/sdk
-```
-
-### Add a new filegroup
+### Add a new filegroup rule
 
 Open `prebuilts.studio.sdk.BUILD`. Once checked in, this will automatically get copied to
 `//prebuilts/studio/sdk/BUILD` by repo at sync time.
@@ -213,7 +183,10 @@ filegroup(
 )
 ```
 
-To test that this is working, manually copy it yourself and do a query:
+Here, `*/build-tools/19.0.3` will match with `darwin/build-tools/19.0.3` on mac,
+`linux/build-tools/19.0.3` on linux, etc.
+
+To test that you set the rule correctly, manually copy the `BUILD` file yourself and do a query:
 
 ```
 $ cd /path/to/studio-master-dev/
@@ -230,13 +203,6 @@ See also: [bazel filegroup rule](http://bazel.io/docs/be/general.html#filegroup)
 ```
 $ cd /path/to/studio-master-dev/
 
-# Remove all ignored files, since sdk.gitignore strips many out
-$ repo forall \
-    prebuilts/studio/sdk/darwin \
-    prebuilts/studio/sdk/linux \
-    prebuilts/studio/sdk/windows \
-    -c git clean -dxf
-
 $ bazel test ...
 ```
 
@@ -252,8 +218,10 @@ $ repo forall \
     tools/base \
     -c git commit -a -m "Updated SDK with build-tools;19.0.3"
 
-# Include -t to ensure all code reviews have the same topic. Be careful that
-# someone else isn't using the same topic as you at the same time!
+# When uploading, include -t to ensure all code reviews have the
+# same topic (the topic will be set to your current branch name).
+# Be careful that someone else isn't using the same topic as you
+# at the same time!
 $ repo upload --cbr -t
 
 # This opens an editor. Uncomment all SDK branches and save.
@@ -261,7 +229,8 @@ $ repo upload --cbr -t
 
 ### Cleanup
 
-Once your CLs are submitted, you can delete local data if you want to.
+_(Optional)_ Once your CLs are submitted, you can delete local data if you don't plan to update the
+SDK again any time soon.
 
 ```
 $ cd /path/to/studio-master-dev/
