@@ -118,25 +118,10 @@ please don't do this!).
 ### Pull down all three SDK repositories
 
 By default, the repo manifest will only pull down the one SDK repository that matches your host
-machine. There are two ways to work around this.
-
-#### Option 1: repo init -b studio-master-dev-sdk
-
-The `studio-master-dev-sdk` branch is a special one that only contains just the projects needed to
-update the SDK.
-
-```
-$ mkdir -p /path/to/studio-master-dev-sdk/
-
-$ repo init ... -b studio-master-dev-sdk
-$ repo sync
-```
-
-#### Option 2: all_sdks_manifest.xml
-
-This folder provides an `all_sdks_manifest.xml` you can copy into your `local_manifests` directory.
-With this approach, you can `repo sync` into the `studio-master-dev` folder you work out of
-normally, and it will start pulling down all SDKS, not just the one that matches your host OS.
+machine. To work around this, this folder provides an `all_sdks_manifest.xml` you can copy into your
+`local_manifests` directory. Afterwards, you can `repo sync` into the `studio-master-dev` folder you
+work out of normally, and it will start pulling down all SDKS, not just the one that matches your
+host OS.
 
 ```
 $ cd /path/to/studio-master-dev/
@@ -147,10 +132,12 @@ $ cp tools/base/bazel/sdk/all_sdks_manifest.xml .repo/local_manifests/
 $ repo sync
 ```
 
+You only have to do this step once.
+
 ### Start a new branch
 
 ```
-$ cd /path/to/studio-master-dev/ # or studio-master-dev-sdk
+$ cd /path/to/studio-master-dev/
 
 # Of course, your branch name will be different...
 $ repo start devsdk+build-tools+19_0_3 \
@@ -178,7 +165,7 @@ platforms;android-23
 Next, we'll need to run SDK tools to fetch the new data.
 
 ```
-$ cd /path/to/studio-master-dev/ # or studio-master-dev-sdk
+$ cd /path/to/studio-master-dev/
 
 $ bazel build //tools/base/bazel/sdk:dev-sdk-updater
 $ ./bazel-bin/tools/base/bazel/sdk/dev-sdk-updater \
@@ -202,7 +189,7 @@ _See also: [gitignore docs](https://git-scm.com/docs/gitignore)_
 And finally, let's propagate those changes:
 
 ```
-$ cd /path/to/studio-master-dev/ # or studio-master-dev-sdk
+$ cd /path/to/studio-master-dev/
 
 $ bazel build //tools/base/bazel/sdk:dev-sdk-updater
 $ ./bazel-bin/tools/base/bazel/sdk/dev-sdk-updater \
@@ -229,7 +216,7 @@ filegroup(
 To test that this is working, manually copy it yourself and do a query:
 
 ```
-$ cd /path/to/studio-master-dev/ # or studio-master-dev-sdk
+$ cd /path/to/studio-master-dev/
 
 $ cp tools/base/bazel/sdk/prebuilts.studio.sdk.BUILD \
      prebuilts/studio/sdk/BUILD
@@ -256,7 +243,7 @@ $ bazel test ...
 ### Upload code review
 
 ```
-$ cd /path/to/studio-master-dev/ # or studio-master-dev-sdk
+$ cd /path/to/studio-master-dev/
 
 $ repo forall \
     prebuilts/studio/sdk/darwin \
