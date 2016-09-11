@@ -249,6 +249,7 @@ public class SdkDownloader {
         private static final String PKG_FILE_ARG = "--package_file=";
         private static final String LIST_ARG = "--list";
         private static final String INCLUDE_OBSOLETE_ARG = "--include_obsolete";
+        private static final String HELP_ARG = "--help";
 
         private File mLocalPath;
         private List<String> mPackages = new ArrayList<>();
@@ -262,7 +263,9 @@ public class SdkDownloader {
         public static Settings createSettings(@NonNull String[] args) {
             Settings result = new Settings();
             for (String arg : args) {
-                if (arg.equals(UNINSTALL_ARG)) {
+                if (arg.equals(HELP_ARG)) {
+                    usageAndExit();
+                } else if (arg.equals(UNINSTALL_ARG)) {
                     result.mIsInstall = false;
                 } else if (arg.equals(UPDATE_ARG)) {
                     result.mIsUpdate = true;
