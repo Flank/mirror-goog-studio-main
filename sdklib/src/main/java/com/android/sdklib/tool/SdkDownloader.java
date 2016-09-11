@@ -35,8 +35,6 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,89 +84,48 @@ public class SdkDownloader {
         mgr.loadSynchronously(0, progress, downloader, settings);
 
         RepositoryPackages packages = mgr.getPackages();
-        int maxPath = 0;
-        int maxDescription = 0;
-        int maxLocation = 0;
-        int maxVersion = 0;
 
         Collection<LocalPackage> locals = new TreeSet<>(packages.getLocalPackages().values());
         Collection<LocalPackage> localObsoletes = new TreeSet<>(locals);
         locals.removeIf(RepoPackage::obsolete);
         localObsoletes.removeAll(locals);
 
-        for (LocalPackage p : locals) {
-            maxPath = Math.max(maxPath, p.getPath().length());
-            maxDescription = Math.max(maxDescription, p.getDisplayName().length());
-            maxLocation = Math.max(maxLocation,
-                    FileUtils.relativePath(p.getLocation(), mgr.getLocalPath()).length());
-            maxVersion = Math.max(maxVersion, p.getVersion().toString().length());
-        }
-        maxPath = Math.min(30, maxPath);
-        maxLocation = Math.min(30, maxLocation);
-        String pattern = String.format("  %%-%ds | %%-%ds | %%-%ds | %%-%ds\n", maxPath, maxVersion,
-                maxDescription, maxLocation);
-        String separator = "-------";
-        System.out.println("Installed packages:");
-        System.out.printf(pattern, "ID", "Version", "Description", "Location");
-        System.out.printf(pattern, separator, separator, separator, separator);
-        for (LocalPackage p : locals) {
-            System.out.printf(pattern, shortenValue(p.getPath()), p.getVersion(),
-                    p.getDisplayName(),
-                    shortenValue(FileUtils.relativePath(p.getLocation(), mgr.getLocalPath())));
-        }
+        TableFormatter<LocalPackage> localTable = new TableFormatter<>();
+        localTable.addColumn("Path", RepoPackage::getPath, 15, 15);
+        localTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
+        localTable.addColumn("Description", RepoPackage::getDisplayName, 30, 0);
+        localTable.addColumn("Location",
+                p -> FileUtils.relativePath(p.getLocation(), mgr.getLocalPath()), 15, 15);
+
+        System.out.println("Installed Packages:");
+        localTable.print(locals, System.out);
+        System.out.println();
+
         if (settings.includeObsolete() && !localObsoletes.isEmpty()) {
-            System.out.println("Obsolete installed packages:");
-            System.out.printf(pattern, "ID", "Version", "Description", "Location");
-            System.out.printf(pattern, separator, separator, separator, separator);
-            for (LocalPackage p : localObsoletes) {
-                System.out.printf(pattern, shortenValue(p.getPath()), p.getVersion(),
-                        shortenValue(p.getDisplayName()),
-                        shortenValue(FileUtils.relativePath(p.getLocation(), mgr.getLocalPath())));
-            }
+            System.out.println("Installed Obsolete Packages:");
+            localTable.print(localObsoletes, System.out);
+            System.out.println();
         }
 
-        System.out.println();
 
         Collection<RemotePackage> remotes = new TreeSet<>(packages.getRemotePackages().values());
         Collection<RemotePackage> remoteObsoletes = new TreeSet<>(remotes);
         remotes.removeIf(RepoPackage::obsolete);
         remoteObsoletes.removeAll(remotes);
 
-        maxPath = 0;
-        maxDescription = 0;
-        maxVersion = 0;
+        TableFormatter<RemotePackage> remoteTable = new TableFormatter<>();
+        remoteTable.addColumn("Path", RepoPackage::getPath, 15, 15);
+        remoteTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
+        remoteTable.addColumn("Description", RepoPackage::getDisplayName, 30, 0);
 
-        for (RemotePackage p : remotes) {
-            maxPath = Math.max(maxPath, p.getPath().length());
-            maxDescription = Math.max(maxDescription, p.getDisplayName().length());
-            maxVersion = Math.max(maxVersion, p.getVersion().toString().length());
-        }
-        pattern = String.format("  %%-%ds | %%-%ds | %%-%ds\n", maxPath, maxVersion,
-                maxDescription);
+        System.out.println("Available Packages:");
+        remoteTable.print(remotes, System.out);
 
-        System.out.println("Available packages:");
-        System.out.printf(pattern, "ID", "Version", "Description");
-        System.out.printf(pattern, separator, separator, separator);
-        for (RemotePackage p : Sets.newTreeSet(remotes)) {
-            System.out.printf(pattern, p.getPath(), p.getVersion(), p.getDisplayName());
-        }
         if (settings.includeObsolete() && !remoteObsoletes.isEmpty()) {
-            System.out.println("Obsolete Available Packages:");
-            System.out.printf(pattern, "ID", "Version", "Description");
-            System.out.printf(pattern, separator, separator, separator);
-            for (RemotePackage p : remoteObsoletes) {
-                System.out.printf(pattern, shortenValue(p.getPath()), p.getVersion(),
-                        shortenValue(p.getDisplayName()));
-            }
+            System.out.println();
+            System.out.println("Available Obsolete Packages:");
+            remoteTable.print(remoteObsoletes, System.out);
         }
-    }
-
-    @NonNull
-    private static String shortenValue(@NonNull String value) {
-        if (value.length() > 25) {
-            value = value.substring(0, 11) + "..." + value.substring(value.length() - 11);
-        }
-        return value;
     }
 
     private static void installPackages(
@@ -179,7 +136,7 @@ public class SdkDownloader {
         LegacyDownloader downloader = new LegacyDownloader(handler.getFileOp());
         mgr.loadSynchronously(0, progress, downloader, settings);
 
-        List<RemotePackage> remotes = Lists.newArrayList();
+        List<RemotePackage> remotes = new ArrayList<>();
         for (String path : settings.getPaths(mgr)) {
             RemotePackage p = mgr.getPackages().getRemotePackages().get(path);
             if (p == null) {
