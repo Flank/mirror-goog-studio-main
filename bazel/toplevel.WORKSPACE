@@ -1,13 +1,13 @@
 new_local_repository(
     name = 'gmock_repo',
     build_file = 'tools/base/profiler/native/external/gmock.BUILD',
-    path = 'external/gmock'
+    path = 'external/googletest/googlemock'
 )
 
 new_local_repository(
     name = 'gtest_repo',
     build_file = 'tools/base/profiler/native/external/gtest.BUILD',
-    path = 'external/gtest'
+    path = 'external/googletest/googletest'
 )
 
 local_repository(
