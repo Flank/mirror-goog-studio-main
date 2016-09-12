@@ -44,6 +44,11 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -56,11 +61,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 /**
  * A {@link MergeWriter} for assets, using {@link ResourceItem}.
@@ -80,6 +83,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     private DocumentBuilderFactory mFactory;
 
+    /**
+     * Compiler for resources
+     */
     @NonNull
     private final ResourceCompiler mResourceCompiler;
 

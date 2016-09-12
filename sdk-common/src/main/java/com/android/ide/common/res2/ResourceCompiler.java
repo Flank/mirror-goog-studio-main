@@ -17,6 +17,7 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -27,6 +28,11 @@ import java.io.File;
  */
 @FunctionalInterface
 public interface ResourceCompiler {
+
+    /**
+     * Resource compiler that doesn't do anything.
+     */
+    ResourceCompiler NONE = (i, o) -> Futures.immediateFuture(null);
 
     /**
      * Produces an optional output file for an input file. Not all files are compilable. An

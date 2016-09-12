@@ -288,7 +288,6 @@ public class InstantRunSplitApkBuilder extends BaseTask {
                     AaptGradleFactory.make(
                             androidBuilder,
                             true,
-                            true,
                             packagingScope.getProject(),
                             packagingScope.getVariantType(),
                             FileUtils.mkdirs(new File(

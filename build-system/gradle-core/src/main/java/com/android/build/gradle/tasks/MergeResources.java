@@ -35,6 +35,7 @@ import com.android.ide.common.res2.GeneratedResourceSet;
 import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.NoOpResourcePreprocessor;
+import com.android.ide.common.res2.ResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
@@ -80,7 +81,7 @@ public class MergeResources extends IncrementalTask {
      */
     private File publicFile;
 
-    private boolean process9Patch;
+    private boolean processResources;
 
     private boolean crunchPng;
 
@@ -136,19 +137,24 @@ public class MergeResources extends IncrementalTask {
             }
 
             // get the merged set and write it down.
-            Aapt aapt =
-                    AaptGradleFactory.make(
-                            getBuilder(),
-                            getCrunchPng(),
-                            getProcess9Patch(),
-                            variantScope,
-                            getAaptTempDir());
+            ResourceCompiler resourceCompiler;
+            if (getProcessResources()) {
+                Aapt aapt =
+                        AaptGradleFactory.make(
+                                getBuilder(),
+                                getCrunchPng(),
+                                variantScope,
+                                getAaptTempDir());
+                resourceCompiler = aapt::compile;
+            } else {
+                resourceCompiler = ResourceCompiler.NONE;
+            }
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir,
                     getPublicFile(),
                     getBlameLogFolder(),
                     preprocessor,
-                    aapt::compile,
+                    resourceCompiler,
                     getIncrementalFolder());
 
             merger.mergeData(writer, false /*doCleanUp*/);
@@ -213,20 +219,25 @@ public class MergeResources extends IncrementalTask {
             }
 
 
+            ResourceCompiler resourceCompiler;
+            if (getProcessResources()) {
+                Aapt aapt =
+                        AaptGradleFactory.make(
+                                getBuilder(),
+                                getCrunchPng(),
+                                variantScope,
+                                getAaptTempDir());
+                resourceCompiler = aapt::compile;
+            } else {
+                resourceCompiler = ResourceCompiler.NONE;
+            }
 
-            Aapt aapt =
-                    AaptGradleFactory.make(
-                            getBuilder(),
-                            getCrunchPng(),
-                            getProcess9Patch(),
-                            variantScope,
-                            getAaptTempDir());
             MergedResourceWriter writer = new MergedResourceWriter(
                     getOutputDir(),
                     getPublicFile(),
                     getBlameLogFolder(),
                     preprocessor,
-                    aapt::compile,
+                    resourceCompiler,
                     getIncrementalFolder());
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
@@ -303,12 +314,12 @@ public class MergeResources extends IncrementalTask {
         this.crunchPng = crunchPng;
     }
 
-    public boolean getProcess9Patch() {
-        return process9Patch;
+    public boolean getProcessResources() {
+        return processResources;
     }
 
-    public void setProcess9Patch(boolean process9Patch) {
-        this.process9Patch = process9Patch;
+    public void setProcessResources(boolean processResources) {
+        this.processResources = processResources;
     }
 
     @Optional
@@ -400,19 +411,19 @@ public class MergeResources extends IncrementalTask {
 
         private final boolean includeDependencies;
 
-        private final boolean process9Patch;
+        private final boolean processResources;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull String taskNamePrefix,
                 @Nullable File outputLocation,
                 boolean includeDependencies,
-                boolean process9Patch) {
+                boolean processResources) {
             this.scope = scope;
             this.taskNamePrefix = taskNamePrefix;
             this.outputLocation = outputLocation;
             this.includeDependencies = includeDependencies;
-            this.process9Patch = process9Patch;
+            this.processResources = processResources;
         }
 
         @NonNull
@@ -446,7 +457,7 @@ public class MergeResources extends IncrementalTask {
             if (includeDependencies) {
                 mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogDir());
             }
-            mergeResourcesTask.setProcess9Patch(process9Patch);
+            mergeResourcesTask.setProcessResources(processResources);
             mergeResourcesTask.setCrunchPng(extension.getAaptOptions().getCruncherEnabled());
 
             VectorDrawablesOptions vectorDrawablesOptions = variantData

@@ -34,10 +34,12 @@ import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+
+import org.gradle.api.Project;
+
 import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.gradle.api.Project;
 
 /**
  * Factory that creates instances of {@link com.android.builder.internal.aapt.Aapt} by looking
@@ -60,7 +62,7 @@ public final class AaptGradleFactory {
             @NonNull AndroidBuilder builder,
             @NonNull VariantScope scope,
             @NonNull File intermediateDir) {
-        return make(builder, true, true, scope, intermediateDir);
+        return make(builder, true, scope, intermediateDir);
     }
 
     /**
@@ -68,7 +70,6 @@ public final class AaptGradleFactory {
      *
      * @param builder the android builder project model
      * @param crunchPng should PNGs be crunched?
-     * @param process9Patch should 9-patch be processed even if PNGs are not crunched?
      * @param scope the scope of the variant to use {@code aapt2} with
      * @param intermediateDir intermediate directory for aapt to use
      * @return the newly-created instance
@@ -77,14 +78,12 @@ public final class AaptGradleFactory {
     public static Aapt make(
             @NonNull AndroidBuilder builder,
             boolean crunchPng,
-            boolean process9Patch,
             @NonNull VariantScope scope,
             @NonNull File intermediateDir) {
         return make(
                 builder,
                 new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())),
                 crunchPng,
-                process9Patch,
                 scope.getGlobalScope().getProject(),
                 scope.getVariantConfiguration().getType(),
                 intermediateDir,
@@ -96,7 +95,6 @@ public final class AaptGradleFactory {
      *
      * @param builder the android builder project model
      * @param crunchPng should PNGs be crunched?
-     * @param process9Patch should 9-patch be processed even if PNGs are not crunched?
      * @param project the Gradle project
      * @param variantType type of the variant to process
      * @param intermediateDir intermediate directory for aapt to use
@@ -108,7 +106,6 @@ public final class AaptGradleFactory {
     public static Aapt make(
             @NonNull AndroidBuilder builder,
             boolean crunchPng,
-            boolean process9Patch,
             @NonNull Project project,
             @NonNull VariantType variantType,
             @NonNull File intermediateDir,
@@ -117,7 +114,6 @@ public final class AaptGradleFactory {
                 builder,
                 null,
                 crunchPng,
-                process9Patch,
                 project,
                 variantType,
                 intermediateDir,
@@ -130,7 +126,6 @@ public final class AaptGradleFactory {
      * @param builder the android builder project model
      * @param outputHandler the output handler to use
      * @param crunchPng should PNGs be crunched?
-     * @param process9Patch should 9-patch be processed even if PNGs are not crunched?
      * @param project the Gradle project
      * @param variantType type of the variant to process
      * @param intermediateDir intermediate directory for aapt to use
@@ -143,7 +138,6 @@ public final class AaptGradleFactory {
             @NonNull AndroidBuilder builder,
             @Nullable ProcessOutputHandler outputHandler,
             boolean crunchPng,
-            boolean process9Patch,
             @NonNull Project project,
             @NonNull VariantType variantType,
             @NonNull File intermediateDir,
@@ -167,12 +161,10 @@ public final class AaptGradleFactory {
                     new FilteringLogger(builder.getLogger()));
         } else {
             AaptV1.PngProcessMode processMode;
-            if (crunchPng && process9Patch) {
+            if (crunchPng) {
                 processMode = AaptV1.PngProcessMode.ALL;
-            } else if (process9Patch) {
-                processMode = AaptV1.PngProcessMode.NINE_PATCH_ONLY;
             } else {
-                processMode = AaptV1.PngProcessMode.NONE;
+                processMode = AaptV1.PngProcessMode.NO_CRUNCH;
             }
 
             return new AaptV1(

@@ -80,7 +80,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
      */
     public enum PngProcessMode {
         /**
-         * All PNGs should be crunched and 9-patch processed.
+         * All PNGs should be crunched and resources processed.
          */
         ALL {
             @Override
@@ -90,22 +90,12 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         },
 
         /**
-         * PNGs should not be crunched, but 9-patch processed.
+         * PNGs should not be crunched, but other resources processed.
          */
-        NINE_PATCH_ONLY {
+        NO_CRUNCH {
             @Override
             public boolean shouldProcess(@NonNull File file) {
                 return file.getName().endsWith(SdkConstants.DOT_9PNG);
-            }
-        },
-
-        /**
-         * PNGs should not be crunched and 9-patch should not be processed.
-         */
-        NONE {
-            @Override
-            public boolean shouldProcess(@NonNull File file) {
-                return false;
             }
         };
 

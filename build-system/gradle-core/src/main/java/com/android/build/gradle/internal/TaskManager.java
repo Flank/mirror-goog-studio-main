@@ -197,7 +197,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 import android.databinding.tool.DataBindingBuilder;
 import android.databinding.tool.DataBindingCompilerArgs;
-import android.databinding.tool.LayoutXmlProcessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -701,20 +700,20 @@ public abstract class TaskManager {
     public AndroidTask<MergeResources> createMergeResourcesTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope) {
-        return createMergeResourcesTask(tasks, scope, true /*process9patch*/);
+        return createMergeResourcesTask(tasks, scope, true /*processResources*/);
     }
 
     public AndroidTask<MergeResources> createMergeResourcesTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
-            boolean process9patch) {
+            boolean processResources) {
         return basicCreateMergeResourcesTask(
                 tasks,
                 scope,
                 "merge",
                 null /*outputLocation*/,
                 true /*includeDependencies*/,
-                process9patch);
+                processResources);
     }
 
     public AndroidTask<MergeResources> basicCreateMergeResourcesTask(
@@ -723,14 +722,14 @@ public abstract class TaskManager {
             @NonNull String taskNamePrefix,
             @Nullable File outputLocation,
             final boolean includeDependencies,
-            final boolean process9Patch) {
+            final boolean processResources) {
         AndroidTask<MergeResources> mergeResourcesTask = androidTasks.create(tasks,
                 new MergeResources.ConfigAction(
                         scope,
                         taskNamePrefix,
                         outputLocation,
                         includeDependencies,
-                        process9Patch));
+                        processResources));
 
         if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.LOCAL_RES_ONLY) {
             mergeResourcesTask.dependsOn(tasks,
