@@ -756,7 +756,7 @@ public class AndroidTargetManagerTest extends TestCase {
         private final File mLocation;
 
         public FakePlatformPackage(@NonNull String path, @NonNull File location, int apiLevel) {
-            super(path, new Revision(1), null);
+            super(path);
             mDetails = ((RepoFactory)AndroidSdkHandler.getRepositoryModule().createLatestFactory())
                     .createPlatformDetailsType();
             mDetails.setApiLevel(apiLevel);

@@ -140,8 +140,8 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("legacy", new Revision(1, 2, 9),
-                            null);
+                    FakePackage legacy = new FakePackage("legacy");
+                    legacy.setRevision(new Revision(1, 2, 9));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                     return ImmutableSet.of(legacy);
                 });
@@ -171,8 +171,8 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("dummy;foo", new Revision(1, 2, 3),
-                            null);
+                    FakePackage legacy = new FakePackage("dummy;foo");
+                    legacy.setRevision(new Revision(1, 2, 3));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                     return ImmutableSet.of(legacy);
                 });
@@ -271,10 +271,10 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("dummy;foo", new Revision(1, 2, 4),
-                            null);
+                    FakePackage legacy = new FakePackage("dummy;foo");
+                    legacy.setRevision(new Revision(1, 2, 4));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
-                    return ImmutableSet.<RemotePackage>of(legacy);
+                    return ImmutableSet.of(legacy);
                 });
         Map<String, RemotePackage> pkgs = loader
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));

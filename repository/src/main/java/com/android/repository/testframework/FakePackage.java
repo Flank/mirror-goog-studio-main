@@ -29,7 +29,6 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.api.RepositorySource;
 import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.CommonFactory;
-import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
 import com.google.common.base.Objects;
@@ -37,8 +36,8 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * A fake {@link RepoPackage} (implementing both {@link LocalPackage} and {@link RemotePackage},
@@ -49,17 +48,15 @@ import java.util.Collection;
 @SuppressWarnings("ConstantConditions")
 public class FakePackage implements LocalPackage, RemotePackage {
     private final String mPath;
-    private final Revision mVersion;
-    private final Collection<Dependency> mDependencies;
+    private Revision mVersion = new Revision(1);
+    private Collection<Dependency> mDependencies = Collections.emptyList();
     private TypeDetails mDetails;
     private Channel mChannel;
     private Archive mArchive;
+    private String mDisplayName = "fake package";
 
-    public FakePackage(@NonNull String path, @NonNull Revision version,
-            @Nullable Collection<Dependency> dependencies) {
+    public FakePackage(@NonNull String path) {
         mPath = path;
-        mVersion = version;
-        mDependencies = dependencies == null ? ImmutableList.<Dependency>of() : dependencies;
     }
 
     @NonNull
@@ -119,7 +116,11 @@ public class FakePackage implements LocalPackage, RemotePackage {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "fake package";
+        return mDisplayName;
+    }
+
+    public void setDisplayName(@NonNull String displayName) {
+        mDisplayName = displayName;
     }
 
     @Nullable
@@ -187,6 +188,14 @@ public class FakePackage implements LocalPackage, RemotePackage {
     @Override
     public String toString() {
         return mPath;
+    }
+
+    public void setDependencies(@NonNull Collection<Dependency> dependencies) {
+        mDependencies = dependencies;
+    }
+
+    public void setRevision(@NonNull Revision revision) {
+        mVersion = revision;
     }
 
     private static class FakeArchive extends Archive {

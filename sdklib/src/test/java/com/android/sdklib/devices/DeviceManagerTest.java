@@ -319,7 +319,7 @@ public class DeviceManagerTest {
     @Test
     public final void testDeviceOverrides() throws Exception {
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage p = new FakePackage("dummy", new Revision(1), null);
+        FakePackage p = new FakePackage("dummy");
         DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
                 .createLatestFactory().createAddonDetailsType();
         details.setApiLevel(22);

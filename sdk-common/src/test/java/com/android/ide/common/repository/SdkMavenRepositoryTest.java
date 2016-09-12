@@ -54,7 +54,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         String path = String.format("extras;%s;m2repository", vendor);
         // Create and add the package
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
-        FakePackage pkg = new FakePackage(path, new Revision(1), null);
+        FakePackage pkg = new FakePackage(path);
         existing.put(path, pkg);
         mRepositoryPackages.setLocalPkgInfos(existing);
         // SdkMavenRepo requires that the path exists.
@@ -177,17 +177,12 @@ public class SdkMavenRepositoryTest extends TestCase {
     }
 
     public void testFindBestPackage() {
-        FakePackage r1 = new FakePackage("extras;m2repository;group;artifact;1", new Revision(1),
-                null);
-        FakePackage r123 = new FakePackage("extras;m2repository;group;artifact;1.2.3",
-                new Revision(1), null);
-        FakePackage r2 = new FakePackage("extras;m2repository;group;artifact;2", new Revision(1),
-                null);
-        FakePackage r211 = new FakePackage("extras;m2repository;group;artifact;2.1.1",
-                new Revision(1), null);
-        FakePackage bogus = new FakePackage("foo;group;artifact;2.1.2", new Revision(1), null);
-        FakePackage other = new FakePackage("extras;m2repository;group2;artifact;2.1.3",
-                new Revision(1), null);
+        FakePackage r1 = new FakePackage("extras;m2repository;group;artifact;1");
+        FakePackage r123 = new FakePackage("extras;m2repository;group;artifact;1.2.3");
+        FakePackage r2 = new FakePackage("extras;m2repository;group;artifact;2");
+        FakePackage r211 = new FakePackage("extras;m2repository;group;artifact;2.1.1");
+        FakePackage bogus = new FakePackage("foo;group;artifact;2.1.2");
+        FakePackage other = new FakePackage("extras;m2repository;group2;artifact;2.1.3");
         List<RepoPackage> packages = ImmutableList.of(r1, r123, r2, r211, bogus, other);
 
         GradleCoordinate pattern = new GradleCoordinate("group", "artifact", 1);

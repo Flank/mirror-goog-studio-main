@@ -302,11 +302,13 @@ public class RepoManagerImplTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         final Map<String, LocalPackage> localPackages = Maps.newHashMap();
         DummyLoader localLoader = new DummyLoader(localPackages);
-        localPackages.put("foo", new FakePackage("foo", new Revision(1), null));
+        localPackages.put("foo", new FakePackage("foo"));
 
         final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
         DummyLoader remoteLoader = new DummyLoader(remotePackages);
-        remotePackages.put("foo", new FakePackage("foo", new Revision(2), null));
+        FakePackage remote = new FakePackage("foo");
+        remote.setRevision(new Revision(2));
+        remotePackages.put("foo", remote);
 
         TestLoaderFactory localFactory = new TestLoaderFactory(localLoader);
         TestLoaderFactory remoteFactory = new TestLoaderFactory(remoteLoader);
@@ -335,13 +337,13 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakePackage("bar", new Revision(1), null));
+        localPackages.put("bar", new FakePackage("bar"));
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());
 
         // update remote and ensure the remote listener fired
-        remotePackages.put("baz", new FakePackage("baz", new Revision(1), null));
+        remotePackages.put("baz", new FakePackage("baz"));
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertFalse(localRan.get());
         assertTrue(remoteRan.compareAndSet(true, false));

@@ -34,19 +34,24 @@ public class AndroidSdkHandlerTest extends TestCase {
     public void testGetLatestPackage() {
         Map<String, LocalPackage> locals = Maps.newHashMap();
 
-        FakePackage p1_1 = new FakePackage("p;1.1", Revision.parseRevision("1.1"), null);
+        FakePackage p1_1 = new FakePackage("p;1.1");
+        p1_1.setRevision(Revision.parseRevision("1.1"));
         locals.put("p;1.1", p1_1);
-        FakePackage p1_20 = new FakePackage("p;1.20", Revision.parseRevision("1.20"), null);
+        FakePackage p1_20 = new FakePackage("p;1.20");
+        p1_20.setRevision(Revision.parseRevision("1.20"));
         locals.put("p;1.20", p1_20);
-        FakePackage p2_1 = new FakePackage("p;2.1", Revision.parseRevision("2.1"), null);
+        FakePackage p2_1 = new FakePackage("p;2.1");
+        p2_1.setRevision(Revision.parseRevision("2.1"));
         locals.put("p;2.1", p2_1);
-        FakePackage p2_2_rc3 = new FakePackage("p;2.2-rc3", Revision.parseRevision("2.2-rc3"),
-                null);
+        FakePackage p2_2_rc3 = new FakePackage("p;2.2-rc3");
+        p2_2_rc3.setRevision(Revision.parseRevision("2.2-rc3"));
         locals.put("p;2.2-rc3", p2_2_rc3);
 
-        FakePackage qr2_0 = new FakePackage("q;r;2.0", Revision.parseRevision("2.0"), null);
+        FakePackage qr2_0 = new FakePackage("q;r;2.0");
+        qr2_0.setRevision(Revision.parseRevision("2.0"));
         locals.put("q;r;2.0", qr2_0);
-        FakePackage qr2_1 = new FakePackage("q;r;2.1", Revision.parseRevision("2.1"), null);
+        FakePackage qr2_1 = new FakePackage("q;r;2.1");
+        qr2_1.setRevision(Revision.parseRevision("2.1"));
         locals.put("q;r;2.1", qr2_1);
 
         RepositoryPackages packages = new RepositoryPackages();
@@ -111,9 +116,11 @@ public class AndroidSdkHandlerTest extends TestCase {
     public void testGetLatestPackageException() {
         Map<String, LocalPackage> locals = Maps.newHashMap();
 
-        FakePackage p1_1 = new FakePackage("p;1.1", Revision.parseRevision("1.1"), null);
+        FakePackage p1_1 = new FakePackage("p;1.1");
+        p1_1.setRevision(Revision.parseRevision("1.1"));
         locals.put("p;1.1", p1_1);
-        FakePackage pgarbage = new FakePackage("p;garbage", Revision.parseRevision("1.2.3"), null);
+        FakePackage pgarbage = new FakePackage("p;garbage");
+        pgarbage.setRevision(Revision.parseRevision("1.2.3"));
         locals.put("p;garbage", pgarbage);
 
         RepositoryPackages packages = new RepositoryPackages();

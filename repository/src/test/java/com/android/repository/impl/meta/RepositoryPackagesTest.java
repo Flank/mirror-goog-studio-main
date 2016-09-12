@@ -44,18 +44,20 @@ public class RepositoryPackagesTest extends TestCase {
         Map<String, RemotePackage> remotes = Maps.newHashMap();
 
         // p1 has no corresponding remote
-        locals.put("p1", new FakePackage("p1", new Revision(1), null));
+        locals.put("p1", new FakePackage("p1"));
 
         // p2 has an updated remote
-        locals.put("p2", new FakePackage("p2", new Revision(1), null));
-        remotes.put("p2", new FakePackage("p2", new Revision(2), null));
+        locals.put("p2", new FakePackage("p2"));
+        FakePackage remote = new FakePackage("p2");
+        remote.setRevision(new Revision(2));
+        remotes.put("p2", remote);
 
         // p3 has a non-updated remote
-        locals.put("p3", new FakePackage("p3", new Revision(1), null));
-        remotes.put("p3", new FakePackage("p3", new Revision(1), null));
+        locals.put("p3", new FakePackage("p3"));
+        remotes.put("p3", new FakePackage("p3"));
 
         // p4 is only remote
-        remotes.put("p4", new FakePackage("p4", new Revision(1), null));
+        remotes.put("p4", new FakePackage("p4"));
 
         mPackages = new RepositoryPackages(locals, remotes);
     }
@@ -112,21 +114,21 @@ public class RepositoryPackagesTest extends TestCase {
         Map<String, LocalPackage> locals = Maps.newHashMap();
         Map<String, RemotePackage> remotes = Maps.newHashMap();
 
-        FakePackage p1 = new FakePackage("a;b;c", new Revision(1), null);
+        FakePackage p1 = new FakePackage("a;b;c");
         locals.put("a;b;c", p1);
         remotes.put("a;b;c", p1);
-        FakePackage p2 = new FakePackage("a;b;d", new Revision(1), null);
+        FakePackage p2 = new FakePackage("a;b;d");
         locals.put("a;b;d", p2);
         remotes.put("a;b;d", p2);
-        FakePackage p3 = new FakePackage("a;c", new Revision(1), null);
+        FakePackage p3 = new FakePackage("a;c");
         locals.put("a;c", p3);
         remotes.put("a;c", p3);
-        FakePackage p4 = new FakePackage("d", new Revision(1), null);
+        FakePackage p4 = new FakePackage("d");
         locals.put("d", p4);
         remotes.put("d", p4);
-        FakePackage localOnly = new FakePackage("l", new Revision(1), null);
+        FakePackage localOnly = new FakePackage("l");
         locals.put("l", localOnly);
-        FakePackage remoteOnly = new FakePackage("r", new Revision(1), null);
+        FakePackage remoteOnly = new FakePackage("r");
         remotes.put("r", remoteOnly);
 
         RepositoryPackages packages = new RepositoryPackages();

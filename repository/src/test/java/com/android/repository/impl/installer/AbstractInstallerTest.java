@@ -62,7 +62,7 @@ public class AbstractInstallerTest {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
-        FakePackage remote = new FakePackage("foo;bar", new Revision(1), null);
+        FakePackage remote = new FakePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
@@ -90,7 +90,7 @@ public class AbstractInstallerTest {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
-        FakePackage remote = new FakePackage("foo", new Revision(1), null);
+        FakePackage remote = new FakePackage("foo");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
@@ -104,7 +104,7 @@ public class AbstractInstallerTest {
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        FakePackage remote = new FakePackage("foo;bar", new Revision(1), null);
+        FakePackage remote = new FakePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
         // Consume temp dir 1
@@ -116,7 +116,7 @@ public class AbstractInstallerTest {
         do {
             tempDir = FileOpUtils.getNewTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
         } while (tempDir != null);
-        FakePackage remote2 = new FakePackage("foo;baz", new Revision(1), null);
+        FakePackage remote2 = new FakePackage("foo;baz");
         TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
         // This will cause the unreferenced temp dirs to be GCd (and a new one created)
         installer.prepare(progress);
