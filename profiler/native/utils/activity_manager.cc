@@ -17,9 +17,11 @@
 
 #include <iostream>
 #include <sstream>
+#include <sys/stat.h>
 
 #include "utils/app_base.h"
 #include "utils/clock.h"
+#include "utils/filesystem_notifier.h"
 #include "utils/trace.h"
 
 using std::string;
@@ -31,13 +33,20 @@ const char *const kAmExecutable = "/system/bin/am";
 namespace profiler {
 
 ActivityManager::ActivityManager() : BashCommandRunner(kAmExecutable) {}
-
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
                                      string *trace_path,
-                                     string *error_string) const {
+                                     string *error_string) {
   Trace trace("CPU:StartProfiling ART");
+  std::lock_guard<std::mutex> lock(profiled_lock_);
+
+  if (IsAppProfiled(app_package_name)) {
+    *error_string = "App is already being profiled with ART";
+    return false;
+  }
   *trace_path = this->GenerateTracePath(app_package_name);
+
+  // Run command via actual am.
   string parameters;
   parameters.append("profile start ");
   if (profiling_mode == ActivityManager::INSTRUMENTED) {
@@ -46,16 +55,48 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
   parameters.append(app_package_name);
   parameters.append(" ");
   parameters.append(*trace_path);
-  return Run(parameters, error_string);
+  if(!Run(parameters, error_string)) {
+    *error_string = "Unable to run profile start command";
+    return false;
+  }
+  AddProfiledApp(app_package_name, *trace_path);
+  return true;
 }
 
 bool ActivityManager::StopProfiling(const string &app_package_name,
-                                    string *error_string) const {
+                                    string *error_string) {
   Trace trace("CPU:StopProfiling ART");
+  std::lock_guard<std::mutex> lock(profiled_lock_);
+
+  // Start monitoring trace events (to catch close) so this method only returns
+  // when the generation of the trace file is finished.
+  FileSystemNotifier notifier(GetProfiledAppTracePath(app_package_name), FileSystemNotifier::CLOSE);
+
+  RemoveProfiledApp(app_package_name);
+
+  if (!notifier.IsReadyToNotify()) {
+    *error_string = "Unable to monitor trace file for completion";
+    return false;
+  }
+
+
+  // Run stop command via actual am.
   string parameters;
   parameters.append("profile stop ");
   parameters.append(app_package_name);
-  return Run(parameters, error_string);
+  if (!Run(parameters, error_string)) {
+    *error_string = "Unable to run profile stop command";
+    return false;
+  }
+
+  // Wait until ART has finished writing the trace to the file and closed the
+  // file.
+  if (!notifier.WaitUntilEventOccurs()) {
+    *error_string = "Wait for ART trace file failed.";
+    return false;
+  }
+
+  return true;
 }
 
 bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,
@@ -78,5 +119,32 @@ std::string ActivityManager::GenerateTracePath(
   path << ".art_trace";
   return path.str();
 }
+
+ActivityManager *ActivityManager::Instance() {
+  static ActivityManager* instance = new ActivityManager();
+  return instance;
+}
+
+bool ActivityManager::IsAppProfiled(const std::string& app_package_name) const{
+  return profiled_.find(app_package_name) != profiled_.end();
+}
+
+void ActivityManager::AddProfiledApp(const std::string& app_package_name, const std::string& trace_path) {
+  ArtOnGoingProfiling profilingEntry;
+  profilingEntry.trace_path = trace_path;
+  profilingEntry.app_pkg_name = app_package_name;
+  profiled_[app_package_name] = profilingEntry;
+}
+
+void ActivityManager::RemoveProfiledApp(const std::string& app_package_name) {
+  profiled_.erase(app_package_name);
+}
+
+string ActivityManager::GetProfiledAppTracePath(const std::string& app_package_name) const {
+  auto it = profiled_.find(app_package_name);
+  return it->second.trace_path;
+}
+
+
 
 }  // namespace profiler

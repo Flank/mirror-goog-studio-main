@@ -17,43 +17,73 @@
 #ifndef UTILS_PROFILER_ACTIVITYMANAGER_H
 #define UTILS_PROFILER_ACTIVITYMANAGER_H
 
+#include <map>
+#include <mutex>
 #include <string>
+
 #include "bash_command.h"
 
 namespace profiler {
 
-// Wrapper around Android executable "am" (Activity Manager).
+
+
+// Singleton rapper around Android executable "am" (Activity Manager).
 class ActivityManager : public BashCommandRunner {
  public:
   enum ProfilingMode { SAMPLING, INSTRUMENTED };
 
-  ActivityManager();
+  static ActivityManager* Instance();
 
   // Starts profiling using ART runtime profiler either by sampling or
   // code instrumentation.
   // Returns true is profiling started successfully. Otherwise false
   // and populate error_string.
   // |trace_path| is populated with absolute path where trace is being recorded.
+  // Calling start twice in a row (without a stop) will result in an error.
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
-                      std::string *trace_path, std::string *error_string) const;
+                      std::string *trace_path, std::string *error_string) ;
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
   // no-op.
   // Returns true is profiling stopped successfully. Otherwise false
   // and populate error_string.
   bool StopProfiling(const std::string &app_package_name,
-                     std::string *error_string) const;
+                     std::string *error_string) ;
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;
 
  private:
-  // Returns the absolute path where a profiling trace file should be
+  ActivityManager();
+
+  // Entry storing all data related to an ongoing profiling.
+  class ArtOnGoingProfiling {
+   public:
+    std::string trace_path;     // File path where trace will be made availabe.
+    std::string app_pkg_name;
+  };
+
+  // This mapping keeps track of ongoing profiling done via ART. It associates
+  // an app package name with the trace file being produced.
+  std::map<std::string, ArtOnGoingProfiling> profiled_;
+  std::mutex profiled_lock_;  // Protects |profiled_|
+
+  // Returns the absolute path_ where a profiling trace file should be
   // saved for a given |app_package_name|. App does not have to be up
   // and running for this method to succeed.
   // Generated path is unique (based on app package name and timestamp).
   std::string GenerateTracePath(const std::string &app_package_name) const;
+
+  // Returns true if app is being profiled.
+  bool IsAppProfiled(const std::string& app_package_name) const;
+
+  void AddProfiledApp(const std::string& app_package_name, const std::string& trace_path);
+
+  void RemoveProfiledApp(const std::string& app_package_name);
+  // Only call this method if you are certain the app is being profiled.
+  // Otherwise result is undefined.
+  std::string GetProfiledAppTracePath(const std::string& app_package_name) const;
 };
 }  // namespace profiler
 
