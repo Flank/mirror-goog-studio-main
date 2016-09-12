@@ -18,24 +18,19 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import com.android.utils.PositionXmlParser;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.logging.Logger;
-
-import javax.xml.parsers.ParserConfigurationException;
 /**
- * Parse a VectorDrawble's XML file, and generate an internal tree representation,
+ * Parse a VectorDrawable's XML file, and generate an internal tree representation,
  * which can be used for drawing / previewing.
  */
 class VdParser {
-    private static Logger logger = Logger.getLogger(VdParser.class.getSimpleName());
-
     // Note that the incoming file is the VectorDrawable's XML file, not the SVG.
     @Nullable
     public VdTree parse(@NonNull InputStream is, @Nullable StringBuilder vdErrorLog) {
@@ -44,21 +39,16 @@ class VdParser {
             Document doc = PositionXmlParser.parse(is, false);
             tree.parse(doc);
         }
-        catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
-        catch (SAXException e) {
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (ParserConfigurationException | SAXException | IOException e) {
+            if (vdErrorLog != null) {
+                vdErrorLog.append(e.getMessage());
+            }
         }
         return tree;
     }
 
+    @Nullable
     public VdTree parse(URL r, StringBuilder vdErrorLog) throws IOException {
         return parse(r.openStream(), vdErrorLog);
     }
-
-
 }

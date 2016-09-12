@@ -276,12 +276,46 @@ public class VdPreview {
         VdTree vdTree;
 
         InputStream inputStream = new ByteArrayInputStream(
-                xmlFileContent.getBytes(Charsets.UTF_8));
+            xmlFileContent.getBytes(Charsets.UTF_8));
         vdTree = p.parse(inputStream, vdErrorLog);
         if (vdTree == null) {
             return null;
         }
 
+        return getPreviewFromVectorTree(targetSize, vdTree, vdErrorLog);
+    }
+
+    /**
+     * This generates an image from a vector tree.
+     * The size of image is determined by the {@code size}.
+     *
+     * @param targetSize the size of result image.
+     * @param xml        The vector drawable XML document
+     * @param vdErrorLog log for the errors and warnings.
+     * @return an preview image according to the VectorDrawable's XML
+     */
+    @Nullable
+    public static BufferedImage getPreviewFromVectorDocument(@NonNull TargetSize targetSize,
+                                                             @NonNull Document xml,
+                                                             @Nullable StringBuilder vdErrorLog) {
+        VdTree vdTree = new VdTree();
+        vdTree.parse(xml);
+        return getPreviewFromVectorTree(targetSize, vdTree, vdErrorLog);
+    }
+
+    /**
+     * This generates an image from a vector tree.
+     * The size of image is determined by the {@code size}.
+     *
+     * @param targetSize the size of result image.
+     * @param vdTree     The vector drawable
+     * @param vdErrorLog log for the errors and warnings.
+     * @return an preview image according to the VectorDrawable's XML
+     */
+    @Nullable
+    public static BufferedImage getPreviewFromVectorTree(@NonNull TargetSize targetSize,
+                                                         @NonNull VdTree vdTree,
+                                                         @Nullable StringBuilder vdErrorLog) {
         // If the forceImageSize is set (>0), then we honor that.
         // Otherwise, we will ask the vectorDrawable for the prefer size, then apply the imageScale.
         float vdWidth = vdTree.getBaseWidth();
@@ -301,8 +335,8 @@ public class VdPreview {
             float scaledHeight = ratioToForceImageSize * vdHeight;
             imageWidth = Math.max(MIN_PREVIEW_IMAGE_SIZE, Math.min(MAX_PREVIEW_IMAGE_SIZE, scaledWidth));
             imageHeight = Math.max(MIN_PREVIEW_IMAGE_SIZE, Math.min(MAX_PREVIEW_IMAGE_SIZE, scaledHeight));
-            if (scaledWidth != imageWidth || scaledHeight != imageHeight) {
-                vdErrorLog.append("Invalid image size, can't fit in a square whose size is" + forceImageSize);
+            if (vdErrorLog != null && (scaledWidth != imageWidth || scaledHeight != imageHeight)) {
+                vdErrorLog.append("Invalid image size, can't fit in a square whose size is").append(forceImageSize);
             }
         } else {
             imageWidth = vdWidth * imageScale;
