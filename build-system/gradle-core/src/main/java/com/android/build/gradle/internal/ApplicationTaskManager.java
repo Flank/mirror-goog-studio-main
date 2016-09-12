@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -41,8 +42,6 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 
 import org.gradle.api.Project;
@@ -87,9 +86,6 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
         assert variantData instanceof ApplicationVariantData;
 
-        final String projectPath = project.getPath();
-        final String variantName = variantData.getName();
-
         final VariantScope variantScope = variantData.getScope();
 
         createAnchorTasks(tasks, variantScope);
@@ -101,106 +97,68 @@ public class ApplicationTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeAppManifestsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                () -> createMergeAppManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createGenerateResValuesTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
+                () -> createGenerateResValuesTask(tasks, variantScope));
 
         // Add a task to compile renderscript files.
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createRenderscriptTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
+                () -> createRenderscriptTask(tasks, variantScope));
 
         // Add a task to merge the resource folders
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeResourcesTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
+                () -> createMergeResourcesTask(tasks, variantScope));
 
         // Add a task to merge the asset folders
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeAssetsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
+                () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createBuildConfigTask(tasks, variantScope);
-                        return null;
-                    }
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
+                () -> createBuildConfigTask(tasks, variantScope));
+
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                () -> {
+                    // Add a task to process the Android Resources and generate source files
+                    createApkProcessResTask(tasks, variantScope);
+
+                    // Add a task to process the java resources
+                    createProcessJavaResTasks(tasks, variantScope);
                 });
 
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        // Add a task to process the Android Resources and generate source files
-                        createApkProcessResTask(tasks, variantScope);
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK,
+                () -> createAidlTask(tasks, variantScope));
 
-                        // Add a task to process the java resources
-                        createProcessJavaResTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createAidlTask(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createShaderTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
+                () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            ThreadRecorder.get().record(ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK,
-                    projectPath, variantName, new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() {
-                            createNdkTasks(tasks, variantScope);
-                            return null;
-                        }
-                    });
+            SpanRecorders.record(
+                    variantScope,
+                    ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK,
+                    () -> createNdkTasks(tasks, variantScope));
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
@@ -211,74 +169,75 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-        ThreadRecorder.get().record(
+        SpanRecorders.record(
+                variantScope,
                 ExecutionType.APP_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createExternalNativeBuildJsonGenerators(variantScope);
-                        createExternalNativeBuildTasks(tasks, variantScope);
-                        return null;
-                    }
-                }
-        );
+                () -> {
+                    createExternalNativeBuildJsonGenerators(variantScope);
+                    createExternalNativeBuildTasks(tasks, variantScope);
+                });
 
         // Add a task to merge the jni libs folders
-        ThreadRecorder.get()
-                .record(ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
-                        projectPath, variantName, new Recorder.Block<Void>() {
-                            @Override
-                            public Void call() {
-                                createMergeJniLibFoldersTasks(tasks, variantScope);
-                                return null;
-                            }
-                        });
+        SpanRecorders.record(
+                variantScope,
+                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
+                () -> createMergeJniLibFoldersTasks(tasks, variantScope));
 
         // Add a compile task
-        ThreadRecorder.get().record(
+        SpanRecorders.record(
+                variantScope,
                 ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
-                projectPath, variantName,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        CoreJackOptions jackOptions =
-                                variantData.getVariantConfiguration().getJackOptions();
-                        // create data binding merge task before the javac task so that it can
-                        // parse jars before any consumer
-                        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
-                        AndroidTask<? extends JavaCompile> javacTask =
-                                createJavacTask(tasks, variantScope);
-                        if (jackOptions.isEnabled()) {
-                            AndroidTask<TransformTask> jackTask =
-                                    createJackTask(tasks, variantScope, true /*compileJavaSource*/);
-                            setJavaCompilerTask(jackTask, tasks, variantScope);
-                        } else {
-                            // Prevent the use of java 1.8 without jack, which would otherwise cause an
-                            // internal javac error.
-                            if(variantScope.getGlobalScope().getExtension().getCompileOptions()
-                                    .getTargetCompatibility().isJava8Compatible()) {
-                                // Only warn for users of retrolambda and dexguard
-                                if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
-                                        || project.getPlugins().hasPlugin("dexguard")) {
-                                    getLogger().warn("Jack is disabled, but one of the plugins you "
-                                            + "are using supports Java 8 language features.");
-                                } else {
-                                    androidBuilder.getErrorReporter().handleSyncError(
-                                            variantScope.getVariantConfiguration().getFullName(),
-                                            SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
-                                            "Jack is required to support java 8 language features. "
-                                                    + "Either enable Jack or remove "
-                                                    + "sourceCompatibility JavaVersion.VERSION_1_8."
-                                    );
-                                }
+                () -> {
+                    CoreJackOptions jackOptions =
+                            variantData.getVariantConfiguration().getJackOptions();
+                    // create data binding merge task before the javac task so that it can
+                    // parse jars before any consumer
+                    createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+                    AndroidTask<? extends JavaCompile> javacTask =
+                            createJavacTask(tasks, variantScope);
+                    if (jackOptions.isEnabled()) {
+                        AndroidTask<TransformTask> jackTask =
+                                createJackTask(tasks, variantScope, true /*compileJavaSource*/);
+                        setJavaCompilerTask(jackTask, tasks, variantScope);
+                    } else {
+                        // Prevent the use of java 1.8 without jack, which would otherwise cause an
+                        // internal javac error.
+                        if (variantScope
+                                .getGlobalScope()
+                                .getExtension()
+                                .getCompileOptions()
+                                .getTargetCompatibility()
+                                .isJava8Compatible()) {
+                            // Only warn for users of retrolambda and dexguard
+                            if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
+                                    || project.getPlugins().hasPlugin("dexguard")) {
+                                getLogger()
+                                        .warn(
+                                                "Jack is disabled, but one of the plugins you "
+                                                        + "are using supports Java 8 language "
+                                                        + "features.");
+                            } else {
+                                androidBuilder
+                                        .getErrorReporter()
+                                        .handleSyncError(
+                                                variantScope
+                                                        .getVariantConfiguration()
+                                                        .getFullName(),
+                                                SyncIssue
+                                                        .TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
+                                                "Jack is required to support java 8 language "
+                                                        + "features. Either enable Jack or remove "
+                                                        + "sourceCompatibility "
+                                                        + "JavaVersion.VERSION_1_8.");
                             }
-                            addJavacClassesStream(variantScope);
-                            setJavaCompilerTask(javacTask, tasks, variantScope);
-                            getAndroidTasks().create(tasks,
-                                    new AndroidJarTask.JarClassesConfigAction(variantScope));
-                            createPostCompilationTasks(tasks, variantScope);
                         }
-                        return null;
+                        addJavacClassesStream(variantScope);
+                        setJavaCompilerTask(javacTask, tasks, variantScope);
+                        getAndroidTasks()
+                                .create(
+                                        tasks,
+                                        new AndroidJarTask.JarClassesConfigAction(variantScope));
+                        createPostCompilationTasks(tasks, variantScope);
                     }
                 });
 
@@ -289,50 +248,36 @@ public class ApplicationTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(tasks, variantScope);
 
-        if (variantData.getSplitHandlingPolicy().equals(
-                SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY)) {
+        if (variantData
+                .getSplitHandlingPolicy()
+                .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY)) {
             if (getExtension().getBuildToolsRevision().getMajor() < 21) {
-                throw new RuntimeException("Pure splits can only be used with buildtools 21 and later");
+                throw new RuntimeException(
+                        "Pure splits can only be used with buildtools 21 and later");
             }
 
-            ThreadRecorder.get().record(
+            SpanRecorders.record(
+                    variantScope,
                     ExecutionType.APP_TASK_MANAGER_CREATE_SPLIT_TASK,
-                    projectPath, variantName,
-                    new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() {
-                            createSplitTasks(tasks, variantScope);
-                            return null;
-                        }
-                    });
+                    () -> createSplitTasks(tasks, variantScope));
         }
 
-        ThreadRecorder.get().record(
+        SpanRecorders.record(
+                variantScope,
                 ExecutionType.APP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath, variantName,
-                new Recorder.Block<Void>(){
-                    @Override
-                    public Void call() {
-                        @Nullable
-                        AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask
-                                = createInstantRunPackagingTasks(tasks, variantScope);
-                        createPackagingTask(tasks, variantScope, true /*publishApk*/,
-                                fullBuildInfoGeneratorTask);
-                        return null;
-                    }
+                () -> {
+                    @Nullable
+                    AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask =
+                            createInstantRunPackagingTasks(tasks, variantScope);
+                    createPackagingTask(
+                            tasks, variantScope, true /*publishApk*/, fullBuildInfoGeneratorTask);
                 });
 
         // create the lint tasks.
-        ThreadRecorder.get().record(
+        SpanRecorders.record(
+                variantScope,
                 ExecutionType.APP_TASK_MANAGER_CREATE_LINT_TASK,
-                projectPath, variantName,
-                new Recorder.Block<Void>(){
-                    @Override
-                    public Void call() {
-                        createLintTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+                () -> createLintTasks(tasks, variantScope));
     }
 
     /**
@@ -372,7 +317,6 @@ public class ApplicationTaskManager extends TaskManager {
             // if the assembleVariant task run, make sure it also runs the task to generate
             // the build-info.xml.
             variantScope.getAssembleTask().dependsOn(tasks, buildInfoGeneratorTask);
-
         }
         return buildInfoGeneratorTask;
     }
@@ -410,8 +354,7 @@ public class ApplicationTaskManager extends TaskManager {
             List<String> wearConfigNames = variantData.getWearConfigNames();
 
             for (String configName : wearConfigNames) {
-                Configuration config = project.getConfigurations().findByName(
-                        configName);
+                Configuration config = project.getConfigurations().findByName(configName);
                 // this shouldn't happen, but better safe.
                 if (config == null) {
                     continue;
@@ -429,20 +372,22 @@ public class ApplicationTaskManager extends TaskManager {
                             configName,
                             SyncIssue.TYPE_DEPENDENCY_WEAR_APK_TOO_MANY,
                             String.format(
-                                    "Configuration '%s' resolves to more than one apk.", configName));
+                                    "Configuration '%1$s' resolves to more than one apk.",
+                                    configName));
+
                 }
             }
         }
     }
 
-    private boolean hasWearAppDependency(BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private boolean hasWearAppDependency(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
         // get all possible configurations for the variant. We'll take the highest priority
         // of them that have a file.
         List<String> wearConfigNames = variantData.getWearConfigNames();
 
         for (String configName : wearConfigNames) {
-            Configuration config =
-                    project.getConfigurations().findByName(configName);
+            Configuration config = project.getConfigurations().findByName(configName);
             // this shouldn't happen, but better safe.
             if (config == null) {
                 continue;
