@@ -280,17 +280,11 @@ public class MergeJavaResourcesTransform extends Transform {
 
                 List<QualifiedContent> contentSourceList = sourceFileList.get(key);
 
-                // if no action is specified, and the key is META-INF/services,
-                // default action is merge
-                if (packagingAction == PackagingFileAction.NONE && isMetaServices(key)){
-                    packagingAction = PackagingFileAction.MERGE;
-                }
-
                 QualifiedContent selectedContent;
                 if (packagingAction == PackagingFileAction.MERGE){
                     // if merge is specified, project files have no precedence
                     selectedContent = null;
-                } else{
+                } else {
                     // if there is only one content or if one of the source is PROJECT then it wins.
                     // This is similar behavior as the other merger (assets, res, manifest).
                     selectedContent = findUniqueOrProjectContent(contentSourceList);
@@ -372,10 +366,9 @@ public class MergeJavaResourcesTransform extends Transform {
                                         zipFile.getInputStream(zipFile.getEntry(key)), baos);
                             }
                         }
-                        if (isMetaServices(key)){
-                            // With this, files without newline at the end will be merged
-                            // successfully for the ServiceLoader
-                            baos.write(System.getProperty("line.separator").getBytes());
+
+                        if (!endsWithUnixNewline(baos.toByteArray())) {
+                            baos.write('\n');
                         }
                     }
 
@@ -425,13 +418,6 @@ public class MergeJavaResourcesTransform extends Transform {
         }
 
         return null;
-    }
-
-    private boolean isMetaServices(String key){
-        if (key.startsWith("/")) {
-            key = key.substring(1);
-        }
-        return key.startsWith("META-INF/services/");
     }
 
     private void copyFromFolder(
@@ -562,5 +548,15 @@ public class MergeJavaResourcesTransform extends Transform {
                 }
             }
         }
+    }
+
+    /**
+     * Checks whether a byte array ends with a UNIX newline character.
+     *
+     * @param data the data
+     * @return does it end with a UNIX newline character?
+     */
+    private boolean endsWithUnixNewline(@NonNull byte[] data) {
+        return data.length > 0 && data[data.length - 1] == '\n';
     }
 }
