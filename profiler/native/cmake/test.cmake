@@ -20,8 +20,7 @@ if(NOT GTEST_ROOT_DIR)
   return()
 endif()
 
-add_library(gtest ${GTEST_ROOT_DIR}/src/gtest-all.cc
-                  ${GTEST_ROOT_DIR}/src/gtest_main.cc)
+add_library(gtest ${GTEST_ROOT_DIR}/src/gtest-all.cc)
 
 target_include_directories(gtest PUBLIC ${GTEST_ROOT_DIR}
                                         ${GTEST_ROOT_DIR}/include)
@@ -32,20 +31,24 @@ if(NOT GMOCK_ROOT_DIR)
   return()
 endif()
 
-add_library(gmock ${GMOCK_ROOT_DIR}/src/gmock-all.cc)
+add_library(gmock      ${GMOCK_ROOT_DIR}/src/gmock-all.cc)
+add_library(gmock_main ${GMOCK_ROOT_DIR}/src/gmock_main.cc)
 
-target_include_directories(gmock PUBLIC ${GMOCK_ROOT_DIR}
-                                        ${GMOCK_ROOT_DIR}/include
-                                        ${GTEST_ROOT_DIR}/include)
+set(GMOCK_INCLUDE_DIRS ${GMOCK_ROOT_DIR}
+                       ${GMOCK_ROOT_DIR}/include
+                       ${GTEST_ROOT_DIR}/include)
+target_include_directories(gmock      PUBLIC ${GMOCK_INCLUDE_DIRS})
+target_include_directories(gmock_main PUBLIC ${GMOCK_INCLUDE_DIRS})
 
-add_dependencies(gmock gtest)
+target_link_libraries(gmock      gtest)
+target_link_libraries(gmock_main gmock)
 
-# Collect the list of libraries required to be linked into every test
-# executable
-set(GTEST_LINK_LIBRARIES gtest
-                         gmock)
+# The list of libraries required to be linked into every test executable
+set(GTEST_LINK_LIBRARIES gmock_main)
 
 if(ANDROID)
+  target_link_libraries(gtest gnustl_static)
+  target_link_libraries(gmock gnustl_static)
   set(GTEST_LINK_LIBRARIES ${GTEST_LINK_LIBRARIES} gnustl_static)
 else()
   set(GTEST_LINK_LIBRARIES ${GTEST_LINK_LIBRARIES} pthread)
