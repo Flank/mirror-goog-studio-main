@@ -16,14 +16,14 @@
 
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
-import static com.android.SdkConstants.PREFIX_ANDROID;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.REFERENCE_STYLE;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.ItemResourceValue;
+import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.RenderResources;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.resources.ResourceType;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.android.SdkConstants.*;
 
 public class ResourceResolver extends RenderResources {
     public static final String THEME_NAME = "Theme";
@@ -70,7 +72,7 @@ public class ResourceResolver extends RenderResources {
     private final List<StyleResourceValue> mThemes;
     private FrameworkResourceIdProvider mFrameworkProvider;
     private LayoutLog mLogger;
-    private String mThemeName;
+    private final String mThemeName;
     private boolean mIsProjectTheme;
     // AAPT flattens the names by converting '.', '-' and ':' to '_'. These maps undo the
     // flattening. We prefer lazy initialization of these maps since they are not used in many
@@ -110,6 +112,29 @@ public class ResourceResolver extends RenderResources {
         ResourceResolver resolver = new ResourceResolver(projectResources, frameworkResources,
                 themeName, isProjectTheme);
         resolver.computeStyleMaps();
+
+        return resolver;
+    }
+
+    /**
+     * Creates a new {@link ResourceResolver} copied from the given instance.
+     *
+     * @return a new {@link ResourceResolver} or null if the passed instance is null
+     */
+    @Nullable
+    public static ResourceResolver copy(@Nullable ResourceResolver original) {
+        if (original == null) {
+            return null;
+        }
+
+        ResourceResolver resolver = new ResourceResolver(
+          original.mProjectResources, original.mFrameworkResources,
+          original.mThemeName, original.mIsProjectTheme);
+        resolver.mFrameworkProvider = original.mFrameworkProvider;
+        resolver.mLogger = original.mLogger;
+        resolver.mDefaultTheme = original.mDefaultTheme;
+        resolver.mStyleInheritanceMap.putAll(original.mStyleInheritanceMap);
+        resolver.mThemes.addAll(original.mThemes);
 
         return resolver;
     }

@@ -640,4 +640,59 @@ public class ResourceResolverTest extends TestCase {
         projectRepository.dispose();
 
     }
+
+    public void testCopy() throws Exception {
+        TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
+                new Object[]{
+                        "values/themes.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <style name=\"Theme.Material\"/>\n"
+                        + "</resources>\n",
+                });
+        TestResourceRepository projectRepository = TestResourceRepository.create(false,
+                new Object[]{
+                        "values/colors.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <color name=\"loop1\">@color/loop1</color>\n"
+                        + "    <color name=\"loop2a\">@color/loop2b</color>\n"
+                        + "    <color name=\"loop2b\">@color/loop2a</color>\n"
+                        + "    <style name=\"MyStyle\"/>\n"
+                        + "</resources>\n",
+                        "values/styles.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <style name=\"MyStyle\"/>\n"
+                        + "</resources>\n",
+
+                });
+
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
+        assertNotNull(config);
+        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+                projectRepository.getConfiguredResources(config);
+        assertNotNull(projectResources);
+
+        Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
+                frameworkRepository.getConfiguredResources(config);
+        assertNotNull(frameworkResources);
+
+        ResourceResolver resolver = ResourceResolver.create(projectResources, frameworkResources,
+                "Theme.Material", false);
+        assertNull(ResourceResolver.copy(null));
+        ResourceResolver copyResolver = ResourceResolver.copy(resolver);
+        assertNotNull(copyResolver);
+
+        StyleResourceValue myTheme = resolver.getStyle("MyStyle", false);
+        resolver.applyStyle(myTheme, true);
+        assertEquals(2, resolver.getAllThemes().size());
+        assertEquals(1, copyResolver.getAllThemes().size());
+        resolver.clearStyles();
+        assertEquals(1, resolver.getAllThemes().size());
+        assertEquals(1, copyResolver.getAllThemes().size());
+
+        frameworkRepository.dispose();
+        projectRepository.dispose();
+    }
 }
