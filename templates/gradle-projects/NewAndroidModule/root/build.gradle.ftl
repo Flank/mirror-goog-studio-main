@@ -13,10 +13,19 @@ buildscript {
     }
 }
 </#if>
-<#if isLibraryProject?? && isLibraryProject>
-apply plugin: 'com.android.library'
+
+<#if isInstantApp!false>
+    <#if isLibraryProject!false>
+apply plugin: 'com.android.atom'
+    <#else>
+apply plugin: 'com.android.instantapp'
+    </#if>
 <#else>
+    <#if isLibraryProject!false>
+apply plugin: 'com.android.library'
+    <#else>
 apply plugin: 'com.android.application'
+    </#if>
 </#if>
 <#if !(perModuleRepositories??) || perModuleRepositories>
 
@@ -35,8 +44,7 @@ android {
     buildToolsVersion "${buildToolsVersion}"
 
     defaultConfig {
-    <#if isLibraryProject?? && isLibraryProject>
-    <#else>
+    <#if !(isLibraryProject!false) && !(isInstantApp!false)>
     applicationId "${packageName}"
     </#if>
         minSdkVersion <#if minApi?matches("^\\d+$")>${minApi}<#else>'${minApi}'</#if>
@@ -78,13 +86,35 @@ android {
 </#if>
 }
 
+<#if (isInstantApp!false) && (isLibraryProject!false)>
+android.buildTypes.all { buildType ->
+    String buildFlavorSuffix = buildType.name.capitalize() + "AtomResources";
+
+    task ("rewrite" + buildFlavorSuffix, type: Exec) {
+        tasks.whenTaskAdded{ task ->
+            if (task.name == "process" + buildFlavorSuffix) {
+                task.dependsOn "rewrite" + buildFlavorSuffix
+            }
+        }
+
+        dependsOn "merge" + buildFlavorSuffix
+        commandLine '${whSupportLibRewriteAttrs}', project.buildDir.getAbsolutePath()
+    }
+}
+</#if>
+
 dependencies {
+<#if isLibraryProject || !(isInstantApp!false)>
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:${espressoVersion!"2.0"}', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-<#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
+    <#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
     wearApp project(':${WearprojectName}')
     compile 'com.google.android.gms:play-services-wearable:+'
+    </#if>
+    <#if isInstantApp!false>provided (project.fileTree(dir:'${whSupportLibJars}', include:['*.jar']))</#if>
+<#elseif alsoCreateIapk!false>
+    compile project(':${atomName}')
 </#if>
 }

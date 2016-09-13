@@ -8,6 +8,9 @@ buildscript {
             url '${mavenUrl}'
         }
 </#if>
+<#if isInstantApp!false>
+        flatDir(name: 'support', dirs: '${whSupportLibDir}')
+</#if>
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:${gradlePluginVersion}'
@@ -24,6 +27,9 @@ allprojects {
         maven {
             url '${mavenUrl}'
         }
+</#if>
+<#if isInstantApp!false>
+        flatDir(name: 'support', dirs: '${whSupportLibDir}')
 </#if>
     }
 }

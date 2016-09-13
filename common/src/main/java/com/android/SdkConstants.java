@@ -1810,6 +1810,8 @@ public final class SdkConstants {
     // Always update GRADLE_PLUGIN_RECOMMENDED_VERSION and GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION together.
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.2.0-beta3";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION = "0.8.0-beta3";
+    // Temporary - can be removed once 2.3 is the recommended version.
+    public static final String GRADLE_PLUGIN_WH_VERSION = "2.3.0-dev";
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_LATEST_VERSION = GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION;
     public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
