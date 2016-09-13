@@ -6,7 +6,6 @@ cc_library(
         "activity_manager.cc",
         "app_base.cc",
         "bash_command.cc",
-        "clock.cc",
         "file_reader.cc",
         "fs/dir.cc",
         "fs/disk_file_system.cc",
@@ -18,10 +17,20 @@ cc_library(
         "package_manager.cc",
         "profiler_file.cc",
         "stopwatch.cc",
-        "thread_name.cc",
         "tokenizer.cc",
         "trace.cc",
-    ],
+    ] + select({
+        "//tools/base/bazel:darwin": [
+            "clock.mac.cc",
+            "thread_name.mac.cc",
+            "filesystem_notifier.mac.cc"
+        ],
+        "//conditions:default": [
+            "clock.cc",
+            "thread_name.cc",
+            "filesystem_notifier.cc",
+        ],
+    }),
     hdrs = [
         "activity_manager.h",
         "android_studio_version.h",
