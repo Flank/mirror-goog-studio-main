@@ -57,6 +57,7 @@ uint32_t FileSystemNotifier::GetDstValue(Event e) {
     case CLOSE:
       return IN_CLOSE;
   }
+  return 0;
 }
 
 bool FileSystemNotifier::IsReadyToNotify() {
