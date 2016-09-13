@@ -34,21 +34,17 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-
-/**
- * A Gradle tooling api build builder.
- */
-public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
+/** A Gradle tooling api build builder. */
+public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private final boolean isUseJack;
     private final boolean isMinifyEnabled;
@@ -58,9 +54,14 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private Packaging mPackaging;
 
-    RunGradleTasks(@NonNull GradleTestProject gradleTestProject,
+    RunGradleTasks(
+            @NonNull GradleTestProject gradleTestProject,
             @NonNull ProjectConnection projectConnection) {
-        super(projectConnection, gradleTestProject.getBuildFile(), gradleTestProject.getHeapSize());
+        super(
+                projectConnection,
+                gradleTestProject.getBuildFile(),
+                gradleTestProject.getBenchmarkRecorder(),
+                gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
         isMinifyEnabled = gradleTestProject.isMinifyEnabled();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
@@ -174,9 +175,10 @@ public class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         launcher.setStandardError(new TeeOutputStream(stderr, System.err));
 
         GradleConnectionException failure;
-        try (GradleProfileUploader uploader =
-                     new GradleProfileUploader(benchmarkEnabled, benchmark, benchmarkMode)) {
-            launcher.withArguments(Iterables.toArray(uploader.appendArg(args), String.class));
+
+        try (ProfileCapturer capturer =
+                new ProfileCapturer(benchmarkRecorder, benchmarkMode, benchmarksDirectory)) {
+            launcher.withArguments(Iterables.toArray(capturer.appendArg(args), String.class));
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();

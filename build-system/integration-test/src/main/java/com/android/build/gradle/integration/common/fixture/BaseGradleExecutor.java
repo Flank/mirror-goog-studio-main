@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
+import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -28,6 +30,7 @@ import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,30 +45,29 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull
     final ProjectConnection projectConnection;
 
-    @Nullable
-    private String heapSize;
+    @Nullable final BenchmarkRecorder benchmarkRecorder;
 
-    @NonNull
-    final List<String> arguments = Lists.newArrayList();
+    @Nullable private final String heapSize;
 
-    boolean benchmarkEnabled = false;
+    @NonNull final List<String> arguments = Lists.newArrayList();
 
-    @Nullable
-    Logging.Benchmark benchmark;
+    @NonNull final Path benchmarksDirectory;
 
-    @Nullable
-    Logging.BenchmarkMode benchmarkMode;
+    @Nullable Logging.BenchmarkMode benchmarkMode;
 
     boolean enableInfoLogging = true;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
             @NonNull File buildDotGradleFile,
+            @Nullable BenchmarkRecorder benchmarkRecorder,
             @Nullable String heapSize) {
+        this.benchmarkRecorder = benchmarkRecorder;
         this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getName().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.getPath());
         }
+        benchmarksDirectory = buildDotGradleFile.toPath().getParent().resolve("profiles");
         this.heapSize = heapSize;
     }
 
@@ -73,10 +75,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      * Upload this builds detailed profile as a benchmark.
      */
     public T recordBenchmark(
-            @NonNull Logging.Benchmark benchmark,
             @NonNull Logging.BenchmarkMode benchmarkMode) {
-        this.benchmarkEnabled = true;
-        this.benchmark = benchmark;
+        Preconditions.checkState(
+                benchmarkRecorder != null,
+                "BenchmarkRecorder must be set for this GradleTestProject when it is created in "
+                        + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
         return (T) this;
     }

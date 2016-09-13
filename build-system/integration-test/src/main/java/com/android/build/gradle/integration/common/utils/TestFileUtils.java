@@ -97,7 +97,6 @@ public class TestFileUtils {
      * @param file file to change
      * @param lineNumber the line number, starting at 1
      * @param line the line to replace with
-     * @throws IOException
      */
     public static void replaceLine(
             @NonNull  File file,

@@ -18,80 +18,74 @@ package com.android.build.gradle.integration.common.performance;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleProfileUploader;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.ide.common.util.ReferenceHolder;
+import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.build.gradle.integration.performance.ProjectScenario;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.junit.runners.model.Statement;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.IOException;
-
-/**
- * Smoke test for the performance test infrastructure.
- */
+/** Smoke test for the performance test infrastructure. */
+@RunWith(MockitoJUnitRunner.class)
 public class PerformanceInfrastructureTest {
 
-    private static final GradleProfileUploader.Uploader ASSERT_NO_UPLOAD =
-            profile -> {
-                throw new AssertionError("Should not be called");
-            };
+    private final List<Logging.GradleBenchmarkResult> benchmarkResults = new ArrayList<>();
 
-    @Rule
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
-
-    @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .create();
+    @Rule public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Test
-    public void checkPerformanceDataGiven() throws IOException {
-        // Because the profiler deals with lots of static state, make sure a sequence of actions
-        // with and without the profiler enabled work correctly.
-        getModelWithProfile();
-        getModelWithoutProfile();
-        buildWithProfile();
-        buildWithoutProfile();
-        buildWithProfile();
+    public void checkPerformanceDataGiven() throws Throwable {
+
+        GradleTestProject project =
+                GradleTestProject.builder()
+                        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                        .forBenchmarkRecording(
+                                new BenchmarkRecorder(
+                                        Logging.Benchmark.ANTENNA_POD,
+                                        ProjectScenario.DEX_OUT_OF_PROCESS,
+                                        benchmarkResults::addAll))
+                        .create();
+
+        // Manually evaluate the project rule, so we can assert about the uploads that happen after
+        // the evaluation is complete.
+        project.apply(
+                        new Statement() {
+                            @Override
+                            public void evaluate() throws Throwable {
+                                // Because the profiler deals with lots of static state in the
+                                // plugin, make sure a sequence of actions with and without the
+                                // profiler enabled work correctly.
+                                project.model().recordBenchmark(BenchmarkMode.SYNC).getSingle();
+                                project.model().getSingle();
+                                project.executor()
+                                        .recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN)
+                                        .run("assembleDebug");
+                                project.executor().run("assembleDebug");
+                                project.executor()
+                                        .recordBenchmark(BenchmarkMode.NO_OP)
+                                        .run("assembleDebug");
+                            }
+                        },
+                        Description.createTestDescription(
+                                PerformanceInfrastructureTest.class, "checkPerformanceDataGiven"))
+                .evaluate();
+
+        assertThat(benchmarkResults).hasSize(3);
+        assertThat(benchmarkResults.get(0).getBenchmarkMode()).isEqualTo(BenchmarkMode.SYNC);
+        assertThat(benchmarkResults.get(1).getBenchmarkMode())
+                .isEqualTo(BenchmarkMode.BUILD__FROM_CLEAN);
+        assertThat(benchmarkResults.get(2).getBenchmarkMode()).isEqualTo(BenchmarkMode.NO_OP);
+        assertThat(benchmarkResults.get(0).getProfile().getSpanCount()).isGreaterThan(0);
+        assertThat(benchmarkResults.get(1).getProfile().getSpanCount()).isGreaterThan(0);
+        assertThat(benchmarkResults.get(2).getProfile().getSpanCount()).isGreaterThan(0);
     }
-
-    private void getModelWithProfile() throws IOException {
-        ReferenceHolder<Logging.GradleBenchmarkResult> result = ReferenceHolder.empty();
-
-        GradleProfileUploader.setUploader(result::setValue);
-
-        project.model().recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.SYNC).getSingle();
-
-        assertThat(result.getValue().getProfile().getSpanCount()).isGreaterThan(0);
-
-    }
-
-    private void getModelWithoutProfile() {
-        GradleProfileUploader.setUploader(ASSERT_NO_UPLOAD);
-        project.model().getSingle();
-    }
-
-    private void buildWithProfile() throws IOException {
-        ReferenceHolder<Logging.GradleBenchmarkResult> result = ReferenceHolder.empty();
-
-        GradleProfileUploader.setUploader(result::setValue);
-
-        project.executor()
-                .recordBenchmark(Benchmark.ANTENNA_POD, BenchmarkMode.BUILD_FULL)
-                .run("assembleDebug");
-
-        assertThat(result.getValue().getProfile().getSpanCount()).isGreaterThan(0);
-    }
-
-    private void buildWithoutProfile() {
-        GradleProfileUploader.setUploader(ASSERT_NO_UPLOAD);
-        project.executor().run("assembleDebug");
-    }
-
 }

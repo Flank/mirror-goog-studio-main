@@ -51,10 +51,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
 
-    BuildModel(
-            @NonNull GradleTestProject gradleTestProject,
-            @NonNull ProjectConnection projectConnection) {
-        super(projectConnection, gradleTestProject.getBuildFile(), gradleTestProject.getHeapSize());
+    BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
+        super(
+                projectConnection,
+                project.getBuildFile(),
+                project.getBenchmarkRecorder(),
+                project.getHeapSize());
     }
 
     /** Do not fail if there are sync issues */
@@ -187,9 +189,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         executor.setStandardOutput(System.out);
         executor.setStandardError(System.err);
 
-        try (GradleProfileUploader uploader =
-                     new GradleProfileUploader(benchmarkEnabled, benchmark, benchmarkMode)) {
-            executor.withArguments(Iterables.toArray(uploader.appendArg(arguments), String.class));
+        try (ProfileCapturer capturer =
+                new ProfileCapturer(benchmarkRecorder, benchmarkMode, benchmarksDirectory)) {
+            executor.withArguments(Iterables.toArray(capturer.appendArg(arguments), String.class));
             return executor.run();
         } catch (IOException e) {
             throw new RuntimeException(e);

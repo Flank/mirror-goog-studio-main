@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,13 +32,16 @@ import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
-
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility helper to help read/test the AndroidProject Model.
@@ -292,5 +294,39 @@ public class ModelHelper {
         }
 
         return null;
+    }
+
+
+    /**
+     * Returns the generates sources commands for all projects for the debug variant.
+     *
+     * <p>These are the commands studio will call after sync.
+     *
+     * <p>For example, for a project with a single app subproject these might be:
+     *
+     * <ul>
+     * <li>:app:generateDebugSources
+     * <li>:app:generateDebugAndroidTestSources
+     * <li>:app:mockableAndroidJar
+     * <li>:app:prepareDebugUnitTestDependencies
+     * </ul>
+     */
+    @NonNull
+    public static List<String> getGenerateSourcesCommands(
+            @NonNull Map<String, AndroidProject> model) {
+        List<String> commands = Lists.newArrayList();
+        for (Map.Entry<String, AndroidProject> entry : model.entrySet()) {
+            Variant debug = ModelHelper.getDebugVariant(entry.getValue());
+            commands.add(entry.getKey() + ":" + debug.getMainArtifact().getSourceGenTaskName());
+            for (AndroidArtifact artifact : debug.getExtraAndroidArtifacts()) {
+                commands.add(entry.getKey() + ":" + artifact.getSourceGenTaskName());
+            }
+            for (JavaArtifact artifact : debug.getExtraJavaArtifacts()) {
+                for (String taskName : artifact.getIdeSetupTaskNames()) {
+                    commands.add(entry.getKey() + ":" + taskName);
+                }
+            }
+        }
+        return commands;
     }
 }
