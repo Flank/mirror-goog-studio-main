@@ -6,84 +6,87 @@ package com.google.devtools.build.lib.rules.android.apkmanifest;
 public final class ExternalBuildApkManifest {
   private ExternalBuildApkManifest() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistry registry) {
+      com.google.protobuf.ExtensionRegistryLite registry) {
   }
-  public interface ArtifactOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
 
-    // optional string exec_root_path = 1;
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions(
+        (com.google.protobuf.ExtensionRegistryLite) registry);
+  }
+  public interface ArtifactOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.Artifact)
+      com.google.protobuf.MessageOrBuilder {
+
     /**
-     * <code>optional string exec_root_path = 1;</code>
-     *
      * <pre>
      * This path is relative to "bazel info execution_root"
      * </pre>
-     */
-    boolean hasExecRootPath();
-    /**
-     * <code>optional string exec_root_path = 1;</code>
      *
-     * <pre>
-     * This path is relative to "bazel info execution_root"
-     * </pre>
+     * <code>optional string exec_root_path = 1;</code>
      */
     java.lang.String getExecRootPath();
     /**
-     * <code>optional string exec_root_path = 1;</code>
-     *
      * <pre>
      * This path is relative to "bazel info execution_root"
      * </pre>
+     *
+     * <code>optional string exec_root_path = 1;</code>
      */
     com.google.protobuf.ByteString
         getExecRootPathBytes();
 
-    // optional bytes hash = 2;
-    /**
-     * <code>optional bytes hash = 2;</code>
-     */
-    boolean hasHash();
     /**
      * <code>optional bytes hash = 2;</code>
      */
     com.google.protobuf.ByteString getHash();
+
+    /**
+     * <pre>
+     * The label of the rule that produced this artifact.
+     * </pre>
+     *
+     * <code>optional string label = 3;</code>
+     */
+    java.lang.String getLabel();
+    /**
+     * <pre>
+     * The label of the rule that produced this artifact.
+     * </pre>
+     *
+     * <code>optional string label = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getLabelBytes();
   }
   /**
-   * Protobuf type {@code blaze.apk_manifest.Artifact}
+   * Protobuf type {@code externalBuild.apk_manifest.Artifact}
    */
-  public static final class Artifact extends
-      com.google.protobuf.GeneratedMessage
-      implements ArtifactOrBuilder {
+  public  static final class Artifact extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.Artifact)
+      ArtifactOrBuilder {
     // Use Artifact.newBuilder() to construct.
-    private Artifact(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private Artifact(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private Artifact(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final Artifact defaultInstance;
-    public static Artifact getDefaultInstance() {
-      return defaultInstance;
+    private Artifact() {
+      execRootPath_ = "";
+      hash_ = com.google.protobuf.ByteString.EMPTY;
+      label_ = "";
     }
 
-    public Artifact getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
     }
     private Artifact(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
       int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -93,20 +96,26 @@ public final class ExternalBuildApkManifest {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!input.skipField(tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              bitField0_ |= 0x00000001;
-              execRootPath_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              execRootPath_ = s;
               break;
             }
             case 18: {
-              bitField0_ |= 0x00000002;
+
               hash_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              label_ = s;
               break;
             }
           }
@@ -115,59 +124,31 @@ public final class ExternalBuildApkManifest {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_Artifact_descriptor;
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_Artifact_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_Artifact_fieldAccessorTable
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_Artifact_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<Artifact> PARSER =
-        new com.google.protobuf.AbstractParser<Artifact>() {
-      public Artifact parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Artifact(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Artifact> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    // optional string exec_root_path = 1;
     public static final int EXEC_ROOT_PATH_FIELD_NUMBER = 1;
-    private java.lang.Object execRootPath_;
+    private volatile java.lang.Object execRootPath_;
     /**
-     * <code>optional string exec_root_path = 1;</code>
-     *
      * <pre>
      * This path is relative to "bazel info execution_root"
      * </pre>
-     */
-    public boolean hasExecRootPath() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string exec_root_path = 1;</code>
      *
-     * <pre>
-     * This path is relative to "bazel info execution_root"
-     * </pre>
+     * <code>optional string exec_root_path = 1;</code>
      */
     public java.lang.String getExecRootPath() {
       java.lang.Object ref = execRootPath_;
@@ -177,18 +158,16 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          execRootPath_ = s;
-        }
+        execRootPath_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string exec_root_path = 1;</code>
-     *
      * <pre>
      * This path is relative to "bazel info execution_root"
      * </pre>
+     *
+     * <code>optional string exec_root_path = 1;</code>
      */
     public com.google.protobuf.ByteString
         getExecRootPathBytes() {
@@ -204,15 +183,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional bytes hash = 2;
     public static final int HASH_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString hash_;
-    /**
-     * <code>optional bytes hash = 2;</code>
-     */
-    public boolean hasHash() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
     /**
      * <code>optional bytes hash = 2;</code>
      */
@@ -220,14 +192,53 @@ public final class ExternalBuildApkManifest {
       return hash_;
     }
 
-    private void initFields() {
-      execRootPath_ = "";
-      hash_ = com.google.protobuf.ByteString.EMPTY;
+    public static final int LABEL_FIELD_NUMBER = 3;
+    private volatile java.lang.Object label_;
+    /**
+     * <pre>
+     * The label of the rule that produced this artifact.
+     * </pre>
+     *
+     * <code>optional string label = 3;</code>
+     */
+    public java.lang.String getLabel() {
+      java.lang.Object ref = label_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        label_ = s;
+        return s;
+      }
     }
+    /**
+     * <pre>
+     * The label of the rule that produced this artifact.
+     * </pre>
+     *
+     * <code>optional string label = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getLabelBytes() {
+      java.lang.Object ref = label_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        label_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -235,40 +246,73 @@ public final class ExternalBuildApkManifest {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getExecRootPathBytes());
+      if (!getExecRootPathBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, execRootPath_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (!hash_.isEmpty()) {
         output.writeBytes(2, hash_);
       }
-      getUnknownFields().writeTo(output);
+      if (!getLabelBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, label_);
+      }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getExecRootPathBytes());
+      if (!getExecRootPathBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, execRootPath_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (!hash_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, hash_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      if (!getLabelBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, label_);
+      }
+      memoizedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact)) {
+        return super.equals(obj);
+      }
+      com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact) obj;
+
+      boolean result = true;
+      result = result && getExecRootPath()
+          .equals(other.getExecRootPath());
+      result = result && getHash()
+          .equals(other.getHash());
+      result = result && getLabel()
+          .equals(other.getLabel());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + EXEC_ROOT_PATH_FIELD_NUMBER;
+      hash = (53 * hash) + getExecRootPath().hashCode();
+      hash = (37 * hash) + HASH_FIELD_NUMBER;
+      hash = (53 * hash) + getHash().hashCode();
+      hash = (37 * hash) + LABEL_FIELD_NUMBER;
+      hash = (53 * hash) + getLabel().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
     }
 
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseFrom(
@@ -294,63 +338,75 @@ public final class ExternalBuildApkManifest {
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code blaze.apk_manifest.Artifact}
+     * Protobuf type {@code externalBuild.apk_manifest.Artifact}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder {
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.Artifact)
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_Artifact_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_Artifact_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_Artifact_fieldAccessorTable
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_Artifact_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder.class);
       }
@@ -361,34 +417,29 @@ public final class ExternalBuildApkManifest {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         execRootPath_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        hash_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        hash_ = com.google.protobuf.ByteString.EMPTY;
+
+        label_ = "";
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_Artifact_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_Artifact_descriptor;
       }
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDefaultInstanceForType() {
@@ -405,21 +456,39 @@ public final class ExternalBuildApkManifest {
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact buildPartial() {
         com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact result = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
         result.execRootPath_ = execRootPath_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.hash_ = hash_;
-        result.bitField0_ = to_bitField0_;
+        result.label_ = label_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact) {
           return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact)other);
@@ -431,15 +500,18 @@ public final class ExternalBuildApkManifest {
 
       public Builder mergeFrom(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact other) {
         if (other == com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance()) return this;
-        if (other.hasExecRootPath()) {
-          bitField0_ |= 0x00000001;
+        if (!other.getExecRootPath().isEmpty()) {
           execRootPath_ = other.execRootPath_;
           onChanged();
         }
-        if (other.hasHash()) {
+        if (other.getHash() != com.google.protobuf.ByteString.EMPTY) {
           setHash(other.getHash());
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        if (!other.getLabel().isEmpty()) {
+          label_ = other.label_;
+          onChanged();
+        }
+        onChanged();
         return this;
       }
 
@@ -456,7 +528,7 @@ public final class ExternalBuildApkManifest {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -464,32 +536,21 @@ public final class ExternalBuildApkManifest {
         }
         return this;
       }
-      private int bitField0_;
 
-      // optional string exec_root_path = 1;
       private java.lang.Object execRootPath_ = "";
       /**
-       * <code>optional string exec_root_path = 1;</code>
-       *
        * <pre>
        * This path is relative to "bazel info execution_root"
        * </pre>
-       */
-      public boolean hasExecRootPath() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string exec_root_path = 1;</code>
        *
-       * <pre>
-       * This path is relative to "bazel info execution_root"
-       * </pre>
+       * <code>optional string exec_root_path = 1;</code>
        */
       public java.lang.String getExecRootPath() {
         java.lang.Object ref = execRootPath_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           execRootPath_ = s;
           return s;
         } else {
@@ -497,11 +558,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>optional string exec_root_path = 1;</code>
-       *
        * <pre>
        * This path is relative to "bazel info execution_root"
        * </pre>
+       *
+       * <code>optional string exec_root_path = 1;</code>
        */
       public com.google.protobuf.ByteString
           getExecRootPathBytes() {
@@ -517,61 +578,55 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>optional string exec_root_path = 1;</code>
-       *
        * <pre>
        * This path is relative to "bazel info execution_root"
        * </pre>
+       *
+       * <code>optional string exec_root_path = 1;</code>
        */
       public Builder setExecRootPath(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         execRootPath_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string exec_root_path = 1;</code>
-       *
        * <pre>
        * This path is relative to "bazel info execution_root"
        * </pre>
+       *
+       * <code>optional string exec_root_path = 1;</code>
        */
       public Builder clearExecRootPath() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         execRootPath_ = getDefaultInstance().getExecRootPath();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string exec_root_path = 1;</code>
-       *
        * <pre>
        * This path is relative to "bazel info execution_root"
        * </pre>
+       *
+       * <code>optional string exec_root_path = 1;</code>
        */
       public Builder setExecRootPathBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         execRootPath_ = value;
         onChanged();
         return this;
       }
 
-      // optional bytes hash = 2;
       private com.google.protobuf.ByteString hash_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>optional bytes hash = 2;</code>
-       */
-      public boolean hasHash() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
       /**
        * <code>optional bytes hash = 2;</code>
        */
@@ -585,7 +640,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         hash_ = value;
         onChanged();
         return this;
@@ -594,56 +649,177 @@ public final class ExternalBuildApkManifest {
        * <code>optional bytes hash = 2;</code>
        */
       public Builder clearHash() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         hash_ = getDefaultInstance().getHash();
         onChanged();
         return this;
       }
 
-      // @@protoc_insertion_point(builder_scope:blaze.apk_manifest.Artifact)
+      private java.lang.Object label_ = "";
+      /**
+       * <pre>
+       * The label of the rule that produced this artifact.
+       * </pre>
+       *
+       * <code>optional string label = 3;</code>
+       */
+      public java.lang.String getLabel() {
+        java.lang.Object ref = label_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          label_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The label of the rule that produced this artifact.
+       * </pre>
+       *
+       * <code>optional string label = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getLabelBytes() {
+        java.lang.Object ref = label_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          label_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The label of the rule that produced this artifact.
+       * </pre>
+       *
+       * <code>optional string label = 3;</code>
+       */
+      public Builder setLabel(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        label_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The label of the rule that produced this artifact.
+       * </pre>
+       *
+       * <code>optional string label = 3;</code>
+       */
+      public Builder clearLabel() {
+        
+        label_ = getDefaultInstance().getLabel();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The label of the rule that produced this artifact.
+       * </pre>
+       *
+       * <code>optional string label = 3;</code>
+       */
+      public Builder setLabelBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        label_ = value;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.Artifact)
     }
 
+    // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.Artifact)
+    private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact DEFAULT_INSTANCE;
     static {
-      defaultInstance = new Artifact(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact();
     }
 
-    // @@protoc_insertion_point(class_scope:blaze.apk_manifest.Artifact)
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Artifact>
+        PARSER = new com.google.protobuf.AbstractParser<Artifact>() {
+      public Artifact parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Artifact(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Artifact> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Artifact> getParserForType() {
+      return PARSER;
+    }
+
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
-  public interface NativeLibOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface NativeLibOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.NativeLib)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .blaze.apk_manifest.Artifact native_libs = 1;
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> 
         getNativeLibsList();
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getNativeLibs(int index);
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     int getNativeLibsCount();
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
         getNativeLibsOrBuilderList();
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getNativeLibsOrBuilder(
         int index);
 
-    // optional string arch = 2;
-    /**
-     * <code>optional string arch = 2;</code>
-     */
-    boolean hasArch();
     /**
      * <code>optional string arch = 2;</code>
      */
@@ -655,41 +831,32 @@ public final class ExternalBuildApkManifest {
         getArchBytes();
   }
   /**
-   * Protobuf type {@code blaze.apk_manifest.NativeLib}
+   * Protobuf type {@code externalBuild.apk_manifest.NativeLib}
    */
-  public static final class NativeLib extends
-      com.google.protobuf.GeneratedMessage
-      implements NativeLibOrBuilder {
+  public  static final class NativeLib extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.NativeLib)
+      NativeLibOrBuilder {
     // Use NativeLib.newBuilder() to construct.
-    private NativeLib(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private NativeLib(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private NativeLib(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final NativeLib defaultInstance;
-    public static NativeLib getDefaultInstance() {
-      return defaultInstance;
+    private NativeLib() {
+      nativeLibs_ = java.util.Collections.emptyList();
+      arch_ = "";
     }
 
-    public NativeLib getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
     }
     private NativeLib(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
       int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -699,8 +866,7 @@ public final class ExternalBuildApkManifest {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!input.skipField(tag)) {
                 done = true;
               }
               break;
@@ -710,12 +876,14 @@ public final class ExternalBuildApkManifest {
                 nativeLibs_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              nativeLibs_.add(input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.PARSER, extensionRegistry));
+              nativeLibs_.add(
+                  input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.parser(), extensionRegistry));
               break;
             }
             case 18: {
-              bitField0_ |= 0x00000001;
-              arch_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              arch_ = s;
               break;
             }
           }
@@ -724,88 +892,64 @@ public final class ExternalBuildApkManifest {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           nativeLibs_ = java.util.Collections.unmodifiableList(nativeLibs_);
         }
-        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_NativeLib_descriptor;
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_NativeLib_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_NativeLib_fieldAccessorTable
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_NativeLib_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<NativeLib> PARSER =
-        new com.google.protobuf.AbstractParser<NativeLib>() {
-      public NativeLib parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new NativeLib(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<NativeLib> getParserForType() {
-      return PARSER;
-    }
-
     private int bitField0_;
-    // repeated .blaze.apk_manifest.Artifact native_libs = 1;
     public static final int NATIVE_LIBS_FIELD_NUMBER = 1;
     private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> nativeLibs_;
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> getNativeLibsList() {
       return nativeLibs_;
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
         getNativeLibsOrBuilderList() {
       return nativeLibs_;
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     public int getNativeLibsCount() {
       return nativeLibs_.size();
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getNativeLibs(int index) {
       return nativeLibs_.get(index);
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+     * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
      */
     public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getNativeLibsOrBuilder(
         int index) {
       return nativeLibs_.get(index);
     }
 
-    // optional string arch = 2;
     public static final int ARCH_FIELD_NUMBER = 2;
-    private java.lang.Object arch_;
-    /**
-     * <code>optional string arch = 2;</code>
-     */
-    public boolean hasArch() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
+    private volatile java.lang.Object arch_;
     /**
      * <code>optional string arch = 2;</code>
      */
@@ -817,9 +961,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          arch_ = s;
-        }
+        arch_ = s;
         return s;
       }
     }
@@ -840,14 +982,11 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    private void initFields() {
-      nativeLibs_ = java.util.Collections.emptyList();
-      arch_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -855,19 +994,16 @@ public final class ExternalBuildApkManifest {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
       for (int i = 0; i < nativeLibs_.size(); i++) {
         output.writeMessage(1, nativeLibs_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(2, getArchBytes());
+      if (!getArchBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, arch_);
       }
-      getUnknownFields().writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -875,20 +1011,48 @@ public final class ExternalBuildApkManifest {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, nativeLibs_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getArchBytes());
+      if (!getArchBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, arch_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib)) {
+        return super.equals(obj);
+      }
+      com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib) obj;
+
+      boolean result = true;
+      result = result && getNativeLibsList()
+          .equals(other.getNativeLibsList());
+      result = result && getArch()
+          .equals(other.getArch());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (getNativeLibsCount() > 0) {
+        hash = (37 * hash) + NATIVE_LIBS_FIELD_NUMBER;
+        hash = (53 * hash) + getNativeLibsList().hashCode();
+      }
+      hash = (37 * hash) + ARCH_FIELD_NUMBER;
+      hash = (53 * hash) + getArch().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
     }
 
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseFrom(
@@ -914,63 +1078,75 @@ public final class ExternalBuildApkManifest {
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code blaze.apk_manifest.NativeLib}
+     * Protobuf type {@code externalBuild.apk_manifest.NativeLib}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder {
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.NativeLib)
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_NativeLib_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_NativeLib_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_NativeLib_fieldAccessorTable
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_NativeLib_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder.class);
       }
@@ -981,19 +1157,16 @@ public final class ExternalBuildApkManifest {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
           getNativeLibsFieldBuilder();
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         if (nativeLibsBuilder_ == null) {
@@ -1003,17 +1176,13 @@ public final class ExternalBuildApkManifest {
           nativeLibsBuilder_.clear();
         }
         arch_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_NativeLib_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_NativeLib_descriptor;
       }
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getDefaultInstanceForType() {
@@ -1041,15 +1210,38 @@ public final class ExternalBuildApkManifest {
         } else {
           result.nativeLibs_ = nativeLibsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000001;
-        }
         result.arch_ = arch_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib) {
           return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib)other);
@@ -1080,19 +1272,18 @@ public final class ExternalBuildApkManifest {
               nativeLibs_ = other.nativeLibs_;
               bitField0_ = (bitField0_ & ~0x00000001);
               nativeLibsBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getNativeLibsFieldBuilder() : null;
             } else {
               nativeLibsBuilder_.addAllMessages(other.nativeLibs_);
             }
           }
         }
-        if (other.hasArch()) {
-          bitField0_ |= 0x00000002;
+        if (!other.getArch().isEmpty()) {
           arch_ = other.arch_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
         return this;
       }
 
@@ -1109,7 +1300,7 @@ public final class ExternalBuildApkManifest {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1119,7 +1310,6 @@ public final class ExternalBuildApkManifest {
       }
       private int bitField0_;
 
-      // repeated .blaze.apk_manifest.Artifact native_libs = 1;
       private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> nativeLibs_ =
         java.util.Collections.emptyList();
       private void ensureNativeLibsIsMutable() {
@@ -1129,11 +1319,11 @@ public final class ExternalBuildApkManifest {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> nativeLibsBuilder_;
 
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> getNativeLibsList() {
         if (nativeLibsBuilder_ == null) {
@@ -1143,7 +1333,7 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public int getNativeLibsCount() {
         if (nativeLibsBuilder_ == null) {
@@ -1153,7 +1343,7 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getNativeLibs(int index) {
         if (nativeLibsBuilder_ == null) {
@@ -1163,7 +1353,7 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder setNativeLibs(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
@@ -1180,7 +1370,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder setNativeLibs(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -1194,7 +1384,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder addNativeLibs(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (nativeLibsBuilder_ == null) {
@@ -1210,7 +1400,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder addNativeLibs(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
@@ -1227,7 +1417,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder addNativeLibs(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -1241,7 +1431,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder addNativeLibs(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -1255,13 +1445,14 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder addAllNativeLibs(
           java.lang.Iterable<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> values) {
         if (nativeLibsBuilder_ == null) {
           ensureNativeLibsIsMutable();
-          super.addAll(values, nativeLibs_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, nativeLibs_);
           onChanged();
         } else {
           nativeLibsBuilder_.addAllMessages(values);
@@ -1269,7 +1460,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder clearNativeLibs() {
         if (nativeLibsBuilder_ == null) {
@@ -1282,7 +1473,7 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public Builder removeNativeLibs(int index) {
         if (nativeLibsBuilder_ == null) {
@@ -1295,14 +1486,14 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder getNativeLibsBuilder(
           int index) {
         return getNativeLibsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getNativeLibsOrBuilder(
           int index) {
@@ -1312,7 +1503,7 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
            getNativeLibsOrBuilderList() {
@@ -1323,14 +1514,14 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder addNativeLibsBuilder() {
         return getNativeLibsFieldBuilder().addBuilder(
             com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder addNativeLibsBuilder(
           int index) {
@@ -1338,17 +1529,17 @@ public final class ExternalBuildApkManifest {
             index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact native_libs = 1;</code>
+       * <code>repeated .externalBuild.apk_manifest.Artifact native_libs = 1;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder> 
            getNativeLibsBuilderList() {
         return getNativeLibsFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
           getNativeLibsFieldBuilder() {
         if (nativeLibsBuilder_ == null) {
-          nativeLibsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+          nativeLibsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder>(
                   nativeLibs_,
                   ((bitField0_ & 0x00000001) == 0x00000001),
@@ -1359,22 +1550,16 @@ public final class ExternalBuildApkManifest {
         return nativeLibsBuilder_;
       }
 
-      // optional string arch = 2;
       private java.lang.Object arch_ = "";
-      /**
-       * <code>optional string arch = 2;</code>
-       */
-      public boolean hasArch() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
       /**
        * <code>optional string arch = 2;</code>
        */
       public java.lang.String getArch() {
         java.lang.Object ref = arch_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           arch_ = s;
           return s;
         } else {
@@ -1405,7 +1590,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         arch_ = value;
         onChanged();
         return this;
@@ -1414,7 +1599,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string arch = 2;</code>
        */
       public Builder clearArch() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         arch_ = getDefaultInstance().getArch();
         onChanged();
         return this;
@@ -1427,31 +1612,65 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  checkByteStringIsUtf8(value);
+        
         arch_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
 
-      // @@protoc_insertion_point(builder_scope:blaze.apk_manifest.NativeLib)
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.NativeLib)
     }
 
+    // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.NativeLib)
+    private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib DEFAULT_INSTANCE;
     static {
-      defaultInstance = new NativeLib(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib();
     }
 
-    // @@protoc_insertion_point(class_scope:blaze.apk_manifest.NativeLib)
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<NativeLib>
+        PARSER = new com.google.protobuf.AbstractParser<NativeLib>() {
+      public NativeLib parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new NativeLib(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<NativeLib> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<NativeLib> getParserForType() {
+      return PARSER;
+    }
+
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
-  public interface AndroidSdkOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface AndroidSdkOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.AndroidSdk)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string aapt = 1;
-    /**
-     * <code>optional string aapt = 1;</code>
-     */
-    boolean hasAapt();
     /**
      * <code>optional string aapt = 1;</code>
      */
@@ -1462,11 +1681,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getAaptBytes();
 
-    // optional string adb = 2;
-    /**
-     * <code>optional string adb = 2;</code>
-     */
-    boolean hasAdb();
     /**
      * <code>optional string adb = 2;</code>
      */
@@ -1477,11 +1691,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getAdbBytes();
 
-    // optional string aidl = 3;
-    /**
-     * <code>optional string aidl = 3;</code>
-     */
-    boolean hasAidl();
     /**
      * <code>optional string aidl = 3;</code>
      */
@@ -1492,11 +1701,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getAidlBytes();
 
-    // optional string android_jar = 4;
-    /**
-     * <code>optional string android_jar = 4;</code>
-     */
-    boolean hasAndroidJar();
     /**
      * <code>optional string android_jar = 4;</code>
      */
@@ -1507,11 +1711,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getAndroidJarBytes();
 
-    // optional string annotations_jar = 5;
-    /**
-     * <code>optional string annotations_jar = 5;</code>
-     */
-    boolean hasAnnotationsJar();
     /**
      * <code>optional string annotations_jar = 5;</code>
      */
@@ -1522,11 +1721,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getAnnotationsJarBytes();
 
-    // optional string apkbuilder = 6;
-    /**
-     * <code>optional string apkbuilder = 6;</code>
-     */
-    boolean hasApkbuilder();
     /**
      * <code>optional string apkbuilder = 6;</code>
      */
@@ -1537,11 +1731,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getApkbuilderBytes();
 
-    // optional string dx = 7;
-    /**
-     * <code>optional string dx = 7;</code>
-     */
-    boolean hasDx();
     /**
      * <code>optional string dx = 7;</code>
      */
@@ -1552,11 +1741,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getDxBytes();
 
-    // optional string framework_aidl = 8;
-    /**
-     * <code>optional string framework_aidl = 8;</code>
-     */
-    boolean hasFrameworkAidl();
     /**
      * <code>optional string framework_aidl = 8;</code>
      */
@@ -1567,11 +1751,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getFrameworkAidlBytes();
 
-    // optional string jack = 9;
-    /**
-     * <code>optional string jack = 9;</code>
-     */
-    boolean hasJack();
     /**
      * <code>optional string jack = 9;</code>
      */
@@ -1582,11 +1761,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getJackBytes();
 
-    // optional string jill = 10;
-    /**
-     * <code>optional string jill = 10;</code>
-     */
-    boolean hasJill();
     /**
      * <code>optional string jill = 10;</code>
      */
@@ -1597,11 +1771,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getJillBytes();
 
-    // optional string main_dex_classes = 11;
-    /**
-     * <code>optional string main_dex_classes = 11;</code>
-     */
-    boolean hasMainDexClasses();
     /**
      * <code>optional string main_dex_classes = 11;</code>
      */
@@ -1612,11 +1781,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getMainDexClassesBytes();
 
-    // optional string main_dex_list_creator = 12;
-    /**
-     * <code>optional string main_dex_list_creator = 12;</code>
-     */
-    boolean hasMainDexListCreator();
     /**
      * <code>optional string main_dex_list_creator = 12;</code>
      */
@@ -1627,11 +1791,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getMainDexListCreatorBytes();
 
-    // optional string proguard = 13;
-    /**
-     * <code>optional string proguard = 13;</code>
-     */
-    boolean hasProguard();
     /**
      * <code>optional string proguard = 13;</code>
      */
@@ -1642,11 +1801,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getProguardBytes();
 
-    // optional string resource_extractor = 14;
-    /**
-     * <code>optional string resource_extractor = 14;</code>
-     */
-    boolean hasResourceExtractor();
     /**
      * <code>optional string resource_extractor = 14;</code>
      */
@@ -1657,11 +1811,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getResourceExtractorBytes();
 
-    // optional string shrinked_android_jar = 15;
-    /**
-     * <code>optional string shrinked_android_jar = 15;</code>
-     */
-    boolean hasShrinkedAndroidJar();
     /**
      * <code>optional string shrinked_android_jar = 15;</code>
      */
@@ -1672,11 +1821,6 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getShrinkedAndroidJarBytes();
 
-    // optional string zipalign = 16;
-    /**
-     * <code>optional string zipalign = 16;</code>
-     */
-    boolean hasZipalign();
     /**
      * <code>optional string zipalign = 16;</code>
      */
@@ -1687,69 +1831,66 @@ public final class ExternalBuildApkManifest {
     com.google.protobuf.ByteString
         getZipalignBytes();
 
-    // optional string build_tools_version = 17;
     /**
-     * <code>optional string build_tools_version = 17;</code>
-     *
      * <pre>
      * assume latest if not set
      * </pre>
-     */
-    boolean hasBuildToolsVersion();
-    /**
-     * <code>optional string build_tools_version = 17;</code>
      *
-     * <pre>
-     * assume latest if not set
-     * </pre>
+     * <code>optional string build_tools_version = 17;</code>
      */
     java.lang.String getBuildToolsVersion();
     /**
-     * <code>optional string build_tools_version = 17;</code>
-     *
      * <pre>
      * assume latest if not set
      * </pre>
+     *
+     * <code>optional string build_tools_version = 17;</code>
      */
     com.google.protobuf.ByteString
         getBuildToolsVersionBytes();
   }
   /**
-   * Protobuf type {@code blaze.apk_manifest.AndroidSdk}
+   * Protobuf type {@code externalBuild.apk_manifest.AndroidSdk}
    */
-  public static final class AndroidSdk extends
-      com.google.protobuf.GeneratedMessage
-      implements AndroidSdkOrBuilder {
+  public  static final class AndroidSdk extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.AndroidSdk)
+      AndroidSdkOrBuilder {
     // Use AndroidSdk.newBuilder() to construct.
-    private AndroidSdk(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private AndroidSdk(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private AndroidSdk(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final AndroidSdk defaultInstance;
-    public static AndroidSdk getDefaultInstance() {
-      return defaultInstance;
+    private AndroidSdk() {
+      aapt_ = "";
+      adb_ = "";
+      aidl_ = "";
+      androidJar_ = "";
+      annotationsJar_ = "";
+      apkbuilder_ = "";
+      dx_ = "";
+      frameworkAidl_ = "";
+      jack_ = "";
+      jill_ = "";
+      mainDexClasses_ = "";
+      mainDexListCreator_ = "";
+      proguard_ = "";
+      resourceExtractor_ = "";
+      shrinkedAndroidJar_ = "";
+      zipalign_ = "";
+      buildToolsVersion_ = "";
     }
 
-    public AndroidSdk getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
     }
     private AndroidSdk(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
       int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -1759,95 +1900,111 @@ public final class ExternalBuildApkManifest {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!input.skipField(tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              bitField0_ |= 0x00000001;
-              aapt_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              aapt_ = s;
               break;
             }
             case 18: {
-              bitField0_ |= 0x00000002;
-              adb_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              adb_ = s;
               break;
             }
             case 26: {
-              bitField0_ |= 0x00000004;
-              aidl_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              aidl_ = s;
               break;
             }
             case 34: {
-              bitField0_ |= 0x00000008;
-              androidJar_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              androidJar_ = s;
               break;
             }
             case 42: {
-              bitField0_ |= 0x00000010;
-              annotationsJar_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              annotationsJar_ = s;
               break;
             }
             case 50: {
-              bitField0_ |= 0x00000020;
-              apkbuilder_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              apkbuilder_ = s;
               break;
             }
             case 58: {
-              bitField0_ |= 0x00000040;
-              dx_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              dx_ = s;
               break;
             }
             case 66: {
-              bitField0_ |= 0x00000080;
-              frameworkAidl_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              frameworkAidl_ = s;
               break;
             }
             case 74: {
-              bitField0_ |= 0x00000100;
-              jack_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              jack_ = s;
               break;
             }
             case 82: {
-              bitField0_ |= 0x00000200;
-              jill_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              jill_ = s;
               break;
             }
             case 90: {
-              bitField0_ |= 0x00000400;
-              mainDexClasses_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              mainDexClasses_ = s;
               break;
             }
             case 98: {
-              bitField0_ |= 0x00000800;
-              mainDexListCreator_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              mainDexListCreator_ = s;
               break;
             }
             case 106: {
-              bitField0_ |= 0x00001000;
-              proguard_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              proguard_ = s;
               break;
             }
             case 114: {
-              bitField0_ |= 0x00002000;
-              resourceExtractor_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              resourceExtractor_ = s;
               break;
             }
             case 122: {
-              bitField0_ |= 0x00004000;
-              shrinkedAndroidJar_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              shrinkedAndroidJar_ = s;
               break;
             }
             case 130: {
-              bitField0_ |= 0x00008000;
-              zipalign_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              zipalign_ = s;
               break;
             }
             case 138: {
-              bitField0_ |= 0x00010000;
-              buildToolsVersion_ = input.readBytes();
+              java.lang.String s = input.readStringRequireUtf8();
+
+              buildToolsVersion_ = s;
               break;
             }
           }
@@ -1856,49 +2013,25 @@ public final class ExternalBuildApkManifest {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_AndroidSdk_descriptor;
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_AndroidSdk_fieldAccessorTable
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidSdk_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<AndroidSdk> PARSER =
-        new com.google.protobuf.AbstractParser<AndroidSdk>() {
-      public AndroidSdk parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AndroidSdk(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<AndroidSdk> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    // optional string aapt = 1;
     public static final int AAPT_FIELD_NUMBER = 1;
-    private java.lang.Object aapt_;
-    /**
-     * <code>optional string aapt = 1;</code>
-     */
-    public boolean hasAapt() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
+    private volatile java.lang.Object aapt_;
     /**
      * <code>optional string aapt = 1;</code>
      */
@@ -1910,9 +2043,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          aapt_ = s;
-        }
+        aapt_ = s;
         return s;
       }
     }
@@ -1933,15 +2064,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string adb = 2;
     public static final int ADB_FIELD_NUMBER = 2;
-    private java.lang.Object adb_;
-    /**
-     * <code>optional string adb = 2;</code>
-     */
-    public boolean hasAdb() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
+    private volatile java.lang.Object adb_;
     /**
      * <code>optional string adb = 2;</code>
      */
@@ -1953,9 +2077,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          adb_ = s;
-        }
+        adb_ = s;
         return s;
       }
     }
@@ -1976,15 +2098,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string aidl = 3;
     public static final int AIDL_FIELD_NUMBER = 3;
-    private java.lang.Object aidl_;
-    /**
-     * <code>optional string aidl = 3;</code>
-     */
-    public boolean hasAidl() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
+    private volatile java.lang.Object aidl_;
     /**
      * <code>optional string aidl = 3;</code>
      */
@@ -1996,9 +2111,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          aidl_ = s;
-        }
+        aidl_ = s;
         return s;
       }
     }
@@ -2019,15 +2132,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string android_jar = 4;
     public static final int ANDROID_JAR_FIELD_NUMBER = 4;
-    private java.lang.Object androidJar_;
-    /**
-     * <code>optional string android_jar = 4;</code>
-     */
-    public boolean hasAndroidJar() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
+    private volatile java.lang.Object androidJar_;
     /**
      * <code>optional string android_jar = 4;</code>
      */
@@ -2039,9 +2145,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          androidJar_ = s;
-        }
+        androidJar_ = s;
         return s;
       }
     }
@@ -2062,15 +2166,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string annotations_jar = 5;
     public static final int ANNOTATIONS_JAR_FIELD_NUMBER = 5;
-    private java.lang.Object annotationsJar_;
-    /**
-     * <code>optional string annotations_jar = 5;</code>
-     */
-    public boolean hasAnnotationsJar() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
+    private volatile java.lang.Object annotationsJar_;
     /**
      * <code>optional string annotations_jar = 5;</code>
      */
@@ -2082,9 +2179,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          annotationsJar_ = s;
-        }
+        annotationsJar_ = s;
         return s;
       }
     }
@@ -2105,15 +2200,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string apkbuilder = 6;
     public static final int APKBUILDER_FIELD_NUMBER = 6;
-    private java.lang.Object apkbuilder_;
-    /**
-     * <code>optional string apkbuilder = 6;</code>
-     */
-    public boolean hasApkbuilder() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
+    private volatile java.lang.Object apkbuilder_;
     /**
      * <code>optional string apkbuilder = 6;</code>
      */
@@ -2125,9 +2213,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          apkbuilder_ = s;
-        }
+        apkbuilder_ = s;
         return s;
       }
     }
@@ -2148,15 +2234,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string dx = 7;
     public static final int DX_FIELD_NUMBER = 7;
-    private java.lang.Object dx_;
-    /**
-     * <code>optional string dx = 7;</code>
-     */
-    public boolean hasDx() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
-    }
+    private volatile java.lang.Object dx_;
     /**
      * <code>optional string dx = 7;</code>
      */
@@ -2168,9 +2247,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          dx_ = s;
-        }
+        dx_ = s;
         return s;
       }
     }
@@ -2191,15 +2268,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string framework_aidl = 8;
     public static final int FRAMEWORK_AIDL_FIELD_NUMBER = 8;
-    private java.lang.Object frameworkAidl_;
-    /**
-     * <code>optional string framework_aidl = 8;</code>
-     */
-    public boolean hasFrameworkAidl() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
-    }
+    private volatile java.lang.Object frameworkAidl_;
     /**
      * <code>optional string framework_aidl = 8;</code>
      */
@@ -2211,9 +2281,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          frameworkAidl_ = s;
-        }
+        frameworkAidl_ = s;
         return s;
       }
     }
@@ -2234,15 +2302,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string jack = 9;
     public static final int JACK_FIELD_NUMBER = 9;
-    private java.lang.Object jack_;
-    /**
-     * <code>optional string jack = 9;</code>
-     */
-    public boolean hasJack() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
-    }
+    private volatile java.lang.Object jack_;
     /**
      * <code>optional string jack = 9;</code>
      */
@@ -2254,9 +2315,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          jack_ = s;
-        }
+        jack_ = s;
         return s;
       }
     }
@@ -2277,15 +2336,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string jill = 10;
     public static final int JILL_FIELD_NUMBER = 10;
-    private java.lang.Object jill_;
-    /**
-     * <code>optional string jill = 10;</code>
-     */
-    public boolean hasJill() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
-    }
+    private volatile java.lang.Object jill_;
     /**
      * <code>optional string jill = 10;</code>
      */
@@ -2297,9 +2349,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          jill_ = s;
-        }
+        jill_ = s;
         return s;
       }
     }
@@ -2320,15 +2370,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string main_dex_classes = 11;
     public static final int MAIN_DEX_CLASSES_FIELD_NUMBER = 11;
-    private java.lang.Object mainDexClasses_;
-    /**
-     * <code>optional string main_dex_classes = 11;</code>
-     */
-    public boolean hasMainDexClasses() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
-    }
+    private volatile java.lang.Object mainDexClasses_;
     /**
      * <code>optional string main_dex_classes = 11;</code>
      */
@@ -2340,9 +2383,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          mainDexClasses_ = s;
-        }
+        mainDexClasses_ = s;
         return s;
       }
     }
@@ -2363,15 +2404,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string main_dex_list_creator = 12;
     public static final int MAIN_DEX_LIST_CREATOR_FIELD_NUMBER = 12;
-    private java.lang.Object mainDexListCreator_;
-    /**
-     * <code>optional string main_dex_list_creator = 12;</code>
-     */
-    public boolean hasMainDexListCreator() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
-    }
+    private volatile java.lang.Object mainDexListCreator_;
     /**
      * <code>optional string main_dex_list_creator = 12;</code>
      */
@@ -2383,9 +2417,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          mainDexListCreator_ = s;
-        }
+        mainDexListCreator_ = s;
         return s;
       }
     }
@@ -2406,15 +2438,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string proguard = 13;
     public static final int PROGUARD_FIELD_NUMBER = 13;
-    private java.lang.Object proguard_;
-    /**
-     * <code>optional string proguard = 13;</code>
-     */
-    public boolean hasProguard() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
-    }
+    private volatile java.lang.Object proguard_;
     /**
      * <code>optional string proguard = 13;</code>
      */
@@ -2426,9 +2451,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          proguard_ = s;
-        }
+        proguard_ = s;
         return s;
       }
     }
@@ -2449,15 +2472,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string resource_extractor = 14;
     public static final int RESOURCE_EXTRACTOR_FIELD_NUMBER = 14;
-    private java.lang.Object resourceExtractor_;
-    /**
-     * <code>optional string resource_extractor = 14;</code>
-     */
-    public boolean hasResourceExtractor() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
-    }
+    private volatile java.lang.Object resourceExtractor_;
     /**
      * <code>optional string resource_extractor = 14;</code>
      */
@@ -2469,9 +2485,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          resourceExtractor_ = s;
-        }
+        resourceExtractor_ = s;
         return s;
       }
     }
@@ -2492,15 +2506,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string shrinked_android_jar = 15;
     public static final int SHRINKED_ANDROID_JAR_FIELD_NUMBER = 15;
-    private java.lang.Object shrinkedAndroidJar_;
-    /**
-     * <code>optional string shrinked_android_jar = 15;</code>
-     */
-    public boolean hasShrinkedAndroidJar() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
-    }
+    private volatile java.lang.Object shrinkedAndroidJar_;
     /**
      * <code>optional string shrinked_android_jar = 15;</code>
      */
@@ -2512,9 +2519,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          shrinkedAndroidJar_ = s;
-        }
+        shrinkedAndroidJar_ = s;
         return s;
       }
     }
@@ -2535,15 +2540,8 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string zipalign = 16;
     public static final int ZIPALIGN_FIELD_NUMBER = 16;
-    private java.lang.Object zipalign_;
-    /**
-     * <code>optional string zipalign = 16;</code>
-     */
-    public boolean hasZipalign() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
-    }
+    private volatile java.lang.Object zipalign_;
     /**
      * <code>optional string zipalign = 16;</code>
      */
@@ -2555,9 +2553,7 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          zipalign_ = s;
-        }
+        zipalign_ = s;
         return s;
       }
     }
@@ -2578,25 +2574,14 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    // optional string build_tools_version = 17;
     public static final int BUILD_TOOLS_VERSION_FIELD_NUMBER = 17;
-    private java.lang.Object buildToolsVersion_;
+    private volatile java.lang.Object buildToolsVersion_;
     /**
-     * <code>optional string build_tools_version = 17;</code>
-     *
      * <pre>
      * assume latest if not set
      * </pre>
-     */
-    public boolean hasBuildToolsVersion() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
-    }
-    /**
-     * <code>optional string build_tools_version = 17;</code>
      *
-     * <pre>
-     * assume latest if not set
-     * </pre>
+     * <code>optional string build_tools_version = 17;</code>
      */
     public java.lang.String getBuildToolsVersion() {
       java.lang.Object ref = buildToolsVersion_;
@@ -2606,18 +2591,16 @@ public final class ExternalBuildApkManifest {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          buildToolsVersion_ = s;
-        }
+        buildToolsVersion_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string build_tools_version = 17;</code>
-     *
      * <pre>
      * assume latest if not set
      * </pre>
+     *
+     * <code>optional string build_tools_version = 17;</code>
      */
     public com.google.protobuf.ByteString
         getBuildToolsVersionBytes() {
@@ -2633,29 +2616,11 @@ public final class ExternalBuildApkManifest {
       }
     }
 
-    private void initFields() {
-      aapt_ = "";
-      adb_ = "";
-      aidl_ = "";
-      androidJar_ = "";
-      annotationsJar_ = "";
-      apkbuilder_ = "";
-      dx_ = "";
-      frameworkAidl_ = "";
-      jack_ = "";
-      jill_ = "";
-      mainDexClasses_ = "";
-      mainDexListCreator_ = "";
-      proguard_ = "";
-      resourceExtractor_ = "";
-      shrinkedAndroidJar_ = "";
-      zipalign_ = "";
-      buildToolsVersion_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2663,145 +2628,212 @@ public final class ExternalBuildApkManifest {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getAaptBytes());
+      if (!getAaptBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, aapt_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getAdbBytes());
+      if (!getAdbBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, adb_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, getAidlBytes());
+      if (!getAidlBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, aidl_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, getAndroidJarBytes());
+      if (!getAndroidJarBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, androidJar_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, getAnnotationsJarBytes());
+      if (!getAnnotationsJarBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, annotationsJar_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeBytes(6, getApkbuilderBytes());
+      if (!getApkbuilderBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, apkbuilder_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        output.writeBytes(7, getDxBytes());
+      if (!getDxBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, dx_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
-        output.writeBytes(8, getFrameworkAidlBytes());
+      if (!getFrameworkAidlBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, frameworkAidl_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
-        output.writeBytes(9, getJackBytes());
+      if (!getJackBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, jack_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
-        output.writeBytes(10, getJillBytes());
+      if (!getJillBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, jill_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        output.writeBytes(11, getMainDexClassesBytes());
+      if (!getMainDexClassesBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 11, mainDexClasses_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
-        output.writeBytes(12, getMainDexListCreatorBytes());
+      if (!getMainDexListCreatorBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 12, mainDexListCreator_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
-        output.writeBytes(13, getProguardBytes());
+      if (!getProguardBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 13, proguard_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
-        output.writeBytes(14, getResourceExtractorBytes());
+      if (!getResourceExtractorBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 14, resourceExtractor_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
-        output.writeBytes(15, getShrinkedAndroidJarBytes());
+      if (!getShrinkedAndroidJarBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 15, shrinkedAndroidJar_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
-        output.writeBytes(16, getZipalignBytes());
+      if (!getZipalignBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 16, zipalign_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
-        output.writeBytes(17, getBuildToolsVersionBytes());
+      if (!getBuildToolsVersionBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 17, buildToolsVersion_);
       }
-      getUnknownFields().writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getAaptBytes());
+      if (!getAaptBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, aapt_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getAdbBytes());
+      if (!getAdbBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, adb_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, getAidlBytes());
+      if (!getAidlBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, aidl_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, getAndroidJarBytes());
+      if (!getAndroidJarBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, androidJar_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, getAnnotationsJarBytes());
+      if (!getAnnotationsJarBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, annotationsJar_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(6, getApkbuilderBytes());
+      if (!getApkbuilderBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, apkbuilder_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(7, getDxBytes());
+      if (!getDxBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, dx_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(8, getFrameworkAidlBytes());
+      if (!getFrameworkAidlBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, frameworkAidl_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(9, getJackBytes());
+      if (!getJackBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, jack_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(10, getJillBytes());
+      if (!getJillBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, jill_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(11, getMainDexClassesBytes());
+      if (!getMainDexClassesBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(11, mainDexClasses_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(12, getMainDexListCreatorBytes());
+      if (!getMainDexListCreatorBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, mainDexListCreator_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(13, getProguardBytes());
+      if (!getProguardBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(13, proguard_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(14, getResourceExtractorBytes());
+      if (!getResourceExtractorBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, resourceExtractor_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(15, getShrinkedAndroidJarBytes());
+      if (!getShrinkedAndroidJarBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, shrinkedAndroidJar_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(16, getZipalignBytes());
+      if (!getZipalignBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, zipalign_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(17, getBuildToolsVersionBytes());
+      if (!getBuildToolsVersionBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(17, buildToolsVersion_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk)) {
+        return super.equals(obj);
+      }
+      com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk) obj;
+
+      boolean result = true;
+      result = result && getAapt()
+          .equals(other.getAapt());
+      result = result && getAdb()
+          .equals(other.getAdb());
+      result = result && getAidl()
+          .equals(other.getAidl());
+      result = result && getAndroidJar()
+          .equals(other.getAndroidJar());
+      result = result && getAnnotationsJar()
+          .equals(other.getAnnotationsJar());
+      result = result && getApkbuilder()
+          .equals(other.getApkbuilder());
+      result = result && getDx()
+          .equals(other.getDx());
+      result = result && getFrameworkAidl()
+          .equals(other.getFrameworkAidl());
+      result = result && getJack()
+          .equals(other.getJack());
+      result = result && getJill()
+          .equals(other.getJill());
+      result = result && getMainDexClasses()
+          .equals(other.getMainDexClasses());
+      result = result && getMainDexListCreator()
+          .equals(other.getMainDexListCreator());
+      result = result && getProguard()
+          .equals(other.getProguard());
+      result = result && getResourceExtractor()
+          .equals(other.getResourceExtractor());
+      result = result && getShrinkedAndroidJar()
+          .equals(other.getShrinkedAndroidJar());
+      result = result && getZipalign()
+          .equals(other.getZipalign());
+      result = result && getBuildToolsVersion()
+          .equals(other.getBuildToolsVersion());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + AAPT_FIELD_NUMBER;
+      hash = (53 * hash) + getAapt().hashCode();
+      hash = (37 * hash) + ADB_FIELD_NUMBER;
+      hash = (53 * hash) + getAdb().hashCode();
+      hash = (37 * hash) + AIDL_FIELD_NUMBER;
+      hash = (53 * hash) + getAidl().hashCode();
+      hash = (37 * hash) + ANDROID_JAR_FIELD_NUMBER;
+      hash = (53 * hash) + getAndroidJar().hashCode();
+      hash = (37 * hash) + ANNOTATIONS_JAR_FIELD_NUMBER;
+      hash = (53 * hash) + getAnnotationsJar().hashCode();
+      hash = (37 * hash) + APKBUILDER_FIELD_NUMBER;
+      hash = (53 * hash) + getApkbuilder().hashCode();
+      hash = (37 * hash) + DX_FIELD_NUMBER;
+      hash = (53 * hash) + getDx().hashCode();
+      hash = (37 * hash) + FRAMEWORK_AIDL_FIELD_NUMBER;
+      hash = (53 * hash) + getFrameworkAidl().hashCode();
+      hash = (37 * hash) + JACK_FIELD_NUMBER;
+      hash = (53 * hash) + getJack().hashCode();
+      hash = (37 * hash) + JILL_FIELD_NUMBER;
+      hash = (53 * hash) + getJill().hashCode();
+      hash = (37 * hash) + MAIN_DEX_CLASSES_FIELD_NUMBER;
+      hash = (53 * hash) + getMainDexClasses().hashCode();
+      hash = (37 * hash) + MAIN_DEX_LIST_CREATOR_FIELD_NUMBER;
+      hash = (53 * hash) + getMainDexListCreator().hashCode();
+      hash = (37 * hash) + PROGUARD_FIELD_NUMBER;
+      hash = (53 * hash) + getProguard().hashCode();
+      hash = (37 * hash) + RESOURCE_EXTRACTOR_FIELD_NUMBER;
+      hash = (53 * hash) + getResourceExtractor().hashCode();
+      hash = (37 * hash) + SHRINKED_ANDROID_JAR_FIELD_NUMBER;
+      hash = (53 * hash) + getShrinkedAndroidJar().hashCode();
+      hash = (37 * hash) + ZIPALIGN_FIELD_NUMBER;
+      hash = (53 * hash) + getZipalign().hashCode();
+      hash = (37 * hash) + BUILD_TOOLS_VERSION_FIELD_NUMBER;
+      hash = (53 * hash) + getBuildToolsVersion().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
     }
 
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseFrom(
@@ -2827,63 +2859,75 @@ public final class ExternalBuildApkManifest {
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code blaze.apk_manifest.AndroidSdk}
+     * Protobuf type {@code externalBuild.apk_manifest.AndroidSdk}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder {
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.AndroidSdk)
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_AndroidSdk_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_AndroidSdk_fieldAccessorTable
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidSdk_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder.class);
       }
@@ -2894,64 +2938,57 @@ public final class ExternalBuildApkManifest {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         aapt_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        adb_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
-        aidl_ = "";
-        bitField0_ = (bitField0_ & ~0x00000004);
-        androidJar_ = "";
-        bitField0_ = (bitField0_ & ~0x00000008);
-        annotationsJar_ = "";
-        bitField0_ = (bitField0_ & ~0x00000010);
-        apkbuilder_ = "";
-        bitField0_ = (bitField0_ & ~0x00000020);
-        dx_ = "";
-        bitField0_ = (bitField0_ & ~0x00000040);
-        frameworkAidl_ = "";
-        bitField0_ = (bitField0_ & ~0x00000080);
-        jack_ = "";
-        bitField0_ = (bitField0_ & ~0x00000100);
-        jill_ = "";
-        bitField0_ = (bitField0_ & ~0x00000200);
-        mainDexClasses_ = "";
-        bitField0_ = (bitField0_ & ~0x00000400);
-        mainDexListCreator_ = "";
-        bitField0_ = (bitField0_ & ~0x00000800);
-        proguard_ = "";
-        bitField0_ = (bitField0_ & ~0x00001000);
-        resourceExtractor_ = "";
-        bitField0_ = (bitField0_ & ~0x00002000);
-        shrinkedAndroidJar_ = "";
-        bitField0_ = (bitField0_ & ~0x00004000);
-        zipalign_ = "";
-        bitField0_ = (bitField0_ & ~0x00008000);
-        buildToolsVersion_ = "";
-        bitField0_ = (bitField0_ & ~0x00010000);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        adb_ = "";
+
+        aidl_ = "";
+
+        androidJar_ = "";
+
+        annotationsJar_ = "";
+
+        apkbuilder_ = "";
+
+        dx_ = "";
+
+        frameworkAidl_ = "";
+
+        jack_ = "";
+
+        jill_ = "";
+
+        mainDexClasses_ = "";
+
+        mainDexListCreator_ = "";
+
+        proguard_ = "";
+
+        resourceExtractor_ = "";
+
+        shrinkedAndroidJar_ = "";
+
+        zipalign_ = "";
+
+        buildToolsVersion_ = "";
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_AndroidSdk_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor;
       }
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getDefaultInstanceForType() {
@@ -2968,81 +3005,53 @@ public final class ExternalBuildApkManifest {
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk buildPartial() {
         com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk result = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
         result.aapt_ = aapt_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.adb_ = adb_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
         result.aidl_ = aidl_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
         result.androidJar_ = androidJar_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
         result.annotationsJar_ = annotationsJar_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
         result.apkbuilder_ = apkbuilder_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
-        }
         result.dx_ = dx_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000080;
-        }
         result.frameworkAidl_ = frameworkAidl_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000100;
-        }
         result.jack_ = jack_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
-          to_bitField0_ |= 0x00000200;
-        }
         result.jill_ = jill_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
-          to_bitField0_ |= 0x00000400;
-        }
         result.mainDexClasses_ = mainDexClasses_;
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
-          to_bitField0_ |= 0x00000800;
-        }
         result.mainDexListCreator_ = mainDexListCreator_;
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
-          to_bitField0_ |= 0x00001000;
-        }
         result.proguard_ = proguard_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
-          to_bitField0_ |= 0x00002000;
-        }
         result.resourceExtractor_ = resourceExtractor_;
-        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
-          to_bitField0_ |= 0x00004000;
-        }
         result.shrinkedAndroidJar_ = shrinkedAndroidJar_;
-        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
-          to_bitField0_ |= 0x00008000;
-        }
         result.zipalign_ = zipalign_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
-          to_bitField0_ |= 0x00010000;
-        }
         result.buildToolsVersion_ = buildToolsVersion_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk) {
           return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk)other);
@@ -3054,92 +3063,75 @@ public final class ExternalBuildApkManifest {
 
       public Builder mergeFrom(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk other) {
         if (other == com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance()) return this;
-        if (other.hasAapt()) {
-          bitField0_ |= 0x00000001;
+        if (!other.getAapt().isEmpty()) {
           aapt_ = other.aapt_;
           onChanged();
         }
-        if (other.hasAdb()) {
-          bitField0_ |= 0x00000002;
+        if (!other.getAdb().isEmpty()) {
           adb_ = other.adb_;
           onChanged();
         }
-        if (other.hasAidl()) {
-          bitField0_ |= 0x00000004;
+        if (!other.getAidl().isEmpty()) {
           aidl_ = other.aidl_;
           onChanged();
         }
-        if (other.hasAndroidJar()) {
-          bitField0_ |= 0x00000008;
+        if (!other.getAndroidJar().isEmpty()) {
           androidJar_ = other.androidJar_;
           onChanged();
         }
-        if (other.hasAnnotationsJar()) {
-          bitField0_ |= 0x00000010;
+        if (!other.getAnnotationsJar().isEmpty()) {
           annotationsJar_ = other.annotationsJar_;
           onChanged();
         }
-        if (other.hasApkbuilder()) {
-          bitField0_ |= 0x00000020;
+        if (!other.getApkbuilder().isEmpty()) {
           apkbuilder_ = other.apkbuilder_;
           onChanged();
         }
-        if (other.hasDx()) {
-          bitField0_ |= 0x00000040;
+        if (!other.getDx().isEmpty()) {
           dx_ = other.dx_;
           onChanged();
         }
-        if (other.hasFrameworkAidl()) {
-          bitField0_ |= 0x00000080;
+        if (!other.getFrameworkAidl().isEmpty()) {
           frameworkAidl_ = other.frameworkAidl_;
           onChanged();
         }
-        if (other.hasJack()) {
-          bitField0_ |= 0x00000100;
+        if (!other.getJack().isEmpty()) {
           jack_ = other.jack_;
           onChanged();
         }
-        if (other.hasJill()) {
-          bitField0_ |= 0x00000200;
+        if (!other.getJill().isEmpty()) {
           jill_ = other.jill_;
           onChanged();
         }
-        if (other.hasMainDexClasses()) {
-          bitField0_ |= 0x00000400;
+        if (!other.getMainDexClasses().isEmpty()) {
           mainDexClasses_ = other.mainDexClasses_;
           onChanged();
         }
-        if (other.hasMainDexListCreator()) {
-          bitField0_ |= 0x00000800;
+        if (!other.getMainDexListCreator().isEmpty()) {
           mainDexListCreator_ = other.mainDexListCreator_;
           onChanged();
         }
-        if (other.hasProguard()) {
-          bitField0_ |= 0x00001000;
+        if (!other.getProguard().isEmpty()) {
           proguard_ = other.proguard_;
           onChanged();
         }
-        if (other.hasResourceExtractor()) {
-          bitField0_ |= 0x00002000;
+        if (!other.getResourceExtractor().isEmpty()) {
           resourceExtractor_ = other.resourceExtractor_;
           onChanged();
         }
-        if (other.hasShrinkedAndroidJar()) {
-          bitField0_ |= 0x00004000;
+        if (!other.getShrinkedAndroidJar().isEmpty()) {
           shrinkedAndroidJar_ = other.shrinkedAndroidJar_;
           onChanged();
         }
-        if (other.hasZipalign()) {
-          bitField0_ |= 0x00008000;
+        if (!other.getZipalign().isEmpty()) {
           zipalign_ = other.zipalign_;
           onChanged();
         }
-        if (other.hasBuildToolsVersion()) {
-          bitField0_ |= 0x00010000;
+        if (!other.getBuildToolsVersion().isEmpty()) {
           buildToolsVersion_ = other.buildToolsVersion_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
         return this;
       }
 
@@ -3156,7 +3148,7 @@ public final class ExternalBuildApkManifest {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -3164,24 +3156,17 @@ public final class ExternalBuildApkManifest {
         }
         return this;
       }
-      private int bitField0_;
 
-      // optional string aapt = 1;
       private java.lang.Object aapt_ = "";
-      /**
-       * <code>optional string aapt = 1;</code>
-       */
-      public boolean hasAapt() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
       /**
        * <code>optional string aapt = 1;</code>
        */
       public java.lang.String getAapt() {
         java.lang.Object ref = aapt_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           aapt_ = s;
           return s;
         } else {
@@ -3212,7 +3197,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         aapt_ = value;
         onChanged();
         return this;
@@ -3221,7 +3206,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string aapt = 1;</code>
        */
       public Builder clearAapt() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         aapt_ = getDefaultInstance().getAapt();
         onChanged();
         return this;
@@ -3234,28 +3219,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         aapt_ = value;
         onChanged();
         return this;
       }
 
-      // optional string adb = 2;
       private java.lang.Object adb_ = "";
-      /**
-       * <code>optional string adb = 2;</code>
-       */
-      public boolean hasAdb() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
       /**
        * <code>optional string adb = 2;</code>
        */
       public java.lang.String getAdb() {
         java.lang.Object ref = adb_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           adb_ = s;
           return s;
         } else {
@@ -3286,7 +3266,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         adb_ = value;
         onChanged();
         return this;
@@ -3295,7 +3275,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string adb = 2;</code>
        */
       public Builder clearAdb() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         adb_ = getDefaultInstance().getAdb();
         onChanged();
         return this;
@@ -3308,28 +3288,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  checkByteStringIsUtf8(value);
+        
         adb_ = value;
         onChanged();
         return this;
       }
 
-      // optional string aidl = 3;
       private java.lang.Object aidl_ = "";
-      /**
-       * <code>optional string aidl = 3;</code>
-       */
-      public boolean hasAidl() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
       /**
        * <code>optional string aidl = 3;</code>
        */
       public java.lang.String getAidl() {
         java.lang.Object ref = aidl_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           aidl_ = s;
           return s;
         } else {
@@ -3360,7 +3335,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  
         aidl_ = value;
         onChanged();
         return this;
@@ -3369,7 +3344,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string aidl = 3;</code>
        */
       public Builder clearAidl() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        
         aidl_ = getDefaultInstance().getAidl();
         onChanged();
         return this;
@@ -3382,28 +3357,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  checkByteStringIsUtf8(value);
+        
         aidl_ = value;
         onChanged();
         return this;
       }
 
-      // optional string android_jar = 4;
       private java.lang.Object androidJar_ = "";
-      /**
-       * <code>optional string android_jar = 4;</code>
-       */
-      public boolean hasAndroidJar() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
       /**
        * <code>optional string android_jar = 4;</code>
        */
       public java.lang.String getAndroidJar() {
         java.lang.Object ref = androidJar_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           androidJar_ = s;
           return s;
         } else {
@@ -3434,7 +3404,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  
         androidJar_ = value;
         onChanged();
         return this;
@@ -3443,7 +3413,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string android_jar = 4;</code>
        */
       public Builder clearAndroidJar() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        
         androidJar_ = getDefaultInstance().getAndroidJar();
         onChanged();
         return this;
@@ -3456,28 +3426,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  checkByteStringIsUtf8(value);
+        
         androidJar_ = value;
         onChanged();
         return this;
       }
 
-      // optional string annotations_jar = 5;
       private java.lang.Object annotationsJar_ = "";
-      /**
-       * <code>optional string annotations_jar = 5;</code>
-       */
-      public boolean hasAnnotationsJar() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
       /**
        * <code>optional string annotations_jar = 5;</code>
        */
       public java.lang.String getAnnotationsJar() {
         java.lang.Object ref = annotationsJar_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           annotationsJar_ = s;
           return s;
         } else {
@@ -3508,7 +3473,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  
         annotationsJar_ = value;
         onChanged();
         return this;
@@ -3517,7 +3482,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string annotations_jar = 5;</code>
        */
       public Builder clearAnnotationsJar() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        
         annotationsJar_ = getDefaultInstance().getAnnotationsJar();
         onChanged();
         return this;
@@ -3530,28 +3495,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  checkByteStringIsUtf8(value);
+        
         annotationsJar_ = value;
         onChanged();
         return this;
       }
 
-      // optional string apkbuilder = 6;
       private java.lang.Object apkbuilder_ = "";
-      /**
-       * <code>optional string apkbuilder = 6;</code>
-       */
-      public boolean hasApkbuilder() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
       /**
        * <code>optional string apkbuilder = 6;</code>
        */
       public java.lang.String getApkbuilder() {
         java.lang.Object ref = apkbuilder_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           apkbuilder_ = s;
           return s;
         } else {
@@ -3582,7 +3542,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  
         apkbuilder_ = value;
         onChanged();
         return this;
@@ -3591,7 +3551,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string apkbuilder = 6;</code>
        */
       public Builder clearApkbuilder() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        
         apkbuilder_ = getDefaultInstance().getApkbuilder();
         onChanged();
         return this;
@@ -3604,28 +3564,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  checkByteStringIsUtf8(value);
+        
         apkbuilder_ = value;
         onChanged();
         return this;
       }
 
-      // optional string dx = 7;
       private java.lang.Object dx_ = "";
-      /**
-       * <code>optional string dx = 7;</code>
-       */
-      public boolean hasDx() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
       /**
        * <code>optional string dx = 7;</code>
        */
       public java.lang.String getDx() {
         java.lang.Object ref = dx_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           dx_ = s;
           return s;
         } else {
@@ -3656,7 +3611,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000040;
+  
         dx_ = value;
         onChanged();
         return this;
@@ -3665,7 +3620,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string dx = 7;</code>
        */
       public Builder clearDx() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        
         dx_ = getDefaultInstance().getDx();
         onChanged();
         return this;
@@ -3678,28 +3633,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000040;
+  checkByteStringIsUtf8(value);
+        
         dx_ = value;
         onChanged();
         return this;
       }
 
-      // optional string framework_aidl = 8;
       private java.lang.Object frameworkAidl_ = "";
-      /**
-       * <code>optional string framework_aidl = 8;</code>
-       */
-      public boolean hasFrameworkAidl() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
-      }
       /**
        * <code>optional string framework_aidl = 8;</code>
        */
       public java.lang.String getFrameworkAidl() {
         java.lang.Object ref = frameworkAidl_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           frameworkAidl_ = s;
           return s;
         } else {
@@ -3730,7 +3680,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000080;
+  
         frameworkAidl_ = value;
         onChanged();
         return this;
@@ -3739,7 +3689,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string framework_aidl = 8;</code>
        */
       public Builder clearFrameworkAidl() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        
         frameworkAidl_ = getDefaultInstance().getFrameworkAidl();
         onChanged();
         return this;
@@ -3752,28 +3702,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000080;
+  checkByteStringIsUtf8(value);
+        
         frameworkAidl_ = value;
         onChanged();
         return this;
       }
 
-      // optional string jack = 9;
       private java.lang.Object jack_ = "";
-      /**
-       * <code>optional string jack = 9;</code>
-       */
-      public boolean hasJack() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
-      }
       /**
        * <code>optional string jack = 9;</code>
        */
       public java.lang.String getJack() {
         java.lang.Object ref = jack_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           jack_ = s;
           return s;
         } else {
@@ -3804,7 +3749,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000100;
+  
         jack_ = value;
         onChanged();
         return this;
@@ -3813,7 +3758,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string jack = 9;</code>
        */
       public Builder clearJack() {
-        bitField0_ = (bitField0_ & ~0x00000100);
+        
         jack_ = getDefaultInstance().getJack();
         onChanged();
         return this;
@@ -3826,28 +3771,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000100;
+  checkByteStringIsUtf8(value);
+        
         jack_ = value;
         onChanged();
         return this;
       }
 
-      // optional string jill = 10;
       private java.lang.Object jill_ = "";
-      /**
-       * <code>optional string jill = 10;</code>
-       */
-      public boolean hasJill() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
-      }
       /**
        * <code>optional string jill = 10;</code>
        */
       public java.lang.String getJill() {
         java.lang.Object ref = jill_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           jill_ = s;
           return s;
         } else {
@@ -3878,7 +3818,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000200;
+  
         jill_ = value;
         onChanged();
         return this;
@@ -3887,7 +3827,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string jill = 10;</code>
        */
       public Builder clearJill() {
-        bitField0_ = (bitField0_ & ~0x00000200);
+        
         jill_ = getDefaultInstance().getJill();
         onChanged();
         return this;
@@ -3900,28 +3840,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000200;
+  checkByteStringIsUtf8(value);
+        
         jill_ = value;
         onChanged();
         return this;
       }
 
-      // optional string main_dex_classes = 11;
       private java.lang.Object mainDexClasses_ = "";
-      /**
-       * <code>optional string main_dex_classes = 11;</code>
-       */
-      public boolean hasMainDexClasses() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
-      }
       /**
        * <code>optional string main_dex_classes = 11;</code>
        */
       public java.lang.String getMainDexClasses() {
         java.lang.Object ref = mainDexClasses_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           mainDexClasses_ = s;
           return s;
         } else {
@@ -3952,7 +3887,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000400;
+  
         mainDexClasses_ = value;
         onChanged();
         return this;
@@ -3961,7 +3896,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string main_dex_classes = 11;</code>
        */
       public Builder clearMainDexClasses() {
-        bitField0_ = (bitField0_ & ~0x00000400);
+        
         mainDexClasses_ = getDefaultInstance().getMainDexClasses();
         onChanged();
         return this;
@@ -3974,28 +3909,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000400;
+  checkByteStringIsUtf8(value);
+        
         mainDexClasses_ = value;
         onChanged();
         return this;
       }
 
-      // optional string main_dex_list_creator = 12;
       private java.lang.Object mainDexListCreator_ = "";
-      /**
-       * <code>optional string main_dex_list_creator = 12;</code>
-       */
-      public boolean hasMainDexListCreator() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
-      }
       /**
        * <code>optional string main_dex_list_creator = 12;</code>
        */
       public java.lang.String getMainDexListCreator() {
         java.lang.Object ref = mainDexListCreator_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           mainDexListCreator_ = s;
           return s;
         } else {
@@ -4026,7 +3956,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000800;
+  
         mainDexListCreator_ = value;
         onChanged();
         return this;
@@ -4035,7 +3965,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string main_dex_list_creator = 12;</code>
        */
       public Builder clearMainDexListCreator() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        
         mainDexListCreator_ = getDefaultInstance().getMainDexListCreator();
         onChanged();
         return this;
@@ -4048,28 +3978,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000800;
+  checkByteStringIsUtf8(value);
+        
         mainDexListCreator_ = value;
         onChanged();
         return this;
       }
 
-      // optional string proguard = 13;
       private java.lang.Object proguard_ = "";
-      /**
-       * <code>optional string proguard = 13;</code>
-       */
-      public boolean hasProguard() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
-      }
       /**
        * <code>optional string proguard = 13;</code>
        */
       public java.lang.String getProguard() {
         java.lang.Object ref = proguard_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           proguard_ = s;
           return s;
         } else {
@@ -4100,7 +4025,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00001000;
+  
         proguard_ = value;
         onChanged();
         return this;
@@ -4109,7 +4034,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string proguard = 13;</code>
        */
       public Builder clearProguard() {
-        bitField0_ = (bitField0_ & ~0x00001000);
+        
         proguard_ = getDefaultInstance().getProguard();
         onChanged();
         return this;
@@ -4122,28 +4047,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00001000;
+  checkByteStringIsUtf8(value);
+        
         proguard_ = value;
         onChanged();
         return this;
       }
 
-      // optional string resource_extractor = 14;
       private java.lang.Object resourceExtractor_ = "";
-      /**
-       * <code>optional string resource_extractor = 14;</code>
-       */
-      public boolean hasResourceExtractor() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
-      }
       /**
        * <code>optional string resource_extractor = 14;</code>
        */
       public java.lang.String getResourceExtractor() {
         java.lang.Object ref = resourceExtractor_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           resourceExtractor_ = s;
           return s;
         } else {
@@ -4174,7 +4094,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00002000;
+  
         resourceExtractor_ = value;
         onChanged();
         return this;
@@ -4183,7 +4103,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string resource_extractor = 14;</code>
        */
       public Builder clearResourceExtractor() {
-        bitField0_ = (bitField0_ & ~0x00002000);
+        
         resourceExtractor_ = getDefaultInstance().getResourceExtractor();
         onChanged();
         return this;
@@ -4196,28 +4116,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00002000;
+  checkByteStringIsUtf8(value);
+        
         resourceExtractor_ = value;
         onChanged();
         return this;
       }
 
-      // optional string shrinked_android_jar = 15;
       private java.lang.Object shrinkedAndroidJar_ = "";
-      /**
-       * <code>optional string shrinked_android_jar = 15;</code>
-       */
-      public boolean hasShrinkedAndroidJar() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
-      }
       /**
        * <code>optional string shrinked_android_jar = 15;</code>
        */
       public java.lang.String getShrinkedAndroidJar() {
         java.lang.Object ref = shrinkedAndroidJar_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           shrinkedAndroidJar_ = s;
           return s;
         } else {
@@ -4248,7 +4163,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00004000;
+  
         shrinkedAndroidJar_ = value;
         onChanged();
         return this;
@@ -4257,7 +4172,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string shrinked_android_jar = 15;</code>
        */
       public Builder clearShrinkedAndroidJar() {
-        bitField0_ = (bitField0_ & ~0x00004000);
+        
         shrinkedAndroidJar_ = getDefaultInstance().getShrinkedAndroidJar();
         onChanged();
         return this;
@@ -4270,28 +4185,23 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00004000;
+  checkByteStringIsUtf8(value);
+        
         shrinkedAndroidJar_ = value;
         onChanged();
         return this;
       }
 
-      // optional string zipalign = 16;
       private java.lang.Object zipalign_ = "";
-      /**
-       * <code>optional string zipalign = 16;</code>
-       */
-      public boolean hasZipalign() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
-      }
       /**
        * <code>optional string zipalign = 16;</code>
        */
       public java.lang.String getZipalign() {
         java.lang.Object ref = zipalign_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           zipalign_ = s;
           return s;
         } else {
@@ -4322,7 +4232,7 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00008000;
+  
         zipalign_ = value;
         onChanged();
         return this;
@@ -4331,7 +4241,7 @@ public final class ExternalBuildApkManifest {
        * <code>optional string zipalign = 16;</code>
        */
       public Builder clearZipalign() {
-        bitField0_ = (bitField0_ & ~0x00008000);
+        
         zipalign_ = getDefaultInstance().getZipalign();
         onChanged();
         return this;
@@ -4344,36 +4254,27 @@ public final class ExternalBuildApkManifest {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00008000;
+  checkByteStringIsUtf8(value);
+        
         zipalign_ = value;
         onChanged();
         return this;
       }
 
-      // optional string build_tools_version = 17;
       private java.lang.Object buildToolsVersion_ = "";
       /**
-       * <code>optional string build_tools_version = 17;</code>
-       *
        * <pre>
        * assume latest if not set
        * </pre>
-       */
-      public boolean hasBuildToolsVersion() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
-      }
-      /**
-       * <code>optional string build_tools_version = 17;</code>
        *
-       * <pre>
-       * assume latest if not set
-       * </pre>
+       * <code>optional string build_tools_version = 17;</code>
        */
       public java.lang.String getBuildToolsVersion() {
         java.lang.Object ref = buildToolsVersion_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
           buildToolsVersion_ = s;
           return s;
         } else {
@@ -4381,11 +4282,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>optional string build_tools_version = 17;</code>
-       *
        * <pre>
        * assume latest if not set
        * </pre>
+       *
+       * <code>optional string build_tools_version = 17;</code>
        */
       public com.google.protobuf.ByteString
           getBuildToolsVersionBytes() {
@@ -4401,271 +4302,198 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>optional string build_tools_version = 17;</code>
-       *
        * <pre>
        * assume latest if not set
        * </pre>
+       *
+       * <code>optional string build_tools_version = 17;</code>
        */
       public Builder setBuildToolsVersion(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00010000;
+  
         buildToolsVersion_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string build_tools_version = 17;</code>
-       *
        * <pre>
        * assume latest if not set
        * </pre>
+       *
+       * <code>optional string build_tools_version = 17;</code>
        */
       public Builder clearBuildToolsVersion() {
-        bitField0_ = (bitField0_ & ~0x00010000);
+        
         buildToolsVersion_ = getDefaultInstance().getBuildToolsVersion();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string build_tools_version = 17;</code>
-       *
        * <pre>
        * assume latest if not set
        * </pre>
+       *
+       * <code>optional string build_tools_version = 17;</code>
        */
       public Builder setBuildToolsVersionBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00010000;
+  checkByteStringIsUtf8(value);
+        
         buildToolsVersion_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
 
-      // @@protoc_insertion_point(builder_scope:blaze.apk_manifest.AndroidSdk)
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.AndroidSdk)
     }
 
+    // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.AndroidSdk)
+    private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk DEFAULT_INSTANCE;
     static {
-      defaultInstance = new AndroidSdk(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk();
     }
 
-    // @@protoc_insertion_point(class_scope:blaze.apk_manifest.AndroidSdk)
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<AndroidSdk>
+        PARSER = new com.google.protobuf.AbstractParser<AndroidSdk>() {
+      public AndroidSdk parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new AndroidSdk(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AndroidSdk> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AndroidSdk> getParserForType() {
+      return PARSER;
+    }
+
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
-  public interface ApkManifestOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface AndroidManifestResourceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.AndroidManifestResource)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;
     /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-     *
      * <pre>
-     * Information about the AndroidSdk
+     * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string name = 1;</code>
      */
-    boolean hasAndroidSdk();
+    java.lang.String getName();
     /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-     *
      * <pre>
-     * Information about the AndroidSdk
+     * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
      * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getAndroidSdk();
-    /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
      *
-     * <pre>
-     * Information about the AndroidSdk
-     * </pre>
+     * <code>optional string name = 1;</code>
      */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder getAndroidSdkOrBuilder();
+    com.google.protobuf.ByteString
+        getNameBytes();
 
-    // repeated .blaze.apk_manifest.Artifact jars = 2;
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
      * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
+     * The type of the resource, e.g. "string" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string type = 2;</code>
      */
-    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> 
-        getJarsList();
+    java.lang.String getType();
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
      * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
+     * The type of the resource, e.g. "string" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string type = 2;</code>
      */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getJars(int index);
+    com.google.protobuf.ByteString
+        getTypeBytes();
+
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    int getJarsCount();
+    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> 
+        getValueHashesList();
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
-        getJarsOrBuilderList();
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getValueHashes(int index);
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getJarsOrBuilder(
+    int getValueHashesCount();
+    /**
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+     */
+    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder> 
+        getValueHashesOrBuilderList();
+    /**
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder getValueHashesOrBuilder(
         int index);
-
-    // optional .blaze.apk_manifest.Artifact resource_apk = 3;
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    boolean hasResourceApk();
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getResourceApk();
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getResourceApkOrBuilder();
-
-    // repeated .blaze.apk_manifest.NativeLib native_lib = 4;
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> 
-        getNativeLibList();
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getNativeLib(int index);
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    int getNativeLibCount();
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
-        getNativeLibOrBuilderList();
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder getNativeLibOrBuilder(
-        int index);
-
-    // optional .blaze.apk_manifest.Artifact android_manifest = 5;
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    boolean hasAndroidManifest();
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getAndroidManifest();
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getAndroidManifestOrBuilder();
   }
   /**
-   * Protobuf type {@code blaze.apk_manifest.ApkManifest}
+   * <pre>
+   * Information about a resource referenced from AndroidManifest.xml.
+   * </pre>
+   *
+   * Protobuf type {@code externalBuild.apk_manifest.AndroidManifestResource}
    */
-  public static final class ApkManifest extends
-      com.google.protobuf.GeneratedMessage
-      implements ApkManifestOrBuilder {
-    // Use ApkManifest.newBuilder() to construct.
-    private ApkManifest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+  public  static final class AndroidManifestResource extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.AndroidManifestResource)
+      AndroidManifestResourceOrBuilder {
+    // Use AndroidManifestResource.newBuilder() to construct.
+    private AndroidManifestResource(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private ApkManifest(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final ApkManifest defaultInstance;
-    public static ApkManifest getDefaultInstance() {
-      return defaultInstance;
+    private AndroidManifestResource() {
+      name_ = "";
+      type_ = "";
+      valueHashes_ = java.util.Collections.emptyList();
     }
 
-    public ApkManifest getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
     }
-    private ApkManifest(
+    private AndroidManifestResource(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
       int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -4675,65 +4503,30 @@ public final class ExternalBuildApkManifest {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!input.skipField(tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = androidSdk_.toBuilder();
-              }
-              androidSdk_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(androidSdk_);
-                androidSdk_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
+              java.lang.String s = input.readStringRequireUtf8();
+
+              name_ = s;
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                jars_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              jars_.add(input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.PARSER, extensionRegistry));
+              java.lang.String s = input.readStringRequireUtf8();
+
+              type_ = s;
               break;
             }
             case 26: {
-              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                subBuilder = resourceApk_.toBuilder();
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                valueHashes_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash>();
+                mutable_bitField0_ |= 0x00000004;
               }
-              resourceApk_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(resourceApk_);
-                resourceApk_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000002;
-              break;
-            }
-            case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                nativeLib_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib>();
-                mutable_bitField0_ |= 0x00000008;
-              }
-              nativeLib_.add(input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.PARSER, extensionRegistry));
-              break;
-            }
-            case 42: {
-              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                subBuilder = androidManifest_.toBuilder();
-              }
-              androidManifest_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(androidManifest_);
-                androidManifest_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000004;
+              valueHashes_.add(
+                  input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.parser(), extensionRegistry));
               break;
             }
           }
@@ -4742,271 +4535,800 @@ public final class ExternalBuildApkManifest {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          jars_ = java.util.Collections.unmodifiableList(jars_);
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          valueHashes_ = java.util.Collections.unmodifiableList(valueHashes_);
         }
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-          nativeLib_ = java.util.Collections.unmodifiableList(nativeLib_);
-        }
-        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_ApkManifest_descriptor;
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_ApkManifest_fieldAccessorTable
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.Builder.class);
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<ApkManifest> PARSER =
-        new com.google.protobuf.AbstractParser<ApkManifest>() {
-      public ApkManifest parsePartialFrom(
+    public interface ValueHashOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.AndroidManifestResource.ValueHash)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <pre>
+       * The qualifier for the value of the resource, e.g. for localization or
+       * device properties like hdpi, xhdpi, etc.
+       * </pre>
+       *
+       * <code>optional string qualifier = 1;</code>
+       */
+      java.lang.String getQualifier();
+      /**
+       * <pre>
+       * The qualifier for the value of the resource, e.g. for localization or
+       * device properties like hdpi, xhdpi, etc.
+       * </pre>
+       *
+       * <code>optional string qualifier = 1;</code>
+       */
+      com.google.protobuf.ByteString
+          getQualifierBytes();
+
+      /**
+       * <pre>
+       * A hash of the value of the resource (e.g. the hash of the string value
+       * of a resource if it's a string), or if the resource points to a file, a
+       * hash of the file (e.g. if the resource is an image, then a hash of the
+       * image file).
+       * </pre>
+       *
+       * <code>optional bytes hash = 2;</code>
+       */
+      com.google.protobuf.ByteString getHash();
+    }
+    /**
+     * Protobuf type {@code externalBuild.apk_manifest.AndroidManifestResource.ValueHash}
+     */
+    public  static final class ValueHash extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.AndroidManifestResource.ValueHash)
+        ValueHashOrBuilder {
+      // Use ValueHash.newBuilder() to construct.
+      private ValueHash(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private ValueHash() {
+        qualifier_ = "";
+        hash_ = com.google.protobuf.ByteString.EMPTY;
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+      }
+      private ValueHash(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ApkManifest(input, extensionRegistry);
-      }
-    };
+        this();
+        int mutable_bitField0_ = 0;
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!input.skipField(tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                java.lang.String s = input.readStringRequireUtf8();
 
-    @java.lang.Override
-    public com.google.protobuf.Parser<ApkManifest> getParserForType() {
-      return PARSER;
+                qualifier_ = s;
+                break;
+              }
+              case 18: {
+
+                hash_ = input.readBytes();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder.class);
+      }
+
+      public static final int QUALIFIER_FIELD_NUMBER = 1;
+      private volatile java.lang.Object qualifier_;
+      /**
+       * <pre>
+       * The qualifier for the value of the resource, e.g. for localization or
+       * device properties like hdpi, xhdpi, etc.
+       * </pre>
+       *
+       * <code>optional string qualifier = 1;</code>
+       */
+      public java.lang.String getQualifier() {
+        java.lang.Object ref = qualifier_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          qualifier_ = s;
+          return s;
+        }
+      }
+      /**
+       * <pre>
+       * The qualifier for the value of the resource, e.g. for localization or
+       * device properties like hdpi, xhdpi, etc.
+       * </pre>
+       *
+       * <code>optional string qualifier = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getQualifierBytes() {
+        java.lang.Object ref = qualifier_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          qualifier_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      public static final int HASH_FIELD_NUMBER = 2;
+      private com.google.protobuf.ByteString hash_;
+      /**
+       * <pre>
+       * A hash of the value of the resource (e.g. the hash of the string value
+       * of a resource if it's a string), or if the resource points to a file, a
+       * hash of the file (e.g. if the resource is an image, then a hash of the
+       * image file).
+       * </pre>
+       *
+       * <code>optional bytes hash = 2;</code>
+       */
+      public com.google.protobuf.ByteString getHash() {
+        return hash_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (!getQualifierBytes().isEmpty()) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, qualifier_);
+        }
+        if (!hash_.isEmpty()) {
+          output.writeBytes(2, hash_);
+        }
+      }
+
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (!getQualifierBytes().isEmpty()) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, qualifier_);
+        }
+        if (!hash_.isEmpty()) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(2, hash_);
+        }
+        memoizedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash)) {
+          return super.equals(obj);
+        }
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash) obj;
+
+        boolean result = true;
+        result = result && getQualifier()
+            .equals(other.getQualifier());
+        result = result && getHash()
+            .equals(other.getHash());
+        return result;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptorForType().hashCode();
+        hash = (37 * hash) + QUALIFIER_FIELD_NUMBER;
+        hash = (53 * hash) + getQualifier().hashCode();
+        hash = (37 * hash) + HASH_FIELD_NUMBER;
+        hash = (53 * hash) + getHash().hashCode();
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code externalBuild.apk_manifest.AndroidManifestResource.ValueHash}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.AndroidManifestResource.ValueHash)
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder.class);
+        }
+
+        // Construct using com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        public Builder clear() {
+          super.clear();
+          qualifier_ = "";
+
+          hash_ = com.google.protobuf.ByteString.EMPTY;
+
+          return this;
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor;
+        }
+
+        public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getDefaultInstanceForType() {
+          return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.getDefaultInstance();
+        }
+
+        public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash build() {
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash buildPartial() {
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash result = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash(this);
+          result.qualifier_ = qualifier_;
+          result.hash_ = hash_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder clone() {
+          return (Builder) super.clone();
+        }
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            Object value) {
+          return (Builder) super.setField(field, value);
+        }
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return (Builder) super.clearField(field);
+        }
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return (Builder) super.clearOneof(oneof);
+        }
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, Object value) {
+          return (Builder) super.setRepeatedField(field, index, value);
+        }
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            Object value) {
+          return (Builder) super.addRepeatedField(field, value);
+        }
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash) {
+            return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash other) {
+          if (other == com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.getDefaultInstance()) return this;
+          if (!other.getQualifier().isEmpty()) {
+            qualifier_ = other.qualifier_;
+            onChanged();
+          }
+          if (other.getHash() != com.google.protobuf.ByteString.EMPTY) {
+            setHash(other.getHash());
+          }
+          onChanged();
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private java.lang.Object qualifier_ = "";
+        /**
+         * <pre>
+         * The qualifier for the value of the resource, e.g. for localization or
+         * device properties like hdpi, xhdpi, etc.
+         * </pre>
+         *
+         * <code>optional string qualifier = 1;</code>
+         */
+        public java.lang.String getQualifier() {
+          java.lang.Object ref = qualifier_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            qualifier_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <pre>
+         * The qualifier for the value of the resource, e.g. for localization or
+         * device properties like hdpi, xhdpi, etc.
+         * </pre>
+         *
+         * <code>optional string qualifier = 1;</code>
+         */
+        public com.google.protobuf.ByteString
+            getQualifierBytes() {
+          java.lang.Object ref = qualifier_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            qualifier_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <pre>
+         * The qualifier for the value of the resource, e.g. for localization or
+         * device properties like hdpi, xhdpi, etc.
+         * </pre>
+         *
+         * <code>optional string qualifier = 1;</code>
+         */
+        public Builder setQualifier(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  
+          qualifier_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * The qualifier for the value of the resource, e.g. for localization or
+         * device properties like hdpi, xhdpi, etc.
+         * </pre>
+         *
+         * <code>optional string qualifier = 1;</code>
+         */
+        public Builder clearQualifier() {
+          
+          qualifier_ = getDefaultInstance().getQualifier();
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * The qualifier for the value of the resource, e.g. for localization or
+         * device properties like hdpi, xhdpi, etc.
+         * </pre>
+         *
+         * <code>optional string qualifier = 1;</code>
+         */
+        public Builder setQualifierBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+          
+          qualifier_ = value;
+          onChanged();
+          return this;
+        }
+
+        private com.google.protobuf.ByteString hash_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <pre>
+         * A hash of the value of the resource (e.g. the hash of the string value
+         * of a resource if it's a string), or if the resource points to a file, a
+         * hash of the file (e.g. if the resource is an image, then a hash of the
+         * image file).
+         * </pre>
+         *
+         * <code>optional bytes hash = 2;</code>
+         */
+        public com.google.protobuf.ByteString getHash() {
+          return hash_;
+        }
+        /**
+         * <pre>
+         * A hash of the value of the resource (e.g. the hash of the string value
+         * of a resource if it's a string), or if the resource points to a file, a
+         * hash of the file (e.g. if the resource is an image, then a hash of the
+         * image file).
+         * </pre>
+         *
+         * <code>optional bytes hash = 2;</code>
+         */
+        public Builder setHash(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  
+          hash_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * A hash of the value of the resource (e.g. the hash of the string value
+         * of a resource if it's a string), or if the resource points to a file, a
+         * hash of the file (e.g. if the resource is an image, then a hash of the
+         * image file).
+         * </pre>
+         *
+         * <code>optional bytes hash = 2;</code>
+         */
+        public Builder clearHash() {
+          
+          hash_ = getDefaultInstance().getHash();
+          onChanged();
+          return this;
+        }
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return this;
+        }
+
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return this;
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.AndroidManifestResource.ValueHash)
+      }
+
+      // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.AndroidManifestResource.ValueHash)
+      private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash();
+      }
+
+      public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<ValueHash>
+          PARSER = new com.google.protobuf.AbstractParser<ValueHash>() {
+        public ValueHash parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ValueHash(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<ValueHash> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<ValueHash> getParserForType() {
+        return PARSER;
+      }
+
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
     }
 
     private int bitField0_;
-    // optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;
-    public static final int ANDROID_SDK_FIELD_NUMBER = 1;
-    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk androidSdk_;
+    public static final int NAME_FIELD_NUMBER = 1;
+    private volatile java.lang.Object name_;
     /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-     *
      * <pre>
-     * Information about the AndroidSdk
+     * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string name = 1;</code>
      */
-    public boolean hasAndroidSdk() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        name_ = s;
+        return s;
+      }
     }
     /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-     *
      * <pre>
-     * Information about the AndroidSdk
+     * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
      * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getAndroidSdk() {
-      return androidSdk_;
-    }
-    /**
-     * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
      *
-     * <pre>
-     * Information about the AndroidSdk
-     * </pre>
+     * <code>optional string name = 1;</code>
      */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder getAndroidSdkOrBuilder() {
-      return androidSdk_;
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
-    // repeated .blaze.apk_manifest.Artifact jars = 2;
-    public static final int JARS_FIELD_NUMBER = 2;
-    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> jars_;
+    public static final int TYPE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object type_;
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
      * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
+     * The type of the resource, e.g. "string" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string type = 2;</code>
      */
-    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> getJarsList() {
-      return jars_;
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        type_ = s;
+        return s;
+      }
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
      * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
+     * The type of the resource, e.g. "string" in "&#64;string/app_name".
      * </pre>
+     *
+     * <code>optional string type = 2;</code>
      */
-    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
-        getJarsOrBuilderList() {
-      return jars_;
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VALUE_HASHES_FIELD_NUMBER = 3;
+    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> valueHashes_;
+    /**
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+     */
+    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> getValueHashesList() {
+      return valueHashes_;
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    public int getJarsCount() {
-      return jars_.size();
+    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder> 
+        getValueHashesOrBuilderList() {
+      return valueHashes_;
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getJars(int index) {
-      return jars_.get(index);
+    public int getValueHashesCount() {
+      return valueHashes_.size();
     }
     /**
-     * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-     *
-     * <pre>
-     * All the jars containing the classes that would be dex and go into the APK
-     * </pre>
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
      */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getJarsOrBuilder(
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getValueHashes(int index) {
+      return valueHashes_.get(index);
+    }
+    /**
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder getValueHashesOrBuilder(
         int index) {
-      return jars_.get(index);
+      return valueHashes_.get(index);
     }
 
-    // optional .blaze.apk_manifest.Artifact resource_apk = 3;
-    public static final int RESOURCE_APK_FIELD_NUMBER = 3;
-    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact resourceApk_;
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    public boolean hasResourceApk() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getResourceApk() {
-      return resourceApk_;
-    }
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-     *
-     * <pre>
-     * The .ap_ that contains the resources that go into the APK
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getResourceApkOrBuilder() {
-      return resourceApk_;
-    }
-
-    // repeated .blaze.apk_manifest.NativeLib native_lib = 4;
-    public static final int NATIVE_LIB_FIELD_NUMBER = 4;
-    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> nativeLib_;
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> getNativeLibList() {
-      return nativeLib_;
-    }
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
-        getNativeLibOrBuilderList() {
-      return nativeLib_;
-    }
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    public int getNativeLibCount() {
-      return nativeLib_.size();
-    }
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getNativeLib(int index) {
-      return nativeLib_.get(index);
-    }
-    /**
-     * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-     *
-     * <pre>
-     * The native library files that go into the APK
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder getNativeLibOrBuilder(
-        int index) {
-      return nativeLib_.get(index);
-    }
-
-    // optional .blaze.apk_manifest.Artifact android_manifest = 5;
-    public static final int ANDROID_MANIFEST_FIELD_NUMBER = 5;
-    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact androidManifest_;
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    public boolean hasAndroidManifest() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getAndroidManifest() {
-      return androidManifest_;
-    }
-    /**
-     * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-     *
-     * <pre>
-     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
-     * </pre>
-     */
-    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getAndroidManifestOrBuilder() {
-      return androidManifest_;
-    }
-
-    private void initFields() {
-      androidSdk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance();
-      jars_ = java.util.Collections.emptyList();
-      resourceApk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
-      nativeLib_ = java.util.Collections.emptyList();
-      androidManifest_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -5014,61 +5336,1647 @@ public final class ExternalBuildApkManifest {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, androidSdk_);
+      if (!getNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      for (int i = 0; i < jars_.size(); i++) {
-        output.writeMessage(2, jars_.get(i));
+      if (!getTypeBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(3, resourceApk_);
+      for (int i = 0; i < valueHashes_.size(); i++) {
+        output.writeMessage(3, valueHashes_.get(i));
       }
-      for (int i = 0; i < nativeLib_.size(); i++) {
-        output.writeMessage(4, nativeLib_.get(i));
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeMessage(5, androidManifest_);
-      }
-      getUnknownFields().writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, androidSdk_);
+      if (!getNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      for (int i = 0; i < jars_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, jars_.get(i));
+      if (!getTypeBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      for (int i = 0; i < valueHashes_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, resourceApk_);
+          .computeMessageSize(3, valueHashes_.get(i));
       }
-      for (int i = 0; i < nativeLib_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, nativeLib_.get(i));
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, androidManifest_);
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource)) {
+        return super.equals(obj);
+      }
+      com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource) obj;
+
+      boolean result = true;
+      result = result && getName()
+          .equals(other.getName());
+      result = result && getType()
+          .equals(other.getType());
+      result = result && getValueHashesList()
+          .equals(other.getValueHashesList());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getType().hashCode();
+      if (getValueHashesCount() > 0) {
+        hash = (37 * hash) + VALUE_HASHES_FIELD_NUMBER;
+        hash = (53 * hash) + getValueHashesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Information about a resource referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * Protobuf type {@code externalBuild.apk_manifest.AndroidManifestResource}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.AndroidManifestResource)
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder.class);
+      }
+
+      // Construct using com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getValueHashesFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        name_ = "";
+
+        type_ = "";
+
+        if (valueHashesBuilder_ == null) {
+          valueHashes_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          valueHashesBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor;
+      }
+
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getDefaultInstanceForType() {
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.getDefaultInstance();
+      }
+
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource build() {
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource buildPartial() {
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource result = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        result.name_ = name_;
+        result.type_ = type_;
+        if (valueHashesBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            valueHashes_ = java.util.Collections.unmodifiableList(valueHashes_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.valueHashes_ = valueHashes_;
+        } else {
+          result.valueHashes_ = valueHashesBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource) {
+          return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource other) {
+        if (other == com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.getDefaultInstance()) return this;
+        if (!other.getName().isEmpty()) {
+          name_ = other.name_;
+          onChanged();
+        }
+        if (!other.getType().isEmpty()) {
+          type_ = other.type_;
+          onChanged();
+        }
+        if (valueHashesBuilder_ == null) {
+          if (!other.valueHashes_.isEmpty()) {
+            if (valueHashes_.isEmpty()) {
+              valueHashes_ = other.valueHashes_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureValueHashesIsMutable();
+              valueHashes_.addAll(other.valueHashes_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.valueHashes_.isEmpty()) {
+            if (valueHashesBuilder_.isEmpty()) {
+              valueHashesBuilder_.dispose();
+              valueHashesBuilder_ = null;
+              valueHashes_ = other.valueHashes_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              valueHashesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getValueHashesFieldBuilder() : null;
+            } else {
+              valueHashesBuilder_.addAllMessages(other.valueHashes_);
+            }
+          }
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object name_ = "";
+      /**
+       * <pre>
+       * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string name = 1;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string name = 1;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string name = 1;</code>
+       */
+      public Builder clearName() {
+        
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The name of the resource, e.g. "app_name" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string name = 1;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object type_ = "";
+      /**
+       * <pre>
+       * The type of the resource, e.g. "string" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string type = 2;</code>
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          type_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The type of the resource, e.g. "string" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string type = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * The type of the resource, e.g. "string" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string type = 2;</code>
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The type of the resource, e.g. "string" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string type = 2;</code>
+       */
+      public Builder clearType() {
+        
+        type_ = getDefaultInstance().getType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The type of the resource, e.g. "string" in "&#64;string/app_name".
+       * </pre>
+       *
+       * <code>optional string type = 2;</code>
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        type_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> valueHashes_ =
+        java.util.Collections.emptyList();
+      private void ensureValueHashesIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          valueHashes_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash>(valueHashes_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder> valueHashesBuilder_;
+
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> getValueHashesList() {
+        if (valueHashesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(valueHashes_);
+        } else {
+          return valueHashesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public int getValueHashesCount() {
+        if (valueHashesBuilder_ == null) {
+          return valueHashes_.size();
+        } else {
+          return valueHashesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash getValueHashes(int index) {
+        if (valueHashesBuilder_ == null) {
+          return valueHashes_.get(index);
+        } else {
+          return valueHashesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder setValueHashes(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash value) {
+        if (valueHashesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValueHashesIsMutable();
+          valueHashes_.set(index, value);
+          onChanged();
+        } else {
+          valueHashesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder setValueHashes(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder builderForValue) {
+        if (valueHashesBuilder_ == null) {
+          ensureValueHashesIsMutable();
+          valueHashes_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          valueHashesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder addValueHashes(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash value) {
+        if (valueHashesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValueHashesIsMutable();
+          valueHashes_.add(value);
+          onChanged();
+        } else {
+          valueHashesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder addValueHashes(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash value) {
+        if (valueHashesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValueHashesIsMutable();
+          valueHashes_.add(index, value);
+          onChanged();
+        } else {
+          valueHashesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder addValueHashes(
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder builderForValue) {
+        if (valueHashesBuilder_ == null) {
+          ensureValueHashesIsMutable();
+          valueHashes_.add(builderForValue.build());
+          onChanged();
+        } else {
+          valueHashesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder addValueHashes(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder builderForValue) {
+        if (valueHashesBuilder_ == null) {
+          ensureValueHashesIsMutable();
+          valueHashes_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          valueHashesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder addAllValueHashes(
+          java.lang.Iterable<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash> values) {
+        if (valueHashesBuilder_ == null) {
+          ensureValueHashesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, valueHashes_);
+          onChanged();
+        } else {
+          valueHashesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder clearValueHashes() {
+        if (valueHashesBuilder_ == null) {
+          valueHashes_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          valueHashesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public Builder removeValueHashes(int index) {
+        if (valueHashesBuilder_ == null) {
+          ensureValueHashesIsMutable();
+          valueHashes_.remove(index);
+          onChanged();
+        } else {
+          valueHashesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder getValueHashesBuilder(
+          int index) {
+        return getValueHashesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder getValueHashesOrBuilder(
+          int index) {
+        if (valueHashesBuilder_ == null) {
+          return valueHashes_.get(index);  } else {
+          return valueHashesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder> 
+           getValueHashesOrBuilderList() {
+        if (valueHashesBuilder_ != null) {
+          return valueHashesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(valueHashes_);
+        }
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder addValueHashesBuilder() {
+        return getValueHashesFieldBuilder().addBuilder(
+            com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder addValueHashesBuilder(
+          int index) {
+        return getValueHashesFieldBuilder().addBuilder(
+            index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource.ValueHash value_hashes = 3;</code>
+       */
+      public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder> 
+           getValueHashesBuilderList() {
+        return getValueHashesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder> 
+          getValueHashesFieldBuilder() {
+        if (valueHashesBuilder_ == null) {
+          valueHashesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHash.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.ValueHashOrBuilder>(
+                  valueHashes_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          valueHashes_ = null;
+        }
+        return valueHashesBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.AndroidManifestResource)
+    }
+
+    // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.AndroidManifestResource)
+    private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource();
+    }
+
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<AndroidManifestResource>
+        PARSER = new com.google.protobuf.AbstractParser<AndroidManifestResource>() {
+      public AndroidManifestResource parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new AndroidManifestResource(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AndroidManifestResource> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AndroidManifestResource> getParserForType() {
+      return PARSER;
+    }
+
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ApkManifestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:externalBuild.apk_manifest.ApkManifest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    boolean hasAndroidSdk();
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getAndroidSdk();
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder getAndroidSdkOrBuilder();
+
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> 
+        getJarsList();
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getJars(int index);
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    int getJarsCount();
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
+        getJarsOrBuilderList();
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getJarsOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    boolean hasResourceApk();
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getResourceApk();
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getResourceApkOrBuilder();
+
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> 
+        getNativeLibList();
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getNativeLib(int index);
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    int getNativeLibCount();
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
+        getNativeLibOrBuilderList();
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder getNativeLibOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    boolean hasAndroidManifest();
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getAndroidManifest();
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getAndroidManifestOrBuilder();
+
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> 
+        getAndroidManifestResourcesList();
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getAndroidManifestResources(int index);
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    int getAndroidManifestResourcesCount();
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder> 
+        getAndroidManifestResourcesOrBuilderList();
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder getAndroidManifestResourcesOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    boolean hasDebugKeystore();
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDebugKeystore();
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getDebugKeystoreOrBuilder();
+  }
+  /**
+   * Protobuf type {@code externalBuild.apk_manifest.ApkManifest}
+   */
+  public  static final class ApkManifest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:externalBuild.apk_manifest.ApkManifest)
+      ApkManifestOrBuilder {
+    // Use ApkManifest.newBuilder() to construct.
+    private ApkManifest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ApkManifest() {
+      jars_ = java.util.Collections.emptyList();
+      nativeLib_ = java.util.Collections.emptyList();
+      androidManifestResources_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private ApkManifest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder subBuilder = null;
+              if (androidSdk_ != null) {
+                subBuilder = androidSdk_.toBuilder();
+              }
+              androidSdk_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(androidSdk_);
+                androidSdk_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                jars_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              jars_.add(
+                  input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.parser(), extensionRegistry));
+              break;
+            }
+            case 26: {
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder subBuilder = null;
+              if (resourceApk_ != null) {
+                subBuilder = resourceApk_.toBuilder();
+              }
+              resourceApk_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(resourceApk_);
+                resourceApk_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                nativeLib_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              nativeLib_.add(
+                  input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.parser(), extensionRegistry));
+              break;
+            }
+            case 42: {
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder subBuilder = null;
+              if (androidManifest_ != null) {
+                subBuilder = androidManifest_.toBuilder();
+              }
+              androidManifest_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(androidManifest_);
+                androidManifest_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                androidManifestResources_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource>();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              androidManifestResources_.add(
+                  input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.parser(), extensionRegistry));
+              break;
+            }
+            case 58: {
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder subBuilder = null;
+              if (debugKeystore_ != null) {
+                subBuilder = debugKeystore_.toBuilder();
+              }
+              debugKeystore_ = input.readMessage(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(debugKeystore_);
+                debugKeystore_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          jars_ = java.util.Collections.unmodifiableList(jars_);
+        }
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          nativeLib_ = java.util.Collections.unmodifiableList(nativeLib_);
+        }
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          androidManifestResources_ = java.util.Collections.unmodifiableList(androidManifestResources_);
+        }
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_ApkManifest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_ApkManifest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ANDROID_SDK_FIELD_NUMBER = 1;
+    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk androidSdk_;
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    public boolean hasAndroidSdk() {
+      return androidSdk_ != null;
+    }
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getAndroidSdk() {
+      return androidSdk_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance() : androidSdk_;
+    }
+    /**
+     * <pre>
+     * Information about the AndroidSdk
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder getAndroidSdkOrBuilder() {
+      return getAndroidSdk();
+    }
+
+    public static final int JARS_FIELD_NUMBER = 2;
+    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> jars_;
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> getJarsList() {
+      return jars_;
+    }
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
+        getJarsOrBuilderList() {
+      return jars_;
+    }
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    public int getJarsCount() {
+      return jars_.size();
+    }
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getJars(int index) {
+      return jars_.get(index);
+    }
+    /**
+     * <pre>
+     * All the jars containing the classes that would be dex and go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getJarsOrBuilder(
+        int index) {
+      return jars_.get(index);
+    }
+
+    public static final int RESOURCE_APK_FIELD_NUMBER = 3;
+    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact resourceApk_;
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    public boolean hasResourceApk() {
+      return resourceApk_ != null;
+    }
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getResourceApk() {
+      return resourceApk_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : resourceApk_;
+    }
+    /**
+     * <pre>
+     * The .ap_ that contains the resources that go into the APK
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getResourceApkOrBuilder() {
+      return getResourceApk();
+    }
+
+    public static final int NATIVE_LIB_FIELD_NUMBER = 4;
+    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> nativeLib_;
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> getNativeLibList() {
+      return nativeLib_;
+    }
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
+        getNativeLibOrBuilderList() {
+      return nativeLib_;
+    }
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    public int getNativeLibCount() {
+      return nativeLib_.size();
+    }
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getNativeLib(int index) {
+      return nativeLib_.get(index);
+    }
+    /**
+     * <pre>
+     * The native library files that go into the APK
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder getNativeLibOrBuilder(
+        int index) {
+      return nativeLib_.get(index);
+    }
+
+    public static final int ANDROID_MANIFEST_FIELD_NUMBER = 5;
+    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact androidManifest_;
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    public boolean hasAndroidManifest() {
+      return androidManifest_ != null;
+    }
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getAndroidManifest() {
+      return androidManifest_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : androidManifest_;
+    }
+    /**
+     * <pre>
+     * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getAndroidManifestOrBuilder() {
+      return getAndroidManifest();
+    }
+
+    public static final int ANDROID_MANIFEST_RESOURCES_FIELD_NUMBER = 6;
+    private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> androidManifestResources_;
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> getAndroidManifestResourcesList() {
+      return androidManifestResources_;
+    }
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder> 
+        getAndroidManifestResourcesOrBuilderList() {
+      return androidManifestResources_;
+    }
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    public int getAndroidManifestResourcesCount() {
+      return androidManifestResources_.size();
+    }
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getAndroidManifestResources(int index) {
+      return androidManifestResources_.get(index);
+    }
+    /**
+     * <pre>
+     * Information about resources referenced from AndroidManifest.xml.
+     * </pre>
+     *
+     * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder getAndroidManifestResourcesOrBuilder(
+        int index) {
+      return androidManifestResources_.get(index);
+    }
+
+    public static final int DEBUG_KEYSTORE_FIELD_NUMBER = 7;
+    private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact debugKeystore_;
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    public boolean hasDebugKeystore() {
+      return debugKeystore_ != null;
+    }
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDebugKeystore() {
+      return debugKeystore_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : debugKeystore_;
+    }
+    /**
+     * <pre>
+     * Location of the debug keystore file.
+     * </pre>
+     *
+     * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+     */
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getDebugKeystoreOrBuilder() {
+      return getDebugKeystore();
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (androidSdk_ != null) {
+        output.writeMessage(1, getAndroidSdk());
+      }
+      for (int i = 0; i < jars_.size(); i++) {
+        output.writeMessage(2, jars_.get(i));
+      }
+      if (resourceApk_ != null) {
+        output.writeMessage(3, getResourceApk());
+      }
+      for (int i = 0; i < nativeLib_.size(); i++) {
+        output.writeMessage(4, nativeLib_.get(i));
+      }
+      if (androidManifest_ != null) {
+        output.writeMessage(5, getAndroidManifest());
+      }
+      for (int i = 0; i < androidManifestResources_.size(); i++) {
+        output.writeMessage(6, androidManifestResources_.get(i));
+      }
+      if (debugKeystore_ != null) {
+        output.writeMessage(7, getDebugKeystore());
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (androidSdk_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getAndroidSdk());
+      }
+      for (int i = 0; i < jars_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, jars_.get(i));
+      }
+      if (resourceApk_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getResourceApk());
+      }
+      for (int i = 0; i < nativeLib_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, nativeLib_.get(i));
+      }
+      if (androidManifest_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getAndroidManifest());
+      }
+      for (int i = 0; i < androidManifestResources_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, androidManifestResources_.get(i));
+      }
+      if (debugKeystore_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, getDebugKeystore());
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest)) {
+        return super.equals(obj);
+      }
+      com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest other = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest) obj;
+
+      boolean result = true;
+      result = result && (hasAndroidSdk() == other.hasAndroidSdk());
+      if (hasAndroidSdk()) {
+        result = result && getAndroidSdk()
+            .equals(other.getAndroidSdk());
+      }
+      result = result && getJarsList()
+          .equals(other.getJarsList());
+      result = result && (hasResourceApk() == other.hasResourceApk());
+      if (hasResourceApk()) {
+        result = result && getResourceApk()
+            .equals(other.getResourceApk());
+      }
+      result = result && getNativeLibList()
+          .equals(other.getNativeLibList());
+      result = result && (hasAndroidManifest() == other.hasAndroidManifest());
+      if (hasAndroidManifest()) {
+        result = result && getAndroidManifest()
+            .equals(other.getAndroidManifest());
+      }
+      result = result && getAndroidManifestResourcesList()
+          .equals(other.getAndroidManifestResourcesList());
+      result = result && (hasDebugKeystore() == other.hasDebugKeystore());
+      if (hasDebugKeystore()) {
+        result = result && getDebugKeystore()
+            .equals(other.getDebugKeystore());
+      }
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (hasAndroidSdk()) {
+        hash = (37 * hash) + ANDROID_SDK_FIELD_NUMBER;
+        hash = (53 * hash) + getAndroidSdk().hashCode();
+      }
+      if (getJarsCount() > 0) {
+        hash = (37 * hash) + JARS_FIELD_NUMBER;
+        hash = (53 * hash) + getJarsList().hashCode();
+      }
+      if (hasResourceApk()) {
+        hash = (37 * hash) + RESOURCE_APK_FIELD_NUMBER;
+        hash = (53 * hash) + getResourceApk().hashCode();
+      }
+      if (getNativeLibCount() > 0) {
+        hash = (37 * hash) + NATIVE_LIB_FIELD_NUMBER;
+        hash = (53 * hash) + getNativeLibList().hashCode();
+      }
+      if (hasAndroidManifest()) {
+        hash = (37 * hash) + ANDROID_MANIFEST_FIELD_NUMBER;
+        hash = (53 * hash) + getAndroidManifest().hashCode();
+      }
+      if (getAndroidManifestResourcesCount() > 0) {
+        hash = (37 * hash) + ANDROID_MANIFEST_RESOURCES_FIELD_NUMBER;
+        hash = (53 * hash) + getAndroidManifestResourcesList().hashCode();
+      }
+      if (hasDebugKeystore()) {
+        hash = (37 * hash) + DEBUG_KEYSTORE_FIELD_NUMBER;
+        hash = (53 * hash) + getDebugKeystore().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
     }
 
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseFrom(
@@ -5094,63 +7002,75 @@ public final class ExternalBuildApkManifest {
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code blaze.apk_manifest.ApkManifest}
+     * Protobuf type {@code externalBuild.apk_manifest.ApkManifest}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifestOrBuilder {
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:externalBuild.apk_manifest.ApkManifest)
+        com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_ApkManifest_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_ApkManifest_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_ApkManifest_fieldAccessorTable
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_ApkManifest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.class, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest.Builder.class);
       }
@@ -5161,31 +7081,26 @@ public final class ExternalBuildApkManifest {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getAndroidSdkFieldBuilder();
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
           getJarsFieldBuilder();
-          getResourceApkFieldBuilder();
           getNativeLibFieldBuilder();
-          getAndroidManifestFieldBuilder();
+          getAndroidManifestResourcesFieldBuilder();
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         if (androidSdkBuilder_ == null) {
-          androidSdk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance();
+          androidSdk_ = null;
         } else {
-          androidSdkBuilder_.clear();
+          androidSdk_ = null;
+          androidSdkBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000001);
         if (jarsBuilder_ == null) {
           jars_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -5193,11 +7108,11 @@ public final class ExternalBuildApkManifest {
           jarsBuilder_.clear();
         }
         if (resourceApkBuilder_ == null) {
-          resourceApk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
+          resourceApk_ = null;
         } else {
-          resourceApkBuilder_.clear();
+          resourceApk_ = null;
+          resourceApkBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000004);
         if (nativeLibBuilder_ == null) {
           nativeLib_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000008);
@@ -5205,21 +7120,29 @@ public final class ExternalBuildApkManifest {
           nativeLibBuilder_.clear();
         }
         if (androidManifestBuilder_ == null) {
-          androidManifest_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
+          androidManifest_ = null;
         } else {
-          androidManifestBuilder_.clear();
+          androidManifest_ = null;
+          androidManifestBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        if (androidManifestResourcesBuilder_ == null) {
+          androidManifestResources_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000020);
+        } else {
+          androidManifestResourcesBuilder_.clear();
+        }
+        if (debugKeystoreBuilder_ == null) {
+          debugKeystore_ = null;
+        } else {
+          debugKeystore_ = null;
+          debugKeystoreBuilder_ = null;
+        }
         return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_blaze_apk_manifest_ApkManifest_descriptor;
+        return com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.internal_static_externalBuild_apk_manifest_ApkManifest_descriptor;
       }
 
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest getDefaultInstanceForType() {
@@ -5238,9 +7161,6 @@ public final class ExternalBuildApkManifest {
         com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest result = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
         if (androidSdkBuilder_ == null) {
           result.androidSdk_ = androidSdk_;
         } else {
@@ -5254,9 +7174,6 @@ public final class ExternalBuildApkManifest {
           result.jars_ = jars_;
         } else {
           result.jars_ = jarsBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000002;
         }
         if (resourceApkBuilder_ == null) {
           result.resourceApk_ = resourceApk_;
@@ -5272,19 +7189,56 @@ public final class ExternalBuildApkManifest {
         } else {
           result.nativeLib_ = nativeLibBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000004;
-        }
         if (androidManifestBuilder_ == null) {
           result.androidManifest_ = androidManifest_;
         } else {
           result.androidManifest_ = androidManifestBuilder_.build();
+        }
+        if (androidManifestResourcesBuilder_ == null) {
+          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+            androidManifestResources_ = java.util.Collections.unmodifiableList(androidManifestResources_);
+            bitField0_ = (bitField0_ & ~0x00000020);
+          }
+          result.androidManifestResources_ = androidManifestResources_;
+        } else {
+          result.androidManifestResources_ = androidManifestResourcesBuilder_.build();
+        }
+        if (debugKeystoreBuilder_ == null) {
+          result.debugKeystore_ = debugKeystore_;
+        } else {
+          result.debugKeystore_ = debugKeystoreBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest) {
           return mergeFrom((com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest)other);
@@ -5318,7 +7272,7 @@ public final class ExternalBuildApkManifest {
               jars_ = other.jars_;
               bitField0_ = (bitField0_ & ~0x00000002);
               jarsBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getJarsFieldBuilder() : null;
             } else {
               jarsBuilder_.addAllMessages(other.jars_);
@@ -5347,7 +7301,7 @@ public final class ExternalBuildApkManifest {
               nativeLib_ = other.nativeLib_;
               bitField0_ = (bitField0_ & ~0x00000008);
               nativeLibBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getNativeLibFieldBuilder() : null;
             } else {
               nativeLibBuilder_.addAllMessages(other.nativeLib_);
@@ -5357,7 +7311,36 @@ public final class ExternalBuildApkManifest {
         if (other.hasAndroidManifest()) {
           mergeAndroidManifest(other.getAndroidManifest());
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        if (androidManifestResourcesBuilder_ == null) {
+          if (!other.androidManifestResources_.isEmpty()) {
+            if (androidManifestResources_.isEmpty()) {
+              androidManifestResources_ = other.androidManifestResources_;
+              bitField0_ = (bitField0_ & ~0x00000020);
+            } else {
+              ensureAndroidManifestResourcesIsMutable();
+              androidManifestResources_.addAll(other.androidManifestResources_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.androidManifestResources_.isEmpty()) {
+            if (androidManifestResourcesBuilder_.isEmpty()) {
+              androidManifestResourcesBuilder_.dispose();
+              androidManifestResourcesBuilder_ = null;
+              androidManifestResources_ = other.androidManifestResources_;
+              bitField0_ = (bitField0_ & ~0x00000020);
+              androidManifestResourcesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getAndroidManifestResourcesFieldBuilder() : null;
+            } else {
+              androidManifestResourcesBuilder_.addAllMessages(other.androidManifestResources_);
+            }
+          }
+        }
+        if (other.hasDebugKeystore()) {
+          mergeDebugKeystore(other.getDebugKeystore());
+        }
+        onChanged();
         return this;
       }
 
@@ -5374,7 +7357,7 @@ public final class ExternalBuildApkManifest {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -5384,40 +7367,39 @@ public final class ExternalBuildApkManifest {
       }
       private int bitField0_;
 
-      // optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;
-      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk androidSdk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk androidSdk_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder> androidSdkBuilder_;
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public boolean hasAndroidSdk() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return androidSdkBuilder_ != null || androidSdk_ != null;
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk getAndroidSdk() {
         if (androidSdkBuilder_ == null) {
-          return androidSdk_;
+          return androidSdk_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance() : androidSdk_;
         } else {
           return androidSdkBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public Builder setAndroidSdk(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk value) {
         if (androidSdkBuilder_ == null) {
@@ -5429,15 +7411,15 @@ public final class ExternalBuildApkManifest {
         } else {
           androidSdkBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000001;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public Builder setAndroidSdk(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder builderForValue) {
@@ -5447,20 +7429,19 @@ public final class ExternalBuildApkManifest {
         } else {
           androidSdkBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000001;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public Builder mergeAndroidSdk(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk value) {
         if (androidSdkBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              androidSdk_ != com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance()) {
+          if (androidSdk_ != null) {
             androidSdk_ =
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.newBuilder(androidSdk_).mergeFrom(value).buildPartial();
           } else {
@@ -5470,66 +7451,68 @@ public final class ExternalBuildApkManifest {
         } else {
           androidSdkBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000001;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public Builder clearAndroidSdk() {
         if (androidSdkBuilder_ == null) {
-          androidSdk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance();
+          androidSdk_ = null;
           onChanged();
         } else {
-          androidSdkBuilder_.clear();
+          androidSdk_ = null;
+          androidSdkBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000001);
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder getAndroidSdkBuilder() {
-        bitField0_ |= 0x00000001;
+        
         onChanged();
         return getAndroidSdkFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder getAndroidSdkOrBuilder() {
         if (androidSdkBuilder_ != null) {
           return androidSdkBuilder_.getMessageOrBuilder();
         } else {
-          return androidSdk_;
+          return androidSdk_ == null ?
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.getDefaultInstance() : androidSdk_;
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.AndroidSdk android_sdk = 1;</code>
-       *
        * <pre>
        * Information about the AndroidSdk
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.AndroidSdk android_sdk = 1;</code>
        */
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder> 
           getAndroidSdkFieldBuilder() {
         if (androidSdkBuilder_ == null) {
-          androidSdkBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          androidSdkBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdk.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidSdkOrBuilder>(
-                  androidSdk_,
+                  getAndroidSdk(),
                   getParentForChildren(),
                   isClean());
           androidSdk_ = null;
@@ -5537,7 +7520,6 @@ public final class ExternalBuildApkManifest {
         return androidSdkBuilder_;
       }
 
-      // repeated .blaze.apk_manifest.Artifact jars = 2;
       private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> jars_ =
         java.util.Collections.emptyList();
       private void ensureJarsIsMutable() {
@@ -5547,15 +7529,15 @@ public final class ExternalBuildApkManifest {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> jarsBuilder_;
 
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> getJarsList() {
         if (jarsBuilder_ == null) {
@@ -5565,11 +7547,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public int getJarsCount() {
         if (jarsBuilder_ == null) {
@@ -5579,11 +7561,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getJars(int index) {
         if (jarsBuilder_ == null) {
@@ -5593,11 +7575,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder setJars(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
@@ -5614,11 +7596,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder setJars(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -5632,11 +7614,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder addJars(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (jarsBuilder_ == null) {
@@ -5652,11 +7634,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder addJars(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
@@ -5673,11 +7655,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder addJars(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -5691,11 +7673,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder addJars(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -5709,17 +7691,18 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder addAllJars(
           java.lang.Iterable<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact> values) {
         if (jarsBuilder_ == null) {
           ensureJarsIsMutable();
-          super.addAll(values, jars_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, jars_);
           onChanged();
         } else {
           jarsBuilder_.addAllMessages(values);
@@ -5727,11 +7710,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder clearJars() {
         if (jarsBuilder_ == null) {
@@ -5744,11 +7727,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public Builder removeJars(int index) {
         if (jarsBuilder_ == null) {
@@ -5761,22 +7744,22 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder getJarsBuilder(
           int index) {
         return getJarsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getJarsOrBuilder(
           int index) {
@@ -5786,11 +7769,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
            getJarsOrBuilderList() {
@@ -5801,22 +7784,22 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder addJarsBuilder() {
         return getJarsFieldBuilder().addBuilder(
             com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder addJarsBuilder(
           int index) {
@@ -5824,21 +7807,21 @@ public final class ExternalBuildApkManifest {
             index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.Artifact jars = 2;</code>
-       *
        * <pre>
        * All the jars containing the classes that would be dex and go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.Artifact jars = 2;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder> 
            getJarsBuilderList() {
         return getJarsFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
           getJarsFieldBuilder() {
         if (jarsBuilder_ == null) {
-          jarsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+          jarsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder>(
                   jars_,
                   ((bitField0_ & 0x00000002) == 0x00000002),
@@ -5849,40 +7832,39 @@ public final class ExternalBuildApkManifest {
         return jarsBuilder_;
       }
 
-      // optional .blaze.apk_manifest.Artifact resource_apk = 3;
-      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact resourceApk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact resourceApk_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> resourceApkBuilder_;
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public boolean hasResourceApk() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return resourceApkBuilder_ != null || resourceApk_ != null;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getResourceApk() {
         if (resourceApkBuilder_ == null) {
-          return resourceApk_;
+          return resourceApk_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : resourceApk_;
         } else {
           return resourceApkBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public Builder setResourceApk(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (resourceApkBuilder_ == null) {
@@ -5894,15 +7876,15 @@ public final class ExternalBuildApkManifest {
         } else {
           resourceApkBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000004;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public Builder setResourceApk(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -5912,20 +7894,19 @@ public final class ExternalBuildApkManifest {
         } else {
           resourceApkBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000004;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public Builder mergeResourceApk(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (resourceApkBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
-              resourceApk_ != com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance()) {
+          if (resourceApk_ != null) {
             resourceApk_ =
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.newBuilder(resourceApk_).mergeFrom(value).buildPartial();
           } else {
@@ -5935,66 +7916,68 @@ public final class ExternalBuildApkManifest {
         } else {
           resourceApkBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000004;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public Builder clearResourceApk() {
         if (resourceApkBuilder_ == null) {
-          resourceApk_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
+          resourceApk_ = null;
           onChanged();
         } else {
-          resourceApkBuilder_.clear();
+          resourceApk_ = null;
+          resourceApkBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000004);
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder getResourceApkBuilder() {
-        bitField0_ |= 0x00000004;
+        
         onChanged();
         return getResourceApkFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getResourceApkOrBuilder() {
         if (resourceApkBuilder_ != null) {
           return resourceApkBuilder_.getMessageOrBuilder();
         } else {
-          return resourceApk_;
+          return resourceApk_ == null ?
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : resourceApk_;
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact resource_apk = 3;</code>
-       *
        * <pre>
        * The .ap_ that contains the resources that go into the APK
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact resource_apk = 3;</code>
        */
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
           getResourceApkFieldBuilder() {
         if (resourceApkBuilder_ == null) {
-          resourceApkBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          resourceApkBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder>(
-                  resourceApk_,
+                  getResourceApk(),
                   getParentForChildren(),
                   isClean());
           resourceApk_ = null;
@@ -6002,7 +7985,6 @@ public final class ExternalBuildApkManifest {
         return resourceApkBuilder_;
       }
 
-      // repeated .blaze.apk_manifest.NativeLib native_lib = 4;
       private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> nativeLib_ =
         java.util.Collections.emptyList();
       private void ensureNativeLibIsMutable() {
@@ -6012,15 +7994,15 @@ public final class ExternalBuildApkManifest {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> nativeLibBuilder_;
 
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> getNativeLibList() {
         if (nativeLibBuilder_ == null) {
@@ -6030,11 +8012,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public int getNativeLibCount() {
         if (nativeLibBuilder_ == null) {
@@ -6044,11 +8026,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib getNativeLib(int index) {
         if (nativeLibBuilder_ == null) {
@@ -6058,11 +8040,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder setNativeLib(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib value) {
@@ -6079,11 +8061,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder setNativeLib(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder builderForValue) {
@@ -6097,11 +8079,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder addNativeLib(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib value) {
         if (nativeLibBuilder_ == null) {
@@ -6117,11 +8099,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder addNativeLib(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib value) {
@@ -6138,11 +8120,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder addNativeLib(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder builderForValue) {
@@ -6156,11 +8138,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder addNativeLib(
           int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder builderForValue) {
@@ -6174,17 +8156,18 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder addAllNativeLib(
           java.lang.Iterable<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib> values) {
         if (nativeLibBuilder_ == null) {
           ensureNativeLibIsMutable();
-          super.addAll(values, nativeLib_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, nativeLib_);
           onChanged();
         } else {
           nativeLibBuilder_.addAllMessages(values);
@@ -6192,11 +8175,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder clearNativeLib() {
         if (nativeLibBuilder_ == null) {
@@ -6209,11 +8192,11 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public Builder removeNativeLib(int index) {
         if (nativeLibBuilder_ == null) {
@@ -6226,22 +8209,22 @@ public final class ExternalBuildApkManifest {
         return this;
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder getNativeLibBuilder(
           int index) {
         return getNativeLibFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder getNativeLibOrBuilder(
           int index) {
@@ -6251,11 +8234,11 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
            getNativeLibOrBuilderList() {
@@ -6266,22 +8249,22 @@ public final class ExternalBuildApkManifest {
         }
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder addNativeLibBuilder() {
         return getNativeLibFieldBuilder().addBuilder(
             com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder addNativeLibBuilder(
           int index) {
@@ -6289,21 +8272,21 @@ public final class ExternalBuildApkManifest {
             index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.getDefaultInstance());
       }
       /**
-       * <code>repeated .blaze.apk_manifest.NativeLib native_lib = 4;</code>
-       *
        * <pre>
        * The native library files that go into the APK
        * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.NativeLib native_lib = 4;</code>
        */
       public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder> 
            getNativeLibBuilderList() {
         return getNativeLibFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilder<
+      private com.google.protobuf.RepeatedFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder> 
           getNativeLibFieldBuilder() {
         if (nativeLibBuilder_ == null) {
-          nativeLibBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+          nativeLibBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLib.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.NativeLibOrBuilder>(
                   nativeLib_,
                   ((bitField0_ & 0x00000008) == 0x00000008),
@@ -6314,40 +8297,39 @@ public final class ExternalBuildApkManifest {
         return nativeLibBuilder_;
       }
 
-      // optional .blaze.apk_manifest.Artifact android_manifest = 5;
-      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact androidManifest_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact androidManifest_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> androidManifestBuilder_;
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public boolean hasAndroidManifest() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return androidManifestBuilder_ != null || androidManifest_ != null;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getAndroidManifest() {
         if (androidManifestBuilder_ == null) {
-          return androidManifest_;
+          return androidManifest_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : androidManifest_;
         } else {
           return androidManifestBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public Builder setAndroidManifest(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (androidManifestBuilder_ == null) {
@@ -6359,15 +8341,15 @@ public final class ExternalBuildApkManifest {
         } else {
           androidManifestBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000010;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public Builder setAndroidManifest(
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
@@ -6377,20 +8359,19 @@ public final class ExternalBuildApkManifest {
         } else {
           androidManifestBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000010;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public Builder mergeAndroidManifest(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
         if (androidManifestBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
-              androidManifest_ != com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance()) {
+          if (androidManifest_ != null) {
             androidManifest_ =
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.newBuilder(androidManifest_).mergeFrom(value).buildPartial();
           } else {
@@ -6400,66 +8381,68 @@ public final class ExternalBuildApkManifest {
         } else {
           androidManifestBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000010;
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public Builder clearAndroidManifest() {
         if (androidManifestBuilder_ == null) {
-          androidManifest_ = com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance();
+          androidManifest_ = null;
           onChanged();
         } else {
-          androidManifestBuilder_.clear();
+          androidManifest_ = null;
+          androidManifestBuilder_ = null;
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+
         return this;
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder getAndroidManifestBuilder() {
-        bitField0_ |= 0x00000010;
+        
         onChanged();
         return getAndroidManifestFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
       public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getAndroidManifestOrBuilder() {
         if (androidManifestBuilder_ != null) {
           return androidManifestBuilder_.getMessageOrBuilder();
         } else {
-          return androidManifest_;
+          return androidManifest_ == null ?
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : androidManifest_;
         }
       }
       /**
-       * <code>optional .blaze.apk_manifest.Artifact android_manifest = 5;</code>
-       *
        * <pre>
        * The final merged AndroidManifest.xml file (in text, i.e. non-binary, XML)
        * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact android_manifest = 5;</code>
        */
-      private com.google.protobuf.SingleFieldBuilder<
+      private com.google.protobuf.SingleFieldBuilderV3<
           com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
           getAndroidManifestFieldBuilder() {
         if (androidManifestBuilder_ == null) {
-          androidManifestBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          androidManifestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder>(
-                  androidManifest_,
+                  getAndroidManifest(),
                   getParentForChildren(),
                   isClean());
           androidManifest_ = null;
@@ -6467,106 +8450,640 @@ public final class ExternalBuildApkManifest {
         return androidManifestBuilder_;
       }
 
-      // @@protoc_insertion_point(builder_scope:blaze.apk_manifest.ApkManifest)
+      private java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> androidManifestResources_ =
+        java.util.Collections.emptyList();
+      private void ensureAndroidManifestResourcesIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          androidManifestResources_ = new java.util.ArrayList<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource>(androidManifestResources_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder> androidManifestResourcesBuilder_;
+
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> getAndroidManifestResourcesList() {
+        if (androidManifestResourcesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(androidManifestResources_);
+        } else {
+          return androidManifestResourcesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public int getAndroidManifestResourcesCount() {
+        if (androidManifestResourcesBuilder_ == null) {
+          return androidManifestResources_.size();
+        } else {
+          return androidManifestResourcesBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource getAndroidManifestResources(int index) {
+        if (androidManifestResourcesBuilder_ == null) {
+          return androidManifestResources_.get(index);
+        } else {
+          return androidManifestResourcesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder setAndroidManifestResources(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource value) {
+        if (androidManifestResourcesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.set(index, value);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder setAndroidManifestResources(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder builderForValue) {
+        if (androidManifestResourcesBuilder_ == null) {
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder addAndroidManifestResources(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource value) {
+        if (androidManifestResourcesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.add(value);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder addAndroidManifestResources(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource value) {
+        if (androidManifestResourcesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.add(index, value);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder addAndroidManifestResources(
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder builderForValue) {
+        if (androidManifestResourcesBuilder_ == null) {
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.add(builderForValue.build());
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder addAndroidManifestResources(
+          int index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder builderForValue) {
+        if (androidManifestResourcesBuilder_ == null) {
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder addAllAndroidManifestResources(
+          java.lang.Iterable<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource> values) {
+        if (androidManifestResourcesBuilder_ == null) {
+          ensureAndroidManifestResourcesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, androidManifestResources_);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder clearAndroidManifestResources() {
+        if (androidManifestResourcesBuilder_ == null) {
+          androidManifestResources_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000020);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public Builder removeAndroidManifestResources(int index) {
+        if (androidManifestResourcesBuilder_ == null) {
+          ensureAndroidManifestResourcesIsMutable();
+          androidManifestResources_.remove(index);
+          onChanged();
+        } else {
+          androidManifestResourcesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder getAndroidManifestResourcesBuilder(
+          int index) {
+        return getAndroidManifestResourcesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder getAndroidManifestResourcesOrBuilder(
+          int index) {
+        if (androidManifestResourcesBuilder_ == null) {
+          return androidManifestResources_.get(index);  } else {
+          return androidManifestResourcesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public java.util.List<? extends com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder> 
+           getAndroidManifestResourcesOrBuilderList() {
+        if (androidManifestResourcesBuilder_ != null) {
+          return androidManifestResourcesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(androidManifestResources_);
+        }
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder addAndroidManifestResourcesBuilder() {
+        return getAndroidManifestResourcesFieldBuilder().addBuilder(
+            com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder addAndroidManifestResourcesBuilder(
+          int index) {
+        return getAndroidManifestResourcesFieldBuilder().addBuilder(
+            index, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Information about resources referenced from AndroidManifest.xml.
+       * </pre>
+       *
+       * <code>repeated .externalBuild.apk_manifest.AndroidManifestResource android_manifest_resources = 6;</code>
+       */
+      public java.util.List<com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder> 
+           getAndroidManifestResourcesBuilderList() {
+        return getAndroidManifestResourcesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder> 
+          getAndroidManifestResourcesFieldBuilder() {
+        if (androidManifestResourcesBuilder_ == null) {
+          androidManifestResourcesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResource.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.AndroidManifestResourceOrBuilder>(
+                  androidManifestResources_,
+                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  getParentForChildren(),
+                  isClean());
+          androidManifestResources_ = null;
+        }
+        return androidManifestResourcesBuilder_;
+      }
+
+      private com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact debugKeystore_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> debugKeystoreBuilder_;
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public boolean hasDebugKeystore() {
+        return debugKeystoreBuilder_ != null || debugKeystore_ != null;
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact getDebugKeystore() {
+        if (debugKeystoreBuilder_ == null) {
+          return debugKeystore_ == null ? com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : debugKeystore_;
+        } else {
+          return debugKeystoreBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public Builder setDebugKeystore(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
+        if (debugKeystoreBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          debugKeystore_ = value;
+          onChanged();
+        } else {
+          debugKeystoreBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public Builder setDebugKeystore(
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder builderForValue) {
+        if (debugKeystoreBuilder_ == null) {
+          debugKeystore_ = builderForValue.build();
+          onChanged();
+        } else {
+          debugKeystoreBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public Builder mergeDebugKeystore(com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact value) {
+        if (debugKeystoreBuilder_ == null) {
+          if (debugKeystore_ != null) {
+            debugKeystore_ =
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.newBuilder(debugKeystore_).mergeFrom(value).buildPartial();
+          } else {
+            debugKeystore_ = value;
+          }
+          onChanged();
+        } else {
+          debugKeystoreBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public Builder clearDebugKeystore() {
+        if (debugKeystoreBuilder_ == null) {
+          debugKeystore_ = null;
+          onChanged();
+        } else {
+          debugKeystore_ = null;
+          debugKeystoreBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder getDebugKeystoreBuilder() {
+        
+        onChanged();
+        return getDebugKeystoreFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder getDebugKeystoreOrBuilder() {
+        if (debugKeystoreBuilder_ != null) {
+          return debugKeystoreBuilder_.getMessageOrBuilder();
+        } else {
+          return debugKeystore_ == null ?
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.getDefaultInstance() : debugKeystore_;
+        }
+      }
+      /**
+       * <pre>
+       * Location of the debug keystore file.
+       * </pre>
+       *
+       * <code>optional .externalBuild.apk_manifest.Artifact debug_keystore = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder> 
+          getDebugKeystoreFieldBuilder() {
+        if (debugKeystoreBuilder_ == null) {
+          debugKeystoreBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact.Builder, com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ArtifactOrBuilder>(
+                  getDebugKeystore(),
+                  getParentForChildren(),
+                  isClean());
+          debugKeystore_ = null;
+        }
+        return debugKeystoreBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:externalBuild.apk_manifest.ApkManifest)
     }
 
+    // @@protoc_insertion_point(class_scope:externalBuild.apk_manifest.ApkManifest)
+    private static final com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest DEFAULT_INSTANCE;
     static {
-      defaultInstance = new ApkManifest(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest();
     }
 
-    // @@protoc_insertion_point(class_scope:blaze.apk_manifest.ApkManifest)
+    public static com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<ApkManifest>
+        PARSER = new com.google.protobuf.AbstractParser<ApkManifest>() {
+      public ApkManifest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new ApkManifest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ApkManifest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ApkManifest> getParserForType() {
+      return PARSER;
+    }
+
+    public com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_blaze_apk_manifest_Artifact_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_blaze_apk_manifest_Artifact_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_blaze_apk_manifest_NativeLib_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_blaze_apk_manifest_NativeLib_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_blaze_apk_manifest_AndroidSdk_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_blaze_apk_manifest_AndroidSdk_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_blaze_apk_manifest_ApkManifest_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_blaze_apk_manifest_ApkManifest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_Artifact_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_Artifact_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_NativeLib_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_NativeLib_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_AndroidSdk_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_AndroidManifestResource_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_externalBuild_apk_manifest_ApkManifest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_externalBuild_apk_manifest_ApkManifest_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static com.google.protobuf.Descriptors.FileDescriptor
+  private static  com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n!src/main/proto/apk_manifest.proto\022\022bla" +
-      "ze.apk_manifest\"0\n\010Artifact\022\026\n\016exec_root" +
-      "_path\030\001 \001(\t\022\014\n\004hash\030\002 \001(\014\"L\n\tNativeLib\0221" +
-      "\n\013native_libs\030\001 \003(\0132\034.blaze.apk_manifest" +
-      ".Artifact\022\014\n\004arch\030\002 \001(\t\"\353\002\n\nAndroidSdk\022\014" +
-      "\n\004aapt\030\001 \001(\t\022\013\n\003adb\030\002 \001(\t\022\014\n\004aidl\030\003 \001(\t\022" +
-      "\023\n\013android_jar\030\004 \001(\t\022\027\n\017annotations_jar\030" +
-      "\005 \001(\t\022\022\n\napkbuilder\030\006 \001(\t\022\n\n\002dx\030\007 \001(\t\022\026\n" +
-      "\016framework_aidl\030\010 \001(\t\022\014\n\004jack\030\t \001(\t\022\014\n\004j" +
-      "ill\030\n \001(\t\022\030\n\020main_dex_classes\030\013 \001(\t\022\035\n\025m",
-      "ain_dex_list_creator\030\014 \001(\t\022\020\n\010proguard\030\r" +
-      " \001(\t\022\032\n\022resource_extractor\030\016 \001(\t\022\034\n\024shri" +
-      "nked_android_jar\030\017 \001(\t\022\020\n\010zipalign\030\020 \001(\t" +
-      "\022\033\n\023build_tools_version\030\021 \001(\t\"\215\002\n\013ApkMan" +
-      "ifest\0223\n\013android_sdk\030\001 \001(\0132\036.blaze.apk_m" +
-      "anifest.AndroidSdk\022*\n\004jars\030\002 \003(\0132\034.blaze" +
-      ".apk_manifest.Artifact\0222\n\014resource_apk\030\003" +
-      " \001(\0132\034.blaze.apk_manifest.Artifact\0221\n\nna" +
-      "tive_lib\030\004 \003(\0132\035.blaze.apk_manifest.Nati" +
-      "veLib\0226\n\020android_manifest\030\005 \001(\0132\034.blaze.",
-      "apk_manifest.ArtifactBS\n7com.google.devt" +
-      "ools.build.lib.rules.android.apkmanifest" +
-      "B\030ExternalBuildApkManifest"
+      "\n\022apk_manifest.proto\022\032externalBuild.apk_" +
+      "manifest\"?\n\010Artifact\022\026\n\016exec_root_path\030\001" +
+      " \001(\t\022\014\n\004hash\030\002 \001(\014\022\r\n\005label\030\003 \001(\t\"T\n\tNat" +
+      "iveLib\0229\n\013native_libs\030\001 \003(\0132$.externalBu" +
+      "ild.apk_manifest.Artifact\022\014\n\004arch\030\002 \001(\t\"" +
+      "\353\002\n\nAndroidSdk\022\014\n\004aapt\030\001 \001(\t\022\013\n\003adb\030\002 \001(" +
+      "\t\022\014\n\004aidl\030\003 \001(\t\022\023\n\013android_jar\030\004 \001(\t\022\027\n\017" +
+      "annotations_jar\030\005 \001(\t\022\022\n\napkbuilder\030\006 \001(" +
+      "\t\022\n\n\002dx\030\007 \001(\t\022\026\n\016framework_aidl\030\010 \001(\t\022\014\n" +
+      "\004jack\030\t \001(\t\022\014\n\004jill\030\n \001(\t\022\030\n\020main_dex_cl",
+      "asses\030\013 \001(\t\022\035\n\025main_dex_list_creator\030\014 \001" +
+      "(\t\022\020\n\010proguard\030\r \001(\t\022\032\n\022resource_extract" +
+      "or\030\016 \001(\t\022\034\n\024shrinked_android_jar\030\017 \001(\t\022\020" +
+      "\n\010zipalign\030\020 \001(\t\022\033\n\023build_tools_version\030" +
+      "\021 \001(\t\"\270\001\n\027AndroidManifestResource\022\014\n\004nam" +
+      "e\030\001 \001(\t\022\014\n\004type\030\002 \001(\t\022S\n\014value_hashes\030\003 " +
+      "\003(\0132=.externalBuild.apk_manifest.Android" +
+      "ManifestResource.ValueHash\032,\n\tValueHash\022" +
+      "\021\n\tqualifier\030\001 \001(\t\022\014\n\004hash\030\002 \001(\014\"\314\003\n\013Apk" +
+      "Manifest\022;\n\013android_sdk\030\001 \001(\0132&.external",
+      "Build.apk_manifest.AndroidSdk\0222\n\004jars\030\002 " +
+      "\003(\0132$.externalBuild.apk_manifest.Artifac" +
+      "t\022:\n\014resource_apk\030\003 \001(\0132$.externalBuild." +
+      "apk_manifest.Artifact\0229\n\nnative_lib\030\004 \003(" +
+      "\0132%.externalBuild.apk_manifest.NativeLib" +
+      "\022>\n\020android_manifest\030\005 \001(\0132$.externalBui" +
+      "ld.apk_manifest.Artifact\022W\n\032android_mani" +
+      "fest_resources\030\006 \003(\01323.externalBuild.apk" +
+      "_manifest.AndroidManifestResource\022<\n\016deb" +
+      "ug_keystore\030\007 \001(\0132$.externalBuild.apk_ma",
+      "nifest.ArtifactBS\n7com.google.devtools.b" +
+      "uild.lib.rules.android.apkmanifestB\030Exte" +
+      "rnalBuildApkManifestb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_blaze_apk_manifest_Artifact_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_blaze_apk_manifest_Artifact_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_blaze_apk_manifest_Artifact_descriptor,
-              new java.lang.String[] { "ExecRootPath", "Hash", });
-          internal_static_blaze_apk_manifest_NativeLib_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_blaze_apk_manifest_NativeLib_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_blaze_apk_manifest_NativeLib_descriptor,
-              new java.lang.String[] { "NativeLibs", "Arch", });
-          internal_static_blaze_apk_manifest_AndroidSdk_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_blaze_apk_manifest_AndroidSdk_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_blaze_apk_manifest_AndroidSdk_descriptor,
-              new java.lang.String[] { "Aapt", "Adb", "Aidl", "AndroidJar", "AnnotationsJar", "Apkbuilder", "Dx", "FrameworkAidl", "Jack", "Jill", "MainDexClasses", "MainDexListCreator", "Proguard", "ResourceExtractor", "ShrinkedAndroidJar", "Zipalign", "BuildToolsVersion", });
-          internal_static_blaze_apk_manifest_ApkManifest_descriptor =
-            getDescriptor().getMessageTypes().get(3);
-          internal_static_blaze_apk_manifest_ApkManifest_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_blaze_apk_manifest_ApkManifest_descriptor,
-              new java.lang.String[] { "AndroidSdk", "Jars", "ResourceApk", "NativeLib", "AndroidManifest", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_externalBuild_apk_manifest_Artifact_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_externalBuild_apk_manifest_Artifact_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_Artifact_descriptor,
+        new java.lang.String[] { "ExecRootPath", "Hash", "Label", });
+    internal_static_externalBuild_apk_manifest_NativeLib_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_externalBuild_apk_manifest_NativeLib_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_NativeLib_descriptor,
+        new java.lang.String[] { "NativeLibs", "Arch", });
+    internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_externalBuild_apk_manifest_AndroidSdk_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_AndroidSdk_descriptor,
+        new java.lang.String[] { "Aapt", "Adb", "Aidl", "AndroidJar", "AnnotationsJar", "Apkbuilder", "Dx", "FrameworkAidl", "Jack", "Jill", "MainDexClasses", "MainDexListCreator", "Proguard", "ResourceExtractor", "ShrinkedAndroidJar", "Zipalign", "BuildToolsVersion", });
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor,
+        new java.lang.String[] { "Name", "Type", "ValueHashes", });
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor =
+      internal_static_externalBuild_apk_manifest_AndroidManifestResource_descriptor.getNestedTypes().get(0);
+    internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_AndroidManifestResource_ValueHash_descriptor,
+        new java.lang.String[] { "Qualifier", "Hash", });
+    internal_static_externalBuild_apk_manifest_ApkManifest_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_externalBuild_apk_manifest_ApkManifest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_externalBuild_apk_manifest_ApkManifest_descriptor,
+        new java.lang.String[] { "AndroidSdk", "Jars", "ResourceApk", "NativeLib", "AndroidManifest", "AndroidManifestResources", "DebugKeystore", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

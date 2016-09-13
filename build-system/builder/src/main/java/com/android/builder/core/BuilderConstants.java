@@ -39,6 +39,8 @@ public class BuilderConstants {
     public static final String DEBUG = "debug";
     public static final String RELEASE = "release";
 
+    public static final String EXTERNAL_BUILD = "externalBuild";
+
     public static final String LINT = "lint";
 
     public static final String FD_REPORTS = "reports";
