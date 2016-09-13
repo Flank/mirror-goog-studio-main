@@ -63,12 +63,12 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
- * Simple tool for downloading SDK packages, to be used in the windows studio release process.
+ * Simple tool for installing, uninstalling, etc. SDK packages.
  *
  * Can be built with a convenient wrapper script from the commandline like
- * gradlew :base:sdk-downloader:assemble
+ * gradlew :base:sdkmanager-cli:installDist
  */
-public class SdkDownloader {
+public class SdkManagerCli {
 
     private final Settings mSettings;
     private final AndroidSdkHandler mHandler;
@@ -86,12 +86,12 @@ public class SdkDownloader {
         }
         File localPath = new File(settings.getLocalPath().toString());
         AndroidSdkHandler handler = new AndroidSdkHandler(localPath, fop);
-        new SdkDownloader(settings, System.out, System.in, new LegacyDownloader(fop), handler)
+        new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop), handler)
                 .run();
         System.out.println("done");
     }
 
-    public SdkDownloader(Settings settings, PrintStream out, InputStream in,
+    public SdkManagerCli(Settings settings, PrintStream out, InputStream in,
             Downloader downloader, AndroidSdkHandler handler) {
         mSettings = settings;
         mOut = out;

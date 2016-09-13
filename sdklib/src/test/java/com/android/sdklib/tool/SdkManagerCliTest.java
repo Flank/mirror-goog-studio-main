@@ -60,9 +60,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Tests for {@link SdkDownloader}
+ * Tests for {@link SdkManagerCli}
  */
-public class SdkDownloaderTest {
+public class SdkManagerCliTest {
 
     private static final String SDK_LOCATION = "/sdk";
 
@@ -171,10 +171,10 @@ public class SdkDownloaderTest {
      */
     @Test
     public void basicList() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--list", "/sdk"}, mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 null,
                 mDownloader,
@@ -206,7 +206,7 @@ public class SdkDownloaderTest {
      */
     @Test
     public void channel() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--list", "--channel=1", "/sdk"},
                         mFileOp.getFileSystem());
         assertEquals("channel-1", settings.getChannel().getId());
@@ -217,11 +217,11 @@ public class SdkDownloaderTest {
      */
     @Test
     public void obsoleteList() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--list", "--include_obsolete", "/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 null,
                 mDownloader,
@@ -265,13 +265,13 @@ public class SdkDownloaderTest {
      */
     @Test
     public void basicInstall() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"/sdk", "test;remote1"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
@@ -287,13 +287,13 @@ public class SdkDownloaderTest {
      */
     @Test
     public void multiInstallWithDeps() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"/sdk", "test;remote1", "depends_on"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("y\ny\n".getBytes()),
                 mDownloader,
@@ -310,14 +310,14 @@ public class SdkDownloaderTest {
      */
     @Test
     public void update() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--update", "/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertEquals(1,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 null,
                 mDownloader,
@@ -337,14 +337,14 @@ public class SdkDownloaderTest {
      */
     @Test
     public void updateObsolete() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--update", "--include_obsolete", "/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertEquals(1,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
@@ -364,7 +364,7 @@ public class SdkDownloaderTest {
      */
     @Test
     public void uninstall() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--uninstall", "/sdk", "obsolete"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -372,7 +372,7 @@ public class SdkDownloaderTest {
         assertEquals(3,
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
         assertNotNull(mSdkHandler.getLocalPackage("obsolete", progress));
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 null,
                 mDownloader,
@@ -389,14 +389,14 @@ public class SdkDownloaderTest {
      */
     @Test
     public void multiUninstall() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"--uninstall", "/sdk", "obsolete", "upgrade"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertEquals(3,
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 null,
                 mDownloader,
@@ -416,13 +416,13 @@ public class SdkDownloaderTest {
      */
     @Test
     public void acceptOrRejectLicense() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"/sdk", "depended_on"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(mSdkHandler.getLocalPackage("depended_on", progress));
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("foo\n".getBytes()),
                 mDownloader,
@@ -432,7 +432,7 @@ public class SdkDownloaderTest {
         assertNull(mSdkHandler.getLocalPackage("depended_on",
                 progress));
 
-        downloader = new SdkDownloader(settings,
+        downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
@@ -449,13 +449,13 @@ public class SdkDownloaderTest {
      */
     @Test
     public void rejectLicenseWithDeps() throws Exception {
-        SdkDownloader.Settings settings = SdkDownloader.Settings
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
                 .createSettings(new String[]{"/sdk", "depends_on", "test;remote1"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         // Accept depending license but not depended-on license, then continue.
-        SdkDownloader downloader = new SdkDownloader(settings,
+        SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
                 new ByteArrayInputStream("y\nn\ny\n".getBytes()),
                 mDownloader,

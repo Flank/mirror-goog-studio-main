@@ -18,7 +18,8 @@ apply plugin: 'application'
 apply plugin: 'java'
 apply plugin: 'sdk-files'
 
-mainClassName = "com.android.sdklib.tool.SdkDownloader"
+mainClassName = "com.android.sdklib.tool.SdkManagerCli"
+applicationName = "sdkmanager"
 applicationDefaultJvmArgs = ["-ea"]
 
 sourceCompatibility = 1.8
@@ -28,14 +29,14 @@ dependencies {
 
 sdk {
     common(mac, linux) {
-        item(new File(buildDir, "scripts/sdk-downloader")) {
+        item(new File(buildDir, "scripts/sdkmanager")) {
             into "bin"
             notice null
             builtBy 'startScripts'
         }
     }
     windows {
-        item(new File(buildDir, "scripts/sdk-downloader.bat")) {
+        item(new File(buildDir, "scripts/sdkmanager.bat")) {
             into "bin"
             notice null
             builtBy 'startScripts'

@@ -17,7 +17,7 @@
 package com.android.tools.utils;
 
 import com.android.repository.impl.meta.Archive;
-import com.android.sdklib.tool.SdkDownloader;
+import com.android.sdklib.tool.SdkManagerCli;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +50,7 @@ import java.util.Map;
  * and you want to add a new SDK component to all of them, say build-tools;19.0.3, then this script
  * helps manage that.
  *
- * Essentially, this is a utility that sits on top of {@link SdkDownloader}, which itself is
+ * Essentially, this is a utility that sits on top of {@link SdkManagerCli}, which itself is
  * responsible for managing an SDK for a single platform.
  *
  * Run "DevSdkUpdater --help" or see the {@link #usage()} method for more information.
@@ -197,14 +197,14 @@ public final class DevSdkUpdater {
 
         for (OsEntry osEntry : OS_ENTRIES) {
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
-            // Delegate download operation to SdkDownloader program
+            // Delegate download operation to SdkManagerCli program
             List<String> args = new ArrayList<>();
             args.add("--channel=3");
             args.add(osSdkDest.getAbsolutePath());
             args.addAll(packages);
 
             Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
-            SdkDownloader.main(args.stream().toArray(String[]::new));
+            SdkManagerCli.main(args.stream().toArray(String[]::new));
         }
 
         if (!filters.isEmpty()) {
@@ -276,7 +276,7 @@ public final class DevSdkUpdater {
     private static final class OsEntry {
 
         /**
-         * Names that the SdkDownloader utility expects for specifying target OS.
+         * Names that the SdkManagerCli utility expects for specifying target OS.
          */
         public final String mName;
 
