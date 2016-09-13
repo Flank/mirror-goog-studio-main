@@ -48,6 +48,7 @@ import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.signing.DefaultSigningConfig;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -205,13 +206,12 @@ class ExternalBuildTaskManager {
 
         transformManager.addTransform(tasks, variantScope, dexTransform);
 
-        // for now always use the debug key.
-        SigningConfig debugSigningConfig = new SigningConfig(BuilderConstants.DEBUG);
+        SigningConfig manifestSigningConfig = createManifestSigningConfig(externalBuildContext);
 
         PackagingScope packagingScope =
                 new ExternalBuildPackagingScope(
                         project, externalBuildContext, variantScope, transformManager,
-                        debugSigningConfig);
+                        manifestSigningConfig);
 
         // TODO: Where should assets come from?
         AndroidTask<Task> createAssetsDirectory =
@@ -279,5 +279,16 @@ class ExternalBuildTaskManager {
         for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
             task.dependsOn(tasks, preColdswapTask);
         }
+    }
+
+    private SigningConfig createManifestSigningConfig(ExternalBuildContext externalBuildContext) {
+        SigningConfig config = new SigningConfig(BuilderConstants.EXTERNAL_BUILD);
+        File keystore = new File(externalBuildContext.getExecutionRoot(),
+            externalBuildContext.getBuildManifest().getDebugKeystore().getExecRootPath());
+        config.setStoreFile(keystore);
+        config.setStorePassword(DefaultSigningConfig.DEFAULT_PASSWORD);
+        config.setKeyAlias(DefaultSigningConfig.DEFAULT_ALIAS);
+        config.setKeyPassword(DefaultSigningConfig.DEFAULT_PASSWORD);
+        return config;
     }
 }
