@@ -16,6 +16,7 @@
 
 #include "filesystem_notifier.h"
 
+#include <limits.h>
 #include <poll.h>
 #include <sys/inotify.h>
 #include <sys/ioctl.h>
@@ -56,6 +57,7 @@ uint32_t FileSystemNotifier::GetDstValue(Event e) {
     case CLOSE:
       return IN_CLOSE;
   }
+  return 0;
 }
 
 bool FileSystemNotifier::IsReadyToNotify() {
