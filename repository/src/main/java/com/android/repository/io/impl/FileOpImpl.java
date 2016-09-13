@@ -33,7 +33,7 @@ import java.nio.file.FileSystems;
 public class FileOpImpl extends FileSystemFileOp {
 
     @Override
-    protected FileSystem getFileSystem() {
+    public FileSystem getFileSystem() {
         return FileSystems.getDefault();
     }
 

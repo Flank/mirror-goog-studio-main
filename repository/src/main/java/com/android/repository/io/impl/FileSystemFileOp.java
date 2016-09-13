@@ -54,7 +54,7 @@ public abstract class FileSystemFileOp implements FileOp {
      * Gets the {@link FileSystem} this is based on.
      * @return
      */
-    protected abstract FileSystem getFileSystem();
+    public abstract FileSystem getFileSystem();
 
     @Override
     public final boolean isWindows() {

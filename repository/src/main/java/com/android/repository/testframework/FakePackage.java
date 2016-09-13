@@ -42,18 +42,18 @@ import java.util.Collections;
 /**
  * A fake {@link RepoPackage} (implementing both {@link LocalPackage} and {@link RemotePackage},
  * for use in unit tests.
- *
- * Currently not especially fully-featured.
  */
 @SuppressWarnings("ConstantConditions")
 public class FakePackage implements LocalPackage, RemotePackage {
     private final String mPath;
     private Revision mVersion = new Revision(1);
-    private Collection<Dependency> mDependencies = Collections.emptyList();
+    private Collection<Dependency> mDependencies = ImmutableList.of();
     private TypeDetails mDetails;
     private Channel mChannel;
     private Archive mArchive;
     private String mDisplayName = "fake package";
+    private License mLicense;
+    private boolean mObsolete;
 
     public FakePackage(@NonNull String path) {
         mPath = path;
@@ -126,7 +126,11 @@ public class FakePackage implements LocalPackage, RemotePackage {
     @Nullable
     @Override
     public License getLicense() {
-        return null;
+        return mLicense;
+    }
+
+    public void setLicense(@Nullable License license) {
+        mLicense = license;
     }
 
     @NonNull
@@ -143,7 +147,11 @@ public class FakePackage implements LocalPackage, RemotePackage {
 
     @Override
     public boolean obsolete() {
-        return false;
+        return mObsolete;
+    }
+
+    public void setObsolete(boolean obsolete) {
+        mObsolete = obsolete;
     }
 
     @NonNull

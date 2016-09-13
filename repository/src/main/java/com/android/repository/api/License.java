@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @SuppressWarnings("MethodMayBeStatic")
 @XmlTransient
-public abstract class License {
+public abstract class License implements Comparable<License> {
 
     /**
      * The name of the directory used to store tokens indicating approval of licenses.
@@ -191,6 +191,11 @@ public abstract class License {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int compareTo(License otherLicense) {
+        return getId().compareTo(otherLicense.getId());
     }
 }
 

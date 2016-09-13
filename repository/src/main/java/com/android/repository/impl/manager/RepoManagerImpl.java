@@ -180,7 +180,7 @@ public class RepoManagerImpl extends RepoManager {
      * @see #RepoManagerImpl(FileOp)
      */
     @VisibleForTesting
-    RepoManagerImpl(@Nullable FileOp fop, @Nullable LocalRepoLoaderFactory localFactory,
+    public RepoManagerImpl(@Nullable FileOp fop, @Nullable LocalRepoLoaderFactory localFactory,
             @Nullable RemoteRepoLoaderFactory remoteFactory) {
         mFop = fop;
         registerSchemaModule(getCommonModule());
@@ -611,7 +611,8 @@ public class RepoManagerImpl extends RepoManager {
         LocalRepoLoader createLocalRepoLoader();
     }
 
-    interface RemoteRepoLoaderFactory {
+    @VisibleForTesting
+    public interface RemoteRepoLoaderFactory {
 
         @NonNull
         RemoteRepoLoader createRemoteRepoLoader(@NonNull ProgressIndicator progress);

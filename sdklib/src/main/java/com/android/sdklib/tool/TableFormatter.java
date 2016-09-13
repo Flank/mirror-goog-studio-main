@@ -55,10 +55,11 @@ public class TableFormatter<T> {
 
         Map<Column<T>, Integer> maxLengths = mColumns.stream().collect(Collectors.toMap(
                 Function.identity(),
-                column -> values.stream()
-                        .mapToInt(value -> column.getValue(value).length())
-                        .map(length -> Math.min(length, column.getMaxLength()))
-                        .max().orElse(0)));
+                column -> Math.max(values.stream()
+                                .mapToInt(value -> column.getValue(value).length())
+                                .map(length -> Math.min(length, column.getMaxLength()))
+                                .max().orElse(0),
+                        column.getTitle().length())));
 
         String pattern = "  " +
                 String.join(" | ", mColumns.stream()

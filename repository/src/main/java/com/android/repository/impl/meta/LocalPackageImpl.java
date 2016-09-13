@@ -61,7 +61,10 @@ public abstract class LocalPackageImpl extends RepoPackageImpl implements LocalP
         result.setLicense(repoPackage.getLicense());
         result.setPath(repoPackage.getPath());
         for (Dependency d : repoPackage.getAllDependencies()) {
-            result.addDependency(d);
+            Dependency newDep = factory.createDependencyType();
+            newDep.setPath(d.getPath());
+            newDep.setMinRevision(d.getMinRevision());
+            result.addDependency(newDep);
         }
         result.setObsolete(repoPackage.obsolete());
         result.setTypeDetails(repoPackage.getTypeDetails());
