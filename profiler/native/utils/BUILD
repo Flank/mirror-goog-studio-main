@@ -31,6 +31,7 @@ cc_library(
         "config.h",
         "fake_clock.h",
         "file_reader.h",
+        "filesystem_notifier.h",
         "fs/dir.h",
         "fs/disk_file_system.h",
         "fs/file.h",
