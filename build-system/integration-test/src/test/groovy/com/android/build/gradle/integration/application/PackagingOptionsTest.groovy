@@ -164,7 +164,8 @@ dependencies {
 """
         project.execute("clean", "assembleDebug")
 
-        assertThatZip(project.getApk("debug")).containsFileWithContent("conflict.txt", "foofoo")
+        assertThatZip(project.getApk("debug"))
+                .containsFileWithContent("conflict.txt", "foo\nfoo")
     }
 
     @Test
@@ -214,7 +215,7 @@ android{
         project.execute("clean", "assembleDebug")
         // files should be merged
         assertThatZip(project.getApk("debug")).
-                containsFileWithContent("conflict.txt", "fooproject-foo")
+                containsFileWithContent("conflict.txt", "foo\nproject-foo")
     }
 
     @Test

@@ -37,7 +37,9 @@ import java.util.Set;
  *     path matches the first-pick, only the first found will be selected.
  *
  *     <dt>Merge
- *     <dd>Paths that match a merge pattern will be concatenated and merged into the APK.
+ *     <dd>Paths that match a merge pattern will be concatenated and merged into the APK. When
+ *     merging two files, a newline will be appended to the end of the first file, if it doesn't
+ *     end with a newline already. This is done for all files, regardless of the type of contents.
  *
  *     <dt>Exclude
  *     <dd>Paths that match an exclude pattern will not be included in the APK.
@@ -71,34 +73,34 @@ import java.util.Set;
  * automatically prepended with a forward slash. So, {@code file} and {@code /file} are effectively
  * the same pattern.
  *
- * <p>To decide the action on a specific path, the following algorithm is used:
- * <ol>
- *     <li>If any first-pick pattern matches the
- * </ol>
- *
- * <p>Several paths are excluded by default:
+ * <p>The default values are:
  * <ul>
- *     <li>{@code /META-INF/LICENCE}
- *     <li>{@code /META-INF/LICENCE.txt}
- *     <li>{@code /META-INF/NOTICE}
- *     <li>{@code /META-INF/NOTICE.txt}
- *     <li>{@code /LICENCE}
- *     <li>{@code /LICENCE.txt}
- *     <li>{@code /NOTICE}
- *     <li>{@code /NOTICE.txt}
- *     <li><code>&#042;&#042;/.svn/&#042;&#042;</code> (all {@code .svn} directory contents)
- *     <li><code>&#042;&#042;/CVS/&#042;&#042;</code> (all {@code CVS} directory contents)
- *     <li><code>&#042;&#042;/SCCS/&#042;&#042;</code> (all {@code SCCS} directory contents)
- *     <li><code>&#042;&#042;/.&#042;</code> (all UNIX hidden files)
- *     <li><code>&#042;&#042;/.&#042;/&#042;&#042;</code> (all contents of UNIX hidden directories)
- *     <li><code>&#042;&#042;/&#042;~</code> (temporary files)
- *     <li><code>&#042;&#042;/thumbs.db</code>
- *     <li><code>&#042;&#042;/picasa.ini</code>
- *     <li><code>&#042;&#042;/about.html</code>
- *     <li><code>&#042;&#042;/package.html</code>
- *     <li><code>&#042;&#042;/overview.html</code>
- *     <li><code>&#042;&#042;/_&#042;</code>
- *     <li><code>&#042;&#042;/_&#042;/&#042;&#042;</code>
+ *     <li>Pick first: none
+ *     <li>Merge: {@code /META-INF/services/&#042;&#042;}
+ *     <li>Exclude:
+ *     <ul>
+ *         <li>{@code /META-INF/LICENCE}
+ *         <li>{@code /META-INF/LICENCE.txt}
+ *         <li>{@code /META-INF/NOTICE}
+ *         <li>{@code /META-INF/NOTICE.txt}
+ *         <li>{@code /LICENCE}
+ *         <li>{@code /LICENCE.txt}
+ *         <li>{@code /NOTICE}
+ *         <li>{@code /NOTICE.txt}
+ *         <li><code>&#042;&#042;/.svn/&#042;&#042;</code> (all {@code .svn} directory contents)
+ *         <li><code>&#042;&#042;/CVS/&#042;&#042;</code> (all {@code CVS} directory contents)
+ *         <li><code>&#042;&#042;/SCCS/&#042;&#042;</code> (all {@code SCCS} directory contents)
+ *         <li><code>&#042;&#042;/.&#042;</code> (all UNIX hidden files)
+ *         <li><code>&#042;&#042;/.&#042;/&#042;&#042;</code> (all contents of UNIX hidden directories)
+ *         <li><code>&#042;&#042;/&#042;~</code> (temporary files)
+ *         <li><code>&#042;&#042;/thumbs.db</code>
+ *         <li><code>&#042;&#042;/picasa.ini</code>
+ *         <li><code>&#042;&#042;/about.html</code>
+ *         <li><code>&#042;&#042;/package.html</code>
+ *         <li><code>&#042;&#042;/overview.html</code>
+ *         <li><code>&#042;&#042;/_&#042;</code>
+ *         <li><code>&#042;&#042;/_&#042;/&#042;&#042;</code>
+ *     </ul>
  * </ul>
  *
  * <p>Example that adds the first {@code anyFileWillDo} file found and ignores all the others and
@@ -172,6 +174,9 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         // Exclude stuff for unknown reasons
         exclude("**/_*");
         exclude("**/_*/**");
+
+        // Merge services
+        merge("/META-INF/services/**");
     }
 
     /**
