@@ -16,6 +16,7 @@
 
 #include "filesystem_notifier.h"
 
+#include <limits.h>
 #include <poll.h>
 #include <sys/inotify.h>
 #include <sys/ioctl.h>
