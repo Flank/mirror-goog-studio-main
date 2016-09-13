@@ -365,6 +365,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 @Path("android.dataBinding") DataBindingOptions dataBindingOptions) {
             dataBindingOptions.setEnabled(false);
             dataBindingOptions.setAddDefaultAdapters(true);
+            dataBindingOptions.setEnabledForTests(false);
         }
 
        // TODO: Remove code duplicated from BasePlugin.

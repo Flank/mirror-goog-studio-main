@@ -23,6 +23,7 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
     private String version;
     private boolean enabled = false;
     private boolean addDefaultAdapters = true;
+    private boolean enabledForTests = false;
 
     /**
      * The version of data binding to use.
@@ -58,5 +59,17 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
 
     public void setAddDefaultAdapters(boolean addDefaultAdapters) {
         this.addDefaultAdapters = addDefaultAdapters;
+    }
+
+    /**
+     * Whether to run data binding code generation for test projects
+     */
+    @Override
+    public boolean isEnabledForTests() {
+        return enabledForTests;
+    }
+
+    public void setEnabledForTests(boolean enabledForTests) {
+        this.enabledForTests = enabledForTests;
     }
 }

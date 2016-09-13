@@ -242,9 +242,7 @@ public class ApplicationTaskManager extends TaskManager {
                 });
 
         // Add data binding tasks if enabled
-        if (extension.getDataBinding().isEnabled()) {
-            createDataBindingTasks(tasks, variantScope);
-        }
+        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         createStripNativeLibraryTask(tasks, variantScope);
 
