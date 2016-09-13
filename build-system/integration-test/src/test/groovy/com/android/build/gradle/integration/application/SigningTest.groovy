@@ -57,6 +57,9 @@ import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIA
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FILE
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD
+import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V1_ENABLED
+import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V2_ENABLED
+
 /**
  * Integration test for all signing-related features.
  */
@@ -417,6 +420,45 @@ class SigningTest {
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
         assertThatApk(apk).contains("META-INF/CERT.SF")
+        assertThatApk(apk).containsApkSigningBlock()
+    }
+
+    @Test
+    void "assemble with injected v1 config only"() {
+        // add prop args for signing override.
+        List<String> args = ImmutableList.of(
+                "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
+                "-P" + PROPERTY_SIGNING_STORE_PASSWORD + "=" + STORE_PASSWORD,
+                "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
+                "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD,
+                "-P" + PROPERTY_SIGNING_V1_ENABLED + "=true",
+                "-P" + PROPERTY_SIGNING_V2_ENABLED + "=false");
+
+        project.executor().withArguments(args).withPackaging(packaging).run("assembleRelease")
+        File apk = project.getApk("release")
+
+        assertThatApk(apk).contains("META-INF/$certEntryName")
+        assertThatApk(apk).doesNotContainApkSigningBlock()
+    }
+
+    @Test
+    void "assemble with injected v2 config only"() {
+        // Old packaging doesn't support the v2 signing scheme.
+        Assume.assumeTrue(packaging == Packaging.NEW_PACKAGING)
+
+        // add prop args for signing override.
+        List<String> args = ImmutableList.of(
+                "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
+                "-P" + PROPERTY_SIGNING_STORE_PASSWORD + "=" + STORE_PASSWORD,
+                "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
+                "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD,
+                "-P" + PROPERTY_SIGNING_V1_ENABLED + "=false",
+                "-P" + PROPERTY_SIGNING_V2_ENABLED + "=true");
+
+        project.executor().withArguments(args).withPackaging(packaging).run("assembleRelease")
+        File apk = project.getApk("release")
+
+        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
         assertThatApk(apk).containsApkSigningBlock()
     }
 }

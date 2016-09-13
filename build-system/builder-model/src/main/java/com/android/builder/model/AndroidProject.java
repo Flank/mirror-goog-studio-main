@@ -65,6 +65,8 @@ public interface AndroidProject {
     String PROPERTY_SIGNING_KEY_ALIAS = "android.injected.signing.key.alias";
     String PROPERTY_SIGNING_KEY_PASSWORD = "android.injected.signing.key.password";
     String PROPERTY_SIGNING_STORE_TYPE = "android.injected.signing.store.type";
+    String PROPERTY_SIGNING_V1_ENABLED = "android.injected.signing.v1-enabled";
+    String PROPERTY_SIGNING_V2_ENABLED = "android.injected.signing.v2-enabled";
 
     String PROPERTY_SIGNING_COLDSWAP_MODE = "android.injected.coldswap.mode";
 

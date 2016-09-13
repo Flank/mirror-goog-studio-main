@@ -900,6 +900,14 @@ public class VariantManager implements VariantModel {
                 signingConfigDsl.setStoreType(signingOptions.storeType);
             }
 
+            if (signingOptions.v1Enabled != null) {
+                signingConfigDsl.setV1SigningEnabled(signingOptions.v1Enabled);
+            }
+
+            if (signingOptions.v2Enabled != null) {
+                signingConfigDsl.setV2SigningEnabled(signingOptions.v2Enabled);
+            }
+
             return signingConfigDsl;
         }
         return null;

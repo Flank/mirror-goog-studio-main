@@ -295,7 +295,9 @@ public class AndroidGradleOptions {
                     signingStorePassword,
                     signingKeyAlias,
                     signingKeyPassword,
-                    signingStoreType);
+                    signingStoreType,
+                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
+                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V2_ENABLED));
         }
 
         return null;
@@ -367,6 +369,17 @@ public class AndroidGradleOptions {
             @NonNull Project project,
             @NonNull String propertyName) {
         return getBoolean(project, propertyName, false /*defaultValue*/);
+    }
+
+    @Nullable
+    private static Boolean getOptionalBoolean(
+            @NonNull Project project,
+            @NonNull String propertyName) {
+        if (project.hasProperty(propertyName)) {
+            return getBoolean(project, propertyName);
+        } else {
+            return null;
+        }
     }
 
     private static boolean getBoolean(
@@ -468,18 +481,24 @@ public class AndroidGradleOptions {
         @NonNull public final String keyAlias;
         @NonNull public final String keyPassword;
         @Nullable public final String storeType;
+        @Nullable public final Boolean v1Enabled;
+        @Nullable public final Boolean v2Enabled;
 
         SigningOptions(
                 @NonNull String storeFile,
                 @NonNull String storePassword,
                 @NonNull String keyAlias,
                 @NonNull String keyPassword,
-                @Nullable String storeType) {
+                @Nullable String storeType,
+                @Nullable Boolean v1Enabled,
+                @Nullable Boolean v2Enabled) {
             this.storeFile = storeFile;
             this.storeType = storeType;
             this.storePassword = storePassword;
             this.keyAlias = keyAlias;
             this.keyPassword = keyPassword;
+            this.v1Enabled = v1Enabled;
+            this.v2Enabled = v2Enabled;
         }
     }
 }
