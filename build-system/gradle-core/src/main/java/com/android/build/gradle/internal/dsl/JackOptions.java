@@ -18,9 +18,13 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,11 +40,14 @@ public class JackOptions implements CoreJackOptions {
     private Boolean isJackInProcessFlag;
     @NonNull
     private Map<String, String> additionalParameters = Maps.newHashMap();
+    @NonNull
+    private List<String> pluginNames = Lists.newArrayList();
 
     void _initWith(CoreJackOptions that) {
         isEnabledFlag = that.isEnabled();
         isJackInProcessFlag = that.isJackInProcess();
         additionalParameters = Maps.newHashMap(that.getAdditionalParameters());
+        pluginNames = Lists.newArrayList(that.getPluginNames());
     }
 
     /** {@inheritDoc} */
@@ -81,6 +88,23 @@ public class JackOptions implements CoreJackOptions {
         this.additionalParameters.putAll(additionalParameters);
     }
 
+    /** Sets the plugin names list to the specified one. */
+    public void setPluginNames(@NonNull List<String> pluginNames) {
+        this.pluginNames = Lists.newArrayList(pluginNames);
+    }
+
+    /** Adds the specified plugin names to the existing list of plugin names. */
+    public void pluginNames(@NonNull String... pluginNames) {
+        Collections.addAll(this.pluginNames, pluginNames);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @NonNull
+    public List<String> getPluginNames() {
+        return pluginNames;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -92,20 +116,23 @@ public class JackOptions implements CoreJackOptions {
         JackOptions that = (JackOptions) o;
         return Objects.equal(isEnabledFlag, that.isEnabledFlag)
                 && Objects.equal(isJackInProcessFlag, that.isJackInProcessFlag)
-                && Objects.equal(additionalParameters, that.additionalParameters);
+                && Objects.equal(additionalParameters, that.additionalParameters)
+                && Objects.equal(pluginNames, that.pluginNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(isEnabledFlag, isJackInProcessFlag, additionalParameters);
+        return Objects.hashCode(
+                isEnabledFlag, isJackInProcessFlag, additionalParameters, pluginNames);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("isEnabled", isEnabledFlag)
                 .add("isJackInProcess", isJackInProcessFlag)
                 .add("additionalParameters", isJackInProcessFlag)
+                .add("pluginNames", pluginNames)
                 .toString();
     }
 }

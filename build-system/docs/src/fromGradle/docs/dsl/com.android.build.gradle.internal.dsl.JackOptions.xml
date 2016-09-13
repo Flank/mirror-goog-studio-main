@@ -24,6 +24,7 @@
             <tr><td>enabled</td></tr>
             <tr><td>jackInProcess</td></tr>
             <tr><td>additionalParameters</td></tr>
+            <tr><td>pluginNames</td></tr>
         </table>
     </section>
     <section>

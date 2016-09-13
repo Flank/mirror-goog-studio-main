@@ -287,6 +287,15 @@ public class JackTransform extends Transform {
         options.setAnnotationProcessorOutputDirectory(scope.getAnnotationProcessorOutputDir());
         options.setEcjOptionFile(scope.getJackEcjOptionsFile());
         options.setAdditionalParameters(config.getJackOptions().getAdditionalParameters());
+        List<File> pluginClassPath =
+                Lists.newArrayList(
+                        scope.getVariantData()
+                                .getVariantDependency()
+                                .resolveAndGetJackPluginClassPath(
+                                        androidBuilder.getErrorReporter()));
+        options.setJackPluginClassPath(pluginClassPath);
+        options.setJackPluginNames(config.getJackOptions().getPluginNames());
+
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
 
         // Incremental compilation is disabled for buildtools < 24.0.2 due to b.android.com/220176.

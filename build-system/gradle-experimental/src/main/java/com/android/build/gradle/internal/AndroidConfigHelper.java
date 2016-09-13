@@ -116,6 +116,11 @@ public class AndroidConfigHelper {
                     sourceSet.getWearAppConfigurationName(),
                     "Link to a wear app to embed for object '${sourceSet.name}'.");
 
+            createConfiguration(
+                    configurations,
+                    sourceSet.getJackPluginConfigurationName(),
+                    String.format("Classpath for the '%s' Jack plugins.", sourceSet.getName()));
+
             sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
         });
         return sourceSetsContainer;

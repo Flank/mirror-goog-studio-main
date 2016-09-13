@@ -94,6 +94,7 @@ import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.PlaceholderHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
+import com.android.sdklib.BuildToolInfo.JackApiVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -1687,11 +1688,6 @@ public class AndroidBuilder {
             throws ConfigNotSupportedException, ConfigurationException, CompilationException,
             UnrecoverableException, ClassNotFoundException {
 
-        // Api03 is supported by Duouarn, which is release in the non-preview version of 24.0.0.
-        boolean isApi03Supported =
-                mTargetInfo.getBuildTools().getRevision().compareTo(
-                        JackProcessOptions.DOUARN_REV) >= 0;
-
         BuildToolServiceLoader buildToolServiceLoader
                 = BuildToolsServiceLoader.INSTANCE.forVersion(mTargetInfo.getBuildTools());
 
@@ -1699,61 +1695,54 @@ public class AndroidBuilder {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Optional<JackProvider> jackProvider =
                 buildToolServiceLoader.getSingleService(getLogger(), BuildToolsServiceLoader.JACK);
+        JackApiVersion apiVersion = mTargetInfo.getBuildTools().getSupportedJackApi();
         if (jackProvider.isPresent()) {
 
             // Get configuration object
             try {
-                Api02Config config02;
-                Api03Config config03 = null;
-                if (isApi03Supported) {
-                    config03 = jackProvider.get().createConfig(Api03Config.class);
-                    config02 = config03;
-                } else {
-                    config02 = jackProvider.get().createConfig(Api02Config.class);
-                }
+                Api02Config config = createJackConfig(jackProvider.get());
 
-                config02.setDebugInfoLevel(
+                config.setDebugInfoLevel(
                         options.isDebuggable() ? DebugInfoLevel.FULL : DebugInfoLevel.NONE);
 
-                config02.setClasspath(options.getClasspaths());
+                config.setClasspath(options.getClasspaths());
                 if (options.getDexOutputDirectory() != null) {
-                    config02.setOutputDexDir(options.getDexOutputDirectory());
+                    config.setOutputDexDir(options.getDexOutputDirectory());
                 }
                 if (options.getOutputFile() != null) {
-                    config02.setOutputJackFile(options.getOutputFile());
+                    config.setOutputJackFile(options.getOutputFile());
                 }
-                config02.setImportedJackLibraryFiles(options.getImportFiles());
+                config.setImportedJackLibraryFiles(options.getImportFiles());
                 if (options.getMinSdkVersion() > 0) {
-                    config02.setAndroidMinApiLevel(options.getMinSdkVersion());
+                    config.setAndroidMinApiLevel(options.getMinSdkVersion());
                 }
 
-                config02.setProguardConfigFiles(options.getProguardFiles());
-                config02.setJarJarConfigFiles(options.getJarJarRuleFiles());
+                config.setProguardConfigFiles(options.getProguardFiles());
+                config.setJarJarConfigFiles(options.getJarJarRuleFiles());
 
                 if (options.isMultiDex()) {
                     if (options.getMinSdkVersion() <
                             BuildToolInfo.SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT) {
-                        config02.setMultiDexKind(MultiDexKind.LEGACY);
+                        config.setMultiDexKind(MultiDexKind.LEGACY);
                     } else {
-                        config02.setMultiDexKind(MultiDexKind.NATIVE);
+                        config.setMultiDexKind(MultiDexKind.NATIVE);
                     }
                 }
 
-                config02.setSourceEntries(options.getInputFiles());
+                config.setSourceEntries(options.getInputFiles());
                 if (options.getMappingFile() != null) {
-                    config02.setProperty("jack.obfuscation.mapping.dump", "true");
-                    config02.setObfuscationMappingOutputFile(options.getMappingFile());
+                    config.setProperty("jack.obfuscation.mapping.dump", "true");
+                    config.setObfuscationMappingOutputFile(options.getMappingFile());
                 }
 
-                config02.setProperty("jack.import.type.policy", "keep-first");
-                config02.setProperty("jack.import.resource.policy", "keep-first");
+                config.setProperty("jack.import.type.policy", "keep-first");
+                config.setProperty("jack.import.resource.policy", "keep-first");
 
-                config02.setReporter(ReporterKind.DEFAULT, outputStream);
+                config.setReporter(ReporterKind.DEFAULT, outputStream);
 
                 if (options.getSourceCompatibility() != null) {
-                    config02.setProperty(
-                            "jack.java.source.version",
-                            options.getSourceCompatibility());
+                    config.setProperty(
+                            "jack.java.source.version", options.getSourceCompatibility());
                 }
 
                 if (options.getEncoding() != null
@@ -1769,7 +1758,7 @@ public class AndroidBuilder {
 
                 if (options.getIncrementalDir() != null
                         && options.getIncrementalDir().exists()) {
-                    config02.setIncrementalDir(options.getIncrementalDir());
+                    config.setIncrementalDir(options.getIncrementalDir());
                 }
 
                 ImmutableList.Builder<File> resourcesDir = ImmutableList.builder();
@@ -1778,78 +1767,49 @@ public class AndroidBuilder {
                         resourcesDir.add(file);
                     }
                 }
-                config02.setResourceDirs(resourcesDir.build());
+                config.setResourceDirs(resourcesDir.build());
 
-                config02.setProperty("jack.dex.optimize", Boolean.toString(options.getDexOptimize()));
+                config.setProperty("jack.dex.optimize", Boolean.toString(options.getDexOptimize()));
 
                 if (!options.getAnnotationProcessorNames().isEmpty()) {
-                    config02.setProcessorNames(options.getAnnotationProcessorNames());
+                    config.setProcessorNames(options.getAnnotationProcessorNames());
                 }
                 if (options.getAnnotationProcessorOutputDirectory() != null) {
                     FileUtils.mkdirs(options.getAnnotationProcessorOutputDirectory());
-                    config02.setProperty(
+                    config.setProperty(
                             "jack.annotation-processor.source.output",
                             options.getAnnotationProcessorOutputDirectory().getAbsolutePath());
                 }
                 try {
-                    config02.setProcessorPath(options.getAnnotationProcessorClassPath());
+                    config.setProcessorPath(options.getAnnotationProcessorClassPath());
                 } catch (Exception e) {
                     mLogger.error(e, "Could not resolve annotation processor path.");
                     throw new RuntimeException(e);
                 }
 
-                config02.setProcessorOptions(options.getAnnotationProcessorOptions());
+                config.setProcessorOptions(options.getAnnotationProcessorOptions());
 
                 // apply all additional parameters
                 for (String paramKey: options.getAdditionalParameters().keySet()) {
                     String paramValue = options.getAdditionalParameters().get(paramKey);
-                    config02.setProperty(paramKey, paramValue);
+                    config.setProperty(paramKey, paramValue);
                 }
 
-                if (options.getCoverageMetadataFile() != null) {
-                    if (isApi03Supported) {
-                        String coveragePluginPath =
-                                mTargetInfo
-                                        .getBuildTools()
-                                        .getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
-                        if (coveragePluginPath == null) {
-                            mLogger.warning(
-                                    "Unknown path id %s.  Disabling code coverage.",
-                                    BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
-                        } else {
-                            File coveragePlugin = new File(coveragePluginPath);
-                            if (!coveragePlugin.isFile()) {
-                                mLogger.warning(
-                                        "Unable to find coverage plugin '%s'.  Disabling code "
-                                                + "coverage.",
-                                        coveragePlugin.getAbsolutePath());
-                            } else {
-                                config03.setPluginPath(
-                                        ImmutableList.of(new File(coveragePluginPath)));
-                                config03.setPluginNames(
-                                        ImmutableList.of(JackProcessOptions.COVERAGE_PLUGIN_NAME));
-                                config03.setProperty(
-                                        "jack.coverage.metadata.file",
-                                        options.getCoverageMetadataFile().getAbsolutePath());
-                            }
-                        }
-                    } else {
-                        config02.setProperty("jack.coverage", "true");
-                        config02.setProperty(
-                                "jack.coverage.metadata.file",
-                                options.getCoverageMetadataFile().getAbsolutePath());
-                    }
+                if (apiVersion == JackApiVersion.V2) {
+                    config = api02Specific(config, options);
+                } else if (apiVersion == JackApiVersion.V3) {
+                    config = api03Specific((Api03Config) config, options);
                 }
 
-                compilationTask = config02.getTask();
+                compilationTask = config.getTask();
             } catch (ConfigNotSupportedException e) {
                 mLogger.error(e,
                         "jack.jar from build tools "
                                 + mTargetInfo.getBuildTools().getRevision()
-                                + " does not support Jack API v02.");
+                                + " does not support Jack API v%d.", apiVersion.getVersion());
                 throw e;
             } catch (ConfigurationException e) {
-                mLogger.error(e, "Jack APIs v02 configuration failed");
+                mLogger.error(e, "Jack APIs v%d configuration failed", apiVersion.getVersion());
                 throw e;
             }
         }
@@ -1911,11 +1871,67 @@ public class AndroidBuilder {
         }
     }
 
+    private Api02Config createJackConfig(@NonNull JackProvider jackProvider)
+            throws ConfigNotSupportedException {
+        JackApiVersion version = mTargetInfo.getBuildTools().getSupportedJackApi();
+        if (version == JackApiVersion.V3) {
+            return jackProvider.createConfig(Api03Config.class);
+        } else if (version == JackApiVersion.V2) {
+            return jackProvider.createConfig(Api02Config.class);
+        } else {
+            throw new RuntimeException("Cannot determine Jack API version to use = " + version);
+        }
+    }
+
+    private Api02Config api02Specific(
+            @NonNull Api02Config config, @NonNull JackProcessOptions options)
+            throws ConfigurationException {
+        if (options.getCoverageMetadataFile() != null) {
+            config.setProperty("jack.coverage", "true");
+            config.setProperty(
+                    "jack.coverage.metadata.file",
+                    options.getCoverageMetadataFile().getAbsolutePath());
+        }
+        return config;
+    }
+
+    private Api03Config api03Specific(
+            @NonNull Api03Config config, @NonNull JackProcessOptions options)
+            throws ConfigurationException {
+        if (options.getCoverageMetadataFile() != null) {
+            String coveragePluginPath =
+                    mTargetInfo.getBuildTools().getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
+            if (coveragePluginPath == null) {
+                mLogger.warning(
+                        "Unknown path id %s.  Disabling code coverage.",
+                        BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
+            } else {
+                File coveragePlugin = new File(coveragePluginPath);
+                if (!coveragePlugin.isFile()) {
+                    mLogger.warning(
+                            "Unable to find coverage plugin '%s'.  Disabling code " + "coverage.",
+                            coveragePlugin.getAbsolutePath());
+                } else {
+                    options.addJackPluginClassPath(new File(coveragePluginPath));
+                    options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
+                    config.setProperty(
+                            "jack.coverage.metadata.file",
+                            options.getCoverageMetadataFile().getAbsolutePath());
+                }
+            }
+        }
+
+        // jack plugins
+        config.setPluginNames(Lists.newArrayList(options.getJackPluginNames()));
+        config.setPluginPath(options.getJackPluginClassPath());
+        return config;
+    }
+
     @SuppressWarnings("WeakerAccess")
     public void convertByteCodeUsingJackCli(
             @NonNull JackProcessOptions options,
             @NonNull ProcessOutputHandler processOutputHandler) throws ProcessException {
-        JackProcessBuilder builder = new JackProcessBuilder(options);
+        JackProcessBuilder builder = new JackProcessBuilder(options, mLogger);
         mJavaProcessExecutor.execute(
                 builder.build(mTargetInfo.getBuildTools()), processOutputHandler)
                 .rethrowFailure().assertNormalExitValue();

@@ -65,6 +65,8 @@ public class VariantDependencies {
     private final Configuration publishConfiguration;
     @NonNull
     private final Configuration annotationProcessorConfiguration;
+    @NonNull
+    private final Configuration jackPluginConfiguration;
 
     @Nullable
     private final Configuration mappingConfiguration;
@@ -100,6 +102,7 @@ public class VariantDependencies {
         Set<Configuration> compileConfigs = Sets.newHashSetWithExpectedSize(providers.length * 2);
         Set<Configuration> apkConfigs = Sets.newHashSetWithExpectedSize(providers.length);
         Set<Configuration> annotationConfigs = Sets.newHashSetWithExpectedSize(providers.length);
+        Set<Configuration> jackPluginConfigs = Sets.newHashSetWithExpectedSize(providers.length);
 
         for (ConfigurationProvider provider : providers) {
             if (provider != null) {
@@ -111,6 +114,7 @@ public class VariantDependencies {
                 apkConfigs.add(provider.getCompileConfiguration());
                 apkConfigs.add(provider.getPackageConfiguration());
                 annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
+                jackPluginConfigs.add(provider.getJackPluginConfiguration());
             }
         }
 
@@ -118,6 +122,7 @@ public class VariantDependencies {
             compileConfigs.add(parentVariant.getCompileConfiguration());
             apkConfigs.add(parentVariant.getPackageConfiguration());
             annotationConfigs.add(parentVariant.getAnnotationProcessorConfiguration());
+            jackPluginConfigs.add(parentVariant.getJackPluginConfiguration());
         }
 
         Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
@@ -131,10 +136,18 @@ public class VariantDependencies {
         annotationProcessor.setDescription("## Internal use, do not manually configure ##");
         annotationProcessor.setExtendsFrom(annotationConfigs);
 
-        Configuration apk = project.getConfigurations().maybeCreate(
-                variantType == VariantType.LIBRARY
-                    ? "_" + variantName + "Publish"
-                    : "_" + variantName + "Apk");
+        Configuration jackPlugin =
+                project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");
+        jackPlugin.setVisible(false);
+        jackPlugin.setDescription("## Internal use, do not manually configure ##");
+        jackPlugin.setExtendsFrom(jackPluginConfigs);
+
+        Configuration apk =
+                project.getConfigurations()
+                        .maybeCreate(
+                                variantType == VariantType.LIBRARY
+                                        ? "_" + variantName + "Publish"
+                                        : "_" + variantName + "Apk");
 
         apk.setVisible(false);
         apk.setDescription("## Internal use, do not manually configure ##");
@@ -189,6 +202,7 @@ public class VariantDependencies {
                 apk,
                 publish,
                 annotationProcessor,
+                jackPlugin,
                 mapping,
                 classes,
                 metadata,
@@ -198,10 +212,11 @@ public class VariantDependencies {
     private VariantDependencies(
             @NonNull String variantName,
             @NonNull DependencyChecker dependencyChecker,
-            @NonNull  Configuration compileConfiguration,
-            @NonNull  Configuration packageConfiguration,
+            @NonNull Configuration compileConfiguration,
+            @NonNull Configuration packageConfiguration,
             @Nullable Configuration publishConfiguration,
-            @NonNull  Configuration annotationProcessorConfiguration,
+            @NonNull Configuration annotationProcessorConfiguration,
+            @NonNull Configuration jackPluginConfiguration,
             @Nullable Configuration mappingConfiguration,
             @Nullable Configuration classesConfiguration,
             @Nullable Configuration metadataConfiguration,
@@ -211,6 +226,7 @@ public class VariantDependencies {
         this.packageConfiguration = packageConfiguration;
         this.publishConfiguration = publishConfiguration;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
+        this.jackPluginConfiguration = jackPluginConfiguration;
         this.mappingConfiguration = mappingConfiguration;
         this.classesConfiguration = classesConfiguration;
         this.metadataConfiguration = metadataConfiguration;
@@ -240,6 +256,11 @@ public class VariantDependencies {
     @NonNull
     public Configuration getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
+    }
+
+    @NonNull
+    public Configuration getJackPluginConfiguration() {
+        return jackPluginConfiguration;
     }
 
     @Nullable
@@ -303,6 +324,29 @@ public class VariantDependencies {
             }
         }
         return getAnnotationProcessorConfiguration().getFiles();
+    }
+
+    @NonNull
+    public Set<File> resolveAndGetJackPluginClassPath(
+            @NonNull ErrorReporter errorReporter) {
+        if (getJackPluginConfiguration().getAllDependencies().isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        ResolvedConfiguration resolvedConfiguration =
+                getJackPluginConfiguration().getResolvedConfiguration();
+        if (resolvedConfiguration.hasError()) {
+            try {
+                resolvedConfiguration.rethrowFailure();
+            } catch (Exception e) {
+                errorReporter.handleSyncError(
+                        "jackPlugin",
+                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                        "Unable to find Jack plugin. " + e.getMessage());
+                return Collections.emptySet();
+            }
+        }
+        return getJackPluginConfiguration().getFiles();
     }
 
     @NonNull

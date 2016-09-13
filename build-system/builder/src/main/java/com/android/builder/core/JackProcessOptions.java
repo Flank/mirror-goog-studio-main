@@ -40,7 +40,7 @@ public class JackProcessOptions {
     // Revision that Jack version Douarn is released.
     public static final Revision DOUARN_REV = new Revision(24, 0, 0);
 
-    // Revision with broken coverage plugin for in-process.
+    // Revisions with broken coverage plugin for in-process.
     public static final Set<Revision> COVERAGE_BROKEN =
             ImmutableSet.of(new Revision(24, 0, 0), new Revision(24, 0, 1));
 
@@ -94,6 +94,10 @@ public class JackProcessOptions {
     private String mEncoding = null;
     @NonNull
     private Map<String, String> mAdditionalParameters = Maps.newHashMap();
+    @NonNull
+    private Set<String> mJackPluginNames = ImmutableSet.of();
+    @NonNull
+    private List<File> mJackPluginClassPath = ImmutableList.of();
 
     public boolean isDebugLog() {
         return mDebugLog;
@@ -332,5 +336,36 @@ public class JackProcessOptions {
 
     public void setEncoding(@NonNull String encoding) {
         mEncoding = encoding;
+    }
+
+    @NonNull
+    public Set<String> getJackPluginNames() {
+        return mJackPluginNames;
+    }
+
+    public void setJackPluginNames(@NonNull List<String> jackPluginNames) {
+        mJackPluginNames = ImmutableSet.copyOf(jackPluginNames);
+    }
+
+    public void addJackPluginName(@NonNull String jackPluginName) {
+        mJackPluginNames =
+                ImmutableSet.<String>builder().addAll(mJackPluginNames).add(jackPluginName).build();
+    }
+
+    @NonNull
+    public List<File> getJackPluginClassPath() {
+        return mJackPluginClassPath;
+    }
+
+    public void setJackPluginClassPath(@NonNull List<File> jackPluginClassPath) {
+        mJackPluginClassPath = ImmutableList.copyOf(jackPluginClassPath);
+    }
+
+    public void addJackPluginClassPath(@NonNull File jackPluginClassPath) {
+        mJackPluginClassPath =
+                ImmutableList.<File>builder()
+                        .addAll(mJackPluginClassPath)
+                        .add(jackPluginClassPath)
+                        .build();
     }
 }

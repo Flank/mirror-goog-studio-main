@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.managed.JackOptions;
 import com.android.build.gradle.managed.KeyValuePair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,12 @@ public class JackOptionsAdaptor implements CoreJackOptions {
     @Override
     public Boolean isJackInProcess() {
         return jackOptions.getJackInProcess();
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPluginNames() {
+        return jackOptions.getPluginNames();
     }
 
     @NonNull

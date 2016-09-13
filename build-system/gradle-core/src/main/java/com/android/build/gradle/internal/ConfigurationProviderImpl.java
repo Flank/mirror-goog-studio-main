@@ -53,7 +53,14 @@ public class ConfigurationProviderImpl implements ConfigurationProvider {
     @NonNull
     @Override
     public Configuration getAnnotationProcessorConfiguration() {
-        return project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName());
+        return project.getConfigurations()
+                .getByName(sourceSet.getAnnotationProcessorConfigurationName());
+    }
+
+    @NonNull
+    @Override
+    public Configuration getJackPluginConfiguration() {
+        return project.getConfigurations().getByName(sourceSet.getJackPluginConfigurationName());
     }
 }
 
