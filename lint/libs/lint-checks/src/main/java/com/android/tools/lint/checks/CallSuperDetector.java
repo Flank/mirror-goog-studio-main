@@ -143,21 +143,14 @@ public class CallSuperDetector extends Detector implements JavaPsiScanner {
             return directSuper;
         }
 
-        // Look up annotations metadata
-        PsiMethod superMethod = directSuper;
-        while (superMethod != null) {
-            PsiAnnotation[] annotations = superMethod.getModifierList().getAnnotations();
-            annotations = filterRelevantAnnotations(evaluator, annotations);
-            for (PsiAnnotation annotation : annotations) {
-                String signature = annotation.getQualifiedName();
-                if (CALL_SUPER_ANNOTATION.equals(signature)) {
-                    return directSuper;
-                } else if (signature != null && signature.endsWith(".OverrideMustInvoke")) {
-                    // Handle findbugs annotation on the fly too
-                    return directSuper;
-                }
+        PsiAnnotation[] annotations = evaluator.getAllAnnotations(directSuper, true);
+        annotations = filterRelevantAnnotations(evaluator, annotations);
+        for (PsiAnnotation annotation : annotations) {
+            String signature = annotation.getQualifiedName();
+            if (CALL_SUPER_ANNOTATION.equals(signature) || signature != null
+                    && signature.endsWith(".OverrideMustInvoke")) {
+                return directSuper;
             }
-            superMethod = evaluator.getSuperMethod(superMethod);
         }
 
         return null;
