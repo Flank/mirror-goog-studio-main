@@ -523,11 +523,6 @@ def platform_filegroup(name, visibility = ["//visibility:public"]):
           include = [pattern + "/**"],
           exclude = [
               pattern + "/skins/**",
-
-              # These excludes may be problematic for layoutlib in the
-              # future.
-              pattern + "/data/res/**",
-              pattern + "/data/fonts/**",
           ]
       ),
       visibility = visibility
