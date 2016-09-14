@@ -13,7 +13,6 @@ buildscript {
     }
 }
 </#if>
-
 <#if isInstantApp!false>
     <#if isLibraryProject!false>
 apply plugin: 'com.android.atom'
@@ -85,7 +84,6 @@ android {
     }
 </#if>
 }
-
 <#if (isInstantApp!false) && (isLibraryProject!false)>
 android.buildTypes.all { buildType ->
     String buildFlavorSuffix = buildType.name.capitalize() + "AtomResources";
