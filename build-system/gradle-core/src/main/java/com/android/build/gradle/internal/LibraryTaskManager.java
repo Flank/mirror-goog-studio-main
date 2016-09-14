@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
-import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
 
@@ -40,6 +39,7 @@ import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
 import com.android.build.gradle.internal.tasks.LibraryJarTransform;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
+import com.android.build.gradle.internal.tasks.MergeProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -310,35 +310,21 @@ public class LibraryTaskManager extends TaskManager {
         // merge jni libs.
         createMergeJniLibFoldersTasks(tasks, variantScope);
 
+        // package the renderscript header files files into the bundle folder
         AndroidTask<Sync> packageRenderscriptTask = ThreadRecorder.get().record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
                 projectPath,
                 variantName,
-                () -> {
-                    // package the renderscript header files files into the bundle folder
-                    return getAndroidTasks()
-                            .create(tasks, new PackageRenderscriptConfigAction(variantScope));
-                });
+                () -> getAndroidTasks()
+                        .create(tasks, new PackageRenderscriptConfigAction(variantScope)));
 
         // merge consumer proguard files from different build types and flavors
-        MergeFileTask mergeProGuardFileTask = ThreadRecorder.get().record(
+        AndroidTask<MergeFileTask> mergeProguardFilesTask = ThreadRecorder.get().record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK,
-                projectPath, variantName, new Recorder.Block<MergeFileTask>() {
-                    @Override
-                    public MergeFileTask call() throws Exception {
-                        MergeFileTask mergeProGuardFileTask = project.getTasks().create(
-                                variantScope.getTaskName("merge", "ProguardFiles"),
-                                MergeFileTask.class);
-                        mergeProGuardFileTask.setVariantName(variantConfig.getFullName());
-                        mergeProGuardFileTask.setInputFiles(
-                                project.files(variantConfig.getConsumerProguardFiles())
-                                        .getFiles());
-                        mergeProGuardFileTask.setOutputFile(
-                                new File(variantBundleDir, FN_PROGUARD_TXT));
-                        return mergeProGuardFileTask;
-                    }
-
-                });
+                projectPath,
+                variantName,
+                () -> getAndroidTasks()
+                        .create(tasks, new MergeProguardFilesConfigAction(project, variantScope)));
 
         // copy lint.jar into the bundle folder
         AndroidTask<Copy> copyLintTask =
@@ -348,11 +334,10 @@ public class LibraryTaskManager extends TaskManager {
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
         if (variantData.getVariantDependency().isAnnotationsPresent()) {
             AndroidTask<ExtractAnnotations> extractAnnotationsTask =
-                    getAndroidTasks()
-                            .create(
-                                    tasks,
-                                    new ExtractAnnotations.ConfigAction(
-                                            project, getExtension(), variantScope));
+                    getAndroidTasks().create(
+                            tasks,
+                            new ExtractAnnotations.ConfigAction(
+                                    project, getExtension(), variantScope));
             extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
             if (!generateSourcesOnly) {
                 bundle.dependsOn(extractAnnotationsTask.getName());
@@ -472,7 +457,7 @@ public class LibraryTaskManager extends TaskManager {
                 packageRes.getName(),
                 packageRenderscriptTask.getName(),
                 copyLintTask.getName(),
-                mergeProGuardFileTask,
+                mergeProguardFilesTask.getName(),
                 // The below dependencies are redundant in a normal build as
                 // generateSources depends on them. When generateSourcesOnly is injected they are
                 // needed explicitly, as bundle no longer depends on compileJava
