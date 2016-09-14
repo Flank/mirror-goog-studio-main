@@ -69,7 +69,7 @@ bool ProcessManager::IsPidAlive(int pid) const {
   std::stringstream process_path;
   process_path << "/proc/";
   process_path << pid;
-  return fs.GetFile(process_path.str())->Exists();
+  return fs.GetDir(process_path.str())->Exists();
 }
 
 Process::Process(pid_t pid, const string &cmdline,
