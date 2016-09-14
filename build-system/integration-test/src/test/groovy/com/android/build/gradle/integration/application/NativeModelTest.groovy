@@ -48,7 +48,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  */
 @CompileStatic
 @RunWith(Parameterized.class)
-@Ignore // http://b.android.com/222427
+@Ignore("http://b.android.com/222427")
 class NativeModelTest {
     private static enum Compiler {GCC, CLANG}
 

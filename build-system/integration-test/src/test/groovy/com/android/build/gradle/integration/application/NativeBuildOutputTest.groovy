@@ -24,6 +24,7 @@ import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.SyncIssue
 import groovy.transform.CompileStatic
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -71,6 +72,7 @@ class NativeBuildOutputTest {
     }
 
     @Test
+    @Ignore("http://b.android.com/222427")
     public void checkNdkBuildErrorInSourceCode() {
         project.buildFile << """
             android {
