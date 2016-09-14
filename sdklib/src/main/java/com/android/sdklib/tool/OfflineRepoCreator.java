@@ -69,23 +69,23 @@ public class OfflineRepoCreator {
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(tempDir);
         ProgressIndicator progress = new ConsoleProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
-        mgr.loadSynchronously(0, progress, new LegacyDownloader(mConfig.mFop),
-                new SettingsController() {
-                    @Override
-                    public boolean getForceHttp() {
-                        return false;
-                    }
+        SettingsController settings = new SettingsController() {
+            @Override
+            public boolean getForceHttp() {
+                return false;
+            }
 
-                    @Override
-                    public void setForceHttp(boolean force) {
-                    }
+            @Override
+            public void setForceHttp(boolean force) {
+            }
 
-                    @Nullable
-                    @Override
-                    public Channel getChannel() {
-                        return null;
-                    }
-                });
+            @Nullable
+            @Override
+            public Channel getChannel() {
+                return null;
+            }
+        };
+        mgr.loadSynchronously(0, progress, new LegacyDownloader(mConfig.mFop, settings), settings);
 
         Map<String, RemotePackage> remotes = mgr.getPackages().getRemotePackages();
         List<RemotePackageImpl> toWrite = new ArrayList<>();

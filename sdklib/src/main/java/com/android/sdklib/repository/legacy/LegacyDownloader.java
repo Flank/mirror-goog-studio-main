@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
 import com.android.utils.Pair;
@@ -42,16 +43,19 @@ public class LegacyDownloader implements Downloader {
 
     private FileOp mFileOp;
 
-    public LegacyDownloader(@NonNull FileOp fop) {
+    private SettingsController mSettingsController;
+
+    public LegacyDownloader(@NonNull FileOp fop, @NonNull SettingsController settings) {
         mDownloadCache = new DownloadCache(fop, DownloadCache.Strategy.FRESH_CACHE);
         mFileOp = fop;
+        mSettingsController = settings;
     }
 
     @Override
     @Nullable
     public InputStream downloadAndStream(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
-        return mDownloadCache.openCachedUrl(url.toString(), new LegacyTaskMonitor(indicator));
+        return mDownloadCache.openCachedUrl(getUrl(url), new LegacyTaskMonitor(indicator));
     }
 
     @Nullable
@@ -76,12 +80,18 @@ public class LegacyDownloader implements Downloader {
         mFileOp.mkdirs(target.getParentFile());
         OutputStream out = mFileOp.newFileOutputStream(target);
         Pair<InputStream, Integer> downloadedResult = mDownloadCache
-                .openDirectUrl(url.toString(), new LegacyTaskMonitor(indicator));
+                .openDirectUrl(getUrl(url), new LegacyTaskMonitor(indicator));
         if (downloadedResult.getSecond() == 200) {
             ByteStreams.copy(downloadedResult.getFirst(), out);
             out.close();
         }
     }
 
-
+    private String getUrl(@NonNull URL url) {
+        String urlStr = url.toString();
+        if (mSettingsController.getForceHttp()) {
+            urlStr = urlStr.replaceAll("^https://", "http://");
+        }
+        return urlStr;
+    }
 }

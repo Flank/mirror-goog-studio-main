@@ -76,6 +76,7 @@ public class SdkManagerCli {
     private final PrintStream mOut;
     private final BufferedReader mIn;
     private Downloader mDownloader;
+    private final ProgressIndicator mProgress;
 
     public static void main(@NonNull String args[]) {
         FileSystemFileOp fop = (FileSystemFileOp)FileOpUtils.create();
@@ -86,8 +87,8 @@ public class SdkManagerCli {
         }
         File localPath = new File(settings.getLocalPath().toString());
         AndroidSdkHandler handler = new AndroidSdkHandler(localPath, fop);
-        new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop), handler)
-                .run();
+        new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop, settings),
+                handler).run();
         System.out.println("done");
     }
 
@@ -97,11 +98,11 @@ public class SdkManagerCli {
         mOut = out;
         mIn = in == null ? null : new BufferedReader(new InputStreamReader(in));
         mDownloader = downloader;
-        ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
+        mProgress = settings.getProgressIndicator();
         // Unfortunately AndroidSdkHandler etc. doesn't use nio (yet). We have to convert like this
         // to deal with the non-default provider (test) case.
         mHandler = handler;
-        mRepoManager = mHandler.getSdkManager(progress);
+        mRepoManager = mHandler.getSdkManager(mProgress);
     }
 
     void run() {
@@ -121,8 +122,7 @@ public class SdkManagerCli {
     }
 
     private void listPackages() {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        mRepoManager.loadSynchronously(0, progress, mDownloader, mSettings);
+        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
 
         RepositoryPackages packages = mRepoManager.getPackages();
 
@@ -187,22 +187,21 @@ public class SdkManagerCli {
     }
 
     private void installPackages() {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        mRepoManager.loadSynchronously(0, progress, mDownloader, mSettings);
+        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
 
         List<RemotePackage> remotes = new ArrayList<>();
         for (String path : mSettings.getPaths(mRepoManager)) {
             RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
             if (p == null) {
-                progress.logError("Failed to find package " + path);
+                mProgress.logError("Failed to find package " + path);
                 return;
             }
             remotes.add(p);
         }
         remotes = InstallerUtil.computeRequiredPackages(
-                remotes, mRepoManager.getPackages(), progress);
+                remotes, mRepoManager.getPackages(), mProgress);
         if (remotes != null) {
-            List<RemotePackage> acceptedRemotes = checkLicenses(progress, remotes);
+            List<RemotePackage> acceptedRemotes = checkLicenses(remotes);
             if (!acceptedRemotes.equals(remotes)) {
                 mOut.println("The following packages can not be installed since their "
                         + "licenses or those of the packages they depend on were not accepted:");
@@ -220,27 +219,26 @@ public class SdkManagerCli {
             for (RemotePackage p : remotes) {
                 Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
                         .createInstaller(p, mRepoManager, mDownloader, mHandler.getFileOp());
-                if (!applyPackageOperation(installer, progress)) {
+                if (!applyPackageOperation(installer)) {
                     // there was an error, abort.
                     return;
                 }
             }
         } else {
-            progress.logError("Unable to compute a complete list of dependencies.");
+            mProgress.logError("Unable to compute a complete list of dependencies.");
         }
     }
 
     /**
      * Checks whether the licenses for the given packages are accepted. If they are not, request
      * that the user accept them.
-     * 
+     *
      * @return A list of packages that have had their licenses accepted. If some licenses are not
      * accepted, both the package with the unaccepted license and any packages that depend on it
      * are excluded from this list.
      */
     @NonNull
-    private List<RemotePackage> checkLicenses(@NonNull ProgressIndicator progress,
-            @NonNull List<RemotePackage> remotes) {
+    private List<RemotePackage> checkLicenses(@NonNull List<RemotePackage> remotes) {
         Multimap<License, RemotePackage> unacceptedLicenses = HashMultimap.create();
         remotes.forEach(remote -> {
             License l = remote.getLicense();
@@ -264,7 +262,7 @@ public class SdkManagerCli {
                 RemotePackage accepted = acceptedIter.next();
                 List<RemotePackage> required = InstallerUtil.computeRequiredPackages(
                         Collections.singletonList(accepted), mRepoManager.getPackages(),
-                        progress);
+                        mProgress);
                 if (!Collections.disjoint(required, problemPackages)) {
                     acceptedIter.remove();
                     problemPackages.add(accepted);
@@ -294,17 +292,16 @@ public class SdkManagerCli {
     }
 
     private void uninstallPackages() {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        mRepoManager.loadSynchronously(0, progress, null, mSettings);
+        mRepoManager.loadSynchronously(0, mProgress, null, mSettings);
 
         for (String path : mSettings.getPaths(mRepoManager)) {
             LocalPackage p = mRepoManager.getPackages().getLocalPackages().get(path);
             if (p == null) {
-                progress.logWarning("Unable to find package " + path);
+                mProgress.logWarning("Unable to find package " + path);
             } else {
                 Uninstaller uninstaller = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
                         .createUninstaller(p, mRepoManager, mHandler.getFileOp());
-                if (!applyPackageOperation(uninstaller, progress)) {
+                if (!applyPackageOperation(uninstaller)) {
                     // there was an error, abort.
                     return;
                 }
@@ -312,33 +309,40 @@ public class SdkManagerCli {
         }
     }
 
-    private static boolean applyPackageOperation(
-            @NonNull PackageOperation operation,
-            @NonNull ProgressIndicator progress) {
-        return operation.prepare(progress) && operation.complete(progress);
+    private boolean applyPackageOperation(
+            @NonNull PackageOperation operation) {
+        return operation.prepare(mProgress) && operation.complete(mProgress);
     }
 
-    private static void usage(PrintStream out) {
+    private static void usage(@NonNull PrintStream out) {
         out.println("Usage: ");
-        out.println("  sdk-downloader [--uninstall] [--update] [--channel=<channelId>] \\");
+        out.println("  sdk-downloader [--uninstall] [<common args>] \\");
         out.println("    [--package_file <package-file>] <sdk path> [<packages>...]");
-        out.println("  sdk-downloader --list [--include_obsolete] <sdk path>");
+        out.println("  sdk-downloader --update [<common args>] <sdk path>");
+        out.println("  sdk-downloader --list [<common args>] <sdk path>");
         out.println();
-        out.println("In its first form, installs, uninstalls, or updates packages.");
-        out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or "
-                + "\"platforms;android-23\")");
-        out.println("    <package-file> is a text file where each line is a sdk-style path "
-                + " of a package to install or uninstall.");
-        out.println("    Multiple --package_file arguments may be specified in combination "
-                + "with explicit paths.");
-        out.println("    If --update is specified, currently installed packages are "
-                + "updated, and no further processing is done.");
-        out.println("    <channelId> is the id of the least stable channel to check");
-        out.println();
-        out.println("In its second form, all installed and available packages are printed "
+        out.println("In its first form, installs, or uninstalls, or updates packages.");
+        out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or \n"
+                + "             \"platforms;android-23\")");
+        out.println("    <package-file> is a text file where each line is a sdk-style path\n"
+                + "                   of a package to install or uninstall.");
+        out.println("    Multiple --package_file arguments may be specified in combination\n"
+                + "     with explicit paths.");
+        out.println("In its second form (with --update), currently installed packages are\n"
+                + "    updated to the latest version.");
+        out.println("In its third form, all installed and available packages are printed "
                 + "out.");
-        out.println("    If --include_obsolete is specified, obsolete packages are "
-                + "included.");
+        out.println();
+        out.println("Common Arguments:");
+        out.println("    --channel=<channelId>: Include packages in channels up to "
+                + "<channelId>.");
+        out.println("                           Common channels are:\n"
+                + "                           0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary)");
+        out.println();
+        out.println("    --include_obsolete: With --list, show obsolete packages in the\n"
+                + "                        package listing. With --update, update obsolete\n"
+                + "                        packages as well as non-obsolete.");
+        out.println("    --no_https: Force all connections to use http rather than https");
         out.println();
         out.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
                 + "  \"macosx\", or \"linux\", packages will be downloaded for that OS");
@@ -354,6 +358,8 @@ public class SdkManagerCli {
         private static final String LIST_ARG = "--list";
         private static final String INCLUDE_OBSOLETE_ARG = "--include_obsolete";
         private static final String HELP_ARG = "--help";
+        private static final String NO_HTTPS_ARG = "--no_https";
+        private static final String VERBOSE_ARG = "--verbose";
 
         private Path mLocalPath;
         private List<String> mPackages = new ArrayList<>();
@@ -362,20 +368,27 @@ public class SdkManagerCli {
         private boolean mIsUpdate = false;
         private boolean mIsList = false;
         private boolean mIncludeObsolete = false;
+        private boolean mForceHttp = false;
+        private boolean mVerbose = false;
 
         @Nullable
         public static Settings createSettings(@NonNull String[] args,
                 @NonNull FileSystem fileSystem) {
+            ProgressIndicator progress = new ConsoleProgressIndicator();
             Settings result = new Settings();
             for (String arg : args) {
                 if (arg.equals(HELP_ARG)) {
                     return null;
                 } else if (arg.equals(UNINSTALL_ARG)) {
                     result.mIsInstall = false;
+                } else if (arg.equals(NO_HTTPS_ARG)) {
+                    result.setForceHttp(true);
                 } else if (arg.equals(UPDATE_ARG)) {
                     result.mIsUpdate = true;
                 } else if (arg.equals(LIST_ARG)) {
                     result.mIsList = true;
+                } else if (arg.equals(VERBOSE_ARG)) {
+                    result.mVerbose = true;
                 } else if (arg.equals(INCLUDE_OBSOLETE_ARG)) {
                     result.mIncludeObsolete = true;
                 } else if (arg.startsWith(CHANNEL_ARG)) {
@@ -390,7 +403,6 @@ public class SdkManagerCli {
                         result.mPackages.addAll(
                                 Files.readAllLines(fileSystem.getPath(packageFile)));
                     } catch (IOException e) {
-                        ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
                         progress.logError(
                                 String.format("Invalid package file \"%s\" threw exception:%n%s%n",
                                         packageFile, e));
@@ -402,7 +414,6 @@ public class SdkManagerCli {
                         try {
                             Files.createDirectories(path);
                         } catch (IOException e) {
-                            ConsoleProgressIndicator progress = new ConsoleProgressIndicator();
                             progress.logError("Failed to create SDK root dir: " + path);
                             progress.logError(e.getMessage());
                             return null;
@@ -428,12 +439,12 @@ public class SdkManagerCli {
 
         @Override
         public boolean getForceHttp() {
-            return false;
+            return mForceHttp;
         }
 
         @Override
         public void setForceHttp(boolean force) {
-
+            mForceHttp = force;
         }
 
         @NonNull
@@ -464,6 +475,25 @@ public class SdkManagerCli {
 
         public boolean includeObsolete() {
             return mIncludeObsolete;
+        }
+
+        @NonNull
+        public ProgressIndicator getProgressIndicator() {
+            return new ConsoleProgressIndicator() {
+                @Override
+                public void logInfo(@NonNull String s) {
+                    if (mVerbose) {
+                        super.logInfo(s);
+                    }
+                }
+
+                @Override
+                public void logVerbose(@NonNull String s) {
+                    if (mVerbose) {
+                        super.logVerbose(s);
+                    }
+                }
+            };
         }
     }
 }

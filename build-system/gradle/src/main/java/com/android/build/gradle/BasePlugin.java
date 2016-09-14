@@ -851,7 +851,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         };
     }
 
-    private static Downloader getDownloader() {
-        return new LocalFileAwareDownloader(new LegacyDownloader(FileOpUtils.create()));
+    private Downloader getDownloader() {
+        return new LocalFileAwareDownloader(
+                new LegacyDownloader(FileOpUtils.create(), getSettingsController()));
     }
 }
