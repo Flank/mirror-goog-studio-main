@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.externalBuild;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
@@ -25,10 +27,10 @@ import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.ide.AaptOptionsImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.ide.AaptOptionsImpl;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -281,14 +283,26 @@ class ExternalBuildTaskManager {
         }
     }
 
-    private SigningConfig createManifestSigningConfig(ExternalBuildContext externalBuildContext) {
+    private static SigningConfig createManifestSigningConfig(
+            ExternalBuildContext externalBuildContext) {
         SigningConfig config = new SigningConfig(BuilderConstants.EXTERNAL_BUILD);
-        File keystore = new File(externalBuildContext.getExecutionRoot(),
-            externalBuildContext.getBuildManifest().getDebugKeystore().getExecRootPath());
-        config.setStoreFile(keystore);
         config.setStorePassword(DefaultSigningConfig.DEFAULT_PASSWORD);
         config.setKeyAlias(DefaultSigningConfig.DEFAULT_ALIAS);
         config.setKeyPassword(DefaultSigningConfig.DEFAULT_PASSWORD);
+
+        File keystore =
+                new File(
+                        externalBuildContext.getExecutionRoot(),
+                        externalBuildContext
+                                .getBuildManifest()
+                                .getDebugKeystore()
+                                .getExecRootPath());
+        checkState(
+                keystore.isFile(),
+                "Keystore file from the manifest (%s) does not exist.",
+                keystore.getAbsolutePath());
+        config.setStoreFile(keystore);
+
         return config;
     }
 }

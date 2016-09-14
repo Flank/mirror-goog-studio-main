@@ -34,6 +34,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.truth.Expect;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest;
+import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 
@@ -108,9 +109,11 @@ public class ExternalBuildPluginTest {
                                 .setDx(SdkHelper.getDxJar().getAbsolutePath())
                                 .setAapt(target.getBuildToolInfo().getPath(
                                         BuildToolInfo.PathId.AAPT)))
-                        .setResourceApk(ExternalBuildApkManifest.Artifact.newBuilder()
+                        .setResourceApk(Artifact.newBuilder()
                                 .setExecRootPath("resources.ap_"))
-                        .setAndroidManifest(ExternalBuildApkManifest.Artifact.newBuilder()
+                        .setDebugKeystore(Artifact.newBuilder()
+                                .setExecRootPath("debug.keystore"))
+                        .setAndroidManifest(Artifact.newBuilder()
                                 .setExecRootPath("AndroidManifest.xml"));
 
         List<String> jarFiles = new FileNameFinder().getFileNames(
@@ -119,7 +122,7 @@ public class ExternalBuildPluginTest {
         for (String jarFile : jarFiles) {
             Path jarFilePath = new File(jarFile).toPath();
             Path relativePath = projectPath.relativize(jarFilePath);
-            apkManifest.addJars(ExternalBuildApkManifest.Artifact.newBuilder()
+            apkManifest.addJars(Artifact.newBuilder()
                     .setExecRootPath(relativePath.toString())
                     .setHash(ByteString.copyFromUtf8(String.valueOf(jarFile.hashCode()))));
         }

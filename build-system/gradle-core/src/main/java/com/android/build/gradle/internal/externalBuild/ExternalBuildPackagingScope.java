@@ -32,6 +32,7 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 
 import org.gradle.api.Project;
@@ -184,7 +185,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public String getTaskName(@NonNull String name) {
-        return name + getFullVariantName();
+        return name + StringHelper.capitalize(getFullVariantName());
     }
 
     @NonNull
