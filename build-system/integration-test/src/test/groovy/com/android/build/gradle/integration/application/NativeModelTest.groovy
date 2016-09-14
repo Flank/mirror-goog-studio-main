@@ -29,6 +29,7 @@ import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,6 +48,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  */
 @CompileStatic
 @RunWith(Parameterized.class)
+@Ignore // http://b.android.com/222427
 class NativeModelTest {
     private static enum Compiler {GCC, CLANG}
 
