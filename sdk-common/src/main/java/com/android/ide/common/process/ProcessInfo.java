@@ -45,4 +45,8 @@ public interface ProcessInfo {
      */
     @NonNull
     Map<String, Object> getEnvironment();
+
+    /** Description of this process. */
+    @NonNull
+    String getDescription();
 }

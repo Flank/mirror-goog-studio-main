@@ -320,6 +320,12 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         public Map<String, Object> getEnvironment() {
             return mEnvironment;
         }
+
+        @NonNull
+        @Override
+        public String getDescription() {
+            return "process " + getExecutable();
+        }
     }
 
     protected static class JavaProcessInfoImpl implements JavaProcessInfo {
@@ -377,6 +383,12 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         @Override
         public List<String> getJvmArgs() {
             return mJvmArgs;
+        }
+
+        @NonNull
+        @Override
+        public String getDescription() {
+            return "java process with main class "+ mMain;
         }
 
         @Override
