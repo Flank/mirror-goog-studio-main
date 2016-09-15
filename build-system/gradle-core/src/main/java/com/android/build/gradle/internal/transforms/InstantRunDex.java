@@ -209,7 +209,6 @@ public class InstantRunDex extends Transform {
                 false /* multiDexEnabled */,
                 null /*getMainDexListFile */,
                 dexOptions,
-                Objects.firstNonNull(dexOptions.getOptimize(), false) /* optimize */,
                 new LoggedProcessOutputHandler(logger));
     }
 

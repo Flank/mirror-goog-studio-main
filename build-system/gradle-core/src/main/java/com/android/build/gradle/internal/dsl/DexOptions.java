@@ -32,6 +32,10 @@ public class DexOptions extends DefaultDexOptions {
             "The `android.dexOptions.incremental` property"
                     + " is deprecated and it has no effect on the build process.";
 
+    private static final String OPTIMIZE_IGNORED =
+            "The `android.dexOptions.optimize` property is deprecated. Dex will"
+                    + " always be optimized.";
+
     private final ErrorReporter mErrorReporter;
 
     public DexOptions(ErrorReporter errorReporter) {
@@ -61,4 +65,14 @@ public class DexOptions extends DefaultDexOptions {
         this.setAdditionalParameters(Arrays.asList(parameters));
     }
 
+    /**
+     * @deprecated Dex will always be optimized. Invoking this method has no effect.
+     */
+    @Deprecated
+    public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
+        mErrorReporter.handleSyncWarning(
+                null,
+                SyncIssue.TYPE_GENERIC,
+                OPTIMIZE_IGNORED + "\n" + OPTIMIZE_WARNING);
+    }
 }

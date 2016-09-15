@@ -50,7 +50,6 @@ import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -265,9 +264,7 @@ public class JackTransform extends Transform {
         options.setJumboMode(globalScope.getExtension().getDexOptions().getJumboMode());
         boolean isDebuggable = scope.getVariantConfiguration().getBuildType().isDebuggable();
         options.setDebuggable(isDebuggable);
-        options.setDexOptimize(
-                Objects.firstNonNull(
-                        globalScope.getExtension().getDexOptions().getOptimize(), !isDebuggable));
+        options.setDexOptimize(true);
         options.setMultiDex(config.isMultiDexEnabled());
         options.setMinSdkVersion(config.getMinSdkVersion().getApiLevel());
         options.setOutputFile(scope.getJackClassesZip());

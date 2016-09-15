@@ -73,7 +73,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
         }
 
         builder.addJvmArg("-Dfile.encoding=" + options.getEncoding());
-        builder.addArgs("-D", "jack.dex.optimize=" + Boolean.toString(options.getDexOptimize()));
+        // due to b.android.com/82031
+        builder.addArgs("-D", "jack.dex.optimize=true");
 
         if (options.isDebugLog()) {
             builder.addJvmArg("-Dcom.android.jack.log=DEBUG");

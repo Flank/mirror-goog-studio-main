@@ -289,7 +289,6 @@ public class PreDexCacheTest {
                 output,
                 false /*multidex*/,
                 new DefaultDexOptions(),
-                false,
                 new FakeProcessOutputHandler());
 
         checkOutputFile(content, output);
@@ -320,7 +319,6 @@ public class PreDexCacheTest {
                                 output,
                                 false /*multidex*/,
                                 dexOptions,
-                                false,
                                 new FakeProcessOutputHandler());
                     } catch (Exception ignored) {
 
@@ -383,7 +381,6 @@ public class PreDexCacheTest {
                                 output,
                                 false /*multidex*/,
                                 dexOptions,
-                                false,
                                 new FakeProcessOutputHandler());
                     } catch (Exception ignored) {
 
@@ -421,7 +418,7 @@ public class PreDexCacheTest {
 
     private void doTestReload(DexOptions dexOptions)
             throws IOException, ProcessException, InterruptedException {
-        runTwoBuilds(dexOptions, dexOptions, false, false);
+        runTwoBuilds(dexOptions, dexOptions);
 
         // check the hit/miss
         assertEquals(0, PreDexCache.getCache().getMisses());
@@ -436,7 +433,6 @@ public class PreDexCacheTest {
                 anotherOutput1,
                 false /*multidex*/,
                 dexOptions,
-                false,
                 new FakeProcessOutputHandler());
 
         reloadCache();
@@ -449,23 +445,10 @@ public class PreDexCacheTest {
                 anotherOutput2,
                 false /*multidex*/,
                 dexOptions,
-                false,
                 new FakeProcessOutputHandler());
 
         assertEquals(0, PreDexCache.getCache().getMisses());
         assertEquals(1, PreDexCache.getCache().getHits());
-    }
-
-    @Test
-    public void testReload_differentOptimize() throws IOException, ProcessException, InterruptedException {
-        DexOptions dexOptions = new DefaultDexOptions();
-        runTwoBuilds(dexOptions, dexOptions, false, true);
-
-        // check the hit/miss
-        PreDexCache cache = PreDexCache.getCache();
-        // We expect a cache hit because optimize do not have any effect due to b.android.com/82031.
-        assertEquals(0, cache.getMisses());
-        assertEquals(1, cache.getHits());
     }
 
     @Test
@@ -474,7 +457,7 @@ public class PreDexCacheTest {
         DefaultDexOptions differentDexOptions = new DefaultDexOptions();
         differentDexOptions.setAdditionalParameters(ImmutableList.of("--minimal-main-dex"));
 
-        runTwoBuilds(dexOptions, differentDexOptions, false, false);
+        runTwoBuilds(dexOptions, differentDexOptions);
 
         // check the hit/miss
         PreDexCache cache = PreDexCache.getCache();
@@ -484,9 +467,7 @@ public class PreDexCacheTest {
 
     private void runTwoBuilds(
             DexOptions firstRunOptions,
-            DexOptions secondRunOptions,
-            boolean firstOptimize,
-            boolean secondOptimize) throws IOException, ProcessException, InterruptedException {
+            DexOptions secondRunOptions) throws IOException, ProcessException, InterruptedException {
         // convert one file.
         String content = "Some Content";
         File input = createInputFile(content);
@@ -499,7 +480,6 @@ public class PreDexCacheTest {
                 output,
                 false /*multidex*/,
                 firstRunOptions,
-                firstOptimize,
                 new FakeProcessOutputHandler());
 
         checkOutputFile(content, output);
@@ -518,7 +498,6 @@ public class PreDexCacheTest {
                 output2,
                 false /*multidex*/,
                 secondRunOptions,
-                secondOptimize,
                 new FakeProcessOutputHandler());
 
         // check the output

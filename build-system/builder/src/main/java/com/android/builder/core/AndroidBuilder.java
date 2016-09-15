@@ -1432,7 +1432,6 @@ public class AndroidBuilder {
             boolean multidex,
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
-            boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {
         getDexByteCodeConverter().convertByteCode(inputs,
@@ -1440,7 +1439,6 @@ public class AndroidBuilder {
                 multidex,
                 mainDexList,
                 dexOptions,
-                optimize,
                 processOutputHandler);
     }
 
@@ -1489,7 +1487,6 @@ public class AndroidBuilder {
      * @param outFile the output file or folder if multi-dex is enabled
      * @param multiDex whether multidex is enabled
      * @param dexOptions dex options
-     * @param optimize whether to run dx with {@code --no-optimize} or not
      * @param processOutputHandler output handler to use
      *
      * @throws IOException
@@ -1501,7 +1498,6 @@ public class AndroidBuilder {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {
         checkState(mTargetInfo != null,
@@ -1515,11 +1511,10 @@ public class AndroidBuilder {
                     outFile,
                     multiDex,
                     dexOptions,
-                    optimize,
                     processOutputHandler);
         } else {
             preDexLibraryNoCache(
-                    inputFile, outFile, multiDex, dexOptions, optimize, processOutputHandler);
+                    inputFile, outFile, multiDex, dexOptions, processOutputHandler);
         }
     }
 
@@ -1540,7 +1535,6 @@ public class AndroidBuilder {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            boolean optimize,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws ProcessException, IOException, InterruptedException {
         checkNotNull(inputFile, "inputFile cannot be null.");
@@ -1559,7 +1553,6 @@ public class AndroidBuilder {
 
         builder.setVerbose(mVerboseExec)
                 .setMultiDex(multiDex)
-                .setNoOptimize(!optimize)
                 .addInput(inputFile);
 
         getDexByteCodeConverter().runDexer(builder, dexOptions, processOutputHandler);
@@ -1672,6 +1665,10 @@ public class AndroidBuilder {
             }
         }
 
+        if (options.getAdditionalParameters().keySet().contains("jack.dex.optimize")) {
+            mLogger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
+        }
+
         if (isInProcess) {
             convertByteCodeUsingJackApis(options);
         } else {
@@ -1769,7 +1766,8 @@ public class AndroidBuilder {
                 }
                 config.setResourceDirs(resourcesDir.build());
 
-                config.setProperty("jack.dex.optimize", Boolean.toString(options.getDexOptimize()));
+                // due to b.android.com/82031
+                config.setProperty("jack.dex.optimize", "true");
 
                 if (!options.getAnnotationProcessorNames().isEmpty()) {
                     config.setProcessorNames(options.getAnnotationProcessorNames());

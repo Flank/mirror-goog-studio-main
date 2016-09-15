@@ -390,7 +390,6 @@ public class DexTransformTest {
                 @NonNull File outFile,
                 boolean multiDex,
                 @NonNull DexOptions dexOptions,
-                boolean optimize,
                 @NonNull ProcessOutputHandler processOutputHandler)
                 throws IOException {
             String content =
@@ -407,7 +406,6 @@ public class DexTransformTest {
                 boolean multidex,
                 @Nullable File mainDexList,
                 @NonNull DexOptions dexOptions,
-                boolean optimize,
                 @NonNull ProcessOutputHandler processOutputHandler)
                 throws IOException {
             Files.write(
