@@ -49,6 +49,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -323,7 +328,7 @@ public class SdkManagerCli {
         out.println();
         out.println("In its first form, installs, or uninstalls, or updates packages.");
         out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or \n"
-                + "             \"platforms;android-23\")");
+                + "             \"platforms;android-23\").");
         out.println("    <package-file> is a text file where each line is a sdk-style path\n"
                 + "                   of a package to install or uninstall.");
         out.println("    Multiple --package_file arguments may be specified in combination\n"
@@ -337,15 +342,18 @@ public class SdkManagerCli {
         out.println("    --channel=<channelId>: Include packages in channels up to "
                 + "<channelId>.");
         out.println("                           Common channels are:\n"
-                + "                           0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary)");
+                + "                           0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).");
         out.println();
         out.println("    --include_obsolete: With --list, show obsolete packages in the\n"
                 + "                        package listing. With --update, update obsolete\n"
                 + "                        packages as well as non-obsolete.");
-        out.println("    --no_https: Force all connections to use http rather than https");
+        out.println("    --no_https: Force all connections to use http rather than https.");
+        out.println("    --proxy=<http | socks>: Connect via a proxy of the given type.");
+        out.println("    --proxy_host=<IP or DNS address>: IP or DNS address of the proxy to use.");
+        out.println("    --proxy_port=<port #>: Proxy port to connect to.");
         out.println();
         out.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
-                + "  \"macosx\", or \"linux\", packages will be downloaded for that OS");
+                + "  \"macosx\", or \"linux\", packages will be downloaded for that OS.");
     }
 
     @VisibleForTesting
@@ -360,6 +368,9 @@ public class SdkManagerCli {
         private static final String HELP_ARG = "--help";
         private static final String NO_HTTPS_ARG = "--no_https";
         private static final String VERBOSE_ARG = "--verbose";
+        private static final String PROXY_TYPE_ARG = "--proxy=";
+        private static final String PROXY_HOST_ARG = "--proxy_host=";
+        private static final String PROXY_PORT_ARG = "--proxy_port=";
 
         private Path mLocalPath;
         private List<String> mPackages = new ArrayList<>();
@@ -370,12 +381,16 @@ public class SdkManagerCli {
         private boolean mIncludeObsolete = false;
         private boolean mForceHttp = false;
         private boolean mVerbose = false;
+        private Proxy.Type mProxyType;
+        private SocketAddress mProxyHost;
 
         @Nullable
         public static Settings createSettings(@NonNull String[] args,
                 @NonNull FileSystem fileSystem) {
             ProgressIndicator progress = new ConsoleProgressIndicator();
             Settings result = new Settings();
+            String proxyHost = null;
+            int proxyPort = -1;
             for (String arg : args) {
                 if (arg.equals(HELP_ARG)) {
                     return null;
@@ -391,10 +406,32 @@ public class SdkManagerCli {
                     result.mVerbose = true;
                 } else if (arg.equals(INCLUDE_OBSOLETE_ARG)) {
                     result.mIncludeObsolete = true;
-                } else if (arg.startsWith(CHANNEL_ARG)) {
+                } else if (arg.startsWith(PROXY_HOST_ARG)) {
+                    proxyHost = arg.substring(PROXY_HOST_ARG.length());
+                } else if (arg.startsWith(PROXY_PORT_ARG)) {
+                    String value = arg.substring(PROXY_PORT_ARG.length());
                     try {
-                        result.mChannel = Integer.parseInt(arg.substring(CHANNEL_ARG.length()));
+                        proxyPort = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
+                        progress.logError(String.format("Invalid port \"%s\"", value));
+                        return null;
+                    }
+                } else if (arg.startsWith(PROXY_TYPE_ARG)) {
+                    String type = arg.substring(PROXY_TYPE_ARG.length());
+                    if (type.equals("socks")) {
+                        result.mProxyType = Proxy.Type.SOCKS;
+                    } else if (type.equals("http")) {
+                        result.mProxyType = Proxy.Type.HTTP;
+                    } else {
+                        progress.logError("Valid proxy types are \"socks\" and \"http\".");
+                        return null;
+                    }
+                } else if (arg.startsWith(CHANNEL_ARG)) {
+                    String value = arg.substring(CHANNEL_ARG.length());
+                    try {
+                        result.mChannel = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        progress.logError(String.format("Invalid channel id \"%s\"", value));
                         return null;
                     }
                 } else if (arg.startsWith(PKG_FILE_ARG)) {
@@ -428,7 +465,30 @@ public class SdkManagerCli {
                     !result.mPackages.isEmpty() == (result.mIsUpdate || result.mIsList)) {
                 return null;
             }
+            if (proxyHost == null ^ result.mProxyType == null ||
+                    proxyPort == -1 ^ result.mProxyType == null) {
+                progress.logError(
+                        String.format("All of %1$s, %2$s, and %3$s must be specified if any are.",
+                                PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG));
+                return null;
+            } else if (result.mProxyType != null) {
+                SocketAddress address = createAddress(proxyHost, proxyPort);
+                if (address == null) {
+                    return null;
+                }
+                result.mProxyHost = address;
+            }
             return result;
+        }
+
+        private static SocketAddress createAddress(String host, int port) {
+            try {
+                InetAddress address = InetAddress.getByName(host);
+                return new InetSocketAddress(address, port);
+            } catch (UnknownHostException e) {
+                new ConsoleProgressIndicator().logError("Failed to parse host " + host);
+                return null;
+            }
         }
 
         @Nullable
@@ -494,6 +554,12 @@ public class SdkManagerCli {
                     }
                 }
             };
+        }
+
+        @NonNull
+        @Override
+        public Proxy getProxy() {
+            return mProxyType == null ? Proxy.NO_PROXY : new Proxy(mProxyType, mProxyHost);
         }
     }
 }

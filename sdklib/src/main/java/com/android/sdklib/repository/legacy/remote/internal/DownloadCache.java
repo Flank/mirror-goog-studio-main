@@ -24,6 +24,7 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.repository.api.RepoManager;
+import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -141,6 +142,7 @@ public class DownloadCache {
     private final FileOp mFileOp;
     private final File mCacheRoot;
     private final Strategy mStrategy;
+    private final SettingsController mSettings;
 
     public File getCacheRoot() {
         return mCacheRoot;
@@ -174,13 +176,15 @@ public class DownloadCache {
     }
 
     /** Creates a default instance of the URL cache */
-    public DownloadCache(@NonNull Strategy strategy) {
-        this(FileOpUtils.create(), strategy);
+    public DownloadCache(@NonNull Strategy strategy, @NonNull SettingsController settings) {
+        this(FileOpUtils.create(), strategy, settings);
     }
 
     /** Creates a default instance of the URL cache */
-    public DownloadCache(@NonNull FileOp fileOp, @NonNull Strategy strategy) {
+    public DownloadCache(@NonNull FileOp fileOp, @NonNull Strategy strategy,
+            @NonNull SettingsController settings) {
         mFileOp = fileOp;
+        mSettings = settings;
         mCacheRoot = initCacheRoot();
 
         // If this is defined in the environment, never use the cache. Useful for testing.
@@ -233,7 +237,7 @@ public class DownloadCache {
             boolean needsMarkResetSupport,
             @NonNull ITaskMonitor monitor,
             @Nullable Header[] headers) throws IOException {
-        URLConnection connection = new URL(url).openConnection();
+        URLConnection connection = new URL(url).openConnection(mSettings.getProxy());
         if (headers != null) {
             for (Header header : headers) {
                 connection.setRequestProperty(header.getName(), header.getValue());

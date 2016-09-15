@@ -16,7 +16,10 @@
 
 package com.android.repository.api;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+
+import java.net.Proxy;
 
 /**
  * Settings used by the repository framework.
@@ -40,4 +43,13 @@ public interface SettingsController {
      */
     @Nullable
     Channel getChannel();
+
+    /**
+     * Gets the proxy to use for http connections. If no proxy is configured, returns
+     * {@link Proxy#NO_PROXY}.
+     */
+    @NonNull
+    default Proxy getProxy() {
+        return Proxy.NO_PROXY;
+    }
 }

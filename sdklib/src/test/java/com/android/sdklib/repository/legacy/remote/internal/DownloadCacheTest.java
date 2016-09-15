@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
+import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.TempAndroidLocation;
 import com.android.utils.Pair;
@@ -107,7 +108,7 @@ public class DownloadCacheTest {
             new HashMap<>();
 
         public NoDownloadCache(@NonNull FileOp fileOp, @NonNull Strategy strategy) {
-            super(fileOp, strategy);
+            super(fileOp, strategy, new FakeSettingsController(false));
         }
 
         @Override

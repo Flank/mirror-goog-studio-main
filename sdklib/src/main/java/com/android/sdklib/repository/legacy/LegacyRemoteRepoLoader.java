@@ -85,9 +85,9 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
      * Gets or creates a {@link DownloadCache} using the settings from our {@link
      * SettingsController}.
      */
-    private DownloadCache getDownloadCache() {
+    private DownloadCache getDownloadCache(@NonNull SettingsController settings) {
         if (mDownloadCache == null) {
-            mDownloadCache = new DownloadCache(DownloadCache.Strategy.FRESH_CACHE);
+            mDownloadCache = new DownloadCache(DownloadCache.Strategy.FRESH_CACHE, settings);
         }
         return mDownloadCache;
     }
@@ -112,7 +112,7 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
             }
             if (legacySource != null) {
                 legacySource
-                        .load(getDownloadCache(), new TaskMonitorProgressIndicatorAdapter(progress),
+                        .load(getDownloadCache(settings), new TaskMonitorProgressIndicatorAdapter(progress),
                                 settings.getForceHttp());
                 if (legacySource.getFetchError() != null) {
                     progress.logInfo(legacySource.getFetchError());

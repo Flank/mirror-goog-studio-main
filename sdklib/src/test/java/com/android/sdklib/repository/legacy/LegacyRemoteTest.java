@@ -67,7 +67,7 @@ public class LegacyRemoteTest extends TestCase {
 
         FakeSettingsController settings = new FakeSettingsController(false);
         LegacyRemoteRepoLoader sdk = new LegacyRemoteRepoLoader();
-        sdk.setDownloadCache(new DownloadCache(fop, DownloadCache.Strategy.ONLY_CACHE));
+        sdk.setDownloadCache(new DownloadCache(fop, DownloadCache.Strategy.ONLY_CACHE, settings));
         mgr.setFallbackRemoteRepoLoader(sdk);
         FakeDownloader downloader = new FakeDownloader(fop);
         // TODO: find a better way to get it into the cache/have the fallback load it
