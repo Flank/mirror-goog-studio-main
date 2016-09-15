@@ -26,15 +26,17 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Utility methods to deal with loading the test data.
  */
 public class TestUtils {
     /**
-     * Default timeout in milliseconds for an eventually check.
+     * Default timeout for the {@link #eventually(Runnable)} check.
      */
-    private static final long DEFAULT_EVENTUALLY_TIMEOUT_MS = 10_000;
+    private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
 
     /**
      * Time to wait between checks to obtain the value of an eventually supplier.
@@ -369,12 +371,12 @@ public class TestUtils {
 
     /**
      * Asserts that a runnable will eventually not throw an assertion exception. Equivalent to
-     * {@link #eventually(Runnable, long)}, but using a default timeout
+     * {@link #eventually(Runnable, Duration)}, but using a default timeout
      *
      * @param runnable a description of the failure, if the condition never becomes {@code true}
      */
     public static void eventually(@NonNull Runnable runnable) {
-        eventually(runnable, DEFAULT_EVENTUALLY_TIMEOUT_MS);
+        eventually(runnable, DEFAULT_EVENTUALLY_TIMEOUT);
     }
 
     /**
@@ -382,13 +384,13 @@ public class TestUtils {
      * {@code timeoutMs} milliseconds have ellapsed
      *
      * @param runnable a description of the failure, if the condition never becomes {@code true}
-     * @param timeoutMs the timeout for the predicate to become true, in milliseconds
+     * @param duration the timeout for the predicate to become true
      */
-    public static void eventually(@NonNull Runnable runnable, long timeoutMs) {
+    public static void eventually(@NonNull Runnable runnable, Duration duration) {
         AssertionError lastError = null;
 
-        long timeoutTime = System.currentTimeMillis() + timeoutMs;
-        while (System.currentTimeMillis() < timeoutTime) {
+        Instant timeoutTime = Instant.now().plus(duration);
+        while (Instant.now().isBefore(timeoutTime)) {
             try {
                 runnable.run();
                 return;

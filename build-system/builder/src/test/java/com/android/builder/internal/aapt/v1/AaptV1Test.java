@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -238,7 +239,8 @@ public class AaptV1Test {
                                 + "] != compiled.length() ["
                                 + compiled.length()
                                 + "]",
-                        originalFile.length() == compiled.length()));
+                        originalFile.length() == compiled.length()),
+                Duration.ofMinutes(2));
     }
 
     @Test
