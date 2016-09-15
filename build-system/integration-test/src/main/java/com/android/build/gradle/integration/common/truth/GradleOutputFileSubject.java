@@ -25,11 +25,11 @@ import java.util.regex.Pattern;
 /**
  * Truth support for validating whether changes to a file affects incremental tasks.
  */
-public class IncrementalFileSubject extends Subject<IncrementalFileSubject, File> {
+public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, File> {
 
     private final String gradleOutput;
 
-    public IncrementalFileSubject(FailureStrategy failureStrategy, File subject, String gradleOutput) {
+    public GradleOutputFileSubject(FailureStrategy failureStrategy, File subject, String gradleOutput) {
         super(failureStrategy, subject);
         this.gradleOutput = gradleOutput;
     }
