@@ -1,7 +1,19 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
+
+fileset(
+    name = "resources",
+    srcs = ["//tools/buildSrc/base:version.properties"] + glob(["src/main/resources/**"]),
+    mappings = {
+        "//tools/buildSrc/base:": "com/android/builder/",
+        "src/main/resources/": "",
+    },
+)
+
 java_library(
     name = "builder",
-    # TODO: Generate the Version.java file.
     srcs = glob(["src/main/java/**/*.java"]),
+    resource_strip_prefix = "tools/base/build-system/builder",
+    resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library:analytics-protos",

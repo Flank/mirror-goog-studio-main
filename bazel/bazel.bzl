@@ -96,7 +96,11 @@ def _fileset_impl(ctx):
 
   remap = {}
   for a, b in ctx.attr.maps.items():
-    remap[ ctx.label.package + "/" + a ] = b
+    if a.startswith("//"):
+      key = a[2:].replace(':', '/')
+    else:
+      key = ctx.label.package + "/" + a
+    remap[key] = b
 
   cmd = ""
   for f in ctx.files.srcs:
@@ -152,7 +156,7 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
       name = name + ".map",
       srcs = srcs,
       maps = maps,
-            outs = outs)
+      outs = outs)
 
   native.filegroup(
     name = name,
