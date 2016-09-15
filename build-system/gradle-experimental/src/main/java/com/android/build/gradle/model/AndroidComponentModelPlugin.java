@@ -27,8 +27,6 @@ import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.build.gradle.model.internal.DefaultAndroidBinary;
 import com.android.build.gradle.model.internal.DefaultAndroidComponentSpec;
-import com.android.build.gradle.model.internal.DefaultAndroidLanguageSourceSet;
-import com.android.build.gradle.model.internal.DefaultJniLibsSourceSet;
 import com.android.builder.Version;
 import com.android.builder.core.BuilderConstants;
 import com.android.repository.Revision;
@@ -89,17 +87,17 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
      * is compiled with.  Throw an error and suggest to update this plugin.
      */
     public static void checkPluginVersion() {
-        String actualGradlePluginVersion = Version.getAndroidGradleComponentPluginVersion();
+        String actualGradlePluginVersion = Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION;
         if(!actualGradlePluginVersion.equals(
                 com.android.build.gradle.model.Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION)) {
             throw new UnsupportedVersionException(String.format("Plugin version mismatch.  "
                             + "'com.android.tools.build:gradle:%s' was applied, and it "
                             + "requires 'com.android.tools.build:gradle-experimental:%s'.  Current "
                             + "version is '%s'.  Please update to version '%s'.",
-                    Version .getAndroidGradlePluginVersion(),
-                    Version .getAndroidGradleComponentPluginVersion(),
+                    Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                    Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
                     com.android.build.gradle.model.Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
-                    Version .getAndroidGradleComponentPluginVersion()));
+                    Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION));
         }
     }
 

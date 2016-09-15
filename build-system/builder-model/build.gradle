@@ -4,6 +4,7 @@ apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:annotations')
+    testCompile 'junit:junit:4.12'
 }
 
 group = 'com.android.tools.build'
@@ -31,33 +32,19 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
     sdkJar.manifest.attributes((key): value)
 }
 
-def generated = new File("${project.buildDir}/generated/java")
+def generated = new File("${project.buildDir}/generated/resources")
 
 sourceSets {
     main {
-        java {
+        resources {
             srcDir generated
         }
     }
 }
 
-task generateVersionConstantsJava {
-    inputs.property("apiVersion", apiVersion)
-    inputs.property("version", version)
-    ext.versionFile = new File(generated, "com/android/builder/model/Version.java")
-    outputs.file(versionFile)
-}
-generateVersionConstantsJava << {
-    versionFile.parentFile.mkdirs()
-    versionFile.text = """
-package com.android.builder.model;
-
-public final class Version {
-    private Version() {}
-    public static final String ANDROID_GRADLE_PLUGIN_VERSION = "$version";
-    public static final int BUILDER_MODEL_API_VERSION = $apiVersion;
-}
-"""
+task copyVersionProperties(type: Copy) {
+    from project.file("$rootDir/buildSrc/base/version.properties")
+    into project.file("$generated/com/android/builder/model")
 }
 
-tasks.compileJava.dependsOn generateVersionConstantsJava
+tasks.compileJava.dependsOn copyVersionProperties
