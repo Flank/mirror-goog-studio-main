@@ -581,7 +581,13 @@ public class ClientData {
      * name to replace a specified one.
      */
     void setClientDescription(String description) {
-        if (mClientDescription == null && !description.isEmpty()) {
+        /*
+         * The instant apps runtime initially returns a placeholder name for the process which can
+         * be identified by the following prefix. If the runtime can be updated to return the
+         * correct name from the beginning then this check can be removed.
+         */
+        final String placeholderNamePrefix = "com.google.android.instantapps.supervisor.isolated";
+        if (mClientDescription == null || mClientDescription.startsWith(placeholderNamePrefix)) {
             /*
              * The application VM is first named <pre-initialized> before being assigned
              * its real name.
@@ -589,7 +595,7 @@ public class ClientData {
              * another one setting the final actual name. So if we get a SetClientDescription
              * with this value we ignore it.
              */
-            if (!PRE_INITIALIZED.equals(description)) {
+            if (!description.isEmpty() && !PRE_INITIALIZED.equals(description)) {
                 mClientDescription = description;
             }
         }
