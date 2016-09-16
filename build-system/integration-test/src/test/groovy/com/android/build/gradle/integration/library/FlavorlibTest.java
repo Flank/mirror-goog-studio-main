@@ -14,114 +14,116 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidLibrary
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.ProductFlavorContainer
-import com.android.builder.model.Variant
-import com.google.common.base.Joiner
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.Assert
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Dependencies;
+import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.Variant;
+import com.google.common.base.Joiner;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Assemble tests for flavorlib.
  */
-@CompileStatic
-class FlavorlibTest {
+public class FlavorlibTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("flavorlib")
-            .create()
-    static Map<String, AndroidProject> models
+            .create();
+    public static Map<String, AndroidProject> models;
 
     @BeforeClass
-    static void setUp() {
-        models = project.executeAndReturnMultiModel("clean", "assembleDebug")
+    public static void setUp() {
+        models = project.executeAndReturnMultiModel("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        models = null
+    public static void cleanUp() {
+        project = null;
+        models = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() {
+        project.execute("lint");
     }
 
     @Test
-    void report() {
-        project.execute("androidDependencies", "signingReport")
+    public void report() {
+        project.execute("androidDependencies", "signingReport");
     }
 
     @Test
-    void testModel() throws Exception {
+    public void testModel() throws Exception {
 
-        AndroidProject appProject = models.get(":app")
-        assertNotNull("Module app null-check", appProject)
+        AndroidProject appProject = models.get(":app");
+        assertNotNull("Module app null-check", appProject);
 
-        assertFalse("Library Project", appProject.isLibrary())
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, appProject.getProjectType())
+        assertFalse("Library Project", appProject.isLibrary());
+        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, appProject.getProjectType());
 
-        Collection<Variant> variants = appProject.getVariants()
-        Collection<ProductFlavorContainer> productFlavors = appProject.getProductFlavors()
+        Collection<Variant> variants = appProject.getVariants();
+        Collection<ProductFlavorContainer> productFlavors = appProject.getProductFlavors();
 
-        ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1")
-        assertNotNull(flavor1)
+        ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1");
+        assertNotNull(flavor1);
 
-        Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug")
+        Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
 
-        Dependencies dependencies = flavor1Debug.getMainArtifact().getCompileDependencies()
-        assertNotNull(dependencies)
-        Collection<AndroidLibrary> libs = dependencies.getLibraries()
-        assertNotNull(libs)
-        assertEquals(1, libs.size())
-        AndroidLibrary androidLibrary = libs.iterator().next()
-        assertNotNull(androidLibrary)
-        assertEquals(":lib1", androidLibrary.getProject())
+        Dependencies dependencies = flavor1Debug.getMainArtifact().getCompileDependencies();
+        assertNotNull(dependencies);
+        Collection<AndroidLibrary> libs = dependencies.getLibraries();
+        assertNotNull(libs);
+        assertEquals(1, libs.size());
+        AndroidLibrary androidLibrary = libs.iterator().next();
+        assertNotNull(androidLibrary);
+        assertEquals(":lib1", androidLibrary.getProject());
         // TODO: right now we can only test the folder name efficiently
-        String path = androidLibrary.getFolder().getPath()
+        String path = androidLibrary.getFolder().getPath();
         assertTrue(path, path.endsWith(Joiner.on(File.separatorChar).join(
-                "flavorlib", "lib1", "unspecified")))
+                "flavorlib", "lib1", "unspecified")));
 
-        ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2")
-        assertNotNull(flavor2)
+        ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
+        assertNotNull(flavor2);
 
-        Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug")
+        Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
 
-        dependencies = flavor2Debug.getMainArtifact().getCompileDependencies()
-        assertNotNull(dependencies)
-        libs = dependencies.getLibraries()
-        assertNotNull(libs)
-        Assert.assertEquals(1, libs.size())
-        androidLibrary = libs.iterator().next()
-        assertNotNull(androidLibrary)
-        assertEquals(":lib2", androidLibrary.getProject())
+        dependencies = flavor2Debug.getMainArtifact().getCompileDependencies();
+        assertNotNull(dependencies);
+        libs = dependencies.getLibraries();
+        assertNotNull(libs);
+        Assert.assertEquals(1, libs.size());
+        androidLibrary = libs.iterator().next();
+        assertNotNull(androidLibrary);
+        assertEquals(":lib2", androidLibrary.getProject());
         // TODO: right now we can only test the folder name efficiently
-        path = androidLibrary.getFolder().getPath()
+        path = androidLibrary.getFolder().getPath();
         assertTrue(path, path.endsWith(
-                Joiner.on(File.separatorChar).join("flavorlib", "lib2", "unspecified")))
+                Joiner.on(File.separatorChar).join("flavorlib", "lib2", "unspecified")));
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() {
+        project.executeConnectedCheck();
     }
 }
