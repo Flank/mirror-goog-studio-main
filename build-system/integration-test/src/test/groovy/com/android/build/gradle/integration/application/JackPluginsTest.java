@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -27,12 +26,9 @@ import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
-import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-import org.gradle.api.JavaVersion;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -77,8 +73,8 @@ public class JackPluginsTest {
 
         assertThat(result.getException()).isNotNull();
         //noinspection ThrowableResultOfMethodCallIgnored - should not throw
-        assertThat(Throwables.getRootCause(result.getException()).getClass())
-                .isEqualTo(UnsupportedOperationException.class);
+        assertThat(Throwables.getRootCause(result.getException()).getMessage())
+                .contains("finished with non-zero exit value");
         assertThat(result.getStderr()).contains("Plugin 'Plugin1' not found");
     }
 

@@ -70,8 +70,11 @@ class GradleProcessResult implements ProcessResult {
 
     @NonNull
     private ProcessException buildProcessException(@NonNull ExecException e) {
-        return new ProcessException("Error while executing '"
-                + processInfo.getExecutable() + "' with arguments {"
-                + Joiner.on(' ').join(processInfo.getArgs()) + "}", e);
+        return new ProcessException(
+                String.format(
+                        "Error while executing %s with arguments {%s}",
+                        processInfo.getDescription(),
+                        Joiner.on(' ').join(processInfo.getArgs())),
+                e);
     }
 }
