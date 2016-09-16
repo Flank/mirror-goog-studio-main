@@ -179,7 +179,7 @@ public class LibraryTaskManager extends TaskManager {
                                         "package",
                                         FileUtils.join(variantBundleDir, "res"),
                                         false /*includeDependencies*/,
-                                        false /*process9Patch*/);
+                                        false /*processResources*/);
 
                         if (variantData.getVariantDependency().hasNonOptionalLibraries()) {
                             // Add a task to merge the resource folders, including the libraries, in order to
@@ -188,7 +188,7 @@ public class LibraryTaskManager extends TaskManager {
                             createMergeResourcesTask(
                                     tasks,
                                     variantScope,
-                                    false /*process9patch*/);
+                                    false /*processResources*/);
                         }
 
                         mergeResourceTask.configure(tasks,

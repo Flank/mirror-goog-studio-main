@@ -291,36 +291,6 @@ public class AaptV1Test {
     }
 
     @Test
-    public void ninePatchPngsAreNotProcessedIfNotEnabledBeforeV22() throws Exception {
-        Aapt aapt =
-                makeAapt(
-                        AaptV1.PngProcessMode.NONE,
-                        new Revision(AaptV1.VERSION_FOR_SERVER_AAPT.getMajor() - 1, 0, 0));
-
-        File originalFile = AaptTestUtils.getNinePatchTestPng();
-
-        Future<File> compiledFuture =
-                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
-        File compiled = compiledFuture.get();
-        assertNull(compiled);
-    }
-
-    @Test
-    public void ninePatchPngsAreNotProcessedIfNotEnabledAfterV22() throws Exception {
-        Aapt aapt =
-                makeAapt(
-                        AaptV1.PngProcessMode.NONE,
-                        new Revision(AaptV1.VERSION_FOR_SERVER_AAPT.getMajor() + 1, 0, 0));
-
-        File originalFile = AaptTestUtils.getNinePatchTestPng();
-
-        Future<File> compiledFuture =
-                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
-        File compiled = compiledFuture.get();
-        assertNull(compiled);
-    }
-
-    @Test
     public void generateRJavaInApplication() throws Exception {
         Aapt aapt = makeAapt();
 
