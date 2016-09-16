@@ -1808,8 +1808,8 @@ public final class SdkConstants {
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     // Always update GRADLE_PLUGIN_RECOMMENDED_VERSION and GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION together.
-    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.2.0-beta3";
-    public static final String GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION = "0.8.0-beta3";
+    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.2.0";
+    public static final String GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION = "0.8.0";
     // Temporary - can be removed once 2.3 is the recommended version.
     public static final String GRADLE_PLUGIN_WH_VERSION = "2.3.0-dev";
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
