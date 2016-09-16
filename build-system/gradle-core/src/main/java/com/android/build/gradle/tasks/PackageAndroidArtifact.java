@@ -480,6 +480,18 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                             PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest),
                             getNoCompressPredicate()::apply);
 
+            getLogger().debug(
+                    "Information to create the APK: apkPath={}, v1SigningEnabled={},"
+                            + " v2SigningEnabled={}, builtBy={}, createdBy={}, minSdkVersion={},"
+                            + " nativeLibrariesPackagingMode={}",
+                    creationData.getApkPath(),
+                    creationData.isV1SigningEnabled(),
+                    creationData.isV2SigningEnabled(),
+                    creationData.getBuiltBy(),
+                    creationData.getCreatedBy(),
+                    creationData.getMinSdkVersion(),
+                    creationData.getNativeLibrariesPackagingMode());
+
             try (IncrementalPackager packager = createPackager(creationData)) {
                 packager.updateDex(changedDex);
                 packager.updateJavaResources(changedJavaResources);
