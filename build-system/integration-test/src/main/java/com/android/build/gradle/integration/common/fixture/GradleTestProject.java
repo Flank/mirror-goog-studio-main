@@ -90,7 +90,7 @@ public class GradleTestProject implements TestRule {
     public static final int LAST_JAVA6_SDK_VERSION = 19;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String UPCOMING_BUILD_TOOL_VERSION = "24.0.0";
+    public static final String UPCOMING_BUILD_TOOL_VERSION = "24.0.2";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
     public static final String DEVICE_PROVIDER_NAME = REMOTE_TEST_PROVIDER != null ?
@@ -111,7 +111,7 @@ public class GradleTestProject implements TestRule {
         // when testing cross product of versions of buildtools, compile sdks, plugin versions,
         // there are corresponding system environment variable that you are able to set.
         String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
-        DEFAULT_BUILD_TOOL_VERSION = MoreObjects.firstNonNull(envBuildToolVersion, "23.0.2");
+        DEFAULT_BUILD_TOOL_VERSION = MoreObjects.firstNonNull(envBuildToolVersion, "24.0.2");
 
         String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
         ANDROID_GRADLE_PLUGIN_VERSION =
