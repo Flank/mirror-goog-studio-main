@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 import com.android.ide.common.process.JavaProcessExecutor;
-import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 
@@ -75,19 +74,13 @@ public class DexByteCodeConverterTest {
         when(dexOptions.getDexInProcess()).thenReturn(true);
         // a very small number to ensure dex in process not be disabled due to memory needs.
         when(dexOptions.getJavaMaxHeapSize()).thenReturn("1024");
-        assertTrue(dexByteCodeConverter.shouldDexInProcess(dexOptions, new Revision(23, 0, 2)));
+        assertTrue(dexByteCodeConverter.shouldDexInProcess(dexOptions));
     }
 
     @Test
     public void checkDisabledDexInProcessIsDisabled() {
         when(dexOptions.getDexInProcess()).thenReturn(false);
-        assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions, new Revision(23, 0, 2)));
-    }
-
-    @Test
-    public void checkDexInProcessWithOldBuildToolsIsDisabled() {
-        when(dexOptions.getDexInProcess()).thenReturn(true);
-        assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions, new Revision(23, 0, 1)));
+        assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions));
     }
 
     @Test
@@ -98,7 +91,7 @@ public class DexByteCodeConverterTest {
         String heapSizeSetting = "10000G";
         
         when(dexOptions.getJavaMaxHeapSize()).thenReturn(heapSizeSetting);
-        assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions, new Revision(23, 0, 2)));
+        assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions));
         verify(logger).warning(
                 contains("org.gradle.jvmargs=-Xmx"),
                 any(),

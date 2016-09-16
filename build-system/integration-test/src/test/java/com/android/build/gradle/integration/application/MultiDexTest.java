@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY;
 import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.MAIN;
+import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
@@ -30,14 +30,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.internal.aapt.Aapt;
-import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.gradle.api.JavaVersion;
@@ -240,35 +236,6 @@ public class MultiDexTest {
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
     }
 
-    @Test
-    public void checkManifestKeepListFilter() throws Exception {
-        Assume.assumeFalse(aaptSupportsMultiDexList());
-        project.execute("collectIcsDebugMultiDexComponents");
-        File manifestKeep =
-                FileUtils.join(
-                        project.getIntermediatesDir(),
-                        "multi-dex",
-                        "ics",
-                        "debug",
-                        "manifest_keep.txt");
-        assertThat(Files.toString(manifestKeep, Charsets.UTF_8))
-                .contains("com.android.tests.basic.Main");
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "afterEvaluate {\n"
-                        + "    project.collectIcsDebugMultiDexComponents.filter({\n"
-                        + "        name, attrs -> \n"
-                        + "            !name.equals(\"activity\") ||\n"
-                        + "            !\"com.android.tests.basic.Main\".equals(attrs.get(\"android:name\")); })\n"
-                        + "}\n");
-
-        project.execute("collectIcsDebugMultiDexComponents");
-
-        assertThat(Files.toString(manifestKeep, Charsets.UTF_8))
-                .doesNotContain("com.android.tests.basic.Main");
-    }
-
     private void commonApkChecks(String buildType) throws Exception {
         assertThatApk(project.getApk("ics", buildType))
                 .containsClass("Landroid/support/multidex/MultiDexApplication;");
@@ -325,12 +292,6 @@ public class MultiDexTest {
 
         assertThat(unwantedExtraClasses).named("Unwanted classes in main dex").isEmpty();
 
-    }
-
-    private static boolean aaptSupportsMultiDexList() {
-        return Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
-                        .compareTo(Aapt.VERSION_FOR_MAIN_DEX_LIST)
-                >= 0;
     }
 
     @Test

@@ -69,7 +69,7 @@ public class DexWrapper {
         Main.Arguments args = new Main.Arguments();
 
         // Inputs:
-        args.fileNames = Iterables.toArray(processBuilder.getFilesToAdd(null), String.class);
+        args.fileNames = Iterables.toArray(processBuilder.getFilesToAdd(), String.class);
 
         // Outputs:
         if (processBuilder.getOutputFile().isDirectory() && !processBuilder.isMultiDex()) {

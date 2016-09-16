@@ -33,7 +33,6 @@ import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
@@ -155,7 +154,7 @@ public class DexByteCodeConverter {
             mLogger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
         }
 
-        if (shouldDexInProcess(dexOptions, mTargetInfo.getBuildTools().getRevision())) {
+        if (shouldDexInProcess(dexOptions)) {
             dexInProcess(builder, dexOptions, processOutputHandler);
         } else {
             dexOutOfProcess(builder, dexOptions, processOutputHandler);
@@ -246,20 +245,11 @@ public class DexByteCodeConverter {
      */
     @VisibleForTesting
     synchronized boolean shouldDexInProcess(
-            @NonNull DexOptions dexOptions,
-            @NonNull Revision buildToolsVersion) {
+            @NonNull DexOptions dexOptions) {
         if (mIsDexInProcess != null) {
             return mIsDexInProcess;
         }
         if (!dexOptions.getDexInProcess()) {
-            mIsDexInProcess = false;
-            return false;
-        }
-        if (buildToolsVersion.compareTo(DexProcessBuilder.FIXED_DX_MERGER) < 0) {
-            // We substitute Dex > 23.0.2 with the local implementation.
-            mLogger.warning("Running dex in-process requires build tools %1$s.\n"
-                            + "For faster builds update this project to use the latest build tools.",
-                    DexProcessBuilder.FIXED_DX_MERGER.toShortString());
             mIsDexInProcess = false;
             return false;
         }

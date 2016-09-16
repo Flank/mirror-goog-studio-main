@@ -329,13 +329,7 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
         }
 
         if (mPseudoLocalesEnabled) {
-            if (buildToolInfo.getRevision().getMajor() >= 21) {
-                builder.addArgs("--pseudo-localize");
-            } else {
-                throw new RuntimeException(
-                        "Pseudolocalization is only available since Build Tools version 21.0.0,"
-                                + " please upgrade or turn it off.");
-            }
+            builder.addArgs("--pseudo-localize");
         }
 
         // library specific options
@@ -350,12 +344,7 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
         }
 
         if (mOptions.getFailOnMissingConfigEntry()) {
-            if (buildToolInfo.getRevision().getMajor() > 20) {
-                builder.addArgs("--error-on-missing-config-entry");
-            } else {
-                throw new IllegalStateException("aaptOptions:failOnMissingConfigEntry cannot be used"
-                        + " with SDK Build Tools revision earlier than 21.0.0");
-            }
+            builder.addArgs("--error-on-missing-config-entry");
         }
 
         // never compress apks.
@@ -377,12 +366,6 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
         if (!isNullOrEmpty(mResourceConfigs)) {
             resourceConfigs.addAll(mResourceConfigs);
         }
-        if (buildToolInfo.getRevision().getMajor() < 21 && mPreferredDensity != null) {
-            resourceConfigs.add(mPreferredDensity);
-            // when adding a density filter, also always add the nodpi option.
-            resourceConfigs.add(Density.NODPI.getResourceValue());
-        }
-
 
         // separate the density and language resource configs, since starting in 21, the
         // density resource configs should be passed with --preferred-density to ensure packaging
@@ -390,17 +373,12 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
         List<String> otherResourceConfigs = new ArrayList<String>();
         List<String> densityResourceConfigs = new ArrayList<String>();
         if (!resourceConfigs.isEmpty()) {
-            if (buildToolInfo.getRevision().getMajor() >= 21) {
-                for (String resourceConfig : resourceConfigs) {
-                    if (Density.getEnum(resourceConfig) != null) {
-                        densityResourceConfigs.add(resourceConfig);
-                    } else {
-                        otherResourceConfigs.add(resourceConfig);
-                    }
+            for (String resourceConfig : resourceConfigs) {
+                if (Density.getEnum(resourceConfig) != null) {
+                    densityResourceConfigs.add(resourceConfig);
+                } else {
+                    otherResourceConfigs.add(resourceConfig);
                 }
-            } else {
-                // before 21, everything is passed with -c option.
-                otherResourceConfigs = resourceConfigs;
             }
         }
         if (!otherResourceConfigs.isEmpty()) {
@@ -416,7 +394,7 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
                     "--preferred-density", Iterables.getOnlyElement(densityResourceConfigs));
         }
 
-        if (buildToolInfo.getRevision().getMajor() >= 21 && mPreferredDensity != null) {
+        if (mPreferredDensity != null) {
             if (!isNullOrEmpty(mResourceConfigs)) {
                 Collection<String> densityResConfig = getDensityResConfigs(mResourceConfigs);
                 if (!densityResConfig.isEmpty()) {
@@ -430,13 +408,6 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
             builder.addArgs("--preferred-density", mPreferredDensity);
         }
 
-        if (buildToolInfo.getRevision().getMajor() < 21 && mPreferredDensity != null) {
-            logger.warning(String.format("Warning : Project is building density based multiple APKs"
-                            + " but using tools version %1$s, you should upgrade to build-tools 21 or above"
-                            + " to ensure proper packaging of resources.",
-                    buildToolInfo.getRevision().getMajor()));
-        }
-
         if (mSymbolOutputDir != null &&
                 (mType == VariantType.LIBRARY || !mLibraries.isEmpty())) {
             builder.addArgs("--output-text-symbols", mSymbolOutputDir);
@@ -444,9 +415,7 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
 
         // All the vector XML files that are outside of an "-anydpi-v21" directory were left there
         // intentionally, for the support library to consume. Leave them alone.
-        if (buildToolInfo.getRevision().getMajor() >= 23) {
-            builder.addArgs("--no-version-vectors");
-        }
+        builder.addArgs("--no-version-vectors");
 
         return builder.createProcess();
     }

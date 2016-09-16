@@ -93,7 +93,6 @@ import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
-import com.android.build.gradle.internal.tasks.multidex.CreateManifestKeepList;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -155,7 +154,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -165,7 +163,6 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
@@ -179,6 +176,7 @@ import com.google.common.collect.Lists;
 
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -277,9 +275,6 @@ public abstract class TaskManager {
     private static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
     public static final String ATOM_SUFFIX = "Atom";
-
-    private static final Revision MIN_REVISION_RS_COMPAT_64 = Revision.parseRevision("23.0.3");
-
 
     // Tasks
     private AndroidTask<Copy> jacocoAgentTask;
@@ -664,20 +659,6 @@ public abstract class TaskManager {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
         GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-        if (config.getRenderscriptSupportModeEnabled() && config.getRenderscriptTarget() >= 21) {
-            Revision rev =  androidBuilder.getTargetInfo().getBuildTools().getRevision();
-            if (rev.compareTo(MIN_REVISION_RS_COMPAT_64) < 0)
-                androidBuilder.getErrorReporter().handleSyncError(
-                        rev.toString(),
-                        SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
-                        "Renderscript support mode is not supported with renderscript target 21+ in BuildTools "
-                                + rev.toString()
-                                + '\n'
-                                + "Please update to BuildTools "
-                                + MIN_REVISION_RS_COMPAT_64.toString()
-                                + " or above.");
-        }
-
         // get single output for now.
         BaseVariantOutputData variantOutputData = variantData.getOutputs().get(0);
 
@@ -811,19 +792,13 @@ public abstract class TaskManager {
                                 .getRenderscriptSupportModeBlasEnabled()) {
                             File rsBlasLib = variantScope.getGlobalScope().getAndroidBuilder()
                                     .getSupportBlasLibFolder();
-                            if (rsBlasLib != null && rsBlasLib.isDirectory()) {
-                                builder.add(rsBlasLib);
+
+                            if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
+                                throw new GradleException(
+                                        "Renderscript BLAS support mode is not supported "
+                                                + "in BuildTools" + rsBlasLib);
                             } else {
-                                Revision rev =  androidBuilder.getTargetInfo()
-                                        .getBuildTools().getRevision();
-                                androidBuilder.getErrorReporter().handleSyncError(
-                                        rev.toString(),
-                                        SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
-                                        "Renderscript BLAS support mode is not supported in BuildTools "
-                                                + rev.toString()
-                                                + '\n'
-                                                + "Please update to BuildTools 24.0.0"
-                                                + " or above.");
+                                builder.add(rsBlasLib);
                             }
                         }
                         return builder.build();
@@ -888,7 +863,7 @@ public abstract class TaskManager {
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                useAaptToGenerateLegacyMultidexMainDexProguardRules(scope);
+                isLegacyMultidexMode(scope);
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
@@ -922,13 +897,6 @@ public abstract class TaskManager {
             }
 
         }
-    }
-
-    private boolean useAaptToGenerateLegacyMultidexMainDexProguardRules(
-            @NonNull VariantScope scope) {
-        return isLegacyMultidexMode(scope) &&
-                androidBuilder.getTargetInfo().getBuildTools().getRevision()
-                        .compareTo(Aapt.VERSION_FOR_MAIN_DEX_LIST) >= 0;
     }
 
     /**
@@ -1862,21 +1830,6 @@ public abstract class TaskManager {
                         .ifPresent(variantScope::addColdSwapBuildTask);
             }
 
-            // ----------
-            // Create a task to collect the list of manifest entry points which are
-            // needed in the primary dex.
-            // This is not needed for AAPT >= AaptV1.VERSION_FOR_MAIN_DEX_LIST,
-            // where the '-D manifestKeepListProguardFile' option is used instead.
-            AndroidTask<CreateManifestKeepList> manifestKeepListTask;
-            if (!useAaptToGenerateLegacyMultidexMainDexProguardRules(variantScope)) {
-                manifestKeepListTask = androidTasks.create(tasks,
-                        new CreateManifestKeepList.ConfigAction(variantScope));
-                manifestKeepListTask.dependsOn(tasks,
-                        variantData.getOutputs().get(0).getScope().getManifestProcessorTask());
-                variantScope.addColdSwapBuildTask(manifestKeepListTask);
-            } else {
-                manifestKeepListTask = null;
-            }
             // ---------
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
@@ -1886,10 +1839,7 @@ public abstract class TaskManager {
                     null);
             multiDexClassListTask =
                     transformManager.addTransform(tasks, variantScope, multiDexTransform);
-            multiDexClassListTask.ifPresent(t -> {
-                t.optionalDependsOn(tasks, manifestKeepListTask);
-                variantScope.addColdSwapBuildTask(t);
-            });
+            multiDexClassListTask.ifPresent(variantScope::addColdSwapBuildTask);
         } else {
             multiDexClassListTask = Optional.empty();
         }
@@ -2720,7 +2670,8 @@ public abstract class TaskManager {
 
         if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
             //TODO: This is currently overly broad, as finding the actual application class
-            //      requires manually parsing the manifest (See CreateManifestKeepList)
+            //      requires manually parsing the manifest, see
+            //      aapt -D (getMainDexListProguardOutputFile)
             transform.keep("class ** extends android.app.Application {*;}");
             transform.keep("class com.android.tools.fd.** {*;}");
         }

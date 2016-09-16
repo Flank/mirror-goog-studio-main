@@ -48,13 +48,12 @@ import java.util.List;
  */
 public class AaptPackageProcessBuilderTest extends TestCase {
 
-    private static final Revision PREFERRED_DENSITY_VERSION = new Revision(21, 0, 0);
+    private static final Revision PREFERRED_DENSITY_VERSION = new Revision(24, 0, 1);
 
     @Mock
     AaptOptions aaptOptions;
 
     BuildToolInfo buildToolInfo;
-    BuildToolInfo oldBuildToolInfo;
     IAndroidTarget androidTarget;
     ILogger mLogger = new StdLogger(StdLogger.Level.VERBOSE);
 
@@ -73,16 +72,6 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                                         Range.atLeast(PREFERRED_DENSITY_VERSION),
                                         progressIndicator),
                                 "Build tools >= %s required.",
-                                PREFERRED_DENSITY_VERSION));
-
-        oldBuildToolInfo =
-                BuildToolInfo.fromLocalPackage(
-                        Verify.verifyNotNull(
-                                handler.getPackageInRange(
-                                        SdkConstants.FD_BUILD_TOOLS,
-                                        Range.lessThan(PREFERRED_DENSITY_VERSION),
-                                        progressIndicator),
-                                "Build tools < %s required.",
                                 PREFERRED_DENSITY_VERSION));
 
         androidTarget =
@@ -275,36 +264,6 @@ public class AaptPackageProcessBuilderTest extends TestCase {
         assertTrue(command.indexOf("--preferred-density") == -1);
     }
 
-    public void testPre21ResourceConfigsAndPreferredDensity() {
-        File virtualAndroidManifestFile = new File("/path/to/non/existent/file");
-        File assetsFolder = Mockito.mock(File.class);
-        Mockito.when(assetsFolder.isDirectory()).thenReturn(true);
-        Mockito.when(assetsFolder.getAbsolutePath()).thenReturn("/path/to/assets/folder");
-        File resFolder = Mockito.mock(File.class);
-        Mockito.when(resFolder.isDirectory()).thenReturn(true);
-        Mockito.when(resFolder.getAbsolutePath()).thenReturn("/path/to/res/folder");
-
-        AaptPackageProcessBuilder aaptPackageProcessBuilder =
-                new AaptPackageProcessBuilder(virtualAndroidManifestFile, aaptOptions);
-        aaptPackageProcessBuilder.setResPackageOutput("/path/to/non/existent/dir")
-                .setAssetsFolder(assetsFolder)
-                .setResFolder(resFolder)
-                .setPackageForR("com.example.package.forR")
-                .setSourceOutputDir("path/to/source/output/dir")
-                .setLibraries(ImmutableList.of(Mockito.mock(AndroidLibrary.class)))
-                .setType(VariantType.DEFAULT)
-                .setResourceConfigs(ImmutableList.of("res1", "res2"))
-                .setPreferredDensity("xhdpi");
-
-        ProcessInfo processInfo = aaptPackageProcessBuilder
-                .build(oldBuildToolInfo, androidTarget, mLogger);
-
-        List<String> command = processInfo.getArgs();
-
-        assertTrue("res1,res2,xhdpi,nodpi".equals(command.get(command.indexOf("-c") + 1)));
-        assertTrue(command.indexOf("--preferred-density") == -1);
-    }
-
     public void testPost21ResourceConfigsAndPreferredDensity() {
         File virtualAndroidManifestFile = new File("/path/to/non/existent/file");
         File assetsFolder = Mockito.mock(File.class);
@@ -410,43 +369,6 @@ public class AaptPackageProcessBuilderTest extends TestCase {
                     + "}\n"
                     + "OR add them to the resConfigs list.", expected.getMessage());
         }
-    }
-
-    public void testResConfigAndSplitNoConflict() {
-        File virtualAndroidManifestFile = new File("/path/to/non/existent/file");
-        File assetsFolder = Mockito.mock(File.class);
-        Mockito.when(assetsFolder.isDirectory()).thenReturn(true);
-        Mockito.when(assetsFolder.getAbsolutePath()).thenReturn("/path/to/assets/folder");
-        File resFolder = Mockito.mock(File.class);
-        Mockito.when(resFolder.isDirectory()).thenReturn(true);
-        Mockito.when(resFolder.getAbsolutePath()).thenReturn("/path/to/res/folder");
-
-        AaptPackageProcessBuilder aaptPackageProcessBuilder =
-                new AaptPackageProcessBuilder(virtualAndroidManifestFile, aaptOptions);
-        aaptPackageProcessBuilder.setResPackageOutput("/path/to/non/existent/dir")
-                .setAssetsFolder(assetsFolder)
-                .setResFolder(resFolder)
-                .setPackageForR("com.example.package.forR")
-                .setSourceOutputDir("path/to/source/output/dir")
-                .setLibraries(ImmutableList.of(Mockito.mock(AndroidLibrary.class)))
-                .setType(VariantType.DEFAULT)
-                .setResourceConfigs(ImmutableList
-                        .of("en", "fr", "es", "de", "it", "mdpi", "hdpi", "xhdpi", "xxhdpi"))
-                .setSplits(ImmutableList.of("mdpi", "hdpi", "xhdpi", "xxhdpi"));
-
-        ProcessInfo processInfo =
-                aaptPackageProcessBuilder.build(oldBuildToolInfo, androidTarget, mLogger);
-
-        List<String> command = processInfo.getArgs();
-
-        assertEquals(
-                "en,fr,es,de,it,mdpi,hdpi,xhdpi,xxhdpi",
-                command.get(command.indexOf("-c") + 1));
-        assertTrue("--split".equals(command.get(command.indexOf("mdpi") - 1)));
-        assertTrue("--split".equals(command.get(command.indexOf("hdpi") - 1)));
-        assertTrue("--split".equals(command.get(command.indexOf("xhdpi") - 1)));
-        assertTrue("--split".equals(command.get(command.indexOf("xxhdpi") - 1)));
-        assertEquals(-1, command.indexOf("xxxhdpi"));
     }
 
     public void testResConfigWithPreferredDensityFlags() {
