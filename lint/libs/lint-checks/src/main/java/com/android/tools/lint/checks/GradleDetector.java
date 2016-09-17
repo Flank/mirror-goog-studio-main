@@ -792,8 +792,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             sMajorBuildTools = major;
 
             List<Revision> revisions = Lists.newArrayList();
-            if (major == 23) {
-                revisions.add(new Revision(23, 0, 2));
+            if (major == 24) {
+                revisions.add(new Revision(24, 0, 2));
+            } if (major == 23) {
+                revisions.add(new Revision(23, 0, 3));
             } else if (major == 22) {
                 revisions.add(new Revision(22, 0, 1));
             } else if (major == 21) {
@@ -940,13 +942,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
                 "guava".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(18, 0));
+            version = getNewerRevision(dependency, new Revision(19, 0));
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(2, 4));
+            version = getNewerRevision(dependency, new Revision(2, 7));
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new Revision(4, 3, 5));
+        } else if ("com.github.bumptech.glide".equals(dependency.getGroupId()) &&
+                "glide".equals(dependency.getArtifactId())) {
+            version = getNewerRevision(dependency, new Revision(3, 7, 0));
         } else if ("io.fabric.tools".equals(dependency.getGroupId()) &&
                 "gradle".equals(dependency.getArtifactId())) {
             GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
