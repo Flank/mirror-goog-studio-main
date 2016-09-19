@@ -25,6 +25,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
@@ -101,13 +102,29 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
             Severity.WARNING,
             IMPLEMENTATION);
 
-    /** The main issue discovered by this detector */
+    /** Failing to commit a shared preference */
     public static final Issue SHARED_PREF = Issue.create(
             "CommitPrefEdits", //$NON-NLS-1$
             "Missing `commit()` on `SharedPreference` editor",
 
             "After calling `edit()` on a `SharedPreference`, you must call `commit()` " +
             "or `apply()` on the editor to save the results.",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            new Implementation(
+                    CleanupDetector.class,
+                    Scope.JAVA_FILE_SCOPE));
+
+    /** Using commit instead of apply on a shared preference */
+    public static final Issue APPLY_SHARED_PREF = Issue.create(
+            "ApplySharedPref", //$NON-NLS-1$
+            "Use `apply()` on `SharedPreferences`",
+
+            "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
+                    + "`commit` blocks and writes its data to persistent storage immediately, "
+                    + "`apply` will handle it in the background.",
 
             Category.CORRECTNESS,
             6,
@@ -688,11 +705,15 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
                     returnValueIgnored = true;
                 }
             }
-            if (returnValueIgnored) {
+            if (returnValueIgnored
+                    // This issue used to be reported on SHARED_PREF instead of APPLY_SHARED_PREF
+                    // so consult the older issue id too such that people who have manually
+                    // suppressed the issue don't suddenly start to see these warnings again
+                    && !LintDriver.isSuppressed(SHARED_PREF, node)) {
                 String message = "Consider using `apply()` instead; `commit` writes "
                         + "its data to persistent storage immediately, whereas "
                         + "`apply` will handle it in the background";
-                context.report(SHARED_PREF, node, context.getLocation(node), message);
+                context.report(APPLY_SHARED_PREF, node, context.getLocation(node), message);
             }
         }
     }
