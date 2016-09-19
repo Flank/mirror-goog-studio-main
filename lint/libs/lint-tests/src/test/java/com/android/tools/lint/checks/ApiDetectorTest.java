@@ -5822,6 +5822,57 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testVectorDrawableCompat() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=222654
+        //noinspection all // Sample code
+        assertEquals(""
+                    + "src/test/pkg/VectorTest.java:17: Error: Call requires API level 21 (current min is 15): android.graphics.drawable.Drawable#setTint [NewApi]\n"
+                    + "        vector3.setTint(0xFFFFFF); // ERROR\n"
+                    + "                ~~~~~~~\n"
+                    + "1 errors, 0 warnings\n",
+
+                lintProject(
+                        classpath(),
+                        manifest().minSdk(15),
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.content.res.Resources;\n"
+                                + "import android.graphics.drawable.Drawable;\n"
+                                + "import android.support.graphics.drawable.VectorDrawableCompat;\n"
+                                + "\n"
+                                + "public class VectorTest {\n"
+                                + "    public void test(Resources resources) throws Exception {\n"
+                                + "        VectorDrawableCompat vector = VectorDrawableCompat.create(resources, 0, null);\n"
+                                + "        vector.setTint(0xFFFFFF); // OK\n"
+                                + "\n"
+                                + "        VectorDrawableCompat vector2 = VectorDrawableCompat.createFromXmlInner(resources, null,\n"
+                                + "                null, null);\n"
+                                + "        vector2.setTint(0xFFFFFF); // OK\n"
+                                + "\n"
+                                + "        Drawable vector3 = Drawable.createFromPath(null);\n"
+                                + "        vector3.setTint(0xFFFFFF); // ERROR\n"
+                                + "    }\n"
+                                + "}\n"),
+                        base64gzip("bin/classes/test/pkg/VectorTest.class", ""
+                                + "H4sIAAAAAAAAALVUW08TQRT+hm5ZqcutiIoI2ILachu5iMQaE4OSkFQk0hBf"
+                                + "p9tJu7jd3cxOkTd/hL/EFzE++AP8UeKZbWlNNNRo3Icz5/qdb86c7LfvX74C"
+                                + "2MB2BkOYzWAOd1I4Pz83Ws6IfAbzWDAiZ+OujXsMg0+8wNNPGVKF4hGDtRPW"
+                                + "JMNo2QvkfqtZlaoiqj55suXQFf6RUJ6xO05LN7yYYbKsZax59LbOj6SrQ1Uh"
+                                + "s2TCdDLkC2UR1FTo1bgbBloGmisZ89cyDlvKlXHJNB5SFybDXJ98Yn2S9GHY"
+                                + "7qbGrSgKleZ1JaKG58a8psQ7Q7PD6XnH3AmbkTDs7DbGelfbYFjowv0KcwFA"
+                                + "pZkXp66MtBcGsY37ZB8mzHY9M5TR3gxWj8WJcJDBVRsFB0WsOFgFd/AAazbW"
+                                + "HXqrTYaJ30yPYczUcl8Edf6qekwBSuy5ugQYtv5uAjREV0mhpY0thnSlIZtE"
+                                + "3tkLAql2fBHH5iXe93u6vcvjCwlsqfgPrxRLXfEComsV9syiZNusd1XYfNP0"
+                                + "E7oMZ/14lkNV56dNP2r5Pj9Z41R6QOqBULFUpW5xS3s+f6a18qotLQ+lLv3v"
+                                + "++X7LxzDSO/OB0I3aO0L5d4uHBLdoP4TiUt218Yjhvk/uBPDzKVZyOEK/WXM"
+                                + "NwBmVpykQxank9GZXjwD+5iEh0kOJk4bIySddgJGMUYnwziylGWKP8AiP1Bc"
+                                + "SrHPGHi5nE19grXEGFnp/ZXEInXwsTVlGcPuNZglcBAjm7gME9gktZqmBjmC"
+                                + "L1AD03izDd5pbLQJXCMCNvKUf52QJsm+QVoqud9NTBGhW5RpUdY0xW8n/Waw"
+                                + "TGeGfIt4iCWM/wAiBV6iewUAAA==")
+                ));
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
