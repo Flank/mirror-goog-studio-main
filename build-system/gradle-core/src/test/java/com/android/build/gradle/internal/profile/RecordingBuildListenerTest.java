@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.profile;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,13 +42,10 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
@@ -301,7 +297,7 @@ public class RecordingBuildListenerTest {
     @Test
     public void checkTasksEnum() {
         assertThat(
-                RecordingBuildListener.getExecutionType(
+                AnalyticsUtil.getTaskExecutionType(
                         org.gradle.api.tasks.compile.JavaCompile.class))
                 .named("JavaCompile")
                 .isEqualTo(AndroidStudioStats.GradleTaskExecution.Type.JAVA_COMPILE);

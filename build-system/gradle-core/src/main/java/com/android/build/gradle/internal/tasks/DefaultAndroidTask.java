@@ -22,7 +22,7 @@ import com.android.builder.Version;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 
-public class DefaultAndroidTask extends DefaultTask {
+public abstract class DefaultAndroidTask extends DefaultTask {
 
     @Nullable
     private String variantName;

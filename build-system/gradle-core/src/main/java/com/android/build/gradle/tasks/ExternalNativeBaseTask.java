@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.tasks.BaseTask;
 /**
  * Base task for external native build and clean
  */
-public class ExternalNativeBaseTask extends BaseTask {
+public abstract class ExternalNativeBaseTask extends BaseTask {
     /**
      * Log low level diagnostic information.
      */
