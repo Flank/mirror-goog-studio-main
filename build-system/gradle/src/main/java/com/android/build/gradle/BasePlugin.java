@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.google.common.base.Preconditions.checkState;
 import static java.io.File.separator;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -52,6 +53,7 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -66,8 +68,6 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessRecorder;
-import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.dx.command.dexer.Main;
@@ -79,6 +79,7 @@ import com.android.repository.api.SettingsController;
 import com.android.repository.impl.downloader.LocalFileAwareDownloader;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -86,28 +87,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
-import org.gradle.BuildListener;
-import org.gradle.BuildResult;
-import org.gradle.api.Action;
-import org.gradle.api.GradleException;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.execution.TaskExecutionGraph;
-import org.gradle.api.execution.TaskExecutionGraphListener;
-import org.gradle.api.initialization.Settings;
-import org.gradle.api.invocation.Gradle;
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.tasks.StopExecutionException;
-import org.gradle.internal.reflect.Instantiator;
-import org.gradle.tooling.UnsupportedVersionException;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -124,6 +103,22 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
+import org.gradle.BuildListener;
+import org.gradle.BuildResult;
+import org.gradle.api.Action;
+import org.gradle.api.GradleException;
+import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.initialization.Settings;
+import org.gradle.api.invocation.Gradle;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.tasks.StopExecutionException;
+import org.gradle.internal.reflect.Instantiator;
+import org.gradle.tooling.UnsupportedVersionException;
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
  * Base class for all Android plugins
@@ -135,29 +130,27 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private static final int DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS = 40;
 
 
-    protected BaseExtension extension;
+    private BaseExtension extension;
 
-    protected VariantManager variantManager;
+    private VariantManager variantManager;
 
-    protected TaskManager taskManager;
+    private TaskManager taskManager;
 
-    protected Project project;
+    private Project project;
 
-    protected SdkHandler sdkHandler;
+    private SdkHandler sdkHandler;
 
     private NdkHandler ndkHandler;
 
-    protected AndroidBuilder androidBuilder;
+    private AndroidBuilder androidBuilder;
 
-    protected DataBindingBuilder dataBindingBuilder;
+    private DataBindingBuilder dataBindingBuilder;
 
-    protected Instantiator instantiator;
+    private Instantiator instantiator;
 
-    protected VariantFactory variantFactory;
+    private VariantFactory variantFactory;
 
     private ToolingModelBuilderRegistry registry;
-
-    private JacocoPlugin jacocoPlugin;
 
     private LoggerWrapper loggerWrapper;
 
@@ -264,27 +257,36 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         return -1;
     }
 
-    protected abstract Class<? extends BaseExtension> getExtensionClass();
+    @NonNull
+    protected abstract BaseExtension createExtension(
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
+            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull ExtraModelInfo extraModelInfo);
+
     @NonNull
     protected abstract AndroidStudioStats.GradleBuildProject.PluginType getAnalyticsPluginType();
-    protected abstract VariantFactory createVariantFactory();
+
+    @NonNull
+    protected abstract VariantFactory createVariantFactory(
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull AndroidConfig androidConfig);
+
+    @NonNull
     protected abstract TaskManager createTaskManager(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig extension,
+            @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry);
-
-    /**
-     * Return whether this plugin creates Android library.  Should be overridden if true.
-     */
-    protected boolean isLibrary() {
-        return getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY;
-    }
-
     protected abstract int getProjectType();
 
     @VisibleForTesting
@@ -292,14 +294,23 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         return variantManager;
     }
 
-    protected ILogger getLogger() {
+    @VisibleForTesting
+    BaseExtension getExtension() {
+        return extension;
+    }
+
+    @VisibleForTesting
+    AndroidBuilder getAndroidBuilder() {
+        return androidBuilder;
+    }
+
+    private ILogger getLogger() {
         if (loggerWrapper == null) {
             loggerWrapper = new LoggerWrapper(project.getLogger());
         }
 
         return loggerWrapper;
     }
-
 
     protected void apply(@NonNull Project project) {
         checkPluginVersion();
@@ -317,32 +328,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 .setPluginGeneration(
                         AndroidStudioStats.GradleBuildProject.PluginGeneration.FIRST);
 
-        ThreadRecorder.get().record(ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
-                project.getPath(), null /*variantName*/, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        configureProject();
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                project, null, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE, this::configureProject);
 
-        ThreadRecorder.get().record(ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
-                project.getPath(), null /*variantName*/, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createExtension();
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                project,
+                null,
+                ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
+                this::configureExtension);
 
-        ThreadRecorder.get().record(ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
-                project.getPath(), null /*variantName*/, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createTasks();
-                        return null;
-                    }
-                });
+        SpanRecorders.record(
+                project, null, ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION, this::createTasks);
 
         // Apply additional plugins
         for (String plugin : AndroidGradleOptions.getAdditionalPlugins(project)) {
@@ -350,8 +346,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         }
     }
 
-    protected void configureProject() {
-        extraModelInfo = new ExtraModelInfo(project, isLibrary());
+    private void configureProject() {
+        extraModelInfo = new ExtraModelInfo(project);
         checkGradleVersion();
         sdkHandler = new SdkHandler(project, getLogger());
 
@@ -378,98 +374,131 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         dataBindingBuilder.setPrintMachineReadableOutput(
                 extraModelInfo.getErrorFormatMode() ==
                         ExtraModelInfo.ErrorFormatMode.MACHINE_PARSABLE);
+
+        // Apply the Java and Jacoco plugins.
         project.getPlugins().apply(JavaBasePlugin.class);
+        project.getPlugins().apply(JacocoPlugin.class);
 
-        jacocoPlugin = project.getPlugins().apply(JacocoPlugin.class);
-
-        project.getTasks().getByName("assemble").setDescription(
-                "Assembles all variants of all applications and secondary packages.");
+        project.getTasks()
+                .getByName("assemble")
+                .setDescription(
+                        "Assembles all variants of all applications and secondary packages.");
 
         // call back on execution. This is called after the whole build is done (not
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
-        project.getGradle().addBuildListener(new BuildListener() {
-            private final LibraryCache libraryCache = LibraryCache.getCache();
+        project.getGradle()
+                .addBuildListener(
+                        new BuildListener() {
+                            private final LibraryCache libraryCache = LibraryCache.getCache();
 
-            @Override
-            public void buildStarted(Gradle gradle) { }
-
-            @Override
-            public void settingsEvaluated(Settings settings) { }
-
-            @Override
-            public void projectsLoaded(Gradle gradle) { }
-
-            @Override
-            public void projectsEvaluated(Gradle gradle) { }
-
-            @Override
-            public void buildFinished(BuildResult buildResult) {
-                ExecutorSingleton.shutdown();
-                sdkHandler.unload();
-                ThreadRecorder.get().record(ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
-                        project.getPath(), null, new Recorder.Block() {
                             @Override
-                            public Void call() throws Exception {
-                                PreDexCache.getCache().clear(
-                                        new File(project.getRootProject().getBuildDir(),
-                                                FD_INTERMEDIATES + "/dex-cache/cache.xml"),
-                                        getLogger());
-                                JackConversionCache.getCache().clear(
-                                        new File(project.getRootProject().getBuildDir(),
-                                                FD_INTERMEDIATES + "/jack-cache/cache.xml"),
-                                        getLogger());
-                                libraryCache.unload();
-                                Main.clearInternTables();
-                                return null;
+                            public void buildStarted(Gradle gradle) {}
+
+                            @Override
+                            public void settingsEvaluated(Settings settings) {}
+
+                            @Override
+                            public void projectsLoaded(Gradle gradle) {}
+
+                            @Override
+                            public void projectsEvaluated(Gradle gradle) {}
+
+                            @Override
+                            public void buildFinished(BuildResult buildResult) {
+                                ExecutorSingleton.shutdown();
+                                sdkHandler.unload();
+                                SpanRecorders.record(
+                                        project,
+                                        null,
+                                        ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
+                                        () -> {
+                                            PreDexCache.getCache()
+                                                    .clear(
+                                                            FileUtils.join(
+                                                                    project.getRootProject()
+                                                                            .getBuildDir(),
+                                                                    FD_INTERMEDIATES,
+                                                                    "dex-cache",
+                                                                    "cache.xml"),
+                                                            getLogger());
+                                            JackConversionCache.getCache()
+                                                    .clear(
+                                                            FileUtils.join(
+                                                                    project.getRootProject()
+                                                                            .getBuildDir(),
+                                                                    FD_INTERMEDIATES,
+                                                                    "jack-cache",
+                                                                    "cache.xml"),
+                                                            getLogger());
+                                            libraryCache.unload();
+                                            Main.clearInternTables();
+                                            return null;
+                                        });
                             }
                         });
-            }
-        });
-        project.getGradle().getTaskGraph().addTaskExecutionGraphListener(
-                new TaskExecutionGraphListener() {
-                    @Override
-                    public void graphPopulated(TaskExecutionGraph taskGraph) {
-                        for (Task task : taskGraph.getAllTasks()) {
-                            if (task instanceof TransformTask) {
-                                Transform transform = ((TransformTask) task).getTransform();
-                                if (transform instanceof DexTransform) {
-                                    PreDexCache.getCache().load(
-                                            new File(project.getRootProject().getBuildDir(),
-                                                    FD_INTERMEDIATES + "/dex-cache/cache.xml"));
-                                    break;
-                                } else if (transform instanceof JackPreDexTransform) {
-                                    JackConversionCache.getCache().load(
-                                            new File(project.getRootProject().getBuildDir(),
-                                                    FD_INTERMEDIATES + "/jack-cache/cache.xml"));
-                                    break;
+
+        project.getGradle()
+                .getTaskGraph()
+                .addTaskExecutionGraphListener(
+                        taskGraph -> {
+                            for (Task task : taskGraph.getAllTasks()) {
+                                if (task instanceof TransformTask) {
+                                    Transform transform = ((TransformTask) task).getTransform();
+                                    if (transform instanceof DexTransform) {
+                                        PreDexCache.getCache()
+                                                .load(
+                                                        FileUtils.join(
+                                                                project.getRootProject()
+                                                                        .getBuildDir(),
+                                                                FD_INTERMEDIATES,
+                                                                "dex-cache",
+                                                                "cache.xml"));
+                                        break;
+                                    } else if (transform instanceof JackPreDexTransform) {
+                                        JackConversionCache.getCache()
+                                                .load(
+                                                        FileUtils.join(
+                                                                project.getRootProject()
+                                                                        .getBuildDir(),
+                                                                FD_INTERMEDIATES,
+                                                                "jack-cache",
+                                                                "cache.xml"));
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                    }
-                });
+                        });
     }
 
+    private void configureExtension() {
+        final NamedDomainObjectContainer<BuildType> buildTypeContainer =
+                project.container(
+                        BuildType.class,
+                        new BuildTypeFactory(instantiator, project, project.getLogger()));
+        final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
+                project.container(
+                        ProductFlavor.class,
+                        new ProductFlavorFactory(
+                                instantiator, project, project.getLogger(), extraModelInfo));
+        final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
+                project.container(SigningConfig.class, new SigningConfigFactory(instantiator));
 
-    private void createExtension() {
-        final NamedDomainObjectContainer<BuildType> buildTypeContainer = project.container(
-                BuildType.class,
-                new BuildTypeFactory(instantiator, project, project.getLogger()));
-        final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer = project.container(
-                ProductFlavor.class,
-                new ProductFlavorFactory(instantiator, project, project.getLogger(), extraModelInfo));
-        final NamedDomainObjectContainer<SigningConfig>  signingConfigContainer = project.container(
-                SigningConfig.class,
-                new SigningConfigFactory(instantiator));
-
-        extension = project.getExtensions().create("android", getExtensionClass(),
-                project, instantiator, androidBuilder, sdkHandler,
-                buildTypeContainer, productFlavorContainer, signingConfigContainer,
-                extraModelInfo, isLibrary());
+        extension =
+                createExtension(
+                        project,
+                        instantiator,
+                        androidBuilder,
+                        sdkHandler,
+                        buildTypeContainer,
+                        productFlavorContainer,
+                        signingConfigContainer,
+                        extraModelInfo);
 
         // create the default mapping configuration.
-        project.getConfigurations().create("default" + VariantDependencies.CONFIGURATION_MAPPING)
+        project.getConfigurations()
+                .create("default" + VariantDependencies.CONFIGURATION_MAPPING)
                 .setDescription("Configuration for default mapping artifacts.");
         project.getConfigurations().create("default" + VariantDependencies.CONFIGURATION_METADATA)
                 .setDescription("Metadata for the produced APKs.");
@@ -495,14 +524,16 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 dependencyManager,
                 registry);
 
-        variantFactory = createVariantFactory();
-        variantManager = new VariantManager(
-                project,
-                androidBuilder,
-                extension,
-                variantFactory,
-                taskManager,
-                instantiator);
+        variantFactory = createVariantFactory(instantiator, androidBuilder, extension);
+
+        variantManager =
+                new VariantManager(
+                        project,
+                        androidBuilder,
+                        extension,
+                        variantFactory,
+                        taskManager,
+                        instantiator);
 
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder = new ModelBuilder(
@@ -522,29 +553,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         registry.register(nativeModelBuilder);
 
         // map the whenObjectAdded callbacks on the containers.
-        signingConfigContainer.whenObjectAdded(new Action<SigningConfig>() {
-            @Override
-            public void execute(SigningConfig signingConfig) {
-                variantManager.addSigningConfig(signingConfig);
-            }
-        });
+        signingConfigContainer.whenObjectAdded(variantManager::addSigningConfig);
 
+        buildTypeContainer.whenObjectAdded(
+                buildType -> {
+                    SigningConfig signingConfig =
+                            signingConfigContainer.findByName(BuilderConstants.DEBUG);
+                    buildType.init(signingConfig);
+                    variantManager.addBuildType(buildType);
+                });
 
-        buildTypeContainer.whenObjectAdded(new Action<BuildType>() {
-            @Override
-            public void execute(BuildType buildType) {
-                SigningConfig signingConfig = signingConfigContainer.findByName(BuilderConstants.DEBUG);
-                buildType.init(signingConfig);
-                variantManager.addBuildType(buildType);
-            }
-        });
-
-        productFlavorContainer.whenObjectAdded(new Action<ProductFlavor>() {
-            @Override
-            public void execute(ProductFlavor productFlavor) {
-                variantManager.addProductFlavor(productFlavor);
-            }
-        });
+        productFlavorContainer.whenObjectAdded(variantManager::addProductFlavor);
 
         // map whenObjectRemoved on the containers to throw an exception.
         signingConfigContainer.whenObjectRemoved(
@@ -574,28 +593,21 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     private void createTasks() {
-        ThreadRecorder.get().record(ExecutionType.TASK_MANAGER_CREATE_TASKS,
-                project.getPath(), null,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
+        SpanRecorders.record(
+                project,
+                null,
+                ExecutionType.TASK_MANAGER_CREATE_TASKS,
+                () ->
                         taskManager.createTasksBeforeEvaluate(
-                                new TaskContainerAdaptor(project.getTasks()));
-                        return null;
-                    }
-                });
+                                new TaskContainerAdaptor(project.getTasks())));
 
-        project.afterEvaluate(project -> {
-            ThreadRecorder.get().record(ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
-                    project.getPath(), null,
-                    new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            createAndroidTasks(false);
-                            return null;
-                        }
-                    });
-        });
+        project.afterEvaluate(
+                project ->
+                        SpanRecorders.record(
+                                project,
+                                null,
+                                ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                                () -> createAndroidTasks(false)));
     }
 
     private void checkGradleVersion() {
@@ -666,18 +678,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         sdkHandler.addLocalRepositories(project);
 
         taskManager.addDataBindingDependenciesIfNecessary(extension.getDataBinding());
-        ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
-                project.getPath(), null,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        variantManager.createAndroidTasks();
-                        ApiObjectFactory apiObjectFactory = new ApiObjectFactory(
-                                androidBuilder, extension, variantFactory, instantiator);
-                        for (BaseVariantData variantData : variantManager.getVariantDataList())  {
-                            apiObjectFactory.create(variantData);
-                        }
-                        return null;
+        SpanRecorders.record(
+                project,
+                null,
+                ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
+                () -> {
+                    variantManager.createAndroidTasks();
+                    ApiObjectFactory apiObjectFactory =
+                            new ApiObjectFactory(
+                                    androidBuilder, extension, variantFactory, instantiator);
+                    for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+                        apiObjectFactory.create(variantData);
                     }
                 });
 
@@ -706,27 +717,27 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         boolean forceRegeneration = AndroidGradleOptions.refreshExternalNativeModel(project);
 
         if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(project)) {
-            ThreadRecorder.get().record(ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
-                    project.getPath(), null,
-                    new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            for (BaseVariantData variantData : variantManager
-                                    .getVariantDataList()) {
-                                ExternalNativeJsonGenerator generator =
-                                        variantData.getScope().getExternalNativeJsonGenerator();
-                                if (generator != null) {
-                                    // This will generate any out-of-date or non-existent JSONs.
-                                    // When refreshExternalNativeModel() is true it will also
-                                    // force update all JSONs.
-                                    generator.build(forceRegeneration);
+            SpanRecorders.record(
+                    project,
+                    null,
+                    ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
+                    () -> {
+                        for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+                            ExternalNativeJsonGenerator generator =
+                                    variantData.getScope().getExternalNativeJsonGenerator();
+                            if (generator != null) {
+                                // This will generate any out-of-date or non-existent JSONs.
+                                // When refreshExternalNativeModel() is true it will also
+                                // force update all JSONs.
+                                generator.build(forceRegeneration);
 
-                                    variantData.getScope().addExternalNativeBuildConfigValues(
-                                            generator.readExistingNativeBuildConfigurations());
-                                }
+                                variantData
+                                        .getScope()
+                                        .addExternalNativeBuildConfigValues(
+                                                generator.readExistingNativeBuildConfigurations());
                             }
-                            return null;
                         }
+                        return null;
                     });
         }
     }
@@ -758,7 +769,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
      */
     private void checkModulesForErrors() {
         Project rootProject = project.getRootProject();
-        Map<String, Project> subProjectsById = new HashMap<String, Project>();
+        Map<String, Project> subProjectsById = new HashMap<>();
         for (Project subProject : rootProject.getAllprojects()) {
             String id = subProject.getGroup().toString() + ":" + subProject.getName();
             if (subProjectsById.containsKey(id)) {

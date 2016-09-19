@@ -9,10 +9,9 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
-
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -27,14 +26,25 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
 
     private String targetVariant = "debug";
 
-    public TestExtension(@NonNull ProjectInternal project, @NonNull Instantiator instantiator,
-            @NonNull AndroidBuilder androidBuilder, @NonNull SdkHandler sdkHandler,
+    public TestExtension(
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
-            @NonNull ExtraModelInfo extraModelInfo, boolean isLibrary) {
-        super(project, instantiator, androidBuilder, sdkHandler, buildTypes, productFlavors,
-                signingConfigs, extraModelInfo, isLibrary);
+            @NonNull ExtraModelInfo extraModelInfo) {
+        super(
+                project,
+                instantiator,
+                androidBuilder,
+                sdkHandler,
+                buildTypes,
+                productFlavors,
+                signingConfigs,
+                extraModelInfo,
+                false);
     }
 
     /**

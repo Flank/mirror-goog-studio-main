@@ -49,16 +49,14 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.util.Objects;
-import org.gradle.api.GradleException;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import org.gradle.api.GradleException;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 
 /**
  * For storing additional model information.
@@ -67,7 +65,6 @@ public class ExtraModelInfo extends ErrorReporter {
 
     @NonNull
     private final Project project;
-    private final boolean isLibrary;
 
     @NonNull
     private final ErrorFormatMode errorFormatMode;
@@ -85,10 +82,9 @@ public class ExtraModelInfo extends ErrorReporter {
     @Nullable
     private final Gson mGson;
 
-    public ExtraModelInfo(@NonNull Project project, boolean isLibrary) {
+    public ExtraModelInfo(@NonNull Project project) {
         super(computeModelQueryMode(project));
         this.project = project;
-        this.isLibrary = isLibrary;
         errorFormatMode = computeErrorFormatMode(project);
         if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
             GsonBuilder gsonBuilder = new GsonBuilder();
@@ -97,10 +93,6 @@ public class ExtraModelInfo extends ErrorReporter {
         } else {
             mGson = null;
         }
-    }
-
-    public boolean isLibrary() {
-        return isLibrary;
     }
 
     public Map<SyncIssueKey, SyncIssue> getSyncIssues() {

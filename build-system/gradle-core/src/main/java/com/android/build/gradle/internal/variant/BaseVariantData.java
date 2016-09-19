@@ -81,9 +81,6 @@ import java.util.Set;
  */
 public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
-
-    @NonNull
-    protected final AndroidConfig androidConfig;
     @NonNull
     protected final TaskManager taskManager;
     @NonNull
@@ -159,13 +156,11 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     private SplitHandlingPolicy mSplitHandlingPolicy;
 
-
     public BaseVariantData(
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull ErrorReporter errorReporter) {
-        this.androidConfig = androidConfig;
         this.variantConfiguration = variantConfiguration;
         this.taskManager = taskManager;
 

@@ -15,27 +15,28 @@
  */
 package com.android.build.gradle;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.DependencyManager;
+import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
-
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
+import javax.inject.Inject;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import javax.inject.Inject;
 
 /**
  * Gradle plugin class for 'library' projects.
@@ -47,9 +48,29 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         super(instantiator, registry);
     }
 
+    @NonNull
     @Override
-    public Class<? extends BaseExtension> getExtensionClass() {
-        return LibraryExtension.class;
+    protected BaseExtension createExtension(
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
+            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        return project.getExtensions()
+                .create(
+                        "android",
+                        LibraryExtension.class,
+                        project,
+                        instantiator,
+                        androidBuilder,
+                        sdkHandler,
+                        buildTypeContainer,
+                        productFlavorContainer,
+                        signingConfigContainer,
+                        extraModelInfo);
     }
 
     @NonNull
@@ -58,9 +79,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         return AndroidStudioStats.GradleBuildProject.PluginType.LIBRARY;
     }
 
+    @NonNull
     @Override
-    protected VariantFactory createVariantFactory() {
-        return new LibraryVariantFactory(instantiator, androidBuilder, extension);
+    protected VariantFactory createVariantFactory(
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull AndroidConfig androidConfig) {
+        return new LibraryVariantFactory(instantiator, androidBuilder, androidConfig);
     }
 
     @Override
@@ -68,12 +93,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         return AndroidProject.PROJECT_TYPE_LIBRARY;
     }
 
+    @NonNull
     @Override
     protected TaskManager createTaskManager(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig extension,
+            @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
@@ -82,7 +108,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                 project,
                 androidBuilder,
                 dataBindingBuilder,
-                extension,
+                androidConfig,
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,

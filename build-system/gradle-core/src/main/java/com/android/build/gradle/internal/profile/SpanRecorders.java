@@ -19,11 +19,9 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.Variant;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-
+import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 import org.gradle.api.Project;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,6 +43,22 @@ public class SpanRecorders {
             @NonNull ExecutionType executionType,
             @NonNull Recorder.Block<T> block) {
         return ThreadRecorder.get().record(executionType, project.getPath(), variant, block);
+    }
+
+    public static void record(
+            @NonNull Project project,
+            @Nullable String variant,
+            @NonNull ExecutionType executionType,
+            @NonNull Block block) {
+        ThreadRecorder.get()
+                .record(
+                        executionType,
+                        project.getName(),
+                        variant,
+                        () -> {
+                            block.call();
+                            return null;
+                        });
     }
 
     public static void record(

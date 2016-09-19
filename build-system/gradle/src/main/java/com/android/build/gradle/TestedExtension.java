@@ -12,11 +12,10 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
-
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -32,14 +31,26 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
 
     private String testBuildType = "debug";
 
-    public TestedExtension(@NonNull ProjectInternal project, @NonNull Instantiator instantiator,
-            @NonNull AndroidBuilder androidBuilder, @NonNull SdkHandler sdkHandler,
+    public TestedExtension(
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
-            @NonNull ExtraModelInfo extraModelInfo, boolean isLibrary) {
-        super(project, instantiator, androidBuilder, sdkHandler, buildTypes, productFlavors,
-                signingConfigs, extraModelInfo, isLibrary);
+            @NonNull ExtraModelInfo extraModelInfo,
+            boolean isDependency) {
+        super(
+                project,
+                instantiator,
+                androidBuilder,
+                sdkHandler,
+                buildTypes,
+                productFlavors,
+                signingConfigs,
+                extraModelInfo,
+                isDependency);
 
         getSourceSets().create(ANDROID_TEST.getPrefix());
         getSourceSets().create(UNIT_TEST.getPrefix());
