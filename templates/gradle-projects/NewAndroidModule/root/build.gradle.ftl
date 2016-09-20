@@ -84,22 +84,6 @@ android {
     }
 </#if>
 }
-<#if (isInstantApp!false) && (isLibraryProject!false)>
-android.buildTypes.all { buildType ->
-    String buildFlavorSuffix = buildType.name.capitalize() + "AtomResources";
-
-    task ("rewrite" + buildFlavorSuffix, type: Exec) {
-        tasks.whenTaskAdded{ task ->
-            if (task.name == "process" + buildFlavorSuffix) {
-                task.dependsOn "rewrite" + buildFlavorSuffix
-            }
-        }
-
-        dependsOn "merge" + buildFlavorSuffix
-        commandLine '${whSupportLibRewriteAttrs}', project.buildDir.getAbsolutePath()
-    }
-}
-</#if>
 
 dependencies {
 <#if isLibraryProject || !(isInstantApp!false)>
@@ -111,7 +95,6 @@ dependencies {
     wearApp project(':${WearprojectName}')
     compile 'com.google.android.gms:play-services-wearable:+'
     </#if>
-    <#if isInstantApp!false>provided (project.fileTree(dir:'${whSupportLibJars}', include:['*.jar']))</#if>
 <#elseif alsoCreateIapk!false>
     compile project(':${atomName}')
 </#if>
