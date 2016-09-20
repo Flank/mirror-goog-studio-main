@@ -189,8 +189,6 @@ public class TestUtils {
      * then it will automatically be returned, e.g. "/path/to/binary" -> "/path/to/binary.exe".
      *
      * @throws IllegalArgumentException if the path results in a file that's not found.
-     *
-     * @return a valid File object pointing at the requested workspace file.
      */
     @NonNull
     public static File getWorkspaceFile(@NonNull String path) {
@@ -214,8 +212,6 @@ public class TestUtils {
      *
      * @throws IllegalStateException if the current OS is not supported.
      * @throws IllegalArgumentException if the path results in a file not found.
-     *
-     * @return a valid File object pointing at the requested SDK file.
      */
     @NonNull
     public static File getSdkFile(String path) {
