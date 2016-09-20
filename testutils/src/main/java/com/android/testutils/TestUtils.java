@@ -230,6 +230,17 @@ public class TestUtils {
     }
 
     /**
+     * Returns a file at {@code path} relative to the root for {@link #getLatestAndroidPlatform}.
+     *
+     * @throws IllegalStateException if the current OS is not supported.
+     * @throws IllegalArgumentException if the path results in a file not found.
+     */
+    @NonNull
+    public static File getPlatformFile(String path) {
+        return getSdkFile("platforms/" + getLatestAndroidPlatform() + "/" + path);
+    }
+
+    /**
      * Return the SDK directory.
      *
      * @throws IllegalStateException if the current OS is not supported.
