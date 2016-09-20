@@ -1160,7 +1160,7 @@ public class CleanupDetectorTest extends AbstractCheckTest {
     public void test8() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "src/test/pkg/SharedPrefsTest8.java:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [CommitPrefEdits]\n"
+                + "src/test/pkg/SharedPrefsTest8.java:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]\n"
                 + "        editor.commit();\n"
                 + "        ~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n",

@@ -85,6 +85,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CleanupDetector.COMMIT_FRAGMENT);
         issues.add(CleanupDetector.RECYCLE_RESOURCE);
         issues.add(CleanupDetector.SHARED_PREF);
+        issues.add(CleanupDetector.APPLY_SHARED_PREF);
         issues.add(ClickableViewAccessibilityDetector.ISSUE);
         issues.add(CommentDetector.EASTER_EGG);
         issues.add(CommentDetector.STOP_SHIP);
