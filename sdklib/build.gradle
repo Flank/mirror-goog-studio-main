@@ -37,6 +37,7 @@ sourceSets {
 }
 
 task initSdkForTests(type: JavaExec) {
+    standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.SdkManagerCli"
     if (project.hasProperty('downloaderArgs')) {
