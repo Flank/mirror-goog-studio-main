@@ -137,30 +137,21 @@ public class IconDetectorTest extends AbstractCheckTest {
             lintProject(
                     manifest().minSdk(4),
                     xml("res/drawable/background.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"test.bytecode\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"4\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\" >\n"
-                            + "        <activity\n"
-                            + "            android:name=\".BytecodeTestsActivity\"\n"
-                            + "            android:label=\"@string/app_name\" >\n"
-                            + "            <intent-filter>\n"
-                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                            + "\n"
-                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                            + "            </intent-filter>\n"
-                            + "        </activity>\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
+                            + "<tag/>"),
                     image("res/drawable-mdpi/background.png", 48, 48).fill(0xFF00FF30)));
+    }
+
+    public void testMixedVectors() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_XML_AND_PNG);
+        assertEquals("No warnings.",
+
+                lintProject(
+                        manifest().minSdk(4),
+                        xml("res/drawable-v21/vector.xml", ""
+                                + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" />\n"),
+                        image("res/drawable-mdpi/vector.png", 48, 48),
+                        image("res/drawable-hdpi/vector.png", 48, 48)
+                        ));
     }
 
     public void testApi1() throws Exception {

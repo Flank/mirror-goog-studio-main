@@ -320,11 +320,11 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
         String qualifier = "";
         if (call.getMethodExpression().getQualifierExpression() != null) {
-            qualifier = call.getMethodExpression().getText() + ".";
+            qualifier = call.getMethodExpression().getQualifierExpression().getText();
         }
         String message = String.format("The WIFI_SERVICE must be looked up on the "
                 + "Application context or memory will leak on devices < Android N. "
-                + "Try adding `%1$sgetApplicationContext()`. ", qualifier);
+                + "Try changing `%1$s` to `%1$s.getApplicationContext()` ", qualifier);
         context.report(issue, call, context.getLocation(call), message);
     }
 

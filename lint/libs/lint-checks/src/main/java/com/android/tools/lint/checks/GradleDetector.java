@@ -1318,7 +1318,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private static void addLibraryVersions(@NonNull Multimap<String, MavenCoordinates> versions,
             @NonNull AndroidLibrary library, @NonNull String groupId) {
         MavenCoordinates coordinates = library.getResolvedCoordinates();
-        if (coordinates.getGroupId().equals(groupId)) {
+        if (coordinates.getGroupId().equals(groupId)
+                // Historically the multidex library ended up in the support package but
+                // decided to do its own numbering (and isn't tied to the rest in terms
+                // of implementation dependencies)
+                && !coordinates.getArtifactId().equals("multidex")) {
             versions.put(coordinates.getVersion(), coordinates);
         }
 

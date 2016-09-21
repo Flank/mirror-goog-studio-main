@@ -881,6 +881,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                 + "    compile \"com.android.support:support-v13:24.1\"\n"
                                 + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
                                 + "    compile \"com.android.support:cardview-v7:24.2\""
+                                + "    compile \"com.android.support:multidex:1.0.1\""
                                 + "}\n")));
     }
 
@@ -899,6 +900,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                 + "    compile \"com.android.support:support-v13:24.1\"\n"
                                 + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
                                 + "    compile \"com.android.support:cardview-v7:24.2\""
+                                + "    compile \"com.android.support:multidex:1.0.1\""
                                 + "}\n")));
     }
 
@@ -1238,7 +1240,8 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                     createMockLibrary("com.android.support:appcompat-v7:24.2"),
                                     createMockLibrary("com.android.support:support-v13:24.1"),
                                     createMockLibrary("com.android.support:preference-v7:25.0-SNAPSHOT"),
-                                    createMockLibrary("com.android.support:cardview-v7:24.2")
+                                    createMockLibrary("com.android.support:cardview-v7:24.2"),
+                                    createMockLibrary("com.android.support:multidex:1.0.1")
                             );
 
                             Dependencies dependencies = mock(Dependencies.class);
