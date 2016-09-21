@@ -36,6 +36,33 @@ sourceSets {
     test.resources.srcDir 'src/test/java'
 }
 
+task sdkManagerStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName("runtime"))
+    outputDir new File(project.getBuildDir(), "scripts")
+
+    description "Creates OS specific scripts to start the sdk manager CLI"
+    mainClassName = 'com.android.sdklib.tool.SdkManagerCli'
+    applicationName = 'sdkmanager'
+}
+
+sdk {
+    common(mac, linux) {
+        item(new File(buildDir, "scripts/sdkmanager")) {
+            into "bin"
+            notice null
+            builtBy 'sdkManagerStartScripts'
+        }
+    }
+    windows {
+        item(new File(buildDir, "scripts/sdkmanager.bat")) {
+            into "bin"
+            notice null
+            builtBy 'sdkManagerStartScripts'
+        }
+    }
+}
+
 task initSdkForTests(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
