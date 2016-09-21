@@ -74,9 +74,6 @@ public class CordovaVersionDetector extends Detector implements Detector.ClassSc
             IMPL)
             .addMoreInfo("https://cordova.apache.org/announcements/2015/11/20/security.html");
 
-    // All cordova versions below 4.1.1 are considered vulnerable.
-    private static final GradleVersion VALID_CORDOVA_VERSION =
-            GradleVersion.parse("4.1.1");
     /** Version string format in a class file. Note that any qualifiers such as -dev are ignored.*/
     private static final Pattern VERSION_STR = Pattern.compile("(\\d+\\.\\d+\\.\\d+).*");
     /** The class name that declares the cordovaVersion for versions < 3.x.x */
@@ -170,7 +167,8 @@ public class CordovaVersionDetector extends Detector implements Detector.ClassSc
 
     private static void validateCordovaVersion(@NonNull Context context,
             @NonNull GradleVersion cordovaVersion, Location location) {
-        if (cordovaVersion.compareIgnoringQualifiers(VALID_CORDOVA_VERSION) < 0) {
+        // All cordova versions below 4.1.1 are considered vulnerable.
+        if (!cordovaVersion.isAtLeast(4, 1, 1)) {
             String message = String.format(
                     "You are using a vulnerable version of Cordova: %1$s",
                     cordovaVersion.toString());

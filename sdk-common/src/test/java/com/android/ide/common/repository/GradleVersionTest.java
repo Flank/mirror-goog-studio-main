@@ -442,4 +442,33 @@ public class GradleVersionTest {
     public void testParseWithPlusAtBeginningOfSegment() {
         GradleVersion.parse("2.+1");
     }
+
+    @Test
+    public void testIsAtLeast() {
+        GradleVersion version = GradleVersion.parse("2.1.3");
+
+        assertTrue(version.isAtLeast(2, 1, 3));
+        assertFalse(version.isAtLeast(2, 1, 4));
+        assertFalse(version.isAtLeast(2, 2, 0));
+        assertFalse(version.isAtLeast(3, 0, 0));
+
+        assertTrue(version.isAtLeast(2, 1, 2));
+        assertTrue(version.isAtLeast(1, 2, 3));
+
+        version = GradleVersion.parse("2+");
+        assertFalse(version.isAtLeast(3, 0, 0));
+        assertTrue(version.isAtLeast(1, 5, 1));
+
+        version = GradleVersion.parse("2.3.0-dev");
+        assertTrue(version.isAtLeast(2, 2, 0));
+        assertTrue(version.isAtLeast(2, 3, 0, null, 0, true));
+        assertFalse(version.isAtLeast(2, 3, 0));
+        assertFalse(version.isAtLeast(2, 4, 0));
+
+        version = GradleVersion.parse("2.3.0-beta1");
+        assertTrue(version.isAtLeast(2, 3, 0, "beta", 1, false));
+        assertTrue(version.isAtLeast(2, 3, 0, "alpha", 8, false));
+        assertFalse(version.isAtLeast(2, 3, 0, "beta", 2, false));
+        assertFalse(version.isAtLeast(2, 3, 0, "rc", 1, false));
+    }
 }
