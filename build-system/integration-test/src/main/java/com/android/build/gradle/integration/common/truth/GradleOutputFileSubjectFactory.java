@@ -24,19 +24,19 @@ import java.io.File;
 /**
  * Factory to add truth support for IncrementalFile.
  */
-public class IncrementalFileSubjectFactory extends SubjectFactory<IncrementalFileSubject, File> {
+public class GradleOutputFileSubjectFactory extends SubjectFactory<GradleOutputFileSubject, File> {
     private final String gradleOutput;
 
-    public static IncrementalFileSubjectFactory factory(String gradleOutput) {
-        return new IncrementalFileSubjectFactory(gradleOutput);
+    public static GradleOutputFileSubjectFactory factory(String gradleOutput) {
+        return new GradleOutputFileSubjectFactory(gradleOutput);
     }
 
-    public IncrementalFileSubjectFactory(String gradleOutput) {
+    public GradleOutputFileSubjectFactory(String gradleOutput) {
         this.gradleOutput = gradleOutput;
     }
 
     @Override
-    public IncrementalFileSubject getSubject(FailureStrategy failureStrategy, File subject) {
-        return new IncrementalFileSubject(failureStrategy, subject, gradleOutput);
+    public GradleOutputFileSubject getSubject(FailureStrategy failureStrategy, File subject) {
+        return new GradleOutputFileSubject(failureStrategy, subject, gradleOutput);
     }
 }
