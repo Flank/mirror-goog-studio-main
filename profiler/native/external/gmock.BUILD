@@ -24,8 +24,10 @@ cc_library(
 
 cc_library(
     name = "gmock_main",
+    srcs = [
+        "src/gmock_main.cc",
+    ],
     deps = [
         ":gmock",
-        "//external:gtest_main",
     ],
 )
