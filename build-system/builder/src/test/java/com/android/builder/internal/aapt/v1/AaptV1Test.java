@@ -46,6 +46,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -221,6 +222,7 @@ public class AaptV1Test {
     }
 
     @Test
+    @Ignore("http://b.android.com/223416")
     public void noCrunchPngIfBigger() throws Exception {
         Aapt aapt = makeAapt();
 
@@ -244,6 +246,7 @@ public class AaptV1Test {
     }
 
     @Test
+    @Ignore("http://b.android.com/223416")
     public void crunchPngIfSmaller() throws Exception {
         Aapt aapt = makeAapt();
 
