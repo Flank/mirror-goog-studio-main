@@ -19,6 +19,7 @@ package com.android.builder.internal.compiler;
 import com.android.annotations.NonNull;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.core.JackToolchain;
 import com.android.ide.common.process.ProcessException;
 import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.v01.CompilationException;
@@ -95,8 +96,14 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
         if (pair.getSecond()) {
             try {
                 // haven't process this file yet so do it and record it.
+                JackToolchain toolchain =
+                        new JackToolchain(
+                                androidBuilder.getTargetInfo().getBuildTools(),
+                                androidBuilder.getLogger());
+                toolchain.convert(
+                        options, androidBuilder.getJavaProcessExecutor(), isJackInProcess);
 
-                androidBuilder.convertByteCodeUsingJack(options, isJackInProcess);
+
                 item.getOutputFiles().add(outFile);
 
                 incrementMisses();
