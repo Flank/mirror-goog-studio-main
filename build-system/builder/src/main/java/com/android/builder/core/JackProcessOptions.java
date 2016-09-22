@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
 
 import java.io.File;
 import java.util.Collection;
@@ -41,8 +42,8 @@ public class JackProcessOptions {
     public static final Revision DOUARN_REV = new Revision(24, 0, 0);
 
     // Revisions with broken coverage plugin for in-process.
-    public static final Set<Revision> COVERAGE_BROKEN =
-            ImmutableSet.of(new Revision(24, 0, 0), new Revision(24, 0, 1));
+    public static final Range<Revision> COVERAGE_BROKEN =
+            Range.closed(new Revision(24, 0, 0), new Revision(24, 0, 2));
 
     // Class name of the code coverage plugin.
     public static final String COVERAGE_PLUGIN_NAME = "com.android.jack.coverage.CodeCoverage";
