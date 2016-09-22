@@ -90,7 +90,9 @@ public class DefaultSdkLoader implements SdkLoader {
         if (sLoader == null) {
             sLoader = new DefaultSdkLoader(sdkLocation);
         } else if (!sdkLocation.equals(sLoader.mSdkLocation)) {
-            throw new IllegalStateException("Already created an SDK Loader with different SDK Path");
+            throw new IllegalStateException(String.format(
+                    "%s already created using %s; cannot also use %s",
+                    DefaultSdkLoader.class.getSimpleName(), sLoader.mSdkLocation, sdkLocation));
         }
 
         return sLoader;

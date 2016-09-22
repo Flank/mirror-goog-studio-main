@@ -63,7 +63,9 @@ public class PlatformLoader implements SdkLoader {
         if (sLoader == null) {
             sLoader = new PlatformLoader(treeLocation);
         } else if (!treeLocation.equals(sLoader.mTreeLocation)) {
-            throw new IllegalStateException("Already created an SDK Loader with different SDK Path");
+            throw new IllegalStateException(String.format(
+                    "%s already created using %s; cannot also use %s",
+                    PlatformLoader.class.getSimpleName(), sLoader.mTreeLocation, treeLocation));
         }
 
         return sLoader;
