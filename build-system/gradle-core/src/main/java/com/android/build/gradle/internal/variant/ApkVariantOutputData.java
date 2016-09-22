@@ -27,13 +27,11 @@ import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.build.gradle.tasks.ZipAlign;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.Task;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.Task;
 
 /**
  * Base output data for a variant that generates an APK file.
@@ -65,7 +63,7 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
         }
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getOutputFile() {
         if (zipAlignTask != null) {

@@ -17,16 +17,13 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.tasks.bundling.Zip;
-
 import java.io.File;
 import java.util.Collection;
+import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Output Data about a variant that produce a Library bundle (.aar)
@@ -56,10 +53,12 @@ public class LibVariantOutputData extends BaseVariantOutputData {
         return ImmutableList.of();
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getOutputFile() {
-        return packageLibTask == null ? null : packageLibTask.getArchivePath();
+        return packageLibTask == null
+                ? getScope().getVariantScope().getOutputBundleFile()
+                : packageLibTask.getArchivePath();
     }
 
     @Override

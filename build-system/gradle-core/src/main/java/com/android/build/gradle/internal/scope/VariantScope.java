@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -43,16 +42,14 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * A scope containing data for a specific variant.
@@ -307,6 +304,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getBaseBundleDir();
+
+    @NonNull
+    File getOutputBundleFile();
 
     @NonNull
     File getAnnotationProcessorOutputDir();

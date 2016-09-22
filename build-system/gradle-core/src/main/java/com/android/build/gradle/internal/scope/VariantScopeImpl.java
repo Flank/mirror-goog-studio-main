@@ -31,6 +31,7 @@ import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -66,6 +67,7 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
@@ -85,21 +87,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.DefaultTask;
-import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.compile.JavaCompile;
-
-import android.databinding.tool.DataBindingBuilder;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Sync;
+import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
  * A scope containing data for a specific variant.
@@ -956,6 +954,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 getVariantConfiguration().getType() == VariantType.ATOM ?
                         DIR_ATOMBUNDLES : DIR_BUNDLES,
                 getDirName());
+    }
+
+    @NonNull
+    @Override
+    public File getOutputBundleFile() {
+        String extension =
+                getVariantConfiguration().getType() == VariantType.ATOM
+                        ? BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE
+                        : BuilderConstants.EXT_LIB_ARCHIVE;
+        return FileUtils.join(
+                globalScope.getOutputsDir(),
+                extension,
+                globalScope.getProjectBaseName()
+                        + "-"
+                        + getVariantConfiguration().getBaseName()
+                        + "."
+                        + extension);
     }
 
     @NonNull

@@ -23,7 +23,6 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -46,10 +45,12 @@ public class InstantAppVariantOutputData extends BaseVariantOutputData {
         packageAndroidArtifactTask.setOutputFile(file);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getOutputFile() {
-        return packageAndroidArtifactTask.getOutputFile();
+        return packageAndroidArtifactTask == null
+                ? getScope().getFinalPackage()
+                : packageAndroidArtifactTask.getOutputFile();
     }
 
     @Nullable

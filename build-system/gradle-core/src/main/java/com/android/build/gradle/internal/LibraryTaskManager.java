@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -60,7 +61,11 @@ import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -70,14 +75,6 @@ import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.BuildException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * TaskManager for creating tasks in an Android library project.
@@ -470,15 +467,14 @@ public class LibraryTaskManager extends TaskManager {
 
         bundle.setDescription("Assembles a bundle containing the library in " +
                 variantConfig.getFullName() + ".");
-        bundle.setDestinationDir(
-                new File(globalScope.getOutputsDir(), BuilderConstants.EXT_LIB_ARCHIVE));
-        bundle.setArchiveName(globalScope.getProjectBaseName()
-                + "-" + variantConfig.getBaseName()
-                + "." + BuilderConstants.EXT_LIB_ARCHIVE);
+        bundle.setDestinationDir(variantScope.getOutputBundleFile().getParentFile());
+        bundle.setArchiveName(variantScope.getOutputBundleFile().getName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
         bundle.from(variantBundleDir);
-        bundle.from(FileUtils.join(intermediatesDir,
-                StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
+        bundle.from(
+                FileUtils.join(
+                        intermediatesDir,
+                        StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
 
         // get the single output for now, though that may always be the case for a library.
         LibVariantOutputData variantOutputData = libVariantData.getOutputs().get(0);
