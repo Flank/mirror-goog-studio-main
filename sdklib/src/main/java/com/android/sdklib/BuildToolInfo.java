@@ -59,12 +59,16 @@ import static com.android.sdklib.BuildToolInfo.PathId.LD_X86_64;
 import static com.android.sdklib.BuildToolInfo.PathId.LLVM_RS_CC;
 import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.repository.Revision;
+import com.android.repository.api.LocalPackage;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
@@ -193,6 +197,20 @@ public class BuildToolInfo {
             @NonNull Revision revision,
             @NonNull File path) {
         return new BuildToolInfo(revision, path);
+    }
+
+    /**
+     * Creates a {@link BuildToolInfo} from a {@link LocalPackage}.
+     */
+    @NonNull
+    public static BuildToolInfo fromLocalPackage(@NonNull LocalPackage localPackage) {
+        checkNotNull(localPackage, "localPackage");
+        checkArgument(
+                localPackage.getPath().contains(SdkConstants.FD_BUILD_TOOLS),
+                "%s package required.",
+                SdkConstants.FD_BUILD_TOOLS);
+
+        return fromStandardDirectoryLayout(localPackage.getVersion(), localPackage.getLocation());
     }
 
     /**

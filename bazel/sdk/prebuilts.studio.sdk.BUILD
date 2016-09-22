@@ -23,20 +23,6 @@ platform_filegroup(
     ],
 )
 
-platform_filegroup(
-    name = "platforms/android-21",
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-platform_filegroup(
-    name = "platforms/android-19",
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
 filegroup(
     name = "build-tools/latest",
     srcs = [":build-tools/24.0.1"],

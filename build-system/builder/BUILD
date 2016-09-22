@@ -56,12 +56,8 @@ java_test(
     ],
     data = [
         "//prebuilts/studio/sdk:build-tools/20.0.0",
-        "//prebuilts/studio/sdk:build-tools/21.0.0",
-        "//prebuilts/studio/sdk:build-tools/22.0.1",
         "//prebuilts/studio/sdk:build-tools/23.0.0",
         "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/android-19",
-        "//prebuilts/studio/sdk:platforms/android-21",
         "//prebuilts/studio/sdk:platforms/latest",
     ]
 )
