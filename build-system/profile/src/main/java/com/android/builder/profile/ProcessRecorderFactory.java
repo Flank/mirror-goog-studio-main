@@ -99,12 +99,13 @@ public class ProcessRecorderFactory {
                 .setMaxMemory(Runtime.getRuntime().maxMemory())
                 .setGradleVersion(Strings.nullToEmpty(gradleVersion));
 
+        String anonymizedProjectId;
         try {
-            recorder.getProperties().setProjectId(
-                    Anonymizer.anonymizeUtf8(logger, projectPath.getAbsolutePath()));
+            anonymizedProjectId = Anonymizer.anonymizeUtf8(logger, projectPath.getAbsolutePath());
         } catch (IOException e) {
-            logger.error(e, "Could not anonymize project id.");
+            anonymizedProjectId = "*ANONYMIZATION_ERROR*";
         }
+        recorder.getProperties().setProjectId(anonymizedProjectId);
     }
 
     public synchronized void setLogger(@NonNull ILogger iLogger) {
