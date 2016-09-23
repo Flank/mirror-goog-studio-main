@@ -59,3 +59,23 @@ bind(
     name = "zlib",
     actual = "@zlib_repo//:zlib",
 )
+
+bind(
+    name = "protobuf_compiler",
+    actual = "@protobuf_repo//:protoc_lib",
+)
+
+bind(
+    name = "protoc",
+    actual = "@protobuf_repo//:protoc",
+)
+
+bind(
+    name = "grpc_cpp_plugin",
+    actual = "@grpc_repo//:grpc_cpp_plugin",
+)
+
+bind(
+    name = "grpc++_unsecure",
+    actual = "@grpc_repo//:grpc++_unsecure",
+)
