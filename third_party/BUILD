@@ -7,6 +7,21 @@ java_library(
 )
 
 java_library(
+    name = "com.android.tools.external.com-intellij_uast",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/android/tools/external/com-intellij/uast/145.597.3:jar"],
+)
+
+java_library(
+    name = "com.android.tools.external.lombok_lombok-ast",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/external/lombok/lombok-ast/0.2.3:jar",
+    ],
+)
+
+java_library(
     name = "com.google.code.findbugs_jsr305",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar"],
@@ -222,6 +237,12 @@ java_library(
 )
 
 java_library(
+    name = "org.codehaus.groovy_groovy-all",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.2.1:jar"],
+)
+
+java_library(
     name = "org.codehaus.plexus_plexus-component-annotations",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-component-annotations/1.6:jar"],
@@ -320,6 +341,12 @@ java_library(
 )
 
 java_library(
+    name = "org.eclipse.jdt.core.compiler_ecj",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.5.1:jar"],
+)
+
+java_library(
     name = "org.hamcrest_hamcrest-core",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar"],
@@ -341,6 +368,15 @@ java_library(
     name = "org.ow2.asm_asm",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar"],
+)
+
+java_library(
+    name = "org.ow2.asm_asm-analysis",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.ow2.asm_asm-tree",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4:jar",
+    ],
 )
 
 java_library(

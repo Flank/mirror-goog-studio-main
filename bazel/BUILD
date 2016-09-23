@@ -128,6 +128,8 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
     args = [
+            "com.android.tools.external.com-intellij:uast:145.597.3",
+            "com.android.tools.external.lombok:lombok-ast:0.2.3",
             "com.google.code.findbugs:jsr305:1.3.9",
             "com.google.code.gson:gson:2.2.4",
             "com.google.guava:guava:19.0",
@@ -142,9 +144,12 @@ java_binary(
             "org.apache.maven:maven-aether-provider:3.3.9",
             "org.bouncycastle:bcpkix-jdk15on:1.48",
             "org.bouncycastle:bcprov-jdk15on:1.48",
+            "org.codehaus.groovy:groovy-all:2.2.1",
             "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
             "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
             "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
+            "org.eclipse.jdt.core.compiler:ecj:4.5.1",
+            "org.ow2.asm:asm-analysis:5.0.4",
             "org.ow2.asm:asm-tree:5.0.4",
             "org.ow2.asm:asm:5.0.4",
 
