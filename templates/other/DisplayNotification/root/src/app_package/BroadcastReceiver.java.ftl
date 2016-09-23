@@ -14,9 +14,6 @@ import ${applicationPackage}.R;
 public class ${receiverClass} extends BroadcastReceiver {
     public static final String CONTENT_KEY = "contentText";
 
-    public ${receiverClass}() {
-    }
-
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent displayIntent = new Intent(context, ${displayActivityClass}.class);

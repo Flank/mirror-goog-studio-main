@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 
 public class ${className} extends BroadcastReceiver {
-    public ${className}() {
-    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
