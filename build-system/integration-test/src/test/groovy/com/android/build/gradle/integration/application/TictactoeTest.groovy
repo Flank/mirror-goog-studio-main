@@ -29,6 +29,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
@@ -80,8 +81,12 @@ class  TictactoeTest {
 
         assertEquals("Dependency project path", ":lib", androidLibrary.getProject())
 
-        // TODO: right now we can only test the folder name efficiently
-        String path = androidLibrary.getFolder().getPath()
-        assertTrue(path, path.endsWith(FileUtils.join("tictactoe", "lib", "unspecified")))
+        // check that the folder name is located inside the lib project's intermediate staging folder
+        // reconstruct the path
+        File staging = FileUtils.join(project.getTestDir(),
+                "lib", "build", "intermediates", "bundles", "default");
+        assertThat(androidLibrary.getFolder())
+                .named("ndroidLib.getFolder")
+                .isEqualTo(staging);
     }
 }

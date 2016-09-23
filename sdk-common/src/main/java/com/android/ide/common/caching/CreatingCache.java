@@ -48,9 +48,9 @@ import java.util.concurrent.CountDownLatch;
 public class CreatingCache<K, V> {
 
     @GuardedBy("this")
-    private final Map<Object, V> mCache = Maps.newHashMap();
+    private final Map<K, V> mCache = Maps.newHashMap();
     @GuardedBy("this")
-    private final Map<Object, CountDownLatch> mProcessedValues = Maps.newHashMap();
+    private final Map<K, CountDownLatch> mProcessedValues = Maps.newHashMap();
 
     @NonNull
     private final ValueFactory<K, V> mValueFactory;
@@ -225,20 +225,20 @@ public class CreatingCache<K, V> {
 
         // value exists, just return the state.
         if (value != null) {
-            return new ValueState<V>(value);
+            return new ValueState<>(value);
         }
 
         // check if the value is currently being created
         CountDownLatch latch = mProcessedValues.get(key);
         if (latch != null) {
             // return the latch allowing to wait for end of creation.
-            return new ValueState<V>(State.PROCESSED_VALUE, latch);
+            return new ValueState<>(State.PROCESSED_VALUE, latch);
         }
 
         // new value: create a latch to allow others to wait until creation is done.
         latch = new CountDownLatch(1);
         mProcessedValues.put(key, latch);
-        return new ValueState<V>(State.NEW_VALUE, latch);
+        return new ValueState<>(State.NEW_VALUE, latch);
     }
 
     /**

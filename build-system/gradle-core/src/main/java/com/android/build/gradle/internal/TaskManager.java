@@ -2934,13 +2934,15 @@ public abstract class TaskManager {
 
         // for all libraries required by the configurations of this variant, make this task
         // depend on all the tasks preparing these libraries.
-        VariantDependencies configurationDependencies = variantData.getVariantDependency();
+        VariantDependencies variantDependencies = variantData.getVariantDependency();
 
         AndroidTask<PrepareDependenciesTask> prepareDependenciesTask = androidTasks.create(tasks,
-                new PrepareDependenciesTask.ConfigAction(scope, configurationDependencies));
+                new PrepareDependenciesTask.ConfigAction(scope, variantDependencies));
         scope.setPrepareDependenciesTask(prepareDependenciesTask);
 
         prepareDependenciesTask.dependsOn(tasks, scope.getPreBuildTask());
+        prepareDependenciesTask.dependsOn(tasks, variantDependencies.getCompileConfiguration());
+        prepareDependenciesTask.dependsOn(tasks, variantDependencies.getPackageConfiguration());
 
         dependencyManager.addDependenciesToPrepareTask(tasks, variantData, prepareDependenciesTask);
     }

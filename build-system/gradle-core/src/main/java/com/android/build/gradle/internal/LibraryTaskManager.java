@@ -51,13 +51,11 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.dependency.LibraryDependency;
-import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 
@@ -507,7 +505,7 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         // configure the variant to be testable.
-        variantConfig.setOutput(createLocalTestedAarLibrary(
+        variantConfig.setOutput(LibraryDependency.createLocalTestedAarLibrary(
                 bundle.getArchivePath(),
                 variantBundleDir,
                 variantData.getName(),
@@ -522,29 +520,6 @@ public class LibraryTaskManager extends TaskManager {
                         return null;
                     }
                 });
-    }
-
-    private static LibraryDependency createLocalTestedAarLibrary(
-            @NonNull File bundle,
-            @NonNull File bundleFolder,
-            @Nullable String name,
-            @Nullable String projectPath,
-            @NonNull String projectVariant) {
-        return new LibraryDependency(
-                bundle,
-                bundleFolder,
-                ImmutableList.of(), /* androidDependencies */
-                ImmutableList.of(), /* jarDependencies */
-                name,
-                projectPath,
-                projectVariant,
-                null, /* requestedCoordinates */
-                new MavenCoordinatesImpl(
-                        "__tested_library__",
-                        bundle.getPath(),
-                        "unspecified"),
-                bundleFolder, /*jarsRootFolder*/
-                false /*isProvided*/);
     }
 
     private void excludeDataBindingClassesIfNecessary(final VariantScope variantScope,

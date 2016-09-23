@@ -114,8 +114,7 @@ abstract class LibraryImpl implements Library, Serializable {
                 isProvided == library.isProvided &&
                 Objects.equal(project, library.project) &&
                 Objects.equal(name, library.name) &&
-                Objects.equal(requestedCoordinates, library.requestedCoordinates)
-                &&
+                Objects.equal(requestedCoordinates, library.requestedCoordinates) &&
                 Objects.equal(resolvedCoordinates, library.resolvedCoordinates);
     }
 

@@ -116,6 +116,6 @@ model {
 }
 """
         project.execute(":app:assembleDebug")
-        assertThat(project.getSubproject("app").file("build/intermediates/exploded-aar/project/lib/unspecified/freeDebug")).isDirectory()
+        assertThat(project.getSubproject("lib").file("build/intermediates/bundles/freeDebug")).isDirectory()
     }
 }
