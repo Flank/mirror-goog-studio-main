@@ -16,8 +16,6 @@
 package com.android.sdklib.repository.legacy;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -74,7 +72,10 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
             @NonNull ProgressIndicator progress) {
         SdkSource legacySource;
         RemotePkgInfo[] packages = null;
-        for (SchemaModule module : source.getPermittedModules()) {
+        Collection<SchemaModule<?>> modules = source.getPermittedModules();
+        double progressMax = 0;
+        double progressIncrement = 1. / modules.size();
+        for (SchemaModule module : modules) {
             legacySource = null;
             if (module.equals(AndroidSdkHandler.getRepositoryModule())) {
                 legacySource = new SdkRepoSource(source.getUrl(), "Legacy Repo Source");
@@ -84,7 +85,10 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                 legacySource = new SdkSysImgSource(source.getUrl(), "Legacy System Image Source");
             }
             if (legacySource != null) {
-                legacySource.load(downloader, settings, progress);
+                legacySource.load(
+                        downloader,
+                        settings,
+                        progress.createSubProgress(progressMax + progressIncrement));
                 if (legacySource.getFetchError() != null) {
                     progress.logInfo(legacySource.getFetchError());
                 }
@@ -93,6 +97,8 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                     break;
                 }
             }
+            progressMax += progressIncrement;
+            progress.setFraction(progressMax);
         }
         List<RemotePackage> result = Lists.newArrayList();
         if (packages != null) {

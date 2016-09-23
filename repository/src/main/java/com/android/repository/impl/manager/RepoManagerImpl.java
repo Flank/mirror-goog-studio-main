@@ -524,8 +524,8 @@ public class RepoManagerImpl extends RepoManager {
                             listener.doRun(mPackages);
                         }
                     }
-                    indicator.setFraction(0.25);
                 }
+                indicator.setFraction(0.25);
                 if (indicator.isCanceled()) {
                     return;
                 }
@@ -547,8 +547,9 @@ public class RepoManagerImpl extends RepoManager {
                         mLastRemoteRefreshMs + mCacheExpirationMs <= System.currentTimeMillis()) {
                     RemoteRepoLoader remoteLoader = mRemoteRepoLoaderFactory
                             .createRemoteRepoLoader(indicator);
-                    Map<String, RemotePackage> remotes = remoteLoader
-                            .fetchPackages(indicator, mDownloader, mSettings);
+                    Map<String, RemotePackage> remotes =
+                            remoteLoader.fetchPackages(
+                                    indicator.createSubProgress(.75), mDownloader, mSettings);
                     indicator.setText("Computing updates...");
                     indicator.setFraction(0.75);
                     boolean fireListeners = !remotes.equals(mPackages.getRemotePackages());

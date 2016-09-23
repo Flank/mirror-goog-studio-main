@@ -60,6 +60,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakePackage.FakeRemotePackage remote = new FakePackage.FakeRemotePackage("sources;android-23");
         URL archiveUrl = new URL("http://www.example.com/plat23/sources.zip");
         remote.setCompleteUrl(archiveUrl.toString());
+
         DetailsTypes.SourceDetailsType sourceDetails =
                 AndroidSdkHandler.getRepositoryModule().createLatestFactory()
                         .createSourceDetailsType();

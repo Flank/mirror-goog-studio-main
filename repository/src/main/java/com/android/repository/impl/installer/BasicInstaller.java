@@ -27,11 +27,9 @@ import com.android.repository.impl.meta.Archive;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Paths;
 
 /**
  * A simple {@link Installer} that just unzips the {@code complete} version of an {@link
@@ -68,18 +66,27 @@ class BasicInstaller extends AbstractInstaller {
                     new File(installTempPath, path.substring(path.lastIndexOf('/') + 1));
             // TODO: allow resuming of partial downloads
             String checksum = archive.getComplete().getChecksum();
-            getDownloader().downloadFully(url, downloadLocation, checksum, progress);
+            getDownloader()
+                    .downloadFully(
+                            url, downloadLocation, checksum, progress.createSubProgress(0.5));
             if (progress.isCanceled()) {
+                progress.setFraction(1);
                 return false;
             }
+            progress.setFraction(0.5);
             if (!mFop.exists(downloadLocation)) {
                 progress.logWarning("Failed to download package!");
                 return false;
             }
             File unzip = new File(installTempPath, FN_UNZIP_DIR);
             mFop.mkdirs(unzip);
-            InstallerUtil.unzip(downloadLocation, unzip, mFop,
-              archive.getComplete().getSize(), progress);
+            InstallerUtil.unzip(
+                    downloadLocation,
+                    unzip,
+                    mFop,
+                    archive.getComplete().getSize(),
+                    progress.createSubProgress(1));
+            progress.setFraction(1);
             if (progress.isCanceled()) {
                 return false;
             }

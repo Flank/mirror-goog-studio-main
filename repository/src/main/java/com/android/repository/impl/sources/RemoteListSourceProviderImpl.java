@@ -30,9 +30,6 @@ import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.ls.LSResourceResolver;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,9 +41,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlTransient;
+import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * A {@link RepositorySourceProvider} that downloads a list of sources.
@@ -130,12 +127,16 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
         SchemaModule sourceModule = mSourceListModule == null ? sAddonListModule
                 : mSourceListModule;
 
-        for (int version = sourceModule.getNamespaceVersionMap().size();
-                xml == null && version > 0; version--) {
+        int versionsSize = sourceModule.getNamespaceVersionMap().size();
+        double progressMax = 0;
+        double progressIncrement = 1. / versionsSize;
+        for (int version = versionsSize; xml == null && version > 0; version--) {
             String urlStr = String.format(mUrl, version);
             try {
                 url = new URL(urlStr);
-                xml = downloader.downloadAndStream(url, progress);
+                xml =
+                        downloader.downloadAndStream(
+                                url, progress.createSubProgress(progressMax + progressIncrement));
             } catch (FileNotFoundException expected) {
                 // do nothing
             } catch (UnknownHostException e) {
@@ -146,6 +147,8 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
                 progress.logInfo("IOException: " + urlStr);
                 progress.logInfo(e.toString());
             }
+            progressMax += progressIncrement;
+            progress.setFraction(progressMax);
         }
 
         if (xml != null) {

@@ -26,15 +26,8 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.Pair;
-
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpStatus;
-import org.apache.http.message.BasicHeader;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +42,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
+import org.apache.http.message.BasicHeader;
 
 
 /**
@@ -242,7 +239,6 @@ public class DownloadCache {
     protected Pair<InputStream, URLConnection> openUrl(
             @NonNull String url,
             boolean needsMarkResetSupport,
-            @NonNull ITaskMonitor monitor,
             @Nullable Header[] headers) throws IOException {
         URLConnection connection = new URL(url).openConnection(mSettings.getProxy());
         if (headers != null) {
@@ -308,89 +304,61 @@ public class DownloadCache {
     }
 
     /**
-     * This is a simplified convenience method that calls
-     * {@link #openDirectUrl(String, Header[], ITaskMonitor)}
-     * without passing any specific HTTP headers  and returns the resulting input stream
-     * and the HTTP status code.
-     * See the original method's description for details on its behavior.
-     * <p>
-     * {@link #openDirectUrl(String, Header[], ITaskMonitor)} can accept customized
-     * HTTP headers to send with the requests and also returns the full HTTP
-     * response -- status line with code and protocol and all headers.
-     * <p>
-     * The resulting input stream may not support mark/reset.
+     * This is a simplified convenience method that calls {@link #openUrl(String, Header[])} without
+     * passing any specific HTTP headers and returns the resulting input stream and the
+     * URLConnection. See the original method's description for details on its behavior.
+     *
+     * <p>{@link #openUrl(String, Header[])} can accept customized HTTP headers to send with the
+     * requests and also returns the full HTTP response -- status line with code and protocol and
+     * all headers.
+     *
+     * <p>The resulting input stream may not support mark/reset.
      *
      * @param urlString the URL string to be opened.
-     * @param monitor {@link ITaskMonitor} which is related to this URL
-     *                 fetching.
-     * @return Returns a pair with a {@link InputStream} and an HTTP status code.
-     *              The pair is never null.
-     *              The input stream can be null in case of error, although in general the
-     *              method will probably throw an exception instead.
-     *              The caller should look at the response code's status and only accept the
-     *              input stream if it's the desired code (e.g. 200 or 206).
-     * @throws IOException Exception thrown when there are problems retrieving
-     *                 the URL or its content.
-     * @throws ProcessCanceledException Exception thrown if the user cancels the
-     *              authentication dialog.
-     * @see #openDirectUrl(String, Header[], ITaskMonitor)
+     * @return Returns a pair with a {@link InputStream} and an HTTP status code. The pair is never
+     *     null. The input stream can be null in case of error, although in general the method will
+     *     probably throw an exception instead. The caller should look at the response code's status
+     *     and only accept the input stream if it's the desired code (e.g. 200 or 206).
+     * @throws IOException Exception thrown when there are problems retrieving the URL or its
+     *     content.
+     * @throws ProcessCanceledException Exception thrown if the user cancels the authentication
+     *     dialog.
      */
     @NonNull
-    public Pair<InputStream, Integer> openDirectUrl(
-            @NonNull  String urlString,
-            @NonNull  ITaskMonitor monitor)
-                throws IOException {
+    public Pair<InputStream, URLConnection> openDirectUrl(@NonNull String urlString)
+            throws IOException {
         if (DEBUG) {
             System.out.println(String.format("%s : Direct download", urlString)); //$NON-NLS-1$
         }
-        Pair<InputStream, URLConnection> result = openUrl(
-                urlString,
-                false /*needsMarkResetSupport*/,
-                monitor,
-                null /*headers*/);
-        Integer response = null;
-        URLConnection connection = result.getSecond();
-        if (connection instanceof HttpURLConnection) {
-            response = ((HttpURLConnection)connection).getResponseCode();
-        }
-        else {
-            // Not an http connection, so just assume it worked.
-            response = 200;
-        }
-        return Pair.of(result.getFirst(), response);
+        return openUrl(urlString, false /*needsMarkResetSupport*/, null /*headers*/);
     }
 
     /**
-     * Downloads a small file, typically XML manifests.
-     * The current {@link Strategy} governs whether the file is served as-is
-     * from the cache, potentially updated first or directly downloaded.
-     * <p>
-     * For large downloads (e.g. installable archives) please do not invoke the
-     * cache and instead use the {@link #openDirectUrl} method.
-     * <p>
-     * For details on realm authentication and user/password handling,
-     * see {@link HttpConfigurable#openHttpConnection(String)}.
+     * Downloads a small file, typically XML manifests. The current {@link Strategy} governs whether
+     * the file is served as-is from the cache, potentially updated first or directly downloaded.
+     *
+     * <p>For large downloads (e.g. installable archives) please do not invoke the cache and instead
+     * use the {@link #openDirectUrl} method.
+     *
+     * <p>For details on realm authentication and user/password handling, see {@link
+     * HttpConfigurable#openHttpConnection(String)}.
      *
      * @param urlString the URL string to be opened.
-     * @param monitor {@link ITaskMonitor} which is related to this URL
-     *            fetching.
-     * @return Returns an {@link InputStream} holding the URL content.
-     *   Returns null if there's no content (e.g. resource not found.)
-     *   Returns null if the document is not cached and strategy is {@link Strategy#ONLY_CACHE}.
-     * @throws IOException Exception thrown when there are problems retrieving
-     *             the URL or its content.
-     * @throws ProcessCanceledException Exception thrown if the user cancels the
-     *              authentication dialog.
+     * @return Returns an {@link InputStream} holding the URL content. Returns null if there's no
+     *     content (e.g. resource not found.) Returns null if the document is not cached and
+     *     strategy is {@link Strategy#ONLY_CACHE}.
+     * @throws IOException Exception thrown when there are problems retrieving the URL or its
+     *     content.
+     * @throws ProcessCanceledException Exception thrown if the user cancels the authentication
+     *     dialog.
      */
     @NonNull
-    public InputStream openCachedUrl(@NonNull String urlString, @NonNull ITaskMonitor monitor)
-            throws IOException {
+    public InputStream openCachedUrl(@NonNull String urlString) throws IOException {
         // Don't cache in direct mode.
         if (mStrategy == Strategy.DIRECT) {
             Pair<InputStream, URLConnection> result = openUrl(
                     urlString,
                     true /*needsMarkResetSupport*/,
-                    monitor,
                     null /*headers*/);
             return result.getFirst();
         }
@@ -485,9 +453,13 @@ public class DownloadCache {
                         }
 
                         if (!headers.isEmpty()) {
-                            is = downloadAndCache(urlString, monitor, cached, info,
-                                    headers.toArray(new Header[headers.size()]),
-                                    statusCode);
+                            is =
+                                    downloadAndCache(
+                                            urlString,
+                                            cached,
+                                            info,
+                                            headers.toArray(new Header[headers.size()]),
+                                            statusCode);
                         }
 
                         if (is != null && statusCode.get() == HttpStatus.SC_OK) {
@@ -574,8 +546,7 @@ public class DownloadCache {
             mFileOp.delete(info);
         } catch (SecurityException ignore) {}
 
-        return downloadAndCache(urlString, monitor, cached, info,
-                null /*headers*/, null /*statusCode*/);
+        return downloadAndCache(urlString, cached, info, null /*headers*/, null /*statusCode*/);
     }
 
 
@@ -638,7 +609,6 @@ public class DownloadCache {
     @Nullable
     private InputStream downloadAndCache(
             @NonNull String urlString,
-            @NonNull ITaskMonitor monitor,
             @NonNull File cached,
             @NonNull File info,
             @Nullable Header[] headers,
@@ -653,7 +623,7 @@ public class DownloadCache {
 
         try {
             Pair<InputStream, URLConnection> r =
-                openUrl(urlString, true /*needsMarkResetSupport*/, monitor, headers);
+                    openUrl(urlString, true /*needsMarkResetSupport*/, headers);
 
             is = r.getFirst();
             URLConnection connection = r.getSecond();

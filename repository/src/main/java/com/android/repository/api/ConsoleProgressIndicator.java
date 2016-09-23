@@ -18,31 +18,114 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.io.PrintStream;
 
 /**
  * A simple {@link ProgressIndicator} that prints log messages to {@code stdout} and {@code stderr}.
  */
 public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
 
+    private static final int PROGRESS_WIDTH = 40;
+    private static final int MAX_WIDTH = 80;
+
+    private String mText = "";
+    private String mSecondaryText = "";
+    private double mProgress = 0;
+
+    private final PrintStream mOut;
+    private final PrintStream mErr;
+
+    private static final String SPACES =
+            "                                                                                ";
+
+    public ConsoleProgressIndicator() {
+        this(System.out, System.err);
+    }
+
+    public ConsoleProgressIndicator(@NonNull PrintStream out, @NonNull PrintStream err) {
+        mOut = out;
+        mErr = err;
+    }
+
     @Override
-    public void logWarning(@NonNull String s, @Nullable Throwable e) {
-        System.err.println("Warning: " + s);
+    public double getFraction() {
+        return mProgress;
+    }
+
+    @Override
+    public void setFraction(double progress) {
+        mProgress = progress;
+        printStatusLine(true);
+    }
+
+    private void printStatusLine(boolean forceShowProgress) {
+        StringBuilder line = new StringBuilder();
+        if (forceShowProgress || getFraction() > 0) {
+            line.append("[");
+            int i = 1;
+            for (; i < PROGRESS_WIDTH * mProgress; i++) {
+                line.append("=");
+            }
+            for (; i < PROGRESS_WIDTH; i++) {
+                line.append(" ");
+            }
+            line.append("] ");
+
+            line.append(String.format("%.0f%%", 100 * mProgress));
+            line.append(" ");
+        }
+        line.append(mText);
+        line.append(" ");
+        line.append(mSecondaryText);
+        if (line.length() > MAX_WIDTH) {
+            line.delete(MAX_WIDTH, line.length());
+        } else {
+            line.append(SPACES.substring(0, MAX_WIDTH - line.length()));
+        }
+
+        line.append("\r");
+        mOut.print(line);
+        mOut.flush();
+    }
+
+    private void logMessage(@NonNull String s, @Nullable Throwable e, @NonNull PrintStream stream) {
+        if (mProgress > 0) {
+            mOut.print(SPACES);
+            mOut.print("\r");
+        }
+        stream.println(s);
         if (e != null) {
             e.printStackTrace();
         }
+        if (mProgress > 0) {
+            printStatusLine(false);
+        }
+    }
+
+    @Override
+    public void logWarning(@NonNull String s, @Nullable Throwable e) {
+        logMessage("Warning: " + s, e, mErr);
     }
 
     @Override
     public void logError(@NonNull String s, @Nullable Throwable e) {
-        System.err.println("Error: " + s);
-        if (e != null) {
-            e.printStackTrace();
-        }
-
+        logMessage("Error: " + s, e, mErr);
     }
 
     @Override
     public void logInfo(@NonNull String s) {
-        System.out.println("Info: " + s);
+        logMessage("Info: " + s, null, mOut);
+    }
+
+    @Override
+    public void setText(@Nullable String text) {
+        mText = text;
+        printStatusLine(false);
+    }
+
+    @Override
+    public void setSecondaryText(@Nullable String text) {
+        mSecondaryText = text;
+        printStatusLine(false);
     }
 }

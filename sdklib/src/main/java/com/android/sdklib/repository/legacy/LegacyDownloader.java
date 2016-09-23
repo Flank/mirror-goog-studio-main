@@ -23,13 +23,14 @@ import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
 import com.android.utils.Pair;
-import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Path;
 
 /**
@@ -44,6 +45,7 @@ public class LegacyDownloader implements Downloader {
     private FileOp mFileOp;
 
     private SettingsController mSettingsController;
+    private static final int BUF_SIZE = 8192;
 
     public LegacyDownloader(@NonNull FileOp fop, @NonNull SettingsController settings) {
         mDownloadCache =
@@ -56,7 +58,7 @@ public class LegacyDownloader implements Downloader {
     @Nullable
     public InputStream downloadAndStream(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
-        return mDownloadCache.openCachedUrl(getUrl(url), new LegacyTaskMonitor(indicator));
+        return mDownloadCache.openCachedUrl(getUrl(url));
     }
 
     @Nullable
@@ -72,18 +74,45 @@ public class LegacyDownloader implements Downloader {
     public void downloadFully(@NonNull URL url, @NonNull File target, @Nullable String checksum,
             @NonNull ProgressIndicator indicator) throws IOException {
         if (mFileOp.exists(target) && checksum != null) {
+            indicator.setText("Verifying previous download...");
             try (InputStream in = new BufferedInputStream(mFileOp.newFileInputStream(target))) {
-                if (checksum.equals(Downloader.hash(in, mFileOp.length(target), indicator))) {
+                if (checksum.equals(
+                        Downloader.hash(
+                                in, mFileOp.length(target), indicator.createSubProgress(0.3)))) {
                     return;
                 }
             }
+            indicator = indicator.createSubProgress(1);
         }
         mFileOp.mkdirs(target.getParentFile());
         OutputStream out = mFileOp.newFileOutputStream(target);
-        Pair<InputStream, Integer> downloadedResult = mDownloadCache
-                .openDirectUrl(getUrl(url), new LegacyTaskMonitor(indicator));
-        if (downloadedResult.getSecond() == 200) {
-            ByteStreams.copy(downloadedResult.getFirst(), out);
+        Pair<InputStream, URLConnection> downloadedResult =
+                mDownloadCache.openDirectUrl(getUrl(url));
+        URLConnection connection = downloadedResult.getSecond();
+        if (!(connection instanceof HttpURLConnection)
+                || ((HttpURLConnection) connection).getResponseCode() == 200) {
+            indicator.setText(
+                    String.format("Downloading %s...", new File(url.getFile()).getName()));
+            long total = connection.getContentLengthLong();
+            long done = 0;
+            InputStream from = downloadedResult.getFirst();
+            byte[] buf = new byte[BUF_SIZE];
+            int prevPercent = 0;
+            while (true) {
+                int r = from.read(buf);
+                if (r == -1) {
+                    break;
+                }
+                done += r;
+                out.write(buf, 0, r);
+                int percent = (int) (done * 100. / total);
+                if (percent != prevPercent) {
+                    // Don't update too often
+                    indicator.setFraction((double) done / total);
+                    prevPercent = percent;
+                }
+            }
+            indicator.setFraction(1);
             out.close();
         }
     }

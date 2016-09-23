@@ -86,7 +86,6 @@ public class SdkManagerCli {
     private final PrintStream mOut;
     private final BufferedReader mIn;
     private Downloader mDownloader;
-    private final ProgressIndicator mProgress;
 
     public static void main(@NonNull String args[]) {
         try {
@@ -115,8 +114,14 @@ public class SdkManagerCli {
             }
         }
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath.toFile());
-        new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop, settings),
-                handler).run();
+        new SdkManagerCli(
+                        settings,
+                        System.out,
+                        System.in,
+                        new LegacyDownloader(fop, settings),
+                        handler)
+                .run(settings.getProgressIndicator());
+        System.out.println();
         System.out.println("done");
     }
 
@@ -127,33 +132,33 @@ public class SdkManagerCli {
         mOut = out;
         mIn = in == null ? null : new BufferedReader(new InputStreamReader(in));
         mDownloader = downloader;
-        mProgress = settings.getProgressIndicator();
         // Unfortunately AndroidSdkHandler etc. doesn't use nio (yet). We have to convert like this
         // to deal with the non-default provider (test) case.
         mHandler = handler;
-        mRepoManager = mHandler.getSdkManager(mProgress);
+        mRepoManager = mHandler.getSdkManager(settings.getProgressIndicator());
     }
 
-    void run() throws CommandFailedException {
+    void run(@NonNull ProgressIndicator progress) throws CommandFailedException {
         if (mSettings == null) {
             throw new CommandFailedException();
         }
         if (mSettings.isList()) {
-            listPackages();
+            listPackages(progress);
         } else if (mSettings.islicenses()) {
-            showLicenses();
+            showLicenses(progress);
         } else {
             if (mSettings.isInstallAction()) {
-                installPackages();
+                installPackages(progress);
             }
             else {
-                uninstallPackages();
+                uninstallPackages(progress);
             }
         }
     }
 
-    private void listPackages() {
-        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
+    private void listPackages(@NonNull ProgressIndicator progress) {
+        progress.setText("Loading package information...");
+        mRepoManager.loadSynchronously(0, progress, mDownloader, mSettings);
 
         RepositoryPackages packages = mRepoManager.getPackages();
 
@@ -325,22 +330,25 @@ public class SdkManagerCli {
         }
     }
 
-    private void installPackages() throws CommandFailedException {
-        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
+    private void installPackages(@NonNull ProgressIndicator progress)
+            throws CommandFailedException {
+        progress.setText("Loading package information...");
+        mRepoManager.loadSynchronously(0, progress.createSubProgress(0.1), mDownloader, mSettings);
 
         List<RemotePackage> remotes = new ArrayList<>();
         for (String path : mSettings.getPaths(mRepoManager)) {
             RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
             if (p == null) {
-                mProgress.logWarning("Failed to find package " + path);
+                progress.logWarning("Failed to find package " + path);
                 throw new CommandFailedException();
             }
             remotes.add(p);
         }
-        remotes = InstallerUtil.computeRequiredPackages(
-                remotes, mRepoManager.getPackages(), mProgress);
+        remotes =
+                InstallerUtil.computeRequiredPackages(
+                        remotes, mRepoManager.getPackages(), progress);
         if (remotes != null) {
-            List<RemotePackage> acceptedRemotes = checkLicenses(remotes);
+            List<RemotePackage> acceptedRemotes = checkLicenses(remotes, progress);
             if (!acceptedRemotes.equals(remotes)) {
                 mOut.println("The following packages can not be installed since their "
                         + "licenses or those of the packages they depend on were not accepted:");
@@ -355,22 +363,28 @@ public class SdkManagerCli {
                 }
                 remotes = acceptedRemotes;
             }
+            double progressMax = 0.1;
+            double progressIncrement = 0.9 / (remotes.size());
             for (RemotePackage p : remotes) {
+                progress.setText("Installing " + p.getDisplayName());
                 Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
                         .createInstaller(p, mRepoManager, mDownloader, mHandler.getFileOp());
-                if (!applyPackageOperation(installer)) {
+                progressMax += progressIncrement;
+                if (!applyPackageOperation(installer, progress.createSubProgress(progressMax))) {
                     // there was an error, abort.
                     throw new CommandFailedException();
                 }
+                progress.setFraction(progressMax);
             }
+            progress.setFraction(1);
         } else {
-            mProgress.logWarning("Unable to compute a complete list of dependencies.");
+            progress.logWarning("Unable to compute a complete list of dependencies.");
             throw new CommandFailedException();
         }
     }
 
-    private void showLicenses() throws CommandFailedException {
-        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
+    private void showLicenses(@NonNull ProgressIndicator progress) throws CommandFailedException {
+        mRepoManager.loadSynchronously(0, progress, mDownloader, mSettings);
 
         Set<License> licenses =
                 mRepoManager
@@ -440,11 +454,12 @@ public class SdkManagerCli {
      * that the user accept them.
      *
      * @return A list of packages that have had their licenses accepted. If some licenses are not
-     * accepted, both the package with the unaccepted license and any packages that depend on it
-     * are excluded from this list.
+     *     accepted, both the package with the unaccepted license and any packages that depend on it
+     *     are excluded from this list.
      */
     @NonNull
-    private List<RemotePackage> checkLicenses(@NonNull List<RemotePackage> remotes) {
+    private List<RemotePackage> checkLicenses(
+            @NonNull List<RemotePackage> remotes, @NonNull ProgressIndicator progress) {
         Multimap<License, RemotePackage> unacceptedLicenses = HashMultimap.create();
         remotes.forEach(remote -> {
             License l = remote.getLicense();
@@ -468,9 +483,11 @@ public class SdkManagerCli {
 
             while (acceptedIter.hasNext()) {
                 RemotePackage accepted = acceptedIter.next();
-                List<RemotePackage> required = InstallerUtil.computeRequiredPackages(
-                        Collections.singletonList(accepted), mRepoManager.getPackages(),
-                        mProgress);
+                List<RemotePackage> required =
+                        InstallerUtil.computeRequiredPackages(
+                                Collections.singletonList(accepted),
+                                mRepoManager.getPackages(),
+                                progress);
                 if (!Collections.disjoint(required, problemPackages)) {
                     acceptedIter.remove();
                     problemPackages.add(accepted);
@@ -504,27 +521,35 @@ public class SdkManagerCli {
         }
     }
 
-    private void uninstallPackages() throws CommandFailedException {
-        mRepoManager.loadSynchronously(0, mProgress, null, mSettings);
+    private void uninstallPackages(@NonNull ProgressIndicator progress)
+            throws CommandFailedException {
+        mRepoManager.loadSynchronously(0, progress.createSubProgress(0.1), null, mSettings);
 
-        for (String path : mSettings.getPaths(mRepoManager)) {
+        List<String> paths = mSettings.getPaths(mRepoManager);
+        double progressMax = 0.1;
+        double progressIncrement = 0.9 / paths.size();
+        for (String path : paths) {
             LocalPackage p = mRepoManager.getPackages().getLocalPackages().get(path);
             if (p == null) {
-                mProgress.logWarning("Unable to find package " + path);
+                progress.logWarning("Unable to find package " + path);
             } else {
                 Uninstaller uninstaller = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
                         .createUninstaller(p, mRepoManager, mHandler.getFileOp());
-                if (!applyPackageOperation(uninstaller)) {
+                progressMax += progressIncrement;
+                if (!applyPackageOperation(uninstaller, progress.createSubProgress(progressMax))) {
                     // there was an error, abort.
                     throw new CommandFailedException();
                 }
             }
+            progress.setFraction(progressMax);
         }
+        progress.setFraction(1);
     }
 
     private boolean applyPackageOperation(
-            @NonNull PackageOperation operation) {
-        return operation.prepare(mProgress) && operation.complete(mProgress);
+            @NonNull PackageOperation operation, @NonNull ProgressIndicator progress) {
+        return operation.prepare(progress.createSubProgress(0.5))
+                && operation.complete(progress.createSubProgress(1));
     }
 
     private static void usage(@NonNull PrintStream out) {

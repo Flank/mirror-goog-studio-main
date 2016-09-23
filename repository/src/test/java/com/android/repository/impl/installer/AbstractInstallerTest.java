@@ -19,8 +19,8 @@ package com.android.repository.impl.installer;
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -102,14 +102,13 @@ public class AbstractInstallerTest {
         MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/sdk"));
-        FakeProgressIndicator progress = new FakeProgressIndicator();
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
         // Consume temp dir 1
         FileOpUtils.getNewTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
         // prepare() will create an keep a reference to temp dir 2
-        new TestInstaller(remote, mgr, downloader, fop).prepare(progress);
+        new TestInstaller(remote, mgr, downloader, fop).prepare(new FakeProgressIndicator(true));
         File tempDir;
         // Create the remaining temp dirs
         do {
@@ -118,9 +117,9 @@ public class AbstractInstallerTest {
         FakeRemotePackage remote2 = new FakeRemotePackage("foo;baz");
         TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
         // This will cause the unreferenced temp dirs to be GCd (and a new one created)
-        installer.prepare(progress);
+        installer.prepare(new FakeProgressIndicator(true));
         // This will cause the newly created temp dir to be deleted.
-        installer.complete(progress);
+        installer.complete(new FakeProgressIndicator(true));
         for (int i = 1; i < 100; i++) {
             File dir = FileOpUtils.getTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, i);
             // Only temp dir 2 should remain, since it's still referenced by the incomplete install.

@@ -78,8 +78,8 @@ public class BasicInstallerTest extends TestCase {
         // Uninstall it
         InstallerFactory factory = new BasicInstallerFactory();
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
-        uninstaller.prepare(new FakeProgressIndicator());
-        uninstaller.complete(new FakeProgressIndicator());
+        uninstaller.prepare(new FakeProgressIndicator(true));
+        uninstaller.complete(new FakeProgressIndicator(true));
         // Verify that the deleted dir is gone.
         assertFalse(fop.exists(new File("/repo/dummy/foo")));
         assertTrue(fop.exists(new File("/repo/dummy/bar/package.xml")));
@@ -166,14 +166,16 @@ public class BasicInstallerTest extends TestCase {
         assertEquals(1, pkgs.getLocalPackages().size());
         assertEquals(2, pkgs.getRemotePackages().size());
 
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
         // Install one of the packages.
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
-        basicInstaller.prepare(runner.getProgressIndicator());
-        basicInstaller.complete(runner.getProgressIndicator());
-        runner.getProgressIndicator().assertNoErrorsOrWarnings();
+        basicInstaller.prepare(progress.createSubProgress(0.5));
+        basicInstaller.complete(progress.createSubProgress(1));
+        progress.assertNoErrorsOrWarnings();
 
+        runner = new FakeProgressRunner();
         // Reload the packages.
         mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
                 ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
@@ -356,7 +358,7 @@ public class BasicInstallerTest extends TestCase {
         RemotePackage p = mgr.getPackages().getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
-        FakeProgressIndicator firstInstallProgress = new FakeProgressIndicator();
+        FakeProgressIndicator firstInstallProgress = new FakeProgressIndicator(true);
         boolean result = basicInstaller.prepare(firstInstallProgress);
 
         // be sure it was actually cancelled
@@ -391,7 +393,7 @@ public class BasicInstallerTest extends TestCase {
         basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, failingDownloader, fop);
         // Try again with the failing downloader; it should not be called.
-        FakeProgressIndicator secondInstallProgress = new FakeProgressIndicator();
+        FakeProgressIndicator secondInstallProgress = new FakeProgressIndicator(true);
         result = basicInstaller.prepare(secondInstallProgress);
         assertTrue(result);
         result = basicInstaller.complete(secondInstallProgress);

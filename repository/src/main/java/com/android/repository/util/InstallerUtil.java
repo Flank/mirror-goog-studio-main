@@ -96,9 +96,15 @@ public class InstallerUtil {
 
         progress.setText("Unzipping...");
         ZipFile zipFile = new ZipFile(in);
+        boolean indeterminate = false;
+        if (expectedSize == 0) {
+            progress.setIndeterminate(true);
+            indeterminate = true;
+        }
         try {
             Enumeration entries = zipFile.getEntries();
             progress.setFraction(0);
+            double progressMax = 0;
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry entry = (ZipArchiveEntry) entries.nextElement();
                 String name = entry.getName();
@@ -106,7 +112,15 @@ public class InstallerUtil {
                 progress.setSecondaryText(name);
                 if (entry.isUnixSymlink()) {
                     ByteArrayOutputStream targetByteStream = new ByteArrayOutputStream();
-                    readZipEntry(zipFile, entry, targetByteStream, expectedSize, progress);
+                    progressMax += (double) entry.getCompressedSize() / expectedSize;
+                    readZipEntry(
+                            zipFile,
+                            entry,
+                            targetByteStream,
+                            indeterminate ? progress : progress.createSubProgress(progressMax));
+                    if (!indeterminate) {
+                        progress.setFraction(progressMax);
+                    }
                     Path linkPath = fop.toPath(entryFile);
                     Path linkTarget = fop.toPath(new File(targetByteStream.toString()));
                     Files.createSymbolicLink(linkPath, linkTarget);
@@ -128,8 +142,16 @@ public class InstallerUtil {
                     }
 
                     OutputStream unzippedOutput = fop.newFileOutputStream(entryFile);
-                    if (readZipEntry(zipFile, entry, unzippedOutput, expectedSize, progress)) {
+                    progressMax += (double) entry.getCompressedSize() / expectedSize;
+                    if (readZipEntry(
+                            zipFile,
+                            entry,
+                            unzippedOutput,
+                            indeterminate ? progress : progress.createSubProgress(progressMax))) {
                         return;
+                    }
+                    if (!indeterminate) {
+                        progress.setFraction(progressMax);
                     }
                     if (!fop.isWindows()) {
                         // get the mode and test if it contains the executable bit
@@ -146,27 +168,39 @@ public class InstallerUtil {
             }
         }
         finally {
+            progress.setIndeterminate(false);
+            progress.setFraction(1);
             ZipFile.closeQuietly(zipFile);
         }
     }
 
-    private static boolean readZipEntry(ZipFile zipFile, ZipArchiveEntry entry, OutputStream dest,
-            long expectedSize, @NonNull ProgressIndicator progress) throws IOException {
+    private static boolean readZipEntry(
+            ZipFile zipFile,
+            ZipArchiveEntry entry,
+            OutputStream dest,
+            @NonNull ProgressIndicator progress)
+            throws IOException {
         int size;
         byte[] buf = new byte[8192];
-        double fraction = progress.getFraction();
+        double fraction = 0;
+        int prevPercent = 0;
         try (BufferedOutputStream bufferedDest = new BufferedOutputStream(dest);
              InputStream s = new BufferedInputStream(zipFile.getInputStream(entry))) {
             while ((size = s.read(buf)) > -1) {
                 bufferedDest.write(buf, 0, size);
-                fraction += ((double) entry.getCompressedSize() / expectedSize) *
-                        ((double) size / entry.getSize());
-                progress.setFraction(fraction);
+                fraction += (double) size / entry.getSize();
+                int percent = (int) (fraction * 100);
+                if (percent != prevPercent) {
+                    // Don't update too often
+                    progress.setFraction(fraction);
+                    prevPercent = percent;
+                }
                 if (progress.isCanceled()) {
                     return true;
                 }
             }
         }
+        progress.setFraction(1);
         return false;
     }
 

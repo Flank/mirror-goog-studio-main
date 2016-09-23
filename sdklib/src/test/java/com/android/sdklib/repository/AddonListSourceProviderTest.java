@@ -24,12 +24,10 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestResources;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.net.URL;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link RepositorySourceProvider}s.
@@ -59,6 +57,7 @@ public class AddonListSourceProviderTest extends TestCase {
                 .registerUrl(new URL("https://dl.google.com/android/repository/addons_list-2.xml"),
                         getClass().getResourceAsStream("/addons_list_sample_2.xml"));
 
+        progress = new FakeProgressIndicator();
         sources = provider.getSources(downloader, progress, true);
         progress.assertNoErrorsOrWarnings();
         assertEquals(6, sources.size());
@@ -73,6 +72,7 @@ public class AddonListSourceProviderTest extends TestCase {
                 .registerUrl(new URL("https://dl.google.com/android/repository/addons_list-3.xml"),
                         getClass().getResourceAsStream("/addons_list_sample_3.xml"));
 
+        progress = new FakeProgressIndicator();
         sources = provider.getSources(downloader, progress, true);
         progress.assertNoErrorsOrWarnings();
         assertEquals(6, sources.size());

@@ -19,7 +19,6 @@ package com.android.repository.testframework;
 import com.android.annotations.NonNull;
 import com.android.repository.api.ProgressIndicator;
 import com.google.common.collect.Lists;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
@@ -39,6 +38,18 @@ public class FakeProgressIndicator implements ProgressIndicator {
     private boolean mCancelled = false;
 
     private boolean mCancellable = true;
+
+    private double mPercent = 0;
+
+    private final boolean mValidateMonotonicProgress;
+
+    public FakeProgressIndicator() {
+        this(false);
+    }
+
+    public FakeProgressIndicator(boolean validateMonotonicProgress) {
+        mValidateMonotonicProgress = validateMonotonicProgress;
+    }
 
     @Override
     public void setText(String s) {
@@ -69,17 +80,17 @@ public class FakeProgressIndicator implements ProgressIndicator {
 
     @Override
     public void setFraction(double v) {
-
+        assert !mValidateMonotonicProgress || mPercent <= v;
+        mPercent = v;
     }
 
     @Override
     public double getFraction() {
-        return 0;
+        return mPercent;
     }
 
     @Override
     public void setSecondaryText(String s) {
-
     }
 
     private static String getStackTrace() {

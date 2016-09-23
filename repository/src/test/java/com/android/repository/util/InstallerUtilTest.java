@@ -528,8 +528,8 @@ public class InstallerUtilTest extends TestCase {
             }
             Path unzipped = outRoot.resolve("unzipped");
             Files.createDirectories(unzipped);
-            InstallerUtil.unzip(outZip.toFile(), unzipped.toFile(), fop, 1,
-                    new FakeProgressIndicator());
+            InstallerUtil.unzip(
+                    outZip.toFile(), unzipped.toFile(), fop, 0, new FakeProgressIndicator(true));
             assertEquals("content", new String(Files.readAllBytes(unzipped.resolve("foo"))));
             Path resultDir = unzipped.resolve("bar");
             Path resultFile2 = resultDir.resolve("baz");

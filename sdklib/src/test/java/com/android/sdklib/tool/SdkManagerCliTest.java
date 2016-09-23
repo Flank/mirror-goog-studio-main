@@ -186,7 +186,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         String expected =
                 "Installed packages:\n"
                         + "  Path    | Version | Description | Location\n"
@@ -239,7 +239,7 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader =
                 new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         String expected =
                 "Installed packages:\n"
                         + "  Path                                                                 | Version | Description                                                      | Location                                            \n"
@@ -278,7 +278,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         String expected =
                 String.format(
                         "Installed packages:\n"
@@ -355,7 +355,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         String expected =
                 "Installed packages:\n"
                         + "  Path    | Version | Description | Location\n"
@@ -411,7 +411,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNotNull(mSdkHandler.getLocalPackage("test;remote1",
                 progress));
@@ -435,7 +435,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("y\ny\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator(true));
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNotNull(mSdkHandler.getLocalPackage("test;remote1", progress));
         assertNotNull(mSdkHandler.getLocalPackage("depends_on", progress));
@@ -460,7 +460,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertEquals(2,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
@@ -488,8 +488,7 @@ public class SdkManagerCliTest {
                         ImmutableList.of("--sdk_root=/sdk", "test;remote1"),
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
+        assertNull(mSdkHandler.getLocalPackage("test;remote1", new FakeProgressIndicator()));
         assertNotNull("Arguments should be valid", settings);
         SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
@@ -497,12 +496,14 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler);
         try {
-            downloader.run();
+            downloader.run(new FakeProgressIndicator());
             fail("expected downloader to fail");
         } catch (SdkManagerCli.CommandFailedException ignored) {
         }
-        mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
-        assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
+        mSdkHandler
+                .getSdkManager(new FakeProgressIndicator())
+                .reloadLocalIfNeeded(new FakeProgressIndicator(true));
+        assertNull(mSdkHandler.getLocalPackage("test;remote1", new FakeProgressIndicator()));
     }
 
     /**
@@ -524,7 +525,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertEquals(2,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
@@ -554,7 +555,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNull(mSdkHandler.getLocalPackage("obsolete", progress));
         assertEquals(2,
@@ -571,7 +572,7 @@ public class SdkManagerCliTest {
                         ImmutableList.of("--uninstall", "--sdk_root=/sdk", "obsolete", "upgrade"),
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        FakeProgressIndicator progress = new FakeProgressIndicator();
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
         assertEquals(3,
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
         assertNotNull("Arguments should be valid", settings);
@@ -580,7 +581,7 @@ public class SdkManagerCliTest {
                 null,
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator(true));
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNull(mSdkHandler.getLocalPackage("obsolete", progress));
         assertNull(mSdkHandler.getLocalPackage("upgrade", progress));
@@ -608,7 +609,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("foo\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNull(mSdkHandler.getLocalPackage("depended_on",
                 progress));
@@ -618,7 +619,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("y\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNotNull(mSdkHandler.getLocalPackage("depended_on",
                 progress));
@@ -636,12 +637,12 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("n\n".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("n\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
 
         assertEquals(
                 "2 of 2 SDK package licenses not accepted.\n"
@@ -661,12 +662,12 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("n\n".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("n\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
 
         assertEquals(
                 "License lic1:\n"
@@ -697,12 +698,12 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("y\ny\ny\n".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\ny\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
 
         assertEquals(
                 "2 of 2 SDK package licenses not accepted.\n"
@@ -721,12 +722,12 @@ public class SdkManagerCliTest {
         out.reset();
         // Subsequent call should pass without accepting again.
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
         assertEquals(
                 "All SDK package licenses accepted.\n", out.toString().replaceAll("\\r\\n", "\n"));
     }
@@ -743,12 +744,12 @@ public class SdkManagerCliTest {
         assertNotNull("Arguments should be valid", settings);
         // Accept one of the licences
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("y\ny\nn\n".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\nn\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
         assertEquals(
                 "2 of 2 SDK package licenses not accepted.\n"
                         + "Review licenses that have not been accepted (y/N)? \n"
@@ -768,12 +769,12 @@ public class SdkManagerCliTest {
 
         // Then the other one
         new SdkManagerCli(
-                settings,
-                new PrintStream(out),
-                new ByteArrayInputStream("y\ny\n".getBytes()),
-                mDownloader,
-                mSdkHandler)
-                .run();
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
         assertEquals(
                 "1 of 2 SDK package license not accepted.\n"
                         + "Review license that has not been accepted (y/N)? \n"
@@ -805,7 +806,7 @@ public class SdkManagerCliTest {
                 new ByteArrayInputStream("y\nn\ny\n".getBytes()),
                 mDownloader,
                 mSdkHandler);
-        downloader.run();
+        downloader.run(new FakeProgressIndicator());
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNull(mSdkHandler.getLocalPackage("depended_on",
                 progress));
