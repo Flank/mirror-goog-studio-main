@@ -382,7 +382,7 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
     @Override
     protected TestLintClient createClient() {
         if (getName().equals("testAppCompatOther")) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 // Set fake library name on resources in this test to pretend the
                 // attr comes from appcompat
                 @Override

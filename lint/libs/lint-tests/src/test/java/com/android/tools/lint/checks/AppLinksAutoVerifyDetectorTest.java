@@ -701,7 +701,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
         if (!"testUnknownHostWithResolvedManifestPlaceholders".equals(getName())) {
             return super.createClient();
         }
-        return new TestLintClient() {
+        return new ToolsBaseTestLintClient() {
             @NonNull
             @Override
             protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {

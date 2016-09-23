@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.detector.api.Detector;
@@ -75,4 +76,21 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         return stream;
     }
 
+    @Override
+    protected TestLintClient createClient() {
+        return new ToolsBaseTestLintClient();
+    }
+
+    /**
+     * Overrides TestLintClient to use the checked-in SDK that is available in the tools/base
+     * repo. The "real" TestLintClient is a public utility for writing lint tests, so it cannot
+     * make assumptions specific to tools/base.
+     */
+    protected class ToolsBaseTestLintClient extends TestLintClient {
+        @Nullable
+        @Override
+        public File getSdkHome() {
+            return TestUtils.getSdk();
+        }
+    }
 }

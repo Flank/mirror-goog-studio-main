@@ -24,7 +24,6 @@ import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -34,7 +33,7 @@ import java.util.List;
 public class JarFileIssueRegistryTest extends AbstractCheckTest {
     public void testError() {
         try {
-            JarFileIssueRegistry.get(new TestLintClient(), new File("bogus"));
+            JarFileIssueRegistry.get(createClient(), new File("bogus"));
             fail("Expected exception for bogus path");
         } catch (Throwable t) {
             // pass

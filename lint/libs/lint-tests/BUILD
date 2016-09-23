@@ -20,6 +20,7 @@ java_library(
     ],
 )
 
+# TODO: these don't pass yet.
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
@@ -49,4 +50,8 @@ java_test(
         "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
+    data = [
+        "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:platform-tools",
+    ]
 )

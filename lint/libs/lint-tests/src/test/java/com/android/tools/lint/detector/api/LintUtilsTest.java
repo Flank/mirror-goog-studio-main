@@ -53,6 +53,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
@@ -470,6 +471,12 @@ public class LintUtilsTest extends TestCase {
                 }
 
                 return super.getCompileTarget(project);
+            }
+
+            @Nullable
+            @Override
+            public File getSdkHome() {
+                return TestUtils.getSdk();
             }
         };
         Project project = client.getProject(dir, dir);

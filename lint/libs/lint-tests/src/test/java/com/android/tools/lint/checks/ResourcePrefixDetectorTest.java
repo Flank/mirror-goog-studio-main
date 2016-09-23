@@ -261,7 +261,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
 
     @Override
     protected TestLintClient createClient() {
-        return new TestLintClient() {
+        return new ToolsBaseTestLintClient() {
             @NonNull
             @Override
             protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
