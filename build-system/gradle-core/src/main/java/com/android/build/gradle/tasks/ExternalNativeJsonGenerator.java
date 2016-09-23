@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
@@ -341,6 +342,12 @@ public abstract class ExternalNativeJsonGenerator {
      */
     @NonNull
     public abstract NativeBuildSystem getNativeBuildSystem();
+
+    /**
+     * @return a map of Abi to STL shared object (.so files) that should be copied.
+     */
+    @NonNull
+    abstract Map<Abi, File> getStlSharedObjectFiles();
 
     /**
      * Log low level diagnostic information.
