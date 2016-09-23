@@ -1,4 +1,4 @@
-apply plugin: 'com.android.atom'
+apply plugin: 'com.android.library'
 
 dependencies {
 }
@@ -13,9 +13,4 @@ android {
         versionCode 1
         versionName "1.0"
     }
-}
-
-dependencies {
-    compile project(':libc')
-    compile project(':base')
 }

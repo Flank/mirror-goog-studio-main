@@ -52,7 +52,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -63,14 +69,6 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
 
 @ParallelizableTask
 public class ProcessAndroidResources extends IncrementalTask {
@@ -193,7 +191,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
 
         protected final VariantOutputScope scope;
-        private final File symbolLocation;
+        protected final File symbolLocation;
         private final boolean generateResourcePackage;
         private final boolean generateLegacyMultidexMainDexProguardRules;
 
@@ -399,7 +397,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             super(scope, symbolLocation, true, false);
             this.androidAtom = androidAtom;
             ImmutableSet.Builder<File> listBuilder = ImmutableSet.builder();
-            // Ignore the firt atom as it is the base atom.
+            // Ignore the first atom as it is the base atom.
             for (int i = 1; i < previousAtoms.size(); i++) {
                 listBuilder.add(scope.getProcessResourcePackageOutputFile(previousAtoms.get(i)));
             }
@@ -446,6 +444,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
             processResources.setSourceOutputDir(
                     scope.getVariantScope().getRClassSourceOutputDir(androidAtom));
+            processResources.setTextSymbolOutputDir(symbolLocation);
 
             ConventionMappingHelper.map(processResources, "manifestFile", androidAtom::getManifest);
 
@@ -494,8 +493,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 List<? extends AndroidLibrary> androidLibraries,
                 List<AndroidLibrary> outFlatAndroidLibraries) {
             for (AndroidLibrary lib : androidLibraries) {
-                if (lib.isSkipped() || outFlatAndroidLibraries.contains(lib))
-                    continue;
+                if (outFlatAndroidLibraries.contains(lib)) continue;
                 computeFlatLibraryList(lib.getLibraryDependencies(), outFlatAndroidLibraries);
                 outFlatAndroidLibraries.add(lib);
             }

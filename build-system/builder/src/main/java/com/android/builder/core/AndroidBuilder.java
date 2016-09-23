@@ -100,7 +100,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -925,7 +924,7 @@ public class AndroidBuilder {
             Multimap<String, SymbolLoader> libMap = ArrayListMultimap.create();
 
             for (AndroidLibrary lib : aaptConfig.getLibraries()) {
-                if (lib.isProvided()) {
+                if (aaptConfig.getVariantType() != VariantType.INSTANTAPP && lib.isProvided()) {
                     continue;
                 }
 

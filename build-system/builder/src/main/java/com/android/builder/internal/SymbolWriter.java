@@ -23,11 +23,11 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -79,7 +79,37 @@ public class SymbolWriter {
         return symbols;
     }
 
+    @NonNull
+    private Table<String, String, SymbolEntry> getMatchingSymbols() {
+        ImmutableTable.Builder<String, String, SymbolEntry> symbolBuilder =
+                ImmutableTable.builder();
+
+        Table<String, String, SymbolEntry> symbols = getAllSymbols();
+        Table<String, String, SymbolEntry> values = mValues.getSymbols();
+
+        Set<String> rowSet = symbols.rowKeySet();
+
+        for (String row : rowSet) {
+            Set<String> symbolSet = symbols.row(row).keySet();
+
+            for (String symbolName : symbolSet) {
+                // get the matching SymbolEntry from the values Table.
+                SymbolEntry value = values.get(row, symbolName);
+                if (value != null) {
+                    symbolBuilder.put(row, symbolName, value);
+                }
+            }
+        }
+
+        return symbolBuilder.build();
+    }
+
     public void write() throws IOException {
+        Table<String, String, SymbolEntry> matchingSymbols = getMatchingSymbols();
+        if (matchingSymbols.isEmpty()) {
+            return;
+        }
+
         Splitter splitter = Splitter.on('.');
         Iterable<String> folders = splitter.split(mPackageName);
         File file = new File(mOutFolder);
@@ -107,10 +137,7 @@ public class SymbolWriter {
             writer.write(mPackageName);
             writer.write(";\n\npublic final class R {\n");
 
-            Table<String, String, SymbolEntry> symbols = getAllSymbols();
-            Table<String, String, SymbolEntry> values = mValues.getSymbols();
-
-            Set<String> rowSet = symbols.rowKeySet();
+            Set<String> rowSet = matchingSymbols.rowKeySet();
             List<String> rowList = Lists.newArrayList(rowSet);
             Collections.sort(rowList);
 
@@ -119,24 +146,22 @@ public class SymbolWriter {
                 writer.write(row);
                 writer.write(" {\n");
 
-                Map<String, SymbolEntry> rowMap = symbols.row(row);
+                Map<String, SymbolEntry> rowMap = matchingSymbols.row(row);
                 Set<String> symbolSet = rowMap.keySet();
                 ArrayList<String> symbolList = Lists.newArrayList(symbolSet);
                 Collections.sort(symbolList);
 
                 for (String symbolName : symbolList) {
                     // get the matching SymbolEntry from the values Table.
-                    SymbolEntry value = values.get(row, symbolName);
-                    if (value != null) {
-                        writer.write("\t\t");
-                        writer.write(idModifiers);
-                        writer.write(value.getType());
-                        writer.write(" ");
-                        writer.write(value.getName());
-                        writer.write(" = ");
-                        writer.write(value.getValue());
-                        writer.write(";\n");
-                    }
+                    SymbolEntry value = matchingSymbols.get(row, symbolName);
+                    writer.write("\t\t");
+                    writer.write(idModifiers);
+                    writer.write(value.getType());
+                    writer.write(" ");
+                    writer.write(value.getName());
+                    writer.write(" = ");
+                    writer.write(value.getValue());
+                    writer.write(";\n");
                 }
 
                 writer.write("\t}\n");
