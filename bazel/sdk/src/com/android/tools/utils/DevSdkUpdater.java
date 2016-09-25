@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -93,6 +94,8 @@ public final class DevSdkUpdater {
         System.out.println("                          and 'systrace/**' matches all dir contents");
         System.out.println("  --package-file <file>   A file where each line is an SDK package.");
         System.out.println("                          # comments are allowed in this file.");
+        System.out.println("  --platform              darwin, windows, or linux. Useful for");
+        System.out.println("                          debugging on a single platform at a time.");
         System.out.println();
         System.out.println("Example usages:");
         System.out.println();
@@ -111,6 +114,7 @@ public final class DevSdkUpdater {
     private static Status run(String[] args) throws IOException {
 
         File sdkDest = null;
+        String platform = null; // If null, update all platforms
         List<String> packageLines = new ArrayList<>();
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
@@ -145,6 +149,9 @@ public final class DevSdkUpdater {
                     usage("Package not set");
                     return Status.ERROR;
                 }
+            } else if (arg.equals("--platform")) {
+                ++i;
+                platform = args[i];
             } else if (arg.equals("--dest")) {
                 ++i;
                 try {
@@ -178,7 +185,7 @@ public final class DevSdkUpdater {
         }
 
         System.out.println("Downloading SDKs...");
-        downloadSdkPackages(sdkDest, packageLines);
+        downloadSdkPackages(sdkDest, packageLines, platform);
         System.out.println("done!");
 
         return Status.SUCCESS;
@@ -187,9 +194,10 @@ public final class DevSdkUpdater {
     /**
      * @param packageLines A list of package entries with an (optional) filter appended to them,
      *                     e.g. "platform-tools:adb*"
+     * @param platform Can be {@code null}. If set, only update for that platform.
      */
-    private static void downloadSdkPackages(File sdkDest, List<String> packageLines)
-            throws IOException {
+    private static void downloadSdkPackages(
+            File sdkDest, List<String> packageLines, String platform) throws IOException {
         List<String> packages = new ArrayList<>(); // Just the packages, with filters stripped
         // The following is a package -> filter mapping (if a filter present)
         // If no filter is found, then all downloaded files will be kept
@@ -204,6 +212,9 @@ public final class DevSdkUpdater {
         }
 
         for (OsEntry osEntry : OS_ENTRIES) {
+            if (!Objects.equals(platform, osEntry.mFolder)) {
+                continue;
+            }
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
             // Delegate download operation to SdkManagerCli program
             List<String> args = new ArrayList<>();
@@ -216,7 +227,7 @@ public final class DevSdkUpdater {
         }
 
         if (!filters.isEmpty()) {
-            filterSdkFiles(sdkDest, filters);
+            filterSdkFiles(sdkDest, filters, platform);
         }
     }
 
@@ -225,7 +236,7 @@ public final class DevSdkUpdater {
      * package and remove files that don't match the filters. This will also remove any directories
      * left empty as a result of the filtering.
      */
-    private static void filterSdkFiles(File sdkRoot, Map<String, String> filters)
+    private static void filterSdkFiles(File sdkRoot, Map<String, String> filters, String platform)
             throws IOException {
         FileSystem fs = FileSystems.getDefault();
         for (Map.Entry<String, String> pkgFilterEntry : filters.entrySet()) {
@@ -236,6 +247,10 @@ public final class DevSdkUpdater {
             System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, pkgFilter));
             System.out.flush();
             for (OsEntry osEntry : OS_ENTRIES) {
+                if (!Objects.equals(platform, osEntry.mFolder)) {
+                    continue;
+                }
+
                 File osSdkDest = new File(sdkRoot, osEntry.mFolder);
                 // Convert package format to path format, e.g. a;b;c -> a/b/c
                 File pkgRoot = new File(osSdkDest, pkg.replaceAll(";", "/"));
