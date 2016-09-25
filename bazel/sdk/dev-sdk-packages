@@ -1,4 +1,6 @@
-platform-tools:adb*
+# Line format: <sdk package>[:include-glob]
+
+platform-tools:adb* # match adb and adb.exe
 build-tools;24.0.1
 build-tools;23.0.0
 build-tools;22.0.1
