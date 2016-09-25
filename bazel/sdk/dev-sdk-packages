@@ -1,4 +1,4 @@
-# Line format: <sdk package>[:include-glob]
+# Line format: <sdk package>[:include-glob[:exclude-glob]
 
 # match both adb and adb.exe
 # other files used by lint tests

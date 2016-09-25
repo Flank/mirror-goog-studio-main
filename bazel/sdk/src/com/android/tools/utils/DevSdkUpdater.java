@@ -91,7 +91,10 @@ public final class DevSdkUpdater {
         System.out.println("                          included after a colon,");
         System.out.println("                          e.g. platform-tools:{adb*,systrace/**}");
         System.out.println("                          Here, 'adb*' matches 'adb' and 'adb.exe'");
-        System.out.println("                          and 'systrace/**' matches all dir contents");
+        System.out.println("                          and 'systrace/**' matches all dir contents.");
+        System.out.println("                          An exclude filter can also be included,");
+        System.out.println("                          e.g. build-tools:**:**.jar, which means");
+        System.out.println("                          include everything but jar files.");
         System.out.println("  --package-file <file>   A file where each line is an SDK package.");
         System.out.println("                          # comments are allowed in this file.");
         System.out.println("  --platform              darwin, windows, or linux. Useful for");
@@ -201,13 +204,19 @@ public final class DevSdkUpdater {
         List<String> packages = new ArrayList<>(); // Just the packages, with filters stripped
         // The following is a package -> filter mapping (if a filter present)
         // If no filter is found, then all downloaded files will be kept
-        Map<String, String> filters = new HashMap<>();
+        Map<String, Filters> filterMap = new HashMap<>();
 
         for (String packageLine : packageLines) {
-            String[] packageFilters = packageLine.split(":", 2);
-            packages.add(packageFilters[0]);
+            String[] packageFilters = packageLine.split(":", 3);
+            String pkg = packageFilters[0];
+            packages.add(pkg);
             if (packageFilters.length > 1) {
-                filters.put(packageFilters[0], packageFilters[1]);
+                if (packageFilters.length == 2) {
+                    filterMap.put(pkg, new Filters(packageFilters[1]));
+                }
+                else {
+                    filterMap.put(pkg, new Filters(packageFilters[1], packageFilters[2]));
+                }
             }
         }
 
@@ -226,8 +235,8 @@ public final class DevSdkUpdater {
             SdkManagerCli.main(args.stream().toArray(String[]::new));
         }
 
-        if (!filters.isEmpty()) {
-            filterSdkFiles(sdkDest, filters, platform);
+        if (!filterMap.isEmpty()) {
+            filterSdkFiles(sdkDest, filterMap, platform);
         }
     }
 
@@ -236,15 +245,19 @@ public final class DevSdkUpdater {
      * package and remove files that don't match the filters. This will also remove any directories
      * left empty as a result of the filtering.
      */
-    private static void filterSdkFiles(File sdkRoot, Map<String, String> filters, String platform)
-            throws IOException {
+    private static void filterSdkFiles(
+            File sdkRoot, Map<String, Filters> filterMap, String platform) throws IOException {
         FileSystem fs = FileSystems.getDefault();
-        for (Map.Entry<String, String> pkgFilterEntry : filters.entrySet()) {
+        for (Map.Entry<String, Filters> pkgFilterEntry : filterMap.entrySet()) {
             String pkg = pkgFilterEntry.getKey();
-            String pkgFilter = pkgFilterEntry.getValue();
+            Filters filters = pkgFilterEntry.getValue();
 
-            PathMatcher pm = fs.getPathMatcher("glob:" + pkgFilter);
-            System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, pkgFilter));
+            String includeFilter = filters.getInclude();
+            String excludeFilter = filters.getExclude();
+
+            PathMatcher includeMatcher = fs.getPathMatcher("glob:" + includeFilter);
+            PathMatcher excludeMatcher = fs.getPathMatcher("glob:" + excludeFilter);
+            System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, filters));
             System.out.flush();
             for (OsEntry osEntry : OS_ENTRIES) {
                 if (!Objects.equals(platform, osEntry.mFolder)) {
@@ -260,7 +273,7 @@ public final class DevSdkUpdater {
                     public FileVisitResult visitFile(Path file,
                             BasicFileAttributes attrs) throws IOException {
                         Path relPath = pkgRoot.toPath().relativize(file);
-                        if (!pm.matches(relPath)) {
+                        if (!includeMatcher.matches(relPath) || excludeMatcher.matches(relPath)) {
                             Files.delete(file);
                         }
                         return FileVisitResult.CONTINUE;
@@ -293,6 +306,41 @@ public final class DevSdkUpdater {
 
         Status(int resultCode) {
             mResultCode = resultCode;
+        }
+    }
+
+    /**
+     * Glob filters which will be applied to each file in a package.
+     */
+    private static final class Filters {
+
+        public final String mInclude;
+        public final String mExclude;
+
+        private Filters(String include, String exclude) {
+            mInclude = include;
+            mExclude = exclude;
+        }
+        private Filters(String include) {
+            this(include, "");
+        }
+
+        public String getInclude() {
+            return mInclude;
+        }
+
+        public String getExclude() {
+            return mExclude;
+        }
+
+        @Override
+        public String toString() {
+            if (mExclude.isEmpty()) {
+                return mInclude;
+            }
+            else {
+                return String.format("%s (excluding %s)", mInclude, mExclude);
+            }
         }
     }
 
