@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.primitives.Longs;
+import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.IOException;
@@ -56,7 +57,8 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProfileUploader uploader;
 
-    @NonNull private final List<Logging.GradleBenchmarkResult> benchmarkResults = new ArrayList<>();
+    @NonNull private final List<Logging.GradleBenchmarkResult.Builder> benchmarkResults =
+            new ArrayList<>();
 
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
@@ -83,8 +85,6 @@ public final class BenchmarkRecorder {
         } catch (UnknownHostException ignored) {
         }
 
-        benchmarkResult.setTimestamp(Timestamps.fromMillis(System.currentTimeMillis()));
-
         String userName = System.getProperty("user.name");
         if (userName != null) {
             benchmarkResult.setUsername(userName);
@@ -108,16 +108,23 @@ public final class BenchmarkRecorder {
 
         benchmarkResult.setFlags(projectScenario.getFlags());
         benchmarkResult.setBenchmark(benchmark);
-        benchmarkResults.add(benchmarkResult.build());
+        benchmarkResults.add(benchmarkResult);
     }
 
     public void doUploads() throws IOException {
-        checkAllUploadsAreDistinct();
+        Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
+        List<Logging.GradleBenchmarkResult> results =
+                benchmarkResults.stream()
+                        .map(builder -> builder.setTimestamp(timestamp).build())
+                        .collect(Collectors.toList());
 
-        uploader.uploadData(benchmarkResults);
+        checkAllUploadsAreDistinct(results);
+
+        uploader.uploadData(results);
     }
 
-    private void checkAllUploadsAreDistinct() {
+    private static void checkAllUploadsAreDistinct(
+            @NonNull List<Logging.GradleBenchmarkResult> benchmarkResults) {
         Set<Logging.GradleBenchmarkResult> benchmarkResultIds =
                 benchmarkResults
                         .stream()

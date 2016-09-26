@@ -22,6 +22,9 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.integration.performance.ProjectScenario;
+import com.android.ide.common.util.ReferenceHolder;
+import com.google.protobuf.Timestamp;
+import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.util.ArrayList;
@@ -57,6 +60,9 @@ public class PerformanceInfrastructureTest {
 
         // Manually evaluate the project rule, so we can assert about the uploads that happen after
         // the evaluation is complete.
+
+        ReferenceHolder<Timestamp> minimumTimestamp = ReferenceHolder.empty();
+
         project.apply(
                         new Statement() {
                             @Override
@@ -73,6 +79,8 @@ public class PerformanceInfrastructureTest {
                                 project.executor()
                                         .recordBenchmark(BenchmarkMode.NO_OP)
                                         .run("assembleDebug");
+                                minimumTimestamp.setValue(
+                                        Timestamps.fromMillis(System.currentTimeMillis()));
                             }
                         },
                         Description.createTestDescription(
@@ -87,5 +95,13 @@ public class PerformanceInfrastructureTest {
         assertThat(benchmarkResults.get(0).getProfile().getSpanCount()).isGreaterThan(0);
         assertThat(benchmarkResults.get(1).getProfile().getSpanCount()).isGreaterThan(0);
         assertThat(benchmarkResults.get(2).getProfile().getSpanCount()).isGreaterThan(0);
+
+        // Check that the timestamp is written after the build.
+        assertThat(benchmarkResults.get(0).getTimestamp().getSeconds())
+                .isAtLeast(minimumTimestamp.getValue().getSeconds());
+        assertThat(benchmarkResults.get(1).getTimestamp())
+                .isEqualTo(benchmarkResults.get(0).getTimestamp());
+        assertThat(benchmarkResults.get(2).getTimestamp())
+                .isEqualTo(benchmarkResults.get(0).getTimestamp());
     }
 }
