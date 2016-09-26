@@ -15,13 +15,16 @@
  */
 #include "perfd/network/traffic_sampler.h"
 #include "proto/network.pb.h"
+#include "test/utils.h"
 
 #include <gtest/gtest.h>
 
+using profiler::TestUtils;
 using profiler::TrafficSampler;
 
 TEST(GetTrafficData, OutputIsFromSingleLineEntry) {
-  std::string file_name("traffic_uid_matched_single_entry.txt");
+  std::string file_name(
+    TestUtils::getNetworkTestData("traffic_uid_matched_single_entry.txt"));
   TrafficSampler collector("12345", file_name);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -31,7 +34,8 @@ TEST(GetTrafficData, OutputIsFromSingleLineEntry) {
 }
 
 TEST(GetTrafficData, OutputIsSumOfMultiLineEntries) {
-  std::string file_name("traffic_uid_matched_multiple_entries.txt");
+  std::string file_name(
+    TestUtils::getNetworkTestData("traffic_uid_matched_multiple_entries.txt"));
   TrafficSampler collector("12345", file_name);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -41,7 +45,8 @@ TEST(GetTrafficData, OutputIsSumOfMultiLineEntries) {
 }
 
 TEST(GetTrafficData, OutputIsZeroAsUnmatchUidEntryIsFilteredOut) {
-  std::string file_name("traffic_uid_unmatched.txt");
+  std::string file_name(
+    TestUtils::getNetworkTestData("traffic_uid_unmatched.txt"));
   TrafficSampler collector("12345", file_name);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);

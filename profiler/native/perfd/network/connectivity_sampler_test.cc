@@ -15,14 +15,18 @@
  */
 #include "connectivity_sampler.h"
 #include "proto/network.pb.h"
+#include "test/utils.h"
 #include "utils/bash_command.h"
 
 #include <gtest/gtest.h>
 
 using profiler::ConnectivitySampler;
+using profiler::TestUtils;
 
 TEST(ConnectivitySampler, RadioActive) {
-  ConnectivitySampler sampler("cat connectivity_radio_active.txt", "");
+  ConnectivitySampler sampler(
+    "cat " + TestUtils::getNetworkTestData("connectivity_radio_active.txt"),
+    "");
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
@@ -31,7 +35,9 @@ TEST(ConnectivitySampler, RadioActive) {
 }
 
 TEST(ConnectivitySampler, RadioSleeping) {
-  ConnectivitySampler sampler("cat connectivity_radio_sleeping.txt", "");
+  ConnectivitySampler sampler(
+    "cat " + TestUtils::getNetworkTestData("connectivity_radio_sleeping.txt"),
+    "");
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
@@ -40,7 +46,9 @@ TEST(ConnectivitySampler, RadioSleeping) {
 }
 
 TEST(ConnectivitySampler, NoRadioState) {
-  ConnectivitySampler sampler("cat connectivity_radio_missing.txt", "");
+  ConnectivitySampler sampler(
+    "cat " + TestUtils::getNetworkTestData("connectivity_radio_missing.txt"),
+    "");
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
@@ -49,7 +57,8 @@ TEST(ConnectivitySampler, NoRadioState) {
 }
 
 TEST(ConnectivitySampler, NoNetworkTypeId) {
-  ConnectivitySampler sampler("", "cat connectivity_no_network_type_id.txt");
+  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
+                                      "connectivity_no_network_type_id.txt"));
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
@@ -58,7 +67,9 @@ TEST(ConnectivitySampler, NoNetworkTypeId) {
 }
 
 TEST(ConnectivitySampler, NetworkTypeWifi) {
-  ConnectivitySampler sampler("", "cat connectivity_network_type_wifi.txt");
+  ConnectivitySampler sampler(
+      "", "cat " + TestUtils::getNetworkTestData(
+                       "connectivity_network_type_wifi.txt"));
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());
@@ -67,7 +78,8 @@ TEST(ConnectivitySampler, NetworkTypeWifi) {
 }
 
 TEST(ConnectivitySampler, NetworkTypeMobile) {
-  ConnectivitySampler sampler("", "cat connectivity_network_type_mobile.txt");
+  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
+                                      "connectivity_network_type_mobile.txt"));
   profiler::proto::NetworkProfilerData data;
   sampler.GetData(&data);
   EXPECT_TRUE(data.has_connectivity_data());

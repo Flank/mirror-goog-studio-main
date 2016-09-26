@@ -18,4 +18,5 @@ add_unit_test(profiler_network_test
 
 target_link_libraries(profiler_network_test
                       profiler_network
+                      testutils
                       ${GTEST_LINK_LIBRARIES})
