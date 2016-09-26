@@ -44,6 +44,7 @@ import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -53,11 +54,23 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public final class InstantRunTestUtils {
 
     private static final int SLEEP_TIME_MSEC = 200;
+
+    // each test class, has a port used for IR to avoid interference
+    public static final Map<String, Integer> PORTS =
+            ImmutableMap.<String, Integer>builder()
+                    .put("ConnectedColdSwapTest", 8115)
+                    .put("NativeLibraryInstantRunTest", 8116)
+                    .put("HotSwapTest", 8117)
+                    .put("ButterKnifeTest", 8118)
+                    .put("DaggerTest", 8119)
+                    .put("ResourcesSwapTest", 8120)
+                    .build();
 
     @NonNull
     public static InstantRunBuildInfo loadContext(@NonNull InstantRun instantRunModel)

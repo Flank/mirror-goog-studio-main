@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.AbstractAndroidS
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -184,7 +185,8 @@ public class DaggerTest {
                         "MainActivity",
                         this.testProject,
                         iDevice,
-                        logcat);
+                        logcat,
+                        PORTS.get(DaggerTest.class.getSimpleName()));
 
         tester.run(
                 () -> assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE),

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesArt;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
@@ -100,7 +101,11 @@ public class NativeLibraryInstantRunTest {
 
         //Connect to device
         InstantRunClient client =
-                new InstantRunClient("com.example.hellojni", iLogger, token, 8125);
+                new InstantRunClient(
+                        "com.example.hellojni",
+                        iLogger,
+                        token,
+                        PORTS.get(NativeLibraryInstantRunTest.class.getSimpleName()));
 
         // Give the app a chance to start
         InstantRunTestUtils.waitForAppStart(client, device);
