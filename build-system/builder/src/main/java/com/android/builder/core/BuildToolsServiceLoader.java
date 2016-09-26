@@ -24,7 +24,6 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -35,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.ServiceLoader;
 
 /**
@@ -95,7 +95,7 @@ public enum BuildToolsServiceLoader {
                 return Optional.of(loadedBuildTool);
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -214,7 +214,7 @@ public enum BuildToolsServiceLoader {
 
         /**
          * Return the first service instance for the requested service type or
-         * {@link Optional#absent()} if none exist.
+         * {@link Optional#empty()} if none exist.
          * @param logger to log resolution.
          * @param serviceType the requested service type encapsulation.
          * @param <T> the requested service class type.
@@ -238,7 +238,7 @@ public enum BuildToolsServiceLoader {
                 return Optional.of(service);
             } else {
                 logger.verbose("Cannot find service implementation %1$s", serviceType);
-                return Optional.absent();
+                return Optional.empty();
             }
         }
 
@@ -250,7 +250,7 @@ public enum BuildToolsServiceLoader {
                     return Optional.of((ServiceLoader<T>) loadedServiceLoader.serviceLoader);
                 }
             }
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
