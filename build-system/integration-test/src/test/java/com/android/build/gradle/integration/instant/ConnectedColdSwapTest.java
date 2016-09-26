@@ -84,6 +84,8 @@ public class ConnectedColdSwapTest {
     @Mock
     ILogger iLogger;
 
+    private static final String APP_ID = "com.example.helloworld";
+
     @Before
     public void activityClass() throws IOException {
         createActivityClass("Logger.getLogger(\"coldswaptest\").warning(\"coldswaptest_before\");\n");
@@ -109,6 +111,7 @@ public class ConnectedColdSwapTest {
     private void doTest(@NonNull ColdswapMode coldswapMode, @NonNull IDevice device)
             throws Exception {
         // Set up
+        device.uninstallPackage(APP_ID);
         logcat.start(device, "coldswaptest");
         AndroidProject model = project.model().getSingle();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
@@ -123,11 +126,11 @@ public class ConnectedColdSwapTest {
         InstantRunTestUtils.doInstall(device, info.getArtifacts());
         InstantRunTestUtils.unlockDevice(device);
         Logcat.MessageListener messageListener = logcat.listenForMessage("coldswaptest_before");
-        InstantRunTestUtils.runApp(device, "com.example.helloworld/.HelloWorld");
+        InstantRunTestUtils.runApp(device, APP_ID + "/.HelloWorld");
 
         //Connect to device
         InstantRunClient client =
-                new InstantRunClient("com.example.helloworld", iLogger, token, 8125);
+                new InstantRunClient(APP_ID, iLogger, token, 8125);
 
         // Give the app a chance to start
         messageListener.await();
@@ -159,13 +162,13 @@ public class ConnectedColdSwapTest {
 
         Logcat.MessageListener afterMessageListener = logcat.listenForMessage("coldswaptest_after");
 
-        InstantRunTestUtils.runApp(device, "com.example.helloworld/.HelloWorld");
+        InstantRunTestUtils.runApp(device, APP_ID + "/.HelloWorld");
 
         // Check the app is running
         afterMessageListener.await();
         InstantRunTestUtils.waitForAppStart(client, device);
 
-        device.uninstallPackage("com.example.helloworld");
+        device.uninstallPackage(APP_ID);
     }
 
     private void makeColdSwapChange() throws IOException {

@@ -99,6 +99,8 @@ public class HotSwapTester {
             @NonNull Iterable<Change> changes)
             throws Exception {
         try (Closeable ignored = new UninstallOnClose(device, packageName)) {
+            device.uninstallPackage(packageName);
+
             logcat.start(device, logTag);
 
             // Open project in simulated IDE

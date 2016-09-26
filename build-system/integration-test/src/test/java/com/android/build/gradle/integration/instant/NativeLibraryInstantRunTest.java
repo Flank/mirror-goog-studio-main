@@ -87,6 +87,7 @@ public class NativeLibraryInstantRunTest {
                 .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
+        device.uninstallPackage("com.example.hellojni");
         InstantRunTestUtils.doInstall(device, info.getArtifacts());
 
         // Run app
