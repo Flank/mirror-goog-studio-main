@@ -23,20 +23,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.JavaArtifact;
-import com.android.builder.model.Variant;
-import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class GenerateSourcesOnlyTest {
 
@@ -72,11 +63,13 @@ public class GenerateSourcesOnlyTest {
 
     @Test
     public void checkLibraryNotBuilt() {
-        List<String> generateSources = getGenerateSourcesCommands();
+        List<String> generateSources =
+                ModelHelper.getGenerateSourcesCommands(project.model().getMulti());
 
-        GradleBuildResult result = project.executor()
-                .withArgument("-Pandroid.injected.generateSourcesOnly=true")
-                .run(generateSources);
+        GradleBuildResult result =
+                project.executor()
+                        .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                        .run(generateSources);
 
         assertThat(result.getStdout()).doesNotContain("compileDebugJava");
         assertThat(result.getStdout()).doesNotContain("compileReleaseJava");
@@ -86,24 +79,4 @@ public class GenerateSourcesOnlyTest {
 
         assertThat(resultWithout.getStdout()).contains("compileReleaseJava");
     }
-
-
-    private List<String> getGenerateSourcesCommands () {
-        List<String> commands = Lists.newArrayList();
-        for (Map.Entry<String, AndroidProject> entry: project.model().getMulti().entrySet()) {
-            Variant debug = ModelHelper.getDebugVariant(entry.getValue());
-            commands.add(entry.getKey() + ":" + debug.getMainArtifact().getSourceGenTaskName());
-            for (AndroidArtifact artifact: debug.getExtraAndroidArtifacts()) {
-                commands.add(entry.getKey() + ":" + artifact.getSourceGenTaskName());
-            }
-            for (JavaArtifact artifact: debug.getExtraJavaArtifacts()) {
-                for (String taskName: artifact.getIdeSetupTaskNames()) {
-                    commands.add(entry.getKey() + ":" + taskName);
-                }
-            }
-
-        }
-        return commands;
-    }
-
 }

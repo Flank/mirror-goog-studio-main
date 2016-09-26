@@ -21,6 +21,7 @@ message GradleBenchmarkResult {
   google.protobuf.Timestamp timestamp = 2;
   BenchmarkMode benchmark_mode = 3;
   Benchmark benchmark = 4;
+  Flags flags = 10;
 
   // Describes the reason this build took place.
   oneof build {
@@ -34,6 +35,7 @@ message GradleBenchmarkResult {
 
   message ScheduledBuild {
     int64 buildbot_build_number = 1;
+    Bot bot = 2;
 
     enum Bot {
       // This is the bot we currently have.
@@ -45,11 +47,59 @@ message GradleBenchmarkResult {
     string comment = 1;
   }
 
+  message Flags {
+    DexInProcess dex_in_process = 1;
+    MultiDexMode multi_dex= 2;
+    Minification minification = 3;
+    Jacoco jacoco = 4;
+    BuildCache build_cache = 5;
+    Aapt aapt = 6;
+    ApiJar api_jar = 7;
+
+    enum DexInProcess {
+      DEX_OUT_OF_PROCESS = 0;
+      DEX_IN_PROCESS = 1;
+    }
+
+    enum MultiDexMode {
+      NO_MULTIDEX = 0;
+      LEGACY = 1;
+      NATIVE = 2;
+    }
+
+    enum Minification {
+      NO_MINIFICATION = 0;
+      PROGUARD_SHRINK = 1;
+      PROGUARD_SHRINK_OBFUSCATE = 2;
+      NEW_SHRINKER = 3;
+    }
+
+    enum Jacoco {
+      NO_JACOCO = 0;
+      JACOCO = 1;
+    }
+
+    enum BuildCache {
+      NO_CACHE = 0;
+      CACHE = 1;
+    }
+
+    enum Aapt {
+      AAPT_1 = 0;
+      AAPT_2 = 1;
+    }
+
+    enum ApiJar {
+      NO_API_JAR = 0;
+      API_JAR = 1;
+    }
+  }
+
   // Hostname of the machine that ran the build.
   string hostname = 7;
   string username = 9;
 
-  // NEXT TAG: 10
+  // NEXT TAG: 11
 }
 
 enum Benchmark {
@@ -62,17 +112,38 @@ enum Benchmark {
 enum BenchmarkMode {
   // Benchmark_mode is optional, this value means it was not set.
   MODE_UNSPECIFIED = 0;
-  // These must be kept in sync with the enum
-  // com.android.build.gradle.integration.performance.BenchmarkMode in
-  // studio-master-dev
   EVALUATION = 1;
   SYNC = 2;
-  BUILD_FULL = 3;
-  BUILD_INC_JAVA = 4;
-  BUILD_INC_RES_EDIT = 5;
-  BUILD_INC_RES_ADD = 6;
-  INSTANT_RUN_FULL_BUILD = 7;
-  INSTANT_RUN_BUILD_INC_JAVA = 8;
-  INSTANT_RUN_COLD_SWAP = 9;
-  INSTANT_RUN_HOT_SWAP = 10;
+
+  BUILD__FROM_CLEAN = 3;
+  BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 4;
+  BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE = 11;
+  BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 12;
+  BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE = 13;
+  BUILD_INC__MAIN_PROJECT__RES__EDIT = 5;
+  BUILD_INC__MAIN_PROJECT__RES__ADD = 6;
+  BUILD_INC__SUB_PROJECT__RES__EDIT = 14;
+  BUILD_INC__SUB_PROJECT__RES__ADD = 15;
+
+  INSTANT_RUN_BUILD__FROM_CLEAN = 7;
+  INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 10; // hot swap
+  INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE = 9; // cold swap
+  INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 16; // hot swap
+  INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__API_CHANGE = 17; // cold swap
+  INSTANT_RUN_BUILD__MAIN_PROJECT__RES__EDIT = 18; // warm swap
+  INSTANT_RUN_BUILD__MAIN_PROJECT__RES__ADD = 19; // cold swap
+  INSTANT_RUN_BUILD__SUB_PROJECT__RES__EDIT = 20; // warm swap
+  INSTANT_RUN_BUILD__SUB_PROJECT__RES__ADD = 21; // cold swap
+
+  BUILD_ANDROID_TESTS_FROM_CLEAN = 22;
+  BUILD_UNIT_TESTS_FROM_CLEAN=23;
+  GENERATE_SOURCES = 24;
+  NO_OP = 25;
+
+  LINT_RUN = 26;
+
+
+  //Deprecated modes
+  INSTANT_RUN_BUILD_INC_JAVA_DEPRECATED = 8;
 }
+

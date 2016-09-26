@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -45,15 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import org.gradle.tooling.GradleConnectionException;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -62,6 +54,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 /**
  * JUnit4 test rule for integration test.
@@ -151,10 +150,9 @@ public class GradleTestProject implements TestRule {
         private List<String> gradleProperties = Lists.newArrayList();
         @Nullable
         private String heapSize;
+        @Nullable private BenchmarkRecorder benchmarkRecorder;
 
-        /**
-         * Create a GradleTestProject.
-         */
+        /** Create a GradleTestProject. */
         public GradleTestProject create() {
             if (targetGradleVersion == null) {
                 targetGradleVersion = GRADLE_TEST_VERSION;
@@ -169,7 +167,8 @@ public class GradleTestProject implements TestRule {
                     ndkDir,
                     gradleProperties,
                     heapSize,
-                    buildToolsVersion);
+                    buildToolsVersion,
+                    benchmarkRecorder);
         }
 
         /**
@@ -293,6 +292,11 @@ public class GradleTestProject implements TestRule {
             return this;
         }
 
+        public Builder forBenchmarkRecording(BenchmarkRecorder benchmarkRecorder) {
+            this.benchmarkRecorder = benchmarkRecorder;
+            return this;
+        }
+
         private static class EmptyTestApp extends AbstractAndroidTestApp {
             @Override
             public boolean containsFullBuildScript() {
@@ -323,8 +327,9 @@ public class GradleTestProject implements TestRule {
     @Nullable
     private final String buildToolsVersion;
 
-    @Nullable
-    private String heapSize;
+    @Nullable private final BenchmarkRecorder benchmarkRecorder;
+
+    @Nullable private String heapSize;
 
     private GradleBuildResult lastBuild;
     private ProjectConnection projectConnection;
@@ -341,7 +346,8 @@ public class GradleTestProject implements TestRule {
             @Nullable File ndkDir,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
-            @Nullable String buildToolsVersion) {
+            @Nullable String buildToolsVersion,
+            @Nullable BenchmarkRecorder benchmarkRecorder) {
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
         outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
         testDir = null;
@@ -356,6 +362,7 @@ public class GradleTestProject implements TestRule {
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
+        this.benchmarkRecorder = benchmarkRecorder;
         openConnections = Lists.newArrayList();
         rootProject = this;
     }
@@ -385,6 +392,7 @@ public class GradleTestProject implements TestRule {
         useJack = false;
         openConnections = null;
         buildToolsVersion = null;
+        benchmarkRecorder = rootProject.benchmarkRecorder;
         this.rootProject = rootProject;
     }
 
@@ -443,6 +451,9 @@ public class GradleTestProject implements TestRule {
                     base.evaluate();
                 } finally {
                     openConnections.forEach(ProjectConnection::close);
+                    if (benchmarkRecorder != null) {
+                        benchmarkRecorder.doUploads();
+                    }
                 }
             }
         };
@@ -660,6 +671,11 @@ public class GradleTestProject implements TestRule {
                "buildscript { apply from: \"../commonBuildScript.gradle\" }\n" +
                "\n" +
                "apply from: \"../commonLocalRepo.gradle\"\n";
+    }
+
+    @Nullable
+    public BenchmarkRecorder getBenchmarkRecorder() {
+        return benchmarkRecorder;
     }
 
     /** Fluent method to run a build. */
