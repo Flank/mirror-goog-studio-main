@@ -16,27 +16,28 @@
 
 package com.android.build.gradle;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.AtomTaskManager;
 import com.android.build.gradle.internal.DependencyManager;
+import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.variant.AtomVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
-
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
+import javax.inject.Inject;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import javax.inject.Inject;
 
 /**
  * Gradle plugin class for 'atom' projects.
@@ -48,9 +49,29 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
         super(instantiator, registry);
     }
 
+    @NonNull
     @Override
-    public Class<? extends BaseExtension> getExtensionClass() {
-        return AtomExtension.class;
+    protected BaseExtension createExtension(
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
+            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        return project.getExtensions()
+                .create(
+                        "android",
+                        AtomExtension.class,
+                        project,
+                        instantiator,
+                        androidBuilder,
+                        sdkHandler,
+                        buildTypeContainer,
+                        productFlavorContainer,
+                        signingConfigContainer,
+                        extraModelInfo);
     }
 
     @NonNull
@@ -59,14 +80,13 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
         return AndroidStudioStats.GradleBuildProject.PluginType.ATOM;
     }
 
+    @NonNull
     @Override
-    protected VariantFactory createVariantFactory() {
-        return new AtomVariantFactory(instantiator, androidBuilder, extension);
-    }
-
-    @Override
-    protected boolean isLibrary() {
-        return true;
+    protected VariantFactory createVariantFactory(
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull AndroidConfig androidConfig) {
+        return new AtomVariantFactory(instantiator, androidBuilder, androidConfig);
     }
 
     @Override
@@ -74,14 +94,26 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
         return AndroidProject.PROJECT_TYPE_ATOM;
     }
 
+    @NonNull
     @Override
-    protected TaskManager createTaskManager(@NonNull Project project,
-            @NonNull AndroidBuilder androidBuilder, @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig extension, @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler, @NonNull DependencyManager dependencyManager,
+    protected TaskManager createTaskManager(
+            @NonNull Project project,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull DataBindingBuilder dataBindingBuilder,
+            @NonNull AndroidConfig androidConfig,
+            @NonNull SdkHandler sdkHandler,
+            @NonNull NdkHandler ndkHandler,
+            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry) {
-        return new AtomTaskManager(project, androidBuilder, dataBindingBuilder, extension,
-                sdkHandler, ndkHandler, dependencyManager, toolingRegistry);
+        return new AtomTaskManager(
+                project,
+                androidBuilder,
+                dataBindingBuilder,
+                androidConfig,
+                sdkHandler,
+                ndkHandler,
+                dependencyManager,
+                toolingRegistry);
     }
 
     @Override

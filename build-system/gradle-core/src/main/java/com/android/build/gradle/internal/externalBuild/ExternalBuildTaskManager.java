@@ -54,14 +54,12 @@ import com.android.builder.signing.DefaultSigningConfig;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.gradle.api.DefaultTask;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
 
 /**
  * Task Manager for External Build system integration.
@@ -91,7 +89,7 @@ class ExternalBuildTaskManager {
                 new File(externalBuildExtension.getExecutionRoot()),
                 file, project, externalBuildContext);
 
-        ExtraModelInfo modelInfo = new ExtraModelInfo(project, false /* isLibrary */);
+        ExtraModelInfo modelInfo = new ExtraModelInfo(project);
         TransformManager transformManager = new TransformManager(androidTasks, modelInfo);
 
         transformManager.addStream(OriginalStream.builder()

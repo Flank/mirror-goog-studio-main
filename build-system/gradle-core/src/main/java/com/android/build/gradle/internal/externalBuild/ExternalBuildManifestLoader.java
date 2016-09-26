@@ -28,9 +28,6 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
-
-import org.gradle.api.Project;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
 
 /**
  * Reads the manifest file produced by an external build system.
@@ -101,14 +99,15 @@ public class ExternalBuildManifestLoader {
 
         TargetInfo targetInfo = new TargetInfo(androidTarget, buildToolInfo);
 
-        AndroidBuilder androidBuilder = new AndroidBuilder(
-                project.getPath(),
-                "Android Studio + external build system",
-                new GradleProcessExecutor(project),
-                new GradleJavaProcessExecutor(project),
-                new ExtraModelInfo(project, false),
-                new LoggerWrapper(project.getLogger()),
-                false);
+        AndroidBuilder androidBuilder =
+                new AndroidBuilder(
+                        project.getPath(),
+                        "Android Studio + external build system",
+                        new GradleProcessExecutor(project),
+                        new GradleJavaProcessExecutor(project),
+                        new ExtraModelInfo(project),
+                        new LoggerWrapper(project.getLogger()),
+                        false);
 
         androidBuilder.setTargetInfo(targetInfo);
         return androidBuilder;

@@ -33,8 +33,6 @@ import com.android.builder.core.LibraryRequest;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -70,59 +68,72 @@ public class AndroidConfigHelper {
     public static NamedDomainObjectContainer<AndroidSourceSet> createSourceSetsContainer(
             @NonNull final Project project,
             @NonNull Instantiator instantiator,
-            final boolean isLibrary) {
-        NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = project.container(
-                AndroidSourceSet.class,
-                new AndroidSourceSetFactory(instantiator, project, isLibrary));
+            final boolean publishPackage) {
+        NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer =
+                project.container(
+                        AndroidSourceSet.class,
+                        new AndroidSourceSetFactory(instantiator, project, publishPackage));
 
-        sourceSetsContainer.whenObjectAdded(sourceSet -> {
-            ConfigurationContainer configurations = project.getConfigurations();
+        sourceSetsContainer.whenObjectAdded(
+                sourceSet -> {
+                    ConfigurationContainer configurations = project.getConfigurations();
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getCompileConfigurationName(),
-                    "Classpath for compiling the " + sourceSet.getName() + " sources.");
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getCompileConfigurationName(),
+                            "Classpath for compiling the " + sourceSet.getName() + " sources.");
 
-            String packageConfigDescription;
-            if (isLibrary) {
-                packageConfigDescription
-                        = "Classpath only used when publishing '" + sourceSet.getName() + "'.";
-            } else {
-                packageConfigDescription = "Classpath packaged with the compiled '"
-                        + sourceSet.getName() + "' classes.";
-            }
-            createConfiguration(
-                    configurations,
-                    sourceSet.getPackageConfigurationName(),
-                    packageConfigDescription);
+                    String packageConfigDescription;
+                    if (publishPackage) {
+                        packageConfigDescription =
+                                "Classpath only used when publishing '"
+                                        + sourceSet.getName()
+                                        + "'.";
+                    } else {
+                        packageConfigDescription =
+                                "Classpath packaged with the compiled '"
+                                        + sourceSet.getName()
+                                        + "' classes.";
+                    }
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getPackageConfigurationName(),
+                            packageConfigDescription);
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getProvidedConfigurationName(),
-                    "Classpath for only compiling the " + sourceSet.getName() + " sources.");
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getProvidedConfigurationName(),
+                            "Classpath for only compiling the "
+                                    + sourceSet.getName()
+                                    + " sources.");
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getWearAppConfigurationName(),
-                    "Link to a wear app to embed for object '" + sourceSet.getName() + "}'.");
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getWearAppConfigurationName(),
+                            "Link to a wear app to embed for object '"
+                                    + sourceSet.getName()
+                                    + "}'.");
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getAnnotationProcessorConfigurationName(),
-                    "Classpath for the annotation processor for '" + sourceSet.getName() + "'.");
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getAnnotationProcessorConfigurationName(),
+                            "Classpath for the annotation processor for '"
+                                    + sourceSet.getName()
+                                    + "'.");
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getWearAppConfigurationName(),
-                    "Link to a wear app to embed for object '${sourceSet.name}'.");
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getWearAppConfigurationName(),
+                            "Link to a wear app to embed for object '${sourceSet.name}'.");
 
-            createConfiguration(
-                    configurations,
-                    sourceSet.getJackPluginConfigurationName(),
-                    String.format("Classpath for the '%s' Jack plugins.", sourceSet.getName()));
+                    createConfiguration(
+                            configurations,
+                            sourceSet.getJackPluginConfigurationName(),
+                            String.format(
+                                    "Classpath for the '%s' Jack plugins.", sourceSet.getName()));
 
-            sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
-        });
+                    sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
+                });
         return sourceSetsContainer;
     }
 

@@ -22,25 +22,22 @@ import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.builder.model.SourceProvider;
-
-import org.gradle.api.Project;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.util.ConfigureUtil;
-import org.gradle.util.GUtil;
-
+import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-
-import groovy.lang.Closure;
+import org.gradle.api.Project;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.util.ConfigureUtil;
+import org.gradle.util.GUtil;
 
 /**
  */
 public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider {
     @NonNull
     private final String name;
-    private final boolean isLibrary;
+    private final boolean publishPackage;
 
     private final AndroidSourceDirectorySet javaSource;
     private final AndroidSourceDirectorySet javaResources;
@@ -54,10 +51,9 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     private final AndroidSourceDirectorySet shaders;
     private final String displayName;
 
-    public DefaultAndroidSourceSet(@NonNull String name,
-            Project project, boolean isLibrary) {
+    public DefaultAndroidSourceSet(@NonNull String name, Project project, boolean publishPackage) {
         this.name = name;
-        this.isLibrary = isLibrary;
+        this.publishPackage = publishPackage;
         displayName = GUtil.toWords(this.name);
 
         String javaSrcDisplayName = String.format("%s Java source", displayName);
@@ -123,7 +119,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @Override
     @NonNull
     public String getPackageConfigurationName() {
-        if (isLibrary) {
+        if (publishPackage) {
             if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
                 return "publish";
             } else {

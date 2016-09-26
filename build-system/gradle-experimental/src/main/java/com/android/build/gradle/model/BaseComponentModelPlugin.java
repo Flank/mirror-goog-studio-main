@@ -27,6 +27,7 @@ import static com.android.build.gradle.model.ModelConstants.NATIVE_BUILD_SYSTEMS
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -102,7 +103,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
+import groovy.lang.Closure;
+import java.io.File;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.BuildableComponentSpec;
 import org.gradle.api.Plugin;
@@ -133,21 +143,6 @@ import org.gradle.nativeplatform.StaticLibraryBinarySpec;
 import org.gradle.platform.base.ComponentType;
 import org.gradle.platform.base.TypeBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.KeyStore;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import groovy.lang.Closure;
 
 public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistryProvider {
 
@@ -368,12 +363,10 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             dataBindingOptions.setEnabledForTests(false);
         }
 
-       // TODO: Remove code duplicated from BasePlugin.
+        // TODO: Remove code duplicated from BasePlugin.
         @Model(EXTRA_MODEL_INFO)
-        public static ExtraModelInfo createExtraModelInfo(
-                Project project,
-                @NonNull @Path("isApplication") Boolean isApplication) {
-            return new ExtraModelInfo(project, isApplication);
+        public static ExtraModelInfo createExtraModelInfo(Project project) {
+            return new ExtraModelInfo(project);
         }
 
         @Model
