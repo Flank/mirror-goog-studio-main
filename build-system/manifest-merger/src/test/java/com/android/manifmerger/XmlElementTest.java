@@ -1045,6 +1045,110 @@ public class XmlElementTest extends TestCase {
     }
 
     /**
+     * test attributes merging of elements with some conflicts between children, with the presence
+     * of tools:ignore attribute (http://b.android.com/193679).
+     */
+    public void testMerging_childrenConflict_withToolsIgnoreBeforeToolsReplace()
+            throws ParserConfigurationException, SAXException, IOException {
+        String higherPriority = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"com.example.lib3\">\n"
+                + "\n"
+                + "    <application\n"
+                + "        android:name=\".DebugApplication\"\n"
+                + "        tools:ignore=\"allowBackup\"\n"
+                + "        tools:replace=\"name\">\n"
+                + "    </application>\n"
+                + "\n"
+                + "</manifest>";
+
+        String lowerPriority = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"com.example.lib3\">\n"
+                + "\n"
+                + "    <application\n"
+                + "        android:name=\".MainApplication\">\n"
+                + "    </application>\n"
+                + "\n"
+                + "</manifest>";
+
+        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
+                new StdLogger(StdLogger.Level.VERBOSE));
+        Optional<XmlDocument> result = refDocument.merge(otherDocument, mergingReportBuilder);
+        assertTrue(result.isPresent());
+        XmlElement applicationElement = result.get().getRootNode().getMergeableElements().get(0);
+        assertEquals(3, applicationElement.getAttributes().size());
+        assertEquals(
+                "com.example.lib3.DebugApplication",
+                applicationElement.getAttribute(XmlNode.fromXmlName("android:name")).get()
+                        .getValue());
+        ImmutableList<MergingReport.Record> loggingRecords = mergingReportBuilder.build()
+                .getLoggingRecords();
+        assertTrue(loggingRecords.isEmpty());
+    }
+
+    /**
+     * test attributes merging of elements with some conflicts between children, with the presence
+     * of tools:ignore attribute (http://b.android.com/193679).
+     */
+    public void testMerging_childrenConflict_withToolsIgnoreAfterToolsReplace()
+            throws ParserConfigurationException, SAXException, IOException {
+        String higherPriority = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"com.example.lib3\">\n"
+                + "\n"
+                + "    <application\n"
+                + "        android:name=\".DebugApplication\"\n"
+                + "        tools:replace=\"name\"\n"
+                + "        tools:ignore=\"allowBackup\">\n"
+                + "    </application>\n"
+                + "\n"
+                + "</manifest>";
+
+        String lowerPriority = ""
+                + "<manifest\n"
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"com.example.lib3\">\n"
+                + "\n"
+                + "    <application\n"
+                + "        android:name=\".MainApplication\">\n"
+                + "    </application>\n"
+                + "\n"
+                + "</manifest>";
+
+        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
+                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
+                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
+                new StdLogger(StdLogger.Level.VERBOSE));
+        Optional<XmlDocument> result = refDocument.merge(otherDocument, mergingReportBuilder);
+        assertTrue(result.isPresent());
+        XmlElement applicationElement = result.get().getRootNode().getMergeableElements().get(0);
+        assertEquals(3, applicationElement.getAttributes().size());
+        assertEquals(
+                "com.example.lib3.DebugApplication",
+                applicationElement.getAttribute(XmlNode.fromXmlName("android:name")).get()
+                        .getValue());
+        ImmutableList<MergingReport.Record> loggingRecords = mergingReportBuilder.build()
+                .getLoggingRecords();
+        assertTrue(loggingRecords.isEmpty());
+    }
+
+    /**
      * test attributes merging of elements with some conflicts between children.
      */
     public void testMerging_differentChildrenTypes()

@@ -128,7 +128,7 @@ public class XmlElement extends OrphanXmlElement {
                         try {
                             // is this another tool's operation type that we do not care about.
                             OtherOperationType.valueOf(instruction);
-                            break;
+                            continue;
                         } catch (IllegalArgumentException e1) {
 
                             String errorMessage =
