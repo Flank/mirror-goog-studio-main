@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A utility class which manages updating an Android SDK for all supported platforms at the same
@@ -90,7 +91,8 @@ public final class DevSdkUpdater {
         System.out.println("                          e.g. platform-tools:{adb*,systrace/**}");
         System.out.println("                          Here, 'adb*' matches 'adb' and 'adb.exe'");
         System.out.println("                          and 'systrace/**' matches all dir contents");
-        System.out.println("  --package-file <file>   A file where each line is an SDK package");
+        System.out.println("  --package-file <file>   A file where each line is an SDK package.");
+        System.out.println("                          # comments are allowed in this file.");
         System.out.println();
         System.out.println("Example usages:");
         System.out.println();
@@ -119,7 +121,13 @@ public final class DevSdkUpdater {
                 ++i;
                 try {
                     try {
-                        packageLines.addAll(Files.readAllLines(Paths.get(args[i])));
+                        // Keep only non-empty lines (after # comments are removed)
+                        packageLines.addAll(
+                                Files.lines(Paths.get(args[i]))
+                                        .map(line -> line.replaceAll("#.*", ""))
+                                        .map(String::trim)
+                                        .filter(line -> !line.isEmpty())
+                                        .collect(Collectors.toList()));
                     } catch (Exception e) {
                         usage("Could not successfully read package-file: " + args[i] +
                                 "\n\nException: " + e);
