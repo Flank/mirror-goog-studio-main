@@ -40,6 +40,7 @@ import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.core.JackToolchain;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.jack.api.ConfigNotSupportedException;
@@ -224,7 +225,10 @@ public class JackTransform extends Transform {
         options.setImportFiles(TransformInputUtil.getAllFiles(transformInvocation.getInputs()));
         options.setInputFiles(getSourceFiles());
 
-        androidBuilder.convertByteCodeUsingJack(options, jackInProcess);
+        JackToolchain toolchain =
+                new JackToolchain(
+                        androidBuilder.getTargetInfo().getBuildTools(), androidBuilder.getLogger());
+        toolchain.convert(options, androidBuilder.getJavaProcessExecutor(), jackInProcess);
     }
 
     private Collection<File> getSourceFiles() {
