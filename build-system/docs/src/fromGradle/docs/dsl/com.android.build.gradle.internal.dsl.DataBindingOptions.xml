@@ -24,6 +24,7 @@
             <tr><td>version</td></tr>
             <tr><td>enabled</td></tr>
             <tr><td>addDefaultAdapters</td></tr>
+            <tr><td>enabledForTests</td></tr>
         </table>
     </section>
     <section>

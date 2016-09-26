@@ -40,4 +40,9 @@ public class DataBindingOptionsAdapter implements com.android.builder.model.Data
     public boolean getAddDefaultAdapters() {
         return dataBindingOptions.getAddDefaultAdapters();
     }
+
+    @Override
+    public boolean isEnabledForTests() {
+        return isEnabled() && dataBindingOptions.getEnabledForTests();
+    }
 }

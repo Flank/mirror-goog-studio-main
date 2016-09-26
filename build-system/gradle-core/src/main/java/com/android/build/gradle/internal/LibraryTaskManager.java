@@ -275,9 +275,7 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         // Add data binding tasks if enabled
-        if (extension.getDataBinding().isEnabled()) {
-            createDataBindingTasks(tasks, variantScope);
-        }
+        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (!isComponentModelPlugin) {

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.managed;
 
+import com.android.annotations.Nullable;
+
 import org.gradle.model.Managed;
 
 @Managed
@@ -24,18 +26,34 @@ public interface DataBindingOptions {
     /**
      * The version of data binding to use.
      */
+    @Nullable
     String getVersion();
     void setVersion(String version);
 
     /**
      * Whether to enable data binding.
      */
-    Boolean getEnabled();
-    void setEnabled(Boolean enabled);
+    boolean getEnabled();
+    void setEnabled(boolean enabled);
 
     /**
      * Whether to add the default data binding adapters.
      */
+    @Nullable
     Boolean getAddDefaultAdapters();
     void setAddDefaultAdapters(Boolean addDefaultAdapters);
+    /**
+     * Whether we want tests to be able to use data binding as well.
+     * <p>
+     * Data Binding classes generated from the application can always be accessed in the test code
+     * but test itself cannot introduce new Data Binding layouts, bindables etc unless this flag
+     * is turned on.
+     * <p>
+     * This settings help with an issue in older devices where class verifier throws an exception
+     * when the application class is overwritten by the test class. It also makes it easier to run
+     * proguarded tests.
+     */
+    @Nullable
+    Boolean getEnabledForTests();
+    void setEnabledForTests(Boolean enabledForTests);
 }

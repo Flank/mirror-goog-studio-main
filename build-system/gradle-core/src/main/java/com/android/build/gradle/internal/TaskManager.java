@@ -1454,9 +1454,7 @@ public abstract class TaskManager {
                 testedVariantData.getScope().getJavaCompilerTask());
 
         // Add data binding tasks if enabled
-        if (extension.getDataBinding().isEnabled()) {
-            createDataBindingTasks(tasks, variantScope);
-        }
+        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         createPackagingTask(tasks, variantScope, false /*publishApk*/,
                 null /* buildInfoGeneratorTask */);
@@ -2158,6 +2156,14 @@ public abstract class TaskManager {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
+        VariantType type = variantScope.getVariantData().getType();
+        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
+        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+            BaseVariantData testedVariantData = variantScope.getTestedVariantData();
+            if (testedVariantData.getType() != LIBRARY) {
+                return;
+            }
+        }
         setDataBindingAnnotationProcessorParams(variantScope);
         AndroidTask<TransformTask> existing = variantScope
                 .getDataBindingMergeArtifactsTask();
@@ -2172,7 +2178,20 @@ public abstract class TaskManager {
         variantScope.setDataBindingMergeArtifactsTask(dataBindingMergeTask.get());
     }
 
-    protected void createDataBindingTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void createDataBindingTasksIfNecessary(@NonNull TaskFactory tasks,
+            @NonNull VariantScope scope) {
+        if (!extension.getDataBinding().isEnabled()) {
+            return;
+        }
+        VariantType type = scope.getVariantData().getType();
+        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
+        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+            BaseVariantData testedVariantData = scope.getTestedVariantData();
+            if (testedVariantData.getType() != LIBRARY) {
+                return;
+            }
+        }
+
         boolean isJack = Boolean.TRUE.equals(
                 scope.getVariantConfiguration().getJackOptions().isEnabled());
         if (isJack) {
@@ -2218,14 +2237,23 @@ public abstract class TaskManager {
         if (processorOptions instanceof AnnotationProcessorOptions) {
             AnnotationProcessorOptions ots = (AnnotationProcessorOptions) processorOptions;
             // specify data binding only if another class is specified
-            if (!ots.getClassNames().isEmpty()
-                    && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
+            if (!ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 ots.className(DataBindingBuilder.PROCESSOR_NAME);
             }
             String packageName = variantConfiguration.getOriginalApplicationId();
 
             final DataBindingCompilerArgs.Type type;
-            if (variantData.getType() == VariantType.LIBRARY) {
+
+            final BaseVariantData artifactVariantData;
+            final boolean isTest;
+            if (variantData.getType() == VariantType.ANDROID_TEST) {
+                artifactVariantData = scope.getTestedVariantData();
+                isTest = true;
+            } else {
+                artifactVariantData = variantData;
+                isTest = false;
+            }
+            if (artifactVariantData.getType() == VariantType.LIBRARY) {
                 type = DataBindingCompilerArgs.Type.LIBRARY;
             } else {
                 type = DataBindingCompilerArgs.Type.APPLICATION;
@@ -2233,6 +2261,8 @@ public abstract class TaskManager {
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
             DataBindingCompilerArgs args = DataBindingCompilerArgs.builder()
                     .bundleFolder(scope.getBundleFolderForDataBinding())
+                    .enabledForTests(extension.getDataBinding().isEnabledForTests())
+                    .enableDebugLogs(getLogger().isDebugEnabled())
                     .buildFolder(scope.getBuildFolderForDataBindingCompiler())
                     .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
                     .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
@@ -2241,6 +2271,7 @@ public abstract class TaskManager {
                     .printEncodedErrorLogs(dataBindingBuilder.getPrintMachineReadableOutput())
                     .modulePackage(packageName)
                     .minApi(minApi)
+                    .testVariant(isTest)
                     .type(type)
                     .build();
             ots.arguments(args.toMap());
@@ -2996,16 +3027,23 @@ public abstract class TaskManager {
         if (!options.isEnabled()) {
             return;
         }
+
         String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
         project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
                 + dataBindingBuilder.getLibraryVersion(version));
         project.getDependencies().add("compile", SdkConstants.DATA_BINDING_BASELIB_ARTIFACT + ":"
                 + dataBindingBuilder.getBaseLibraryVersion(version));
+
         // TODO load config name from source sets
         project.getDependencies().add("annotationProcessor",
                 SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
                 version);
+        if (options.isEnabledForTests()) {
+            project.getDependencies().add("androidTestAnnotationProcessor",
+                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
+                            version);
+        }
         if (options.getAddDefaultAdapters()) {
             project.getDependencies()
                     .add("compile", SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT + ":" +
