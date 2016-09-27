@@ -53,7 +53,7 @@ SimplePerfManager::~SimplePerfManager() {
 
 bool SimplePerfManager::EnableProfiling(std::string *error) const {
   // By default, linuxSE disallow profiling. This enables it.
-  // TODO: Have CTS to make sure this command does NOT need root access.
+  // simpleperf already has CTS tests ensuring the following command running successfully.
   string enable_profiling_output;
   BashCommandRunner enable_profiling("setprop");
   bool enable_profiling_result =
