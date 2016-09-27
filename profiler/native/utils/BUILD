@@ -62,7 +62,6 @@ cc_library(
     copts = [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
-        "-DBAZEL",
     ],
 )
 
@@ -82,7 +81,6 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
-        "-DBAZEL",
     ],
     data = [
         "//tools/base/profiler/native/testdata:utils",
@@ -90,5 +88,6 @@ cc_test(
     deps = [
         ":profiler_utils",
         "//external:gmock_main",
+        "//tools/base/profiler/native/test:testutils",
     ],
 )

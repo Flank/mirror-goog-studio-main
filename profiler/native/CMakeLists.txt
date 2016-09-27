@@ -66,3 +66,6 @@ add_subdirectory(perfa)
 add_subdirectory(perfd)
 add_subdirectory(proto)
 add_subdirectory(utils)
+
+# Add test utils directory
+add_subdirectory(test)
