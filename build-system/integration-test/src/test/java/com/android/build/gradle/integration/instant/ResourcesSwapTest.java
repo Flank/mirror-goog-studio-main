@@ -156,7 +156,7 @@ public class ResourcesSwapTest {
                 new HotSwapTester(
                         mProject,
                         mPackaging,
-                        "com.example.helloworld",
+                        HelloWorldApp.APP_ID,
                         "HelloWorld",
                         LOG_TAG,
                         device,
