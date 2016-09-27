@@ -22,13 +22,12 @@ import org.junit.Test;
 public class WindowsCompressedFoldersTest {
 
     private static final String FILE_NAME = "windows-cf.zip";
-    private static final boolean TOOL_STORES_DIRECTORIES = false;
+    private static final int NUM_ENTRIES = 4;
 
-    @Rule public final ZipToolsTester mZipToolsTester =
-            new ZipToolsTester(FILE_NAME, TOOL_STORES_DIRECTORIES);
+    @Rule public final ZipToolsTester mZipToolsTester = new ZipToolsTester();
 
     @Test
     public void zfileReadsZipFile() throws Exception {
-        mZipToolsTester.zfileReadsZipFile();
+        mZipToolsTester.zfileReadsZipFile(FILE_NAME, NUM_ENTRIES);
     }
 }

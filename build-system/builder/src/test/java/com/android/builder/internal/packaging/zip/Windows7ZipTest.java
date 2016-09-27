@@ -24,27 +24,26 @@ import org.junit.Test;
 public class Windows7ZipTest {
 
     private static final String FILE_NAME = "windows-7zip.zip";
-    private static final boolean TOOL_STORES_DIRECTORIES = true;
+    private static final int NUM_ENTRIES = 6;
     private static final ImmutableList<String> COMMAND =
             ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l");
     private static final String REGEX =
             "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$";
 
-    @Rule public final ZipToolsTester mZipToolsTester =
-            new ZipToolsTester(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+    @Rule public final ZipToolsTester mZipToolsTester = new ZipToolsTester();
 
     @Test
     public void zfileReadsZipFile() throws Exception {
-        mZipToolsTester.zfileReadsZipFile();
+        mZipToolsTester.zfileReadsZipFile(FILE_NAME, NUM_ENTRIES);
     }
 
     @Test
     public void toolReadsZfFile() throws Exception {
-        mZipToolsTester.toolReadsZfFile();
+        mZipToolsTester.toolReadsZfFile(COMMAND, REGEX);
     }
 
     @Test
     public void toolReadsAlignedZfFile() throws Exception {
-        mZipToolsTester.toolReadsAlignedZfFile();
+        mZipToolsTester.toolReadsAlignedZfFile(COMMAND, REGEX);
     }
 }

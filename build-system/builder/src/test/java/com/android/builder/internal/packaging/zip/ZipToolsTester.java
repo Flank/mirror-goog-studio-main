@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -44,29 +43,9 @@ import java.util.regex.Pattern;
 
 class ZipToolsTester extends TemporaryFolder {
 
-    @NonNull private final String mZipFile;
-    @NonNull private final List<String> mUnzipCommand;
-    @NonNull private final String mUnzipLineRegex;
-    private final boolean mToolStoresDirectories;
-
-    ZipToolsTester(
-            @NonNull String zipFile,
-            @NonNull List<String> unzipCommand,
-            @NonNull String unzipLineRegex,
-            boolean toolStoresDirectories) {
-        mZipFile = zipFile;
-        mUnzipCommand = unzipCommand;
-        mUnzipLineRegex = unzipLineRegex;
-        mToolStoresDirectories = toolStoresDirectories;
-    }
-
-    ZipToolsTester(@NonNull String zipFile, boolean toolStoresDirectories) {
-        this(zipFile, ImmutableList.of("no command"), "no regexp", toolStoresDirectories);
-    }
-
-    private File cloneZipFile() throws Exception {
+    private File cloneZipFile(String fileName) throws Exception {
         File zfile = newFile("file.zip");
-        Files.copy(ZipTestUtils.rsrcFile(mZipFile), zfile);
+        Files.copy(ZipTestUtils.rsrcFile(fileName), zfile);
         return zfile;
     }
 
@@ -82,14 +61,9 @@ class ZipToolsTester extends TemporaryFolder {
         assertArrayEquals(inFileData, inZipData);
     }
 
-    void zfileReadsZipFile() throws Exception {
-        try (ZFile zf = new ZFile(cloneZipFile())) {
-            if (mToolStoresDirectories) {
-                assertEquals(6, zf.entries().size());
-            } else {
-                assertEquals(4, zf.entries().size());
-            }
-
+    void zfileReadsZipFile(String fileName, int numEntries) throws Exception {
+        try (ZFile zf = new ZFile(cloneZipFile(fileName))) {
+            assertEquals(numEntries, zf.entries().size());
             assertFileInZip(zf, "root");
             assertFileInZip(zf, "images/lena.png");
             assertFileInZip(zf, "text-files/rfc2460.txt");
@@ -97,16 +71,17 @@ class ZipToolsTester extends TemporaryFolder {
         }
     }
 
-    void toolReadsZfFile() throws Exception {
-        testReadZFile(false);
+    void toolReadsZfFile(List<String> unzipCommand, String regex) throws Exception {
+        testReadZFile(unzipCommand, regex, false);
     }
 
-    void toolReadsAlignedZfFile() throws Exception {
-        testReadZFile(true);
+    void toolReadsAlignedZfFile(List<String> unzipCommand, String regex) throws Exception {
+        testReadZFile(unzipCommand, regex, true);
     }
 
-    private void testReadZFile(boolean align) throws Exception {
-        String unzipcmd = mUnzipCommand.get(0);
+    private void testReadZFile(List<String> unzipCommand, String regex, boolean align)
+            throws Exception {
+        String unzipcmd = unzipCommand.get(0);
         Assume.assumeTrue(new File(unzipcmd).canExecute());
 
         ZFileOptions options = new ZFileOptions();
@@ -126,7 +101,7 @@ class ZipToolsTester extends TemporaryFolder {
                     new FileInputStream(ZipTestUtils.rsrcFile("text-files/wikipedia.html")));
         }
 
-        List<String> command = Lists.newArrayList(mUnzipCommand);
+        List<String> command = Lists.newArrayList(unzipCommand);
         command.add(zfile.getAbsolutePath());
         ProcessBuilder pb = new ProcessBuilder(command);
         Process proc = pb.start();
@@ -136,7 +111,7 @@ class ZipToolsTester extends TemporaryFolder {
         String lines[] = text.split("\n");
         Map<String, Integer> sizes = Maps.newHashMap();
         for (String l : lines) {
-            Matcher m = Pattern.compile(mUnzipLineRegex).matcher(l);
+            Matcher m = Pattern.compile(regex).matcher(l);
             if (m.matches()) {
                 String sizeTxt = m.group("size");
                 int size = Integer.parseInt(sizeTxt);

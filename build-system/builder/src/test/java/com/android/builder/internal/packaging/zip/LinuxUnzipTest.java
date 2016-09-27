@@ -24,26 +24,25 @@ import org.junit.Test;
 public class LinuxUnzipTest {
 
     private static final String FILE_NAME = "linux-zip.zip";
-    private static final boolean TOOL_STORES_DIRECTORIES = true;
+    private static final int NUM_ENTRIES = 6;
     private static final ImmutableList<String> COMMAND = ImmutableList.of("/usr/bin/unzip", "-v");
     private static final String REGEX =
             "^\\s*(?<size>\\d+)\\s+(?:Stored|Defl:N).*\\s(?<name>\\S+)\\S*$";
 
-    @Rule public final ZipToolsTester mZipToolsTester =
-            new ZipToolsTester(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+    @Rule public final ZipToolsTester mZipToolsTester = new ZipToolsTester();
 
     @Test
     public void zfileReadsZipFile() throws Exception {
-        mZipToolsTester.zfileReadsZipFile();
+        mZipToolsTester.zfileReadsZipFile(FILE_NAME, NUM_ENTRIES);
     }
 
     @Test
     public void toolReadsZfFile() throws Exception {
-        mZipToolsTester.toolReadsZfFile();
+        mZipToolsTester.toolReadsZfFile(COMMAND, REGEX);
     }
 
     @Test
     public void toolReadsAlignedZfFile() throws Exception {
-        mZipToolsTester.toolReadsAlignedZfFile();
+        mZipToolsTester.toolReadsAlignedZfFile(COMMAND, REGEX);
     }
 }
