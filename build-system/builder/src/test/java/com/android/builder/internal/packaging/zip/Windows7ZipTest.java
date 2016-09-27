@@ -21,9 +21,16 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 
 public class Windows7ZipTest extends ZipToolsTestCase {
+
+    private static final String FILE_NAME = "windows-7zip.zip";
+    private static final boolean TOOL_STORES_DIRECTORIES = true;
+    private static final ImmutableList<String> COMMAND =
+            ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l");
+    private static final String REGEX =
+            "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$";
+
     @Before
     public void setUp() {
-        configure("windows-7zip.zip", ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l"),
-                "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$", true);
+        configure(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
     }
 }

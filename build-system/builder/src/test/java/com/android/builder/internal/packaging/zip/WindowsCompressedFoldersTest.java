@@ -19,8 +19,12 @@ package com.android.builder.internal.packaging.zip;
 import org.junit.Before;
 
 public class WindowsCompressedFoldersTest extends ZipToolsTestCase {
+
+    private static final String FILE_NAME = "windows-cf.zip";
+    private static final boolean TOOL_STORES_DIRECTORIES = false;
+
     @Before
     public void setUp() {
-        configure("windows-cf.zip", false);
+        configure(FILE_NAME, TOOL_STORES_DIRECTORIES);
     }
 }

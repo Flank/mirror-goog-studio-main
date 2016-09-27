@@ -21,9 +21,15 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 
 public class LinuxUnzipTest extends ZipToolsTestCase {
+
+    private static final String FILE_NAME = "linux-zip.zip";
+    private static final boolean TOOL_STORES_DIRECTORIES = true;
+    private static final ImmutableList<String> COMMAND = ImmutableList.of("/usr/bin/unzip", "-v");
+    private static final String REGEX =
+            "^\\s*(?<size>\\d+)\\s+(?:Stored|Defl:N).*\\s(?<name>\\S+)\\S*$";
+
     @Before
     public void setUp() {
-        configure("linux-zip.zip", ImmutableList.of("/usr/bin/unzip", "-v"),
-                "^\\s*(?<size>\\d+)\\s+(?:Stored|Defl:N).*\\s(?<name>\\S+)\\S*$", true);
+        configure(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
     }
 }
