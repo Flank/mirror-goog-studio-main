@@ -35,7 +35,6 @@ import com.android.ide.common.caching.CreatingCache;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -55,8 +54,8 @@ import java.util.zip.ZipFile;
 final class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static final CreatingCache<AndroidAtom, AndroidAtomImpl> sAtomCache
-            = new CreatingCache<>(DependenciesImpl::convertAndroidAtom);
+    private static final CreatingCache<AndroidAtom, AndroidAtomImpl> sAtomCache =
+            new CreatingCache<>(DependenciesImpl::getAndroidAtomValue);
     private static final CreatingCache<AndroidLibrary, AndroidLibraryImpl> sLibCache
             = new CreatingCache<>(DependenciesImpl::getAndroidLibraryValue);
     private static final CreatingCache<JavaLibrary, JavaLibraryImpl> sJarCache
@@ -132,7 +131,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
         clonedJavaLibraries = Lists.newArrayListWithExpectedSize(javaLibraries.size() + localJavaLibraries.size());
 
         for (AndroidAtom atomImpl : androidAtoms) {
-            AndroidAtom clonedAtom = sAtomCache.get(atomImpl);
+            AndroidAtom clonedAtom = sAtomCache.get(getAndroidAtomKey(atomImpl));
             if (clonedAtom != null) {
                 clonedAndroidAtoms.add(clonedAtom);
             }
@@ -200,7 +199,7 @@ final class DependenciesImpl implements Dependencies, Serializable {
         // Finally, find the base atom, if present.
         AndroidAtom baseAtom = null;
         if (dependencies.getBaseAtom() != null)
-            baseAtom = sAtomCache.get(dependencies.getBaseAtom());
+            baseAtom = sAtomCache.get(getAndroidAtomKey(dependencies.getBaseAtom()));
 
         return new DependenciesImpl(
                 clonedAndroidAtoms,
@@ -289,39 +288,71 @@ final class DependenciesImpl implements Dependencies, Serializable {
     }
 
     @NonNull
-    private static AndroidAtomImpl convertAndroidAtom(
+    private static AndroidAtom getAndroidAtomKey(@NonNull AndroidAtom androidAtom) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+
+        if (fullCopy) {
+            // in a full copy case, we let the cache create the serializable instance
+            // and the original instance can be the key
+            return androidAtom;
+        }
+
+        // else in a partial copy case, we need to first make a copy without the removed
+        // stuff and use that as a key
+        // It's ok because it's a fairly shallow copy anyway.
+        return createSerializableAndroidAtom(androidAtom);
+    }
+
+    @NonNull
+    private static AndroidAtomImpl getAndroidAtomValue(@NonNull AndroidAtom androidAtom) {
+        boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+
+        if (fullCopy) {
+            // in a full copy case, the value is the serializable copy of the key.
+            return createSerializableAndroidAtom(androidAtom);
+        }
+
+        // in a non full copy case, the key is already serializable so we can return it directly.
+        assert androidAtom instanceof AndroidAtomImpl;
+        return (AndroidAtomImpl) androidAtom;
+    }
+
+    @NonNull
+    private static AndroidAtomImpl createSerializableAndroidAtom(
             @NonNull AndroidAtom atomDependency) {
-        List<? extends AndroidAtom> atomDeps = atomDependency.getAtomDependencies();
-        List<AndroidAtom> clonedAtomDeps = Lists.newArrayListWithCapacity(atomDeps.size());
-        for (AndroidAtom childAtom : atomDeps) {
-            AndroidAtom clonedAtom = sAtomCache.get(childAtom);
-            if (clonedAtom != null) {
-                clonedAtomDeps.add(clonedAtom);
-            }
-        }
+        boolean newDepModel = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
 
-        List<? extends AndroidLibrary> libDeps = atomDependency.getLibraryDependencies();
-        List<AndroidLibrary> clonedLibDeps = Lists.newArrayListWithCapacity(libDeps.size());
-        for (AndroidLibrary childLib : libDeps) {
-            AndroidLibrary clonedLib = sLibCache.get(childLib);
-            if (clonedLib != null) {
-                clonedLibDeps.add(clonedLib);
-            }
-        }
+        List<JavaLibrary> clonedJavaLibraries = ImmutableList.of();
+        List<AndroidLibrary> clonedLibDeps = ImmutableList.of();
+        List<AndroidAtom> clonedAtomDeps = ImmutableList.of();
 
-        // get the clones of the Java libraries
-        List<JavaLibrary> clonedJavaLibraries;
-        if (sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH) {
+        if (newDepModel) {
+            List<? extends AndroidAtom> atomDeps = atomDependency.getAtomDependencies();
+            clonedAtomDeps = Lists.newArrayListWithCapacity(atomDeps.size());
+            for (AndroidAtom childAtom : atomDeps) {
+                AndroidAtom clonedAtom = sAtomCache.get(getAndroidAtomKey(childAtom));
+                if (clonedAtom != null) {
+                    clonedAtomDeps.add(clonedAtom);
+                }
+            }
+
+            List<? extends AndroidLibrary> libDeps = atomDependency.getLibraryDependencies();
+            clonedLibDeps = Lists.newArrayListWithCapacity(libDeps.size());
+            for (AndroidLibrary childLib : libDeps) {
+                AndroidLibrary clonedLib = sLibCache.get(getAndroidLibraryKey(childLib));
+                if (clonedLib != null) {
+                    clonedLibDeps.add(clonedLib);
+                }
+            }
+
             Collection<? extends JavaLibrary> jarDeps = atomDependency.getJavaDependencies();
             clonedJavaLibraries = Lists.newArrayListWithCapacity(jarDeps.size());
             for (JavaLibrary javaLibrary : jarDeps) {
-                JavaLibraryImpl clonedJar = sJarCache.get(javaLibrary);
+                JavaLibraryImpl clonedJar = sJarCache.get(getJavaLibraryKey(javaLibrary));
                 if (clonedJar != null) {
                     clonedJavaLibraries.add(clonedJar);
                 }
             }
-        } else {
-            clonedJavaLibraries = ImmutableList.of();
         }
 
         return new AndroidAtomImpl(

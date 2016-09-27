@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
@@ -33,8 +34,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
-import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
+import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.PackageAtom;
 import com.android.build.gradle.tasks.PackageInstantApp;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -44,19 +45,14 @@ import com.android.build.gradle.tasks.factory.AtomResClassJavaCompileConfigActio
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.profile.ProcessRecorder;
-import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
-import org.gradle.api.Project;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
  * TaskManager for creating tasks in an Android InstantApp project.
@@ -114,8 +110,10 @@ public class InstantAppTaskManager extends TaskManager {
                         variantName,
                         () -> createAtomPackagingTasks(tasks, variantScope));
 
-        // Sanity check.
-        assert lastPackageAtom != null;
+        // This will happen for the first sync. Just ignore and exit early.
+        if (lastPackageAtom == null) {
+            return;
+        }
 
         // Add a task to process the resources and generate the instantApp manifest.
         ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
