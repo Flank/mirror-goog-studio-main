@@ -18,9 +18,10 @@ package com.android.builder.internal.packaging.zip;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class Windows7ZipTest extends ZipToolsTestCase {
+public class Windows7ZipTest {
 
     private static final String FILE_NAME = "windows-7zip.zip";
     private static final boolean TOOL_STORES_DIRECTORIES = true;
@@ -29,8 +30,21 @@ public class Windows7ZipTest extends ZipToolsTestCase {
     private static final String REGEX =
             "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$";
 
-    @Before
-    public void setUp() {
-        configure(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+    @Rule public final ZipToolsTester mZipToolsTester =
+            new ZipToolsTester(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+
+    @Test
+    public void zfileReadsZipFile() throws Exception {
+        mZipToolsTester.zfileReadsZipFile();
+    }
+
+    @Test
+    public void toolReadsZfFile() throws Exception {
+        mZipToolsTester.toolReadsZfFile();
+    }
+
+    @Test
+    public void toolReadsAlignedZfFile() throws Exception {
+        mZipToolsTester.toolReadsAlignedZfFile();
     }
 }

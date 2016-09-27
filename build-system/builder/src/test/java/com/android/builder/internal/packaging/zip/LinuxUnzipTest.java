@@ -18,9 +18,10 @@ package com.android.builder.internal.packaging.zip;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class LinuxUnzipTest extends ZipToolsTestCase {
+public class LinuxUnzipTest {
 
     private static final String FILE_NAME = "linux-zip.zip";
     private static final boolean TOOL_STORES_DIRECTORIES = true;
@@ -28,8 +29,21 @@ public class LinuxUnzipTest extends ZipToolsTestCase {
     private static final String REGEX =
             "^\\s*(?<size>\\d+)\\s+(?:Stored|Defl:N).*\\s(?<name>\\S+)\\S*$";
 
-    @Before
-    public void setUp() {
-        configure(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+    @Rule public final ZipToolsTester mZipToolsTester =
+            new ZipToolsTester(FILE_NAME, COMMAND, REGEX, TOOL_STORES_DIRECTORIES);
+
+    @Test
+    public void zfileReadsZipFile() throws Exception {
+        mZipToolsTester.zfileReadsZipFile();
+    }
+
+    @Test
+    public void toolReadsZfFile() throws Exception {
+        mZipToolsTester.toolReadsZfFile();
+    }
+
+    @Test
+    public void toolReadsAlignedZfFile() throws Exception {
+        mZipToolsTester.toolReadsAlignedZfFile();
     }
 }
