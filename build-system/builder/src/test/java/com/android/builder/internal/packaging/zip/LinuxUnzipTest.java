@@ -16,12 +16,14 @@
 
 package com.android.builder.internal.packaging.zip;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 
 public class LinuxUnzipTest extends ZipToolsTestCase {
     @Before
     public void setUp() {
-        configure("linux-zip.zip", new String[] { "/usr/bin/unzip", "-v" },
+        configure("linux-zip.zip", ImmutableList.of("/usr/bin/unzip", "-v"),
                 "^\\s*(\\d+)\\s+(?:Stored|Defl:N).*\\s(\\S+)\\S*$", 2, 1, true);
     }
 }

@@ -39,7 +39,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -65,11 +64,15 @@ public abstract class ZipToolsTestCase {
     @NonNull
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
-    protected void configure(@NonNull String zipFile, @NonNull String unzipCommand[],
-            @NonNull String unzipLineRegex, int nameGroup, int sizeGroup,
+    protected void configure(
+            @NonNull String zipFile,
+            @NonNull List<String> unzipCommand,
+            @NonNull String unzipLineRegex,
+            int nameGroup,
+            int sizeGroup,
             boolean toolStoresDirectories) {
         mZipFile = zipFile;
-        mUnzipCommand = Arrays.asList(unzipCommand);
+        mUnzipCommand = unzipCommand;
         mUnzipLineRegex = unzipLineRegex;
         mUnzipRegexNameGroup = nameGroup;
         mUnzipRegexSizeGroup = sizeGroup;

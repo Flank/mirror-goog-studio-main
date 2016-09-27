@@ -16,12 +16,14 @@
 
 package com.android.builder.internal.packaging.zip;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 
 public class Windows7ZipTest extends ZipToolsTestCase {
     @Before
     public void setUp() {
-        configure("windows-7zip.zip", new String[] { "c:\\Program Files\\7-Zip\\7z.exe", "l" },
+        configure("windows-7zip.zip", ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l"),
                 "^(?:\\S+\\s+){3}(\\d+)\\s+\\d+\\s+(\\S+)\\s*$", 2, 1, true);
     }
 }

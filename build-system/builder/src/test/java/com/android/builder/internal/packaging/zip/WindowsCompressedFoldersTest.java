@@ -16,12 +16,14 @@
 
 package com.android.builder.internal.packaging.zip;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 
 public class WindowsCompressedFoldersTest extends ZipToolsTestCase {
     @Before
     public void setUp() {
-        configure("windows-cf.zip", new String[] { "cannot use compressed folders from cmd line "
-                + "to list zip contents" }, "", 1, 2, false);
+        configure("windows-cf.zip", ImmutableList.of("cannot use compressed folders from cmd line "
+                + "to list zip contents"), "", 1, 2, false);
     }
 }
