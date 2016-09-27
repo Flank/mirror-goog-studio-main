@@ -159,7 +159,7 @@ public class HotSwapTest {
                 new HotSwapTester(
                         project,
                         packaging,
-                        "com.example.helloworld",
+                        HelloWorldApp.APP_ID,
                         "HelloWorld",
                         LOG_TAG,
                         device,

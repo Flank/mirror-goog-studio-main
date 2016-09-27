@@ -33,6 +33,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
  */
 public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTestApp {
 
+    public static final String APP_ID = "com.example.helloworld";
+
     private static final TestSourceFile javaSource = new TestSourceFile(
             "src/main/java/com/example/helloworld", "HelloWorld.java",
             "package com.example.helloworld;\n" +
