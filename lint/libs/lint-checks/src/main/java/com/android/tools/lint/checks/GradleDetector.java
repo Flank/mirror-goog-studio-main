@@ -257,19 +257,40 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             Severity.ERROR,
             IMPLEMENTATION);
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static final Issue BUNDLED_GMS = Issue.create(
-      "UseOfBundledGooglePlayServices",
-      "Use of bundled version of Google Play services",
-      "Google Play services SDK's can be selectively included, which enables a smaller APK size. " +
-      "Consider declaring dependencies on individual Google Play services SDK's. If you are " +
-      "using Firebase API's (http://firebase.google.com/docs/android/setup), Android Studio's " +
-      "Tools \\u2192 Firebase assistant window can automatically add just the dependencies " +
-      "needed for each feature.",
-      Category.PERFORMANCE,
-      4,
-      Severity.WARNING,
-      IMPLEMENTATION)
-      .addMoreInfo("http://developers.google.com/android/guides/setup#split");
+            "UseOfBundledGooglePlayServices", //$NON-NLS-1$
+            "Use of bundled version of Google Play services",
+
+            "Google Play services SDK's can be selectively included, which enables a smaller APK " +
+            "size. Consider declaring dependencies on individual Google Play services SDK's. " +
+            "If you are using Firebase API's (http://firebase.google.com/docs/android/setup), " +
+            "Android Studio's Tools \\u2192 Firebase assistant window can automatically add " +
+            "just the dependencies needed for each feature.",
+
+            Category.PERFORMANCE,
+            4,
+            Severity.WARNING,
+            IMPLEMENTATION)
+            .addMoreInfo("http://developers.google.com/android/guides/setup#split");
+
+    /**
+     * Using a versionCode that is very high
+     */
+    public static final Issue HIGH_APP_VERSION_CODE = Issue.create(
+            "HighAppVersionCode", //$NON-NLS-1$
+            "VersionCode too high",
+
+            "The declared `versionCode` is an Integer. Ensure that the version number is " +
+            "not close to the limit. It is recommended to monotonically increase this number " +
+            "each minor or major release of the app. Note that updating an app with a " +
+            "versionCode over `Integer.MAX_VALUE` is not possible.",
+
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            IMPLEMENTATION)
+            .addMoreInfo("https://developer.android.com/studio/publish/versioning.html");
 
     /** The Gradle plugin ID for Android applications */
     public static final String APP_PLUGIN_ID = "com.android.application";
@@ -285,8 +306,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     public static final String GMS_GROUP_ID = "com.google.android.gms";
     public static final String GOOGLE_SUPPORT_GROUP_ID = "com.google.android.support";
     public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.support";
-    private static final GradleCoordinate PLAY_SERVICES_V650 =
-      GradleCoordinate.parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
+
+    private static final GradleCoordinate PLAY_SERVICES_V650 = GradleCoordinate
+            .parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
+    /**
+     * Threshold to consider a versionCode very high and issue a warning.
+     * https://developer.android.com/studio/publish/versioning.html indicates
+     * that the highest value accepted by Google Play is 2100000000
+     */
+    private static final int VERSION_CODE_HIGH_THRESHOLD = 2000000000;
 
     private int mMinSdkVersion;
     private int mCompileSdkVersion;
@@ -422,6 +450,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 }
                 String message = "Deprecated: Replace 'packageName' with 'applicationId'";
                 report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message);
+            }
+            if (property.equals("versionCode") && context.isEnabled(HIGH_APP_VERSION_CODE)
+                    && isInteger(value)) {
+                int version = getIntLiteralValue(value, -1);
+                if (version >= VERSION_CODE_HIGH_THRESHOLD) {
+                    String message =
+                            "The 'versionCode' is very high and close to the max allowed value";
+                    report(context, getPropertyKeyCookie(valueCookie),
+                            HIGH_APP_VERSION_CODE, message);
+                }
             }
         } else if (property.equals("compileSdkVersion") && parent.equals("android")) {
             int version = getIntLiteralValue(value, -1);

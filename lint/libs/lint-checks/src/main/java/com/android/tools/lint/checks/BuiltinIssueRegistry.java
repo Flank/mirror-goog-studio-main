@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 285;
+    static final int INITIAL_CAPACITY = 286;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -111,19 +111,20 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(FullBackupContentDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
+        issues.add(GradleDetector.ACCIDENTAL_OCTAL);
         issues.add(GradleDetector.BUNDLED_GMS);
         issues.add(GradleDetector.COMPATIBILITY);
-        issues.add(GradleDetector.GRADLE_PLUGIN_COMPATIBILITY);
         issues.add(GradleDetector.DEPENDENCY);
         issues.add(GradleDetector.DEPRECATED);
         issues.add(GradleDetector.GRADLE_GETTER);
+        issues.add(GradleDetector.GRADLE_PLUGIN_COMPATIBILITY);
+        issues.add(GradleDetector.HIGH_APP_VERSION_CODE);
         issues.add(GradleDetector.IDE_SUPPORT);
-        issues.add(GradleDetector.NOT_INTERPOLATED);
         issues.add(GradleDetector.PATH);
         issues.add(GradleDetector.PLUS);
+        issues.add(GradleDetector.NOT_INTERPOLATED);
         issues.add(GradleDetector.STRING_INTEGER);
         issues.add(GradleDetector.REMOTE_VERSION);
-        issues.add(GradleDetector.ACCIDENTAL_OCTAL);
         issues.add(GridLayoutDetector.ISSUE);
         issues.add(HandlerDetector.ISSUE);
         issues.add(HardcodedDebugModeDetector.ISSUE);
