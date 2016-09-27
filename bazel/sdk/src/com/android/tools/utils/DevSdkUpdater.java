@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -90,9 +91,14 @@ public final class DevSdkUpdater {
         System.out.println("                          included after a colon,");
         System.out.println("                          e.g. platform-tools:{adb*,systrace/**}");
         System.out.println("                          Here, 'adb*' matches 'adb' and 'adb.exe'");
-        System.out.println("                          and 'systrace/**' matches all dir contents");
+        System.out.println("                          and 'systrace/**' matches all dir contents.");
+        System.out.println("                          An exclude filter can also be included,");
+        System.out.println("                          e.g. build-tools:**:**.jar, which means");
+        System.out.println("                          include everything but jar files.");
         System.out.println("  --package-file <file>   A file where each line is an SDK package.");
         System.out.println("                          # comments are allowed in this file.");
+        System.out.println("  --platform              darwin, windows, or linux. Useful for");
+        System.out.println("                          debugging on a single platform at a time.");
         System.out.println();
         System.out.println("Example usages:");
         System.out.println();
@@ -111,6 +117,7 @@ public final class DevSdkUpdater {
     private static Status run(String[] args) throws IOException {
 
         File sdkDest = null;
+        String platform = null; // If null, update all platforms
         List<String> packageLines = new ArrayList<>();
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
@@ -145,6 +152,9 @@ public final class DevSdkUpdater {
                     usage("Package not set");
                     return Status.ERROR;
                 }
+            } else if (arg.equals("--platform")) {
+                ++i;
+                platform = args[i];
             } else if (arg.equals("--dest")) {
                 ++i;
                 try {
@@ -178,7 +188,7 @@ public final class DevSdkUpdater {
         }
 
         System.out.println("Downloading SDKs...");
-        downloadSdkPackages(sdkDest, packageLines);
+        downloadSdkPackages(sdkDest, packageLines, platform);
         System.out.println("done!");
 
         return Status.SUCCESS;
@@ -187,23 +197,33 @@ public final class DevSdkUpdater {
     /**
      * @param packageLines A list of package entries with an (optional) filter appended to them,
      *                     e.g. "platform-tools:adb*"
+     * @param platform Can be {@code null}. If set, only update for that platform.
      */
-    private static void downloadSdkPackages(File sdkDest, List<String> packageLines)
-            throws IOException {
+    private static void downloadSdkPackages(
+            File sdkDest, List<String> packageLines, String platform) throws IOException {
         List<String> packages = new ArrayList<>(); // Just the packages, with filters stripped
         // The following is a package -> filter mapping (if a filter present)
         // If no filter is found, then all downloaded files will be kept
-        Map<String, String> filters = new HashMap<>();
+        Map<String, Filters> filterMap = new HashMap<>();
 
         for (String packageLine : packageLines) {
-            String[] packageFilters = packageLine.split(":", 2);
-            packages.add(packageFilters[0]);
+            String[] packageFilters = packageLine.split(":", 3);
+            String pkg = packageFilters[0];
+            packages.add(pkg);
             if (packageFilters.length > 1) {
-                filters.put(packageFilters[0], packageFilters[1]);
+                if (packageFilters.length == 2) {
+                    filterMap.put(pkg, new Filters(packageFilters[1]));
+                }
+                else {
+                    filterMap.put(pkg, new Filters(packageFilters[1], packageFilters[2]));
+                }
             }
         }
 
         for (OsEntry osEntry : OS_ENTRIES) {
+            if (!Objects.equals(platform, osEntry.mFolder)) {
+                continue;
+            }
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
             // Delegate download operation to SdkManagerCli program
             List<String> args = new ArrayList<>();
@@ -215,8 +235,8 @@ public final class DevSdkUpdater {
             SdkManagerCli.main(args.stream().toArray(String[]::new));
         }
 
-        if (!filters.isEmpty()) {
-            filterSdkFiles(sdkDest, filters);
+        if (!filterMap.isEmpty()) {
+            filterSdkFiles(sdkDest, filterMap, platform);
         }
     }
 
@@ -225,17 +245,25 @@ public final class DevSdkUpdater {
      * package and remove files that don't match the filters. This will also remove any directories
      * left empty as a result of the filtering.
      */
-    private static void filterSdkFiles(File sdkRoot, Map<String, String> filters)
-            throws IOException {
+    private static void filterSdkFiles(
+            File sdkRoot, Map<String, Filters> filterMap, String platform) throws IOException {
         FileSystem fs = FileSystems.getDefault();
-        for (Map.Entry<String, String> pkgFilterEntry : filters.entrySet()) {
+        for (Map.Entry<String, Filters> pkgFilterEntry : filterMap.entrySet()) {
             String pkg = pkgFilterEntry.getKey();
-            String pkgFilter = pkgFilterEntry.getValue();
+            Filters filters = pkgFilterEntry.getValue();
 
-            PathMatcher pm = fs.getPathMatcher("glob:" + pkgFilter);
-            System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, pkgFilter));
+            String includeFilter = filters.getInclude();
+            String excludeFilter = filters.getExclude();
+
+            PathMatcher includeMatcher = fs.getPathMatcher("glob:" + includeFilter);
+            PathMatcher excludeMatcher = fs.getPathMatcher("glob:" + excludeFilter);
+            System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, filters));
             System.out.flush();
             for (OsEntry osEntry : OS_ENTRIES) {
+                if (!Objects.equals(platform, osEntry.mFolder)) {
+                    continue;
+                }
+
                 File osSdkDest = new File(sdkRoot, osEntry.mFolder);
                 // Convert package format to path format, e.g. a;b;c -> a/b/c
                 File pkgRoot = new File(osSdkDest, pkg.replaceAll(";", "/"));
@@ -245,7 +273,7 @@ public final class DevSdkUpdater {
                     public FileVisitResult visitFile(Path file,
                             BasicFileAttributes attrs) throws IOException {
                         Path relPath = pkgRoot.toPath().relativize(file);
-                        if (!pm.matches(relPath)) {
+                        if (!includeMatcher.matches(relPath) || excludeMatcher.matches(relPath)) {
                             Files.delete(file);
                         }
                         return FileVisitResult.CONTINUE;
@@ -278,6 +306,41 @@ public final class DevSdkUpdater {
 
         Status(int resultCode) {
             mResultCode = resultCode;
+        }
+    }
+
+    /**
+     * Glob filters which will be applied to each file in a package.
+     */
+    private static final class Filters {
+
+        public final String mInclude;
+        public final String mExclude;
+
+        private Filters(String include, String exclude) {
+            mInclude = include;
+            mExclude = exclude;
+        }
+        private Filters(String include) {
+            this(include, "");
+        }
+
+        public String getInclude() {
+            return mInclude;
+        }
+
+        public String getExclude() {
+            return mExclude;
+        }
+
+        @Override
+        public String toString() {
+            if (mExclude.isEmpty()) {
+                return mInclude;
+            }
+            else {
+                return String.format("%s (excluding %s)", mInclude, mExclude);
+            }
         }
     }
 
