@@ -20,12 +20,10 @@ import static com.android.SdkConstants.DOT_RES;
 import static com.android.SdkConstants.FN_RES_BASE;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -43,15 +41,17 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
 
     @Override
     public void setOutputFile(@NonNull File file) {
-        if (packageAndroidArtifactTask != null) {
-            packageAndroidArtifactTask.setOutputFile(file);
+        if (bundleAtomTask != null) {
+            bundleAtomTask.setBundleFile(file);
         }
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getOutputFile() {
-        return packageAndroidArtifactTask == null ? null : packageAndroidArtifactTask.getOutputFile();
+        return bundleAtomTask == null
+                ? getScope().getVariantScope().getOutputBundleFile()
+                : bundleAtomTask.getBundleFile();
     }
 
     @NonNull

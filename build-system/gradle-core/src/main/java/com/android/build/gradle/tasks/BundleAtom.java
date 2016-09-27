@@ -29,17 +29,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.tasks.FileSupplier;
-import com.android.builder.core.BuilderConstants;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-
-import org.apache.commons.compress.utils.IOUtils;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -48,6 +39,12 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
+import org.gradle.api.Task;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to zip an atom bundle.
@@ -208,22 +205,26 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             // TODO: Change this task to be incremental and re-use the IncrementalPackager.
             bundleAtom.setBundleFolder(scope.getBaseBundleDir());
 
-            bundleAtom.setBundleFile(FileUtils.join(
-                    scope.getGlobalScope().getOutputsDir(),
-                    BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE,
-                    scope.getGlobalScope().getProjectBaseName()
-                            + "-" + scope.getVariantConfiguration().getBaseName()
-                            + "." + BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE));
+            bundleAtom.setBundleFile(scope.getOutputBundleFile());
 
-            ConventionMappingHelper.map(bundleAtom, "jniFolders", () ->
-                    scope.getTransformManager()
-                            .getPipelineOutput(StreamFilter.NATIVE_LIBS).keySet());
-            ConventionMappingHelper.map(bundleAtom, "dexFolders", () ->
-                    scope.getTransformManager()
-                            .getPipelineOutput(StreamFilter.DEX).keySet());
-            ConventionMappingHelper.map(bundleAtom, "javaResFolders", () ->
-                    scope.getTransformManager()
-                            .getPipelineOutput(StreamFilter.RESOURCES).keySet());
+            ConventionMappingHelper.map(
+                    bundleAtom,
+                    "jniFolders",
+                    () ->
+                            scope.getTransformManager()
+                                    .getPipelineOutput(StreamFilter.NATIVE_LIBS)
+                                    .keySet());
+            ConventionMappingHelper.map(
+                    bundleAtom,
+                    "dexFolders",
+                    () -> scope.getTransformManager().getPipelineOutput(StreamFilter.DEX).keySet());
+            ConventionMappingHelper.map(
+                    bundleAtom,
+                    "javaResFolders",
+                    () ->
+                            scope.getTransformManager()
+                                    .getPipelineOutput(StreamFilter.RESOURCES)
+                                    .keySet());
         }
 
         @NonNull

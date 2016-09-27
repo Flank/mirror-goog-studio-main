@@ -39,11 +39,9 @@ import com.android.builder.model.AndroidAtom;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.Task;
-
 import java.io.File;
 import java.util.Collection;
+import org.gradle.api.Task;
 
 /**
  * Base output data about a variant.
@@ -97,7 +95,7 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     public abstract void setOutputFile(@NonNull File file);
 
-    @Nullable
+    @NonNull
     public abstract File getOutputFile();
 
     @NonNull
