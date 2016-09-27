@@ -23,17 +23,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
@@ -45,40 +41,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class ZipToolsTestCase {
-    @Nullable
-    private String mZipFile;
+class ZipToolsTester extends TemporaryFolder {
 
-    @Nullable
-    private List<String> mUnzipCommand;
-
-    @Nullable
-    private String mUnzipLineRegex;
-
-    private boolean mToolStoresDirectories;
-
-    @Rule
-    @NonNull
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
-
-    protected void configure(
-            @NonNull String zipFile,
-            @NonNull List<String> unzipCommand,
-            @NonNull String unzipLineRegex,
-            boolean toolStoresDirectories) {
-        mZipFile = zipFile;
-        mUnzipCommand = unzipCommand;
-        mUnzipLineRegex = unzipLineRegex;
-        mToolStoresDirectories = toolStoresDirectories;
-    }
-
-    void configure(@NonNull String zipFile, boolean toolStoresDirectories) {
-        configure(zipFile, ImmutableList.of("no command"), "no regexp", toolStoresDirectories);
-    }
-
-    private File cloneZipFile() throws Exception {
-        File zfile = mTemporaryFolder.newFile("file.zip");
-        Files.copy(ZipTestUtils.rsrcFile(mZipFile), zfile);
+    private File cloneZipFile(String fileName) throws Exception {
+        File zfile = newFile("file.zip");
+        Files.copy(ZipTestUtils.rsrcFile(fileName), zfile);
         return zfile;
     }
 
@@ -94,15 +61,9 @@ public abstract class ZipToolsTestCase {
         assertArrayEquals(inFileData, inZipData);
     }
 
-    @Test
-    public void zfileReadsZipFile() throws Exception {
-        try (ZFile zf = new ZFile(cloneZipFile())) {
-            if (mToolStoresDirectories) {
-                assertEquals(6, zf.entries().size());
-            } else {
-                assertEquals(4, zf.entries().size());
-            }
-
+    void zfileReadsZipFile(String fileName, int numEntries) throws Exception {
+        try (ZFile zf = new ZFile(cloneZipFile(fileName))) {
+            assertEquals(numEntries, zf.entries().size());
             assertFileInZip(zf, "root");
             assertFileInZip(zf, "images/lena.png");
             assertFileInZip(zf, "text-files/rfc2460.txt");
@@ -110,18 +71,17 @@ public abstract class ZipToolsTestCase {
         }
     }
 
-    @Test
-    public void toolReadsZfFile() throws Exception {
-        testReadZFile(false);
+    void toolReadsZfFile(List<String> unzipCommand, String regex) throws Exception {
+        testReadZFile(unzipCommand, regex, false);
     }
 
-    @Test
-    public void toolReadsAlignedZfFile() throws Exception {
-        testReadZFile(true);
+    void toolReadsAlignedZfFile(List<String> unzipCommand, String regex) throws Exception {
+        testReadZFile(unzipCommand, regex, true);
     }
 
-    private void testReadZFile(boolean align) throws Exception {
-        String unzipcmd = mUnzipCommand.get(0);
+    private void testReadZFile(List<String> unzipCommand, String regex, boolean align)
+            throws Exception {
+        String unzipcmd = unzipCommand.get(0);
         Assume.assumeTrue(new File(unzipcmd).canExecute());
 
         ZFileOptions options = new ZFileOptions();
@@ -129,7 +89,7 @@ public abstract class ZipToolsTestCase {
             options.setAlignmentRule(AlignmentRules.constant(500));
         }
 
-        File zfile = new File (mTemporaryFolder.getRoot(), "zfile.zip");
+        File zfile = new File(getRoot(), "zfile.zip");
         try (ZFile zf = new ZFile(zfile, options)) {
             zf.add("root", new FileInputStream(ZipTestUtils.rsrcFile("root")));
             zf.add("images/", new ByteArrayInputStream(new byte[0]));
@@ -141,7 +101,7 @@ public abstract class ZipToolsTestCase {
                     new FileInputStream(ZipTestUtils.rsrcFile("text-files/wikipedia.html")));
         }
 
-        List<String> command = Lists.newArrayList(mUnzipCommand);
+        List<String> command = Lists.newArrayList(unzipCommand);
         command.add(zfile.getAbsolutePath());
         ProcessBuilder pb = new ProcessBuilder(command);
         Process proc = pb.start();
@@ -151,7 +111,7 @@ public abstract class ZipToolsTestCase {
         String lines[] = text.split("\n");
         Map<String, Integer> sizes = Maps.newHashMap();
         for (String l : lines) {
-            Matcher m = Pattern.compile(mUnzipLineRegex).matcher(l);
+            Matcher m = Pattern.compile(regex).matcher(l);
             if (m.matches()) {
                 String sizeTxt = m.group("size");
                 int size = Integer.parseInt(sizeTxt);

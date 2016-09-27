@@ -18,12 +18,32 @@ package com.android.builder.internal.packaging.zip;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class Windows7ZipTest extends ZipToolsTestCase {
-    @Before
-    public void setUp() {
-        configure("windows-7zip.zip", ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l"),
-                "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$", true);
+public class Windows7ZipTest {
+
+    private static final String FILE_NAME = "windows-7zip.zip";
+    private static final int NUM_ENTRIES = 6;
+    private static final ImmutableList<String> COMMAND =
+            ImmutableList.of("c:\\Program Files\\7-Zip\\7z.exe", "l");
+    private static final String REGEX =
+            "^(?:\\S+\\s+){3}(?<size>\\d+)\\s+\\d+\\s+(?<name>\\S+)\\s*$";
+
+    @Rule public final ZipToolsTester mZipToolsTester = new ZipToolsTester();
+
+    @Test
+    public void zfileReadsZipFile() throws Exception {
+        mZipToolsTester.zfileReadsZipFile(FILE_NAME, NUM_ENTRIES);
+    }
+
+    @Test
+    public void toolReadsZfFile() throws Exception {
+        mZipToolsTester.toolReadsZfFile(COMMAND, REGEX);
+    }
+
+    @Test
+    public void toolReadsAlignedZfFile() throws Exception {
+        mZipToolsTester.toolReadsAlignedZfFile(COMMAND, REGEX);
     }
 }
