@@ -120,7 +120,7 @@ public class JarTestSuiteRunner extends Suite {
 
     private static boolean seemsLikeJUnit3(Class<?> aClass) {
         return (TestCase.class.isAssignableFrom(aClass) || TestSuite.class.isAssignableFrom(aClass))
-               && (aClass.getName().endsWith("Test") || !Modifier.isAbstract(aClass.getModifiers()));  // let an abstract “Test” fail
+               && !Modifier.isAbstract(aClass.getModifiers());
     }
 
     private static boolean seemsLikeJUnit4(Class<?> aClass) {
