@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -77,6 +78,10 @@ public abstract class ZipToolsTestCase {
         mUnzipRegexNameGroup = nameGroup;
         mUnzipRegexSizeGroup = sizeGroup;
         mToolStoresDirectories = toolStoresDirectories;
+    }
+
+    void configure(@NonNull String zipFile, boolean toolStoresDirectories) {
+        configure(zipFile, ImmutableList.of("no command"), "no regexp", -1, -1, toolStoresDirectories);
     }
 
     private File cloneZipFile() throws Exception {
