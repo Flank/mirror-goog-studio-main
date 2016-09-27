@@ -807,7 +807,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         // Set up a mock project model for the resource configuration test(s)
         // where we provide a subset of densities to be included
 
-        return new TestLintClient() {
+        return new ToolsBaseTestLintClient() {
             @NonNull
             @Override
             protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {

@@ -76,7 +76,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                 mOnclick2,
                 mOnclick3
         );
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         File plainFile = new File(projectDir,
@@ -133,7 +133,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                 mOnclick2,
                 mOnclick3
         );
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         File plainFile = new File(projectDir,
@@ -180,7 +180,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                 mOnclick2,
                 mOnclick3
         );
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         File plainFile = new File(projectDir,
@@ -225,7 +225,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         File projectDir = getProjectDir(null,
                 mOnclick
         );
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
         File file = new File(projectDir,
@@ -295,7 +295,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     }
 
     private DefaultConfiguration getConfiguration(String xml) throws IOException {
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         File lintFile = File.createTempFile("lintconfig", ".xml");
         Files.write(xml, lintFile, Charsets.UTF_8);
         return DefaultConfiguration.create(client, lintFile);

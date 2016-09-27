@@ -1127,7 +1127,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     @Override
     protected TestLintClient createClient() {
-        return new TestLintClient() {
+        return new ToolsBaseTestLintClient() {
             @Nullable
             @Override
             public File getSdkHome() {

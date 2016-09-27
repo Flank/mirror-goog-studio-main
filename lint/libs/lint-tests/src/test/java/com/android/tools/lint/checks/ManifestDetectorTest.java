@@ -1422,7 +1422,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
         if ("testMipMapWithDensityFiltering".equals(getName())) {
             // Set up a mock project model for the resource configuration test(s)
             // where we provide a subset of densities to be included
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
 
                 @NonNull
                 @Override
@@ -1522,7 +1522,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
             };
         }
         if (mEnabled.contains(ManifestDetector.MOCK_LOCATION)) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -1602,7 +1602,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 }
             };
         } else if (mEnabled.contains(ManifestDetector.GRADLE_OVERRIDES)) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -1649,7 +1649,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
             };
 
         } else if (mEnabled.contains(ManifestDetector.WEARABLE_BIND_LISTENER)) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
 
                 @Override
                 public File getSdkHome() {

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint;
 
-import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.tools.lint.EcjParser.equalsCompound;
 import static com.android.tools.lint.EcjParser.startsWithCompound;
 import static com.android.tools.lint.client.api.JavaParser.ResolvedClass;
@@ -27,7 +26,6 @@ import static com.android.tools.lint.client.api.JavaParser.ResolvedVariable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.SdCardDetector;
@@ -986,7 +984,7 @@ public class EcjParserTest extends AbstractCheckTest {
 
     @Override
     protected TestLintClient createClient() {
-        return new TestLintClient() {
+        return new ToolsBaseTestLintClient() {
             @NonNull
             @Override
             protected ClassPathInfo getClassPath(@NonNull Project project) {

@@ -39,7 +39,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     private static final String SEPARATOR = "->";
 
     public void testCapitalization() throws Exception {
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         // Make sure it can be read in
         TypoLookup db = TypoLookup.get(client, "de", null);
         assertNotNull(db);
@@ -79,7 +79,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     public void test1() {
-        TypoLookup db = TypoLookup.get(new TestLintClient(), "en", null);
+        TypoLookup db = TypoLookup.get(createClient(), "en", null);
         assertNull(db.getTypos("hello", 0, "hello".length()));
         assertNull(db.getTypos("this", 0, "this".length()));
 
@@ -106,14 +106,14 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     public void testRegion() {
-        TypoLookup db = TypoLookup.get(new TestLintClient(), "en", "US");
+        TypoLookup db = TypoLookup.get(createClient(), "en", "US");
         assertNotNull(db.getTypos("wiht", 0, "wiht".length()));
-        db = TypoLookup.get(new TestLintClient(), "en", "GB");
+        db = TypoLookup.get(createClient(), "en", "GB");
         assertNotNull(db.getTypos("wiht", 0, "wiht".length()));
     }
 
     public void test2() {
-        TypoLookup db = TypoLookup.get(new TestLintClient(), "nb", null); //$NON-NLS-1$
+        TypoLookup db = TypoLookup.get(createClient(), "nb", null); //$NON-NLS-1$
         assertNull(db.getTypos("hello", 0, "hello".length()));
         assertNull(db.getTypos("this", 0, "this".length()));
 
@@ -134,7 +134,7 @@ public class TypoLookupTest extends AbstractCheckTest {
         // Some language dictionaries contain multi-word sequences (e.g. where there's a
         // space on the left hand side). This needs some particular care in the lookup
         // which is usually word oriented.
-        TypoLookup db = TypoLookup.get(new TestLintClient(), "de", "DE"); //$NON-NLS-1$
+        TypoLookup db = TypoLookup.get(createClient(), "de", "DE"); //$NON-NLS-1$
 
         // all zu->allzu
 
@@ -164,7 +164,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     public void testGlobbing() {
-        TypoLookup db = TypoLookup.get(new TestLintClient(), "de", null);
+        TypoLookup db = TypoLookup.get(createClient(), "de", null);
 
         // Authorisierung*->Autorisierung*
         String text = "Authorisierungscode";
@@ -191,7 +191,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     public void testComparisons() throws Exception {
         // Ensure that the two comparison methods agree
 
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         for (String locale : new String[] { "de", "nb", "es", "en", "pt", "hu", "it", "tr" }) {
             File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
             assertTrue(locale, f != null && f.exists());
@@ -293,7 +293,7 @@ public class TypoLookupTest extends AbstractCheckTest {
 
     private void validateDictionary(String locale) throws Exception {
         // Check that all the typo files are well formed
-        LintClient client = new TestLintClient();
+        LintClient client = createClient();
         File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
         assertTrue(locale, f != null && f.exists());
 

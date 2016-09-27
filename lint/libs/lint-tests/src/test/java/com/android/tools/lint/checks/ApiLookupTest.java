@@ -71,7 +71,7 @@ import java.util.zip.ZipEntry;
 
 @SuppressWarnings({"javadoc", "ConstantConditions"})
 public class ApiLookupTest extends AbstractCheckTest {
-    private final ApiLookup mDb = ApiLookup.get(new TestLintClient());
+    private final ApiLookup mDb = ApiLookup.get(createClient());
 
     public void test1() {
         assertEquals(5, mDb.getFieldVersion("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
@@ -214,7 +214,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         ApiLookup lookup;
 
         // Real cache:
-        mCacheDir = new TestLintClient().getCacheDir(true);
+        mCacheDir = createClient().getCacheDir(true);
         mLogBuffer.setLength(0);
         lookup = ApiLookup.get(new LookupTestClient());
         assertEquals(11, lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
@@ -385,7 +385,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 "setBackgroundTintList", "(Landroid/content/res/ColorStateList;)"));
     }
 
-    private final class LookupTestClient extends TestLintClient {
+    private final class LookupTestClient extends ToolsBaseTestLintClient {
         @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
         public File getCacheDir(boolean create) {

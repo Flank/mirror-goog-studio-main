@@ -5441,7 +5441,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     protected TestLintClient createClient() {
         if (getName().equals("testMissingApiDatabase")) {
             // Simulate an environment where there is no API database
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @Override
                 public File findResource(@NonNull String relativePath) {
                     return null;
@@ -5449,7 +5449,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             };
         }
         if (getName().equals("testVector_withGradleSupport")) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -5465,7 +5465,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             };
         }
         if (getName().equals("testPaddingStart")) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -5477,7 +5477,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             };
         }
         if (getName().equals("testPaddingStartWithOldBuildTools")) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -5492,7 +5492,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             };
         }
         if (getName().equals("testPaddingStartWithNewBuildTools")) {
-            return new TestLintClient() {
+            return new ToolsBaseTestLintClient() {
                 @NonNull
                 @Override
                 protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
