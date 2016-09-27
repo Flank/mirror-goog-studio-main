@@ -55,10 +55,6 @@ public abstract class ZipToolsTestCase {
     @Nullable
     private String mUnzipLineRegex;
 
-    private int mUnzipRegexNameGroup;
-
-    private int mUnzipRegexSizeGroup;
-
     private boolean mToolStoresDirectories;
 
     @Rule
@@ -69,19 +65,15 @@ public abstract class ZipToolsTestCase {
             @NonNull String zipFile,
             @NonNull List<String> unzipCommand,
             @NonNull String unzipLineRegex,
-            int nameGroup,
-            int sizeGroup,
             boolean toolStoresDirectories) {
         mZipFile = zipFile;
         mUnzipCommand = unzipCommand;
         mUnzipLineRegex = unzipLineRegex;
-        mUnzipRegexNameGroup = nameGroup;
-        mUnzipRegexSizeGroup = sizeGroup;
         mToolStoresDirectories = toolStoresDirectories;
     }
 
     void configure(@NonNull String zipFile, boolean toolStoresDirectories) {
-        configure(zipFile, ImmutableList.of("no command"), "no regexp", -1, -1, toolStoresDirectories);
+        configure(zipFile, ImmutableList.of("no command"), "no regexp", toolStoresDirectories);
     }
 
     private File cloneZipFile() throws Exception {
@@ -161,9 +153,9 @@ public abstract class ZipToolsTestCase {
         for (String l : lines) {
             Matcher m = Pattern.compile(mUnzipLineRegex).matcher(l);
             if (m.matches()) {
-                String sizeTxt = m.group(mUnzipRegexSizeGroup);
+                String sizeTxt = m.group("size");
                 int size = Integer.parseInt(sizeTxt);
-                String name = m.group(mUnzipRegexNameGroup);
+                String name = m.group("name");
                 sizes.put(name, size);
             }
         }

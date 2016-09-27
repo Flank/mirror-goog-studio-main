@@ -24,6 +24,6 @@ public class LinuxUnzipTest extends ZipToolsTestCase {
     @Before
     public void setUp() {
         configure("linux-zip.zip", ImmutableList.of("/usr/bin/unzip", "-v"),
-                "^\\s*(\\d+)\\s+(?:Stored|Defl:N).*\\s(\\S+)\\S*$", 2, 1, true);
+                "^\\s*(?<size>\\d+)\\s+(?:Stored|Defl:N).*\\s(?<name>\\S+)\\S*$", true);
     }
 }
