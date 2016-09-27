@@ -27,6 +27,7 @@ class BashCommandRunner {
   // Expected executable_path can be either absolute, relative or even
   // executable name only path.
   explicit BashCommandRunner(const std::string &executable_path);
+  // Returns true if the command runs successfully (exiting with 0).
   // If |output| is not null, it is populated with stdin and stderr from
   // running command.
   bool Run(const std::string &parameters, std::string *output) const;
