@@ -24,6 +24,7 @@ import static com.android.tools.lint.checks.GradleDetector.DEPENDENCY;
 import static com.android.tools.lint.checks.GradleDetector.DEPRECATED;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_GETTER;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_PLUGIN_COMPATIBILITY;
+import static com.android.tools.lint.checks.GradleDetector.HIGH_APP_VERSION_CODE;
 import static com.android.tools.lint.checks.GradleDetector.NOT_INTERPOLATED;
 import static com.android.tools.lint.checks.GradleDetector.PATH;
 import static com.android.tools.lint.checks.GradleDetector.PLUS;
@@ -1094,6 +1095,23 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "}\n")));
     }
 
+    public void testHighAppVersionCode() throws Exception {
+        mEnabled = Collections.singleton(HIGH_APP_VERSION_CODE);
+        assertEquals(""
+                + "build.gradle:5: Error: The 'versionCode' is very high and close to the max allowed value [HighAppVersionCode]\n"
+                + "        versionCode 2146435071\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n",
+
+                lintProject(source("build.gradle", ""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        versionCode 2146435071\n"
+                        + "    }\n"
+                        + "}")));
+    }
 
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
