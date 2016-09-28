@@ -43,7 +43,7 @@ public class AppPluginInternalTest extends BaseTest {
                 new File(testDir, "${FOLDER_TEST_PROJECTS}/basic")).build()
 
         project.apply plugin: 'com.android.application'
-1
+
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
             buildToolsVersion BUILD_TOOL_VERSION

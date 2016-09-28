@@ -49,7 +49,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }
@@ -79,7 +79,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion "android-" + COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }
@@ -109,7 +109,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }
@@ -134,7 +134,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             testBuildType "staging"
             defaultConfig {
                 versionName '1.0'
@@ -177,7 +177,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
         }
 
         // query the sourceSets, will throw if missing
@@ -196,7 +196,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }
@@ -262,7 +262,7 @@ class AtomPluginDslTest  extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }
@@ -308,7 +308,7 @@ class AtomPluginDslTest  extends BaseTest {
             project.apply plugin: 'com.android.atom'
             project.android {
                 compileSdkVersion version
-                buildToolsVersion '20.0.0'
+                buildToolsVersion BUILD_TOOL_VERSION
                 defaultConfig {
                     versionName '1.0'
                 }
@@ -353,7 +353,7 @@ class AtomPluginDslTest  extends BaseTest {
         project.apply plugin: 'com.android.atom'
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '20.0.0'
+            buildToolsVersion BUILD_TOOL_VERSION
             defaultConfig {
                 versionName '1.0'
             }

@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.shrinker.ShrinkerTestUtils.ch
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,6 +49,16 @@ public class IoScheduleShrinkerTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":android").getBuildFile(),
                 "android.buildTypes.release.useProguard = false");
+    }
+
+    @Before
+    public void upgradeBuildTools() throws Exception {
+        for (String subProject: ImmutableList.of(":android", ":Wearable")) {
+            TestFileUtils.searchAndReplace(
+                    project.getSubproject(subProject).getBuildFile(),
+                    "buildToolsVersion \".*\"",
+                    "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"");
+        }
     }
 
     @Test

@@ -283,12 +283,15 @@ public class PreDexCacheTest {
 
         File output = mTemporaryFolder.newFile();
 
+        DefaultDexOptions dexOptions = new DefaultDexOptions();
+        dexOptions.setDexInProcess(false);
+
         PreDexCache.getCache().preDexLibrary(
                 mAndroidBuilder,
                 input,
                 output,
                 false /*multidex*/,
-                new DefaultDexOptions(),
+                dexOptions,
                 new FakeProcessOutputHandler());
 
         checkOutputFile(content, output);
@@ -302,7 +305,8 @@ public class PreDexCacheTest {
         Thread[] threads = new Thread[3];
         final File[] outputFiles = new File[threads.length];
 
-        final DexOptions dexOptions = new DefaultDexOptions();
+        final DefaultDexOptions dexOptions = new DefaultDexOptions();
+        dexOptions.setDexInProcess(false);
 
         for (int i = 0 ; i < threads.length ; i++) {
             final int ii = i;
@@ -403,15 +407,17 @@ public class PreDexCacheTest {
 
     @Test
     public void testReload_defaultDexOptions() throws IOException, ProcessException, InterruptedException {
-        doTestReload(new DefaultDexOptions());
+        DefaultDexOptions dexOptions = new DefaultDexOptions();
+        dexOptions.setDexInProcess(false);
+        doTestReload(dexOptions);
     }
 
     @Test
     public void testReload_customDexOptions() throws IOException, ProcessException, InterruptedException {
-        System.err.println("TEST START");
         DefaultDexOptions dexOptions = new DefaultDexOptions();
         dexOptions.setJumboMode(true);
         dexOptions.setAdditionalParameters(ImmutableList.of("--minimal-main-dex"));
+        dexOptions.setDexInProcess(false);
 
         doTestReload(dexOptions);
     }
@@ -453,8 +459,10 @@ public class PreDexCacheTest {
 
     @Test
     public void testReload_differentDexOptions() throws IOException, ProcessException, InterruptedException {
-        DexOptions dexOptions = new DefaultDexOptions();
+        DefaultDexOptions dexOptions = new DefaultDexOptions();
+        dexOptions.setDexInProcess(false);
         DefaultDexOptions differentDexOptions = new DefaultDexOptions();
+        differentDexOptions.setDexInProcess(false);
         differentDexOptions.setAdditionalParameters(ImmutableList.of("--minimal-main-dex"));
 
         runTwoBuilds(dexOptions, differentDexOptions);
@@ -540,7 +548,7 @@ public class PreDexCacheTest {
         Files.write("dx!", dx, Charsets.UTF_8);
 
         return BuildToolInfo.modifiedLayout(
-                new Revision(21, 0, 1),
+                new Revision(24, 0, 2),
                 toolDir,
                 new File(toolDir, FN_AAPT),
                 new File(toolDir, FN_AIDL),

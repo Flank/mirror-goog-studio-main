@@ -26,6 +26,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -34,6 +35,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class AntennaPodInstantRunTest {
 
@@ -61,6 +63,22 @@ public class AntennaPodInstantRunTest {
                         + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
                         + "'} \n"
                         + "        jcenter()");
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "buildToolsVersion = \".*\"",
+                "buildToolsVersion = \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\" // Updated by test");
+
+        List<String> subprojects =
+                ImmutableList.of("AudioPlayer/library", "afollestad/commons", "afollestad/core");
+
+        for (String subproject: subprojects) {
+            TestFileUtils.searchAndReplace(
+                    mainProject.getSubproject(subproject).getBuildFile(),
+                    "buildToolsVersion \".*\"",
+                    "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                            + "\" // Updated by test");
+        }
     }
 
     @Test
