@@ -192,6 +192,7 @@ public class ApiDetector extends ResourceXmlDetector
     private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
 
     public static final String REQUIRES_API_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresApi"; //$NON-NLS-1$
+    public static final String SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"; //$NON-NLS-1$
 
     /** Accessing an unsupported API */
     @SuppressWarnings("unchecked")
@@ -330,8 +331,10 @@ public class ApiDetector extends ResourceXmlDetector
                     ApiDetector.class,
                     Scope.JAVA_FILE_SCOPE));
 
-    private static final String TARGET_API_VMSIG = '/' + TARGET_API + ';';
-    private static final String REQ_API_VMSIG = "/RequiresApi;";
+    private static final String REQ_API_VMSIG = "Landroid/support/annotation/RequiresApi;";
+    private static final String SDK_SUPPRESS_VMSIG = "Landroid/support/test/filters/SdkSuppress;";
+    // Just a suffix: we have two versions, both support lib and non-support lib
+    private static final String TARGET_API_VMSIG_SUFFIX =  "/TargetApi;";
     private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";  //$NON-NLS-1$
     private static final String ORDINAL_METHOD = "ordinal"; //$NON-NLS-1$
     public static final String ENUM_SWITCH_PREFIX = "$SwitchMap$";  //$NON-NLS-1$
@@ -1539,7 +1542,7 @@ public class ApiDetector extends ResourceXmlDetector
         if (annotations != null) {
             for (AnnotationNode annotation : (List<AnnotationNode>)annotations) {
                 String desc = annotation.desc;
-                if (desc.endsWith(TARGET_API_VMSIG)) {
+                if (desc.endsWith(TARGET_API_VMSIG_SUFFIX)) {
                     if (annotation.values != null) {
                         for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                             String key = (String) annotation.values.get(i);
@@ -1551,11 +1554,13 @@ public class ApiDetector extends ResourceXmlDetector
                             }
                         }
                     }
-                } else if (desc.endsWith(REQ_API_VMSIG)) {
+                } else if (desc.equals(REQ_API_VMSIG) || desc.equals(SDK_SUPPRESS_VMSIG)) {
                     if (annotation.values != null) {
                         for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                             String key = (String) annotation.values.get(i);
-                            if (key.equals(ATTR_VALUE) || key.equals("api")) {
+                            if (key.equals(ATTR_VALUE)
+                                    || key.equals("api")
+                                    || key.equals("minSdkVersion")) {
                                 Object value = annotation.values.get(i + 1);
                                 if (value instanceof Integer) {
                                     int api = (Integer) value;
@@ -1982,10 +1987,10 @@ public class ApiDetector extends ResourceXmlDetector
                     if (api > minSdk) {
                         int target = getTargetApi(expression);
                         if (target == -1 || api > target) {
-                            if (ApiDetector.isWithinVersionCheckConditional(expression, api)) {
+                            if (isWithinVersionCheckConditional(expression, api)) {
                                 return true;
                             }
-                            if (ApiDetector.isPrecededByVersionCheckExit(expression, api)) {
+                            if (isPrecededByVersionCheckExit(expression, api)) {
                                 return true;
                             }
 
@@ -2273,6 +2278,7 @@ public class ApiDetector extends ResourceXmlDetector
             if (fqcn != null &&
                     (fqcn.equals(FQCN_TARGET_API)
                     || fqcn.equals(REQUIRES_API_ANNOTATION)
+                    || fqcn.equals(SDK_SUPPRESS_ANNOTATION)
                     || fqcn.equals(TARGET_API))) { // when missing imports
                 PsiAnnotationParameterList parameterList = annotation.getParameterList();
                 for (PsiNameValuePair pair : parameterList.getAttributes()) {

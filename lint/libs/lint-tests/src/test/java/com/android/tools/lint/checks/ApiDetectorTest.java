@@ -5588,6 +5588,35 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    @SuppressWarnings("all") // sample code
+    public void testSdkSuppress() throws Exception {
+        // Regression test for b/31799926
+        assertEquals("No warnings.",
+                lintProject(
+                        java("src/test/pkg/MainActivity.java", ""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.app.Activity;\n"
+                                + "import android.content.Context;\n"
+                                + "import android.os.Build;\n"
+                                + "import android.os.Bundle;\n"
+                                + "import android.os.UserManager;\n"
+                                + "\n"
+                                + "public class MainActivity extends Activity {\n"
+                                + "\n"
+                                + "    @Override\n"
+                                + "    @android.support.test.filters.SdkSuppress(minSdkVersion = 17)\n"
+                                + "    protected void onCreate(Bundle savedInstanceState) {\n"
+                                + "        super.onCreate(savedInstanceState);\n"
+                                + "        setContentView(R.layout.activity_main);\n"
+                                + "\n"
+                                + "        UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "}")
+                ));
+    }
+
     public void testMultiCatch() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=198854
         // Check disjointed exception types
