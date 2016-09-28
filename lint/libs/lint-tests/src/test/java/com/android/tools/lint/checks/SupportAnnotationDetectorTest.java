@@ -2940,6 +2940,40 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testThreadingWithinLambdas() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=223101
+        assertEquals("No warnings.",
+                lintProject(
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.app.Activity;\n"
+                                + "import android.os.Bundle;\n"
+                                + "import android.support.annotation.WorkerThread;\n"
+                                + "\n"
+                                + "public class LambdaThreadTest extends Activity {\n"
+                                + "    @WorkerThread\n"
+                                + "    static void doSomething() {}\n"
+                                + "\n"
+                                + "    static void doInBackground(Runnable r) {}\n"
+                                + "\n"
+                                + "    @Override protected void onCreate(Bundle savedInstanceState) {\n"
+                                + "        super.onCreate(savedInstanceState);\n"
+                                + "        doInBackground(new Runnable() {\n"
+                                + "            @Override public void run() {\n"
+                                + "                doSomething();\n"
+                                + "            }\n"
+                                + "        });\n"
+                                + "        doInBackground(() -> doSomething());\n"
+                                + "        doInBackground(LambdaThreadTest::doSomething);\n"
+                                + "    }\n"
+                                + "}\n"
+                        ),
+                        mSupportClasspath,
+                        mSupportJar
+                ));
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
