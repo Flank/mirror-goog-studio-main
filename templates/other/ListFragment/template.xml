@@ -30,6 +30,7 @@
         id="className"
         type="string"
         constraints="nonempty|class|unique"
+        default="ItemFragment"
         suggest="${extractLetters(objectKind)}Fragment"
         name="Fragment class name" />
 
@@ -56,6 +57,7 @@
         id="fragment_layout"
         type="string"
         constraints="layout|nonempty|unique"
+        default="fragment_item"
         suggest="fragment_${extractLetters(objectKind?lower_case)}"
         name="Object content layout file name" />
 
@@ -63,6 +65,7 @@
         id="fragment_layout_list"
         type="string"
         constraints="layout|nonempty|unique"
+        default="fragment_item_list"
         suggest="fragment_${extractLetters(objectKind?lower_case)}_list"
         name="List layout file name" />
 
@@ -70,6 +73,7 @@
         id="adapterClassName"
         type="string"
         constraints="nonempty|class|unique"
+        default="MyItemRecyclerViewAdapter"
         suggest="My${extractLetters(objectKind)}RecyclerViewAdapter"
         name="Adapter class name"
         visible="false"/>
