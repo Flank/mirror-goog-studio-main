@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import ${packageName}.ItemFragment.OnListFragmentInteractionListener;
+import ${packageName}.${className}.OnListFragmentInteractionListener;
 import ${packageName}.dummy.DummyContent.DummyItem;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_item, parent, false);
+                .inflate(R.layout.${fragment_layout}, parent, false);
         return new ViewHolder(view);
     }
 
