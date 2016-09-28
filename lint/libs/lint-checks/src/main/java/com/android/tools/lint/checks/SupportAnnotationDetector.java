@@ -581,7 +581,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 context.report(MISSING_PERMISSION, node, context.getLocation(node), message);
             }
         } else if (requirement.isRevocable(permissions) &&
-                context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23) {
+                context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23 &&
+                requirement.getLastApplicableApi() >= 23) {
 
             boolean handlesMissingPermission = handlesSecurityException(node);
 

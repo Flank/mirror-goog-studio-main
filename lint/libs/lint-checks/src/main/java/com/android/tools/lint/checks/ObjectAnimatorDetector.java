@@ -156,7 +156,9 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
             // and validate each one
             checkPropertyValueHolders(context, targetClass, expressions);
         } else {
-            String expectedType = getExpectedType(methodName);
+            // If "ObjectAnimator#ofObject", look for the type evaluator type in
+            // argument at index 2 (third argument)
+            String expectedType = getExpectedType(context, call, 2);
             if (expectedType != null) {
                 checkProperty(context, expressions[1], targetClass, expectedType);
             }
@@ -164,7 +166,12 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
     }
 
     @Nullable
-    private static String getExpectedType(@Nullable String methodName) {
+    private static String getExpectedType(
+            @NonNull JavaContext context,
+            @NonNull PsiMethodCallExpression method,
+            int evaluatorIndex) {
+        String methodName = method.getMethodExpression().getReferenceName();
+
         if (methodName == null) {
             return null;
         }
@@ -176,7 +183,27 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
             case "ofMultiInt" : return "int[]";
             case "ofMultiFloat" : return "float[]";
             case "ofKeyframe" : return "android.animation.Keyframe";
-            case "ofObject" : return "java.lang.Object";
+            case "ofObject" : {
+                PsiExpression[] args = method.getArgumentList().getExpressions();
+                if (args.length > evaluatorIndex) {
+                    PsiType evaluatorType = TypeEvaluator.evaluate(context, args[evaluatorIndex]);
+                    if (evaluatorType != null) {
+                        String typeName = evaluatorType.getCanonicalText();
+                        if ("android.animation.FloatEvaluator".equals(typeName)) {
+                            return "float";
+                        } else if ("android.animation.FloatArrayEvaluator".equals(typeName)) {
+                            return "float[]";
+                        } else if ("android.animation.IntEvaluator".equals(typeName)
+                                || "android.animation.ArgbEvaluator".equals(typeName)) {
+                            return "int";
+                        } else if ("android.animation.IntArrayEvaluator".equals(typeName)) {
+                            return "int[]";
+                        } else if ("android.animation.PointFEvaluator".equals(typeName)) {
+                            return "android.graphics.PointF";
+                        }
+                    }
+                }
+            }
         }
 
         return null;
@@ -194,7 +221,9 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
             if (holder != null) {
                 PsiExpression[] args = holder.getArgumentList().getExpressions();
                 if (args.length >= 2) {
-                    String expectedType = getExpectedType(holder.getMethodExpression().getReferenceName());
+                    // If "PropertyValueHolder#ofObject", look for the type evaluator type in
+                    // argument at index 1 (second argument)
+                    String expectedType = getExpectedType(context, holder, 1);
                     if (expectedType != null) {
                         checkProperty(context, args[0], targetClass, expectedType);
                     }

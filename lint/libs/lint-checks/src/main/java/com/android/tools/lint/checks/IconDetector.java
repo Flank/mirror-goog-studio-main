@@ -1009,16 +1009,20 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
             for (Map.Entry<File, Set<String>> entry : folderMap.entrySet()) {
                 Set<String> names = entry.getValue();
+                String folderName = entry.getKey().getName();
                 for (String name : names) {
                     if (endsWith(name, DOT_XML)) {
-                        xmlNames.add(name);
+                        // Ignore .xml files in version qualifier folders
+                        if (!folderName.contains("-v")) {
+                            xmlNames.add(name);
+                        }
                     } else if (isDrawableFile(name)) {
                         bitmapNames.add(name);
                     }
                 }
             }
             if (!xmlNames.isEmpty() && !bitmapNames.isEmpty()) {
-                // Make sure that none of the nodpi names appear in a non-nodpi folder
+                // Make sure that none of the density-independent names appear in a density folder
                 Set<String> overlap = nameIntersection(xmlNames, bitmapNames);
                 if (!overlap.isEmpty()) {
                     Multimap<String, File> map = ArrayListMultimap.create();
