@@ -22,4 +22,3 @@ java_library(
         "//tools/base/common:tools.common",
     ],
 )
-
