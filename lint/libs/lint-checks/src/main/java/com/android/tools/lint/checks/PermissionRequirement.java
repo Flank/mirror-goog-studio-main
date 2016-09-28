@@ -659,7 +659,6 @@ public abstract class PermissionRequirement {
             "android.permission.BODY_SENSORS",
             "android.permission.CALL_PHONE",
             "android.permission.CAMERA",
-            "android.permission.GET_ACCOUNTS",
             "android.permission.PROCESS_OUTGOING_CALLS",
             "android.permission.READ_CALENDAR",
             "android.permission.READ_CALL_LOG",
