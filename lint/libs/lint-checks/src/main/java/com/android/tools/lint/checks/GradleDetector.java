@@ -457,8 +457,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 if (version >= VERSION_CODE_HIGH_THRESHOLD) {
                     String message =
                             "The 'versionCode' is very high and close to the max allowed value";
-                    report(context, getPropertyKeyCookie(valueCookie),
-                            HIGH_APP_VERSION_CODE, message);
+                    report(context, valueCookie, HIGH_APP_VERSION_CODE, message);
                 }
             }
         } else if (property.equals("compileSdkVersion") && parent.equals("android")) {
