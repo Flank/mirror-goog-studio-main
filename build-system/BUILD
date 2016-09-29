@@ -52,6 +52,7 @@ java_test(
     srcs = glob(["builder-test-api/src/test/java/**"]),
     deps = [
         ":tools.builder-test-api",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
     ],
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
@@ -86,6 +87,7 @@ java_test(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-all",
     ],
