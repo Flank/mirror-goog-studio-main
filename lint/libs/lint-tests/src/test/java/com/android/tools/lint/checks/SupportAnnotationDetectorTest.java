@@ -2885,6 +2885,30 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testRequiresPermissionWithinRequires() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(
+                        java(""
+                                + "package com.example.mylibrary1;\n"
+                                + "\n"
+                                + "import android.Manifest;\n"
+                                + "import android.content.Context;\n"
+                                + "import android.net.wifi.WifiInfo;\n"
+                                + "import android.net.wifi.WifiManager;\n"
+                                + "import android.support.annotation.RequiresPermission;\n"
+                                + "\n"
+                                + "public class WifiInfoUtil {\n"
+                                + "    @RequiresPermission(Manifest.permission.ACCESS_WIFI_STATE)\n"
+                                + "    public static WifiInfo getWifiInfo(Context context) {\n"
+                                + "        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);\n"
+                                + "        return wm.getConnectionInfo();\n"
+                                + "    }\n"
+                                + "}"),
+                        mSupportClasspath,
+                        mSupportJar
+                ));
+    }
+
     // TODO: http://b.android.com/220686
     public void ignore_testSnackbarDuration() throws Exception {
         assertEquals(""

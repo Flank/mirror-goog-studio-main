@@ -180,6 +180,7 @@ public class PermissionRequirementTest extends TestCase {
         assertTrue(isRevocableSystemPermission("android.permission.ACCESS_FINE_LOCATION"));
         assertTrue(isRevocableSystemPermission("android.permission.ACCESS_COARSE_LOCATION"));
         assertFalse(isRevocableSystemPermission("android.permission.UNKNOWN_PERMISSION_NAME"));
+        assertFalse(isRevocableSystemPermission("android.permission.GET_ACCOUNTS"));
     }
 
     public void testRevocable2() {
@@ -304,6 +305,10 @@ public class PermissionRequirementTest extends TestCase {
                     Element element = (Element) child;
                     String protectionLevel = element.getAttributeNS(ANDROID_URI, "protectionLevel");
                     String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                    if (name.equals("android.permission.GET_ACCOUNTS")) {
+                        // No longer needed in M. See issue 223244.
+                        continue;
+                    }
                     if (!name.isEmpty() && pattern.matcher(protectionLevel).find()) {
                         revocable.add(name);
                     } else {
@@ -324,7 +329,6 @@ public class PermissionRequirementTest extends TestCase {
                             // This one seems to have gone from a dangerous permission
                             // in M to a signature permission
                             revocable.add(name);
-
                         }
                     }
                 }
