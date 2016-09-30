@@ -59,6 +59,11 @@ class ProfilerServiceImpl final
       const profiler::proto::GetDevicesRequest* request,
       profiler::proto::GetDevicesResponse* response) override;
 
+  grpc::Status AttachAgent(
+      grpc::ServerContext* context,
+      const profiler::proto::AgentAttachRequest* request,
+      profiler::proto::AgentAttachResponse* response) override;
+
  private:
   // Clock knows about timestamps.
   const Clock& clock_;

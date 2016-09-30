@@ -1,0 +1,6 @@
+{
+  global:
+    Agent_*;
+  local:
+    *;
+};
