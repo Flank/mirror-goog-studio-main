@@ -98,6 +98,7 @@ import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiLambdaExpression;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
@@ -1377,11 +1378,11 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Attempts to infer the current thread context at the site of the given method call */
     @Nullable
-    private static List<String> getThreadContext(@NonNull JavaContext context,
+    public static List<String> getThreadContext(@NonNull JavaContext context,
             @NonNull PsiElement methodCall) {
         //noinspection unchecked
         PsiMethod method = PsiTreeUtil.getParentOfType(methodCall, PsiMethod.class, true,
-                PsiAnonymousClass.class);
+                PsiAnonymousClass.class, PsiLambdaExpression.class);
         return getThreads(context, method);
     }
 
