@@ -307,6 +307,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
         }
         if (!ignoreQualifiers) {
             if (mPreviewType == null) {
+                //noinspection VariableNotUsedInsideIf
                 if (version.mPreviewType != null) {
                     return 1;
                 }
@@ -326,6 +327,54 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
             delta = mSnapshot == version.mSnapshot ? 0 : (mSnapshot ? -1 : 1);
         }
         return delta;
+    }
+
+    /**
+     * Is this {@linkplain GradleVersion} at least as high as the given
+     * major, minor, micro version?
+     */
+    public boolean isAtLeast(int major, int minor, int micro) {
+        return isAtLeast(major, minor, micro, null, 0, false);
+    }
+
+    /**
+     * Is this {@linkplain GradleVersion} at least as high as the given
+     * major, minor, micro version?
+     */
+    public boolean isAtLeast(int major, int minor, int micro,
+            @Nullable String previewType, int previewVersion, boolean isSnapshot) {
+        int delta = getMajor() - major;
+        if (delta != 0) {
+            return delta >= 0;
+        }
+        delta = getMinor() - minor;
+        if (delta != 0) {
+            return delta >= 0;
+        }
+        delta = getMicro() - micro;
+        if (delta != 0) {
+            return delta >= 0;
+        }
+
+        if (mPreviewType == null) {
+            //noinspection VariableNotUsedInsideIf
+            if (previewType != null) {
+                return true;
+            }
+        } else if (previewType == null) {
+            return false;
+        } else {
+            delta = mPreviewType.compareToIgnoreCase(previewType);
+        }
+        if (delta != 0) {
+            return delta >= 0;
+        }
+
+        delta = mPreview - previewVersion;
+        if (delta != 0) {
+            return delta >= 0;
+        }
+        return mSnapshot == isSnapshot || !mSnapshot;
     }
 
     @Override
