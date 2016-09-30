@@ -21,17 +21,23 @@ import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import javax.swing.*;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 
@@ -53,7 +59,7 @@ public class VdCommandLineTool {
 
     private static void exitWithErrorMessage(String message) {
         System.err.println(message);
-        System.exit(-1);;
+        System.exit(-1);
     }
 
     public static void main(String[] args) {
@@ -76,12 +82,7 @@ public class VdCommandLineTool {
     }
 
     private static void displayXmlAsync(final File[] displayFiles) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                displayXml(displayFiles);
-            }
-        });
+        SwingUtilities.invokeLater(() -> displayXml(displayFiles));
     }
 
     private static class MyTableModel extends AbstractTableModel {
@@ -124,15 +125,14 @@ public class VdCommandLineTool {
     }
 
     private static void displayXml(File[] inputFiles) {
-        ArrayList<VdIcon> iconList = new ArrayList<VdIcon>();
+        ArrayList<VdIcon> iconList = new ArrayList<>();
         int validXmlFileCounter = 0;
-        for (int i = 0; i < inputFiles.length; i++) {
-            File xmlFile = inputFiles[i];
+        for (File xmlFile : inputFiles) {
             if (!xmlFile.isFile() || xmlFile.length() == 0) {
                 continue;
             }
             String xmlFilename = xmlFile.getName();
-            if (xmlFilename == null || xmlFilename.isEmpty()) {
+            if (xmlFilename.isEmpty()) {
                 continue;
             }
             if (!xmlFilename.endsWith(SdkConstants.DOT_XML)) {
@@ -140,10 +140,10 @@ public class VdCommandLineTool {
             }
 
             try {
-                VdIcon icon = new VdIcon(inputFiles[i].toURL());
+                VdIcon icon = new VdIcon(xmlFile.toURI().toURL());
                 icon.enableCheckerBoardBackground(true);
                 iconList.add(icon);
-            } catch (MalformedURLException e) {
+            } catch (IllegalArgumentException | IOException e) {
                 e.printStackTrace();
             }
             validXmlFileCounter++;
@@ -171,7 +171,7 @@ public class VdCommandLineTool {
             }
         });
         JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         if (table.getPreferredSize().getHeight() > MAX_WINDOW_SIZE.getHeight()) {
             JScrollPane pane = new JScrollPane(table);
@@ -183,7 +183,7 @@ public class VdCommandLineTool {
         frame.setVisible(true);
     }
 
-    private final static String AOSP_HEADER = "<!--\n" +
+    private static final String AOSP_HEADER = "<!--\n" +
             "Copyright (C) " + Calendar.getInstance().get(Calendar.YEAR) +
             " The Android Open Source Project\n\n" +
             "   Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
@@ -205,21 +205,23 @@ public class VdCommandLineTool {
         File outputDir = options.getOutputDir();
         int totalSvgFileCounter = 0;
         int errorSvgFileCounter = 0;
-        ArrayList<File> allOutputFiles = new ArrayList<File>();
-        for (int i = 0; i < inputSVGFiles.length; i++) {
-            String svgFilename = inputSVGFiles[i].getName();
+        ArrayList<File> allOutputFiles = new ArrayList<>();
+        for (File inputSVGFile : inputSVGFiles) {
+            String svgFilename = inputSVGFile.getName();
             if (!svgFilename.endsWith(SdkConstants.DOT_SVG)) {
                 continue;
             }
-            String svgFilenameWithoutExtension = svgFilename.substring(0, svgFilename.lastIndexOf("."));
+            String svgFilenameWithoutExtension = svgFilename.substring(0,
+                    svgFilename.lastIndexOf('.'));
 
-            File outputFile = new File(outputDir, svgFilenameWithoutExtension + SdkConstants.DOT_XML);
+            File outputFile = new File(outputDir,
+                    svgFilenameWithoutExtension + SdkConstants.DOT_XML);
             allOutputFiles.add(outputFile);
             try {
                 ByteArrayOutputStream byteArrayOutStream = new ByteArrayOutputStream();
 
                 String error = Svg2Vector
-                        .parseSvgToXml(inputSVGFiles[i], byteArrayOutStream);
+                        .parseSvgToXml(inputSVGFile, byteArrayOutStream);
 
                 if (error != null && !error.isEmpty()) {
                     errorSvgFileCounter++;
@@ -228,27 +230,31 @@ public class VdCommandLineTool {
                         // Copy the broken svg file in the same directory but with a new extension.
                         String brokenFileName = svgFilename + BROKEN_FILE_EXTENSION;
                         File brokenSvgFile = new File(outputDir, brokenFileName);
-                        Files.copy(inputSVGFiles[i], brokenSvgFile);
+                        Files.copy(inputSVGFile, brokenSvgFile);
                     }
                 }
 
                 // Override the size info if needed. Negative value will be ignored.
                 String vectorXmlContent = byteArrayOutStream.toString();
                 if (options.getForceHeight() > 0 || options.getForceWidth() > 0) {
-                    Document vdDocument = VdPreview.parseVdStringIntoDocument(vectorXmlContent, null);
+                    Document vdDocument = VdPreview
+                            .parseVdStringIntoDocument(vectorXmlContent, null);
 
-                    VdOverrideInfo info = new VdOverrideInfo(options.getForceWidth(), options.getForceHeight(),
-                            -1 /* opacity */, false /*auto mirrored*/);
-                    vectorXmlContent = VdPreview.overrideXmlContent(vdDocument, info, null);
+                    if (vdDocument != null) {
+                        VdOverrideInfo info = new VdOverrideInfo(options.getForceWidth(),
+                                options.getForceHeight(),
+                                -1 /* opacity */, false /*auto mirrored*/);
+                        vectorXmlContent = VdPreview.overrideXmlContent(vdDocument, info, null);
+                    }
                 }
                 if (options.isAddHeader()) {
                     vectorXmlContent = AOSP_HEADER + vectorXmlContent;
                 }
 
                 // Write the final result into the output XML file.
-                PrintWriter writer = new PrintWriter(outputFile);
-                writer.print(vectorXmlContent);
-                writer.close();
+                try (PrintWriter writer = new PrintWriter(outputFile)) {
+                    writer.print(vectorXmlContent);
+                }
             } catch (Exception e) {
                 System.err.println("exception" + e.getMessage());
                 e.printStackTrace();

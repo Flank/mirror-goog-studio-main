@@ -15,16 +15,23 @@
  */
 package com.android.assetstudiolib;
 
+import static com.android.assetstudiolib.AssetStudio.MATERIAL_DESIGN_ICONS_PATH;
+
 import com.android.ide.common.vectordrawable.VdIcon;
 
+import java.io.IOException;
 import java.net.URL;
-
-import static com.android.assetstudiolib.AssetStudio.MATERIAL_DESIGN_ICONS_PATH;
 
 public class AndroidVectorIcons {
   private static VdIcon load(String path, int size) {
     URL url = GraphicGenerator.class.getClassLoader().getResource(MATERIAL_DESIGN_ICONS_PATH + path);
-    return new VdIcon(url, size, size);
+    try {
+      return new VdIcon(url, size, size);
+    } catch (IOException e) {
+      // Should not happen; these are built-ins
+      assert false : path;
+      return null;
+    }
   }
 
   public static class EditorIcons {
