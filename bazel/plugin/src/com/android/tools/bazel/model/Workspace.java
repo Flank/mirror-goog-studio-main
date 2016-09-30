@@ -20,7 +20,7 @@ import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.PrintWriter;
 import java.util.Map;
 
 public class Workspace {
@@ -32,22 +32,9 @@ public class Workspace {
         this.directory = directory;
     }
 
-    public void generate() throws IOException {
-        if (!new File(directory, "WORKSPACE").exists()) {
-            throw new IllegalStateException("Invalid workspace directory " + directory);
-        }
+    public void generate(PrintWriter progress) throws IOException {
         for (Package pkg : packages.values()) {
-            pkg.generate();
-        }
-    }
-
-    public void createPackagesInDirectory(String relDir) {
-        File dir = new File(directory, relDir);
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory()) {
-                Path rel = directory.toPath().relativize(file.toPath());
-                createPackage(rel.toString());
-            }
+            pkg.generate(progress);
         }
     }
 
@@ -55,39 +42,33 @@ public class Workspace {
         return packages.get(name);
     }
 
-    public void createPackage(String rel) {
-        Package pkg = packages.get(rel);
-        if (pkg == null) {
-            pkg = new Package(this, rel);
-            packages.put(rel, pkg);
-        }
-    }
-
     public File getDirectory() {
         return directory;
     }
 
     public Package findPackage(String rel) {
-        if (rel.startsWith("prebuilts/tools/common/m2")) {
-            String packageName = rel.substring(0, rel.lastIndexOf('/'));
-            Package result = packages.get(packageName);
-            if (result == null) {
-                result = new Package(this, packageName);
-            }
-            return result;
+        File pkg = findBuildDirectory(new File(directory, rel));
+        if (pkg == null) {
+            System.err.println("Invalid package directory " + rel);
+            return null;
         }
+        String label = directory.toPath().relativize(pkg.toPath()).normalize().toString();
 
-        if (!rel.endsWith("/")) {
-            rel = rel + "/";
+        Package result = packages.get(label);
+        if (result == null) {
+            result = new Package(this, label);
+            packages.put(label, result);
         }
-        for (String pkg : packages.keySet()) {
-            Package aPackage = packages.get(pkg);
-            String norm =  (pkg.endsWith("/") ? pkg : pkg + "/");
-            if (rel.startsWith(norm)) {
-                return aPackage;
-            }
+        return result;
+    }
+
+
+    private File findBuildDirectory(File child) {
+        File file = child == null ? null : new File(child, "BUILD");
+        while (file != null && !(file.exists() && !file.isDirectory())) {
+            child = child.getParentFile();
+            file = child == null ? null : new File(child, "BUILD");
         }
-        System.err.println("Invalid package directory " + rel);
-        return null;
+        return child;
     }
 }

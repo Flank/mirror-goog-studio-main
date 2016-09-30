@@ -16,7 +16,10 @@
 
 package com.android.tools.bazel.model;
 
-import java.io.PrintWriter;
+import com.android.tools.bazel.parser.ast.CallExpression;
+import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,21 +31,11 @@ public class JavaImport extends BazelRule {
     }
 
     @Override
-    public void generate(PrintWriter writer) {
-        writer.append("java_import(\n");
-        writer.append("    name = \"").append(name).append("\",\n");
-        writer.append("    jars = [\n");
-        for (String jar : jars) {
-            writer.append("        \"").append(jar).append("\"").append(",\n");
-        }
-        for (BazelRule rule : dependencies) {
-            if (!rule.isEmpty()) {
-                writer.append("        \"").append(rule.getLabel()).append("\"").append(",\n");
-            }
-        }
-        writer.append("    ],\n");
-        writer.append("    visibility = [\"//visibility:public\"],\n");
-        writer.append(")\n");
+    public void update() throws IOException {
+        CallExpression call = getCallExpression("java_import", name);
+
+        setArgument(call, "jars", jars);
+        setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
     }
 
     public void addJar(String jar) {

@@ -16,9 +16,10 @@
 
 package com.android.tools.bazel.model;
 
-import com.google.common.collect.ImmutableSet;
+import com.android.tools.bazel.parser.ast.CallExpression;
+import com.google.common.collect.ImmutableList;
 
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class ImlModule extends BazelRule {
@@ -29,33 +30,24 @@ public class ImlModule extends BazelRule {
     private List<String> resources = new LinkedList<>();
     private List<String> exclude = new LinkedList<>();
     private Map<BazelRule, List<String>> dependencyTags = new HashMap<>();
-    private String testData;
-    private String testTimeout;
-    private String testClass;
 
     public ImlModule(Package pkg, String name) {
         super(pkg, name);
     }
 
     @Override
-    public void generate(PrintWriter writer) {
-        writer.append("iml_module").append("(\n");
-        writer.append("    name = \"").append(name).append("\",\n");
+    public void update() throws IOException {
+        CallExpression call = getCallExpression("iml_module", name);
 
-        append(writer, "srcs", sources);
-        append(writer, "test_srcs", testSources);
-        append(writer, "exclude", exclude);
-        append(writer, "resources", resources);
-        append(writer, "test_resources", testResources);
-        append(writer, "deps", tagDependencies(dependencies));
-        append(writer, "exports", exported);
-        append(writer, "test_data", testData, false);
-        append(writer, "test_timeout", testTimeout);
-        append(writer, "test_class", testClass);
-
-        writer.append("    javacopts = [\"-extra_checks:off\"],\n");
-        writer.append("    visibility = [\"//visibility:public\"],\n");
-        writer.append(")\n");
+        setArgument(call, "srcs", sources);
+        setArgument(call, "test_srcs", testSources);
+        setArgument(call, "exclude", exclude);
+        setArgument(call, "resources", resources);
+        setArgument(call, "test_resources", testResources);
+        setArgument(call, "deps", tagDependencies(dependencies));
+        setArgument(call, "exports", exported);
+        setArgument(call, "javacopts", ImmutableList.of("-extra_checks:off"));
+        setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {
@@ -94,22 +86,5 @@ public class ImlModule extends BazelRule {
 
     public void addExclude(String exclude) {
         this.exclude.add(exclude);
-    }
-
-    @Override
-    public Set<String> getImports() {
-        return ImmutableSet.of("iml_module");
-    }
-
-    public void setTestData(String testData) {
-        this.testData = testData;
-    }
-
-    public void setTestTimeout(String timeout) {
-        this.testTimeout = timeout;
-    }
-
-    public void setTestClass(String testClass) {
-        this.testClass = testClass;
     }
 }

@@ -16,27 +16,44 @@
 
 package com.android.tools.bazel.model;
 
+import com.android.tools.bazel.parser.BuildParser;
+import com.android.tools.bazel.parser.Tokenizer;
+import com.android.tools.bazel.parser.ast.Build;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.intellij.openapi.util.io.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class Package {
 
     private final String name;
     private final Workspace workspace;
     private Map<String, BazelRule> rules = Maps.newLinkedHashMap();
-    private Set<String> imports = Sets.newLinkedHashSet();
+    private Build buildFile;
 
     public Package(Workspace workspace, String name) {
         this.workspace = workspace;
         this.name = name;
     }
 
-    public void generate() throws IOException {
+    public Build getBuildFile() throws IOException {
+        if (buildFile == null) {
+            File file = new File(getPackageDir(), "BUILD");
+            Tokenizer tokenizer = new Tokenizer(file);
+            BuildParser parser = new BuildParser(tokenizer);
+            buildFile = parser.parse();
+        }
+        return buildFile;
+    }
+
+    public void generate(PrintWriter progress) throws IOException {
         if (workspace == null) return;
 
         boolean hasRules = false;
@@ -50,24 +67,26 @@ public class Package {
 
         File dir = getPackageDir();
         File build = new File(dir, "BUILD");
-        System.err.println(">> " + build.getAbsolutePath());
         FileUtil.createIfDoesntExist(build);
-        try (FileOutputStream fileOutputStream = new FileOutputStream(build);
-            PrintWriter writer = new PrintWriter(fileOutputStream)) {
-            writer.append("# This file has been automatically generated, please do not modify directly.\n");
-            if (!imports.isEmpty()) {
-                writer.append("load(\"//tools/base/bazel:bazel.bzl\"");
-                for (String name : imports) {
-                    writer.append(", \"").append(name).append("\"");
-                }
-                writer.append(")\n");
-            }
-            for (BazelRule rule : rules.values()) {
-                if (rule.isEmpty()) continue;
-                if (!rule.isExport()) continue;
+        for (BazelRule rule : rules.values()) {
+            if (rule.isEmpty()) continue;
+            if (!rule.isExport()) continue;
+            rule.update();
+        }
 
-                writer.append("\n");
-                rule.generate(writer);
+        if (buildFile != null) {
+            File tmp = File.createTempFile("BUILD", "test");
+            try (FileOutputStream fileOutputStream = new FileOutputStream(tmp);
+                 PrintWriter writer = new PrintWriter(fileOutputStream)) {
+                buildFile.write(writer);
+            }
+            String before = Files.toString(build, StandardCharsets.UTF_8);
+            String after = Files.toString(tmp, StandardCharsets.UTF_8);
+            if (!before.equals(after)) {
+                progress.append("Updated " + name + "/BUILD\n");
+                System.err.println("Build file changed: " + name);
+                System.err.println("idea diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
+                Files.copy(tmp, build);
             }
         }
     }
@@ -89,7 +108,6 @@ public class Package {
         if (rules.get(rule.getName().toLowerCase()) != null) {
             throw new IllegalStateException("Duplicated rule " + rule.getName());
         }
-        imports.addAll(rule.getImports());
         rules.put(rule.getName().toLowerCase(), rule);
     }
 }

@@ -16,12 +16,17 @@
 
 package com.android.tools.bazel.model;
 
-import com.google.common.collect.ImmutableSet;
+import com.android.tools.bazel.parser.ast.Build;
+import com.android.tools.bazel.parser.ast.CallExpression;
+import com.android.tools.bazel.parser.ast.CallStatement;
+import com.android.tools.bazel.parser.ast.ListExpression;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class BazelRule {
 
@@ -45,7 +50,10 @@ public abstract class BazelRule {
         return false;
     }
 
-    abstract public void generate(PrintWriter writer);
+    /**
+     * Updates the associated BUILD file with the contents of this rule.
+     */
+    public abstract void update() throws IOException;
 
     public String getLabel() {
         return "//" + pkg.getName() + ":" + name;
@@ -76,37 +84,28 @@ public abstract class BazelRule {
         return getLabel();
     }
 
-    public Set<String> getImports() {
-        return ImmutableSet.of();
-    }
-
-    protected void append(PrintWriter writer, String name, String value) {
-        append(writer, name, value, true);
-    }
-
-    protected void append(PrintWriter writer, String name, String value, boolean quote) {
-        if (value != null) {
-            writer.append("    ")
-                    .append(name)
-                    .append(" = ")
-                    .append(quote ? "\"" : "")
-                    .append(value)
-                    .append(quote ? "\"" : "")
-                    .append(",\n");
+    /**
+     * Gets the expression in the BUILD file that represents this rule. If the rule doesn't
+     * exist in the BUILD file, a new one is created.
+     */
+    protected final CallExpression getCallExpression(String type, String name) throws IOException {
+        Build build = pkg.getBuildFile();
+        CallExpression call = build.getCall(name);
+        if (call == null) {
+            call = CallExpression.build(type, ImmutableMap.of("name", name));
+            build.addStatement(new CallStatement(call));
         }
+        return call;
     }
 
-    protected void append(PrintWriter writer, String name, Collection<? extends Object> collection) {
-        if (collection != null && !collection.isEmpty()) {
-            boolean single = collection.size() == 1;
-            writer.append("    ").append(name).append(" = ");
-            writer.append("[").append(single ? "" : "\n");
-            for (Object element : collection) {
-                writer.append(single ? "" : "        ");
-                writer.append("\"").append(element.toString()).append("\"");
-                writer.append(single ? "" : ",\n");
-            }
-            writer.append(single ?  "" : "    ").append("]").append(",\n");
+    /**
+     * Sets the argument of the given call expression named {@code name} to be {@code values}.
+     */
+    protected final void setArgument(CallExpression rule, String name, Collection<?> values) {
+        if (!values.isEmpty()) {
+            ListExpression list = ListExpression.build(values.stream().map(Object::toString).collect(Collectors.toList()));
+            list.setSingleLine(values.size() <= 1);
+            rule.setArgument(name, list);
         }
     }
 }

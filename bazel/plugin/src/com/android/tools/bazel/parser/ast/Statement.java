@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.tools.bazel;
+package com.android.tools.bazel.parser.ast;
 
-import java.util.List;
-import java.util.Map;
+import java.io.PrintWriter;
 
-interface Configuration {
-    String nameRule(String rel, String name);
+/**
+ * A top-level statement.
+ */
+public abstract class Statement extends Node {
 
-    String mapImportJar(String jar);
+    protected Statement(Token start, Token end) {
+        super(start, end);
+    }
 
-    List<String> getAdditionalImports();
+    public final void write(PrintWriter writer) {
+        for (String comment : preComments) {
+            writer.append(comment);
+        }
+        doWrite(writer);
+        for (String comment : postComments) {
+            writer.append("  " + comment);
+        }
+        writer.write("\n");
+    }
 
-    List<String> getLabelsToExport();
-
-    Map<String, String> getCopySpec();
+    public abstract void doWrite(PrintWriter writer);
 }
-

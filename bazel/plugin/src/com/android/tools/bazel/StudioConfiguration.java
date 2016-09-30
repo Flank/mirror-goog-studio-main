@@ -15,7 +15,6 @@
  */
 package com.android.tools.bazel;
 
-import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -23,34 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 public class StudioConfiguration implements Configuration {
-
-    @Override
-    public void configureWorkspace(Workspace bazel) {
-        // Create packages in order of priority
-        bazel.createPackagesInDirectory("prebuilts/studio");
-        bazel.createPackagesInDirectory("prebuilts/tools/common");
-        bazel.createPackage("prebuilts");
-        bazel.createPackage("tools/analytics-library");
-        bazel.createPackage("tools/adt/idea/adt-ui");
-        bazel.createPackage("tools/adt/idea");
-        bazel.createPackage("tools/data-binding");
-
-        // Ideally we'd do this, but we repo copy it instead
-        // bazel.createPackage("tools/idea");
-        bazel.createPackage("tools/idea/.idea/libraries");
-        bazel.createPackage("tools/sherpa");
-        bazel.createPackage("tools/studio/google/cloud/tools");
-        bazel.createPackage("tools/studio/google/cloud/testing");
-        bazel.createPackagesInDirectory("tools/studio/google");
-        bazel.createPackage("tools/vendor/google");
-        bazel.createPackage("tools/vendor/google3/blaze");
-        bazel.createPackage("tools/vendor/intellij/cidr");
-        bazel.createPackagesInDirectory("tools/base");
-        bazel.createPackage("tools");
-
-        // TODO Fix this mapping of a prebuilt jar, to be built with bazel.
-        bazel.createPackage("out/studio");
-    }
 
     @Override
     public String nameRule(String rel, String name) {
@@ -71,7 +42,7 @@ public class StudioConfiguration implements Configuration {
         } else if (jar.equals("tools/vendor/google3/blaze/blaze-base/lib/proto_deps.jar")) {
             return "tools/vendor/google3/blaze/blaze-base:proto_deps";
         } else if (jar.equals("out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar")) {
-            return "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
+            return "tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
         } else {
             return null;
         }
@@ -92,23 +63,5 @@ public class StudioConfiguration implements Configuration {
         return ImmutableMap.of(
                 "tools/BUILD", "tools/base/bazel/tools.idea.BUILD"
         );
-    }
-
-    @Override
-    public Map<String, String> getTestData() {
-        return ImmutableMap.of(
-                "android", "glob([\"android/testData/**/*\", \"designer/testData/**/*\"])",
-                "ddmlib", "[\"//prebuilts/studio/sdk:platform-tools\"]"
-        );
-    }
-
-    @Override
-    public Map<String, String> getTestTimeout() {
-        return ImmutableMap.of("android", "long");
-    }
-
-    @Override
-    public Map<String, String> getTestClass() {
-        return ImmutableMap.of("android", "com.android.tools.idea.IdeaTestSuite");
     }
 }

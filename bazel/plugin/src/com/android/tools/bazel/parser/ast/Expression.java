@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.tools.bazel;
+package com.android.tools.bazel.parser.ast;
 
-import java.util.List;
-import java.util.Map;
+import java.io.PrintWriter;
 
-interface Configuration {
-    String nameRule(String rel, String name);
+public abstract class Expression extends Node {
+    public Expression(Token start, Token end) {
+        super(start, end);
+    }
 
-    String mapImportJar(String jar);
+    public abstract void write(String indent, PrintWriter writer);
 
-    List<String> getAdditionalImports();
-
-    List<String> getLabelsToExport();
-
-    Map<String, String> getCopySpec();
+    public String getLiteral() {
+        return getStart().value();
+    }
 }
-
