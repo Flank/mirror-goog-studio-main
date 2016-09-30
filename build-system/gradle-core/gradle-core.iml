@@ -124,7 +124,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../out/repo/net/sf/jopt-simple/jopt-simple/4.9/jopt-simple-4.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9/jopt-simple-4.9.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
