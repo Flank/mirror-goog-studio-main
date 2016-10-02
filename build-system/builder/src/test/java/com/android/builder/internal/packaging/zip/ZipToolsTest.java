@@ -100,21 +100,6 @@ public class ZipToolsTest {
         };
     }
 
-    protected void configure(
-            @NonNull String zipFile,
-            @NonNull List<String> unzipCommand,
-            @NonNull String unzipLineRegex,
-            boolean toolStoresDirectories) {
-        mZipFile = zipFile;
-        mUnzipCommand = unzipCommand;
-        mUnzipLineRegex = unzipLineRegex;
-        mToolStoresDirectories = toolStoresDirectories;
-    }
-
-    void configure(@NonNull String zipFile, boolean toolStoresDirectories) {
-        configure(zipFile, ImmutableList.of("no command"), "no regexp", toolStoresDirectories);
-    }
-
     private File cloneZipFile() throws Exception {
         File zfile = mTemporaryFolder.newFile("file.zip");
         Files.copy(ZipTestUtils.rsrcFile(mZipFile), zfile);
