@@ -52,4 +52,5 @@ add_unit_test(profiler_utils_test
 
 target_link_libraries(profiler_utils_test
                       profiler_utils
+                      testutils
                       ${GTEST_LINK_LIBRARIES})
