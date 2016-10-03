@@ -108,8 +108,8 @@ task initSdkForTests(type: JavaExec) {
                     'extras;google;m2repository',
                     'extras;android;m2repository',
                     'ndk-bundle',
-                    'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha8',
-                    'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha8',
+                    'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha9',
+                    'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha9',
                     "system-images;android-19;default;x86",
                     "system-images;android-23;default;x86",
                     "extras;android;gapid;3"]
@@ -117,8 +117,8 @@ task initSdkForTests(type: JavaExec) {
     }
 }
 
-def offline_repo_files = ["extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha8",
-                          "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha8"]
+def offline_repo_files = ["extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha9",
+                          "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha9"]
 def offline_sdk_targets = [["macosx", "64", "darwin-x86_64"],
                            ["macosx", "32", "darwin-x86"],
                            ["windows", "64", "windows-x86_64"],
