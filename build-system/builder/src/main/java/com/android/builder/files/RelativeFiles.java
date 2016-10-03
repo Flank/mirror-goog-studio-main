@@ -17,14 +17,25 @@
 package com.android.builder.files;
 
 import com.android.annotations.NonNull;
+import com.android.builder.internal.packaging.zip.StoredEntry;
+import com.android.builder.internal.packaging.zip.StoredEntryType;
+import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.ide.common.res2.FileStatus;
+import com.android.utils.FileUtils;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closer;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -102,5 +113,31 @@ public final class RelativeFiles {
     @NonNull
     public static Predicate<RelativeFile> fromPathPredicate(@NonNull Predicate<String> predicate) {
         return Predicates.compose(predicate, RelativeFile.EXTRACT_PATH);
+    }
+
+    /**
+     * Reads a zip file and adds all files in the file in a new relative set.
+     *
+     * @param zip the zip file to read, must be a valid, existing zip file
+     * @return the file set
+     * @throws IOException failed to read the zip file
+     */
+    @NonNull
+    public static ImmutableSet<RelativeFile> fromZip(@NonNull File zip) throws IOException {
+        Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
+
+        Set<RelativeFile> files = Sets.newHashSet();
+
+        try (ZFile zipReader = new ZFile(zip)) {
+            for (StoredEntry entry : zipReader.entries()) {
+                if (entry.getType() == StoredEntryType.FILE) {
+                    File file = new File(zip, FileUtils.toSystemDependentPath(
+                            entry.getCentralDirectoryHeader().getName()));
+                    files.add(new RelativeFile(zip, file));
+                }
+            }
+        }
+
+        return ImmutableSet.copyOf(files);
     }
 }

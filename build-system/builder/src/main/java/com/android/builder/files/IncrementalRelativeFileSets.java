@@ -94,30 +94,18 @@ public final class IncrementalRelativeFileSets {
      * @throws IOException failed to read the zip file
      */
     @NonNull
-    public static ImmutableMap<RelativeFile, FileStatus> fromZip(@NonNull File zip,
-            FileStatus status) throws IOException {
+    public static ImmutableMap<RelativeFile, FileStatus> fromZip(
+            @NonNull File zip,
+            FileStatus status)
+            throws IOException {
         Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
 
-        Set<RelativeFile> files = Sets.newHashSet();
-
-        Closer closer = Closer.create();
-        try {
-            ZFile zipReader = closer.register(new ZFile(zip));
-            for (StoredEntry entry : zipReader.entries()) {
-                if (entry.getType() == StoredEntryType.FILE) {
-                    File file = new File(zip, FileUtils.toSystemDependentPath(
-                            entry.getCentralDirectoryHeader().getName()));
-                    files.add(new RelativeFile(zip, file));
-                }
-            }
-        } catch (Throwable t) {
-            throw closer.rethrow(t, IOException.class);
-        } finally {
-            closer.close();
-        }
-
-        Map<RelativeFile, FileStatus> map = Maps.asMap(files, Functions.constant(status));
-        return ImmutableMap.copyOf(map);
+        return ImmutableMap.<RelativeFile, FileStatus>builder()
+                .putAll(
+                        Maps.asMap(
+                            RelativeFiles.fromZip(zip),
+                            f -> status))
+                .build();
     }
 
     /**
