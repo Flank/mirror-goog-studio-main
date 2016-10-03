@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -163,7 +164,8 @@ public class HotSwapTest {
                         "HelloWorld",
                         LOG_TAG,
                         device,
-                        logcat);
+                        logcat,
+                        PORTS.get(HotSwapTester.class.getSimpleName()));
 
         List<HotSwapTester.Change> changes = new ArrayList<>();
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesArt;
 import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesDalvik;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -128,7 +129,11 @@ public class ConnectedColdSwapTest {
 
         //Connect to device
         InstantRunClient client =
-                new InstantRunClient(HelloWorldApp.APP_ID, iLogger, token, 8125);
+                new InstantRunClient(
+                        HelloWorldApp.APP_ID,
+                        iLogger,
+                        token,
+                        PORTS.get(ConnectedColdSwapTest.class.getSimpleName()));
 
         // Give the app a chance to start
         messageListener.await();

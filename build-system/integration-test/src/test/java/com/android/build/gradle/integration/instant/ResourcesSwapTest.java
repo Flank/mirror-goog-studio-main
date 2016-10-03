@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 import static com.android.build.gradle.integration.instant.HotSwapTester.COLDSWAP_MODE;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -160,7 +161,8 @@ public class ResourcesSwapTest {
                         "HelloWorld",
                         LOG_TAG,
                         device,
-                        logcat);
+                        logcat,
+                        PORTS.get(ResourcesSwapTest.class.getSimpleName()));
 
         tester.run(
                 () -> {

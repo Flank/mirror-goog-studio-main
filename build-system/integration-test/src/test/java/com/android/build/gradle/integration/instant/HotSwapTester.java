@@ -62,6 +62,8 @@ public class HotSwapTester {
     @NonNull
     private final Logcat logcat;
 
+    private final int port;
+
     public HotSwapTester(
             @NonNull GradleTestProject project,
             @NonNull Packaging packaging,
@@ -69,7 +71,8 @@ public class HotSwapTester {
             @NonNull String activityName,
             @NonNull String logTag,
             @NonNull IDevice device,
-            @NonNull Logcat logcat) {
+            @NonNull Logcat logcat,
+            int port) {
         this.project = project;
         this.packaging = packaging;
         this.packageName = packageName;
@@ -77,6 +80,7 @@ public class HotSwapTester {
         this.logTag = logTag;
         this.device = device;
         this.logcat = logcat;
+        this.port = port;
     }
 
     /**
@@ -129,7 +133,7 @@ public class HotSwapTester {
 
             //Connect to device
             InstantRunClient client =
-                    new InstantRunClient(packageName, iLogger, token, 8125);
+                    new InstantRunClient(packageName, iLogger, token, port);
 
             // Give the app a chance to start
             InstantRunTestUtils.waitForAppStart(client, device);
