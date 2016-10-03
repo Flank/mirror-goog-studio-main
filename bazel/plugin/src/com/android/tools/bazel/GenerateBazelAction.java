@@ -81,8 +81,6 @@ public class GenerateBazelAction extends AnAction {
         final ExcludesConfiguration excludesConfiguration = CompilerConfiguration.getInstance(project).getExcludedEntriesConfiguration();
         ExcludeEntryDescription[] excludeEntries = excludesConfiguration.getExcludeEntryDescriptions();
 
-        config.configureWorkspace(bazel);
-
         Map<String, JavaImport> imports = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
         Map<Module, BazelModule> inverse = Maps.newHashMap();
@@ -139,9 +137,6 @@ public class GenerateBazelAction extends AnAction {
                     }
                 }
             }
-            iml.setTestData(config.getTestData().get(name));
-            iml.setTestTimeout(config.getTestTimeout().get(name));
-            iml.setTestClass(config.getTestClass().get(name));
         }
 
         // 2nd pass: Dependencies.
@@ -190,17 +185,19 @@ public class GenerateBazelAction extends AnAction {
                                     String relJar = FileUtil.getRelativePath(workspace, jarFile);
                                     JavaImport imp = imports.get(relJar);
                                     if (imp == null) {
+                                        String label = config.mapImportJar(relJar);
                                         Package jarPkg = bazel.findPackage(relJar);
-                                        if (jarPkg != null) {
-                                            String packageRelative = FileUtil.getRelativePath(jarPkg.getPackageDir(), new File(jar.getPath()));
+                                        if (label != null) {
+                                            Label pkgAndTarget = new Label(label);
+                                            jarPkg = new Package(null, pkgAndTarget.pkg);
+                                            imp = new JavaImport(jarPkg, pkgAndTarget.target);
+                                            imports.put(relJar, imp);
+                                        } else if (jarPkg != null) {
+                                            String packageRelative = FileUtil.getRelativePath(
+                                                    jarPkg.getPackageDir(), new File(jar.getPath()));
                                             // TODO: Fix all these dependencies correctly
-                                            String label = config.mapImportJar(relJar);
                                             String target;
-                                            if (label != null) {
-                                                Label pkgAndTarget = new Label(label);
-                                                jarPkg = new Package(null, pkgAndTarget.pkg);
-                                                target = pkgAndTarget.target;
-                                            } else if (relJar.startsWith("prebuilts/tools/common/m2")) {
+                                            if (relJar.startsWith("prebuilts/tools/common/m2")) {
                                                 target = "jar";
                                             } else {
                                                 target = packageRelative.replaceAll("\\.jar$", "");
@@ -264,7 +261,7 @@ public class GenerateBazelAction extends AnAction {
         }
 
         progress.append("Saving BUILD files...\n");
-        bazel.generate();
+        bazel.generate(progress);
 
         for (Map.Entry<String, String> entry : config.getCopySpec().entrySet()) {
             FileUtil.copy(new File(workspace, entry.getKey()), new File(workspace, entry.getValue()));
@@ -300,8 +297,8 @@ public class GenerateBazelAction extends AnAction {
     }
 
     private class Label {
-        final public String pkg;
-        final public String target;
+        public final String pkg;
+        public final String target;
 
         public Label(String label) {
             String[] split = label.split(":");

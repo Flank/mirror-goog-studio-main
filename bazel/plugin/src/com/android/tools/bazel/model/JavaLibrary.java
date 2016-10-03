@@ -16,7 +16,10 @@
 
 package com.android.tools.bazel.model;
 
-import java.io.PrintWriter;
+import com.android.tools.bazel.parser.ast.CallExpression;
+import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 
 /**
  * A partially supported java_library with no sources.
@@ -28,15 +31,12 @@ public class JavaLibrary extends BazelRule {
     }
 
     @Override
-    public void generate(PrintWriter writer) {
-        writer.append("java_library(\n");
+    public void update() throws IOException {
+        CallExpression call = getCallExpression("java_library", name);
 
-        append(writer, "name", name);
-        append(writer, "runtime_deps", dependencies);
-        append(writer, "exports", exported);
-
-        writer.append("    visibility = [\"//visibility:public\"],\n");
-        writer.append(")\n");
+        setArgument(call, "runtime_deps", dependencies);
+        setArgument(call, "exports", exported);
+        setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
     }
 }
 

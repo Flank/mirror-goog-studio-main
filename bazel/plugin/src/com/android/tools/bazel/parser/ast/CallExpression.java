@@ -1,0 +1,127 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.bazel.parser.ast;
+
+
+import java.io.PrintWriter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A function call expression.
+ */
+public class CallExpression extends Expression {
+    private final Token token;
+    private final List<Argument> arguments;
+    private boolean singleLine;
+
+    public CallExpression(Token ident, List<Argument> arguments, Token end) {
+        super(ident, end);
+        this.token = ident;
+        this.arguments = arguments;
+    }
+
+    @Override
+    public void write(String indent, PrintWriter writer) {
+        for (String comment : preComments) {
+            writer.append(indent).append(comment);
+        }
+        if (!preComments.isEmpty()) {
+            writer.append(indent);
+        }
+        writer.append(token.value()).append("(");
+        if (!singleLine) {
+            writer.append("\n");
+        }
+
+        int i = 0;
+        for (Argument argument : arguments) {
+            if (!singleLine) {
+                writer.append(indent + Build.INDENT);
+            }
+            argument.write(singleLine ? indent : indent + Build.INDENT, writer);
+            if (singleLine) {
+                if (i < arguments.size() - 1) {
+                    writer.append(", ");
+                }
+            } else {
+                writer.append(",\n");
+            }
+            i++;
+        }
+        if (!singleLine) {
+            writer.append(indent);
+        }
+        writer.append(")");
+    }
+
+    public void setSingleLine(boolean singleLine) {
+        this.singleLine = singleLine;
+    }
+
+    @Override
+    public void preOrder(List<Node> nodes) {
+        nodes.add(this);
+        for (Argument argument : arguments) {
+            argument.preOrder(nodes);
+        }
+    }
+
+    @Override
+    public void postOrder(List<Node> nodes) {
+        for (Argument argument : arguments) {
+            argument.postOrder(nodes);
+        }
+        nodes.add(this);
+    }
+
+    public String getLiteralArgument(String name) {
+        Argument argument = getNamedArgument(name);
+        return argument == null ? null : argument.getExpression().getLiteral();
+    }
+
+    public Argument getNamedArgument(String name) {
+        for (Argument argument : arguments) {
+            if (argument.hasName() && argument.getName().equals(name)) {
+                return argument;
+            }
+        }
+        return null;
+    }
+
+    public static CallExpression build(String ident, Map<String, Object> arguments) {
+        List<Argument> list = new LinkedList<>();
+        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
+            Expression expression = null;
+            if (entry.getValue() instanceof String) {
+                expression = new LiteralExpression(Token.string((String) entry.getValue()));
+            }
+            list.add(new Argument(Token.ident(entry.getKey()), expression));
+        }
+        return new CallExpression(Token.ident(ident), list, Token.NONE);
+    }
+
+    public void setArgument(String name, Expression expression) {
+        Argument arg = getNamedArgument(name);
+        if (arg == null) {
+            arguments.add(new Argument(Token.ident(name), expression));
+        } else {
+            arg.setExpression(expression);
+        }
+    }
+}
