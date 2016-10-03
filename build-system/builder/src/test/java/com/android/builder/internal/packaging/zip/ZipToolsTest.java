@@ -42,6 +42,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -73,8 +74,8 @@ public class ZipToolsTest {
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "{4} {index}")
-    public static Object[][] getConfigurations() {
-        return new Object[][] {
+    public static Iterable<Object[]> getConfigurations() {
+        return Arrays.asList(new Object[][] {
                 {
                         "linux-zip.zip",
                         ImmutableList.of("/usr/bin/unzip", "-v"),
@@ -97,7 +98,7 @@ public class ZipToolsTest {
                         false,
                         "Windows Compressed Folders"
                 }
-        };
+        });
     }
 
     private File cloneZipFile() throws Exception {
