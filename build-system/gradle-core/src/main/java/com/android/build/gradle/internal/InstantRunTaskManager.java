@@ -105,7 +105,7 @@ public class InstantRunTaskManager {
             Set<QualifiedContent.Scope> resMergingScopes,
             SupplierTask<File> instantRunMergedManifest,
             SupplierTask<File> processedResourcesOutputFile,
-            boolean addResourceVerifier) {
+            boolean addDependencyChangeChecker) {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
@@ -123,7 +123,7 @@ public class InstantRunTaskManager {
         NoChangesVerifierTransform javaResourcesVerifierTransform =
                 new NoChangesVerifierTransform(
                         "javaResourcesVerifier",
-                        variantScope,
+                        variantScope.getInstantRunBuildContext(),
                         ImmutableSet.of(
                                 QualifiedContent.DefaultContentType.RESOURCES,
                                 ExtendedContentType.NATIVE_LIBS),
@@ -160,11 +160,11 @@ public class InstantRunTaskManager {
                         javaResourcesVerifierTask.orElse(null),
                         checkManifestTask));
 
-        if (addResourceVerifier) {
+        if (addDependencyChangeChecker) {
             NoChangesVerifierTransform dependenciesVerifierTransform =
                     new NoChangesVerifierTransform(
-                            "dependenciesVerifier",
-                            variantScope,
+                            "dependencyChecker",
+                            variantScope.getInstantRunBuildContext(),
                             ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                             Sets.immutableEnumSet(
                                     QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
