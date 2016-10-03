@@ -165,7 +165,7 @@ public class HotSwapTest {
                         LOG_TAG,
                         device,
                         logcat,
-                        PORTS.get(HotSwapTester.class.getSimpleName()));
+                        PORTS.get(HotSwapTest.class.getSimpleName()));
 
         List<HotSwapTester.Change> changes = new ArrayList<>();
 
