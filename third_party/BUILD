@@ -45,7 +45,7 @@ java_library(
 java_library(
     name = "com.google.protobuf_protobuf-java",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/2.5.0:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0:jar"],
 )
 
 java_library(
@@ -104,15 +104,61 @@ java_library(
 )
 
 java_library(
+    name = "net.sf.jopt-simple_jopt-simple",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar"],
+)
+
+java_library(
     name = "net.sf.kxml_kxml2",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0:jar"],
 )
 
 java_library(
+    name = "net.sf.proguard_proguard-base",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.1:jar"],
+)
+
+java_library(
+    name = "net.sf.proguard_proguard-gradle",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":net.sf.proguard_proguard-base",
+        "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.1:jar",
+    ],
+)
+
+java_library(
     name = "nl.jqno.equalsverifier_equalsverifier",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/2.1.5:jar"],
+)
+
+java_library(
+    name = "org.antlr_ST4",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.antlr_antlr-runtime",
+        "//prebuilts/tools/common/m2/repository/org/antlr/ST4/4.0.8:jar",
+    ],
+)
+
+java_library(
+    name = "org.antlr_antlr",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.antlr_ST4",
+        ":org.antlr_antlr-runtime",
+        "//prebuilts/tools/common/m2/repository/org/antlr/antlr/3.5.2:jar",
+    ],
+)
+
+java_library(
+    name = "org.antlr_antlr-runtime",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/antlr/antlr-runtime/3.5.2:jar"],
 )
 
 java_library(
@@ -365,6 +411,31 @@ java_library(
 )
 
 java_library(
+    name = "org.jacoco_org.jacoco.core",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.ow2.asm_asm-debug-all",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.5.201505241946:jar",
+    ],
+)
+
+java_library(
+    name = "org.jacoco_org.jacoco.report",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.jacoco_org.jacoco.core",
+        ":org.ow2.asm_asm-debug-all",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.5.201505241946:jar",
+    ],
+)
+
+java_library(
+    name = "org.jsoup_jsoup",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.6.3:jar"],
+)
+
+java_library(
     name = "org.mockito_mockito-all",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar"],
@@ -389,6 +460,12 @@ java_library(
         ":org.ow2.asm_asm-tree",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4:jar",
     ],
+)
+
+java_library(
+    name = "org.ow2.asm_asm-debug-all",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.0.1:jar"],
 )
 
 java_library(
