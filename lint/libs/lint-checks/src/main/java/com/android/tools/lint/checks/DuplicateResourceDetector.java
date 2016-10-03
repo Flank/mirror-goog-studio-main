@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
@@ -84,6 +83,10 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     Scope.ALL_RESOURCES_SCOPE,
                     Scope.RESOURCE_FILE_SCOPE));
 
+    public static final Implementation IMPLEMENTATION_XML = new Implementation(
+            DuplicateResourceDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
     /** Wrong resource value type */
     public static final Issue TYPE_MISMATCH = Issue.create(
             "ReferenceType", //$NON-NLS-1$
@@ -93,10 +96,20 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             Category.CORRECTNESS,
             8,
             Severity.FATAL,
-            new Implementation(
-                    DuplicateResourceDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+            IMPLEMENTATION_XML);
 
+    /** Invalid XML escaping */
+    public static final Issue STRING_ESCAPING = Issue.create(
+            "StringEscaping", //$NON-NLS-1$
+            "Invalid string escapes",
+
+            "Apostrophes (') must always be escaped (with a \\), unless they appear " +
+            "in a string which is itself escaped in double quotes (\").",
+
+            Category.MESSAGES,
+            9,
+            Severity.ERROR,
+            IMPLEMENTATION_XML);
 
     private static final String PRODUCT = "product";   //$NON-NLS-1$
     private Map<ResourceType, Set<String>> mTypeMap;
@@ -105,12 +118,6 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
 
     /** Constructs a new {@link DuplicateResourceDetector} */
     public DuplicateResourceDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
     }
 
     @Override
@@ -185,6 +192,9 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             Node child = children.item(i);
             if (child.getNodeType() == Node.TEXT_NODE) {
                 String text = child.getNodeValue();
+
+                checkXmlEscapes(context, child, element, text);
+
                 for (int j = 0, length = text.length(); j < length; j++) {
                     char c = text.charAt(j);
                     if (c == '@') {
@@ -291,6 +301,120 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
         }
 
         return true;
+    }
+
+    /**
+     * Check the XML for the string format. This is a port of portions of the code
+     * in frameworks/base/libs/androidfw/ResourceTypes.cpp (and in particular,
+     * the stringToValue and collectString methods)
+     */
+    private static void checkXmlEscapes(@NonNull XmlContext context, @NonNull Node textNode,
+            @NonNull Element element,
+            @NonNull String string) {
+        int s = 0;
+        int len = string.length();
+
+        // First strip leading/trailing whitespace.  Do this before handling
+        // escapes, so they can be used to force whitespace into the string.
+        while (len > 0 && Character.isWhitespace(string.charAt(s))) {
+            s++;
+            len--;
+        }
+        while (len > 0 && Character.isWhitespace(string.charAt(s + len-1))) {
+            len--;
+        }
+        // If the string ends with '\', then we keep the space after it.
+        if (len > 0 && string.charAt(s+len-1) == '\\' && len < string.length()) {
+            len++;
+        }
+
+        char quoted = 0;
+        int p = s;
+        while (p < (s + len)) {
+            while (p < (s + len)) {
+                char c = string.charAt(p);
+                if (c == '\\') {
+                    break;
+                }
+                if (quoted == 0 && Character.isWhitespace(c)
+                        && (c != ' ' || Character.isWhitespace(string.charAt(p + 1)))) {
+                    break;
+                }
+                if (c == '"' && (quoted == 0 || quoted == '"')) {
+                    break;
+                }
+                if (c == '\'' && (quoted == 0 || quoted == '\'')) {
+                    // In practice, when people write ' instead of \'
+                    // in a string, they are doing it by accident
+                    // instead of really meaning to use ' as a quoting
+                    // character.  Warn them so they don't lose it.
+
+                    // Use a location range not just from p to p+1 but from p to len
+                    // such that the error is more visually prominent/evident in
+                    // the source editor.
+                    Location location = context.getLocation(textNode, p, len);
+                    context.report(STRING_ESCAPING, element, location, "Apostrophe not preceded by \\");
+                    return;
+                }
+                p++;
+            }
+            if (p < (s + len)) {
+                char cp = string.charAt(p);
+                if ((cp == '"' || cp == '\'')) {
+                    if (quoted == 0) {
+                        quoted = cp;
+                    } else {
+                        quoted = 0;
+                    }
+                    p++;
+                } else if (Character.isWhitespace(cp)) {
+                    // Space outside of a quote -- consume all spaces and
+                    // leave a single plain space char.
+                    p++;
+                    while (p < (s + len) && Character.isWhitespace(string.charAt(p))) {
+                        p++;
+                    }
+                } else if (cp == '\\') {
+                    p++;
+                    if (p < (s + len)) {
+                        switch (string.charAt(p)) {
+                            case 't':
+                            case 'n':
+                            case '#':
+                            case '@':
+                            case '?':
+                            case '"':
+                            case '\'':
+                            case '\\':
+                                break;
+                            case 'u': {
+                                int i = 0;
+                                while (i < 4 && p + 1 < len) {
+                                    p++;
+                                    i++;
+                                    char h = string.charAt(p);
+                                    if ((h < '0' || h > '9')
+                                            && (h < 'a' || h > 'f')
+                                            && (h < 'A' || h > 'F')) {
+                                        Location location = context.getLocation(textNode, p, p + 1);
+                                        context.report(STRING_ESCAPING, element, location,
+                                                       "Bad character in \\u unicode escape sequence");
+                                        return;
+                                    }
+                                }
+                            }
+                            break;
+                            default:
+                                // ignore unknown escape chars.
+                                break;
+                        }
+                        p++;
+                    }
+                }
+                len -= (p - s);
+                s = p;
+            }
+        }
     }
 
     /**
