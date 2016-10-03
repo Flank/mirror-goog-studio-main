@@ -111,7 +111,8 @@ task initSdkForTests(type: JavaExec) {
                     'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha8',
                     'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha8',
                     "system-images;android-19;default;x86",
-                    "system-images;android-23;default;x86"]
+                    "system-images;android-23;default;x86",
+                    "extras;android;gapid;3"]
         }
     }
 }
