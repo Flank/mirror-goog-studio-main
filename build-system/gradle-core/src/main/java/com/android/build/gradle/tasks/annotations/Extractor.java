@@ -288,7 +288,9 @@ public class Extractor {
                     return;
                 }
             }
-            Files.write(desc, file, Charsets.UTF_8);
+            if (!desc.isEmpty()) {
+                Files.write(desc, file, Charsets.UTF_8);
+            }
         } catch (IOException e) {
             Extractor.error("Could not write " + file + ": " + e.getLocalizedMessage());
         }
