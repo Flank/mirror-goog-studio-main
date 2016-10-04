@@ -2085,15 +2085,18 @@ public abstract class TaskManager {
                 true);
         Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
-        AndroidTask jacocoTask = getJacocoAgentTask(tasks);
-        packageTask.ifPresent(t ->
-                t.optionalDependsOn(
-                        tasks,
-                        scope.getVariantData()
-                                .getVariantDependency()
-                                .getPackageConfiguration()
-                                .getBuildDependencies(),
-                        jacocoTask));
+
+        if (scope.getVariantConfiguration().isTestCoverageEnabled()) {
+            AndroidTask jacocoTask = getJacocoAgentTask(tasks);
+            packageTask.ifPresent(t ->
+                    t.optionalDependsOn(
+                            tasks,
+                            scope.getVariantData()
+                                    .getVariantDependency()
+                                    .getPackageConfiguration()
+                                    .getBuildDependencies(),
+                            jacocoTask));
+        }
 
         JackPreDexTransform preDexRuntimeTransform = new JackPreDexTransform(
                 androidBuilder,
