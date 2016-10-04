@@ -4,8 +4,8 @@ iml_module(
     name = "studio.dvlib",
     srcs = [
         "dvlib/src/main/java",
-        "dvlib/src/main/resources",
     ],
+    resources = ["dvlib/src/main/resources"],
     deps = ["//tools/base/common:studio.common[module]"],
     exports = ["//tools/base/common:studio.common"],
     javacopts = ["-extra_checks:off"],
