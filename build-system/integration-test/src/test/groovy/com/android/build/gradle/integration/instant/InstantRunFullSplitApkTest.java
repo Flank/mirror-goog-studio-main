@@ -18,9 +18,9 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
@@ -29,17 +29,13 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
-import com.android.utils.Pair;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Test instant run with split.
@@ -54,6 +50,8 @@ public class InstantRunFullSplitApkTest {
 
     @Before
     public void getModel() throws IOException {
+        // IR currently does not work with Jack - http://b.android.com/224374
+        AssumeUtil.assumeNotUsingJack();
         TestFileUtils.appendToFile(mProject.getBuildFile(),
                 "android {\n"
                         + "    splits {\n"

@@ -20,9 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.shrinker.ShrinkerTestUtils.checkShrinkerWasUsed;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class IoScheduleShrinkerTest {
 
     @Before
     public void skipOnJack() throws Exception {
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
+        AssumeUtil.assumeNotUsingJack();
     }
 
     @Before

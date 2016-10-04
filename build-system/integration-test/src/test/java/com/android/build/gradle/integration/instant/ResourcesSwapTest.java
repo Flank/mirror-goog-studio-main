@@ -31,6 +31,7 @@ import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
@@ -45,6 +46,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,6 +82,12 @@ public class ResourcesSwapTest {
     @Rule
     @SuppressWarnings("IOResourceOpenedButNotSafelyClosed") // Handled by Adb
     public final Adb adb = new Adb();
+
+    @Before
+    public void checkEnvironment() {
+        // IR currently does not work with Jack - http://b.android.com/224374
+        AssumeUtil.assumeNotUsingJack();
+    }
 
     @Test
     public void artifactContents() throws Exception {

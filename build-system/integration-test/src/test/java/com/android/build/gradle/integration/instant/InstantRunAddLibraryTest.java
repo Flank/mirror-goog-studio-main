@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
@@ -35,7 +36,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,8 +74,8 @@ public class InstantRunAddLibraryTest {
 
     @Before
     public void skipOnJack() throws Exception {
-        // Instant Run doesn't work with Jack.
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
+        // IR currently does not work with Jack - http://b.android.com/224374
+        AssumeUtil.assumeNotUsingJack();
     }
 
     @Test

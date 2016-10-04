@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -36,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -87,6 +89,12 @@ public class InstantRunChangeDeviceTest {
         InstantRunArtifact apk = Iterables.getOnlyElement(artifacts);
         assertThat(apk.type).named("Main apk type").isEqualTo(InstantRunArtifactType.MAIN);
         return apk.file;
+    }
+
+    @Before
+    public void checkEnvironment() {
+        // IR currently does not work with Jack - http://b.android.com/224374
+        AssumeUtil.assumeNotUsingJack();
     }
 
     @Test

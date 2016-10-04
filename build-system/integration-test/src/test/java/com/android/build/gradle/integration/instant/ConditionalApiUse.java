@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.DexClassSubject;
 import com.android.build.gradle.integration.common.truth.DexFileSubject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -37,6 +38,8 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -61,6 +64,12 @@ public class ConditionalApiUse {
 
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
+
+    @Before
+    public void checkEnvironment() {
+        // IR currently does not work with Jack - http://b.android.com/224374
+        AssumeUtil.assumeNotUsingJack();
+    }
 
     @Test
     public void buildFor19() throws Exception {

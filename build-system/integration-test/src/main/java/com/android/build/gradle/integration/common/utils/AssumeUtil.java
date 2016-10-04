@@ -45,4 +45,8 @@ public class AssumeUtil {
                 currentVersion.compareTo(revision) >= 0);
 
     }
+
+    public static void assumeNotUsingJack() {
+        Assume.assumeFalse(GradleTestProject.USE_JACK);
+    }
 }
