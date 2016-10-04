@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
@@ -70,7 +71,13 @@ public class BasicTest2 {
     public static AndroidProject model;
 
     @BeforeClass
-    public static void getModel() {
+    public static void getModel() throws IOException {
+        if (GradleTestProject.USE_JACK) {
+            // have to run it out of process - http://b.android.com/220939
+            TestFileUtils.appendToFile(
+                    project.getBuildFile(),
+                    "\nandroid.defaultConfig.jackOptions.jackInProcess = false");
+        }
         model = project.executeAndReturnModel("clean");
     }
 

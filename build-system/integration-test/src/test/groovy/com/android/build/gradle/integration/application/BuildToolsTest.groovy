@@ -57,11 +57,11 @@ class BuildToolsTest {
             .build()
 
     private static final List<String> JACK_TASKS = ImmutableList.builder().add(COMMON_TASKS)
-            .add("transformClassesAndResourcesWithPreDexJackRuntimeLibrariesForDebug")
-            .add("transformClassesAndResourcesWithPreDexJackPackagedLibrariesForDebug")
+            .add("transformClassesWithPreJackRuntimeLibrariesForDebug")
+            .add("transformClassesWithPreJackPackagedLibrariesForDebug")
             .add("transformJackWithJackForRelease")
-            .add("transformClassesAndResourcesWithPreDexJackRuntimeLibrariesForRelease")
-            .add("transformClassesAndResourcesWithPreDexJackPackagedLibrariesForRelease")
+            .add("transformClassesWithPreJackRuntimeLibrariesForRelease")
+            .add("transformClassesWithPreJackPackagedLibrariesForRelease")
             .add("transformJackWithJackForDebug")
             .build()
 
@@ -94,12 +94,9 @@ android {
 
     @Test
     public void invalidateBuildTools() {
-        // Jack is tied to a build tools version currently, skip this test when testing Jack.
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
-
         project.execute("assemble")
 
-        String oldBuildToolsVersion = "22.0.1"
+        String oldBuildToolsVersion = "24.0.0"
         // Sanity check:
         assertThat(oldBuildToolsVersion).isNotEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
 

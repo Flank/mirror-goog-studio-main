@@ -20,12 +20,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,6 +43,7 @@ public class BuildCacheTest {
 
     @Before
     public void setUp() throws IOException {
+        AssumeUtil.assumeNotUsingJack();
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

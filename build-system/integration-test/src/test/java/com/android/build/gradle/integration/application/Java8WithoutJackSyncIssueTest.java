@@ -48,6 +48,7 @@ public class Java8WithoutJackSyncIssueTest {
                 + "        targetCompatibility 1.8\n"
                 + "        sourceCompatibility 1.8\n"
                 + "    }\n"
+                + "    defaultConfig.jackOptions.enabled = false"
                 + "}\n");
     }
 
