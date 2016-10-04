@@ -2,6 +2,13 @@ apply plugin: 'java'
 apply plugin: 'jacoco'
 apply plugin: 'clone-artifacts'
 apply plugin: 'antlr'
+apply plugin: 'com.google.protobuf'
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+}
 
 configurations {
     provided
@@ -16,7 +23,6 @@ File baseInstrumentedClasses = new File(classesDir, "baseInstrumented")
 sourceSets {
     main {
         java.srcDirs += 'src/fromGradle/java'
-        java.srcDirs += 'src/main/generated'
         resources.srcDirs = ['src/main/resources', 'src/fromGradle/resources']
         compileClasspath += configurations.provided
     }
