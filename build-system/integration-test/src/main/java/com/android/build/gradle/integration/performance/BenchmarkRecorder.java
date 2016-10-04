@@ -46,8 +46,6 @@ import java.util.stream.Collectors;
  *         <li>When the test using GradleTestProject is complete {@link #doUploads()} is called,
  *             which calls the given {@link ProfileUploader#uploadData(List)}.</li>
  *     </ol>
- *
- * </ul>
  */
 public final class BenchmarkRecorder {
 

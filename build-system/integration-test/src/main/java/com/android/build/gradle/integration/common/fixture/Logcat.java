@@ -28,7 +28,6 @@ import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.ddmlib.logcat.LogCatReceiverTask;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -37,11 +36,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class Logcat implements TestRule {
@@ -140,9 +137,9 @@ public class Logcat implements TestRule {
     }
 
     /**
-     * Listens for a logcat message with the exact content given.<br />
+     * Listens for a logcat message with the exact content given.
      *
-     * Tests will want to wait for a device to be ready, a common idiom is likely to be:
+     * <p>Tests will want to wait for a device to be ready, a common idiom is likely to be:
      * <ol>
      *     <li>Test calls {@link #listenForMessage(String)} to start listening for the logcat
      *         message.</li>

@@ -34,14 +34,16 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
+
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
@@ -82,7 +84,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * @param apiLevel The device api level.
      * @param coldswapMode The cold swap strategy to use.
-     * @param flags additional instant run flags, {@see OptionalCompilationStep}.
+     * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(int apiLevel,
             @NonNull ColdswapMode coldswapMode,
@@ -97,7 +99,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * @param device The connected device.
      * @param coldswapMode The cold swap strategy to use.
-     * @param flags additional instant run flags, {@see OptionalCompilationStep}.
+     * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
             @NonNull IDevice device,

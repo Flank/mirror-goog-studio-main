@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
  *
  * <p>Using this in a test application as a rule is usually done as:
  * <pre>
- * @Rule
+ * {@literal @}Rule
  * public GradleTestProject project = GradleTestProject.builder()
  *     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
  *     .create();
