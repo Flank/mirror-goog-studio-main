@@ -211,7 +211,7 @@ public final class FileUtils {
         // attempt to create first.
         // if failure only throw if folder does not exist.
         // This makes this method able to create the same folder(s) from different thread
-        if (!folder.mkdirs() && !folder.exists()) {
+        if (!folder.mkdirs() && !folder.isDirectory()) {
             throw new RuntimeException("Cannot create directory " + folder);
         }
 

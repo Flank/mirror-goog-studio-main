@@ -40,6 +40,25 @@ public class FileUtilsTest {
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Test
+    public void testMkdirs() throws IOException {
+        File directory = new File(mTemporaryFolder.getRoot(), "foo");
+        FileUtils.mkdirs(directory);
+        assertTrue(directory.isDirectory());
+
+        directory = mTemporaryFolder.newFolder("bar");
+        FileUtils.mkdirs(directory);
+        assertTrue(directory.isDirectory());
+
+        directory = mTemporaryFolder.newFile("baz");
+        try {
+            FileUtils.mkdirs(directory);
+            fail("expected RuntimeException");
+        } catch (RuntimeException exception) {
+            assertTrue(exception.getMessage().startsWith("Cannot create directory"));
+        }
+    }
+
+    @Test
     public void computeRelativePathOfFile() throws Exception {
         File d1 = mTemporaryFolder.newFolder("foo");
         File f2 = new File(d1, "bar");
