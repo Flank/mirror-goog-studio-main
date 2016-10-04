@@ -1,19 +1,7 @@
-load("//tools/base/bazel:bazel.bzl", "fileset")
-
-fileset(
-    name = "resources",
-    srcs = ["//tools/buildSrc/base:version.properties"] + glob(["src/main/resources/**"]),
-    mappings = {
-        "//tools/buildSrc/base:": "com/android/builder/",
-        "src/main/resources/": "",
-    },
-)
-
 java_library(
     name = "builder",
+    # TODO: Generate the Version.java file.
     srcs = glob(["src/main/java/**/*.java"]),
-    resource_strip_prefix = "tools/base/build-system/builder",
-    resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library:analytics-protos",
@@ -45,16 +33,10 @@ java_library(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
-    data = [
-        "//prebuilts/studio/sdk:build-tools/20.0.0",
-        "//prebuilts/studio/sdk:build-tools/23.0.0",
-        "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/latest",
-    ],
     javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
+    resources = glob(["src/test/resources/**"]),
     deps = [
         ":builder",
         "//tools/base/annotations",
@@ -72,4 +54,10 @@ java_test(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.mockito_mockito-all",
     ],
+    data = [
+        "//prebuilts/studio/sdk:build-tools/20.0.0",
+        "//prebuilts/studio/sdk:build-tools/23.0.0",
+        "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:platforms/latest",
+    ]
 )

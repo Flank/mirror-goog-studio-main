@@ -47,24 +47,51 @@ apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
-def generated = new File("${project.buildDir}/generated/resources")
+jar.manifest.attributes("Builder-Version": version)
+
+def generated = new File("${project.buildDir}/generated/java")
 
 sourceSets {
     main {
-        resources {
+        java {
             srcDir generated
         }
     }
 }
 
-task copyVersionProperties(type: Copy) {
-    from project.file("$rootDir/buildSrc/base/version.properties")
-    into project.file("$generated/com/android/builder")
+def componentPluginVersion = rootProject.ext.experimentalVersion
+task generateVersionConstantsJava {
+    inputs.property("apiVersion", apiVersion)
+    inputs.property("nativeApiVersion", nativeApiVersion)
+    inputs.property("version", version)
+    inputs.property("componentPluginVersion", componentPluginVersion)
+    ext.versionFile = new File(generated, "com/android/builder/Version.java")
+    outputs.file(versionFile)
+}
+generateVersionConstantsJava << {
+    versionFile.parentFile.mkdirs()
+    versionFile.text = """
+package com.android.builder;
+
+public final class Version {
+    private Version() {}
+    public static final String ANDROID_GRADLE_PLUGIN_VERSION = "$version";
+    public static final String ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION = "$componentPluginVersion";
+    public static final int BUILDER_MODEL_API_VERSION = $apiVersion;
+    public static final int BUILDER_NATIVE_MODEL_API_VERSION = $nativeApiVersion;
+
+    // Getter method for the plugin version so that it is not inlined.
+    public static String getAndroidGradlePluginVersion() {
+        return ANDROID_GRADLE_PLUGIN_VERSION;
+    }
+    public static String getAndroidGradleComponentPluginVersion() {
+        return ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION;
+    }
+}
+"""
 }
 
-tasks.compileJava.dependsOn copyVersionProperties
-
-jar.manifest.attributes("Builder-Version": version)
+tasks.compileJava.dependsOn generateVersionConstantsJava
 
 configurations {
     provided

@@ -784,19 +784,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
      * compiled with.  Throw an error and suggest to update this plugin.
      */
     private static void checkPluginVersion() {
-        String actualGradlePluginVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION;
+        String actualGradlePluginVersion = Version.getAndroidGradlePluginVersion();
         if(!actualGradlePluginVersion.equals(
                 com.android.build.gradle.internal.Version.ANDROID_GRADLE_PLUGIN_VERSION)) {
-            throw new UnsupportedVersionException(
-                    String.format(
-                            "Plugin version mismatch.  "
-                                    + "'com.android.tools.build:gradle-experimental:%s' was applied, and it "
-                                    + "requires 'com.android.tools.build:gradle:%s'.  Current version is '%s'.  "
-                                    + "Please update to version '%s'.",
-                            Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
-                            Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                            com.android.build.gradle.internal.Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                            Version.ANDROID_GRADLE_PLUGIN_VERSION));
+            throw new UnsupportedVersionException(String.format("Plugin version mismatch.  "
+                    + "'com.android.tools.build:gradle-experimental:%s' was applied, and it "
+                    + "requires 'com.android.tools.build:gradle:%s'.  Current version is '%s'.  "
+                    + "Please update to version '%s'.",
+                    Version .getAndroidGradleComponentPluginVersion(),
+                    Version .getAndroidGradlePluginVersion(),
+                    com.android.build.gradle.internal.Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                    Version .getAndroidGradlePluginVersion()));
         }
     }
 
