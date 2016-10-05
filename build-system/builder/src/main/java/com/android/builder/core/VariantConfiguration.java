@@ -1096,7 +1096,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /** Gets api versions for this variant that might be correlated, such as min and target sdk */
-    private ApiVersions getApiVersionsNonTestVariant() {
+    protected ApiVersions getApiVersionsNonTestVariant() {
         ApiVersion minSdkVersion = mMergedFlavor.getMinSdkVersion();
         if (minSdkVersion == null) {
             // read it from the main manifest

@@ -31,9 +31,12 @@ import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
@@ -277,6 +280,22 @@ public class GradleVariantConfiguration
     @NonNull
     public CoreNdkOptions getNdkConfig() {
         return mergedNdkConfig;
+    }
+
+    @Override
+    protected ApiVersions getApiVersionsNonTestVariant() {
+        ApiVersions apiVersions = super.getApiVersionsNonTestVariant();
+        if (!project.hasProperty(AndroidProject.PROPERTY_BUILD_API)) {
+            return apiVersions;
+        }
+        Integer targetAPILevel = Integer.parseInt(
+                project.property(AndroidProject.PROPERTY_BUILD_API).toString());
+
+        int minVersion = apiVersions.targetSdkVersion.getApiLevel() > 0
+                ? Integer.min(apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
+                : targetAPILevel;
+
+        return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
     }
 
     @NonNull
