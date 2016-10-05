@@ -48,7 +48,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  */
 @CompileStatic
 @RunWith(Parameterized.class)
-@Ignore("http://b.android.com/222427")
 class NativeModelTest {
     private static enum Compiler {GCC, CLANG}
 
@@ -67,6 +66,7 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
+                            arguments "NDK_TOOLCHAIN_VERSION:=4.9"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
@@ -89,6 +89,7 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
+                            arguments "NDK_TOOLCHAIN_VERSION:=4.9"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
@@ -112,6 +113,7 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
+                            arguments "NDK_TOOLCHAIN_VERSION:=4.9"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
@@ -188,6 +190,7 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
+                            arguments "NDK_TOOLCHAIN_VERSION:=4.9"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
