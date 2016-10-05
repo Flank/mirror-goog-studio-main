@@ -5,6 +5,7 @@ filegroup(
     srcs = glob(
         include = ["*/licenses/**"],
     ),
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
