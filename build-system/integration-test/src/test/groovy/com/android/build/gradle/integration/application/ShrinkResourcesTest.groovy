@@ -25,6 +25,7 @@ import com.google.common.io.Closer
 import groovy.transform.CompileStatic
 import org.junit.Assume
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -43,6 +44,8 @@ import static org.junit.Assert.assertTrue
 /**
  * Assemble tests for shrink.
  */
+
+@Ignore("Flaky: http://b.android.com/224406")
 @CompileStatic
 class ShrinkResourcesTest {
 
