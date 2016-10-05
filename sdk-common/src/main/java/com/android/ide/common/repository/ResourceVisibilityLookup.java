@@ -465,6 +465,10 @@ public abstract class ResourceVisibilityLookup {
                         continue;
                     }
                     String name = line.substring(index + 1);
+                    // Unfortunately the public.txt extraction code has not been flattening
+                    // identifiers into the same namespace as aapt does in the R.txt file,
+                    // so we'll need to correct for that here.
+                    name = name.replace('.', '_');
                     result.put(name, type);
                 }
                 return result;

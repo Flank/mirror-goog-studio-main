@@ -463,7 +463,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                 String name = element.getAttribute(ATTR_NAME);
                                 String type = element.getAttribute(ATTR_TYPE);
                                 if (!name.isEmpty() && !type.isEmpty()) {
-                                    sb.append(type).append(' ').append(name).append('\n');
+                                    String flattenedName = name.replace('.', '_');
+                                    sb.append(type).append(' ').append(flattenedName).append('\n');
                                 }
                             }
                         }

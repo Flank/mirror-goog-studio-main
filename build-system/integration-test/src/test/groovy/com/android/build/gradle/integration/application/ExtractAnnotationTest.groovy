@@ -32,6 +32,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * <pre>
  *     $ cd tools
  *     $ ./gradlew :base:int:test --tests com.android.build.gradle.integration.application.ExtractAnnotationTest
+ *     $ ./gradlew  -D:base:integration-test:test.single=com.android.build.gradle.integration.application.ExtractAnnotationTest
  * </pre>
  */
 @CompileStatic

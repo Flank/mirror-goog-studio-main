@@ -100,6 +100,26 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                         + "}\n")));
     }
 
+    public void testStyle() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=221560
+        assertEquals("No warnings.",
+          lintProject(xml("res/layout/private2.xml", ""
+                      + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                      + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                      + "\n"
+                      + "    <View\n"
+                      + "        android:layout_width=\"match_parent\"\n"
+                      + "        android:layout_height=\"match_parent\"\n"
+                      + "        android:theme=\"@style/Theme.AppCompat.DayNight\" />\n"
+                      + "\n"
+                      + "    <View\n"
+                      + "        android:layout_width=\"match_parent\"\n"
+                      + "        android:layout_height=\"match_parent\"\n"
+                      + "        android:theme=\"@style/Theme_AppCompat_DayNight\" />\n"
+                      + "\n"
+                      + "</merge>\n")));
+    }
+
     public void testOverride() throws Exception {
         assertEquals(""
                 + "res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
@@ -183,10 +203,12 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                             + "int string my_private_string 0x7f040000\n"
                                             + "int string my_public_string 0x7f040001\n"
                                             + "int layout my_private_layout 0x7f040002\n"
-                                            + "int id title 0x7f040003\n",
+                                            + "int id title 0x7f040003\n"
+                                            + "int style Theme_AppCompat_DayNight 0x7f070004",
                                     ""
                                             + ""
-                                            + "string my_public_string\n",
+                                            + "string my_public_string\n"
+                                            + "style Theme.AppCompat.DayNight\n",
                                     Collections.<AndroidLibrary>emptyList()
                             );
                             AndroidArtifact artifact = createMockArtifact(
