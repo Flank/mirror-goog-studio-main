@@ -65,6 +65,12 @@ java_library(
 )
 
 java_library(
+    name = "com.googlecode.juniversalchardet_juniversalchardet",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/com/googlecode/juniversalchardet/juniversalchardet/1.0.3:jar"],
+)
+
+java_library(
     name = "com.intellij_annotations",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/com/intellij/annotations/12.0:jar"],
@@ -80,6 +86,12 @@ java_library(
     name = "commons-codec_commons-codec",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar"],
+)
+
+java_library(
+    name = "commons-io_commons-io",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4:jar"],
 )
 
 java_library(
@@ -107,6 +119,12 @@ java_library(
     name = "nl.jqno.equalsverifier_equalsverifier",
     visibility = ["//visibility:public"],
     exports = ["//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/2.1.5:jar"],
+)
+
+java_library(
+    name = "org.antlr_antlr4",
+    visibility = ["//visibility:public"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/antlr/antlr4/4.5.3:jar"],
 )
 
 java_library(
