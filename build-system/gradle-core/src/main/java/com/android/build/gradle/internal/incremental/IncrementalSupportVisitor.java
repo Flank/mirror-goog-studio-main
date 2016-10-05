@@ -38,6 +38,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -183,8 +184,13 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 args.add(0, Type.getType(Object.class));
             }
 
+            // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
+            // Jsr/Ret deprecated byte codes.
+            // see https://code.google.com/p/android/issues/detail?id=220019
+            JSRInlinerAdapter jsrInlinerAdapter = new JSRInlinerAdapter(
+                    defaultVisitor, access, name, desc, signature, exceptions);
 
-            ISMethodVisitor mv = new ISMethodVisitor(defaultVisitor, access, name, desc);
+            ISMethodVisitor mv = new ISMethodVisitor(jsrInlinerAdapter, access, name, desc);
             if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
                 Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
                 LabelNode start = new LabelNode();

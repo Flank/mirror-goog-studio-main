@@ -27,6 +27,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -179,7 +180,7 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
             // Nothing to generate.
             return null;
         }
-        if (name.equals("<clinit>")) {
+        if (name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
             // we skip the class init as it can reset static fields which we don't support right now
             return null;
         }
@@ -203,15 +204,17 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         // on the original method would translate into a static synchronized method here.
         access = Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
         MethodNode method = getMethodByNameInClass(name, desc, classNode);
-        if (name.equals("<init>")) {
+        if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
             Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
 
-            MethodVisitor original = super.visitMethod(access, constructor.args.name, constructor.args.desc, constructor.args.signature, exceptions);
-            ISVisitor mv = new ISVisitor(original, access, constructor.args.name, constructor.args.desc, isStatic, true /* isConstructor */);
+            MethodVisitor mv = createMethodAdapter(access, constructor.args.name,
+                    constructor.args.desc, constructor.args.desc, constructor.args.signature,
+                    exceptions, isStatic, true /* isConstructor */);
             constructor.args.accept(mv);
 
-            original = super.visitMethod(access, constructor.body.name, constructor.body.desc, constructor.body.signature, exceptions);
-            mv = new ISVisitor(original, access, constructor.body.name, newDesc, isStatic, true /* isConstructor */);
+            mv = createMethodAdapter(access, constructor.body.name,
+                    constructor.body.desc, newDesc, constructor.body.signature, exceptions,
+                    isStatic, true /* isConstructor */);
             constructor.body.accept(mv);
 
             // Remember our created methods so we can generated the access$dispatch for them.
@@ -220,9 +223,41 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
             return null;
         } else {
             String newName = isStatic ? computeOverrideMethodName(name, desc) : name;
-            MethodVisitor original = super.visitMethod(access, newName, newDesc, signature, exceptions);
-            return new ISVisitor(original, access, newName, newDesc, isStatic, false /* isConstructor */);
+            return createMethodAdapter(access, newName, newDesc, newDesc, signature, exceptions,
+                    isStatic, false /* isConstructor */);
         }
+    }
+
+    /**
+     * Creates a method adapter that will instrument to original code in such a way that it can
+     * patch live code.
+     * @param access the method access flags.
+     * @param name the method name
+     * @param originalDesc the original description.
+     * @param newDesc the modified method description that suits the InstantRun patching algorithms
+     * @param signature the method signature.
+     * @param exceptions the exceptions thrown by the method
+     * @param isStatic true if the method is static, false otherwise.
+     * @param isConstructor true if a constructor. false otherwise.
+     * @return the method adapter visitor.
+     */
+    private MethodVisitor createMethodAdapter(
+            int access,
+            String name,
+            String originalDesc,
+            String newDesc,
+            String signature,
+            String[] exceptions,
+            boolean isStatic,
+            boolean isConstructor) {
+
+        MethodVisitor methodVisitor =
+                super.visitMethod(access, name, originalDesc, signature,  exceptions);
+        methodVisitor = new ISVisitor(methodVisitor, access, name, newDesc, isStatic, isConstructor);
+        // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
+        // Jsr/Ret deprecated byte codes.
+        // see https://code.google.com/p/android/issues/detail?id=220019
+        return new JSRInlinerAdapter(methodVisitor, access, name, newDesc, signature, exceptions);
     }
 
     @Override
