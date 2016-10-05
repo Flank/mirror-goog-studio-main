@@ -43,10 +43,6 @@ import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
-import com.android.jack.api.ConfigNotSupportedException;
-import com.android.jack.api.v01.CompilationException;
-import com.android.jack.api.v01.ConfigurationException;
-import com.android.jack.api.v01.UnrecoverableException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
@@ -199,17 +195,18 @@ public class JackTransform extends Transform {
             throws TransformException, InterruptedException, IOException {
         try {
             runJack(transformInvocation);
-        } catch (ProcessException | ConfigNotSupportedException | CompilationException
-                | ClassNotFoundException | UnrecoverableException | ConfigurationException e) {
+        } catch (ProcessException
+                | ClassNotFoundException
+                | JackToolchain.ToolchainException e) {
             throw new TransformException(e);
         }
     }
 
     private void runJack(@NonNull TransformInvocation transformInvocation)
-            throws ProcessException, IOException, ConfigNotSupportedException,
-            ClassNotFoundException, CompilationException, ConfigurationException,
-            UnrecoverableException {
-
+            throws ProcessException,
+            IOException,
+            JackToolchain.ToolchainException,
+            ClassNotFoundException {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         checkNotNull(outputProvider);
         final File outDirectory = outputProvider.getContentLocation(

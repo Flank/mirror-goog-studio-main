@@ -182,7 +182,7 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
 
         JackVersion apiVersion = buildToolInfo.getSupportedJackApi();
 
-        if (JackVersion.V4 == apiVersion) {
+        if (apiVersion.getVersion() >= JackVersion.V4.getVersion()) {
             api04Specific(buildToolInfo, builder);
         }
 

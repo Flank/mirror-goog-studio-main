@@ -457,7 +457,7 @@ public class BuildToolInfo {
         throw new UnsupportedOperationException("Jack API unsupported; update the build tools.");
     }
 
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting(visibility = Visibility.PRIVATE)
     @Nullable
     static Revision getCurrentJvmVersion() throws NumberFormatException {
         String javav = System.getProperty("java.version");              //$NON-NLS-1$

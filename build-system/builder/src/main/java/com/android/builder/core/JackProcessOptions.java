@@ -94,6 +94,7 @@ public class JackProcessOptions {
     private Set<String> mJackPluginNames = ImmutableSet.of();
     @NonNull
     private List<File> mJackPluginClassPath = ImmutableList.of();
+    private boolean useJill = false;
 
     public boolean isDebugLog() {
         return mDebugLog;
@@ -363,5 +364,13 @@ public class JackProcessOptions {
                         .addAll(mJackPluginClassPath)
                         .add(jackPluginClassPath)
                         .build();
+    }
+
+    public boolean getUseJill() {
+        return useJill;
+    }
+
+    public void setUseJill(boolean useJill) {
+        this.useJill = useJill;
     }
 }
