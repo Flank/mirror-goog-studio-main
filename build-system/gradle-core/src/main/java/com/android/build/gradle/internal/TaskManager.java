@@ -165,6 +165,7 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -2018,6 +2019,18 @@ public abstract class TaskManager {
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope,
             final boolean compileJavaSources) {
+        if (androidBuilder.getTargetInfo() != null
+                && !androidBuilder.getTargetInfo().getBuildTools().supportsJack()) {
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncError(
+                            BuildToolInfo.JackVersion.V4.getMinRevision().toString(),
+                            SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
+                            String.format(
+                                    "Jack requires Build Tools %s or later.",
+                                    BuildToolInfo.JackVersion.V4.getMinRevision().toString()));
+        }
+
         if (scope.getTestedVariantData() != null) {
             scope.getTransformManager().addStream(
                     OriginalStream.builder()

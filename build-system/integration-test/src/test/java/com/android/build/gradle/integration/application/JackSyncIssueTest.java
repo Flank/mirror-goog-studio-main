@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class Java8WithoutJackSyncIssueTest {
+public class JackSyncIssueTest {
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -60,5 +60,22 @@ public class Java8WithoutJackSyncIssueTest {
         assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES);
+    }
+
+    @Test
+    public void testMinimumBuildToolsError() throws IOException {
+        // we require 24.0.3+ for Jack
+        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
+                + "android {\n"
+                + "    buildToolsVersion '24.0.2'\n"
+                + "    defaultConfig.jackOptions.enabled = true"
+                + "}\n");
+
+        // get sync issues
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle();
+
+        assertThat(model).hasIssue(
+                SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
     }
 }

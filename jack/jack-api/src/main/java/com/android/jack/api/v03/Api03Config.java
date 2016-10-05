@@ -20,7 +20,7 @@ import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v02.Api02Config;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
@@ -30,15 +30,15 @@ import javax.annotation.Nonnull;
 public interface Api03Config extends Api02Config {
   /**
    * Sets names of the Jack plugin to use.
-   * @param pluginNames Plugin names
+   * @param pluginNames Plugin names, each name must be unique
    * @throws ConfigurationException if something is wrong in Jack's configuration
    */
-  void setPluginNames(@Nonnull List<String> pluginNames) throws ConfigurationException;
+  void setPluginNames(@Nonnull Collection<String> pluginNames) throws ConfigurationException;
 
   /**
    * Sets the path where to find Jack plugins.
-   * @param pluginPath The plugin path as a list
+   * @param pluginPath A collection of jar files where Jack plugins reside
    * @throws ConfigurationException if something is wrong in Jack's configuration
    */
-  void setPluginPath(@Nonnull List<File> pluginPath) throws ConfigurationException;
+  void setPluginPath(@Nonnull Collection<File> pluginPath) throws ConfigurationException;
 }

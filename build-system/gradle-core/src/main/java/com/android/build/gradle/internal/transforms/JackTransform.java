@@ -47,7 +47,6 @@ import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
-import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
@@ -299,20 +298,18 @@ public class JackTransform extends Transform {
 
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
 
-        // Incremental compilation is disabled for buildtools < 24.0.2 due to b.android.com/220176.
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
-                        project, scope, compileOptions, processorPath, LOG)
-                        && androidBuilder.getTargetInfo().getBuildTools().getRevision().compareTo(
-                                new Revision(24, 0, 3), Revision.PreviewComparison.IGNORE) >= 0 ;
+                        project, scope, compileOptions, processorPath, LOG);
 
         if (incremental) {
-            String taskName = StringHelper.combineAsCamelCase(
-                    ImmutableList.of(
-                            "transformJackWith",
-                            getName(),
-                            "for",
-                            scope.getFullVariantName()));
+            String taskName =
+                    StringHelper.combineAsCamelCase(
+                            ImmutableList.of(
+                                    "transformJackWith",
+                                    getName(),
+                                    "for",
+                                    scope.getFullVariantName()));
             options.setIncrementalDir(scope.getIncrementalDir(taskName));
         }
 
@@ -320,18 +317,15 @@ public class JackTransform extends Transform {
         jackInProcess = isInProcess(config.getJackOptions().isJackInProcess());
 
         if (config.getBuildType().isTestCoverageEnabled()) {
-            if (jackInProcess
-                    && JackProcessOptions.COVERAGE_BROKEN.contains(
+            if (JackProcessOptions.COVERAGE_BROKEN.contains(
                             androidBuilder.getTargetInfo().getBuildTools().getRevision())) {
                 androidBuilder
                         .getErrorReporter()
                         .handleSyncWarning(
                                 null,
                                 SyncIssue.TYPE_GENERIC,
-                                "Test coverage is disabled for Jack in process. Please set"
-                                        + " android.defaultConfig.jackOptions.jackInProcess "
-                                        + "= false. Next versions of build tools will "
-                                        + "fix this issue.");
+                                "Test coverage is disabled for Jack. Next versions of build tools "
+                                        + "will fix this issue.");
             } else {
                 options.setCoverageMetadataFile(scope.getJackCoverageMetadataFile());
             }

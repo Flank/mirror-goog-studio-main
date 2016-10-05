@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.repository.Revision;
@@ -50,6 +51,8 @@ public class JackPluginsTest {
 
     @Test
     public void checkCoverageAsPlugin() throws Exception {
+        // http://b.android.com/224564
+        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
@@ -93,6 +96,8 @@ public class JackPluginsTest {
 
     @Test
     public void checkNameDuplicates() throws Exception {
+        // http://b.android.com/224564
+        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
@@ -113,6 +118,8 @@ public class JackPluginsTest {
 
     @Test
     public void checkPathDuplicates() throws Exception {
+        // http://b.android.com/224564
+        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(

@@ -36,11 +36,9 @@ import java.util.Set;
  */
 public class JackProcessOptions {
 
-    public static final Revision JACK_MIN_REV = new Revision(24, 0, 2);
-
     // Revisions with broken coverage plugin for in-process.
     public static final Range<Revision> COVERAGE_BROKEN =
-            Range.closed(new Revision(24, 0, 0), new Revision(24, 0, 2));
+            Range.singleton(new Revision(24, 0, 3));
 
     // Class name of the code coverage plugin.
     public static final String COVERAGE_PLUGIN_NAME = "com.android.jack.coverage.CodeCoverage";

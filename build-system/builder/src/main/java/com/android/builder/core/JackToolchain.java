@@ -16,7 +16,6 @@
 
 package com.android.builder.core;
 
-import static com.android.builder.core.JackProcessOptions.JACK_MIN_REV;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -34,9 +33,7 @@ import com.android.jack.api.v01.DebugInfoLevel;
 import com.android.jack.api.v01.MultiDexKind;
 import com.android.jack.api.v01.ReporterKind;
 import com.android.jack.api.v01.UnrecoverableException;
-import com.android.jack.api.v02.Api02Config;
-import com.android.jack.api.v03.Api03Config;
-import com.android.repository.Revision;
+import com.android.jack.api.v04.Api04Config;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -79,11 +76,6 @@ public class JackToolchain {
             boolean isInProcess)
             throws ConfigNotSupportedException, ClassNotFoundException, CompilationException,
             ConfigurationException, UnrecoverableException, ProcessException {
-        Revision revision = buildToolInfo.getRevision();
-        if (revision.compareTo(JACK_MIN_REV, Revision.PreviewComparison.IGNORE) < 0) {
-            throw new ConfigNotSupportedException(
-                    "Jack requires Build Tools " + JACK_MIN_REV.toString() + " or later");
-        }
 
         // Create all the necessary directories if needed.
         if (options.getDexOutputDirectory() != null) {
@@ -143,12 +135,12 @@ public class JackToolchain {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Optional<JackProvider> jackProvider =
                 buildToolServiceLoader.getSingleService(logger, BuildToolsServiceLoader.JACK);
-        BuildToolInfo.JackApiVersion apiVersion = buildToolInfo.getSupportedJackApi();
+        BuildToolInfo.JackVersion apiVersion = buildToolInfo.getSupportedJackApi();
         if (jackProvider.isPresent()) {
 
             // Get configuration object
             try {
-                Api02Config config = createJackConfig(jackProvider.get());
+                Api04Config config = createJackConfig(jackProvider.get(), apiVersion);
 
                 config.setDebugInfoLevel(
                         options.isDebuggable() ? DebugInfoLevel.FULL : DebugInfoLevel.NONE);
@@ -193,17 +185,6 @@ public class JackToolchain {
                             "jack.java.source.version", options.getSourceCompatibility());
                 }
 
-                if (options.getEncoding() != null
-                        && !options.getEncoding().equals(Charset.defaultCharset().name())) {
-                    logger.warning(
-                            "Jack will use %s encoding for the source files. If you would like to "
-                                    + "specify a different one, add org.gradle.jvmargs="
-                                    + "-Dfile.encoding=<encoding> to the gradle.properties file."
-                                    + "Alternatively, set jackInProcess = false, and "
-                                    + "use android.compileOptions.encoding property.",
-                            Charset.defaultCharset().name());
-                }
-
                 if (options.getIncrementalDir() != null && options.getIncrementalDir().exists()) {
                     config.setIncrementalDir(options.getIncrementalDir());
                 }
@@ -243,10 +224,8 @@ public class JackToolchain {
                     config.setProperty(paramKey, paramValue);
                 }
 
-                if (apiVersion == BuildToolInfo.JackApiVersion.V2) {
-                    config = api02Specific(config, options);
-                } else if (apiVersion == BuildToolInfo.JackApiVersion.V3) {
-                    config = api03Specific((Api03Config) config, options);
+                if (apiVersion == BuildToolInfo.JackVersion.V4) {
+                    config = api04Specific(config, options);
                 }
 
                 compilationTask = config.getTask();
@@ -344,32 +323,20 @@ public class JackToolchain {
         }
     }
 
-    private Api02Config createJackConfig(@NonNull JackProvider jackProvider)
+    private Api04Config createJackConfig(
+            @NonNull JackProvider jackProvider, @NonNull BuildToolInfo.JackVersion apiVersion)
             throws ConfigNotSupportedException {
-        BuildToolInfo.JackApiVersion version = buildToolInfo.getSupportedJackApi();
-        if (version == BuildToolInfo.JackApiVersion.V3) {
-            return jackProvider.createConfig(Api03Config.class);
-        } else if (version == BuildToolInfo.JackApiVersion.V2) {
-            return jackProvider.createConfig(Api02Config.class);
+        if (apiVersion == BuildToolInfo.JackVersion.V4) {
+            return jackProvider.createConfig(Api04Config.class);
         } else {
-            throw new RuntimeException("Cannot determine Jack API version to use = " + version);
+            throw new RuntimeException("Cannot determine Jack API version to use = " + apiVersion);
         }
     }
 
-    private Api02Config api02Specific(
-            @NonNull Api02Config config, @NonNull JackProcessOptions options)
-            throws ConfigurationException {
-        if (options.getCoverageMetadataFile() != null) {
-            config.setProperty("jack.coverage", "true");
-            config.setProperty(
-                    "jack.coverage.metadata.file",
-                    options.getCoverageMetadataFile().getAbsolutePath());
-        }
-        return config;
-    }
-
-    private Api03Config api03Specific(
-            @NonNull Api03Config config, @NonNull JackProcessOptions options)
+    /** Apply Api04 specific values. */
+    @NonNull
+    private Api04Config api04Specific(
+            @NonNull Api04Config config, @NonNull JackProcessOptions options)
             throws ConfigurationException {
         if (options.getCoverageMetadataFile() != null) {
             String coveragePluginPath =
@@ -397,6 +364,11 @@ public class JackToolchain {
         // jack plugins
         config.setPluginNames(Lists.newArrayList(options.getJackPluginNames()));
         config.setPluginPath(options.getJackPluginClassPath());
+
+        if (options.getEncoding() != null) {
+            config.setDefaultCharset(Charset.forName(options.getEncoding()));
+        }
+
         return config;
     }
 }

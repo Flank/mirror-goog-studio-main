@@ -40,6 +40,7 @@ public class DeploymentApiOverrideTest {
 
     @BeforeClass
     public static void checkBuildTools() {
+        AssumeUtil.assumeNotUsingJack();
         AssumeUtil.assumeBuildToolsAtLeast(21);
     }
 
