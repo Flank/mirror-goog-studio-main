@@ -1,6 +1,13 @@
 load("//tools/base/bazel:bazel.bzl", "platform_filegroup")
 
 filegroup(
+    name = "licenses",
+    srcs = glob(
+        include = ["*/licenses/**"],
+    ),
+)
+
+filegroup(
     name = "build-tools/latest",
     srcs = [":build-tools/24.0.1"],
     visibility = ["//visibility:public"],
