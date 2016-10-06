@@ -39,9 +39,11 @@ java_test(
     deps = [
         ":tools.repository",
         "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
     ],
+    javacopts = ["-extra_checks:off"],
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     test_class = "com.android.testutils.JarTestSuite",
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

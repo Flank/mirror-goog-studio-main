@@ -41,10 +41,12 @@ java_test(
     deps = [
         ":tools.ddmlib",
         "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:junit_junit",
         "//tools/base/testutils:tools.testutils",
     ],
+    javacopts = ["-extra_checks:off"],
     test_class = "com.android.testutils.JarTestSuite",
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     data = ["//prebuilts/studio/sdk:platform-tools"],

@@ -36,4 +36,5 @@ java_test(
     deps = [":tools.testutils"],
     test_class = "com.android.testutils.JarTestSuite",
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    javacopts = ["-extra_checks:off"],
 )

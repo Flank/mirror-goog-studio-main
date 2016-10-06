@@ -36,6 +36,7 @@ _kotlin_jar = rule(
         ),
         "_kotlinc": attr.label(
             executable = True,
+            cfg = "host",
             default = Label("//tools/base/bazel:kotlinc"),
             allow_files = True),
         "_kotlin": attr.label(
@@ -79,6 +80,7 @@ _groovy_jar = rule(
         ),
         "_groovy": attr.label(
             executable = True,
+            cfg = "host",
             default = Label("//tools/base/bazel:groovyc"),
             allow_files = True),
     },
@@ -190,6 +192,7 @@ _form_jar = rule(
         ),
         "_formc": attr.label(
             executable = True,
+            cfg = "host",
             default = Label("//tools/base/bazel:formc"),
             allow_files = True),
     },
@@ -462,10 +465,12 @@ _java_proto_library = rule(
         "_protoc": attr.label(
             default = Label("//prebuilts/tools/common/m2:protoc"),
             executable = True,
+            cfg = "host",
         ),
         "_protoc_grpc_plugin_java": attr.label(
             default = Label("//prebuilts/tools/common/m2:grpc-plugin"),
             executable = True,
+            cfg = "host",
         ),
     },
     outputs = {
