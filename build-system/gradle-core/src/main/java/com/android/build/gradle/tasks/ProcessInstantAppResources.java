@@ -39,7 +39,10 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -48,11 +51,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.tooling.BuildException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 
 /**
  * A task to process InstantApp resources.
@@ -235,11 +233,14 @@ public class ProcessInstantAppResources extends IncrementalTask {
             processInstantAppResources.setMergeBlameLogFolder(
                     scope.getVariantScope().getResourceBlameLogDir());
 
+            processInstantAppResources.setOutputResourcePackage(
+                    scope.getProcessResourcePackageOutputFile());
+
             AndroidAtom baseAtom = config.getPackageDependencies().getBaseAtom();
+
+            // This will happen for the first sync. Just ignore and exit early.
             if (baseAtom == null) {
-                processInstantAppResources.getLogger().error(
-                        "Instant apps need at least one atom.");
-                throw new BuildException("Instant apps need at least one atom.", null);
+                return;
             }
             processInstantAppResources.setBaseAtomResourcePackage(baseAtom.getResourcePackage());
 
@@ -251,8 +252,6 @@ public class ProcessInstantAppResources extends IncrementalTask {
             }
             processInstantAppResources.setAtomResourcePackages(builder.build());
 
-            processInstantAppResources.setOutputResourcePackage(
-                    scope.getProcessResourcePackageOutputFile());
         }
 
         @NonNull
