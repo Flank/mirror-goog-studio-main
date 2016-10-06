@@ -15,14 +15,18 @@
  */
 #include "connection_sampler.h"
 #include "proto/network.pb.h"
+#include "test/utils.h"
 
 #include <gtest/gtest.h>
 
 using profiler::ConnectionSampler;
+using profiler::TestUtils;
 
 TEST(GetConnectionData, TwoOpenConnectionsWithUidMatched) {
   const std::vector<std::string> file_names = {
-      "open_connection_uid_matched1.txt", "open_connection_uid_matched2.txt"};
+      TestUtils::getNetworkTestData("open_connection_uid_matched1.txt"),
+      TestUtils::getNetworkTestData("open_connection_uid_matched2.txt")
+  };
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -32,7 +36,8 @@ TEST(GetConnectionData, TwoOpenConnectionsWithUidMatched) {
 
 TEST(GetConnectionData, OpenConnectionWithUidUnmatched) {
   const std::vector<std::string> file_names = {
-      "open_connection_uid_unmatched.txt"};
+      TestUtils::getNetworkTestData("open_connection_uid_unmatched.txt")
+  };
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);
@@ -42,7 +47,10 @@ TEST(GetConnectionData, OpenConnectionWithUidUnmatched) {
 
 TEST(GetConnectionData, OpenConnectionListeningAllInterfaces) {
   const std::vector<std::string> file_names = {
-      "open_connection_listening_all_interfaces.txt"};
+      TestUtils::getNetworkTestData(
+        "open_connection_listening_all_interfaces.txt"
+      )
+  };
   ConnectionSampler collector("12345", file_names);
   profiler::proto::NetworkProfilerData data;
   collector.GetData(&data);

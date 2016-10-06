@@ -1,5 +1,11 @@
+package(default_visibility = ["//visibility:public"])
+
 filegroup(
     name = "utils",
     srcs = glob(["utils/**"]),
-    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "perfd/network",
+    srcs = glob(["perfd/network/**"]),
 )

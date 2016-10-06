@@ -23,4 +23,8 @@ std::string TestUtils::getUtilsTestData(const std::string &path) {
   return path;
 }
 
+std::string TestUtils::getNetworkTestData(const std::string &path) {
+  return path;
+}
+
 }  // namespace profiler
