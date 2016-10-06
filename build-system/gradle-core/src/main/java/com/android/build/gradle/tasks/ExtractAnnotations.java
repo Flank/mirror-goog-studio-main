@@ -150,11 +150,11 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
      */
     @Optional
     @OutputFile
-    public File setTypedefFile() {
+    public File getTypedefFile() {
         return typedefFile;
     }
 
-    public void getTypedefFile(File typedefFile) {
+    public void setTypedefFile(File typedefFile) {
         this.typedefFile = typedefFile;
     }
 
@@ -408,7 +408,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             LibraryTaskManager.ANNOTATIONS + "/" + variantConfig.getDirName()));
             task.setOutput(new File(task.getDestinationDir(), SdkConstants.FN_ANNOTATIONS_ZIP));
-            task.getTypedefFile(variantScope.getTypedefFile());
+            task.setTypedefFile(variantScope.getTypedefFile());
             task.setClassDir(variantScope.getJavaOutputDir());
             task.setSource(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());
