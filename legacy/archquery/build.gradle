@@ -6,4 +6,31 @@ archivesBaseName = 'archquery'
 version = rootProject.ext.baseVersion
 
 // configure the manifest of the sdkJar task.
-sdkJar.manifest.attributes("Main-Class": "com.android.archquery.Main")
+sdkJar.manifest.attributes('Main-Class': 'com.android.archquery.Main')
+
+task archQueryStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName('runtime'))
+    outputDir new File(project.getBuildDir(), 'scripts')
+
+    description 'Creates OS specific scripts to start archQuery'
+    mainClassName = 'com.android.archquery.Main'
+    applicationName = 'archquery'
+}
+
+
+sdk {
+    common(mac, linux) {
+        item(new File(buildDir, 'scripts/archquery')) {
+            into 'bin'
+            builtBy 'archQueryStartScripts'
+        }
+    }
+    windows {
+        item(new File(buildDir, 'scripts/archquery.bat')) {
+            into 'bin'
+            builtBy 'archQueryStartScripts'
+        }
+    }
+}
+
