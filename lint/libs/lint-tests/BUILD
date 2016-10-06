@@ -20,13 +20,13 @@ java_library(
     ],
 )
 
-# TODO: these don't pass yet.
+# TODO: Remove the list of excluded tests from LintBazelSuite.
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
     javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
+    test_class = "com.android.tools.lint.LintBazelSuite",
     deps = [
         ":lint-tests",
         "//tools/base/annotations",
