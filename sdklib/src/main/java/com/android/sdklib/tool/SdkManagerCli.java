@@ -541,6 +541,16 @@ public class SdkManagerCli {
         public ProgressIndicator getProgressIndicator() {
             return new ConsoleProgressIndicator() {
                 @Override
+                public void logWarning(@NonNull String s, @Nullable Throwable e) {
+                    if (mVerbose) {
+                        super.logWarning(s, e);
+                    }
+                    else {
+                        super.logWarning(s, null);
+                    }
+                }
+
+                @Override
                 public void logInfo(@NonNull String s) {
                     if (mVerbose) {
                         super.logInfo(s);
