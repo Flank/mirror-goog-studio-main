@@ -380,7 +380,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
     private static void checkTransactionCommits(@NonNull JavaContext context,
             @NonNull PsiMethodCallExpression node, @NonNull PsiMethod calledMethod) {
         if (isBeginTransaction(context, calledMethod)) {
-            PsiVariable boundVariable = getVariableElement(node, true);
+            PsiVariable boundVariable = getVariableElement(node, true, true);
             if (boundVariable == null && isCommittedInChainedCalls(context, node)) {
                 return;
             }
@@ -515,7 +515,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
     private static void checkEditorApplied(@NonNull JavaContext context,
             @NonNull PsiMethodCallExpression node, @NonNull PsiMethod calledMethod) {
         if (isSharedEditorCreation(context, calledMethod)) {
-            PsiVariable boundVariable = getVariableElement(node, true);
+            PsiVariable boundVariable = getVariableElement(node, true, true);
             if (isEditorCommittedInChainedCalls(context, node)) {
                 return;
             }
@@ -721,12 +721,12 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
     /** Returns the variable the expression is assigned to, if any */
     @Nullable
     public static PsiVariable getVariableElement(@NonNull PsiElement rhs) {
-        return getVariableElement(rhs, false);
+        return getVariableElement(rhs, false, false);
     }
 
     @Nullable
     public static PsiVariable getVariableElement(@NonNull PsiElement rhs,
-            boolean allowChainedCalls) {
+            boolean allowChainedCalls, boolean allowFields) {
         PsiElement parent = skipParentheses(rhs.getParent());
 
         // Handle some types of chained calls; e.g. you might have
@@ -752,12 +752,14 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
             PsiExpression lhs = assignment.getLExpression();
             if (lhs instanceof PsiReference) {
                 PsiElement resolved = ((PsiReference)lhs).resolve();
-                if (resolved instanceof PsiVariable && !(resolved instanceof PsiField)) {
+                if (resolved instanceof PsiVariable
+                        && (allowFields || !(resolved instanceof PsiField))) {
                     // e.g. local variable, parameter - but not a field
                     return (PsiVariable) resolved;
                 }
             }
-        } else if (parent instanceof PsiVariable && !(parent instanceof PsiField)) {
+        } else if (parent instanceof PsiVariable
+                && (allowFields || !(parent instanceof PsiField))) {
             return (PsiVariable) parent;
         }
 
