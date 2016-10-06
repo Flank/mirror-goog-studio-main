@@ -90,6 +90,8 @@ public class InstantRunVerifierTransformTest {
         when(variantScope.getIncrementalVerifierDir()).thenReturn(backupDir);
         when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
+        when(instantRunBuildContext.getVerifierResult()).thenReturn(
+                InstantRunVerifierStatus.NO_CHANGES);
         when(globalScope.isActive(OptionalCompilationStep.RESTART_ONLY)).thenReturn(false);
     }
 
@@ -408,7 +410,56 @@ public class InstantRunVerifierTransformTest {
         assertThat(recordedCopies).hasSize(5);
         for (int i=0; i<5; i++) {
             assertThat(recordedCopies).containsEntry(files[i], lastIterationFiles[i]);
-        }    }
+        }
+    }
+
+    @Test
+    public void testStatusAlreadySet()
+            throws TransformException, InterruptedException, IOException {
+        when(instantRunBuildContext.getVerifierResult()).thenReturn(
+                InstantRunVerifierStatus.DEPENDENCY_CHANGED);
+
+        final File inputDir = temporaryFolder.newFolder();
+        final File inputFile = new File(inputDir, "com/foo/bar/InputFile.class");
+
+        ImmutableList<TransformInput> transformInputs =
+                ImmutableList.<TransformInput>of(new TransformInput() {
+                    @NonNull
+                    @Override
+                    public Collection<JarInput> getJarInputs() {
+                        return ImmutableList.of();
+                    }
+
+                    @NonNull
+                    @Override
+                    public Collection<DirectoryInput> getDirectoryInputs() {
+                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
+
+                            @NonNull
+                            @Override
+                            public Map<File, Status> getChangedFiles() {
+                                return ImmutableMap.of(inputFile, Status.ADDED);
+                            }
+
+                            @NonNull
+                            @Override
+                            public File getFile() {
+                                return inputDir;
+                            }
+                        });
+                    }
+                });
+
+        getTransform().transform(new TransformInvocationBuilder(context)
+                .addOutputProvider(transformOutputProvider)
+                .addReferencedInputs(transformInputs)
+                .setIncrementalMode(true)
+                .build());
+
+        // check the verifier status is not reset.
+        assertThat(instantRunBuildContext.getVerifierResult()).isEqualTo(
+                InstantRunVerifierStatus.DEPENDENCY_CHANGED);
+    }
 
     private InstantRunVerifierTransform getTransform() {
 
