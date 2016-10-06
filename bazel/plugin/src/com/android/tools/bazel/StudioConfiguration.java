@@ -30,6 +30,11 @@ public class StudioConfiguration implements Configuration {
             prefix = "idea.";
         } else if (rel.startsWith("tools/base")) {
             prefix = "studio.";
+        } else if (rel.startsWith("tools/data-binding")) {
+            prefix = "studio.";
+            if (name.startsWith("db-")) {
+                name = name.replace("db-", "");
+            }
         }
 
         return prefix + name;
