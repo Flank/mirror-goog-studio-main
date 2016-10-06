@@ -10,17 +10,31 @@ archivesBaseName = 'jobb'
 version = rootProject.ext.baseVersion
 
 // configure the manifest of the sdkJar task
-sdkJar.manifest.attributes("Main-Class": "com.android.jobb.Main")
+sdkJar.manifest.attributes('Main-Class': 'com.android.jobb.Main')
+
+task jobbStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName('runtime'))
+    outputDir new File(project.getBuildDir(), 'scripts')
+
+    description 'Creates OS specific scripts to start jobb'
+    mainClassName = 'com.android.jobb.Main'
+    applicationName = 'jobb'
+}
+
 
 sdk {
-    linux {
-        item('etc/jobb') { executable true }
-    }
-    mac {
-        item('etc/jobb') { executable true }
+    common(mac, linux) {
+        item(new File(buildDir, 'scripts/jobb')) {
+            into 'bin'
+            builtBy 'jobbStartScripts'
+        }
     }
     windows {
-        item 'etc/jobb.bat'
+        item(new File(buildDir, 'scripts/jobb.bat')) {
+            into 'bin'
+            builtBy 'jobbStartScripts'
+        }
     }
 }
 
