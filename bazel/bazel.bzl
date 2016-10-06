@@ -403,20 +403,21 @@ def iml_module(name,
     javacopts = javacopts,
   )
 
-  native.java_test(
-    name = name + "_tests",
-    runtime_deps = test_runtime_deps + [
-      ":" + name + "_testlib",
-      "//tools/base/testutils:studio.testutils",
-      "//tools/base/bazel:langtools",
-    ],
-    timeout = test_timeout,
-    shard_count = test_shard_count,
-    data = test_data,
-    jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.jar"],
-    test_class = test_class,
-    visibility = ["//visibility:public"],
-  )
+  if test_srcs:
+    native.java_test(
+      name = name + "_tests",
+      runtime_deps = test_runtime_deps + [
+        ":" + name + "_testlib",
+        "//tools/base/testutils:studio.testutils",
+        "//tools/base/bazel:langtools",
+      ],
+      timeout = test_timeout,
+      shard_count = test_shard_count,
+      data = test_data,
+      jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.jar"],
+      test_class = test_class,
+      visibility = ["//visibility:public"],
+    )
 
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
