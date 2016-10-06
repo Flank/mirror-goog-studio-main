@@ -114,6 +114,8 @@ public class AllocationsParser {
   */
   @NonNull
   public static AllocationInfo[] parse(@NonNull ByteBuffer data) {
+    data.rewind();
+
     int messageHdrLen, entryHdrLen, stackFrameLen;
     int numEntries, offsetToStrings;
     int numClassNames, numMethodNames, numFileNames;
@@ -129,7 +131,6 @@ public class AllocationsParser {
     numClassNames = (data.getShort() & 0xffff);
     numMethodNames = (data.getShort() & 0xffff);
     numFileNames = (data.getShort() & 0xffff);
-
 
     /*
      * Skip forward to the strings and read them.
@@ -194,5 +195,30 @@ public class AllocationsParser {
       allocations[i] = new AllocationInfo(numEntries - i, classNames[classNameIndex], totalSize, (short) threadId, steArray);
     }
     return allocations;
+  }
+
+  /**
+   * In older versions of Android, there is a bug where the .alloc file will allow the header field
+   * "number of entries" overflow by 1. This results in the parser thinking there are 0 entries when
+   * there are actually 65536 entries in the file (the field is encoded in an unsigned short).
+   *
+   * This method, therefore, detects when the entries field has overflowed.
+   *
+   * @param data    The data buffer holding the contents of the .alloc file.
+   * @return true if the bug affects the input file, false otherwise.
+   */
+  public static boolean hasOverflowedNumEntriesBug(@NonNull ByteBuffer data) {
+    data.rewind();
+
+    int messageHdrLen, entryHdrLen, stackFrameLen;
+    int numEntries, offsetToStrings;
+
+    messageHdrLen = (data.get() & 0xff);
+    entryHdrLen = (data.get() & 0xff);
+    stackFrameLen = (data.get() & 0xff);
+    numEntries = (data.getShort() & 0xffff);
+    offsetToStrings = data.getInt();
+
+    return (numEntries == 0) && (offsetToStrings - messageHdrLen >= entryHdrLen);
   }
 }
