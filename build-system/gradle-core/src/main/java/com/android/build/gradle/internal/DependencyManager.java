@@ -186,23 +186,28 @@ public class DependencyManager {
             @NonNull VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath) {
-        Multimap<LibraryDependency, Configuration> reverseLibMap = ArrayListMultimap.create();
+        // set of Android Libraries to explode. This only concerns remote libraries, as modules
+        // are now used through their staging folders rather than their bundled AARs.
+        // Therefore there is no dependency on these exploded tasks since remote AARs are
+        // downloaded during the dependency resolution process.
+        Set<LibraryDependency> libsToExplode = Sets.newHashSet();
+
         Multimap<AndroidAtom, Configuration> reverseAtomMap = ArrayListMultimap.create();
 
         resolveDependencyForConfig(
                 variantDeps,
                 testedVariantDeps,
                 testedProjectPath,
-                reverseLibMap,
+                libsToExplode,
                 reverseAtomMap);
 
-        processLibraries(reverseLibMap);
+        processLibraries(libsToExplode);
         processAtoms(reverseAtomMap);
     }
 
-    private void processLibraries(@NonNull Multimap<LibraryDependency, Configuration> reverseMap) {
-        for (LibraryDependency lib : reverseMap.keySet()) {
-            setupPrepareLibraryTask(lib, reverseMap.get(lib));
+    private void processLibraries(@NonNull Set<LibraryDependency> libsToExplode) {
+        for (LibraryDependency lib: libsToExplode) {
+            maybeCreatePrepareLibraryTask(lib, project);
         }
     }
 
@@ -210,37 +215,6 @@ public class DependencyManager {
         for (AndroidAtom atom : reverseMap.keySet()) {
             setupPrepareAtomTask(atom, reverseMap.get(atom));
         }
-    }
-
-    private void setupPrepareLibraryTask(
-            @NonNull LibraryDependency androidLibrary,
-            @Nullable Collection<Configuration> configurationList) {
-        Task task = maybeCreatePrepareLibraryTask(androidLibrary, project);
-
-        // Use the reverse map to find all the configurations that included this android
-        // library so that we can make sure they are built.
-        // TODO fix, this is not optimum as we bring in more dependencies than we should.
-        if (configurationList != null && !configurationList.isEmpty()) {
-            for (Configuration configuration: configurationList) {
-                task.dependsOn(configuration.getBuildDependencies());
-            }
-        }
-
-        // check if this library is created by a parent (this is based on the
-        // output file.
-        // TODO Fix this as it's fragile
-            /*
-            This is a somewhat better way but it doesn't work in some project with
-            weird setups...
-            Project parentProject = DependenciesImpl.getProject(library.getBundle(), projects)
-            if (parentProject != null) {
-                String configName = library.getProjectVariant()
-                if (configName == null) {
-                    configName = "default"
-                }
-
-                prepareLibraryTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
-            }*/
     }
 
     private void setupPrepareAtomTask(
@@ -364,7 +338,7 @@ public class DependencyManager {
             @NonNull final VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
+            @NonNull Set<LibraryDependency> libsToExplodeOut,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap) {
 
         boolean needPackageScope = true;
@@ -407,7 +381,7 @@ public class DependencyManager {
             packagedDependencies = gatherDependencies(
                     packageClasspath,
                     variantDeps,
-                    reverseLibMap,
+                    libsToExplodeOut,
                     reverseAtomMap,
                     currentUnresolvedDependencies,
                     testedProjectPath,
@@ -426,7 +400,7 @@ public class DependencyManager {
         DependencyContainer compileDependencies = gatherDependencies(
                 compileClasspath,
                 variantDeps,
-                reverseLibMap,
+                libsToExplodeOut,
                 reverseAtomMap,
                 currentUnresolvedDependencies,
                 testedProjectPath,
@@ -498,7 +472,7 @@ public class DependencyManager {
     private DependencyContainer gatherDependencies(
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
-            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
+            @NonNull Set<LibraryDependency> libsToExplodeOut,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
@@ -537,7 +511,7 @@ public class DependencyManager {
                         foundAtoms,
                         foundJars,
                         artifacts,
-                        reverseLibMap,
+                        libsToExplodeOut,
                         reverseAtomMap,
                         currentUnresolvedDependencies,
                         testedProjectPath,
@@ -754,7 +728,7 @@ public class DependencyManager {
             @NonNull Map<ModuleVersionIdentifier, List<AtomDependency>> alreadyFoundAtoms,
             @NonNull Map<ModuleVersionIdentifier, List<JarDependency>> alreadyFoundJars,
             @NonNull Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-            @NonNull Multimap<LibraryDependency, Configuration> reverseLibMap,
+            @NonNull Set<LibraryDependency> libsToExplodeOut,
             @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
@@ -786,7 +760,7 @@ public class DependencyManager {
 
             for (LibraryDependency lib : libsForThisModule) {
                 if (!lib.isSubModule()) {
-                    reverseLibMap.put(lib, configuration);
+                    libsToExplodeOut.add(lib);
                 }
             }
         } else if (atomsForThisModule != null) {
@@ -867,7 +841,7 @@ public class DependencyManager {
                             alreadyFoundAtoms,
                             alreadyFoundJars,
                             artifacts,
-                            reverseLibMap,
+                            libsToExplodeOut,
                             reverseAtomMap,
                             currentUnresolvedDependencies,
                             testedProjectPath,
@@ -989,10 +963,10 @@ public class DependencyManager {
                         libsForThisModule.add(libraryDependency);
                         outLibraries.add(libraryDependency);
 
-                        // reverse lib map is to create extract task, which is not needed for
-                        // sub-projects/
+                        // only record the libraries to explode if they are remote and not
+                        // sub-modules.
                         if (!isSubProject) {
-                            reverseLibMap.put(libraryDependency, configuration);
+                            libsToExplodeOut.add(libraryDependency);
                         }
 
                         // check this aar does not have a dependency on an atom, as this would
