@@ -21,6 +21,10 @@ sourceSets {
     test.resources.srcDir 'src/test/java'
 }
 
+test {
+    exclude '**/LintBazelSuite.class'
+}
+
 project.ext.pomName = 'Android Tools Lint Test API'
 project.ext.pomDesc = 'API to build lint check tests'
 
