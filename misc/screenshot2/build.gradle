@@ -9,14 +9,21 @@ dependencies {
     compile project(':base:ddmlib')
 }
 
-sdk {
-    linux {
-        item('etc/screenshot2') { executable true }
-    }
-    mac {
-        item('etc/screenshot2') { executable true }
-    }
+task Screenshot2StartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName('runtime'))
+    outputDir new File(project.getBuildDir(), 'scripts')
+
+    description 'Creates OS specific scripts to start screenshot2'
+    mainClassName = 'com.android.screenshot.Screenshot'
+    applicationName = 'screenshot2'
 }
 
-// configure the manifest of the sdkJar task.
-sdkJar.manifest.attributes("Main-Class": "com.android.screenshot.Screenshot")
+sdk {
+    common(mac, linux) {
+        item(new File(buildDir, 'scripts/screenshot2')) {
+            into 'bin'
+            builtBy 'Screenshot2StartScripts'
+        }
+    }
+}
