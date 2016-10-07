@@ -27,4 +27,8 @@ std::string TestUtils::getNetworkTestData(const std::string &path) {
   return "tools/base/profiler/native/testdata/perfd/network/" + path;
 }
 
+std::string TestUtils::getMemoryTestData(const std::string &path) {
+  return "tools/base/profiler/native/testdata/perfd/memory/" + path;
+}
+
 }  // namespace profiler

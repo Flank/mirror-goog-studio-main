@@ -15,13 +15,17 @@
  */
 #include "memory_levels_sampler.h"
 #include "proto/memory.pb.h"
+#include "test/utils.h"
 #include "utils/file_reader.h"
 
 #include <gtest/gtest.h>
 
+using profiler::TestUtils;
+
 TEST(ParseMemoryLevels, MemoryDataVersion3Valid) {
   std::string content;
-  profiler::FileReader::Read("memory_data_valid_v3.txt", &content);
+  profiler::FileReader::Read(
+    TestUtils::getMemoryTestData("memory_data_valid_v3.txt"), &content);
 
   profiler::MemoryLevelsSampler sampler;
   profiler::proto::MemoryData_MemorySample sample;
@@ -40,7 +44,8 @@ TEST(ParseMemoryLevels, MemoryDataVersion3Valid) {
 
 TEST(ParseMemoryLevels, MemoryDataVersion4Valid) {
   std::string content;
-  profiler::FileReader::Read("memory_data_valid_v4.txt", &content);
+  profiler::FileReader::Read(
+    TestUtils::getMemoryTestData("memory_data_valid_v4.txt") , &content);
 
   profiler::MemoryLevelsSampler sampler;
   profiler::proto::MemoryData_MemorySample sample;

@@ -30,6 +30,10 @@ class TestUtils {
   // Returns the correct testdata path correspondent to perfd network package
   // given a relative path.
   static std::string getNetworkTestData(const std::string &path);
+
+  // Returns the correct testdata path correspondent to perfd memory package
+  // given a relative path.
+  static std::string getMemoryTestData(const std::string &path);
 };
 
 }  // namespace profiler
