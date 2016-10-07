@@ -1391,6 +1391,35 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                                 + "}")));
     }
 
+    public void testFields() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=224435
+        assertEquals("No warnings.",
+                lintProject(
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import android.app.Service;\n"
+                                + "import android.content.SharedPreferences;\n"
+                                + "import android.preference.PreferenceManager;\n"
+                                + "\n"
+                                + "public abstract class CommitFromField extends Service {\n"
+                                + "    private SharedPreferences prefs;\n"
+                                + "    @SuppressWarnings(\"FieldCanBeLocal\")\n"
+                                + "    private SharedPreferences.Editor editor;\n"
+                                + "\n"
+                                + "    @Override\n"
+                                + "    public void onCreate() {\n"
+                                + "        prefs = PreferenceManager.getDefaultSharedPreferences(this);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private void engine() {\n"
+                                + "        editor = prefs.edit();\n"
+                                + "        editor.apply();\n"
+                                + "    }\n"
+                                + "}\n")
+                ));
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mDialogFragment = java(""
             + "package android.support.v4.app;\n"
