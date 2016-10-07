@@ -1,8 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ResourceName">
-<!--
-    <style name="Mylib.My" parent="android:Theme"/>
-    <style name="Mylib.My.Theme"/>
--->
-    <style name="My"/>
-    <style name="My.Theme"/>
+<resources>
+    <style name="Mylib_My"/>
+    <style name="Mylib_My.Theme"/>
 </resources>

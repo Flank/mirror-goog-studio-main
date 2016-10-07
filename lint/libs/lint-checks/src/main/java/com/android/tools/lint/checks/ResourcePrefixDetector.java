@@ -19,7 +19,9 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_DECLARE_STYLEABLE;
 import static com.android.SdkConstants.TAG_RESOURCES;
-import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
+import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
+import static com.android.utils.SdkUtils.startsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -36,14 +38,12 @@ import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.SdkUtils;
+import com.google.common.annotations.VisibleForTesting;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -80,17 +80,8 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
     }
 
     private String mPrefix;
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
-    }
+    private String mUnderlinePrefix;
+    private String mCamelPrefix;
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -108,23 +99,40 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
 
     @Override
     public void beforeCheckProject(@NonNull Context context) {
-        mPrefix = computeResourcePrefix(context.getProject());
+        updatePrefix(context);
+    }
+
+    private void updatePrefix(@Nullable Context context) {
+        if (context == null) {
+            mPrefix = mUnderlinePrefix = mCamelPrefix = null;
+        } else {
+            mPrefix = computeResourcePrefix(context.getProject());
+            if (mPrefix == null) {
+                mUnderlinePrefix = mCamelPrefix = null;
+            } else if (mPrefix.indexOf('_') != -1) {
+                mUnderlinePrefix = mPrefix;
+                mCamelPrefix = underlinesToCamelCase(mPrefix);
+            } else {
+                mCamelPrefix = mPrefix;
+                mUnderlinePrefix = camelCaseToUnderlines(mPrefix);
+            }
+        }
     }
 
     @Override
     public void beforeCheckLibraryProject(@NonNull Context context) {
         // TODO: Make sure this doesn't wipe out the prefix for the remaining projects
-        mPrefix = computeResourcePrefix(context.getProject());
+        updatePrefix(context);
     }
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        mPrefix = null;
+        updatePrefix(null);
     }
 
     @Override
     public void afterCheckLibraryProject(@NonNull Context context) {
-        mPrefix = null;
+        updatePrefix(null);
     }
 
     @Override
@@ -134,7 +142,7 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
             ResourceFolderType folderType = xmlContext.getResourceFolderType();
             if (folderType != null && folderType != ResourceFolderType.VALUES) {
                 String name = LintUtils.getBaseName(context.file.getName());
-                if (!name.startsWith(mPrefix)) {
+                if (!libraryPrefixMatches(mUnderlinePrefix, name)) {
                     // Attempt to report the error on the root tag of the associated
                     // document to make suppressing the error with a tools:suppress
                     // attribute etc possible
@@ -142,29 +150,30 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
                         Element root = xmlContext.document.getDocumentElement();
                         if (root != null) {
                             xmlContext.report(ISSUE, root, xmlContext.getLocation(root),
-                                    getErrorMessage(name));
+                                    getErrorMessage(name, folderType));
                             return;
                         }
                     }
                     context.report(ISSUE, Location.create(context.file),
-                            getErrorMessage(name));
+                            getErrorMessage(name, folderType));
                 }
             }
         }
     }
 
-    private String getErrorMessage(String name) {
+    private String getErrorMessage(@NonNull String name, @NonNull ResourceFolderType folderType) {
         assert mPrefix != null && !name.startsWith(mPrefix);
         return String.format("Resource named '`%1$s`' does not start "
                         + "with the project's resource prefix '`%2$s`'; rename to '`%3$s`' ?",
-                name, mPrefix, LintUtils.computeResourceName(mPrefix, name));
+                name, mPrefix, LintUtils.computeResourceName(mPrefix, name, folderType));
     }
 
     // --- Implements XmlScanner ----
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (mPrefix == null || context.getResourceFolderType() != ResourceFolderType.VALUES) {
+        if (mPrefix == null
+                || context.getResourceFolderType() != ResourceFolderType.VALUES) {
             return;
         }
 
@@ -172,23 +181,13 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
             Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
             if (nameAttribute != null) {
                 String name = nameAttribute.getValue();
-                if (!name.startsWith(mPrefix)) {
-                    // For styleables, allow case insensitive prefix match, and if the
-                    // prefix ends with a "_" it's not required, e.g. prefix "foo_"
-                    // should accept FooView as a styleable, and shouldn't require
-                    // foo_View or Foo_View.
-                    String tagName = item.getTagName();
-                    if ((tagName.equals(TAG_DECLARE_STYLEABLE) || tagName.equals(TAG_STYLE)) &&
-                        (SdkUtils.startsWithIgnoreCase(name, mPrefix) ||
-                            mPrefix.endsWith("_") && name.regionMatches(true, 0, mPrefix, 0,
-                                    mPrefix.length() - 1))) {
-                        continue;
-                    }
-                    if (name.indexOf(':') != -1) {
-                        // Don't flag names in other namespaces, such as android:textColor
-                        continue;
-                    }
-                    String message = getErrorMessage(name);
+                if (name.indexOf(':') != -1) {
+                    // Don't flag names in other namespaces, such as android:textColor
+                    continue;
+                }
+                if (!libraryPrefixMatches(mUnderlinePrefix, name)
+                        && !libraryPrefixMatches(mCamelPrefix, name)) {
+                    String message = getErrorMessage(name, ResourceFolderType.VALUES);
                     context.report(ISSUE, nameAttribute, context.getLocation(nameAttribute),
                             message);
                 }
@@ -196,15 +195,35 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
         }
     }
 
+    /** Perform a prefix comparison and return true if the prefix matches */
+    @VisibleForTesting
+    static boolean libraryPrefixMatches(@NonNull String prefix, @NonNull String name) {
+        // To allow this matching we perform two conversion
+        if (name.startsWith(prefix)) {
+            return true;
+        }
+
+        // For styleables, allow case insensitive prefix match
+        if (startsWithIgnoreCase(name, prefix)) {
+            return true;
+        }
+
+        // If the prefix ends with a "_" it's not required, e.g. prefix "foo_"
+        // should accept FooView as a styleable, and shouldn't require
+        // foo_View or Foo_View.
+        return prefix.endsWith("_") && name.regionMatches(true, 0, prefix, 0,
+                prefix.length() - 1);
+    }
+
     // ---- Implements BinaryResourceScanner ---
 
     @Override
     public void checkBinaryResource(@NonNull ResourceContext context) {
-        if (mPrefix != null) {
+        if (mUnderlinePrefix != null) {
             ResourceFolderType folderType = context.getResourceFolderType();
             if (folderType != null && folderType != ResourceFolderType.VALUES) {
                 String name = LintUtils.getBaseName(context.file.getName());
-                if (!name.startsWith(mPrefix)) {
+                if (!name.startsWith(mUnderlinePrefix)) {
                     // Turns out the Gradle plugin will generate raw resources
                     // for renderscript. We don't want to flag these.
                     // We don't have a good way to recognize them today.
@@ -214,7 +233,7 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
                     }
 
                     Location location = Location.create(context.file);
-                    context.report(ISSUE, location, getErrorMessage(name));
+                    context.report(ISSUE, location, getErrorMessage(name, folderType));
                 }
             }
         }

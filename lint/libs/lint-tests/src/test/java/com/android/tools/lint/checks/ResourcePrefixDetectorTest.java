@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
+import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -123,7 +125,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     public void testValues() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/values/customattr.xml:2: Error: Resource named 'ContentFrame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_ContentFrame' ? [ResourceName]\n"
+                + "res/values/customattr.xml:2: Error: Resource named 'ContentFrame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'UnitTestPrefixContentFrame' ? [ResourceName]\n"
                 + "    <declare-styleable name=\"ContentFrame\">\n"
                 + "                       ~~~~~~~~~~~~~~~~~~~\n"
                 + "res/values/customattr.xml:3: Error: Resource named 'content' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_content' ? [ResourceName]\n"
@@ -172,6 +174,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     }
 
     public void testMultiProject() throws Exception {
+        //noinspection all // Sample code
         File master = getProjectDir("MasterProject",
                 // Master project
                 manifest().pkg("foo.master").minSdk(14),
@@ -185,6 +188,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                             + "    }\n"
                             + "}\n")
         );
+        //noinspection all // Sample code
         File library = getProjectDir("LibraryProject",
                 // Library project
                 manifest().pkg("foo.library").minSdk(14),
@@ -257,7 +261,57 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                         + "</resources>\n")
                 ));
     }
+
+    public void testPublicStyleableName() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(xml("res/values/values.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                        + "  <public name=\"Unit_test_prefixMyView\" type=\"declare-styleable\"/>\n"
+                        + "</resources>\n")
+                ));
+    }
+
     // TODO: Test suppressing root level tag
+
+    public void testPrefixMatches() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=213569
+
+        // Let's say the prefix is "myLib".
+        // We'd like this to *allow* matching the following prefixes:
+        //  - MyLibTheme
+        //  - myLibAttr
+        //  - my_lib_layout
+        //  - mylib_layout
+        // We similarly want the prefix "mylib_" (note the suffix) to also match
+        // MyLibTheme (e.g. the _ can be omitted).
+
+        assertFalse(checkPrefixMatches("a", "b"));
+        assertFalse(checkPrefixMatches("ab", "b"));
+
+
+        assertTrue(checkPrefixMatches("", ""));
+        assertTrue(checkPrefixMatches("", "MyLibTheme"));
+        assertTrue(checkPrefixMatches("myLib", "MyLibTheme"));
+        assertTrue(checkPrefixMatches("myLib", "myLibAttr"));
+        assertTrue(checkPrefixMatches("myLib", "my_lib_layout"));
+        assertTrue(checkPrefixMatches("myLib", "mylib_layout"));
+
+        assertTrue(checkPrefixMatches("my_lib", "MyLibTheme"));
+        assertTrue(checkPrefixMatches("my_lib", "myLibAttr"));
+        assertTrue(checkPrefixMatches("my_lib", "my_lib_layout"));
+        assertTrue(checkPrefixMatches("my_lib", "mylib_layout"));
+
+        assertTrue(checkPrefixMatches("my_lib_", "MyLibTheme"));
+        assertTrue(checkPrefixMatches("my_lib_", "myLibAttr"));
+        assertTrue(checkPrefixMatches("my_lib_", "my_lib_layout"));
+        assertTrue(checkPrefixMatches("my_lib_", "mylib_layout"));
+    }
+
+    private static boolean checkPrefixMatches(String prefix, String name) {
+        return ResourcePrefixDetector.libraryPrefixMatches(camelCaseToUnderlines(prefix), name) ||
+                ResourcePrefixDetector.libraryPrefixMatches(underlinesToCamelCase(prefix), name);
+    }
 
     @Override
     protected TestLintClient createClient() {

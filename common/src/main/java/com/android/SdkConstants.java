@@ -875,6 +875,7 @@ public final class SdkConstants {
     public static final String TAG_EAT_COMMENT = "eat-comment";        //$NON-NLS-1$
     public static final String TAG_SKIP = "skip";                      //$NON-NLS-1$
     public static final String TAG_SELECTOR = "selector";              //$NON-NLS-1$
+    public static final String TAG_PUBLIC = "public";                  //$NON-NLS-1$
 
     // Tags: XML
     public static final String TAG_HEADER = "header";                  //$NON-NLS-1$
