@@ -103,7 +103,8 @@ public class DeviceManagerTest {
                 "Android TV (1080p)", "Android TV (720p)", "Android Wear Round",
                 "Android Wear Round Chin", "Android Wear Square", "Galaxy Nexus", "Nexus 10",
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
-                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C");
+                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
+                "Pixel", "Pixel XL");
         assertThat(log.getMessages()).isEmpty();
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
@@ -116,7 +117,8 @@ public class DeviceManagerTest {
                 "7\" WSVGA (Tablet)", "Android TV (1080p)", "Android TV (720p)",
                 "Android Wear Round", "Android Wear Round Chin", "Android Wear Square",
                 "Galaxy Nexus", "Nexus 10", "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P",
-                "Nexus 7", "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C");
+                "Nexus 7", "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
+                "Pixel", "Pixel XL");
         assertThat(log.getMessages()).isEmpty();
     }
 
@@ -185,7 +187,8 @@ public class DeviceManagerTest {
                 "Android TV (1080p)", "Android TV (720p)", "Android Wear Round",
                 "Android Wear Round Chin", "Android Wear Square", "Galaxy Nexus", "Nexus 10",
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
-                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C");
+                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
+                "Pixel", "Pixel XL");
         assertThat(log.getMessages()).isEmpty();
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
@@ -197,7 +200,8 @@ public class DeviceManagerTest {
                 "Android Wear Round", "Android Wear Round Chin", "Android Wear Square",
                 "Galaxy Nexus", "My Custom Tablet", "Nexus 10", "Nexus 4", "Nexus 5", "Nexus 5X",
                 "Nexus 6", "Nexus 6P", "Nexus 7", "Nexus 7 (2012)", "Nexus 9", "Nexus One",
-                "Nexus S", "Pixel C");
+                "Nexus S", "Pixel C", "Pixel", "Pixel XL");
+
         assertThat(log.getMessages()).isEmpty();
     }
 
@@ -235,7 +239,8 @@ public class DeviceManagerTest {
                 "Android TV (1080p)", "Android TV (720p)", "Android Wear Round",
                 "Android Wear Round Chin", "Android Wear Square", "Galaxy Nexus", "Nexus 10",
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
-                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C");
+                "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
+                "Pixel", "Pixel XL");
         assertThat(log.getMessages()).isEmpty();
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
@@ -247,7 +252,7 @@ public class DeviceManagerTest {
                 "Android Wear Round", "Android Wear Round Chin", "Android Wear Square",
                 "Galaxy Nexus", "Mock Tag 1 Device Name", "Nexus 10", "Nexus 4", "Nexus 5",
                 "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7", "Nexus 7 (2012)", "Nexus 9",
-                "Nexus One", "Nexus S", "Pixel C");
+                "Nexus One", "Nexus S", "Pixel C", "Pixel", "Pixel XL");
         assertThat(log.getMessages()).isEmpty();
     }
 
