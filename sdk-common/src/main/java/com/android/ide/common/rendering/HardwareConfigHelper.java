@@ -195,6 +195,48 @@ public class HardwareConfigHelper {
     }
 
     /**
+     * Returns a user-displayable description of the given Nexus device.
+     * Optimized for display in menus where multiple other devices are also
+     * listed.
+     *
+     * @param device the device to check
+     * @return the label
+     * @see #isNexus(com.android.sdklib.devices.Device)
+     */
+    @NonNull
+    public static String getNexusMenuLabel(@NonNull Device device) {
+        String name = device.getDisplayName();
+        if (isTv(device)) {
+            // Example: 1080p, 1920x1080, xhdpi (TV)
+            if (name.startsWith("Android TV (")) {
+                name = name.substring("Android TV (".length());
+                if (name.endsWith(")")) {
+                    name = name.substring(0, name.length() - 1);
+                }
+            }
+            return String.format(Locale.US, "%1$s, %2$s (TV)", name, getResolutionString(device));
+        } else if (isWear(device)) {
+            // Example: 320x200, tvpdi (Round Chin)
+            if (name.startsWith("Android Wear ")) {
+                name = name.substring("Android Wear ".length());
+            }
+            return String.format(Locale.US, "%1$s (%2$s)", getResolutionString(device), name);
+        } else {
+            // Example: 5.2", 1920x1080, 420dpi (Nexus 5X)
+            if (name.endsWith(")")) {
+                // Drop parentheses, e.g. Nexus 7 (2012) to Nexus 7 2012
+                name = name.replace("(", "").replace(")", "");
+            }
+            Screen screen = device.getDefaultHardware().getScreen();
+            float length = (float) screen.getDiagonalLength();
+            // Round dimensions to the nearest tenth
+            length = Math.round(10 * length) / 10.0f;
+            return String.format(Locale.US, "%1$s, %2$s (%3$s)", Float.toString(length),
+                                 getResolutionString(device), name);
+        }
+    }
+
+    /**
      * Returns a user-displayable description of the given generic device
      * @param device the device to check
      * @return the label
@@ -235,7 +277,7 @@ public class HardwareConfigHelper {
     public static String getResolutionString(@NonNull Device device) {
         Screen screen = device.getDefaultHardware().getScreen();
         return String.format(Locale.US,
-                "%1$d \u00D7 %2$d: %3$s", // U+00D7: Unicode multiplication sign
+                "%1$d \u00D7 %2$d, %3$s", // U+00D7: Unicode multiplication sign
                 screen.getXDimension(),
                 screen.getYDimension(),
                 screen.getPixelDensity().getResourceValue());
@@ -289,60 +331,68 @@ public class HardwareConfigHelper {
      */
     public static int nexusRank(Device device) {
         String id = device.getId();
-        if (id.equals("Nexus One")) {      //$NON-NLS-1$
-            return 1;
+        switch (id) {
+            case "Nexus One":
+                return 1;
+            case "Nexus S":
+                return 2;
+            case "Galaxy Nexus":
+                return 3;
+            case "Nexus 7":
+                return 4; // 2012 version
+            case "Nexus 10":
+                return 5;
+            case "Nexus 4":
+                return 6;
+            case "Nexus 7 2013":
+                return 7;
+            case "Nexus 5":
+                return 8;
+            case "Nexus 9":
+                return 9;
+            case "Nexus 6":
+                return 10;
+            case "pixel_c":
+                return 11;
+            case "Nexus 6P":
+                return 12;
+            case "Nexus 5X":
+                return 13;
+            case "pixel":
+                return 14;
+            case "pixel_xl":
+                return 15;
+            default:
+                return 100; // devices released in the future?
         }
-        if (id.equals("Nexus S")) {        //$NON-NLS-1$
-            return 2;
-        }
-        if (id.equals("Galaxy Nexus")) {   //$NON-NLS-1$
-            return 3;
-        }
-        if (id.equals("Nexus 7")) {        //$NON-NLS-1$
-            return 4; // 2012 version
-        }
-        if (id.equals("Nexus 10")) {       //$NON-NLS-1$
-            return 5;
-        }
-        if (id.equals("Nexus 4")) {        //$NON-NLS-1$
-            return 6;
-        }
-        if (id.equals("Nexus 7 2013")) {   //$NON-NLS-1$
-            return 7;
-        }
-        if (id.equals("Nexus 5")) {        //$NON-NLS-1$
-          return 8;
-        }
-        if (id.equals("Nexus 9")) {        //$NON-NLS-1$
-            return 9;
-        }
-        if (id.equals("Nexus 6")) {        //$NON-NLS-1$
-            return 10;
-        }
-        if (id.equals("pixel_c")) {        //$NON-NLS-1$
-            return 11;
-        }
-        if (id.equals("Nexus 6P")) {       //$NON-NLS-1$
-            return 12;
-        }
-        if (id.equals("Nexus 5X")) {       //$NON-NLS-1$
-            return 13;
-        }
-
-        return 100; // devices released in the future?
     }
 
     /**
      * Sorts the given list of Nexus devices according to rank
      * @param list the list to sort
      */
-    public static void sortNexusList(@NonNull List<Device> list) {
-        Collections.sort(list, new Comparator<Device>() {
-            @Override
-            public int compare(Device device1, Device device2) {
-                // Descending order of age
-                return nexusRank(device2) - nexusRank(device1);
-            }
+    public static void sortNexusListByRank(@NonNull List<Device> list) {
+        Collections.sort(list, (device1, device2) -> {
+            // Sort by screen size
+            // Descending order of age
+            return nexusRank(device2) - nexusRank(device1);
+        });
+    }
+
+    /**
+     * Sorts the given list of Nexus devices according to rank
+     * @param list the list to sort
+     */
+    public static void sortDevicesByScreenSize(@NonNull List<Device> list) {
+        Collections.sort(list, (device1, device2) -> {
+
+            Screen screen1 = device1.getDefaultHardware().getScreen();
+            float length1 = (float) screen1.getDiagonalLength();
+
+            Screen screen2 = device2.getDefaultHardware().getScreen();
+            float length2 = (float) screen2.getDiagonalLength();
+
+            return (int) Math.signum(length1 - length2);
         });
     }
 }
