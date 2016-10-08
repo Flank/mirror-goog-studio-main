@@ -1324,10 +1324,12 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
         private void visitQuietly(@NonNull final Context context,
                 @SuppressWarnings("UnusedParameters") Map<String, Object> sharedData) {
-            String source = context.getContents();
-            if (source == null) {
+            final CharSequence contents = context.getContents();
+            if (contents == null) {
                 return;
             }
+
+            String source = contents.toString();
 
             List<ASTNode> astNodes = new AstBuilder().buildFromString(source);
             GroovyCodeVisitor visitor = new CodeVisitorSupport() {
@@ -1420,7 +1422,6 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 }
 
                 private String getText(ASTNode node) {
-                    String source = context.getContents();
                     Pair<Integer, Integer> offsets = getOffsets(node, context);
                     return source.substring(offsets.getFirst(), offsets.getSecond());
                 }
@@ -1444,7 +1445,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
                 }
             }
-            String source = context.getContents();
+            CharSequence source = context.getContents();
             assert source != null; // because we successfully parsed
             int start = 0;
             int end = source.length();

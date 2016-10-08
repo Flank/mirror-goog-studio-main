@@ -298,8 +298,14 @@ public class LintUtilsTest extends TestCase {
         writer.write(sb.toString());
         writer.close();
 
-        String s = LintUtils.getEncodedString(new LintCliClient(), file);
+        String s = LintUtils.getEncodedString(new LintCliClient(), file, true).toString();
         assertEquals(expected, s);
+
+        CharSequence seq = LintUtils.getEncodedString(new LintCliClient(), file, false);
+        if (encoding.equalsIgnoreCase("utf-8")) {
+            assertFalse(seq instanceof String);
+        }
+        assertEquals(expected, seq.toString());
     }
 
     public void testGetEncodedString() throws Exception {
@@ -459,7 +465,7 @@ public class LintUtilsTest extends TestCase {
         LintCliClient client = new LintCliClient() {
             @NonNull
             @Override
-            public String readFile(@NonNull File file) {
+            public CharSequence readFile(@NonNull File file) {
                 if (file.getPath().equals(fullPath.getPath())) {
                     return javaSource;
                 }

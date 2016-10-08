@@ -176,6 +176,12 @@ public class JavaPsiVisitor {
     /** Max number of logs to include */
     private static final int MAX_REPORTED_CRASHES = 20;
 
+    /**
+     * Whether we should call {@link JavaParser#dispose(JavaContext, PsiJavaFile)} after the
+     * file has been processed with this visitor
+     */
+    private boolean mDisposeUnitsAfterUse = true;
+
     JavaPsiVisitor(@NonNull JavaParser parser, @NonNull List<Detector> detectors) {
         mParser = parser;
         mAllDetectors = new ArrayList<VisitingDetector>(detectors.size());
@@ -272,6 +278,10 @@ public class JavaPsiVisitor {
         }
     }
 
+    public void setDisposeUnitsAfterUse(boolean disposeUnitsAfterUse) {
+        mDisposeUnitsAfterUse = disposeUnitsAfterUse;
+    }
+
     void visitFile(@NonNull final JavaContext context) {
         try {
             final PsiJavaFile javaFile = mParser.parseJavaToPsi(context);
@@ -350,7 +360,9 @@ public class JavaPsiVisitor {
                     }
                 });
             } finally {
-                mParser.dispose(context, javaFile);
+                if (mDisposeUnitsAfterUse) {
+                    mParser.dispose(context, javaFile);
+                }
                 context.setJavaFile(null);
             }
         } catch (ProcessCanceledException ignore) {
@@ -1640,7 +1652,7 @@ public class JavaPsiVisitor {
                                         ? ResourceType.getEnum(typeName)
                                         : null;
                                 if (type != null) {
-                                    boolean isFramework = node.getQualifier().getText().equals(
+                                    boolean isFramework = node.getQualifier().textMatches(
                                             ANDROID_PKG);
                                     for (VisitingDetector v : mResourceFieldDetectors) {
                                         JavaPsiScanner detector = v.getJavaScanner();

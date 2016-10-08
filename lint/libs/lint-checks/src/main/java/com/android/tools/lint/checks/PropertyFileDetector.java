@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.DOT_PROPERTIES;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
@@ -79,13 +77,8 @@ public class PropertyFileDetector extends Detector {
     }
 
     @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return file.getPath().endsWith(DOT_PROPERTIES);
-    }
-
-    @Override
     public void run(@NonNull Context context) {
-        String contents = context.getContents();
+        CharSequence contents = context.getContents();
         if (contents == null) {
             return;
         }
@@ -108,7 +101,7 @@ public class PropertyFileDetector extends Detector {
         }
     }
 
-    private static void checkLine(@NonNull Context context, @NonNull String contents,
+    private static void checkLine(@NonNull Context context, @NonNull CharSequence contents,
             @NonNull String line, int offset, int valueStart) {
         String prefix = "distributionUrl=http\\";
         if (line.startsWith(prefix)) {

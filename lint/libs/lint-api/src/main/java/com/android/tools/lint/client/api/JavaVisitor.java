@@ -354,14 +354,6 @@ public class JavaVisitor {
         sExceptionCount = 0;
     }
 
-    public void prepare(@NonNull List<JavaContext> contexts) {
-        mParser.prepareJavaParse(contexts);
-    }
-
-    public void dispose() {
-        mParser.dispose();
-    }
-
     @Nullable
     private static Set<String> getInterfaceNames(
             @Nullable Set<String> addTo,

@@ -262,7 +262,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
         }
 
         if (logTag != null) {
-            if (!isLoggableTag.getText().equals(logTag.getText())) {
+            if (!isLoggableTag.textMatches(logTag)) {
                 PsiElement resolved1 = context.getEvaluator().resolve(isLoggableTag);
                 PsiElement resolved2 = context.getEvaluator().resolve(logTag);
                 if ((resolved1 == null || resolved2 == null || !resolved1.equals(resolved2))
@@ -298,9 +298,11 @@ public class LogDetector extends Detector implements JavaPsiScanner {
         if (isLoggableLevel == null) {
             return;
         }
-        String levelString = isLoggableLevel.getText();
+        String levelString;
         if (isLoggableLevel instanceof PsiReferenceExpression) {
             levelString = ((PsiReferenceExpression)isLoggableLevel).getReferenceName();
+        } else {
+            levelString = isLoggableLevel.getText();
         }
         if (levelString == null || levelString.isEmpty()) {
             return;

@@ -22,7 +22,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
@@ -48,9 +47,9 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 import java.io.File;
+import java.nio.CharBuffer;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public class EcjPsiJavaEvaluator extends JavaEvaluator {
     private final EcjPsiManager mManager;
@@ -521,6 +520,17 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         }
 
         return null;
+    }
+
+    @NonNull
+    @Override
+    public CharSequence getFileContents(@NonNull PsiFile file) {
+        if (file instanceof EcjPsiJavaFile) {
+            EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
+            return CharBuffer.wrap(javaFile.getFileContents());
+        }
+
+        return super.getFileContents(file);
     }
 
     @Nullable

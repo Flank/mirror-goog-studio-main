@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.SUPPRESS_ALL;
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -74,7 +75,7 @@ public class Context {
     private final Configuration mConfiguration;
 
     /** The contents of the file */
-    private String mContents;
+    private CharSequence mContents;
 
     /** Map of properties to share results between detectors */
     private Map<String, Object> mProperties;
@@ -177,7 +178,7 @@ public class Context {
      * @return the contents of the given file, or null if an error occurs.
      */
     @Nullable
-    public String getContents() {
+    public CharSequence getContents() {
         if (mContents == null) {
             mContents = mDriver.getClient().readFile(file);
         }
@@ -378,9 +379,9 @@ public class Context {
             mContainsCommentSuppress = false;
             String prefix = getSuppressCommentPrefix();
             if (prefix != null) {
-                String contents = getContents();
+                CharSequence contents = getContents();
                 if (contents != null) {
-                    mContainsCommentSuppress = contents.contains(prefix);
+                    mContainsCommentSuppress = indexOf(contents, prefix) != -1;
                 }
             }
         }
@@ -403,20 +404,20 @@ public class Context {
         }
 
         // Check whether there is a comment marker
-        String contents = getContents();
+        CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
         if (startOffset >= contents.length()) {
             return false;
         }
 
         // Scan backwards to the previous line and see if it contains the marker
-        int lineStart = contents.lastIndexOf('\n', startOffset) + 1;
+        int lineStart = CharSequences.lastIndexOf(contents, '\n', startOffset) + 1;
         if (lineStart <= 1) {
             return false;
         }
         int index = findPrefixOnPreviousLine(contents, lineStart, prefix);
         if (index != -1 &&index+prefix.length() < lineStart) {
-                String line = contents.substring(index + prefix.length(), lineStart);
+            String line = contents.subSequence(index + prefix.length(), lineStart).toString();
             return line.contains(issue.getId())
                     || line.contains(SUPPRESS_ALL) && line.trim().startsWith(SUPPRESS_ALL);
         }
@@ -424,7 +425,8 @@ public class Context {
         return false;
     }
 
-    private static int findPrefixOnPreviousLine(String contents, int lineStart, String prefix) {
+    private static int findPrefixOnPreviousLine(CharSequence contents, int lineStart,
+            String prefix) {
         // Search backwards on the previous line until you find the prefix start (also look
         // back on previous lines if the previous line(s) contain just whitespace
         char first = prefix.charAt(0);
@@ -440,7 +442,7 @@ public class Context {
                 seenNonWhitespace = true;
             }
 
-            if (c == first && contents.regionMatches(false, offset, prefix, 0,
+            if (c == first && CharSequences.regionMatches(contents, offset, prefix, 0,
                     prefix.length())) {
                 return offset;
             }

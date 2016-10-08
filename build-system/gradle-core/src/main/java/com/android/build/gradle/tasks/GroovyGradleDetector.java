@@ -69,11 +69,12 @@ public class GroovyGradleDetector extends GradleDetector {
     }
 
     private void visitQuietly(@NonNull final Context context, Map<String, Object> sharedData) {
-        String source = context.getContents();
-        if (source == null) {
+        CharSequence sequence = context.getContents();
+        if (sequence == null) {
             return;
         }
 
+        final String source = sequence.toString();
         List<ASTNode> astNodes = new AstBuilder().buildFromString(source);
         GroovyCodeVisitor visitor = new CodeVisitorSupport() {
             private List<MethodCallExpression> mMethodCallStack = Lists.newArrayList();
@@ -165,7 +166,6 @@ public class GroovyGradleDetector extends GradleDetector {
             }
 
             private String getText(ASTNode node) {
-                String source = context.getContents();
                 Pair<Integer, Integer> offsets = getOffsets(node, context);
                 return source.substring(offsets.getFirst(), offsets.getSecond());
             }
@@ -189,7 +189,7 @@ public class GroovyGradleDetector extends GradleDetector {
                         getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
             }
         }
-        String source = context.getContents();
+        CharSequence source = context.getContents();
         assert source != null; // because we successfully parsed
         int start = 0;
         int end = source.length();

@@ -49,8 +49,8 @@ public class LintCliXmlParser extends XmlParser {
         String xml = null;
         try {
             // Do we need to provide an input stream for encoding?
-            xml = context.getContents();
-            if (xml != null) {
+            if (context.getContents() != null) {
+                xml = context.getContents().toString();
                 return PositionXmlParser.parse(xml);
             }
         } catch (UnsupportedEncodingException e) {
@@ -153,7 +153,7 @@ public class LintCliXmlParser extends XmlParser {
     }
 
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
-    private class LocationHandle implements Handle {
+    private static class LocationHandle implements Handle {
         private final File mFile;
         private final Node mNode;
         private Object mClientData;

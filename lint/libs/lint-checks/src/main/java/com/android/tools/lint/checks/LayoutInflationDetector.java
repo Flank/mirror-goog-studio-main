@@ -30,6 +30,7 @@ import com.android.ide.common.res2.ResourceItem;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
@@ -63,7 +64,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -216,11 +216,13 @@ public class LayoutInflationDetector extends LayoutDetector implements JavaPsiSc
             if (source == null) {
                 return true; // not certain
             }
+
             File file = source.getFile();
             if (file.exists()) {
                 try {
-                    String s = client.readFile(file);
-                    if (hasLayoutParams(new StringReader(s))) {
+                    CharSequence s = client.readFile(file);
+                    Reader reader = CharSequences.getReader(s, true);
+                    if (hasLayoutParams(reader)) {
                         return true;
                     }
                 } catch (Exception e) {

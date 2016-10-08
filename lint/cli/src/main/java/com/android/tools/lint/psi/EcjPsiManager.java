@@ -135,6 +135,13 @@ public class EcjPsiManager {
 
     private final Map<PackageBinding,String> mGroupCache = Maps.newHashMap();
 
+    public void clear() {
+        mGroupCache.clear();
+        mTypeMap.clear();
+        mElementMap.clear();
+        mGroupCache.clear();
+    }
+
     @Nullable
     String getJarFile(@NonNull ReferenceBinding binding) {
         if (binding.fPackage == null || binding.compoundName == null) {

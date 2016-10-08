@@ -249,7 +249,7 @@ public class JavaContext extends Context {
     @Override
     public void report(@NonNull Issue issue, @NonNull Location location,
             @NonNull String message) {
-        if (mDriver.isSuppressed(this, issue, mCompilationUnit)) {
+        if (mDriver.isSuppressed(this, issue, mJavaFile)) {
             return;
         }
         super.report(issue, location, message);
@@ -361,7 +361,7 @@ public class JavaContext extends Context {
     @Deprecated
     public boolean isSuppressedWithComment(@NonNull Node scope, @NonNull Issue issue) {
         // Check whether there is a comment marker
-        String contents = getContents();
+        CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
         Position position = scope.getPosition();
         if (position == null) {
@@ -374,7 +374,7 @@ public class JavaContext extends Context {
 
     public boolean isSuppressedWithComment(@NonNull PsiElement scope, @NonNull Issue issue) {
         // Check whether there is a comment marker
-        String contents = getContents();
+        CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
         TextRange textRange = scope.getTextRange();
         if (textRange == null) {

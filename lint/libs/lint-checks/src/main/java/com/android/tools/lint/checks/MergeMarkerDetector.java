@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
+import static com.android.tools.lint.detector.api.CharSequences.startsWith;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -70,23 +73,23 @@ public class MergeMarkerDetector extends Detector implements Detector.OtherFileS
             return;
         }
 
-        String source = context.getContents();
+        CharSequence source = context.getContents();
         if (source == null) {
             return;
         }
         int length = source.length();
         int offset = 0;
         while (true) {
-            offset = source.indexOf('\n', offset);
+            offset = indexOf(source, '\n', offset);
             if (offset == -1 || offset == length - 1) {
                 break;
             }
             offset++;
             char peek = source.charAt(offset);
             if (peek == '<' || peek == '=' || peek == '>') {
-                if (source.startsWith("<<<<<<< ", offset)
-                        || source.startsWith("=======\n", offset)
-                        || source.startsWith(">>>>>>> ", offset)) {
+                if (startsWith(source, "<<<<<<< ", offset)
+                        || startsWith(source, "=======\n", offset)
+                        || startsWith(source, ">>>>>>> ", offset)) {
                     Location location = Location.create(context.file, source, offset, offset + 7);
                     context.report(ISSUE, location, "Missing merge marker?");
                 }

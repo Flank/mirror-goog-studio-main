@@ -19,6 +19,7 @@ package com.android.tools.lint;
 import static com.android.SdkConstants.UTF_8;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.detector.api.CharSequences;
 
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 
@@ -29,38 +30,39 @@ import java.io.File;
  * on char[]'s exclusively, whereas for PSI we'll need Strings) and serve it back quickly.
  */
 public class EcjSourceFile extends CompilationUnit {
-
     private File mFile;
-    private String mSource;
 
-    public EcjSourceFile(@NonNull char[] source, @NonNull File file,
-            @NonNull String encoding) {
-        super(source, file.getPath(), encoding);
-        mSource = new String(source);
+    private EcjSourceFile(@NonNull char[] source, @NonNull String path,
+            @NonNull String encoding, @NonNull File file) {
+        super(source, path, encoding);
         mFile = file;
-    }
-
-    public EcjSourceFile(@NonNull String source, @NonNull File file,
-            @NonNull String encoding) {
-        super(source.toCharArray(), file.getPath(), encoding);
-        mSource = source;
-        mFile = file;
-    }
-
-    public EcjSourceFile(@NonNull String source, @NonNull File file) {
-        this(source, file, UTF_8);
     }
 
     @NonNull
     public String getSource() {
-        if (mSource == null) {
-            mSource = new String(getContents());
-        }
-        return mSource;
+        // Note: Not cached. This method is not expected to be called frequently or really
+        // at all from normal lint checks.
+        return new String(getContents());
     }
 
     @NonNull
     public File getFile() {
         return mFile;
+    }
+
+
+    public static EcjSourceFile create(@NonNull char[] source, @NonNull File file,
+            @NonNull String encoding) {
+        return new EcjSourceFile(source, file.getPath(), encoding, file);
+    }
+
+    public static EcjSourceFile create(@NonNull CharSequence source, @NonNull File file,
+            @NonNull String encoding) {
+        char[] contents = CharSequences.getCharArray(source);
+        return new EcjSourceFile(contents, file.getPath(), encoding, file);
+    }
+
+    public static EcjSourceFile create(@NonNull CharSequence source, @NonNull File file) {
+        return create(source, file, UTF_8);
     }
 }

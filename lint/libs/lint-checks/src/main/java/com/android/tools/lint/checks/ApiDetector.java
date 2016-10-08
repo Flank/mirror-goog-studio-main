@@ -48,6 +48,7 @@ import static com.android.SdkConstants.TARGET_API;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.tools.lint.checks.RtlDetector.ATTR_SUPPORTS_RTL;
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import static com.android.tools.lint.detector.api.ClassContext.getFqcn;
 import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
@@ -401,8 +402,8 @@ public class ApiDetector extends ResourceXmlDetector
                 Location location;
                 if (currentFiles != null && currentFiles.size() == 1) {
                     File file = currentFiles.get(0);
-                    String contents = context.getClient().readFile(file);
-                    int firstLineEnd = contents.indexOf('\n');
+                    CharSequence contents = context.getClient().readFile(file);
+                    int firstLineEnd = indexOf(contents, '\n');
                     if (firstLineEnd == -1) {
                         firstLineEnd = contents.length();
                     }

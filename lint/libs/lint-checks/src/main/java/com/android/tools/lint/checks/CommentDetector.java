@@ -16,11 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
+import static com.android.tools.lint.detector.api.CharSequences.regionMatches;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -99,7 +101,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
     private static void checkJava(@NonNull JavaContext context) {
         // Lombok does not generate comment nodes for block and line comments, only for
         // javadoc comments!
-        String source = context.getContents();
+        CharSequence source = context.getContents();
         if (source == null) {
             return;
         }
@@ -114,7 +116,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                 if (next == '/') {
                     // Line comment
                     int start = i + 2;
-                    int end = source.indexOf('\n', start);
+                    int end = indexOf(source, '\n', start);
                     if (end == -1) {
                         end = n;
                     }
@@ -122,7 +124,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                 } else if (next == '*') {
                     // Block comment
                     int start = i + 2;
-                    int end = source.indexOf("*/", start);
+                    int end = indexOf(source, "*/", start);
                     if (end == -1) {
                         end = n;
                     }
@@ -153,7 +155,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
             @Nullable JavaContext javaContext,
             @Nullable XmlContext xmlContext,
             @Nullable Node xmlNode,
-            @NonNull String source,
+            @NonNull CharSequence source,
             int offset,
             int start,
             int end) {
@@ -165,7 +167,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
             c = source.charAt(i);
             if (prev == '\\') {
                 if (c == 'u' || c == 'U') {
-                    if (source.regionMatches(true, i - 1, ESCAPE_STRING,
+                    if (regionMatches(source,true, i - 1, ESCAPE_STRING,
                             0, ESCAPE_STRING.length())) {
                         String message =
                                 "Code might be hidden here; found unicode escape sequence " +
@@ -185,7 +187,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                     i++;
                 }
             } else if (prev == 'S' && c == 'T' &&
-                    source.regionMatches(i - 1, STOPSHIP_COMMENT, 0, STOPSHIP_COMMENT.length())) {
+                    regionMatches(source, i - 1, STOPSHIP_COMMENT, 0, STOPSHIP_COMMENT.length())) {
                 // TODO: Only flag this issue in release mode??
                 String message =
                         "`STOPSHIP` comment found; points to code which must be fixed prior " +

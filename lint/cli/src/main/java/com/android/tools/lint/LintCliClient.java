@@ -20,6 +20,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
 import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -80,7 +81,7 @@ import java.util.Set;
  */
 @Beta
 public class LintCliClient extends LintClient {
-    protected final List<Warning> mWarnings = new ArrayList<Warning>();
+    protected final List<Warning> mWarnings = new ArrayList<>();
     protected boolean mHasErrors;
     protected int mErrorCount;
     protected int mWarningCount;
@@ -116,15 +117,11 @@ public class LintCliClient extends LintClient {
 
         mDriver.setAbbreviating(!mFlags.isShowEverything());
         addProgressPrinter();
-        mDriver.addLintListener(new LintListener() {
-            @Override
-            public void update(@NonNull LintDriver driver, @NonNull EventType type,
-                    @Nullable Context context) {
-                if (type == EventType.SCANNING_PROJECT && !mValidatedIds) {
-                    // Make sure all the id's are valid once the driver is all set up and
-                    // ready to run (such that custom rules are available in the registry etc)
-                    validateIssueIds(context != null ? context.getProject() : null);
-                }
+        mDriver.addLintListener((driver, type, context) -> {
+            if (type == LintListener.EventType.SCANNING_PROJECT && !mValidatedIds) {
+                // Make sure all the id's are valid once the driver is all set up and
+                // ready to run (such that custom rules are available in the registry etc)
+                validateIssueIds(context != null ? context.getProject() : null);
             }
         });
 
@@ -192,17 +189,11 @@ public class LintCliClient extends LintClient {
     }
 
     /** File content cache */
-    private final Map<File, String> mFileContents = new HashMap<File, String>(100);
+    private final Map<File, CharSequence> mFileContents = new HashMap<>(100);
 
     /** Read the contents of the given file, possibly cached */
-    private String getContents(File file) {
-        String s = mFileContents.get(file);
-        if (s == null) {
-            s = readFile(file);
-            mFileContents.put(file, s);
-        }
-
-        return s;
+    private CharSequence getContents(File file) {
+        return mFileContents.computeIfAbsent(file, k -> readFile(file));
     }
 
     @Override
@@ -311,7 +302,7 @@ public class LintCliClient extends LintClient {
     }
 
     /** Look up the contents of the given line */
-    static String getLine(String contents, int line) {
+    static String getLine(CharSequence contents, int line) {
         int index = getLineOffset(contents, line);
         if (index != -1) {
             return getLineOfOffset(contents, index);
@@ -320,20 +311,20 @@ public class LintCliClient extends LintClient {
         }
     }
 
-    static String getLineOfOffset(String contents, int offset) {
-        int end = contents.indexOf('\n', offset);
+    static String getLineOfOffset(CharSequence contents, int offset) {
+        int end = indexOf(contents, '\n', offset);
         if (end == -1) {
-            end = contents.indexOf('\r', offset);
+            end = indexOf(contents, '\r', offset);
         }
-        return contents.substring(offset, end != -1 ? end : contents.length());
+        return contents.subSequence(offset, end != -1 ? end : contents.length()).toString();
     }
 
 
     /** Look up the contents of the given line */
-    static int getLineOffset(String contents, int line) {
+    static int getLineOffset(CharSequence contents, int line) {
         int index = 0;
         for (int i = 0; i < line; i++) {
-            index = contents.indexOf('\n', index);
+            index = indexOf(contents, '\n', index);
             if (index == -1) {
                 return -1;
             }
@@ -345,9 +336,9 @@ public class LintCliClient extends LintClient {
 
     @NonNull
     @Override
-    public String readFile(@NonNull File file) {
+    public CharSequence readFile(@NonNull File file) {
         try {
-            return LintUtils.getEncodedString(this, file);
+            return LintUtils.getEncodedString(this, file, false);
         } catch (IOException e) {
             return ""; //$NON-NLS-1$
         }

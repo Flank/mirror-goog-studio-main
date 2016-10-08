@@ -20,11 +20,12 @@ import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.SdkConstants.DOT_LAYOUT_PARAMS;
-import static com.android.SdkConstants.R_STYLEABLE_PREFIX;
+import static com.android.SdkConstants.R_CLASS;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -38,6 +39,7 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
+import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.util.PsiTreeUtil;
 
 import java.util.Collections;
@@ -104,11 +106,33 @@ public class CustomViewDetector extends Detector implements Detector.JavaPsiScan
                 parameterIndex = 1;
             }
             PsiExpression expression = arguments[parameterIndex];
-            String s = expression.getText();
-            if (!s.startsWith(R_STYLEABLE_PREFIX)) {
+            if (!(expression instanceof PsiReferenceExpression)) {
                 return;
             }
-            String styleableName = s.substring(R_STYLEABLE_PREFIX.length());
+            PsiReferenceExpression nameRef = (PsiReferenceExpression)expression;
+            PsiExpression styleableQualifier = nameRef.getQualifierExpression();
+            if (!(styleableQualifier instanceof PsiReferenceExpression)) {
+                return;
+            }
+            PsiReferenceExpression styleableRef = (PsiReferenceExpression)styleableQualifier;
+            if (!ResourceType.STYLEABLE.getName().equals(styleableRef.getReferenceName())) {
+                return;
+            }
+            PsiExpression rQualifier = styleableRef.getQualifierExpression();
+            if (!(rQualifier instanceof PsiReferenceExpression)) {
+                return;
+            }
+            PsiReferenceExpression rReference = (PsiReferenceExpression)rQualifier;
+            if (rReference.getQualifierExpression() != null
+                    || !R_CLASS.equals(rReference.getReferenceName())) {
+                return;
+            }
+
+            String styleableName = nameRef.getReferenceName();
+            if (styleableName == null) {
+                return;
+            }
+
             PsiClass cls = PsiTreeUtil.getParentOfType(node, PsiClass.class, false);
             if (cls == null) {
                 return;

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -24,7 +26,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Document;
@@ -66,15 +67,9 @@ public class Utf8Detector extends ResourceXmlDetector {
     public Utf8Detector() {
     }
 
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
-    }
-
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        String xml = context.getContents();
+        CharSequence xml = context.getContents();
         if (xml == null) {
             return;
         }
@@ -99,7 +94,7 @@ public class Utf8Detector extends ResourceXmlDetector {
             }
         }
 
-        int encodingIndex = xml.lastIndexOf("encoding", lineEnd); //$NON-NLS-1$
+        int encodingIndex = lastIndexOf(xml, "encoding", lineEnd); //$NON-NLS-1$
         if (encodingIndex != -1) {
             Matcher matcher = ENCODING_PATTERN.matcher(xml);
             if (matcher.find(encodingIndex)) {

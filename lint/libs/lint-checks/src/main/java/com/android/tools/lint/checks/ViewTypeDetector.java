@@ -34,6 +34,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
@@ -46,7 +47,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -290,9 +290,10 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
             map = ArrayListMultimap.create();
             mFileIdMap.put(file, map);
 
-            String xml = context.getClient().readFile(file);
+            CharSequence xml = context.getClient().readFile(file);
             // TODO: Use pull parser instead for better performance!
-            Document document = XmlUtils.parseDocumentSilently(xml, true);
+            // See LayoutInflationDetector#hasLayoutParams for an example
+            Document document = CharSequences.parseDocumentSilently(xml, true);
             if (document != null && document.getDocumentElement() != null) {
                 addViewTags(map, document.getDocumentElement());
             }

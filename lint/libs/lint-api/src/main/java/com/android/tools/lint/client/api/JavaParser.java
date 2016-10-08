@@ -162,19 +162,20 @@ public abstract class JavaParser {
         TextRange range = element.getTextRange();
         PsiFile containingFile = element.getContainingFile();
         File file = context.file;
-        String contents = context.getContents();
+        CharSequence contents = context.getContents();
         if (containingFile != context.getJavaFile()) {
             // Reporting an error in a different file.
             if (context.getDriver().getScope().size() == 1) {
                 // Don't bother with this error if it's in a different file during single-file analysis
                 return Location.NONE;
             }
-            File ioFile = context.getEvaluator().getFile(containingFile);
+            JavaEvaluator evaluator = context.getEvaluator();
+            File ioFile = evaluator.getFile(containingFile);
             if (ioFile == null) {
                 return Location.NONE;
             }
             file = ioFile;
-            contents = containingFile.getText();
+            contents = evaluator.getFileContents(containingFile);
         }
         return Location.create(file, contents, range.getStartOffset(),
                                range.getEndOffset());
@@ -221,7 +222,7 @@ public abstract class JavaParser {
             int fromDelta,
             @NonNull PsiElement to,
             int toDelta) {
-        String contents = context.getContents();
+        CharSequence contents = context.getContents();
         TextRange fromRange = from.getTextRange();
         int start = Math.max(0, fromRange.getStartOffset() + fromDelta);
         int end = Math.min(contents == null ? Integer.MAX_VALUE : contents.length(),
