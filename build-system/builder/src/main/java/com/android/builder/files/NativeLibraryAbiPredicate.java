@@ -49,12 +49,12 @@ public class NativeLibraryAbiPredicate implements Predicate<String> {
      * Set of ABIs accepted by the predicate. If empty, then all ABIs are accepted.
      */
     @NonNull
-    private Set<String> mAcceptedAbis;
+    private Set<String> acceptedAbis;
 
     /**
      * Is JNI debug mode enabled?
      */
-    private final boolean mJniDebugMode;
+    private final boolean jniDebugMode;
 
     /**
      * Creates a new predicate.
@@ -63,8 +63,8 @@ public class NativeLibraryAbiPredicate implements Predicate<String> {
      * @param jniDebugMode is JNI debug mode enabled?
      */
     public NativeLibraryAbiPredicate(@NonNull Set<String> acceptedAbis, boolean jniDebugMode) {
-        mAcceptedAbis = Sets.newHashSet(acceptedAbis);
-        mJniDebugMode = jniDebugMode;
+        this.acceptedAbis = Sets.newHashSet(acceptedAbis);
+        this.jniDebugMode = jniDebugMode;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class NativeLibraryAbiPredicate implements Predicate<String> {
         /*
          * See if we accept the ABI.
          */
-        if (!mAcceptedAbis.isEmpty() && !mAcceptedAbis.contains(abi)) {
+        if (!acceptedAbis.isEmpty() && !acceptedAbis.contains(abi)) {
             return false;
         }
 
@@ -95,7 +95,7 @@ public class NativeLibraryAbiPredicate implements Predicate<String> {
          * If it is not a shared library, then, if debug is enabled, we may accept a few special
          * files.
          */
-        if (mJniDebugMode && (SdkConstants.FN_GDBSERVER.equals(fileName) ||
+        if (jniDebugMode && (SdkConstants.FN_GDBSERVER.equals(fileName) ||
                 SdkConstants.FN_GDB_SETUP.equals(fileName))) {
             return true;
         }

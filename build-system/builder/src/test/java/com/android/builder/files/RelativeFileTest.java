@@ -40,7 +40,7 @@ public class RelativeFileTest {
      * Temporary folder to use in tests.
      */
     @Rule
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
      * Finds a file in {@code files} that has the given name (not path).
@@ -62,54 +62,54 @@ public class RelativeFileTest {
 
     @Test
     public void loadEmptyDirectory() {
-        Set<RelativeFile> files = RelativeFiles.fromDirectory(mTemporaryFolder.getRoot());
+        Set<RelativeFile> files = RelativeFiles.fromDirectory(temporaryFolder.getRoot());
         assertTrue(files.isEmpty());
     }
 
     @Test
     public void loadFilesRecursively() throws Exception {
-        mTemporaryFolder.newFile("foo");
-        mTemporaryFolder.newFile("bar");
-        mTemporaryFolder.newFolder("sub");
-        mTemporaryFolder.newFile("sub" + File.separator + "file-in-sub");
+        temporaryFolder.newFile("foo");
+        temporaryFolder.newFile("bar");
+        temporaryFolder.newFolder("sub");
+        temporaryFolder.newFile("sub" + File.separator + "file-in-sub");
 
-        Set<RelativeFile> files = RelativeFiles.fromDirectory(mTemporaryFolder.getRoot());
+        Set<RelativeFile> files = RelativeFiles.fromDirectory(temporaryFolder.getRoot());
         assertEquals(4, files.size());
 
         RelativeFile fooFile = findFile(files, "foo");
         assertNotNull(fooFile);
-        assertEquals(mTemporaryFolder.getRoot(), fooFile.getBase());
+        assertEquals(temporaryFolder.getRoot(), fooFile.getBase());
         assertEquals("foo", fooFile.getOsIndependentRelativePath());
         assertTrue(fooFile.getFile().isFile());
 
         RelativeFile barFile = findFile(files, "bar");
         assertNotNull(barFile);
-        assertEquals(mTemporaryFolder.getRoot(), barFile.getBase());
+        assertEquals(temporaryFolder.getRoot(), barFile.getBase());
         assertEquals("bar", barFile.getOsIndependentRelativePath());
         assertTrue(barFile.getFile().isFile());
 
         RelativeFile subFile = findFile(files, "sub");
         assertNotNull(subFile);
-        assertEquals(mTemporaryFolder.getRoot(), subFile.getBase());
+        assertEquals(temporaryFolder.getRoot(), subFile.getBase());
         assertEquals("sub/", subFile.getOsIndependentRelativePath());
         assertTrue(subFile.getFile().isDirectory());
 
         RelativeFile fileInSubFile = findFile(files, "file-in-sub");
         assertNotNull(fileInSubFile);
-        assertEquals(mTemporaryFolder.getRoot(), fileInSubFile.getBase());
+        assertEquals(temporaryFolder.getRoot(), fileInSubFile.getBase());
         assertEquals("sub/file-in-sub", fileInSubFile.getOsIndependentRelativePath());
         assertTrue(fileInSubFile.getFile().isFile());
     }
 
     @Test
     public void fileFilter() throws Exception {
-        mTemporaryFolder.newFile("foo");
-        mTemporaryFolder.newFolder("dir");
-        mTemporaryFolder.newFile("dir" + File.separator + "bar");
+        temporaryFolder.newFile("foo");
+        temporaryFolder.newFolder("dir");
+        temporaryFolder.newFile("dir" + File.separator + "bar");
 
         Set<RelativeFile> files =
                 RelativeFiles.fromDirectory(
-                        mTemporaryFolder.getRoot(), rf -> rf.getFile().isFile());
+                        temporaryFolder.getRoot(), rf -> rf.getFile().isFile());
         assertEquals(2, files.size());
 
         assertNotNull(findFile(files, "foo"));
@@ -118,13 +118,13 @@ public class RelativeFileTest {
 
     @Test
     public void directoryFilter() throws Exception {
-        mTemporaryFolder.newFile("foo");
-        mTemporaryFolder.newFolder("dir");
-        mTemporaryFolder.newFile("dir" + File.separator + "bar");
+        temporaryFolder.newFile("foo");
+        temporaryFolder.newFolder("dir");
+        temporaryFolder.newFile("dir" + File.separator + "bar");
 
         Set<RelativeFile> files =
                 RelativeFiles.fromDirectory(
-                        mTemporaryFolder.getRoot(),
+                        temporaryFolder.getRoot(),
                         relativeFile -> relativeFile.getFile().isDirectory());
         assertEquals(1, files.size());
 
@@ -133,11 +133,11 @@ public class RelativeFileTest {
 
     @Test
     public void relativePathFilter() throws Exception {
-        mTemporaryFolder.newFile("foo");
-        mTemporaryFolder.newFolder("dir");
-        mTemporaryFolder.newFile("dir" + File.separator + "bar");
+        temporaryFolder.newFile("foo");
+        temporaryFolder.newFolder("dir");
+        temporaryFolder.newFile("dir" + File.separator + "bar");
 
-        Set<RelativeFile> files = RelativeFiles.fromDirectory(mTemporaryFolder.getRoot(),
+        Set<RelativeFile> files = RelativeFiles.fromDirectory(temporaryFolder.getRoot(),
                 RelativeFiles.fromPathPredicate(input -> {
                         int slashIdx = input.indexOf('/');
                         return slashIdx == -1 || slashIdx == input.length() - 1;
@@ -150,7 +150,7 @@ public class RelativeFileTest {
 
     @Test
     public void relativeFileAcceptsNonExistingFileInBase() throws Exception {
-        File existingBase = mTemporaryFolder.newFolder("foo");
+        File existingBase = temporaryFolder.newFolder("foo");
         File nonExistingFile = new File(existingBase, "bar");
         @SuppressWarnings("unused")
         RelativeFile unused = new RelativeFile(existingBase, nonExistingFile);
@@ -158,7 +158,7 @@ public class RelativeFileTest {
 
     @Test
     public void relativeFileAcceptsNonExistingFileInNonExistingBase() throws Exception {
-        File existingBase = new File(mTemporaryFolder.getRoot(), "foo");
+        File existingBase = new File(temporaryFolder.getRoot(), "foo");
         File nonExistingFile = new File(existingBase, "bar");
         @SuppressWarnings("unused")
         RelativeFile unused = new RelativeFile(existingBase, nonExistingFile);

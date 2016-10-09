@@ -40,29 +40,29 @@ import java.util.Random;
 public class FileCacheByPathTest {
 
     @Rule
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private File mCacheDir;
+    private File cacheDir;
 
-    private FileCacheByPath mCache;
+    private FileCacheByPath cache;
 
-    private File mRandomFilesDir;
+    private File randomFilesDir;
 
-    private Random mRandom = new Random();
+    private Random random = new Random();
 
     @Before
     public void before() throws Exception {
-        mRandomFilesDir = mTemporaryFolder.newFolder("random-generated");
-        mCacheDir = mTemporaryFolder.newFolder("cache");
-        mCache = new FileCacheByPath(mCacheDir);
+        randomFilesDir = temporaryFolder.newFolder("random-generated");
+        cacheDir = temporaryFolder.newFolder("cache");
+        cache = new FileCacheByPath(cacheDir);
     }
 
     private File makeRandomFile() throws Exception {
-        String name = "random-file-" + mRandom.nextLong();
-        byte[] data = new byte[1 + mRandom.nextInt(1000)];
-        mRandom.nextBytes(data);
+        String name = "random-file-" + random.nextLong();
+        byte[] data = new byte[1 + random.nextInt(1000)];
+        random.nextBytes(data);
 
-        File out = new File(mRandomFilesDir, name);
+        File out = new File(randomFilesDir, name);
         Files.write(data, out);
         return out;
     }
@@ -71,8 +71,8 @@ public class FileCacheByPathTest {
     public void addAndFindFile() throws Exception {
         File f = makeRandomFile();
 
-        mCache.add(f);
-        File inCache = mCache.get(f);
+        cache.add(f);
+        File inCache = cache.get(f);
         assertNotNull(inCache);
         assertFalse(f.equals(inCache));
         assertArrayEquals(Files.toByteArray(f), Files.toByteArray(inCache));
@@ -82,7 +82,7 @@ public class FileCacheByPathTest {
     public void getNonAddedFile() throws Exception {
         File f = makeRandomFile();
 
-        File inCache = mCache.get(f);
+        File inCache = cache.get(f);
         assertNull(inCache);
     }
 
@@ -95,14 +95,14 @@ public class FileCacheByPathTest {
         byte[] f2Contents = Files.toByteArray(f2);
 
         assertFalse(f1.equals(f2));
-        mCache.add(f1);
-        File inCache = mCache.get(f1);
+        cache.add(f1);
+        File inCache = cache.get(f1);
         assertNotNull(inCache);
         assertArrayEquals(f1Contents, Files.toByteArray(inCache));
 
         Files.copy(f2, f1);
-        mCache.add(f1);
-        inCache = mCache.get(f1);
+        cache.add(f1);
+        inCache = cache.get(f1);
         assertNotNull(inCache);
         assertFalse(Arrays.equals(f1Contents, Files.toByteArray(inCache)));
         assertArrayEquals(f2Contents, Files.toByteArray(inCache));
@@ -114,10 +114,10 @@ public class FileCacheByPathTest {
 
         byte[] fc = Files.toByteArray(f);
 
-        mCache.add(f);
+        cache.add(f);
         f.delete();
 
-        File inCache = mCache.get(f);
+        File inCache = cache.get(f);
         assertNotNull(inCache);
         assertFalse(f.equals(inCache));
         assertArrayEquals(fc, Files.toByteArray(inCache));
@@ -127,9 +127,9 @@ public class FileCacheByPathTest {
     public void generateManyRandomFiles() throws Exception {
         for (int i = 0; i < 10; i++) {
             File fi = makeRandomFile();
-            mCache.add(fi);
+            cache.add(fi);
 
-            File ci = mCache.get(fi);
+            File ci = cache.get(fi);
             assertNotNull(ci);
             assertArrayEquals(Files.toByteArray(fi), Files.toByteArray(ci));
 
@@ -137,16 +137,16 @@ public class FileCacheByPathTest {
 
             for (int j = 0; j < 10; j++) {
                 File fj = makeRandomFile();
-                mCache.add(fj);
+                cache.add(fj);
 
-                File cj = mCache.get(fj);
+                File cj = cache.get(fj);
                 assertNotNull(cj);
                 assertArrayEquals(Files.toByteArray(fj), Files.toByteArray(cj));
 
                 assertTrue(cj.getName().matches("[a-zA-Z0-9_+=]+"));
             }
 
-            ci = mCache.get(fi);
+            ci = cache.get(fi);
             assertNotNull(ci);
             assertArrayEquals(Files.toByteArray(fi), Files.toByteArray(ci));
         }
@@ -155,49 +155,49 @@ public class FileCacheByPathTest {
     @Test
     public void clearCache() throws Exception {
         File f = makeRandomFile();
-        mCache.add(f);
+        cache.add(f);
 
-        File ff = mCache.get(f);
+        File ff = cache.get(f);
         assertNotNull(ff);
 
-        mCache.clear();
-        ff = mCache.get(f);
+        cache.clear();
+        ff = cache.get(f);
         assertNull(ff);
     }
 
     @Test
     public void removeCachedContents() throws Exception {
         File f = makeRandomFile();
-        mCache.add(f);
+        cache.add(f);
 
-        File ff = mCache.get(f);
+        File ff = cache.get(f);
         assertNotNull(ff);
 
-        mCache.remove(f);
-        ff = mCache.get(f);
+        cache.remove(f);
+        ff = cache.get(f);
         assertNull(ff);
     }
 
     @Test
     public void cachedDirectoryDeletedBeforeGet() throws Exception {
         File f = makeRandomFile();
-        mCache.add(f);
+        cache.add(f);
 
-        File ff = mCache.get(f);
+        File ff = cache.get(f);
         assertNotNull(ff);
 
-        FileUtils.deletePath(mCacheDir);
-        ff = mCache.get(ff);
+        FileUtils.deletePath(cacheDir);
+        ff = cache.get(ff);
         assertNull(ff);
     }
 
     @Test
     public void cachedDirectoryDeletedBeforeAdd() throws Exception {
         File f = makeRandomFile();
-        FileUtils.deletePath(mCacheDir);
-        mCache.add(f);
+        FileUtils.deletePath(cacheDir);
+        cache.add(f);
 
-        File ff = mCache.get(f);
+        File ff = cache.get(f);
         assertNotNull(ff);
     }
 }

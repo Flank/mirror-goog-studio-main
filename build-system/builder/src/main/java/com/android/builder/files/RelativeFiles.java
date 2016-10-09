@@ -60,10 +60,10 @@ public final class RelativeFiles {
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    public static ImmutableSet<RelativeFile> fromDirectory(@NonNull File directory,
+    public static ImmutableSet<RelativeFile> fromDirectory(
+            @NonNull File directory,
             @NonNull final Predicate<RelativeFile> filter) {
-        return ImmutableSet.copyOf(Sets.filter(fromDirectory(directory, directory),
-                filter::test));
+        return ImmutableSet.copyOf(Sets.filter(fromDirectory(directory, directory), filter::test));
     }
 
     /**
@@ -74,7 +74,8 @@ public final class RelativeFiles {
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    private static ImmutableSet<RelativeFile> fromDirectory(@NonNull File base,
+    private static ImmutableSet<RelativeFile> fromDirectory(
+            @NonNull File base,
             @NonNull File directory) {
         Preconditions.checkArgument(base.isDirectory(), "!base.isDirectory()");
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
