@@ -74,7 +74,7 @@ public class RelativeFileTest {
         temporaryFolder.newFile("sub" + File.separator + "file-in-sub");
 
         Set<RelativeFile> files = RelativeFiles.fromDirectory(temporaryFolder.getRoot());
-        assertEquals(4, files.size());
+        assertEquals(3, files.size());
 
         RelativeFile fooFile = findFile(files, "foo");
         assertNotNull(fooFile);
@@ -87,12 +87,6 @@ public class RelativeFileTest {
         assertEquals(temporaryFolder.getRoot(), barFile.getBase());
         assertEquals("bar", barFile.getOsIndependentRelativePath());
         assertTrue(barFile.getFile().isFile());
-
-        RelativeFile subFile = findFile(files, "sub");
-        assertNotNull(subFile);
-        assertEquals(temporaryFolder.getRoot(), subFile.getBase());
-        assertEquals("sub/", subFile.getOsIndependentRelativePath());
-        assertTrue(subFile.getFile().isDirectory());
 
         RelativeFile fileInSubFile = findFile(files, "file-in-sub");
         assertNotNull(fileInSubFile);
@@ -126,9 +120,7 @@ public class RelativeFileTest {
                 RelativeFiles.fromDirectory(
                         temporaryFolder.getRoot(),
                         relativeFile -> relativeFile.getFile().isDirectory());
-        assertEquals(1, files.size());
-
-        assertNotNull(findFile(files, "dir"));
+        assertEquals(0, files.size());
     }
 
     @Test
@@ -143,9 +135,8 @@ public class RelativeFileTest {
                         return slashIdx == -1 || slashIdx == input.length() - 1;
                 }));
 
-        assertEquals(2, files.size());
+        assertEquals(1, files.size());
         assertNotNull(findFile(files, "foo"));
-        assertNotNull(findFile(files, "dir"));
     }
 
     @Test
