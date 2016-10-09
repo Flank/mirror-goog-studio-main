@@ -64,7 +64,7 @@ public final class IncrementalRelativeFileSets {
     public static ImmutableMap<RelativeFile, FileStatus> fromDirectory(@NonNull File directory) {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
         Set<RelativeFile> files = RelativeFiles.fromDirectory(directory);
-        files = Sets.filter(files, Predicates.compose(Files.isFile(), RelativeFile.EXTRACT_FILE));
+        files = Sets.filter(files, Predicates.compose(Files.isFile(), RelativeFile::getFile));
         Map<RelativeFile, FileStatus> map = Maps.asMap(files, Functions.constant(FileStatus.NEW));
         return ImmutableMap.copyOf(map);
     }
@@ -217,7 +217,7 @@ public final class IncrementalRelativeFileSets {
                 Iterables.filter(
                         Iterables.transform(
                                 set.keySet(),
-                                RelativeFile.EXTRACT_BASE),
+                                RelativeFile::getBase),
                         Files.isDirectory()))
                 .size();
     }

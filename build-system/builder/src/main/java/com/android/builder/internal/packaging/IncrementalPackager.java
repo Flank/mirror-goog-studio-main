@@ -175,7 +175,7 @@ public class IncrementalPackager implements Closeable {
 
         Function<PackagedFileUpdate, File> extractBaseFile =
                 Functions.compose(
-                        RelativeFile.EXTRACT_BASE,
+                        RelativeFile::getBase,
                         PackagedFileUpdate.EXTRACT_SOURCE);
 
         Iterable<PackagedFileUpdate> newOrChangedNonArchiveFiles =
@@ -247,7 +247,7 @@ public class IncrementalPackager implements Closeable {
                                 files,
                                 Predicates.compose(
                                         isNotClassFile,
-                                        RelativeFile.EXTRACT_PATH))));
+                                        RelativeFile::getOsIndependentRelativePath))));
     }
 
     /**
@@ -292,7 +292,7 @@ public class IncrementalPackager implements Closeable {
                                 files,
                                 Predicates.compose(
                                         mAbiPredicate,
-                                        RelativeFile.EXTRACT_PATH
+                                        RelativeFile::getOsIndependentRelativePath
                                 )
                         )
                 )
@@ -303,7 +303,7 @@ public class IncrementalPackager implements Closeable {
      * Updates the atom metadata file.
      *
      * @param files the atom metadata folder.
-     * @throws IOException
+     * @throws IOException failed
      */
     public void updateAtomMetadata(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
             throws IOException {
@@ -318,7 +318,7 @@ public class IncrementalPackager implements Closeable {
         updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(
                 Maps.filterKeys(files, Predicates.compose(
                         isAtomMetadataFile,
-                        RelativeFile.EXTRACT_FILE)))
+                        RelativeFile::getFile)))
                 .stream()
                 .map(pfu -> new PackagedFileUpdate(
                         pfu.getSource(),

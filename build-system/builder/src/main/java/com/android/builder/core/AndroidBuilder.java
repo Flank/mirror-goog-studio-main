@@ -875,9 +875,9 @@ public class AndroidBuilder {
      * in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
      * @param enforceUniquePackageName if {@code true} method will fail if some libraries share the
      * same package name
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ProcessException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws ProcessException failed
      */
     public void processResources(
             @NonNull Aapt aapt,
@@ -1107,9 +1107,9 @@ public class AndroidBuilder {
      * @param importFolders import folders
      * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies
      *                                of the compilation.
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws LoggedErrorException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws LoggedErrorException failed
      */
     public void compileAllAidlFiles(@NonNull List<File> sourceFolders,
                                     @NonNull File sourceOutputDir,
@@ -1163,9 +1163,9 @@ public class AndroidBuilder {
      * @param importFolders all the import folders, including the source folders.
      * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies
      *                                of the compilation.
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws LoggedErrorException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws LoggedErrorException failed
      */
     public void compileAidlFile(@NonNull File sourceFolder,
                                 @NonNull File aidlFile,
@@ -1210,9 +1210,9 @@ public class AndroidBuilder {
      *
      * @param sourceFolder the source folder with the merged shaders
      * @param outputDir the output dir in which to generate the output
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws LoggedErrorException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws LoggedErrorException failed
      */
     public void compileAllShaderFiles(
             @NonNull File sourceFolder,
@@ -1254,9 +1254,9 @@ public class AndroidBuilder {
      * @param sourceFolder the source folder containing the file
      * @param shaderFile the shader file to compile
      * @param outputDir the output dir
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws LoggedErrorException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws LoggedErrorException failed
      */
     public void compileShaderFile(
             @NonNull File sourceFolder,
@@ -1302,10 +1302,9 @@ public class AndroidBuilder {
      * @param ndkMode whether the renderscript code should be compiled to generate C/C++ bindings
      * @param supportMode support mode flag to generate .so files.
      * @param abiFilters ABI filters in case of support mode
-     *
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws LoggedErrorException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws LoggedErrorException failed
      */
     public void compileAllRenderscriptFiles(
             @NonNull List<File> sourceFolders,
@@ -1404,9 +1403,9 @@ public class AndroidBuilder {
      * @param inputs the input files
      * @param outDexFolder the location of the output folder
      * @param dexOptions dex options
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ProcessException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws ProcessException failed
      */
     public void convertByteCode(
             @NonNull Collection<File> inputs,
@@ -1470,10 +1469,9 @@ public class AndroidBuilder {
      * @param multiDex whether multidex is enabled
      * @param dexOptions dex options
      * @param processOutputHandler output handler to use
-     *
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ProcessException
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     * @throws ProcessException failed
      */
     public void preDexLibrary(
             @NonNull File inputFile,
@@ -1508,8 +1506,7 @@ public class AndroidBuilder {
      * @param multiDex whether multidex is enabled.
      * @param dexOptions the dex options
      * @return the list of generated files.
-     *
-     * @throws ProcessException
+     * @throws ProcessException failed
      */
     @NonNull
     public ImmutableList<File> preDexLibraryNoCache(
@@ -1665,8 +1662,8 @@ public class AndroidBuilder {
      * @param outApkLocation location of the APK.
      * @param noCompressPredicate predicate for paths that should not be compressed
      * @throws FileNotFoundException if the store location was not found
-     * @throws KeytoolException
-     * @throws PackagerException
+     * @throws KeytoolException failed
+     * @throws PackagerException failed
      */
     @SuppressWarnings("deprecation")
     public void oldPackageApk(
@@ -1698,7 +1695,7 @@ public class AndroidBuilder {
                 javaResourceArchiveMods.put(resourceLocation, FileModificationType.NEW);
             } else {
                 Set<RelativeFile> files =
-                        RelativeFiles.fromDirectory(resourceLocation, RelativeFiles.IS_FILE);
+                        RelativeFiles.fromDirectory(resourceLocation, rf -> rf.getFile().isFile());
                 javaResourceMods.putAll(
                         Maps.asMap(files, Functions.constant(FileModificationType.NEW)));
             }
@@ -1713,7 +1710,7 @@ public class AndroidBuilder {
                 jniArchiveMods.put(jniLoc, FileModificationType.NEW);
             } else {
                 Set<RelativeFile> files = RelativeFiles.fromDirectory(jniLoc,
-                        RelativeFiles.fromPathPredicate(nativeLibraryPredicate));
+                        RelativeFiles.fromPathPredicate(nativeLibraryPredicate::apply));
                 jniMods.putAll(Maps.asMap(files,
                         Functions.constant(FileModificationType.NEW)));
             }
@@ -1721,7 +1718,7 @@ public class AndroidBuilder {
 
         Set<RelativeFile> assets = assetsFolder == null
                 ? Collections.emptySet()
-                : RelativeFiles.fromDirectory(assetsFolder, RelativeFiles.IS_FILE);
+                : RelativeFiles.fromDirectory(assetsFolder, rf -> rf.getFile().isFile());
 
         PrivateKey key;
         X509Certificate certificate;
@@ -1855,12 +1852,12 @@ public class AndroidBuilder {
      * @param in the jar file to sign.
      * @param signingConfig the signing configuration
      * @param out the file path for the signed jar.
-     * @throws IOException
-     * @throws KeytoolException
-     * @throws SigningException
-     * @throws NoSuchAlgorithmException
-     * @throws ZipAbortException
-     * @throws com.android.builder.signing.SigningException
+     * @throws IOException failed
+     * @throws KeytoolException failed
+     * @throws SigningException failed
+     * @throws NoSuchAlgorithmException failed
+     * @throws ZipAbortException failed
+     * @throws com.android.builder.signing.SigningException failed
      */
     public static void signApk(
             @NonNull File in,
