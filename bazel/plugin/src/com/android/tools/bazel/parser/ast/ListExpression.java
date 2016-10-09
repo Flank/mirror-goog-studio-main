@@ -16,6 +16,8 @@
 
 package com.android.tools.bazel.parser.ast;
 
+import org.jaxen.expr.Expr;
+
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +75,14 @@ public class ListExpression extends Expression {
         expressions.add(expression);
     }
 
+    public void addIfNew(Expression e) {
+        for (Expression expression : expressions) {
+            if (expression.equals(e)) {
+                return;
+            }
+        }
+        add(e);
+    }
     @Override
     public void preOrder(List<Node> nodes) {
         nodes.add(this);
@@ -95,5 +105,9 @@ public class ListExpression extends Expression {
             list.add(LiteralExpression.build(source));
         }
         return list;
+    }
+
+    public int size() {
+        return expressions.size();
     }
 }

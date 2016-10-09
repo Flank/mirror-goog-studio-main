@@ -49,4 +49,13 @@ public class LiteralExpression extends Expression {
     public static Expression build(String source) {
         return new LiteralExpression(Token.string(source));
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof LiteralExpression) {
+            LiteralExpression e = (LiteralExpression) obj;
+            return e.getLiteral().equals(this.getLiteral());
+        }
+        return super.equals(obj);
+    }
 }

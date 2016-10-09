@@ -11,4 +11,5 @@ iml_module(
     deps = ["//tools/idea/.idea/libraries:JUnit4[test]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )

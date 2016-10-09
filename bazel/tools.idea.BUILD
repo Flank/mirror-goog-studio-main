@@ -6,6 +6,7 @@ iml_module(
     srcs = ["idea/platform/annotations/common/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -15,6 +16,7 @@ iml_module(
     exports = ["//tools:idea.annotations-common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -23,6 +25,7 @@ iml_module(
     deps = ["//tools:idea.annotations[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -31,6 +34,7 @@ iml_module(
     deps = ["//tools:idea.annotations[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -42,6 +46,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -49,6 +54,7 @@ iml_module(
     srcs = ["idea/platform/boot/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -56,6 +62,7 @@ iml_module(
     resources = ["idea/community-resources/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -63,6 +70,7 @@ iml_module(
     srcs = ["idea/platform/forms_rt/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -70,6 +78,7 @@ iml_module(
     srcs = ["idea/plugins/groovy/rt-constants/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -77,6 +86,7 @@ iml_module(
     srcs = ["idea/platform/icons/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -85,6 +95,7 @@ iml_module(
     deps = ["//tools/idea/.idea/libraries:asm5"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -102,6 +113,7 @@ iml_module(
     exports = ["//tools:idea.instrumentation-util"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -114,6 +126,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -125,6 +138,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -136,6 +150,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -143,6 +158,7 @@ iml_module(
     srcs = ["idea/jps/jps-launcher/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -151,6 +167,7 @@ iml_module(
     deps = ["//tools:maven-artifact-resolver-common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -163,6 +180,7 @@ iml_module(
     exports = ["//tools:idea.maven-artifact-resolver-common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -178,6 +196,7 @@ iml_module(
     exports = ["//tools:idea.maven-artifact-resolver-common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -192,6 +211,7 @@ iml_module(
     exports = ["//tools:idea.maven-artifact-resolver-common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -199,6 +219,7 @@ iml_module(
     resources = ["idea/platform/platform-resources-en/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -232,6 +253,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -243,6 +265,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -256,6 +279,7 @@ iml_module(
     exports = ["//tools/idea/.idea/libraries:JDOM"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -268,6 +292,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -281,6 +306,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -289,6 +315,7 @@ iml_module(
     deps = ["//tools:idea.util[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -310,6 +337,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -332,6 +360,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -347,6 +376,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -360,6 +390,7 @@ iml_module(
     exports = ["//tools:idea.core-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -374,6 +405,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -390,6 +422,7 @@ iml_module(
     exports = ["//tools:idea.editor-ui-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -432,6 +465,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -446,6 +480,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -455,6 +490,7 @@ iml_module(
     exports = ["//tools:idea.platform-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -463,6 +499,7 @@ iml_module(
     deps = ["//tools:idea.platform-api[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -489,6 +526,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -498,6 +536,7 @@ iml_module(
     exports = ["//tools:idea.lang-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -510,6 +549,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -533,6 +573,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -546,6 +587,7 @@ iml_module(
     exports = ["//tools:idea.xml-psi-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -564,6 +606,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -577,6 +620,7 @@ iml_module(
     exports = ["//tools:idea.xml-openapi"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -605,6 +649,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -617,6 +662,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -635,6 +681,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -647,6 +694,7 @@ iml_module(
     exports = ["//tools:idea.core-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -659,6 +707,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -671,6 +720,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -686,6 +736,7 @@ iml_module(
     exports = ["//tools:idea.core-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -705,6 +756,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -722,6 +774,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -744,6 +797,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -756,6 +810,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -773,6 +828,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -790,6 +846,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -797,6 +854,7 @@ iml_module(
     srcs = ["idea/resources-en/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -819,6 +877,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -844,6 +903,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -865,6 +925,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -877,6 +938,7 @@ iml_module(
     exports = ["//tools:idea.structure-view-impl"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -902,6 +964,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -910,6 +973,7 @@ iml_module(
     deps = ["//tools/idea/.idea/libraries:JUnit4"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1064,6 +1128,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1076,6 +1141,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1092,6 +1158,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1135,6 +1202,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1148,6 +1216,7 @@ iml_module(
     exports = ["//tools:idea.xdebugger-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1156,6 +1225,7 @@ iml_module(
     deps = ["//tools:idea.openapi[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1177,6 +1247,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1190,6 +1261,7 @@ iml_module(
     exports = ["//tools:idea.jsp-base-openapi"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1203,6 +1275,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1218,6 +1291,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1234,6 +1308,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1253,6 +1328,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1274,6 +1350,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1293,6 +1370,7 @@ iml_module(
     exports = ["//tools:idea.properties-psi-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1305,6 +1383,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1326,6 +1405,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1337,6 +1417,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1349,6 +1430,7 @@ iml_module(
     exports = ["//tools:idea.MM_RegExpSupport"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1361,6 +1443,7 @@ iml_module(
     exports = ["//tools:idea.jps-model-tests"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1402,6 +1485,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1418,6 +1502,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1436,6 +1521,7 @@ iml_module(
     exports = ["//tools/idea/.idea/libraries:Ant"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1452,6 +1538,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1468,6 +1555,7 @@ iml_module(
     exports = ["//tools/idea/.idea/libraries:Groovy"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1485,6 +1573,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1513,6 +1602,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1563,6 +1653,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1632,6 +1723,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1651,6 +1743,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1667,6 +1760,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1690,6 +1784,7 @@ iml_module(
     exports = ["//tools:idea.smRunner"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1720,6 +1815,7 @@ iml_module(
     exports = ["//tools/idea/.idea/libraries:Groovy"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1744,6 +1840,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1765,6 +1862,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1783,6 +1881,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:Gradle"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1806,6 +1905,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1833,6 +1933,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1858,6 +1959,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1872,6 +1974,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1890,6 +1993,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1917,6 +2021,7 @@ iml_module(
     exports = ["//tools:idea.smRunner"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1924,6 +2029,7 @@ iml_module(
     srcs = ["idea/plugins/xpath/xslt-rt/src"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1946,6 +2052,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -1961,6 +2068,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -2000,6 +2108,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -2065,6 +2174,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -2109,6 +2219,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -2122,6 +2233,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -2141,252 +2253,294 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/protobuf-2.5.0",
     jars = ["idea/lib/protobuf-2.5.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/guava-18.0",
     jars = ["idea/lib/guava-18.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/hamcrest-core-1.3",
     jars = ["idea/lib/hamcrest-core-1.3.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/junit-4.12",
     jars = ["idea/lib/junit-4.12.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/gson-2.5",
     jars = ["idea/lib/gson-2.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/trove4j",
     jars = ["idea/lib/trove4j.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jsr305",
     jars = ["idea/lib/jsr305.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/junit",
     jars = ["idea/lib/junit.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/httpcore-4.4.1",
     jars = ["idea/lib/httpcore-4.4.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/httpmime-4.4.1",
     jars = ["idea/lib/httpmime-4.4.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/httpclient-4.4.1",
     jars = ["idea/lib/httpclient-4.4.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/fluent-hc-4.4.1",
     jars = ["idea/lib/fluent-hc-4.4.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xmlrpc-2.0",
     jars = ["idea/lib/xmlrpc-2.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-commons-net",
     jars = ["idea/lib/ant/lib/ant-commons-net.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-jmf",
     jars = ["idea/lib/ant/lib/ant-jmf.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-resolver",
     jars = ["idea/lib/ant/lib/ant-apache-resolver.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-jai",
     jars = ["idea/lib/ant/lib/ant-jai.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-bsf",
     jars = ["idea/lib/ant/lib/ant-apache-bsf.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-commons-logging",
     jars = ["idea/lib/ant/lib/ant-commons-logging.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-junit",
     jars = ["idea/lib/ant/lib/ant-junit.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-jsch",
     jars = ["idea/lib/ant/lib/ant-jsch.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-bcel",
     jars = ["idea/lib/ant/lib/ant-apache-bcel.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant",
     jars = ["idea/lib/ant/lib/ant.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-netrexx",
     jars = ["idea/lib/ant/lib/ant-netrexx.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-oro",
     jars = ["idea/lib/ant/lib/ant-apache-oro.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-antlr",
     jars = ["idea/lib/ant/lib/ant-antlr.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-jdepend",
     jars = ["idea/lib/ant/lib/ant-jdepend.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-launcher",
     jars = ["idea/lib/ant/lib/ant-launcher.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-regexp",
     jars = ["idea/lib/ant/lib/ant-apache-regexp.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-apache-log4j",
     jars = ["idea/lib/ant/lib/ant-apache-log4j.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-swing",
     jars = ["idea/lib/ant/lib/ant-swing.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ant/lib/ant-javamail",
     jars = ["idea/lib/ant/lib/ant-javamail.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/asm-all",
     jars = ["idea/lib/asm-all.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jdom",
     jars = ["idea/lib/jdom.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jgoodies-forms",
     jars = ["idea/lib/jgoodies-forms.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/hamcrest-library-1.3",
     jars = ["idea/lib/hamcrest-library-1.3.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/testng/lib/testng",
     jars = ["idea/plugins/testng/lib/testng.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/testng/lib/jcommander",
     jars = ["idea/plugins/testng/lib/jcommander.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/coverage-agent",
     jars = ["idea/lib/coverage-agent.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/coverage-instrumenter",
     jars = ["idea/lib/coverage-instrumenter.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/coverage-util",
     jars = ["idea/lib/coverage-util.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2394,12 +2548,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2407,12 +2563,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber"],
     exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2420,12 +2578,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2433,12 +2593,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2446,6 +2608,7 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2453,12 +2616,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2466,6 +2631,7 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2473,6 +2639,7 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
     exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2480,102 +2647,119 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2"],
     exports = ["//tools:idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2",
     jars = ["idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/eawtstub",
     jars = ["idea/lib/eawtstub.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/log4j",
     jars = ["idea/lib/log4j.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/picocontainer",
     jars = ["idea/lib/picocontainer.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jna",
     jars = ["idea/lib/jna.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jna-platform",
     jars = ["idea/lib/jna-platform.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/oromatcher",
     jars = ["idea/lib/oromatcher.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jsr166e",
     jars = ["idea/lib/jsr166e.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/snappy-in-java-0.3.1",
     jars = ["idea/lib/snappy-in-java-0.3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/imgscalr-lib-4.2",
     jars = ["idea/lib/imgscalr-lib-4.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/batik-all",
     jars = ["idea/lib/batik-all.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xmlgraphics-commons-1.5",
     jars = ["idea/lib/xmlgraphics-commons-1.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xml-apis-ext",
     jars = ["idea/lib/xml-apis-ext.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xstream-1.4.8",
     jars = ["idea/lib/xstream-1.4.8.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xercesImpl",
     jars = ["idea/lib/xercesImpl.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xml-apis",
     jars = ["idea/lib/xml-apis.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2583,42 +2767,49 @@ java_library(
     runtime_deps = ["//tools:idea/lib/automaton"],
     exports = ["//tools:idea/lib/automaton"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/automaton",
     jars = ["idea/lib/automaton.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/asm",
     jars = ["idea/lib/asm.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/asm-commons",
     jars = ["idea/lib/asm-commons.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/cglib-2.2.2",
     jars = ["idea/lib/cglib-2.2.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/nanoxml-2.2.3",
     jars = ["idea/lib/nanoxml-2.2.3.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/commons-codec-1.9",
     jars = ["idea/lib/commons-codec-1.9.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2626,60 +2817,70 @@ java_library(
     runtime_deps = ["//tools:idea/lib/automaton"],
     exports = ["//tools:idea/lib/automaton"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/netty-all-4.1.0.CR7",
     jars = ["idea/lib/netty-all-4.1.0.CR7.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/proxy-vole_20131209",
     jars = ["idea/lib/proxy-vole_20131209.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/pty4j-0.6",
     jars = ["idea/lib/pty4j-0.6.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/easymock",
     jars = ["idea/lib/dev/easymock.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/easymockclassextension",
     jars = ["idea/lib/dev/easymockclassextension.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/jmock-2.5.1",
     jars = ["idea/lib/dev/jmock-2.5.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/jmock-junit4-2.5.1",
     jars = ["idea/lib/dev/jmock-junit4-2.5.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/jmock-legacy-2.5.1",
     jars = ["idea/lib/dev/jmock-legacy-2.5.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/objenesis-1.0",
     jars = ["idea/lib/dev/objenesis-1.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2687,12 +2888,14 @@ java_library(
     runtime_deps = ["//tools:idea/lib/automaton"],
     exports = ["//tools:idea/lib/automaton"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/microba",
     jars = ["idea/lib/microba.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2700,60 +2903,70 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1"],
     exports = ["//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1",
     jars = ["idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/groovy-all-2.4.6",
     jars = ["idea/lib/groovy-all-2.4.6.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/dev/assertj-core-3.2.0",
     jars = ["idea/lib/dev/assertj-core-3.2.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jaxen-1.1.3",
     jars = ["idea/lib/jaxen-1.1.3.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jsr173_1.0_api",
     jars = ["idea/lib/jsr173_1.0_api.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xbean",
     jars = ["idea/lib/xbean.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/resolver",
     jars = ["idea/lib/resolver.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jcip-annotations",
     jars = ["idea/lib/jcip-annotations.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/swingx-core-1.6.2",
     jars = ["idea/lib/swingx-core-1.6.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2761,12 +2974,14 @@ java_library(
     runtime_deps = ["//tools:idea/xml/relaxng/lib/rngom-20051226-patched"],
     exports = ["//tools:idea/xml/relaxng/lib/rngom-20051226-patched"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/xml/relaxng/lib/rngom-20051226-patched",
     jars = ["idea/xml/relaxng/lib/rngom-20051226-patched.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2774,12 +2989,14 @@ java_library(
     runtime_deps = ["//tools:idea/xml/relaxng/lib/isorelax"],
     exports = ["//tools:idea/xml/relaxng/lib/isorelax"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/xml/relaxng/lib/isorelax",
     jars = ["idea/xml/relaxng/lib/isorelax.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2787,12 +3004,14 @@ java_library(
     runtime_deps = ["//tools:idea/xml/relaxng/lib/trang-core"],
     exports = ["//tools:idea/xml/relaxng/lib/trang-core"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/xml/relaxng/lib/trang-core",
     jars = ["idea/xml/relaxng/lib/trang-core.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2800,108 +3019,126 @@ java_library(
     runtime_deps = ["//tools:idea/xml/relaxng/lib/jing"],
     exports = ["//tools:idea/xml/relaxng/lib/jing"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/xml/relaxng/lib/jing",
     jars = ["idea/xml/relaxng/lib/jing.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/sanselan-0.98-snapshot",
     jars = ["idea/lib/sanselan-0.98-snapshot.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/velocity",
     jars = ["idea/lib/velocity.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/xpp3-1.1.4-min",
     jars = ["idea/lib/xpp3-1.1.4-min.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/cli-parser-1.1",
     jars = ["idea/lib/cli-parser-1.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/commons-logging-1.2",
     jars = ["idea/lib/commons-logging-1.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jh",
     jars = ["idea/lib/jh.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/winp-1.23",
     jars = ["idea/lib/winp-1.23.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/miglayout-swing",
     jars = ["idea/lib/miglayout-swing.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/jayatana-1.2.4",
     jars = ["idea/lib/jayatana-1.2.4.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/slf4j-api-1.7.10",
     jars = ["idea/lib/slf4j-api-1.7.10.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/slf4j-log4j12-1.7.10",
     jars = ["idea/lib/slf4j-log4j12-1.7.10.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/minlog-1.2",
     jars = ["idea/lib/minlog-1.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/kryo-2.22",
     jars = ["idea/lib/kryo-2.22.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/reflectasm-1.07",
     jars = ["idea/lib/reflectasm-1.07.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/objenesis-1.2",
     jars = ["idea/lib/objenesis-1.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/serviceMessages",
     jars = ["idea/lib/serviceMessages.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -2909,102 +3146,119 @@ java_library(
     runtime_deps = ["//tools:idea/jps/lib/optimizedFileManager"],
     exports = ["//tools:idea/jps/lib/optimizedFileManager"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/jps/lib/optimizedFileManager",
     jars = ["idea/jps/lib/optimizedFileManager.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/ecj-4.5.2",
     jars = ["idea/lib/ecj-4.5.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-tooling-api-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-tooling-api-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-core-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-core-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-messaging-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-messaging-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-model-core-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-model-core-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-model-groovy-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-model-groovy-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-wrapper-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-wrapper-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-base-services-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-base-services-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-base-services-groovy-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-base-services-groovy-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-dependency-management-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-dependency-management-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-native-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-native-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-resources-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-resources-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/groovy/lib/groovy-eclipse-batch-2.3.4-01",
     jars = ["idea/plugins/groovy/lib/groovy-eclipse-batch-2.3.4-01.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/groovy/testdata/griffon/griffon-rt-1.1.0",
     jars = ["idea/plugins/groovy/testdata/griffon/griffon-rt-1.1.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/groovy/testdata/griffon/griffon-cli-1.1.0",
     jars = ["idea/plugins/groovy/testdata/griffon/griffon-cli-1.1.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3012,114 +3266,133 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/lib/plexus-utils-2.0.6"],
     exports = ["//tools:idea/plugins/maven/lib/plexus-utils-2.0.6"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/lib/plexus-utils-2.0.6",
     jars = ["idea/plugins/maven/lib/plexus-utils-2.0.6.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/nekohtml-1.9.14",
     jars = ["idea/lib/nekohtml-1.9.14.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-logging-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-logging-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-process-services-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-process-services-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/guava-jdk5-17.0",
     jars = ["idea/plugins/gradle/lib/guava-jdk5-17.0.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-build-init-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-ide-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-language-java-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-language-jvm-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-base-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-platform-jvm-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-plugins-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-base-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-testing-jvm-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-scala-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-api/lib/gradle-language-scala-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-impl/lib/gradle-reporting-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-3.1",
     jars = ["idea/plugins/gradle/tooling-extension-impl/lib/gradle-ear-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3127,36 +3400,42 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5"],
     exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/maven-dependency-tree-1.2",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/maven-dependency-tree-1.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/archetype-common-2.0-alpha-4-SNAPSHOT",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/archetype-common-2.0-alpha-4-SNAPSHOT.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/mercury-artifact-1.0-alpha-6",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/mercury-artifact-1.0-alpha-6.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/maven2/boot/classworlds-1.1",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/maven2/boot/classworlds-1.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3164,12 +3443,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3"],
     exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3177,12 +3458,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/activation-1.1"],
     exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/activation-1.1"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/activation-1.1",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/activation-1.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3190,12 +3473,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils"],
     exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/commons-beanutils",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/commons-beanutils.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3203,12 +3488,14 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/lib/wadl-core"],
     exports = ["//tools:idea/plugins/maven/lib/wadl-core"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/lib/wadl-core",
     jars = ["idea/plugins/maven/lib/wadl-core.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -3216,48 +3503,56 @@ java_library(
     runtime_deps = ["//tools:idea/plugins/maven/lib/plexus-archiver-2.4.4"],
     exports = ["//tools:idea/plugins/maven/lib/plexus-archiver-2.4.4"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/maven/lib/plexus-archiver-2.4.4",
     jars = ["idea/plugins/maven/lib/plexus-archiver-2.4.4.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/gradle-cli-3.1",
     jars = ["idea/plugins/gradle/lib/gradle-cli-3.1.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/jsr305-1.3.9",
     jars = ["idea/plugins/gradle/lib/jsr305-1.3.9.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/commons-io-2.2",
     jars = ["idea/plugins/gradle/lib/commons-io-2.2.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/jna-3.2.7",
     jars = ["idea/plugins/gradle/lib/jna-3.2.7.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/plugins/gradle/lib/native-platform-0.11",
     jars = ["idea/plugins/gradle/lib/native-platform-0.11.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_import(
     name = "idea/lib/asm4-all",
     jars = ["idea/lib/asm4-all.jar"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 filegroup(

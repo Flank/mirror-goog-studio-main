@@ -362,6 +362,7 @@ def iml_module(name,
     test_timeout="moderate",
     test_class="com.android.testutils.JarTestSuite",
     test_shard_count=None,
+    tags=None,
     back_target=0,
     back_deps=[]):
 

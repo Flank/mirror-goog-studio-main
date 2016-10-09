@@ -54,4 +54,8 @@ public class BinaryExpression extends Expression {
         right.postOrder(nodes);
         nodes.add(this);
     }
+
+    public Expression getLeft() {
+        return left;
+    }
 }

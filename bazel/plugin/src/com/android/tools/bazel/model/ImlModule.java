@@ -48,6 +48,7 @@ public class ImlModule extends BazelRule {
         setArgument(call, "exports", exported);
         setArgument(call, "javacopts", ImmutableList.of("-extra_checks:off"));
         setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
+        addElementToList(call, "tags", "managed");
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {

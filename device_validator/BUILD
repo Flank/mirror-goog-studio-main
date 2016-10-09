@@ -10,6 +10,7 @@ iml_module(
     exports = ["//tools/base/common:studio.common"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(

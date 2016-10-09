@@ -37,6 +37,7 @@ public class JavaLibrary extends BazelRule {
         setArgument(call, "runtime_deps", dependencies);
         setArgument(call, "exports", exported);
         setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
+        addElementToList(call, "tags", "managed");
     }
 }
 

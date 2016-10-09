@@ -7,4 +7,5 @@ iml_module(
     deps = ["//tools/base/chunkio:studio.chunkio[module]"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )

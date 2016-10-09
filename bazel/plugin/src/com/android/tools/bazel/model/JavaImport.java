@@ -36,6 +36,7 @@ public class JavaImport extends BazelRule {
 
         setArgument(call, "jars", jars);
         setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
+        addElementToList(call, "tags", "managed");
     }
 
     public void addJar(String jar) {

@@ -124,4 +124,13 @@ public class CallExpression extends Expression {
             arg.setExpression(expression);
         }
     }
+
+    public Expression getArgument(String name) {
+        Argument arg = getNamedArgument(name);
+        if (arg == null) {
+            return null;
+        } else {
+            return arg.getExpression();
+        }
+    }
 }

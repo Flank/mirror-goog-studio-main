@@ -6,6 +6,7 @@ iml_module(
     srcs = ["src/main/java"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 # TODO: Keep only only one rule in this BUILD file, since there's no real need for the split here.

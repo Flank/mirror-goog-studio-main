@@ -20,6 +20,7 @@ iml_module(
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(

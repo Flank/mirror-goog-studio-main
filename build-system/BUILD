@@ -15,6 +15,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 iml_module(
@@ -32,6 +33,7 @@ iml_module(
     exports = ["//tools/base/sdklib:studio.sdklib"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 # TODO(bendowski): Move this to the right directory.

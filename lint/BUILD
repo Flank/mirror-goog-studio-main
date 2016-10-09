@@ -28,6 +28,7 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(
@@ -61,6 +62,7 @@ iml_module(
     exports = ["//tools/base/lint:studio.lint-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
 
 java_library(

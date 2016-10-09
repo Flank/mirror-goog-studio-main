@@ -14,4 +14,5 @@ iml_module(
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
