@@ -49,6 +49,7 @@ public class Package {
             Tokenizer tokenizer = new Tokenizer(file);
             BuildParser parser = new BuildParser(tokenizer);
             buildFile = parser.parse();
+            buildFile.hideManagedStatements();
         }
         return buildFile;
     }
@@ -67,7 +68,6 @@ public class Package {
 
         File dir = getPackageDir();
         File build = new File(dir, "BUILD");
-        FileUtil.createIfDoesntExist(build);
         for (BazelRule rule : rules.values()) {
             if (rule.isEmpty()) continue;
             if (!rule.isExport()) continue;

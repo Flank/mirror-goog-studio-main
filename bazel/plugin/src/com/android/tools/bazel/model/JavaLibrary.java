@@ -16,7 +16,7 @@
 
 package com.android.tools.bazel.model;
 
-import com.android.tools.bazel.parser.ast.CallExpression;
+import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class JavaLibrary extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        CallExpression call = getCallExpression("java_library", name);
+        CallStatement call = getCallStatement("java_library", name);
 
         setArgument(call, "runtime_deps", dependencies);
         setArgument(call, "exports", exported);

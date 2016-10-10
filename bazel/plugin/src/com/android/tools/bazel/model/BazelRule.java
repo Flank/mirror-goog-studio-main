@@ -83,27 +83,28 @@ public abstract class BazelRule {
     }
 
     /**
-     * Gets the expression in the BUILD file that represents this rule. If the rule doesn't
+     * Gets the statement in the BUILD file that represents this rule. If the rule doesn't
      * exist in the BUILD file, a new one is created.
      */
-    protected final CallExpression getCallExpression(String type, String name) throws IOException {
+    protected final CallStatement getCallStatement(String type, String name) throws IOException {
         Build build = pkg.getBuildFile();
-        CallExpression call = build.getCall(name);
+        CallStatement call = build.getCall(name);
         if (call == null) {
-            call = CallExpression.build(type, ImmutableMap.of("name", name));
-            build.addStatement(new CallStatement(call));
+            call = new CallStatement(CallExpression.build(type, ImmutableMap.of("name", name)));
+            build.addStatement(call);
         }
+        call.setHidden(false);
         return call;
     }
 
     /**
      * Sets the argument of the given call expression named {@code name} to be {@code values}.
      */
-    protected final void setArgument(CallExpression rule, String name, Collection<?> values) {
+    protected final void setArgument(CallStatement rule, String name, Collection<?> values) {
         if (!values.isEmpty()) {
             ListExpression list = ListExpression.build(values.stream().map(Object::toString).collect(Collectors.toList()));
             list.setSingleLine(values.size() <= 1);
-            rule.setArgument(name, list);
+            rule.getCall().setArgument(name, list);
         }
     }
 
@@ -111,12 +112,12 @@ public abstract class BazelRule {
     /**
      * Ensures an element is in the a list in the given call expression.
      */
-    protected void addElementToList(CallExpression call, String attribute, String element) {
-        Expression expression = call.getArgument(attribute);
+    protected void addElementToList(CallStatement call, String attribute, String element) {
+        Expression expression = call.getCall().getArgument(attribute);
         ListExpression list;
         if (expression == null) {
             list = ListExpression.build(ImmutableList.of());
-            call.setArgument(attribute, list);
+            call.getCall().setArgument(attribute, list);
         } else if (expression instanceof BinaryExpression
                 && (((BinaryExpression)expression).getLeft() instanceof ListExpression)) {
             list = (ListExpression) ((BinaryExpression) expression).getLeft();
@@ -125,7 +126,7 @@ public abstract class BazelRule {
         } else {
             list = ListExpression.build(ImmutableList.of());
             BinaryExpression plus = new BinaryExpression(list, new Token("+", Token.Kind.PLUS), expression);
-            call.setArgument(attribute, plus);
+            call.getCall().setArgument(attribute, plus);
         }
         list.addIfNew(LiteralExpression.build(element));
         list.setSingleLine(list.size() <= 1);

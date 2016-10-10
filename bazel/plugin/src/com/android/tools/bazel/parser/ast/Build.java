@@ -29,13 +29,15 @@ public class Build extends Node {
     }
 
     public void write(PrintWriter writer) {
-        int i = 0;
+        boolean first = true;
         for (Statement statement : statements) {
-            statement.write(writer);
-            if (i < statements.size() - 1) {
+            if (!first) {
                 writer.append("\n");
             }
-            i++;
+            if (!statement.isHidden()) {
+                statement.write(writer);
+            }
+            first = false;
         }
     }
 
@@ -55,13 +57,13 @@ public class Build extends Node {
         nodes.add(this);
     }
 
-    public CallExpression getCall(String name) {
+    public CallStatement getCall(String name) {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallExpression call = ((CallStatement)statement).getCall();
                 String literal = call.getLiteralArgument("name");
                 if (literal != null && literal.equals("\"" + name + "\"")) {
-                    return call;
+                    return (CallStatement)statement;
                 }
             }
         }
@@ -70,5 +72,24 @@ public class Build extends Node {
 
     public void addStatement(Statement statement) {
         statements.add(statement);
+    }
+
+    /**
+     * Hides all the statements that are managed by this plugin. This plugin identifies
+     * managed rules by the tag "managed" present in the rule.
+     */
+    public void hideManagedStatements() {
+        for (Statement statement : statements) {
+            if (statement instanceof CallStatement) {
+                CallStatement call = ((CallStatement)statement);
+                Expression tags = call.getCall().getArgument("tags");
+                if (tags instanceof ListExpression) {
+                    ListExpression list = (ListExpression)tags;
+                    if (list.contains("managed")) {
+                        statement.setHidden(true);
+                    }
+                }
+            }
+        }
     }
 }

@@ -76,12 +76,9 @@ public class ListExpression extends Expression {
     }
 
     public void addIfNew(Expression e) {
-        for (Expression expression : expressions) {
-            if (expression.equals(e)) {
-                return;
-            }
+        if (!contains(e)) {
+            add(e);
         }
-        add(e);
     }
     @Override
     public void preOrder(List<Node> nodes) {
@@ -109,5 +106,18 @@ public class ListExpression extends Expression {
 
     public int size() {
         return expressions.size();
+    }
+
+    public boolean contains(Expression e) {
+        for (Expression expression : expressions) {
+            if (expression.equals(e)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean contains(String managed) {
+        return contains(LiteralExpression.build(managed));
     }
 }

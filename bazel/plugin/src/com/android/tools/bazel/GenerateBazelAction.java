@@ -148,26 +148,24 @@ public class GenerateBazelAction extends AnAction {
             File librariesDir = new File(VfsUtil.virtualToIoFile(project.getBaseDir()), ".idea/libraries");
             Package librariesPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, librariesDir));
 
-            int anonymousLib = 0;
             for (OrderEntry orderEntry : module.getOrderEntries()) {
                 if (orderEntry instanceof LibraryOrderEntry) {
                     // A dependency to a jar file
                     LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
                     String libName = libraryEntry.getLibraryName();
                     Package libPkg = librariesPkg;
-                    if (libName == null) {
-                        libPkg = pkg;
-                        libName = module.getName();
-                        String baseName = libName;
-                        while (libPkg.getRule(libName) != null) {
-                            libName = baseName + "_" + anonymousLib++;
-                        }
+                    List<String> scopes = new LinkedList<>();
+                    if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
+                        scopes.add("test");
                     }
 
-                    JavaLibrary libRule = libraries.get(libName.toLowerCase());
-                    if (libRule == null) {
-                        libRule = new JavaLibrary(libPkg, libName);
-                        libraries.put(libName.toLowerCase(), libRule);
+                    JavaLibrary namedLib = null;
+                    if (libName != null) {
+                        namedLib = libraries.get(libName.toLowerCase());
+                        if (namedLib == null) {
+                            namedLib = new JavaLibrary(libPkg, libName);
+                            libraries.put(libName.toLowerCase(), namedLib);
+                        }
                     }
 
                     Library library = libraryEntry.getLibrary();
@@ -210,19 +208,19 @@ public class GenerateBazelAction extends AnAction {
                                         }
                                     }
                                     if (imp != null) {
-                                        libRule.addDependency(imp, true);
+                                        if (namedLib != null) {
+                                            namedLib.addDependency(imp, true);
+                                        } else {
+                                            module.rule.addDependency(imp, libraryEntry.isExported(), scopes);
+                                        }
                                     }
                                 } else {
                                     System.err.println("Cannot find file for: " + libFile);
                                 }
                             }
                         }
-                        if (!libRule.isEmpty()) {
-                            List<String> scopes = new LinkedList<>();
-                            if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
-                                scopes.add("test");
-                            }
-                            module.rule.addDependency(libRule, libraryEntry.isExported(), scopes);
+                        if (namedLib != null && !namedLib.isEmpty()) {
+                            module.rule.addDependency(namedLib, libraryEntry.isExported(), scopes);
                         }
                     } else {
                         System.err.println("No library for entry " + libraryEntry);

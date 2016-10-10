@@ -23,6 +23,13 @@ import java.io.PrintWriter;
  */
 public abstract class Statement extends Node {
 
+    /**
+     * Whether the statement is hidden. Hidden statements are not output when the AST is written
+     * to a file, allowing it to effectively delete statements from the output without loosing the
+     * AST node.
+     */
+    private boolean hidden;
+
     protected Statement(Token start, Token end) {
         super(start, end);
     }
@@ -39,4 +46,12 @@ public abstract class Statement extends Node {
     }
 
     public abstract void doWrite(PrintWriter writer);
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
 }

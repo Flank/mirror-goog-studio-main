@@ -164,7 +164,7 @@ iml_module(
 iml_module(
     name = "idea.maven-artifact-resolver-common",
     srcs = ["idea/plugins/maven/artifact-resolver/common/src"],
-    deps = ["//tools:maven-artifact-resolver-common"],
+    deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
@@ -174,7 +174,7 @@ iml_module(
     name = "idea.maven-artifact-resolver-m2",
     srcs = ["idea/plugins/maven/artifact-resolver-m2/src"],
     deps = [
-        "//tools:maven-artifact-resolver-m2",
+        "//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber",
         "//tools:idea.maven-artifact-resolver-common[module]",
     ],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
@@ -187,10 +187,10 @@ iml_module(
     name = "idea.maven-artifact-resolver-m3",
     srcs = ["idea/plugins/maven/artifact-resolver-m3/src"],
     deps = [
-        "//tools:maven-artifact-resolver-m3",
-        "//tools:maven-artifact-resolver-m3_0",
-        "//tools:maven-artifact-resolver-m3_1",
-        "//tools:maven-artifact-resolver-m3_2",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5",
         "//tools:idea.maven-artifact-resolver-common[module]",
     ],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
@@ -203,9 +203,9 @@ iml_module(
     name = "idea.maven-artifact-resolver-m31",
     srcs = ["idea/plugins/maven/artifact-resolver-m31/src"],
     deps = [
-        "//tools:maven-artifact-resolver-m31",
-        "//tools:maven-artifact-resolver-m31_0",
-        "//tools:maven-artifact-resolver-m31_1",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5",
+        "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5",
+        "//tools:idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2",
         "//tools:idea.maven-artifact-resolver-common[module]",
     ],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
@@ -348,7 +348,7 @@ iml_module(
         "//tools:idea.extensions[module]",
         "//tools/idea/.idea/libraries:picocontainer",
         "//tools:idea.platform-resources-en[module]",
-        "//tools:core-api",
+        "//tools:idea/lib/automaton",
         "//tools/idea/.idea/libraries:asm",
         "//tools/idea/.idea/libraries:CGLIB",
     ],
@@ -440,7 +440,7 @@ iml_module(
         "//tools:idea.platform-resources-en[module]",
         "//tools/idea/.idea/libraries:OroMatcher",
         "//tools:idea.icons[module]",
-        "//tools:platform-api",
+        "//tools:idea/lib/automaton",
         "//tools:idea.projectModel-api[module]",
         "//tools/idea/.idea/libraries:Netty",
         "//tools/idea/.idea/libraries:proxy-vole",
@@ -635,7 +635,7 @@ iml_module(
         "//tools:idea.bootstrap[module]",
         "//tools:idea.platform-resources-en[module]",
         "//tools:idea.icons[module]",
-        "//tools:structure-view-impl",
+        "//tools:idea/lib/automaton",
         "//tools:idea.projectModel-api[module]",
     ],
     exports = [
@@ -819,12 +819,12 @@ iml_module(
     deps = [
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JDOM",
-        "//tools:maven-server-api",
+        "//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1",
     ],
     exports = [
         "//tools:idea.util",
         "//tools/idea/.idea/libraries:JDOM",
-        "//tools:maven-server-api",
+        "//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -1049,10 +1049,10 @@ iml_module(
         "//tools/idea/.idea/libraries:Netty",
         "//tools:idea.xdebugger-api[module]",
         "//tools:idea.built-in-server-api[module]",
-        "//tools:MM_RegExpSupport",
-        "//tools:MM_RegExpSupport_0",
-        "//tools:MM_RegExpSupport_1",
-        "//tools:MM_RegExpSupport_2",
+        "//tools:idea/xml/relaxng/lib/rngom-20051226-patched",
+        "//tools:idea/xml/relaxng/lib/isorelax",
+        "//tools:idea/xml/relaxng/lib/trang-core",
+        "//tools:idea/xml/relaxng/lib/jing",
         "//tools:idea.extensions[module]",
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:Sanselan",
@@ -1465,7 +1465,7 @@ iml_module(
         "//tools/idea/.idea/libraries:jgoodies-forms",
         "//tools/idea/.idea/libraries:Netty",
         "//tools/idea/.idea/libraries:protobuf",
-        "//tools:jps-builders",
+        "//tools:idea/jps/lib/optimizedFileManager",
         "//tools:idea.java-runtime[module]",
         "//tools/idea/.idea/libraries:Log4J",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -1568,7 +1568,7 @@ iml_module(
         "//tools:idea.util[module]",
         "//tools:idea.jps-builders[module]",
         "//tools:idea.jps-model-serialization[module]",
-        "//tools:maven-jps-plugin",
+        "//tools:idea/plugins/maven/lib/plexus-utils-2.0.6",
         "//tools:idea.jps-serialization-tests[module, test]",
     ],
     javacopts = ["-extra_checks:off"],
@@ -2125,12 +2125,12 @@ iml_module(
     deps = [
         "//tools:idea.maven-server-api[module]",
         "//tools:idea.util[module]",
-        "//tools:MM_maven2-server-impl",
+        "//tools:idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5",
         "//tools/idea/.idea/libraries:Maven",
-        "//tools:MM_maven2-server-impl_0",
-        "//tools:MM_maven2-server-impl_1",
+        "//tools:idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3",
+        "//tools:idea/plugins/maven/maven2-server-impl/lib/activation-1.1",
         "//tools/idea/.idea/libraries:commons-logging",
-        "//tools:MM_maven2-server-impl_2",
+        "//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils",
         "//tools:idea.openapi[module]",
         "//tools:idea.MM_RegExpSupport[module]",
         "//tools:idea.java-impl[module]",
@@ -2142,7 +2142,7 @@ iml_module(
         "//tools:idea.forms_rt[module]",
         "//tools/idea/.idea/libraries:jgoodies-forms",
         "//tools/idea/.idea/libraries:XmlBeans",
-        "//tools:MM_maven2-server-impl_3",
+        "//tools:idea/plugins/maven/lib/wadl-core",
         "//tools/idea/.idea/libraries:JAXB",
         "//tools/idea/.idea/libraries:gson",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -2155,7 +2155,7 @@ iml_module(
         "//tools:idea.maven-artifact-resolver-m31[module]",
         "//tools:idea.vcs-api[module]",
         "//tools:idea.properties-psi-api[module]",
-        "//tools:MM_maven2-server-impl_4",
+        "//tools:idea/plugins/maven/lib/plexus-archiver-2.4.4",
         "//tools:idea.external-system-api[module]",
         "//tools/idea/.idea/libraries:Slf4j",
         "//tools/idea/.idea/libraries:Log4J",
@@ -2543,25 +2543,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "maven-artifact-resolver-common",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m2",
-    runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber"],
-    exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2573,25 +2557,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "maven-artifact-resolver-m3",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m3_0",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2603,49 +2571,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "maven-artifact-resolver-m3_1",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-artifact-3.0.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m3_2",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5",
     jars = ["idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m31",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m31_0",
-    runtime_deps = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
-    exports = ["//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-artifact-resolver-m31_1",
-    runtime_deps = ["//tools:idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2"],
-    exports = ["//tools:idea/plugins/maven/artifact-resolver-m31/lib/eclipse-aether/aether-api-0.9.0.M2"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2762,14 +2690,6 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "core-api",
-    runtime_deps = ["//tools:idea/lib/automaton"],
-    exports = ["//tools:idea/lib/automaton"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/lib/automaton",
     jars = ["idea/lib/automaton.jar"],
@@ -2808,14 +2728,6 @@ java_import(
 java_import(
     name = "idea/lib/commons-codec-1.9",
     jars = ["idea/lib/commons-codec-1.9.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "platform-api",
-    runtime_deps = ["//tools:idea/lib/automaton"],
-    exports = ["//tools:idea/lib/automaton"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2883,25 +2795,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "structure-view-impl",
-    runtime_deps = ["//tools:idea/lib/automaton"],
-    exports = ["//tools:idea/lib/automaton"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/lib/microba",
     jars = ["idea/lib/microba.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-server-api",
-    runtime_deps = ["//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1"],
-    exports = ["//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2969,25 +2865,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_RegExpSupport",
-    runtime_deps = ["//tools:idea/xml/relaxng/lib/rngom-20051226-patched"],
-    exports = ["//tools:idea/xml/relaxng/lib/rngom-20051226-patched"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/xml/relaxng/lib/rngom-20051226-patched",
     jars = ["idea/xml/relaxng/lib/rngom-20051226-patched.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "MM_RegExpSupport_0",
-    runtime_deps = ["//tools:idea/xml/relaxng/lib/isorelax"],
-    exports = ["//tools:idea/xml/relaxng/lib/isorelax"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2999,25 +2879,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_RegExpSupport_1",
-    runtime_deps = ["//tools:idea/xml/relaxng/lib/trang-core"],
-    exports = ["//tools:idea/xml/relaxng/lib/trang-core"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/xml/relaxng/lib/trang-core",
     jars = ["idea/xml/relaxng/lib/trang-core.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "MM_RegExpSupport_2",
-    runtime_deps = ["//tools:idea/xml/relaxng/lib/jing"],
-    exports = ["//tools:idea/xml/relaxng/lib/jing"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -3141,14 +3005,6 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "jps-builders",
-    runtime_deps = ["//tools:idea/jps/lib/optimizedFileManager"],
-    exports = ["//tools:idea/jps/lib/optimizedFileManager"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/jps/lib/optimizedFileManager",
     jars = ["idea/jps/lib/optimizedFileManager.jar"],
@@ -3257,14 +3113,6 @@ java_import(
 java_import(
     name = "idea/plugins/groovy/testdata/griffon/griffon-cli-1.1.0",
     jars = ["idea/plugins/groovy/testdata/griffon/griffon-cli-1.1.0.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "maven-jps-plugin",
-    runtime_deps = ["//tools:idea/plugins/maven/lib/plexus-utils-2.0.6"],
-    exports = ["//tools:idea/plugins/maven/lib/plexus-utils-2.0.6"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -3395,14 +3243,6 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_maven2-server-impl",
-    runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5"],
-    exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/plexus-utils-1.5.5.jar"],
@@ -3438,25 +3278,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_maven2-server-impl_0",
-    runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3"],
-    exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/nexus-indexer-1.2.3.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "MM_maven2-server-impl_1",
-    runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/activation-1.1"],
-    exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/activation-1.1"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -3468,14 +3292,6 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_maven2-server-impl_2",
-    runtime_deps = ["//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils"],
-    exports = ["//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/maven2-server-impl/lib/commons-beanutils",
     jars = ["idea/plugins/maven/maven2-server-impl/lib/commons-beanutils.jar"],
@@ -3483,25 +3299,9 @@ java_import(
     tags = ["managed"],
 )
 
-java_library(
-    name = "MM_maven2-server-impl_3",
-    runtime_deps = ["//tools:idea/plugins/maven/lib/wadl-core"],
-    exports = ["//tools:idea/plugins/maven/lib/wadl-core"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 java_import(
     name = "idea/plugins/maven/lib/wadl-core",
     jars = ["idea/plugins/maven/lib/wadl-core.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_library(
-    name = "MM_maven2-server-impl_4",
-    runtime_deps = ["//tools:idea/plugins/maven/lib/plexus-archiver-2.4.4"],
-    exports = ["//tools:idea/plugins/maven/lib/plexus-archiver-2.4.4"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
