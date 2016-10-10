@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -58,6 +59,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
 
 /**
  * Implementation of an interface to the original {@code aapt}. This implementation relies on
@@ -449,12 +452,26 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
                         /*
                          * Sometimes aapt doesn't flush the file fast enough and we get here
-                         * without the file actually existing. It is pretty crap, but that's what
+                         * without the file actually existing, or with the file existing, but not
+                         * completely written. It is pretty crap, but that's what
                          * we've got. So, we wait for a little bit to make sure the file exists
-                         * before marking the future as complete.
+                         * and is a valid png before moving forward.
                          */
                         Instant maxWaitUntil = Instant.now().plus(MAX_WAIT_FOR_AAPT_FLUSH);
-                        while (!outputFile.exists() && Instant.now().isBefore(maxWaitUntil)) {
+                        while (Instant.now().isBefore(maxWaitUntil)) {
+                            if (outputFile.exists()) {
+                                try {
+                                    BufferedImage png = ImageIO.read(outputFile);
+                                    if (png != null && png.getWidth() > 0 && png.getHeight() > 0) {
+                                        break;
+                                    }
+                                } catch (IOException e) {
+                                    /*
+                                     * Image still not there.
+                                     */
+                                }
+                            }
+
                             try {
                                 Thread.sleep(MAX_CYCLE_AAPT_FLUSH_WAIT.toMillis());
                             } catch (InterruptedException e) {
