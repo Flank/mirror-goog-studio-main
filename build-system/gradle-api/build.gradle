@@ -8,7 +8,7 @@ configurations {
 
 dependencies {
     compile project(':base:builder-model')
-    compile 'com.google.guava:guava:17.0'
+    compile 'com.google.guava:guava:18.0'
 
     provided gradleApi()
 

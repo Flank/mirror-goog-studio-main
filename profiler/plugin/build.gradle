@@ -8,7 +8,7 @@ version = '1.0'// TODO: Pass in as an argument
 dependencies {
     compile gradleApi()
     compile 'org.ow2.asm:asm:5.0.3'
-    compile 'com.google.guava:guava:17.0'
+    compile 'com.google.guava:guava:18.0'
     compile('com.android.tools.build:gradle-api:2.0.0-beta2')
 }
 
