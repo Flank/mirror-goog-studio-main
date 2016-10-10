@@ -20,31 +20,21 @@ import com.android.annotations.NonNull;
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.StoredEntryType;
 import com.android.builder.internal.packaging.zip.ZFile;
-import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Utilities to handle {@link RelativeFile}.
  */
 public final class RelativeFiles {
-
-    public static final Predicate<RelativeFile> IS_FILE =
-            relativeFile -> relativeFile.getFile().isFile();
 
     private RelativeFiles() {}
 
@@ -73,7 +63,7 @@ public final class RelativeFiles {
     public static ImmutableSet<RelativeFile> fromDirectory(@NonNull File directory,
             @NonNull final Predicate<RelativeFile> filter) {
         return ImmutableSet.copyOf(Sets.filter(fromDirectory(directory, directory),
-                filter));
+                filter::test));
     }
 
     /**
@@ -112,7 +102,7 @@ public final class RelativeFiles {
      */
     @NonNull
     public static Predicate<RelativeFile> fromPathPredicate(@NonNull Predicate<String> predicate) {
-        return Predicates.compose(predicate, RelativeFile.EXTRACT_PATH);
+        return rf -> predicate.test(rf.getOsIndependentRelativePath());
     }
 
     /**

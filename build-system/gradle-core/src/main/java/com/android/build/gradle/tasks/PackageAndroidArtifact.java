@@ -418,7 +418,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                                 changedDex,
                                 Predicates.compose(
                                         Predicates.in(instantRunDexBaseFiles),
-                                        RelativeFile.EXTRACT_BASE
+                                        RelativeFile::getBase
                                 )));
 
                 break;
@@ -432,7 +432,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                                 changedDex,
                                 Predicates.compose(
                                         Predicates.in(instantRunDexBaseFiles),
-                                        RelativeFile.EXTRACT_BASE
+                                        RelativeFile::getBase
                                 )));
 
             case STANDARD:

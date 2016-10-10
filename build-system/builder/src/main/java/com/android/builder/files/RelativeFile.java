@@ -18,11 +18,11 @@ package com.android.builder.files;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
+import java.util.function.Function;
 
 /**
  * Representation of a file with respect to a base directory. A {@link RelativeFile} contains
@@ -33,37 +33,6 @@ import java.io.File;
  * <p>Neither the file nor the base need to exist. They are treated as abstract paths.
  */
 public class RelativeFile {
-
-    /**
-     * Function that extracts the file from a relative file.
-     */
-    public static Function<RelativeFile, File> EXTRACT_BASE = new Function<RelativeFile, File>() {
-        @Override
-        public File apply(RelativeFile input) {
-            return input.getBase();
-        }
-    };
-
-    /**
-     * Function that extracts the file from a relative file.
-     */
-    public static Function<RelativeFile, File> EXTRACT_FILE = new Function<RelativeFile, File>() {
-        @Override
-        public File apply(RelativeFile input) {
-            return input.getFile();
-        }
-    };
-
-    /**
-     * Function that extracts the OS independent path from a relative file.
-     */
-    public static Function<RelativeFile, String> EXTRACT_PATH =
-            new Function<RelativeFile, String>() {
-        @Override
-        public String apply(RelativeFile input) {
-            return input.getOsIndependentRelativePath();
-        }
-    };
 
     /**
      * The base directory.
