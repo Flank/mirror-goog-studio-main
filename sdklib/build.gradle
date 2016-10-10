@@ -108,6 +108,7 @@ task initSdkForTests(type: JavaExec) {
                     'extras;android;support',
                     'extras;google;m2repository',
                     'extras;android;m2repository',
+                    'cmake;3.6',
                     'ndk-bundle',
                     'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-alpha9',
                     'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-alpha9',
