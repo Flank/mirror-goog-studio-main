@@ -81,6 +81,12 @@ public class AntennaPodPerformanceMatrixTest {
                 "classpath \"com.android.tools.build:gradle:"
                         + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
                         + '"');
+
+        upgradeBuildToolsVersion(project.getBuildFile());
+        upgradeBuildToolsVersion(mainProject.file("afollestad/commons/build.gradle"));
+        upgradeBuildToolsVersion(mainProject.file("afollestad/core/build.gradle"));
+        upgradeBuildToolsVersion(mainProject.file("AudioPlayer/library/build.gradle"));
+
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
@@ -97,6 +103,13 @@ public class AntennaPodPerformanceMatrixTest {
             default:
                 throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
         }
+    }
+
+    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws IOException {
+        TestFileUtils.searchAndReplace(
+                buildGradleFile,
+                "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
+                "buildToolsVersion$1 \"24.0.3\"");
     }
 
     @Test
