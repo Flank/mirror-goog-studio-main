@@ -18,6 +18,7 @@ package com.android.builder.files;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -38,19 +39,19 @@ public class RelativeFile {
      * The base directory.
      */
     @NonNull
-    private final File mBase;
+    private final File base;
 
     /**
      * The file.
      */
     @NonNull
-    private final File mFile;
+    private final File file;
 
     /**
      * The OS independent path from base to file, including the file name in the end.
      */
     @NonNull
-    private final String mOsIndependentRelativePath;
+    private final String osIndependentRelativePath;
 
     /**
      * Creates a new relative file.
@@ -62,12 +63,12 @@ public class RelativeFile {
     public RelativeFile(@NonNull File base, @NonNull File file) {
         Preconditions.checkArgument(!base.equals(file), "base.equals(file)");
 
-        mBase = base;
-        mFile = file;
+        this.base = base;
+        this.file = file;
 
         String relativePath = FileUtils. relativePossiblyNonExistingPath(file, base);
 
-        mOsIndependentRelativePath = FileUtils.toSystemIndependentPath(relativePath);;
+        osIndependentRelativePath = FileUtils.toSystemIndependentPath(relativePath);
     }
 
     /**
@@ -77,7 +78,7 @@ public class RelativeFile {
      */
     @NonNull
     public File getBase() {
-        return mBase;
+        return base;
     }
 
     /**
@@ -87,7 +88,7 @@ public class RelativeFile {
      */
     @NonNull
     public File getFile() {
-        return mFile;
+        return file;
     }
 
     /**
@@ -99,12 +100,12 @@ public class RelativeFile {
      */
     @NonNull
     public String getOsIndependentRelativePath() {
-        return mOsIndependentRelativePath;
+        return osIndependentRelativePath;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(mBase, mFile);
+        return Objects.hashCode(base, file);
     }
 
     @Override
@@ -114,15 +115,14 @@ public class RelativeFile {
         }
 
         RelativeFile rf = (RelativeFile) obj;
-        return Objects.equal(mBase, rf.mBase) && Objects.equal(mFile, rf.mFile);
+        return Objects.equal(base, rf.base) && Objects.equal(file, rf.file);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("base", mBase)
-                .add("file", mFile)
-                .add("path", mOsIndependentRelativePath)
+        return MoreObjects.toStringHelper(this)
+                .add("base", base)
+                .add("path", osIndependentRelativePath)
                 .toString();
     }
 }

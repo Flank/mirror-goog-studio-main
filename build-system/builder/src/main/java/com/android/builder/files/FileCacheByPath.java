@@ -53,7 +53,7 @@ public class FileCacheByPath {
      * The directory where the cache exists.
      */
     @NonNull
-    private final File mDirectory;
+    private final File directory;
 
     /**
      * Creates a new cache.
@@ -63,7 +63,7 @@ public class FileCacheByPath {
     public FileCacheByPath(@NonNull File directory) {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
 
-        mDirectory = directory;
+        this.directory = directory;
     }
 
     /**
@@ -75,12 +75,12 @@ public class FileCacheByPath {
     public void add(@NonNull File f) throws IOException {
         Preconditions.checkArgument(f.isFile(), "!f.isFile()");
 
-        if (!mDirectory.isDirectory()) {
-            FileUtils.mkdirs(mDirectory);
+        if (!directory.isDirectory()) {
+            FileUtils.mkdirs(directory);
         }
 
         String k = key(f);
-        Files.copy(f, new File(mDirectory, k));
+        Files.copy(f, new File(directory, k));
     }
 
     /**
@@ -92,7 +92,7 @@ public class FileCacheByPath {
      */
     @Nullable
     public File get(@NonNull File f) {
-        File file = new File(mDirectory, key(f));
+        File file = new File(directory, key(f));
         if (file.isFile()) {
             return file;
         } else {
@@ -107,7 +107,7 @@ public class FileCacheByPath {
      * @throws IOException failed to remove the file
      */
     public void remove(@NonNull File f) throws IOException {
-        File toRemove = new File(mDirectory, key(f));
+        File toRemove = new File(directory, key(f));
         if (toRemove.exists()) {
             FileUtils.delete(toRemove);
         }
@@ -132,7 +132,7 @@ public class FileCacheByPath {
      * @throws IOException failed to clear the cache
      */
     public void clear() throws IOException {
-        File[] files = mDirectory.listFiles();
+        File[] files = directory.listFiles();
         if (files == null) {
             return;
         }

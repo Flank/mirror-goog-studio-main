@@ -44,33 +44,33 @@ public class IncrementalRelativeFileSetsTest {
      * Temporary folder used for tests.
      */
     @Rule
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void readEmptyDirectory() {
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.fromDirectory(
-                mTemporaryFolder.getRoot());
+        ImmutableMap<RelativeFile, FileStatus> set =
+                IncrementalRelativeFileSets.fromDirectory(temporaryFolder.getRoot());
 
         assertEquals(0, set.size());
     }
 
     @Test
     public void readDirectory() throws Exception {
-        File a = mTemporaryFolder.newFolder("a");
+        File a = temporaryFolder.newFolder("a");
         File ab = new File(a, "ab");
         @SuppressWarnings("unused")
         boolean ignored1 = ab.createNewFile();
         File ac = new File(a, "ac");
         @SuppressWarnings("unused")
         boolean ignored2 = ac.createNewFile();
-        File d = mTemporaryFolder.newFile("d");
+        File d = temporaryFolder.newFile("d");
 
-        RelativeFile expectedB = new RelativeFile(mTemporaryFolder.getRoot(), ab);
-        RelativeFile expectedC = new RelativeFile(mTemporaryFolder.getRoot(), ac);
-        RelativeFile expectedD = new RelativeFile(mTemporaryFolder.getRoot(), d);
+        RelativeFile expectedB = new RelativeFile(temporaryFolder.getRoot(), ab);
+        RelativeFile expectedC = new RelativeFile(temporaryFolder.getRoot(), ac);
+        RelativeFile expectedD = new RelativeFile(temporaryFolder.getRoot(), d);
 
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.fromDirectory(
-                mTemporaryFolder.getRoot());
+        ImmutableMap<RelativeFile, FileStatus> set =
+                IncrementalRelativeFileSets.fromDirectory(temporaryFolder.getRoot());
 
         assertEquals(3, set.size());
         assertTrue(set.containsKey(expectedB));
@@ -83,7 +83,7 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void readEmptyZip() throws Exception {
-        File zipFile = new File(mTemporaryFolder.getRoot(), "foo");
+        File zipFile = new File(temporaryFolder.getRoot(), "foo");
 
         Closer closer = Closer.create();
         try {
@@ -102,7 +102,7 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void readZip() throws Exception {
-        File zipFile = new File(mTemporaryFolder.getRoot(), "foo");
+        File zipFile = new File(temporaryFolder.getRoot(), "foo");
 
         RelativeFile expectedB = new RelativeFile(zipFile,
                 new File(zipFile, "a" + File.separator + "b"));
@@ -145,7 +145,7 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void unionOfSets() throws Exception {
-        File zipFile = new File(mTemporaryFolder.getRoot(), "foo1");
+        File zipFile = new File(temporaryFolder.getRoot(), "foo1");
 
         RelativeFile expectedB = new RelativeFile(zipFile,
                 new File(zipFile, "a" + File.separator + "b"));
@@ -187,8 +187,8 @@ public class IncrementalRelativeFileSetsTest {
         }
 
         @SuppressWarnings("unchecked")
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.union(
-                Sets.newHashSet(set1, set2));
+        ImmutableMap<RelativeFile, FileStatus> set =
+                IncrementalRelativeFileSets.union(Sets.newHashSet(set1, set2));
 
         assertEquals(3, set.size());
         assertTrue(set.containsKey(expectedB));
@@ -209,7 +209,7 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void baseDirectoryCountOneDirectoryMultipleEntries() throws Exception {
-        File dir = mTemporaryFolder.newFolder("foo");
+        File dir = temporaryFolder.newFolder("foo");
         File f0 = new File(dir, "f0");
         assertTrue(f0.createNewFile());
         File f1 = new File(dir, "f1");
@@ -221,20 +221,20 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void baseDirectoryCountTwoDirectoriesTwoZipsMultipleEntries() throws Exception {
-        File foo = mTemporaryFolder.newFolder("foo");
+        File foo = temporaryFolder.newFolder("foo");
         File f0 = new File(foo, "f0");
         assertTrue(f0.createNewFile());
         File f1 = new File(foo, "f1");
         assertTrue(f1.createNewFile());
 
-        File bar = mTemporaryFolder.newFolder("bar");
+        File bar = temporaryFolder.newFolder("bar");
         File b0 = new File(bar, "b0");
         assertTrue(b0.createNewFile());
         File b1 = new File(bar, "b1");
         assertTrue(b1.createNewFile());
 
-        File fooz = new File(mTemporaryFolder.getRoot(), "fooz");
-        File barz = new File(mTemporaryFolder.getRoot(), "barz");
+        File fooz = new File(temporaryFolder.getRoot(), "fooz");
+        File barz = new File(temporaryFolder.getRoot(), "barz");
 
         Closer closer = Closer.create();
 
@@ -257,14 +257,14 @@ public class IncrementalRelativeFileSetsTest {
         ImmutableMap<RelativeFile, FileStatus> set3 = IncrementalRelativeFileSets.fromZip(fooz);
         ImmutableMap<RelativeFile, FileStatus> set4 = IncrementalRelativeFileSets.fromZip(barz);
         @SuppressWarnings("unchecked")
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.union(
-                Sets.newHashSet(set1, set2, set3, set4));
+        ImmutableMap<RelativeFile, FileStatus> set =
+                IncrementalRelativeFileSets.union(Sets.newHashSet(set1, set2, set3, set4));
         assertEquals(2, IncrementalRelativeFileSets.getBaseDirectoryCount(set));
     }
 
     @Test
     public void makingFromBaseFilesIgnoresDirectories() throws Exception {
-        File foo = mTemporaryFolder.newFolder("foo");
+        File foo = temporaryFolder.newFolder("foo");
 
         File f0 = new File(foo, "f0");
         assertTrue(f0.createNewFile());
@@ -273,13 +273,13 @@ public class IncrementalRelativeFileSetsTest {
         File f1 = new File(bar, "f1");
         assertTrue(f1.createNewFile());
 
-        RelativeFile expectedF0 = new RelativeFile(mTemporaryFolder.getRoot(), f0);
-        RelativeFile expectedF1 = new RelativeFile(mTemporaryFolder.getRoot(), f1);
+        RelativeFile expectedF0 = new RelativeFile(temporaryFolder.getRoot(), f0);
+        RelativeFile expectedF1 = new RelativeFile(temporaryFolder.getRoot(), f1);
 
-        FileCacheByPath cache = new FileCacheByPath(mTemporaryFolder.newFolder());
+        FileCacheByPath cache = new FileCacheByPath(temporaryFolder.newFolder());
         ImmutableMap<RelativeFile, FileStatus> set =
                 IncrementalRelativeFileSets.makeFromBaseFiles(
-                        Collections.singleton(mTemporaryFolder.getRoot()),
+                        Collections.singleton(temporaryFolder.getRoot()),
                         ImmutableMap.of(
                                 f0, FileStatus.NEW,
                                 f1, FileStatus.NEW,
@@ -295,7 +295,7 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void makeFromDirectoryIgnoresDirectories() throws Exception {
-        File foo = mTemporaryFolder.newFolder("foo");
+        File foo = temporaryFolder.newFolder("foo");
         File f0 = new File(foo, "f0");
         assertTrue(f0.createNewFile());
         File bar = new File(foo, "bar");
@@ -303,11 +303,11 @@ public class IncrementalRelativeFileSetsTest {
         File f1 = new File(bar, "f1");
         assertTrue(f1.createNewFile());
 
-        RelativeFile expectedF0 = new RelativeFile(mTemporaryFolder.getRoot(), f0);
-        RelativeFile expectedF1 = new RelativeFile(mTemporaryFolder.getRoot(), f1);
+        RelativeFile expectedF0 = new RelativeFile(temporaryFolder.getRoot(), f0);
+        RelativeFile expectedF1 = new RelativeFile(temporaryFolder.getRoot(), f1);
 
         ImmutableMap<RelativeFile, FileStatus> set =
-                IncrementalRelativeFileSets.fromDirectory(mTemporaryFolder.getRoot());
+                IncrementalRelativeFileSets.fromDirectory(temporaryFolder.getRoot());
 
         assertEquals(2, set.size());
         assertTrue(set.containsKey(expectedF0));
