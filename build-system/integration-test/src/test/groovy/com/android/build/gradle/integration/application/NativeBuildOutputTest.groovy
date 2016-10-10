@@ -72,7 +72,6 @@ class NativeBuildOutputTest {
     }
 
     @Test
-    @Ignore("http://b.android.com/222427")
     public void checkNdkBuildErrorInSourceCode() {
         project.buildFile << """
             android {
@@ -87,7 +86,7 @@ class NativeBuildOutputTest {
         project.file("src/main/cpp/Android.mk") << androidMk;
         project.file("src/main/cpp/hello-jni.cpp").write("xx");
 
-        checkFailed(["'xx' does not name a type"], [], 0);
+        checkFailed(["'xx'"], [], 0);
     }
 
     @Test
