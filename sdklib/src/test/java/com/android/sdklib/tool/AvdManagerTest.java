@@ -16,6 +16,7 @@
 
 package com.android.sdklib.tool;
 
+import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.internal.avd.AvdInfo;
@@ -35,6 +36,8 @@ import java.util.TreeMap;
 
 public class AvdManagerTest extends TestCase {
 
+    private static final File ANDROID_HOME = new File("/android-home");
+
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
     private File mAvdFolder;
@@ -48,10 +51,16 @@ public class AvdManagerTest extends TestCase {
         mFileOp.recordExistingFile("/sdk/tools/lib/emulator/snapshots.img");
         recordGoogleApisSysImg23(mFileOp);
         recordSysImg23(mFileOp);
-        mAndroidSdkHandler = new AndroidSdkHandler(new File("/sdk"), mFileOp);
-        mAvdManager = AvdManager.getInstance(mAndroidSdkHandler, new NullLogger(), mFileOp);
-        mAvdFolder = AvdInfo
-                .getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
+        mAndroidSdkHandler =
+                new AndroidSdkHandler(new File("/sdk"), ANDROID_HOME,  mFileOp);
+        mAvdManager =
+                AvdManager.getInstance(
+                        mAndroidSdkHandler,
+                        new File(ANDROID_HOME, AndroidLocation.FOLDER_AVD),
+                        new NullLogger(),
+                        mFileOp);
+        mAvdFolder =
+                AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
         mSystemImage = mAndroidSdkHandler.getSystemImageManager(
                 new FakeProgressIndicator()).getImages().iterator().next();
 

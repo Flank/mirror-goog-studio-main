@@ -11,6 +11,7 @@ import static com.android.ide.common.rendering.HardwareConfigHelper.isWear;
 import static com.android.ide.common.rendering.HardwareConfigHelper.nexusRank;
 import static com.android.ide.common.rendering.HardwareConfigHelper.sortNexusListByRank;
 
+import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.utils.StdLogger;
@@ -24,7 +25,8 @@ import java.util.List;
 
 public class HardwareConfigHelperTest extends TestCase {
     private static DeviceManager getDeviceManager() {
-        return DeviceManager.createInstance(null, new StdLogger(StdLogger.Level.INFO));
+        return DeviceManager.createInstance(
+                null, null, new StdLogger(StdLogger.Level.INFO), new MockFileOp());
     }
 
     public void testNexus() {

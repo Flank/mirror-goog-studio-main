@@ -118,7 +118,7 @@ public class FakeAdbServerTest {
             server.start();
 
             // Start up ADB.
-            File adbPath = TestUtils.getSdkFile("platform-tools/adb");
+            File adbPath = new File(TestUtils.getSdk(), "platform-tools/adb");
             AndroidDebugBridge.initIfNeeded(false);
             AndroidDebugBridge bridge = AndroidDebugBridge
                     .createBridge(adbPath.getCanonicalPath(), false);

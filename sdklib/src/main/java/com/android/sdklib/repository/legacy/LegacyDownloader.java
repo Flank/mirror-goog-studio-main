@@ -46,7 +46,8 @@ public class LegacyDownloader implements Downloader {
     private SettingsController mSettingsController;
 
     public LegacyDownloader(@NonNull FileOp fop, @NonNull SettingsController settings) {
-        mDownloadCache = new DownloadCache(fop, DownloadCache.Strategy.FRESH_CACHE, settings);
+        mDownloadCache =
+                DownloadCache.inUserHome(fop, DownloadCache.Strategy.FRESH_CACHE, settings);
         mFileOp = fop;
         mSettingsController = settings;
     }

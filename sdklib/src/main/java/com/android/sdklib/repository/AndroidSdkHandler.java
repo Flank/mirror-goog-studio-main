@@ -15,6 +15,8 @@
  */
 package com.android.sdklib.repository;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -193,6 +195,12 @@ public final class AndroidSdkHandler {
     private final File mLocation;
 
     /**
+     * @see AndroidLocation#getFolder()
+     */
+    @Nullable
+    private final File mAndroidFolder;
+
+    /**
      * Provider for user-specified {@link RepositorySource}s.
      */
     private LocalSourceProvider mUserSourceProvider;
@@ -213,12 +221,20 @@ public final class AndroidSdkHandler {
     public static AndroidSdkHandler getInstance(@Nullable File localPath) {
         File key = localPath == null ? new File("") : localPath;
         synchronized (sInstances) {
-            AndroidSdkHandler instance = sInstances.get(key);
-            if (instance == null) {
-                instance = new AndroidSdkHandler(localPath, FileOpUtils.create());
-                sInstances.put(key, instance);
-            }
-            return instance;
+            return sInstances.computeIfAbsent(
+                    key,
+                    k -> {
+                        File androidFolder;
+                        try {
+                            androidFolder = new File(AndroidLocation.getFolder());
+                        } catch (AndroidLocation.AndroidLocationException e) {
+                            androidFolder = null;
+                        }
+                        return new AndroidSdkHandler(
+                                localPath,
+                                androidFolder,
+                                FileOpUtils.create());
+                    });
         }
     }
 
@@ -233,25 +249,31 @@ public final class AndroidSdkHandler {
             sInstances.remove(localPath);
         }
     }
+
     /**
      * Don't use this, use {@link #getInstance(File)}, unless you're in a unit test and need to
-     * specify a custom {@link FileOp}.
+     * specify a custom {@link FileOp} and/or {@code androidFolder}.
      */
     @VisibleForTesting
-    public AndroidSdkHandler(@Nullable File localPath, @NonNull FileOp fop) {
-        mFop = fop;
+    public AndroidSdkHandler(
+            @Nullable File localPath, @Nullable File androidFolder, @NonNull FileOp fop) {
         mLocation = localPath;
+        mAndroidFolder = androidFolder;
+        mFop = checkNotNull(fop);
     }
 
     /**
      * Don't use this either, unless you're in a unit test and need to specify a custom
      * {@link RepoManager}.
-     * @see #AndroidSdkHandler(File, FileOp)
+     * @see #AndroidSdkHandler(File, File, FileOp)
      */
     @VisibleForTesting
-    public AndroidSdkHandler(@Nullable File localPath, @NonNull FileOp fop,
+    public AndroidSdkHandler(
+            @Nullable File localPath,
+            @Nullable File androidFolder,
+            @NonNull FileOp fop,
             @NonNull RepoManager repoManager) {
-        this(localPath, fop);
+        this(localPath, androidFolder, fop);
         mRepoManager = repoManager;
     }
 
@@ -274,13 +296,10 @@ public final class AndroidSdkHandler {
                                 mFop);
                 // Invalidate system images, targets, the latest build tool, and the legacy local
                 // package manager when local packages change
-                result.registerLocalChangeListener(new RepoManager.RepoLoadedCallback() {
-                    @Override
-                    public void doRun(@NonNull RepositoryPackages packages) {
-                        mSystemImageManager = null;
-                        mAndroidTargetManager = null;
-                        mLatestBuildTool = null;
-                    }
+                result.registerLocalChangeListener(packages -> {
+                    mSystemImageManager = null;
+                    mAndroidTargetManager = null;
+                    mLatestBuildTool = null;
                 });
                 mRepoManager = result;
             }
@@ -320,6 +339,11 @@ public final class AndroidSdkHandler {
     @Nullable
     public File getLocation() {
         return mLocation;
+    }
+
+    @Nullable
+    public File getAndroidFolder() {
+        return mAndroidFolder;
     }
 
     /**
@@ -515,8 +539,8 @@ public final class AndroidSdkHandler {
      */
     @Nullable
     public LocalSourceProvider getUserSourceProvider(@NonNull ProgressIndicator progress) {
-        if (mUserSourceProvider == null) {
-            mUserSourceProvider = RepoConfig.createUserSourceProvider(progress, mFop);
+        if (mUserSourceProvider == null && mAndroidFolder != null) {
+            mUserSourceProvider = RepoConfig.createUserSourceProvider(mFop, mAndroidFolder);
             synchronized (MANAGER_LOCK) {
                 if (mRepoManager != null) {
                     // If the repo already exists cause it to be reloaded, so the userSourceProvider
@@ -604,21 +628,15 @@ public final class AndroidSdkHandler {
         }
 
         /**
-         * Creates a customizable {@link RepositorySourceProvider}. Can be null if there's a problem
-         * with the user's environment.
+         * Creates a customizable {@link RepositorySourceProvider}.
          */
-        @Nullable
+        @NonNull
         public static LocalSourceProvider createUserSourceProvider(
-                @NonNull ProgressIndicator progress,
-                @NonNull FileOp fileOp) {
-            try {
-                return new LocalSourceProvider(
-                        new File(AndroidLocation.getFolder(), LOCAL_ADDONS_FILENAME),
-                        ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE), fileOp);
-            } catch (AndroidLocation.AndroidLocationException e) {
-                progress.logWarning("Couldn't find android folder", e);
-            }
-            return null;
+                @NonNull FileOp fileOp, @NonNull File androidFolder) {
+            return new LocalSourceProvider(
+                    new File(androidFolder, LOCAL_ADDONS_FILENAME),
+                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE),
+                    fileOp);
         }
 
         @NonNull

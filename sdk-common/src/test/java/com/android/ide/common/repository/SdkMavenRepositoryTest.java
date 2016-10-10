@@ -17,7 +17,6 @@
 package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
-import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoPackage;
@@ -29,11 +28,13 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
+
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
 
 public class SdkMavenRepositoryTest extends TestCase {
     private static final File SDK_HOME = new File("/sdk");
@@ -46,8 +47,12 @@ public class SdkMavenRepositoryTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         mFileOp = new MockFileOp();
-        mSdkHandler = new AndroidSdkHandler(SDK_HOME, mFileOp,
-          new FakeRepoManager(SDK_HOME, mRepositoryPackages));
+        mSdkHandler =
+                new AndroidSdkHandler(
+                        SDK_HOME,
+                        null,
+                        mFileOp,
+                        new FakeRepoManager(SDK_HOME, mRepositoryPackages));
     }
 
     private void registerRepo(@NonNull String vendor) {

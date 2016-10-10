@@ -16,21 +16,23 @@
 
 package com.android.sdklib.devices;
 
-import com.android.repository.Revision;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.repository.impl.meta.TypeDetails;
+import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakePackage;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
-import com.android.sdklib.TempAndroidLocation;
 import com.android.sdklib.TempSdkManager;
 import com.android.sdklib.devices.Device.Builder;
 import com.android.sdklib.devices.DeviceManager.DeviceFilter;
 import com.android.sdklib.devices.DeviceManager.DeviceStatus;
-import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
+import com.android.testutils.MockLog;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,13 +45,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.google.common.truth.Truth.assertThat;
-
 @RunWith(JUnit4.class)
 public class DeviceManagerTest {
 
-    @Rule public final TempAndroidLocation androidLocation =
-            new TempAndroidLocation("androidhome_" + getClass().getSimpleName());
     @Rule public final TempSdkManager sdkManager =
             new TempSdkManager("sdk_" + getClass().getSimpleName());
 
@@ -64,8 +62,12 @@ public class DeviceManagerTest {
 
     private DeviceManager createDeviceManager() {
         log = sdkManager.getLog();
-        File sdkLocation = sdkManager.getSdkHandler().getLocation();
-        return DeviceManager.createInstance(sdkLocation, log);
+        AndroidSdkHandler sdkHandler = sdkManager.getSdkHandler();
+        return DeviceManager.createInstance(
+                sdkHandler.getLocation(),
+                sdkHandler.getAndroidFolder(),
+                log,
+                FileOpUtils.create());
     }
 
     /**
@@ -330,13 +332,13 @@ public class DeviceManagerTest {
                 IdDisplay.create("android-wear", "android-wear"),
                 IdDisplay.create("Google", "Google1"),
                 "x86", new File[]{}, p);
-        DeviceManager manager = DeviceManager.createInstance(location, log);
+        DeviceManager manager = createDeviceManager();
         int count = manager.getDevices(EnumSet.allOf(DeviceFilter.class)).size();
         Device d = manager.getDevice("wear_round", "Google");
         assertThat(d.getDisplayName()).isEqualTo("Android Wear Round");
 
         sdkManager.makeSystemImageFolder(imageWithDevice, "wear_round");
-        manager = DeviceManager.createInstance(location, log);
+        manager = createDeviceManager();
 
         d = manager.getDevice("wear_round", "Google");
         assertThat(d.getDisplayName()).isEqualTo("Mock Android wear Device Name");

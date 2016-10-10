@@ -18,6 +18,7 @@ package com.android.sdklib.repository.legacy;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.prefs.AndroidLocation;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -83,11 +84,13 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
 
     /**
      * Gets or creates a {@link DownloadCache} using the settings from our {@link
-     * SettingsController}.
+     * SettingsController} and {@link AndroidLocation}.
      */
     private DownloadCache getDownloadCache(@NonNull SettingsController settings) {
         if (mDownloadCache == null) {
-            mDownloadCache = new DownloadCache(DownloadCache.Strategy.FRESH_CACHE, settings);
+            mDownloadCache =
+                    DownloadCache.inUserHome(
+                            FileOpUtils.create(), DownloadCache.Strategy.FRESH_CACHE, settings);
         }
         return mDownloadCache;
     }

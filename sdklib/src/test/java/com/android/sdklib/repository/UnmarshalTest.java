@@ -15,6 +15,7 @@
  */
 package com.android.sdklib.repository;
 
+import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
@@ -27,7 +28,6 @@ import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -50,7 +50,7 @@ public class UnmarshalTest extends TestCase {
         InputStream xmlStream = getClass().getResourceAsStream(filename);
         assertNotNull("Missing test file: " + filename, xmlStream);
 
-        AndroidSdkHandler handler = new AndroidSdkHandler(new File(filename), new MockFileOp());
+        AndroidSdkHandler handler = getAndroidSdkHandler();
         SchemaModule repoEx = AndroidSdkHandler.getRepositoryModule();
         SchemaModule addonEx = AndroidSdkHandler.getAddonModule();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -124,7 +124,7 @@ public class UnmarshalTest extends TestCase {
                     + "</repo:repository>";
 
     public void testLeniency() throws Exception {
-        AndroidSdkHandler handler = new AndroidSdkHandler(new File("/sdk"), new MockFileOp());
+        AndroidSdkHandler handler = getAndroidSdkHandler();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
         Repository repo = (Repository) SchemaModuleUtil
@@ -163,7 +163,7 @@ public class UnmarshalTest extends TestCase {
                     + "</repo:repository>";
 
     public void testNamespaceFallback() throws Exception {
-        AndroidSdkHandler handler = new AndroidSdkHandler(new File("/sdk"), new MockFileOp());
+        AndroidSdkHandler handler = getAndroidSdkHandler();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
         Repository repo = (Repository) SchemaModuleUtil
@@ -187,4 +187,9 @@ public class UnmarshalTest extends TestCase {
         }
     }
 
+    @NonNull
+    private static AndroidSdkHandler getAndroidSdkHandler() {
+        MockFileOp fileOp = new MockFileOp();
+        return new AndroidSdkHandler(new File("/sdk"), null, fileOp);
+    }
 }

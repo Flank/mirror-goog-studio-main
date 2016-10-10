@@ -35,7 +35,7 @@ public class AndroidDebugBridgeTest {
 
     @Before
     public void setUp() throws Exception {
-        mAdbPath = TestUtils.getSdkFile("platform-tools/adb");
+        mAdbPath = new File(TestUtils.getSdk(), "platform-tools/adb");
         AndroidDebugBridge.initIfNeeded(false);
     }
 

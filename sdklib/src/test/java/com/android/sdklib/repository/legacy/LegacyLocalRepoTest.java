@@ -30,7 +30,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.legacy.LegacyLocalRepoLoader;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +65,8 @@ public class LegacyLocalRepoTest extends TestCase {
 
         File root = new File("/sdk");
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RepoManager mgr = AndroidSdkHandler.getInstance(root).getSdkManager(progress);
+        RepoManager mgr =
+                new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();
 
         LocalRepoLoader sdk = new LocalRepoLoaderImpl(root, mgr,
@@ -94,7 +94,8 @@ public class LegacyLocalRepoTest extends TestCase {
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         File root = new File("/sdk");
-        RepoManager mgr = new AndroidSdkHandler(root, mockFop).getSdkManager(progress);
+        RepoManager mgr =
+                new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
 
         progress.assertNoErrorsOrWarnings();
 
@@ -123,7 +124,7 @@ public class LegacyLocalRepoTest extends TestCase {
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         File root = new File("/sdk");
-        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(root, mockFop);
+        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(root, null, mockFop);
         SdkCommonFactory factory = AndroidSdkHandler.getCommonModule().createLatestFactory();
         RepoManager mgr = sdkHandler.getSdkManager(progress);
 

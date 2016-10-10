@@ -30,7 +30,8 @@ public class BuildToolInfoTest extends TestCase {
     public void testGetCurrentJvmVersion() {
         MockFileOp fop = new MockFileOp();
         recordBuildTool23(fop);
-        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(new File("/sdk"), fop);
+        AndroidSdkHandler sdkHandler =
+                new AndroidSdkHandler(new File("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo bt = sdkHandler.getBuildToolInfo(new Revision(23, 0, 2), progress);
         progress.assertNoErrorsOrWarnings();

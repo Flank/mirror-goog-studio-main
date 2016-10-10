@@ -16,18 +16,20 @@
 
 package com.android.sdklib.repository.legacy.remote.internal;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
-import com.android.sdklib.TempAndroidLocation;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
+
 import org.apache.http.Header;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,15 +50,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
-
 @RunWith(JUnit4.class)
 public class DownloadCacheTest {
-
-    @Rule public final TempAndroidLocation mTempAndroidLocation =
-            new TempAndroidLocation("androidhome_" + getClass().getSimpleName());
-
+    private static final File ANDROID_FOLDER = new File("/android-home");
     private OutputStreamMockFileOp mFileOp;
     private MockMonitor mMonitor;
 
@@ -108,7 +104,7 @@ public class DownloadCacheTest {
             new HashMap<>();
 
         public NoDownloadCache(@NonNull FileOp fileOp, @NonNull Strategy strategy) {
-            super(fileOp, strategy, new FakeSettingsController(false));
+            super(ANDROID_FOLDER, fileOp, strategy, new FakeSettingsController(false));
         }
 
         @Override
