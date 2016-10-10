@@ -651,7 +651,7 @@ public class AppPluginDslTest extends BaseTest {
 
         project.android {
             compileSdkVersion COMPILE_SDK_VERSION
-            buildToolsVersion '23.0.2'
+            buildToolsVersion BUILD_TOOL_VERSION
 
             productFlavors {
                 f1 {

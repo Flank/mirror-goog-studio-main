@@ -84,7 +84,7 @@ public class ExternalBuildManifestLoader {
         ExternalBuildApkManifest.AndroidSdk sdk = manifest.getAndroidSdk();
 
         BuildToolInfo buildToolInfo = BuildToolInfo.partial(
-                new Revision(23, 0, 2),
+                new Revision(24, 0, 2),
                 project.getProjectDir(),
                 ImmutableMap.of(
                         // TODO: Put dx.jar in the proto

@@ -8,7 +8,7 @@ project.ext['android.useDeprecatedNdk'] = true
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.0"
+    buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
         applicationId "com.android.tests.conditionalApiUse"
         minSdkVersion 19

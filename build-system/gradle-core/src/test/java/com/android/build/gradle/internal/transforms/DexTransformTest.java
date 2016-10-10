@@ -109,9 +109,6 @@ public class DexTransformTest {
         FileCache buildCache =
                 FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
 
-        // Build tools revision
-        Revision buildToolsRevision = new Revision(24, 0, 0);
-
         // Run dexing
         runDexing(
                 ImmutableList.of(externalLibraryJarInput, nonExternalLibraryJarInput),
@@ -119,7 +116,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert pre-dex results
         File[] preDexOutputFiles = preDexOutputDir.listFiles();
@@ -168,7 +165,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert pre-dex results
         assertEquals(3, preDexOutputDir.listFiles().length);
@@ -215,7 +212,6 @@ public class DexTransformTest {
                 FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
 
         // Build tools revision
-        Revision buildToolsRevision = new Revision(24, 0, 0);
 
         // Run dexing
         runDexing(
@@ -224,7 +220,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert cache results
         assertEquals(2, buildCache.getCacheDirectory().listFiles().length);
@@ -236,7 +232,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to remain the same
         assertEquals(2, buildCache.getCacheDirectory().listFiles().length);
 
@@ -247,7 +243,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                new Revision(25, 0, 0));
+                new Revision(AndroidBuilder.MIN_BUILD_TOOLS_REV.getMajor() + 1));
         // Expect the cache to contain 2 more entries
         assertEquals(4, buildCache.getCacheDirectory().listFiles().length);
 
@@ -259,7 +255,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
         Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
         // Expect the cache to contain 1 more entry
         assertEquals(5, buildCache.getCacheDirectory().listFiles().length);
@@ -274,7 +270,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
         assertEquals(6, buildCache.getCacheDirectory().listFiles().length);
 
@@ -301,7 +297,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
         assertEquals(7, buildCache.getCacheDirectory().listFiles().length);
 
@@ -320,7 +316,7 @@ public class DexTransformTest {
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
-                buildToolsRevision);
+                AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
         assertEquals(8, buildCache.getCacheDirectory().listFiles().length);
     }

@@ -18,7 +18,9 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.AndroidProject
+import com.android.repository.Revision
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import groovy.transform.CompileStatic
@@ -94,18 +96,21 @@ android {
 
     @Test
     public void invalidateBuildTools() {
+        // Jack is tied to a build tools version currently, skip this test when testing Jack.
+        Assume.assumeFalse(GradleTestProject.USE_JACK);
+
         project.execute("assemble")
 
-        String oldBuildToolsVersion = "24.0.0"
+        String newerBuildToolsVersion = new Revision(24,0,3);
         // Sanity check:
-        assertThat(oldBuildToolsVersion).isNotEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
+        assertThat(newerBuildToolsVersion).isNotEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
 
         project.getBuildFile() << """
 apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion '$oldBuildToolsVersion'
+    buildToolsVersion '$newerBuildToolsVersion'
 }
 """
 
