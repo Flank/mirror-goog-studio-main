@@ -52,6 +52,7 @@ public class NdkHandler {
     private final NdkInfo ndkInfo;
 
     private static final int LATEST_SUPPORTED_VERSION = 13;
+    public static final String NDK_BUNDLE_SUBPATH = "ndk-bundle";
 
     public NdkHandler(
             @NonNull File projectDir,
@@ -165,10 +166,17 @@ public class NdkHandler {
             }
         }
 
-        String envVar = System.getenv("ANDROID_NDK_HOME");
-        if (envVar != null) {
-                return new File(envVar);
+        String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
+        if (ndkEnvVar != null) {
+                return new File(ndkEnvVar);
         }
+
+        String stdEnvVar = System.getenv("ANDROID_HOME");
+        if (stdEnvVar != null && !stdEnvVar.isEmpty()) {
+            // Worth checking if the NDK came bundled with the SDK
+            return new File(stdEnvVar, NDK_BUNDLE_SUBPATH);
+        }
+
         return null;
     }
 
