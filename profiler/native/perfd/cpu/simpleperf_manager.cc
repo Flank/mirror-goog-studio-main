@@ -28,9 +28,9 @@
 #include <sstream>
 #include <vector>
 
-#include "utils/app_base.h"
 #include "utils/bash_command.h"
 #include "utils/clock.h"
+#include "utils/current_process.h"
 #include "utils/fs/file_system.h"
 #include "utils/installer.h"
 #include "utils/log.h"
@@ -111,7 +111,7 @@ bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
 
   entry.output_prefix = trace_filebase;
   entry.trace_path =
-      AppBase::Instance()->GetBase() + entry.output_prefix + ".simple_perf.trace";
+      CurrentProcess::dir() + entry.output_prefix + ".simple_perf.trace";
   entry.log_filepath = entry.app_dir + "/" + trace_filebase + ".log";
   *trace_path = entry.trace_path;
 

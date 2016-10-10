@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "utils/clock.h"
+#include "utils/current_process.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
@@ -40,11 +41,11 @@ using grpc::ServerContext;
 using grpc::Status;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    const std::string &root_path, NetworkCache *network_cache)
+    NetworkCache *network_cache)
     : network_cache_(*network_cache) {
   fs_.reset(new DiskFileSystem());
   // Since we're restarting perfd, nuke any leftover cache from a previous run
-  auto cache_root = fs_->NewDir(root_path + "/cache/network");
+  auto cache_root = fs_->NewDir(CurrentProcess::dir() + "cache/network");
   cache_partial_ = cache_root->NewDir("partial");
   cache_complete_ = cache_root->NewDir("complete");
 

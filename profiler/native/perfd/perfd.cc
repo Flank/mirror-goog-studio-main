@@ -21,8 +21,8 @@
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
-#include "utils/app_base.h"
 #include "utils/config.h"
+#include "utils/current_process.h"
 #include "utils/fs/path.h"
 #include "utils/trace.h"
 
@@ -33,8 +33,6 @@ int main(int argc, char** argv) {
 
   profiler::Trace::Init();
   profiler::Daemon daemon;
-
-  profiler::AppBase::Instance()->SetBase(argv[0]);
 
   profiler::GenericComponent generic_component{daemon};
   daemon.RegisterComponent(&generic_component);
@@ -51,12 +49,7 @@ int main(int argc, char** argv) {
   profiler::EnergyProfilerComponent energy_component{daemon};
   daemon.RegisterComponent(&energy_component);
 
-  // TODO: This is assuming argv[0] is a full path, but this may not be true.
-  // We should consider getting the path a more foolproof way.
-  string binary_path(argv[0]);
-  string root_path = profiler::Path::StripLast(binary_path);
-
-  profiler::NetworkProfilerComponent network_component{daemon, root_path};
+  profiler::NetworkProfilerComponent network_component{daemon};
   daemon.RegisterComponent(&network_component);
 
   daemon.RunServer(profiler::kServerAddress);

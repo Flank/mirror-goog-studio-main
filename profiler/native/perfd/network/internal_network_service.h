@@ -31,8 +31,7 @@ namespace profiler {
 class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
-  InternalNetworkServiceImpl(const std::string &root_path,
-                             NetworkCache *network_cache);
+  explicit InternalNetworkServiceImpl(NetworkCache *network_cache);
   ~InternalNetworkServiceImpl() override;
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,

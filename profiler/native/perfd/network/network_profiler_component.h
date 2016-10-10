@@ -26,10 +26,10 @@ namespace profiler {
 
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
-  NetworkProfilerComponent(const Daemon& daemon, const std::string& root_path)
+  explicit NetworkProfilerComponent(const Daemon& daemon)
       : network_cache_(daemon.clock()),
         public_service_(&network_cache_),
-        internal_service_(root_path, &network_cache_) {}
+        internal_service_(&network_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
