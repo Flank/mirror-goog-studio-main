@@ -1178,6 +1178,11 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_HORIZONTAL_BIAS = "layout_constraintHorizontal_bias"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_VERTICAL_BIAS = "layout_constraintVertical_bias"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_DIMENSION_RATIO = "layout_constraintDimensionRatio"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_VERTICAL_CHAIN_PACKED = "layout_constraintVertical_chainPacked"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HORIZONTAL_CHAIN_PACKED = "layout_constraintHorizontal_chainPacked"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_VERTICAL_WEIGHT = "layout_constraintVertical_weight"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HORIZONTAL_WEIGHT = "layout_constraintHorizontal_weight"; //$NON-NLS-1$
+
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$
     public static final String LAYOUT_CONSTRAINT_GUIDE_BEGIN = "layout_constraintGuide_begin"; //$NON-NLS-1$
