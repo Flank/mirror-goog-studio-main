@@ -172,7 +172,7 @@ public class SdkManagerCliTest {
     @Test
     public void basicList() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--list", "/sdk"}, mFileOp.getFileSystem());
+                .createSettings(new String[]{"--list", "--sdk_root=/sdk"}, mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader = new SdkManagerCli(settings,
                 new PrintStream(out),
@@ -207,7 +207,7 @@ public class SdkManagerCliTest {
     @Test
     public void channel() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--list", "--channel=1", "/sdk"},
+                .createSettings(new String[]{"--list", "--channel=1", "--sdk_root=/sdk"},
                         mFileOp.getFileSystem());
         assertEquals("channel-1", settings.getChannel().getId());
     }
@@ -218,7 +218,7 @@ public class SdkManagerCliTest {
     @Test
     public void obsoleteList() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--list", "--include_obsolete", "/sdk"},
+                .createSettings(new String[]{"--list", "--include_obsolete", "--sdk_root=/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader = new SdkManagerCli(settings,
@@ -266,7 +266,7 @@ public class SdkManagerCliTest {
     @Test
     public void basicInstall() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"/sdk", "test;remote1"},
+                .createSettings(new String[]{"--sdk_root=/sdk", "test;remote1"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -288,7 +288,7 @@ public class SdkManagerCliTest {
     @Test
     public void multiInstallWithDeps() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"/sdk", "test;remote1", "depends_on"},
+                .createSettings(new String[]{"--sdk_root=/sdk", "test;remote1", "depends_on"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -311,7 +311,7 @@ public class SdkManagerCliTest {
     @Test
     public void update() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--update", "/sdk"},
+                .createSettings(new String[]{"--update", "--sdk_root=/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -338,7 +338,7 @@ public class SdkManagerCliTest {
     @Test
     public void updateObsolete() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--update", "--include_obsolete", "/sdk"},
+                .createSettings(new String[]{"--update", "--include_obsolete", "--sdk_root=/sdk"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -365,7 +365,7 @@ public class SdkManagerCliTest {
     @Test
     public void uninstall() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--uninstall", "/sdk", "obsolete"},
+                .createSettings(new String[]{"--uninstall", "--sdk_root=/sdk", "obsolete"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -390,7 +390,7 @@ public class SdkManagerCliTest {
     @Test
     public void multiUninstall() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"--uninstall", "/sdk", "obsolete", "upgrade"},
+                .createSettings(new String[]{"--uninstall", "--sdk_root=/sdk", "obsolete", "upgrade"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -417,7 +417,7 @@ public class SdkManagerCliTest {
     @Test
     public void acceptOrRejectLicense() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"/sdk", "depended_on"},
+                .createSettings(new String[]{"--sdk_root=/sdk", "depended_on"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -450,7 +450,7 @@ public class SdkManagerCliTest {
     @Test
     public void rejectLicenseWithDeps() throws Exception {
         SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(new String[]{"/sdk", "depends_on", "test;remote1"},
+                .createSettings(new String[]{"--sdk_root=/sdk", "depends_on", "test;remote1"},
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();

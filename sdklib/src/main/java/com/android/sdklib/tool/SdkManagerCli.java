@@ -44,7 +44,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,6 +74,8 @@ import java.util.stream.Collectors;
  */
 public class SdkManagerCli {
 
+    private final static String TOOLSDIR = "com.android.sdklib.toolsdir";
+
     private final Settings mSettings;
     private final AndroidSdkHandler mHandler;
     private final RepoManager mRepoManager;
@@ -90,15 +91,26 @@ public class SdkManagerCli {
             usage(System.err);
             return;
         }
-        File localPath = new File(settings.getLocalPath().toString());
-        AndroidSdkHandler handler = new AndroidSdkHandler(localPath, fop);
+        Path localPath = settings.getLocalPath();
+        if (!Files.exists(localPath)) {
+            try {
+                Files.createDirectories(localPath);
+            } catch (IOException e) {
+                System.err.println("Failed to create SDK root dir: " + localPath);
+                System.err.println(e.getMessage());
+                return;
+            }
+        }
+
+        AndroidSdkHandler handler = new AndroidSdkHandler(localPath.toFile(), fop);
         new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop, settings),
                 handler).run();
         System.out.println("done");
     }
 
-    public SdkManagerCli(Settings settings, PrintStream out, InputStream in,
-            Downloader downloader, AndroidSdkHandler handler) {
+    public SdkManagerCli(@NonNull Settings settings, @NonNull PrintStream out,
+            @Nullable InputStream in, @Nullable Downloader downloader,
+            @NonNull AndroidSdkHandler handler) {
         mSettings = settings;
         mOut = out;
         mIn = in == null ? null : new BufferedReader(new InputStreamReader(in));
@@ -278,7 +290,7 @@ public class SdkManagerCli {
         return remotes;
     }
 
-    private boolean askForLicense(License license) {
+    private boolean askForLicense(@NonNull License license) {
         mOut.printf("License %s:%n", license.getId());
         mOut.println("---------------------------------------");
         mOut.println(license.getValue());
@@ -322,9 +334,9 @@ public class SdkManagerCli {
     private static void usage(@NonNull PrintStream out) {
         out.println("Usage: ");
         out.println("  sdk-downloader [--uninstall] [<common args>] \\");
-        out.println("    [--package_file <package-file>] <sdk path> [<packages>...]");
-        out.println("  sdk-downloader --update [<common args>] <sdk path>");
-        out.println("  sdk-downloader --list [<common args>] <sdk path>");
+        out.println("    [--package_file <package-file>] [<packages>...]");
+        out.println("  sdk-downloader --update [<common args>]");
+        out.println("  sdk-downloader --list [<common args>]");
         out.println();
         out.println("In its first form, installs, or uninstalls, or updates packages.");
         out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or \n"
@@ -339,6 +351,8 @@ public class SdkManagerCli {
                 + "out.");
         out.println();
         out.println("Common Arguments:");
+        out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK " +
+                "containing this tool");
         out.println("    --channel=<channelId>: Include packages in channels up to "
                 + "<channelId>.");
         out.println("                           Common channels are:\n"
@@ -363,6 +377,7 @@ public class SdkManagerCli {
         private static final String UNINSTALL_ARG = "--uninstall";
         private static final String UPDATE_ARG = "--update";
         private static final String PKG_FILE_ARG = "--package_file=";
+        private static final String SDK_ROOT_ARG = "--sdk_root=";
         private static final String LIST_ARG = "--list";
         private static final String INCLUDE_OBSOLETE_ARG = "--include_obsolete";
         private static final String HELP_ARG = "--help";
@@ -391,6 +406,11 @@ public class SdkManagerCli {
             Settings result = new Settings();
             String proxyHost = null;
             int proxyPort = -1;
+            String toolsDir = System.getProperty(TOOLSDIR);
+            if (toolsDir != null) {
+                result.mLocalPath = fileSystem.getPath(toolsDir).normalize().getParent();
+            }
+
             for (String arg : args) {
                 if (arg.equals(HELP_ARG)) {
                     return null;
@@ -445,22 +465,13 @@ public class SdkManagerCli {
                                         packageFile, e));
                         return null;
                     }
-                } else if (result.mLocalPath == null) {
-                    Path path = fileSystem.getPath(arg);
-                    if (!Files.exists(path)) {
-                        try {
-                            Files.createDirectories(path);
-                        } catch (IOException e) {
-                            progress.logError("Failed to create SDK root dir: " + path);
-                            progress.logError(e.getMessage());
-                            return null;
-                        }
-                    }
-                    result.mLocalPath = path;
+                } else if (arg.startsWith(SDK_ROOT_ARG)) {
+                    result.mLocalPath = fileSystem.getPath(arg.substring(SDK_ROOT_ARG.length()));
                 } else {
                     result.mPackages.add(arg);
                 }
             }
+
             if (result.mLocalPath == null ||
                     !result.mPackages.isEmpty() == (result.mIsUpdate || result.mIsList)) {
                 return null;
