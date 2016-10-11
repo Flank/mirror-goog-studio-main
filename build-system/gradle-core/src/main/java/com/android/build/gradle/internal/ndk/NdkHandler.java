@@ -71,9 +71,12 @@ public class NdkHandler {
             if (revision == null) {
                 ndkInfo = new DefaultNdkInfo(ndkDirectory);
             } else if (revision.getMajor() > LATEST_SUPPORTED_VERSION) {
-                ndkInfo = new NdkR13Info(ndkDirectory);
+                ndkInfo = new NdkR14Info(ndkDirectory);
             } else {
                 switch (revision.getMajor()) {
+                    case 14:
+                        ndkInfo = new NdkR14Info(ndkDirectory);
+                        break;
                     case 13:
                         ndkInfo = new NdkR13Info(ndkDirectory);
                         break;
@@ -321,6 +324,23 @@ public class NdkHandler {
         return ndkInfo.getCppCompiler(toolchain, toolchainVersion, abi);
     }
 
+    /**
+     * Return the executable for linking binary files.
+     */
+    @NonNull
+    public File getLinker(@NonNull Abi abi) {
+        checkNotNull(ndkInfo);
+        return ndkInfo.getLinker(toolchain, toolchainVersion, abi);
+    }
+
+    /**
+     * Return the executable for assembling code.
+     */
+    @NonNull
+    public File getAssembler(@NonNull Abi abi) {
+        checkNotNull(ndkInfo);
+        return ndkInfo.getAssembler(toolchain, toolchainVersion, abi);
+    }
     /**
      * Return the static archiver.
      */

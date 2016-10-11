@@ -76,11 +76,14 @@ public class ToolchainConfiguration {
                             }
 
                             if (Toolchain.GCC == ndkToolchain) {
-                                String gccPrefix = abi.getGccExecutablePrefix();
-                                targetPlatform.getcCompiler().setExecutable(gccPrefix + "-gcc");
-                                targetPlatform.getCppCompiler().setExecutable(gccPrefix + "-g++");
-                                targetPlatform.getLinker().setExecutable(gccPrefix + "-g++");
-                                targetPlatform.getAssembler().setExecutable(gccPrefix + "-as");
+                                targetPlatform.getcCompiler().setExecutable(
+                                        ndkHandler.getCCompiler(abi).getName());
+                                targetPlatform.getCppCompiler().setExecutable(
+                                        ndkHandler.getCppCompiler(abi).getName());
+                                targetPlatform.getLinker().setExecutable(
+                                        ndkHandler.getLinker(abi).getName());
+                                targetPlatform.getAssembler().setExecutable(
+                                        ndkHandler.getAssembler(abi).getName());
                             }
                             // For clang, we use the ar from the GCC toolchain.
                             targetPlatform.getStaticLibArchiver().setExecutable(

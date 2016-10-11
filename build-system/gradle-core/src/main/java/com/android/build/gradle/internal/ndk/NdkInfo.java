@@ -69,6 +69,24 @@ public interface NdkInfo {
             @NonNull String toolchainVersion,
             @NonNull Abi abi);
 
+    /**
+     * Return the executable for compiling C code.
+     */
+    @NonNull
+    File getLinker(
+            @NonNull Toolchain toolchain,
+            @NonNull String toolchainVersion,
+            @NonNull Abi abi);
+
+    /**
+     * Return the executable for compiling C++ code.
+     */
+    @NonNull
+    File getAssembler(
+            @NonNull Toolchain toolchain,
+            @NonNull String toolchainVersion,
+            @NonNull Abi abi);
+
     @NonNull
     File getAr(
             @NonNull Toolchain toolchain,
@@ -108,5 +126,5 @@ public interface NdkInfo {
      * ABI.  The result is cached for performance.
      */
     @NonNull
-    String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull final Abi abi);
+    String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull Abi abi);
 }
