@@ -20,6 +20,7 @@ import static com.android.builder.profile.MemoryStats.getCurrentProperties;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.analytics.UsageTracker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -27,6 +28,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.AndroidStudioStats;
+import com.google.wireless.android.sdk.stats.AndroidStudioStats.AndroidStudioEvent;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -128,15 +130,12 @@ public class ProcessRecorder {
 
         } else {
             // Public build profile.
-            AndroidStudioStats.AndroidStudioEvent.Builder studioStats =
-                    AndroidStudioStats.AndroidStudioEvent.newBuilder();
-            studioStats.setCategory(
-                    AndroidStudioStats.AndroidStudioEvent.EventCategory.GRADLE);
-            studioStats.setKind(
-                    AndroidStudioStats.AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE);
-            studioStats.setGradleBuildProfile(mBuild.build());
-
-            UsageTracker.getInstance().log(studioStats);
+            UsageTracker.getInstance().log(AndroidStudioEvent.newBuilder()
+                    .setCategory(AndroidStudioEvent.EventCategory.GRADLE)
+                    .setKind(AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE)
+                    .setGradleBuildProfile(mBuild.build())
+                    .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
+                    .setJvmDetails(CommonMetricsData.getJvmDetails()));
         }
     }
 
