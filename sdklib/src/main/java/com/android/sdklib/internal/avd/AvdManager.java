@@ -1750,9 +1750,7 @@ public class AvdManager {
     }
 
     public AvdInfo updateAvd(AvdInfo avd,
-            Map<String, String> newProperties,
-            AvdStatus status,
-            ILogger log) throws IOException {
+            Map<String, String> newProperties) throws IOException {
         // now write the config file
         File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
         writeIniFile(configIniFile, newProperties, true);
@@ -1795,7 +1793,7 @@ public class AvdManager {
                 if (d.getId().equals(name) && d.getManufacturer().equals(manufacturer)) {
                     properties.putAll(DeviceManager.getHardwareProperties(d));
                     try {
-                        return updateAvd(avd, properties, AvdStatus.OK, log);
+                        return updateAvd(avd, properties);
                     } catch (IOException e) {
                         log.warning("%1$s", e);
                     }

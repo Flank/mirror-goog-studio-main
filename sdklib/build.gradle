@@ -46,16 +46,42 @@ task sdkManagerStartScripts(type: CreateStartScripts) {
     applicationName = 'sdkmanager'
 }
 
+task avdManagerStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName('runtime'))
+    outputDir new File(project.getBuildDir(), 'scripts')
+
+    description 'Creates OS specific scripts to start avdmanager'
+    mainClassName = 'com.android.sdklib.tool.AvdManagerCli'
+    applicationName = 'avdmanager'
+    defaultJvmOpts = ["-Dcom.android.sdkmanager.toolsdir=MY_APP_HOME"]
+
+    doLast {
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0\\..')
+    }
+}
+
 sdk {
     common(mac, linux) {
-        item(new File(buildDir, "scripts/sdkmanager")) {
+        item(new File(avdManagerStartScripts.outputDir, "avdmanager")) {
+            into "bin"
+            notice null
+            builtBy 'avdManagerStartScripts'
+        }
+        item(new File(sdkManagerStartScripts.outputDir, "sdkmanager")) {
             into "bin"
             notice null
             builtBy 'sdkManagerStartScripts'
         }
     }
     windows {
-        item(new File(buildDir, "scripts/sdkmanager.bat")) {
+        item(new File(avdManagerStartScripts.outputDir, "avdmanager.bat")) {
+            into "bin"
+            notice null
+            builtBy 'avdManagerStartScripts'
+        }
+        item(new File(sdkManagerStartScripts.outputDir, "sdkmanager.bat")) {
             into "bin"
             notice null
             builtBy 'sdkManagerStartScripts'

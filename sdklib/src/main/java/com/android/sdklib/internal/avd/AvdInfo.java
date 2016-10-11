@@ -269,15 +269,6 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         return result;
     }
 
-    /** Compatibility forwarding until the usages in tools/swt are updated */
-    @Deprecated
-    @NonNull
-    public static File getDefaultAvdFolder(@NonNull AvdManager manager, @NonNull String avdName,
-            @NonNull FileOp fileOp)
-            throws AndroidLocationException {
-        return getDefaultAvdFolder(manager, avdName, fileOp, false);
-    }
-
     /**
      * Helper method that returns the .ini {@link File} for a given AVD name.
      * <p>
