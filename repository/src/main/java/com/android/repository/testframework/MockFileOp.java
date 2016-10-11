@@ -114,7 +114,7 @@ public class MockFileOp extends FileSystemFileOp {
         if (isWindows()) {
             // Try to convert the windows-looking path to a unix-looking one
             path = path.replace('\\', '/');
-            path = path.replaceAll("^[A-Z]:", "");
+            path = path.replaceAll("^[A-Za-z]:", "");
         }
         return path;
     }
