@@ -55,6 +55,8 @@ message GradleBenchmarkResult {
     BuildCache build_cache = 5;
     Aapt aapt = 6;
     ApiJar api_jar = 7;
+    GradleVersion gradle_version = 8;
+    Branch branch = 9;
 
     enum DexInProcess {
       DEX_OUT_OF_PROCESS = 0;
@@ -93,6 +95,16 @@ message GradleBenchmarkResult {
       NO_API_JAR = 0;
       API_JAR = 1;
     }
+
+    enum GradleVersion {
+      STABLE_GRADLE = 0;
+      UPCOMING_GRADLE = 1;
+    }
+
+    enum Branch {
+      STUDIO_MASTER_DEV = 0;
+      STUDIO_UPCOMING_GRADLE_BRANCH = 1;
+    }
   }
 
   // Hostname of the machine that ran the build.
@@ -107,6 +119,12 @@ enum Benchmark {
 
   // Used currently for go/gradle-perf:
   ANTENNA_POD = 1;
+
+  // https://github.com/gradle/perf-android-large
+  PERF_ANDROID_LARGE = 2;
+
+  // https://github.com/gradle/perf-android-medium
+  PERF_ANDROID_MEDIUM = 3;
 }
 
 enum BenchmarkMode {
