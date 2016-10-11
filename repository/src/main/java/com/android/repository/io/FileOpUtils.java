@@ -128,7 +128,9 @@ public final class FileOpUtils {
             if (fop.exists(dest)) {
                 moveOrCopyAndDelete(dest, destBackup, fop, progress);
                 if (fop.exists(dest)) {
-                    throw new IOException("Failed to move away or delete existing target file");
+                    throw new IOException(String.format(
+                      "Failed to move away or delete existing target file: %s%n" +
+                      "Move it away manually and try again.", dest));
                 }
                 success = true;
             }
