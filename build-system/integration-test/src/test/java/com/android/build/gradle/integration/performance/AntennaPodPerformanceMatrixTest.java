@@ -28,23 +28,19 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RunWith(FilterableParameterized.class)
 public class AntennaPodPerformanceMatrixTest {
@@ -66,10 +62,10 @@ public class AntennaPodPerformanceMatrixTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> getParameters() {
-        return Sets.cartesianProduct(ImmutableList.of(EnumSet.allOf(ProjectScenario.class)))
-                .stream()
-                .map(List::toArray)
-                .collect(Collectors.toList());
+        return Arrays.asList(
+                new Object[][] {
+                    {ProjectScenario.NORMAL}, {ProjectScenario.DEX_OUT_OF_PROCESS},
+                });
     }
 
     @Before

@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -34,6 +35,8 @@ import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.GradleTask;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -91,7 +94,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     public AndroidProject getSingle() {
         AndroidProject androidProject = getSingle(AndroidProject.class);
         if (mAssertNoSyncIssues) {
-            assertNoSyncIssues(androidProject);
+            assertNoSyncIssues(androidProject.getName(), androidProject);
         }
         return androidProject;
     }
@@ -118,9 +121,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     public Map<String, AndroidProject> getMulti() {
         Map<String, AndroidProject> models = getMulti(AndroidProject.class);
         if (mAssertNoSyncIssues) {
-            for (AndroidProject project : models.values()) {
-                assertNoSyncIssues(project);
-            }
+            models.forEach(BuildModel::assertNoSyncIssues);
         }
         return models;
     }
@@ -198,17 +199,47 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         }
     }
 
-    private static void assertNoSyncIssues(AndroidProject project) {
+    private static void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
         if (!project.getSyncIssues().isEmpty()) {
             StringBuilder msg = new StringBuilder();
-            msg.append("Project ")
-                    .append(project.getName())
-                    .append(" had sync issues :\n");
+            msg.append("Project ").append(name).append(" had sync issues :\n");
             for (SyncIssue syncIssue : project.getSyncIssues()) {
-                msg.append(syncIssue);
+                msg.append(
+                        MoreObjects.toStringHelper(SyncIssue.class)
+                                .add(
+                                        "type",
+                                        getIntConstantName(
+                                                SyncIssue.class, "TYPE", syncIssue.getType()))
+                                .add(
+                                        "severity",
+                                        getIntConstantName(
+                                                SyncIssue.class,
+                                                "SEVERITY",
+                                                syncIssue.getSeverity()))
+                                .add("data", syncIssue.getData())
+                                .add("message", syncIssue.getMessage())
+                                .toString());
                 msg.append("\n");
             }
             fail(msg.toString());
         }
+    }
+
+    @NonNull
+    private static String getIntConstantName(
+            @NonNull Class<?> clazz, @NonNull String prefix, int value) {
+        return Arrays.stream(clazz.getFields())
+                .filter(field -> field.getName().startsWith(prefix))
+                .filter(
+                        field -> {
+                            try {
+                                return field.getInt(null) == value;
+                            } catch (IllegalAccessException e) {
+                                return false;
+                            }
+                        })
+                .map(Field::getName)
+                .findAny()
+                .orElseGet(() -> Integer.toString(value));
     }
 }
