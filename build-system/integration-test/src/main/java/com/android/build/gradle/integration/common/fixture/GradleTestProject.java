@@ -39,6 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
 import org.gradle.tooling.GradleConnectionException;
@@ -100,6 +101,8 @@ public final class GradleTestProject implements TestRule {
     public static final boolean USE_JACK;
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
+
+    private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
 
     static {
         // These are some properties that we use in the integration test projects, when generating
@@ -269,17 +272,39 @@ public final class GradleTestProject implements TestRule {
         // On windows, move the temporary copy as close to root to avoid running into path too
         // long exceptions.
         testDir = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                ? new File(new File(new File(System.getProperty("user.home")), "android-tests"),
-                testClass.getSimpleName())
-                : new File(outDir, testClass.getSimpleName());
+                ? new File(new File(System.getProperty("user.home")), "android-tests")
+                : outDir;
+
+        String classDir = testClass.getSimpleName();
+        String methodDir = null;
 
         // Create separate directory based on test method name if @Rule is used.
         // getMethodName() is null if this rule is used as a @ClassRule.
         if (methodName != null) {
-            String dirName = methodName;
-            dirName = dirName.replaceAll("[^a-zA-Z0-9_]", "_");
-            testDir = new File(testDir, dirName);
+            methodDir = methodName.replaceAll("[^a-zA-Z0-9_]", "_");
         }
+
+        // In Windows, make sure we do not exceed the limit for test class / name size.
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            int totalLen = classDir.length();
+            if (methodDir != null) {
+                totalLen += methodDir.length();
+            }
+
+            if (totalLen > MAX_TEST_NAME_DIR_WINDOWS) {
+                String hash =
+                        Hashing.sha1().hashString(classDir + methodDir, Charsets.US_ASCII)
+                                .toString();
+                classDir = hash.substring(0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS));
+                methodDir = null;
+            }
+        }
+
+        testDir = new File(testDir, classDir);
+        if (methodDir != null) {
+            testDir = new File(testDir, methodDir);
+        }
+        
         testDir = new File(testDir, name);
 
         buildFile = new File(testDir, "build.gradle");
