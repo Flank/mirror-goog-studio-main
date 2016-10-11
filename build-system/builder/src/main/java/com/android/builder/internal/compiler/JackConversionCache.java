@@ -21,11 +21,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
 import com.android.ide.common.process.ProcessException;
-import com.android.jack.api.ConfigNotSupportedException;
-import com.android.jack.api.v01.CompilationException;
-import com.android.jack.api.v01.ConfigurationException;
-import com.android.jack.api.v01.UnrecoverableException;
-import com.android.jill.api.v01.TranslationException;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
@@ -108,7 +103,8 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
                 JackToolchain toolchain =
                         new JackToolchain(
                                 androidBuilder.getTargetInfo().getBuildTools(),
-                                androidBuilder.getLogger());
+                                androidBuilder.getLogger(),
+                                androidBuilder.getErrorReporter());
                 toolchain.convert(
                         options, androidBuilder.getJavaProcessExecutor(), isJackInProcess);
 
