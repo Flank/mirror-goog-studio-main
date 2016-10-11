@@ -392,7 +392,7 @@ public class ExtractAnnotationsDriver {
 
         for (File source : gatherJavaSources(sourcePaths)) {
             char[] contents = Util.getFileCharContent(source, encoding);
-            EcjSourceFile unit = new EcjSourceFile(contents, source, encoding);
+            EcjSourceFile unit = EcjSourceFile.create(contents, source, encoding);
             sourceUnits.add(unit);
         }
 

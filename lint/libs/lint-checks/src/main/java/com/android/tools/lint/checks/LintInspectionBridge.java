@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Issue;
 import com.intellij.psi.PsiElement;

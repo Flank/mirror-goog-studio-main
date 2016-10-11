@@ -76,6 +76,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -101,6 +102,9 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -577,21 +581,24 @@ public class LintUtils {
      * same as {@code Files.toString(file, Charsets.UTF8}, but if there's a UTF byte order mark
      * (for UTF8, UTF_16 or UTF_16LE), use that instead.
      *
-     * @param client the client to use for I/O operations
-     * @param file the file to read from
+     * @param client       the client to use for I/O operations
+     * @param file         the file to read from
+     * @param createString If true, create a {@link String} instead of a general {@link
+     *                     CharSequence}
      * @return the string
      * @throws IOException if the file cannot be read properly
      */
     @NonNull
-    public static String getEncodedString(
+    public static CharSequence getEncodedString(
             @NonNull LintClient client,
-            @NonNull File file) throws IOException {
+            @NonNull File file,
+            boolean createString) throws IOException {
         byte[] bytes = client.readBytes(file);
         if (endsWith(file.getName(), DOT_XML)) {
             return PositionXmlParser.getXmlString(bytes);
         }
 
-        return getEncodedString(bytes);
+        return getEncodedString(bytes, createString);
     }
 
     /**
@@ -603,11 +610,13 @@ public class LintUtils {
      * could be a {@code encoding=} attribute in the prologue. For those files,
      * use {@link PositionXmlParser#getXmlString(byte[])} instead.
      *
-     * @param data the byte array to construct the string from
+     * @param data         the byte array to construct the string from
+     * @param createString If true, create a {@link String} instead of a general {@link
+     *                     CharSequence}
      * @return the string
      */
     @NonNull
-    public static String getEncodedString(@Nullable byte[] data) {
+    public static CharSequence getEncodedString(@Nullable byte[] data, boolean createString) {
         if (data == null) {
             return "";
         }
@@ -666,7 +675,29 @@ public class LintUtils {
             charset = seenOddZero ? UTF_16LE : seenEvenZero ? UTF_16 : UTF_8;
         }
 
-        String text = null;
+        if (!createString) {
+            // Attempt to create a CharSequence backed by our own lint implementation
+            // where we can feed the char array back into ECJ without a separate copy
+            // (which the String class insists on)
+
+            if (UTF_8.equals(charset)) {
+                ByteBuffer bytes = ByteBuffer.wrap(data, offset, length);
+                try {
+                    CharBuffer decode = Charsets.UTF_8.newDecoder().decode(bytes);
+                    decode.compact();
+                    int size = decode.position();
+                    assert size <= decode.limit();
+
+                    char[] array = decode.array();
+                    return CharSequences.createSequence(array, 0, size);
+                } catch (CharacterCodingException ignore) {
+                    // Fall back to encoding handling below
+                }
+            }
+        }
+
+
+        CharSequence text = null;
         try {
             text = new String(data, offset, length, charset);
         } catch (UnsupportedEncodingException e) {

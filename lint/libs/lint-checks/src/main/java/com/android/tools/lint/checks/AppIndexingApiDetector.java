@@ -689,7 +689,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
             PsiExpression[] expressions = call.getArgumentList().getExpressions();
             if (expressions.length > 0) {
                 PsiExpression argument2 = expressions[0];
-                if (argument.getText().equals(argument2.getText())) {
+                if (argument.textMatches(argument2)) {
                     return true;
                 }
             }
@@ -707,7 +707,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
     private static boolean hasOperand(PsiExpression operand, List<PsiMethodCallExpression> list) {
         for (PsiMethodCallExpression method : list) {
             PsiElement operand2 = method.getMethodExpression().getQualifier();
-            if (operand2 != null && operand.getText().equals(operand2.getText())) {
+            if (operand2 != null && operand.textMatches(operand2)) {
                 return true;
             }
         }

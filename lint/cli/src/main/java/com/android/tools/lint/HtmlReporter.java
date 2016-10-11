@@ -255,8 +255,8 @@ public class HtmlReporter extends Reporter {
 
                                 String name = l.getFile().getName();
                                 if (!(endsWith(name, DOT_PNG) || endsWith(name, DOT_JPG))) {
-                                    String s = mClient.readFile(l.getFile());
-                                    if (!s.isEmpty()) {
+                                    CharSequence s = mClient.readFile(l.getFile());
+                                    if (s.length() > 0) {
                                         mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
                                         int offset = start != null ? start.getOffset() : -1;
                                         appendCodeBlock(s, line, offset);
@@ -750,7 +750,7 @@ public class HtmlReporter extends Reporter {
         }
     }
 
-    private void appendCodeBlock(String contents, int lineno, int offset)
+    private void appendCodeBlock(CharSequence contents, int lineno, int offset)
             throws IOException {
         int max = lineno + 3;
         int min = lineno - 3;

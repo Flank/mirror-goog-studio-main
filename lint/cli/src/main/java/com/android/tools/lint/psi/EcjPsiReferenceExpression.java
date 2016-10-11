@@ -181,4 +181,15 @@ class EcjPsiReferenceExpression extends EcjPsiExpression implements PsiReference
     public boolean isSoft() {
         return false;
     }
+
+    @Override
+    public String getText() {
+        // We often look up the text contents of a leaf reference expression;
+        // optimize to not compute a new string for this
+        if (mQualifier == null && mIdentifier != null &&
+                mIdentifier.getTextRange().equals(getTextRange())) {
+            return mIdentifier.getText();
+        }
+        return super.getText();
+    }
 }

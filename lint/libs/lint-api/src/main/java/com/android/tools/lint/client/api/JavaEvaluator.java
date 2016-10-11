@@ -37,7 +37,6 @@ import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
-import com.intellij.psi.util.PsiTreeUtil;
 
 import java.io.File;
 import java.util.Map;
@@ -267,6 +266,11 @@ public abstract class JavaEvaluator {
 
     @Nullable
     public abstract File getFile(@NonNull PsiFile file);
+
+    @NonNull
+    public CharSequence getFileContents(@NonNull PsiFile file) {
+        return file.getText();
+    }
 
     /**
      * Try to determine the path to the .jar file containing the element, <b>if</b> applicable

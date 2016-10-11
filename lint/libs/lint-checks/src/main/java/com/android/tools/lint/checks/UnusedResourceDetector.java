@@ -599,7 +599,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
         @Override
         protected String readText(@NonNull File file) {
             if (context != null) {
-                return context.getClient().readFile(file);
+                return context.getClient().readFile(file).toString();
             }
             try {
                 return Files.toString(file, UTF_8);

@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
+import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
+import static com.android.tools.lint.detector.api.CharSequences.startsWith;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
@@ -55,7 +59,7 @@ public class Location {
      * (Private constructor, use one of the factory methods
      * {@link Location#create(File)},
      * {@link Location#create(File, Position, Position)}, or
-     * {@link Location#create(File, String, int, int)}.
+     * {@link Location#create(File, CharSequence, int, int)}.
      * <p>
      * Constructs a new location range for the given file, from start to end. If
      * the length of the range is not known, end may be null.
@@ -268,7 +272,7 @@ public class Location {
     @NonNull
     public static Location create(
             @NonNull File file,
-            @Nullable String contents,
+            @Nullable CharSequence contents,
             int startOffset,
             int endOffset) {
         if (startOffset < 0 || endOffset < startOffset) {
@@ -342,13 +346,13 @@ public class Location {
      * @return a new location
      */
     @NonNull
-    public static Location create(@NonNull File file, @NonNull String contents, int line,
+    public static Location create(@NonNull File file, @NonNull CharSequence contents, int line,
             @Nullable String patternStart, @Nullable String patternEnd,
             @Nullable SearchHints hints) {
         int currentLine = 0;
         int offset = 0;
         while (currentLine < line) {
-            offset = contents.indexOf('\n', offset);
+            offset = indexOf(contents, '\n', offset);
             if (offset == -1) {
                 return create(file);
             }
@@ -368,7 +372,7 @@ public class Location {
                     index = findPreviousMatch(contents, offset, patternStart, hints);
                     line = adjustLine(contents, line, offset, index);
                 } else if (direction == SearchDirection.EOL_BACKWARD) {
-                    int lineEnd = contents.indexOf('\n', offset);
+                    int lineEnd = indexOf(contents, '\n', offset);
                     if (lineEnd == -1) {
                         lineEnd = contents.length();
                     }
@@ -382,7 +386,7 @@ public class Location {
                     assert direction == SearchDirection.NEAREST ||
                             direction == SearchDirection.EOL_NEAREST;
 
-                    int lineEnd = contents.indexOf('\n', offset);
+                    int lineEnd = indexOf(contents, '\n', offset);
                     if (lineEnd == -1) {
                         lineEnd = contents.length();
                     }
@@ -422,7 +426,7 @@ public class Location {
                 }
 
                 if (index != -1) {
-                    int lineStart = contents.lastIndexOf('\n', index);
+                    int lineStart = lastIndexOf(contents, '\n', index);
                     if (lineStart == -1) {
                         lineStart = 0;
                     } else {
@@ -430,13 +434,13 @@ public class Location {
                     }
                     int column = index - lineStart;
                     if (patternEnd != null) {
-                        int end = contents.indexOf(patternEnd, offset + patternStart.length());
+                        int end = indexOf(contents, patternEnd, offset + patternStart.length());
                         if (end != -1) {
                             return new Location(file, new DefaultPosition(line, column, index),
                                     new DefaultPosition(line, -1, end + patternEnd.length()));
                         }
                     } else if (hints != null && (hints.isJavaSymbol() || hints.isWholeWord())) {
-                        if (hints.isConstructor() && contents.startsWith(SUPER_KEYWORD, index)) {
+                        if (hints.isConstructor() && startsWith(contents, SUPER_KEYWORD, index)) {
                             patternStart = SUPER_KEYWORD;
                         }
                         return new Location(file, new DefaultPosition(line, column, index),
@@ -455,10 +459,10 @@ public class Location {
         return create(file);
     }
 
-    private static int findPreviousMatch(@NonNull String contents, int offset, String pattern,
+    private static int findPreviousMatch(@NonNull CharSequence contents, int offset, String pattern,
             @Nullable SearchHints hints) {
         while (true) {
-            int index = contents.lastIndexOf(pattern, offset);
+            int index = lastIndexOf(contents, pattern, offset);
             if (index == -1) {
                 return -1;
             } else {
@@ -471,20 +475,20 @@ public class Location {
         }
     }
 
-    private static int findNextMatch(@NonNull String contents, int offset, String pattern,
+    private static int findNextMatch(@NonNull CharSequence contents, int offset, String pattern,
             @Nullable SearchHints hints) {
         int constructorIndex = -1;
         if (hints != null && hints.isConstructor()) {
             // Special condition: See if the call is referenced as "super" instead.
             assert hints.isWholeWord();
-            int index = contents.indexOf(SUPER_KEYWORD, offset);
+            int index = indexOf(contents, SUPER_KEYWORD, offset);
             if (index != -1 && isMatch(contents, index, SUPER_KEYWORD, hints)) {
                 constructorIndex = index;
             }
         }
 
         while (true) {
-            int index = contents.indexOf(pattern, offset);
+            int index = indexOf(contents, pattern, offset);
             if (index == -1) {
                 return constructorIndex;
             } else {
@@ -500,9 +504,9 @@ public class Location {
         }
     }
 
-    private static boolean isMatch(@NonNull String contents, int offset, String pattern,
+    private static boolean isMatch(@NonNull CharSequence contents, int offset, String pattern,
             @Nullable SearchHints hints) {
-        if (!contents.startsWith(pattern, offset)) {
+        if (!startsWith(contents, pattern, offset)) {
             return false;
         }
 
@@ -550,7 +554,7 @@ public class Location {
         return true;
     }
 
-    private static int adjustLine(String doc, int line, int offset, int newOffset) {
+    private static int adjustLine(CharSequence doc, int line, int offset, int newOffset) {
         if (newOffset == -1) {
             return line;
         }
@@ -562,7 +566,7 @@ public class Location {
         }
     }
 
-    private static int countLines(String doc, int start, int end) {
+    private static int countLines(CharSequence doc, int start, int end) {
         int lines = 0;
         for (int offset = start; offset < end; offset++) {
             char c = doc.charAt(offset);
@@ -631,7 +635,7 @@ public class Location {
     /** A default {@link Handle} implementation for simple file offsets */
     public static class DefaultLocationHandle implements Handle {
         private final File mFile;
-        private final String mContents;
+        private final CharSequence mContents;
         private final int mStartOffset;
         private final int mEndOffset;
         private Object mClientData;
@@ -730,7 +734,7 @@ public class Location {
 
     /**
      * Extra information pertaining to finding a symbol in a source buffer,
-     * used by {@link Location#create(File, String, int, String, String, SearchHints)}
+     * used by {@link Location#create(File, CharSequence, int, String, String, SearchHints)}
      */
     public static class SearchHints {
         /**

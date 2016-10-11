@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
@@ -221,7 +220,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             }
 
             PsiElement token = expression.getMethodExpression().getQualifier();
-            if (token == null || !mBundleReference.getText().equals(token.getText())) {
+            if (token == null || !mBundleReference.textMatches(token)) {
                 return;
             }
 

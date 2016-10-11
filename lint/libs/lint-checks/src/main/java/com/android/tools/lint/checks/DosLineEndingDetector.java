@@ -67,7 +67,7 @@ public class DosLineEndingDetector extends LayoutDetector {
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        String contents = context.getContents();
+        CharSequence contents = context.getContents();
         if (contents == null) {
             return;
         }

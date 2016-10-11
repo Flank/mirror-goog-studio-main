@@ -60,7 +60,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -1138,11 +1137,9 @@ public class LintDriver {
                 Context context = new Context(this, project, main, file);
                 fireEvent(EventType.SCANNING_FILE, context);
                 for (Detector detector : detectors) {
-                    if (detector.appliesTo(context, file)) {
-                        detector.beforeCheckFile(context);
-                        detector.visitBuildScript(context, Maps.<String, Object>newHashMap());
-                        detector.afterCheckFile(context);
-                    }
+                    detector.beforeCheckFile(context);
+                    detector.visitBuildScript(context, Maps.<String, Object>newHashMap());
+                    detector.afterCheckFile(context);
                 }
             }
         }
@@ -1156,11 +1153,9 @@ public class LintDriver {
                 Context context = new Context(this, project, main, file);
                 fireEvent(EventType.SCANNING_FILE, context);
                 for (Detector detector : detectors) {
-                    if (detector.appliesTo(context, file)) {
-                        detector.beforeCheckFile(context);
-                        detector.run(context);
-                        detector.afterCheckFile(context);
-                    }
+                    detector.beforeCheckFile(context);
+                    detector.run(context);
+                    detector.afterCheckFile(context);
                 }
             }
         }
@@ -1182,11 +1177,9 @@ public class LintDriver {
             Context context = new Context(this, project, main, file);
             fireEvent(EventType.SCANNING_FILE, context);
             for (Detector detector : detectors) {
-                if (detector.appliesTo(context, file)) {
-                    detector.beforeCheckFile(context);
-                    detector.run(context);
-                    detector.afterCheckFile(context);
-                }
+                detector.beforeCheckFile(context);
+                detector.run(context);
+                detector.afterCheckFile(context);
             }
         }
     }
@@ -1344,7 +1337,7 @@ public class LintDriver {
             if (classDetectors != null && !classDetectors.isEmpty() && !entries.isEmpty()) {
                 AsmVisitor visitor = new AsmVisitor(mClient, classDetectors);
 
-                String sourceContents = null;
+                CharSequence sourceContents = null;
                 String sourceName = "";
                 mOuterClasses = new ArrayDeque<ClassNode>();
                 ClassEntry prev = null;
@@ -1570,6 +1563,9 @@ public class LintDriver {
         }
 
         JavaPsiVisitor visitor = new JavaPsiVisitor(javaParser, scanners);
+        if (mRunCompatChecks) {
+            visitor.setDisposeUnitsAfterUse(false);
+        }
         visitor.prepare(contexts);
         for (JavaContext context : contexts) {
             fireEvent(EventType.SCANNING_FILE, context);
@@ -1579,16 +1575,24 @@ public class LintDriver {
             }
         }
 
-        visitor.dispose();
-
         // Only if the user is using some custom lint rules that haven't been updated
         // yet
         //noinspection ConstantConditions
         if (mRunCompatChecks) {
+            try {
+                // Call EcjParser#disposePsi (if running from Gradle) to clear up PSI
+                // caches that are full from the above JavaPsiVisitor call. We do this
+                // instead of calling visitor.dispose because we want to *keep* the
+                // ECJ parse around for use by the Lombok bridge.
+                javaParser.getClass().getMethod("disposePsi").invoke(javaParser);
+            } catch (Throwable ignore) {
+            }
+
             // Filter the checks to only those that implement JavaScanner
             List<Detector> filtered = Lists.newArrayListWithCapacity(checks.size());
             for (Detector detector : checks) {
                 if (detector instanceof Detector.JavaScanner) {
+                    assert !(detector instanceof Detector.JavaPsiScanner); // Shouldn't be both
                     filtered.add(detector);
                 }
             }
@@ -1619,7 +1623,9 @@ public class LintDriver {
 
                 JavaVisitor oldVisitor = new JavaVisitor(javaParser, filtered);
 
-                oldVisitor.prepare(contexts);
+                // NOTE: We do NOT call oldVisitor.prepare and dispose here since this
+                // visitor is wrapping the same java parser as the one we used for PSI,
+                // so calling prepare again would wipe out the results we're trying to reuse.
                 for (JavaContext context : contexts) {
                     fireEvent(EventType.SCANNING_FILE, context);
                     oldVisitor.visitFile(context);
@@ -1627,9 +1633,10 @@ public class LintDriver {
                         return;
                     }
                 }
-                oldVisitor.dispose();
             }
         }
+
+        visitor.dispose();
     }
 
     private void checkIndividualJavaFiles(
@@ -1977,7 +1984,7 @@ public class LintDriver {
 
         @Override
         @NonNull
-        public String readFile(@NonNull File file) {
+        public CharSequence readFile(@NonNull File file) {
             return mDelegate.readFile(file);
         }
 

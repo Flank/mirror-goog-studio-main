@@ -361,6 +361,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = new TestLintClient() {
             @Override
+            @NonNull
             public List<File> getResourceFolders(@NonNull Project project) {
                 return Arrays.asList(
                         new File(project.getDir(),

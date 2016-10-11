@@ -57,6 +57,7 @@ import com.android.tools.lint.checks.PermissionHolder.SetPermissionLookup;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
@@ -68,7 +69,6 @@ import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
@@ -794,7 +794,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             @NonNull Set<String> permissions,
             @NonNull Set<String> revocable,
             @NonNull File manifest) {
-        Document document = XmlUtils.parseDocumentSilently(client.readFile(manifest), true);
+        CharSequence xml = client.readFile(manifest);
+        Document document = CharSequences.parseDocumentSilently(xml, true);
         if (document == null) {
             return;
         }
@@ -1140,7 +1141,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 if (cls != null) {
                     PsiExpression qualifier = methodExpression.getQualifierExpression();
                     String className = cls.getName();
-                    if (qualifier != null && qualifier.getText().equals(className)) {
+                    if (qualifier != null && qualifier.textMatches(className)) {
                         locationNode = qualifier;
                         api = className;
                     }

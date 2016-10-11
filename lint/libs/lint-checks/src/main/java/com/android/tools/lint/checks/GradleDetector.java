@@ -52,7 +52,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -319,17 +318,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private int mMinSdkVersion;
     private int mCompileSdkVersion;
     private int mTargetSdkVersion;
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return true;
-    }
-
-    @Override
-    @NonNull
-    public Speed getSpeed(@SuppressWarnings("UnusedParameters") @NonNull Issue issue) {
-        return issue == REMOTE_VERSION ? Speed.REALLY_SLOW : Speed.NORMAL;
-    }
 
     // ---- Implements Detector.GradleScanner ----
 

@@ -199,8 +199,8 @@ public class Main {
 
             @NonNull
             @Override
-            public String readFile(@NonNull File file) {
-                String contents = super.readFile(file);
+            public CharSequence readFile(@NonNull File file) {
+                CharSequence contents = super.readFile(file);
                 if (Project.isAospBuildEnvironment()
                         && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
                     if (mAndroidAnnotationPattern == null) {

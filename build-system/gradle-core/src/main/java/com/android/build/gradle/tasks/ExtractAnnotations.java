@@ -317,7 +317,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                         getLogger().warn("Could not read file", e);
                         return;
                     }
-                    EcjSourceFile unit = new EcjSourceFile(contents, file, encoding);
+                    EcjSourceFile unit = EcjSourceFile.create(contents, file, encoding);
                     sourceUnits.add(unit);
                 }
             }

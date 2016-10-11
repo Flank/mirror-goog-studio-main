@@ -23,7 +23,7 @@ import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
 import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.ide.common.repository.GradleCoordinate.*;
+import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -45,11 +45,13 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.util.Collection;
-import java.util.Collections;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Check which looks for potential errors in declarations of ConstraintLayout, such as

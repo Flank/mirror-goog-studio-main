@@ -254,12 +254,12 @@ public class EcjParser extends JavaParser {
         List<EcjSourceFile> sources = Lists.newArrayListWithExpectedSize(contexts.size());
         mSourceUnits = Maps.newHashMapWithExpectedSize(sources.size());
         for (JavaContext context : contexts) {
-            String contents = context.getContents();
+            CharSequence contents = context.getContents();
             if (contents == null) {
                 continue;
             }
             File file = context.file;
-            EcjSourceFile unit = new EcjSourceFile(contents, file);
+            EcjSourceFile unit = EcjSourceFile.create(contents, file);
             sources.add(unit);
             mSourceUnits.put(file, unit);
         }
@@ -324,9 +324,7 @@ public class EcjParser extends JavaParser {
         }
 
         @Nullable
-        public PsiJavaFile findFile(
-                @NonNull EcjSourceFile sourceUnit,
-                @Nullable String source) {
+        public PsiJavaFile findFile(@NonNull EcjSourceFile sourceUnit) {
             if (mPsiMap != null) {
                 PsiJavaFile file = mPsiMap.get(sourceUnit);
                 if (file != null) {
@@ -385,7 +383,7 @@ public class EcjParser extends JavaParser {
                 if (unit != null) {
                     EcjSourceFile sourceUnit = mUnitToSource.get(unit);
                     if (sourceUnit != null) {
-                        return findFile(sourceUnit, null);
+                        return findFile(sourceUnit);
                     }
                 }
                 declaringClass = declaringClass.enclosingType();
@@ -630,7 +628,7 @@ public class EcjParser extends JavaParser {
             EcjSourceFile sourceUnit = mSourceUnits.get(context.file);
             if (sourceUnit != null) {
                 try {
-                    return mEcjResult.findFile(sourceUnit, context.getContents());
+                    return mEcjResult.findFile(sourceUnit);
                 } catch (Throwable t) {
                     mClient.log(t, "Failed converting ECJ parse tree to PSI for file %1$s",
                             context.file.getPath());
@@ -644,7 +642,7 @@ public class EcjParser extends JavaParser {
 
     @Override
     public Node parseJava(@NonNull JavaContext context) {
-        String code = context.getContents();
+        CharSequence code = context.getContents();
         if (code == null) {
             return null;
         }
@@ -652,7 +650,7 @@ public class EcjParser extends JavaParser {
         CompilationUnitDeclaration unit = getParsedUnit(context, code);
         try {
             EcjTreeConverter converter = new EcjTreeConverter();
-            converter.visit(code, unit);
+            converter.visit(code.toString(), unit);
             List<? extends Node> nodes = converter.getAll();
 
             if (nodes != null) {
@@ -676,7 +674,7 @@ public class EcjParser extends JavaParser {
     @Nullable
     private CompilationUnitDeclaration getParsedUnit(
             @NonNull JavaContext context,
-            @NonNull String code) {
+            @NonNull CharSequence code) {
         EcjSourceFile sourceUnit = null;
         if (mSourceUnits != null && mEcjResult != null) {
             sourceUnit = mSourceUnits.get(context.file);
@@ -689,7 +687,7 @@ public class EcjParser extends JavaParser {
         }
 
         if (sourceUnit == null) {
-            sourceUnit = new EcjSourceFile(code, context.file);
+            sourceUnit = EcjSourceFile.create(code, context.file);
         }
         try {
             CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
@@ -729,7 +727,7 @@ public class EcjParser extends JavaParser {
             int fromDelta,
             @NonNull Node to,
             int toDelta) {
-        String contents = context.getContents();
+        CharSequence contents = context.getContents();
         int start = Math.max(0, from.getPosition().getStart() + fromDelta);
         int end = Math.min(contents == null ? Integer.MAX_VALUE : contents.length(),
                 to.getPosition().getEnd() + toDelta);
@@ -823,6 +821,26 @@ public class EcjParser extends JavaParser {
 
         mSourceUnits = null;
         mTypeUnits = null;
+    }
+
+    /**
+     * <b>PARTIALLY</b> disposes the current ECJ result where we want to keep the ECJ
+     * compilation units, but get rid of the PSI cached data. This is used when we have
+     * legacy (Lombok) custom lint rules about to be run, where we want to re-use all the
+     * ECJ parse data, but we won't need the PSI data (which can be large) so clear it all
+     * first.
+     * <b>
+     * NOTE: This method is called via reflection.
+     */
+    @SuppressWarnings("unused") // Called via reflection from LintDriver
+    public void disposePsi() {
+        if (mEcjResult != null) {
+            EcjPsiManager psiManager = mEcjResult.mPsiManager;
+            if (psiManager != null) {
+                psiManager.clear();
+            }
+            mEcjResult.mPsiMap = null;
+        }
     }
 
     @Nullable

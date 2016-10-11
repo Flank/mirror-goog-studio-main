@@ -58,7 +58,7 @@ public class ClassContext extends Context {
     /** The source file, if known/found */
     private File mSourceFile;
     /** The contents of the source file, if source file is known/found */
-    private String mSourceContents;
+    private CharSequence mSourceContents;
     /** Whether we've searched for the source file (used to avoid repeated failed searches) */
     private boolean mSearchedForSource;
     /** If the file is a relative path within a jar file, this is the jar file, otherwise null */
@@ -97,7 +97,7 @@ public class ClassContext extends Context {
             @NonNull byte[] bytes,
             @NonNull ClassNode classNode,
             boolean fromLibrary,
-            @Nullable String sourceContents) {
+            @Nullable CharSequence sourceContents) {
         super(driver, project, main, file);
         mJarFile = jarFile;
         mBinDir = binDir;
@@ -168,32 +168,30 @@ public class ClassContext extends Context {
                     source = source.substring(0, index) + DOT_JAVA;
                 }
             }
-            if (source != null) {
-                if (mJarFile != null) {
-                    String relative = file.getParent() + File.separator + source;
+            if (mJarFile != null) {
+                String relative = file.getParent() + File.separator + source;
+                List<File> sources = getProject().getJavaSourceFolders();
+                for (File dir : sources) {
+                    File sourceFile = new File(dir, relative);
+                    if (sourceFile.exists()) {
+                        mSourceFile = sourceFile;
+                        break;
+                    }
+                }
+            } else {
+                // Determine package
+                String topPath = mBinDir.getPath();
+                String parentPath = file.getParentFile().getPath();
+                if (parentPath.startsWith(topPath)) {
+                    int start = topPath.length() + 1;
+                    String relative = start > parentPath.length() ? // default package?
+                            "" : parentPath.substring(start);
                     List<File> sources = getProject().getJavaSourceFolders();
                     for (File dir : sources) {
-                        File sourceFile = new File(dir, relative);
+                        File sourceFile = new File(dir, relative + File.separator + source);
                         if (sourceFile.exists()) {
                             mSourceFile = sourceFile;
                             break;
-                        }
-                    }
-                } else {
-                    // Determine package
-                    String topPath = mBinDir.getPath();
-                    String parentPath = file.getParentFile().getPath();
-                    if (parentPath.startsWith(topPath)) {
-                        int start = topPath.length() + 1;
-                        String relative = start > parentPath.length() ? // default package?
-                                "" : parentPath.substring(start);
-                        List<File> sources = getProject().getJavaSourceFolders();
-                        for (File dir : sources) {
-                            File sourceFile = new File(dir, relative + File.separator + source);
-                            if (sourceFile.exists()) {
-                                mSourceFile = sourceFile;
-                                break;
-                            }
                         }
                     }
                 }
@@ -209,11 +207,11 @@ public class ClassContext extends Context {
      * @return the source contents, or ""
      */
     @NonNull
-    public String getSourceContents() {
+    public CharSequence getSourceContents() {
         if (mSourceContents == null) {
             File sourceFile = getSourceFile();
             if (sourceFile != null) {
-                mSourceContents = getClient().readFile(mSourceFile);
+                mSourceContents = getClient().readFile(sourceFile);
             }
 
             if (mSourceContents == null) {
@@ -238,7 +236,7 @@ public class ClassContext extends Context {
      *         hasn't already been read.
      */
     @Nullable
-    public String getSourceContents(boolean read) {
+    public CharSequence getSourceContents(boolean read) {
         if (read) {
             return getSourceContents();
         } else {

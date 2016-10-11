@@ -188,7 +188,7 @@ public class XmlContext extends ResourceContext {
 
     public boolean isSuppressedWithComment(@NonNull Node node, @NonNull Issue issue) {
         // Check whether there is a comment marker
-        String contents = getContents();
+        CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
 
         int start = mParser.getNodeStartOffset(this, node);

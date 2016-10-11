@@ -54,7 +54,7 @@ public class Warning implements Comparable<Warning> {
     public int line = -1;
     public int offset = -1;
     public String errorLine;
-    public String fileContents;
+    public CharSequence fileContents;
     public Set<Variant> variants;
 
     public Warning(Issue issue, String message, Severity severity, Project project) {

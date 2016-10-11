@@ -240,10 +240,7 @@ abstract class EcjPsiSourceElement extends EcjPsiElement
         if (file != null) {
             TextRange range = getTextRange();
             if (range != null) {
-                String text = file.getText();
-                if (text != null) {
-                    return text.substring(range.getStartOffset(), range.getEndOffset());
-                }
+                return file.getText(range);
             }
             return super.toString();
         }
@@ -270,11 +267,79 @@ abstract class EcjPsiSourceElement extends EcjPsiElement
 
     @Override
     public boolean textMatches(@NonNull CharSequence charSequence) {
+        EcjPsiJavaFile file;
+        if (this instanceof EcjPsiJavaFile) {
+            file = (EcjPsiJavaFile) this;
+        } else {
+            file = (EcjPsiJavaFile) getContainingFile();
+        }
+        if (file != null) {
+            TextRange range = getTextRange();
+            if (range.getLength() != charSequence.length()) {
+                return false;
+            }
+            char[] contents = file.getFileContents();
+            int end = range.getEndOffset();
+            if (end <= contents.length) {
+                for (int i = range.getStartOffset(), j = 0; i < range.getEndOffset(); i++, j++) {
+                    if (contents[i] != charSequence.charAt(j)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         return getText().equals(charSequence.toString());
     }
 
     @Override
     public boolean textMatches(@NonNull PsiElement psiElement) {
+        TextRange thisRange = getTextRange();
+        TextRange otherRange = psiElement.getTextRange();
+
+        if (thisRange.getLength() != otherRange.getLength()) {
+            return false;
+        }
+
+        EcjPsiJavaFile thisFile;
+        if (this instanceof EcjPsiJavaFile) {
+            thisFile = (EcjPsiJavaFile) this;
+        } else {
+            thisFile = (EcjPsiJavaFile) getContainingFile();
+        }
+        if (thisFile != null) {
+            EcjPsiJavaFile otherFile;
+            if (this instanceof EcjPsiJavaFile) {
+                otherFile = (EcjPsiJavaFile) this;
+            } else {
+                otherFile = (EcjPsiJavaFile) getContainingFile();
+            }
+            if (otherFile != null) {
+                char[] thisContents = thisFile.getFileContents();
+                char[] otherContents = otherFile.getFileContents();
+
+                if (thisRange.getEndOffset() > thisContents.length ||
+                        otherRange.getEndOffset() >= otherContents.length) {
+                    return false;
+                }
+
+                for (int i = thisRange.getStartOffset(), j = otherRange.getStartOffset();
+                        i < thisRange.getEndOffset();
+                        i++, j++) {
+                    if (thisContents[i] != otherContents[j]) {
+                        return false;
+                    }
+                }
+
+                return true;
+            } else {
+                return textMatches(psiElement.getText());
+            }
+        }
+
         return getText().equals(psiElement.getText());
     }
 

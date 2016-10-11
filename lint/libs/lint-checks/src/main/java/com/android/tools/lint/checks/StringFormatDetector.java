@@ -35,6 +35,7 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_OBJECT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
+import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -753,9 +754,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements JavaPsi
             int startOffset = startLocation.getOffset();
             int endOffset = endLocation.getOffset();
             if (startOffset >= 0) {
-                String contents = context.getClient().readFile(location.getFile());
+                CharSequence contents = context.getClient().readFile(location.getFile());
                 if (endOffset <= contents.length() && startOffset < endOffset) {
-                    int formatOffset = contents.indexOf(formatString, startOffset);
+                    int formatOffset = indexOf(contents, formatString, startOffset);
                     if (formatOffset != -1 && formatOffset <= endOffset) {
                         return Location.create(location.getFile(), contents,
                                 formatOffset + substringStart, formatOffset + substringEnd);
