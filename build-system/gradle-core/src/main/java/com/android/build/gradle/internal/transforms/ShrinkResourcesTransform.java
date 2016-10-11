@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -84,9 +85,13 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull
     private final ImmutableList<File> secondaryInputs;
 
+    @NonNull
     private final File sourceDir;
+    @NonNull
     private final File resourceDir;
+    @NonNull
     private final File mergedManifest;
+    @Nullable
     private final File mappingFile;
 
     public ShrinkResourcesTransform(
@@ -102,10 +107,9 @@ public class ShrinkResourcesTransform extends Transform {
         this.logger = logger;
 
         BaseVariantData<?> variantData = variantOutputData.variantData;
-        ProcessAndroidResources processResourcesTask = variantData.generateRClassTask;
-        sourceDir = processResourcesTask.getSourceOutputDir();
+        sourceDir = variantData.getScope().getRClassSourceOutputDir();
         resourceDir = variantData.getScope().getFinalResourcesDir();
-        mergedManifest = variantOutputData.manifestProcessorTask.getManifestOutputFile();
+        mergedManifest = variantOutputData.getScope().getManifestOutputFile();
         mappingFile = variantData.getMappingFile();
 
         if (mappingFile != null) {
