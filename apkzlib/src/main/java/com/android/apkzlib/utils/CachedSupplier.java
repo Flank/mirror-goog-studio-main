@@ -45,7 +45,8 @@ import javax.annotation.Nonnull;
 public class CachedSupplier<T> {
 
     /**
-     * The cached data, {@code null} if computation resulted in {@code null}.
+     * The cached data, {@code null} if computation resulted in {@code null}. It is also
+     * {@code null} if the cached data has not yet been computed.
      */
     private T cached;
 

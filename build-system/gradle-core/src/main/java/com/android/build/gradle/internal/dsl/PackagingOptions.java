@@ -87,6 +87,12 @@ import java.util.Set;
  *         <li>{@code /LICENCE.txt}
  *         <li>{@code /NOTICE}
  *         <li>{@code /NOTICE.txt}
+ *         <li><code>/META-INF/&#042;.DSA</code> (all DSA signature files)
+ *         <li><code>/META-INF/&#042;.EC</code> (all EC signature files)
+ *         <li><code>/META-INF/&#042;.SF</code> (all signature files)
+ *         <li><code>/META-INF/&#042;.RSA</code> (all RSA signature files)
+ *         <li><code>/META-INF/maven/&#042;&#042;</code> (all files in the {@code maven} meta inf
+ *         directory)</li>
  *         <li><code>&#042;&#042;/.svn/&#042;&#042;</code> (all {@code .svn} directory contents)
  *         <li><code>&#042;&#042;/CVS/&#042;&#042;</code> (all {@code CVS} directory contents)
  *         <li><code>&#042;&#042;/SCCS/&#042;&#042;</code> (all {@code SCCS} directory contents)
@@ -145,8 +151,14 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
     public PackagingOptions() {
         exclude("/META-INF/LICENCE");
         exclude("/META-INF/LICENSE.txt");
+        exclude("/META-INF/MANIFEST.MF");
         exclude("/META-INF/NOTICE");
         exclude("/META-INF/NOTICE.txt");
+        exclude("/META-INF/*.DSA");
+        exclude("/META-INF/*.EC");
+        exclude("/META-INF/*.SF");
+        exclude("/META-INF/*.RSA");
+        exclude("/META-INF/maven/**");
         exclude("/NOTICE");
         exclude("/NOTICE.txt");
         exclude("/LICENSE.txt");

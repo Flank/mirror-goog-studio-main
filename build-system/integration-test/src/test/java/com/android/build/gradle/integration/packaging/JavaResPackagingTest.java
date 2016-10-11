@@ -141,7 +141,7 @@ public class JavaResPackagingTest {
     public void testNonIncrementalPackaging() throws IOException, ProcessException {
         execute("clean", "assembleDebug", "assembleAndroidTest");
 
-        // chek the files are there. Start from the bottom of the dependency graph
+        // check the files are there. Start from the bottom of the dependency graph
         checkAar(    libProject2, "library2.txt",     "library2:abcd");
         checkTestApk(libProject2, "library2.txt",     "library2:abcd");
         checkTestApk(libProject2, "library2test.txt", "library2Test:abcd");
