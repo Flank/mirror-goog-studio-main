@@ -22,6 +22,8 @@ import java.util.function.Consumer;
 public enum ProjectScenario {
     NORMAL(flags -> {}),
     DEX_OUT_OF_PROCESS(flags -> flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS)),
+    NATIVE_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.NATIVE)),
+    LEGACY_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.LEGACY)),
     ;
 
     private final Flags flags;

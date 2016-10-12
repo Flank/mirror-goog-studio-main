@@ -27,7 +27,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -80,7 +79,10 @@ public class TestFileUtils {
             @NonNull String replace) throws IOException {
         String content = Files.toString(file, Charset.defaultCharset());
         String newContent = content.replaceAll(search, replace);
-        assertNotEquals("No match in file", content, newContent);
+        assertNotEquals(
+                "No match in file\n - File:   " + file.getPath() + "\n - Search: " + search + "\n",
+                content,
+                newContent);
 
         // Gradle has a bug, where it may not notice rapid changes to build.gradle if the length of
         // the file has not changed. Work around this by appending a new line at the end.

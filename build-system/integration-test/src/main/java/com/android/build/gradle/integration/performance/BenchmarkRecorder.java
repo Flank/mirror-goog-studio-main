@@ -100,7 +100,10 @@ public final class BenchmarkRecorder {
         } else {
             Logging.GradleBenchmarkResult.Experiment.Builder experiment =
                     Logging.GradleBenchmarkResult.Experiment.newBuilder();
-            // TODO: way to set experiment comment
+            String experimentComment = System.getenv("BENCHMARK_EXPERIMENT");
+            if (experimentComment != null) {
+                experiment.setComment(experimentComment);
+            }
             benchmarkResult.setExperiment(experiment);
         }
 
