@@ -78,6 +78,7 @@ public class SdkHandler {
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
 
+    public static final String NDK_BUNDLE_SUBPATH = "ndk-bundle";
     public static void setTestSdkFolder(File testSdkFolder) {
         sTestSdkFolder = testSdkFolder;
     }
@@ -247,9 +248,16 @@ public class SdkHandler {
             return;
         }
 
-        String envVar = System.getenv("ANDROID_NDK_HOME");
-        if (envVar != null) {
-            ndkFolder = new File(envVar);
+        String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
+        if (ndkEnvVar != null) {
+            ndkFolder = new File(ndkEnvVar);
+            return;
+        }
+
+        String stdEnvVar = System.getenv("ANDROID_HOME");
+        if (stdEnvVar != null && !stdEnvVar.isEmpty()) {
+            // Worth checking if the NDK came bundled with the SDK
+            ndkFolder = new File(stdEnvVar, NDK_BUNDLE_SUBPATH);
         }
     }
 
