@@ -261,7 +261,7 @@ public class ManifestMerger2 {
             // been overridden so the problem was transient. However, with the final document
             // ready, all placeholders values must have been provided.
             performPlaceHolderSubstitution(loadedMainManifestInfo, xmlDocumentOptional.get(),
-                    mergingReportBuilder);
+                    mergingReportBuilder, mMergeType);
             if (mergingReportBuilder.hasErrors()) {
                 return mergingReportBuilder.build();
             }
@@ -489,15 +489,17 @@ public class ManifestMerger2 {
 
         // perform place holder substitution, this is necessary to do so early in case placeholders
         // are used in key attributes.
-        performPlaceHolderSubstitution(manifestInfo, xmlDocument, builder);
+        performPlaceHolderSubstitution(manifestInfo, xmlDocument, builder, mMergeType);
 
         return new LoadedManifestInfo(manifestInfo,
                 Optional.fromNullable(originalPackageName), xmlDocument);
     }
 
-    private void performPlaceHolderSubstitution(@NonNull ManifestInfo manifestInfo,
+    private void performPlaceHolderSubstitution(
+            @NonNull ManifestInfo manifestInfo,
             @NonNull XmlDocument xmlDocument,
-            @NonNull MergingReport.Builder mergingReportBuilder) {
+            @NonNull MergingReport.Builder mergingReportBuilder,
+            @NonNull MergeType mergeType) {
 
         if (mOptionalFeatures.contains(Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)) {
             return;
@@ -522,7 +524,7 @@ public class ManifestMerger2 {
                 }
             }
             builder.put(PlaceholderHandler.PACKAGE_NAME, packageName);
-            if (mMergeType != MergeType.LIBRARY) {
+            if (mergeType != MergeType.LIBRARY) {
                 builder.put(PlaceholderHandler.APPLICATION_ID, packageName);
             }
             finalPlaceHolderValues = builder.build();
@@ -531,7 +533,7 @@ public class ManifestMerger2 {
         KeyBasedValueResolver<String> placeHolderValueResolver =
                 new MapBasedKeyBasedValueResolver<String>(finalPlaceHolderValues);
         PlaceholderHandler.visit(
-                mMergeType,
+                mergeType,
                 xmlDocument,
                 placeHolderValueResolver,
                 mergingReportBuilder);
@@ -606,7 +608,8 @@ public class ManifestMerger2 {
             // substitutions so feed it with a fake merging report.
             MergingReport.Builder builder = new MergingReport.Builder(mergingReportBuilder.getLogger());
             builder.getActionRecorder().recordDefaultNodeAction(libraryDocument.getRootNode());
-            performPlaceHolderSubstitution(manifestInfo, libraryDocument, builder);
+            performPlaceHolderSubstitution(
+                    manifestInfo, libraryDocument, builder, MergeType.LIBRARY);
             if (builder.hasErrors()) {
                 // we log the errors but continue, in case the error is of no consequence
                 // to the application consuming the library.
@@ -648,7 +651,7 @@ public class ManifestMerger2 {
         APPLICATION,
 
         /**
-         * Library merging typee is used when packaging a library. The resulting android manifest
+         * Library merging type is used when packaging a library. The resulting android manifest
          * file will not merge in all the imported libraries this library depends on. Also the tools
          * annotations will not be removed as they can be useful when later importing the resulting
          * merged android manifest into an application.
