@@ -361,6 +361,16 @@ public final class FileOpUtils {
         }
     }
 
+    /**
+     * Deletes the given file if it exists. Does nothing and returns successfully if the file didn't
+     * exist to begin with.
+     *
+     * @return true if the file no longer exists, false if we failed to delete it
+     */
+    public static boolean deleteIfExists(File file, FileOp fop) {
+        return !fop.exists(file) || fop.delete(file);
+    }
+
     private FileOpUtils() {
     }
 }

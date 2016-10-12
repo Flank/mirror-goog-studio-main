@@ -158,6 +158,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
             }
 
             result = doComplete(installTemp, progress);
+            progress.logInfo(String.format("\"%1$s\" complete.", getName()));
         } finally {
             if (!result && progress.isCanceled()) {
                 cleanup(progress);
@@ -174,7 +175,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         progress.setFraction(1);
         progress.setIndeterminate(false);
         progress
-          .logInfo(String.format("\"%1$s\" %2$s.", getName(), result ? "complete" : "failed"));
+          .logInfo(String.format("\"%1$s\" %2$s.", getName(), result ? "finished" : "failed"));
         return result;
     }
 
@@ -387,6 +388,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                 }
             }
         } catch (Exception e) {
+            progress.logError("Failed to update status to " + status, e);
             updateStatus(InstallStatus.FAILED, progress);
             return false;
         }
