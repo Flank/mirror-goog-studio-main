@@ -31,7 +31,6 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -501,12 +500,8 @@ public class AaptPackageProcessBuilder extends ProcessEnvBuilder<AaptPackageProc
     }
 
     private static Collection<String> getDensityResConfigs(Collection<String> resourceConfigs) {
-        return Collections2.filter(new ArrayList<String>(resourceConfigs),
-                new Predicate<String>() {
-                    @Override
-                    public boolean apply(@Nullable String input) {
-                        return Density.getEnum(input) != null;
-                    }
-                });
+        return Collections2.filter(
+                new ArrayList<>(resourceConfigs),
+                input -> Density.getEnum(input) != null);
     }
 }

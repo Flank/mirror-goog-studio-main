@@ -29,7 +29,6 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
@@ -45,6 +44,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -310,28 +310,22 @@ public abstract class AbstractShrinker<T> {
             }
             Files.createParentDirs(outputFile.get());
 
-            final Predicate<String> keepInterfacePredicate = new Predicate<String>() {
-                @Override
-                public boolean apply(String input) {
-                    T iface = mGraph.getClassReference(input);
+            final Predicate<String> keepInterfacePredicate = input -> {
+                T iface = mGraph.getClassReference(input);
 
-                    return !isProgramClass(iface)
-                            || mGraph.isReachable(iface, CounterSet.SHRINK);
-                }
+                return !isProgramClass(iface)
+                        || mGraph.isReachable(iface, CounterSet.SHRINK);
             };
 
-            mExecutor.execute(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    byte[] newBytes = rewrite(
-                            mGraph.getClassName(klass),
-                            sourceFile,
-                            mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK),
-                            keepInterfacePredicate);
+            mExecutor.execute(() -> {
+                byte[] newBytes = rewrite(
+                        mGraph.getClassName(klass),
+                        sourceFile,
+                        mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK),
+                        keepInterfacePredicate);
 
-                    Files.write(newBytes, outputFile.get());
-                    return null;
-                }
+                Files.write(newBytes, outputFile.get());
+                return null;
             });
         }
 

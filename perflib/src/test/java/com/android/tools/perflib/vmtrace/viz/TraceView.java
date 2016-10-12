@@ -24,10 +24,11 @@ import com.android.tools.perflib.vmtrace.SearchResult;
 import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.tools.perflib.vmtrace.VmTraceParser;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -35,7 +36,17 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -219,12 +230,11 @@ public class TraceView {
             mTraceData = traceData;
 
             List<ThreadInfo> threads = traceData.getThreads(true);
-            ThreadInfo defaultThread = Iterables.find(threads, new Predicate<ThreadInfo>() {
-                @Override
-                public boolean apply(ThreadInfo input) {
-                    return DEFAULT_THREAD_NAME.equals(input.getName());
-                }
-            }, threads.get(0));
+            ThreadInfo defaultThread =
+                    Iterables.find(
+                            threads,
+                            input ->  DEFAULT_THREAD_NAME.equals(input.getName()),
+                            threads.get(0));
 
             mThreadCombo.setModel(new DefaultComboBoxModel(threads.toArray()));
             mThreadCombo.setEnabled(true);
