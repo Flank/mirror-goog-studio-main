@@ -54,7 +54,6 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
 import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -94,6 +93,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -478,7 +478,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                             getBuilder().getCreatedBy(),
                             getMinSdkVersion(),
                             PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest),
-                            getNoCompressPredicate()::apply);
+                            getNoCompressPredicate());
 
             getLogger().debug(
                     "Information to create the APK: apkPath={}, v1SigningEnabled={},"

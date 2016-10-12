@@ -44,7 +44,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -386,17 +385,14 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
 
                 Collection<String> filteredPermissions = Collections2.filter(
                         mUnsupportedHardwareImpliedPermissions,
-                        new Predicate<String>() {
-                            @Override
-                            public boolean apply(String input) {
-                                // Filter out all permissions that already have their
-                                // corresponding implied hardware declared in
-                                // the AndroidManifest.xml
-                                String usesFeature =
-                                        PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE.get(input);
-                                return usesFeature != null
-                                        && !mAllUnsupportedTvUsesFeatures.contains(usesFeature);
-                            }
+                        input -> {
+                            // Filter out all permissions that already have their
+                            // corresponding implied hardware declared in
+                            // the AndroidManifest.xml
+                            String usesFeature =
+                                    PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE.get(input);
+                            return usesFeature != null
+                                    && !mAllUnsupportedTvUsesFeatures.contains(usesFeature);
                         });
 
                 List<Element> permissionsWithoutUsesFeatures =

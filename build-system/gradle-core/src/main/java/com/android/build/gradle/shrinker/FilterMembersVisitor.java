@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.shrinker;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -27,6 +26,7 @@ import org.objectweb.asm.Opcodes;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * {@link ClassVisitor} that skips class members which are not reachable. It also filters the list
@@ -47,7 +47,7 @@ public class FilterMembersVisitor extends ClassVisitor {
             String[] interfaces) {
         List<String> interfacesToKeep = Lists.newArrayList();
         for (String iface : interfaces) {
-            if (mClassKeptPredicate.apply(iface)) {
+            if (mClassKeptPredicate.test(iface)) {
                 interfacesToKeep.add(iface);
             }
         }
@@ -78,7 +78,7 @@ public class FilterMembersVisitor extends ClassVisitor {
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
         // Remove constant pool references to removed classes.
-        if (mClassKeptPredicate.apply(name)) {
+        if (mClassKeptPredicate.test(name)) {
             super.visitInnerClass(name, outerName, innerName, access);
         }
     }

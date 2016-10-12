@@ -33,7 +33,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-import com.google.common.io.Files;
 
 import java.io.Closeable;
 import java.io.File;
@@ -267,7 +266,7 @@ public class IncrementalPackager implements Closeable {
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
                         Maps.filterKeys(
                                 files,
-                                rf -> mAbiPredicate.apply(rf.getOsIndependentRelativePath())
+                                rf -> mAbiPredicate.test(rf.getOsIndependentRelativePath())
                         )
                 )
         );

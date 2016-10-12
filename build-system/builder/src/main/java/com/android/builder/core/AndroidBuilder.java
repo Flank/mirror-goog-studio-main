@@ -89,8 +89,6 @@ import com.android.xml.AndroidManifest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -100,6 +98,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -113,6 +112,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -1708,10 +1708,12 @@ public class AndroidBuilder {
             if (jniLoc.isFile()) {
                 jniArchiveMods.put(jniLoc, FileModificationType.NEW);
             } else {
-                Set<RelativeFile> files = RelativeFiles.fromDirectory(jniLoc,
-                        RelativeFiles.fromPathPredicate(nativeLibraryPredicate::apply));
-                jniMods.putAll(Maps.asMap(files,
-                        Functions.constant(FileModificationType.NEW)));
+                Set<RelativeFile> files =
+                        RelativeFiles.fromDirectory(
+                                jniLoc,
+                                RelativeFiles.fromPathPredicate(nativeLibraryPredicate));
+                jniMods.putAll(
+                        Maps.asMap(files, Functions.constant(FileModificationType.NEW)));
             }
         }
 
@@ -1753,7 +1755,7 @@ public class AndroidBuilder {
                         mCreatedBy,
                         minSdkVersion,
                         NativeLibrariesPackagingMode.COMPRESSED,
-                        noCompressPredicate::apply);
+                        noCompressPredicate);
         try (OldPackager packager = new OldPackager(creationData, androidResPkgLocation, mLogger)) {
             // add dex folder to the apk root.
             if (!dexFolders.isEmpty()) {
@@ -1769,7 +1771,7 @@ public class AndroidBuilder {
             for (Map.Entry<File, FileModificationType> resourceArchiveUpdate :
                     javaResourceArchiveMods.entrySet()) {
                 packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
-                        resourceArchiveUpdate.getValue(), Predicates.alwaysFalse());
+                        resourceArchiveUpdate.getValue(), i -> false);
             }
 
             for (Map.Entry<RelativeFile, FileModificationType> jniLibUpdates : jniMods.entrySet()) {
@@ -1779,7 +1781,7 @@ public class AndroidBuilder {
             for (Map.Entry<File, FileModificationType> resourceArchiveUpdate :
                     jniArchiveMods.entrySet()) {
                 packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
-                        resourceArchiveUpdate.getValue(), Predicates.not(nativeLibraryPredicate));
+                        resourceArchiveUpdate.getValue(), nativeLibraryPredicate.negate());
             }
 
             for (RelativeFile asset : assets) {

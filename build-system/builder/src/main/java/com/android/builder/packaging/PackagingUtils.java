@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.model.AaptOptions;
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -36,6 +35,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Utility class for packaging.

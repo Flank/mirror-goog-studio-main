@@ -34,7 +34,6 @@ import com.android.builder.packaging.ZipEntryFilter;
 import com.android.builder.signing.SignedJarApkCreatorFactory;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closer;
 
@@ -49,6 +48,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -341,10 +341,10 @@ public final class OldPackager implements Closeable {
                             throw new RuntimeException(e);
                         }
 
-                        return isIgnored.apply(input);
+                        return isIgnored.test(input);
                     };
 
-                    mApkCreator.writeZip(file, null, newIsIgnored::apply);
+                    mApkCreator.writeZip(file, null, newIsIgnored);
                 } catch (Throwable t) {
                     throw closer.rethrow(t, ZipAbortException.class);
                 } finally {

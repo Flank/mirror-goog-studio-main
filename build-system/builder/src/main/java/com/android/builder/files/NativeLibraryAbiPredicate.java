@@ -18,10 +18,10 @@ package com.android.builder.files;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +68,7 @@ public class NativeLibraryAbiPredicate implements Predicate<String> {
     }
 
     @Override
-    public boolean apply(String input) {
+    public boolean test(String input) {
         Matcher AbiMatcher = ABI_PATTERN.matcher(input);
         if (!AbiMatcher.matches()) {
             return false;

@@ -21,10 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.ddmlib.logcat.LogCatMessage;
 import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+
+import java.util.function.Predicate;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat> {
@@ -68,7 +69,7 @@ public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat
 
     private boolean containsMessageThatMatches(@NonNull Predicate<LogCatMessage> predicate) {
         for (LogCatMessage message : getSubject().getFilteredLogCatMessages()) {
-            if (predicate.apply(message)) {
+            if (predicate.test(message)) {
                 return true;
             }
         }

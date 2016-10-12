@@ -26,9 +26,9 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -182,12 +182,7 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
     public List<String> getFilesToAdd(@Nullable Revision buildToolsRevision)
             throws ProcessException {
         // remove non-existing files.
-        Set<File> existingFiles = Sets.filter(mInputs, new Predicate<File>() {
-            @Override
-            public boolean apply(@Nullable File input) {
-                return input != null && input.exists();
-            }
-        });
+        Set<File> existingFiles = Sets.filter(mInputs, input -> input != null && input.exists());
 
         if (existingFiles.isEmpty()) {
             throw new ProcessException("No files to pass to dex.");
