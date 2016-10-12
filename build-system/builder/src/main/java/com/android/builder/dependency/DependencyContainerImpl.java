@@ -150,7 +150,7 @@ public class DependencyContainerImpl implements DependencyContainer {
 
         List<AndroidLibrary> flatAndroidLibs = Lists.newArrayList();
         List<AndroidAtom> flatAndroidAtoms = Lists.newArrayList();
-        Set<JavaLibrary> flatJavaLibs = Sets.newIdentityHashSet();
+        Set<JavaLibrary> flatJavaLibs = Sets.newLinkedHashSet();
 
         computeFlatAtomList(mAtomDependencies, flatAndroidAtoms, flatAndroidLibs, flatJavaLibs);
         computeFlatLibraryList(mLibraryDependencies, flatAndroidLibs, flatJavaLibs);
