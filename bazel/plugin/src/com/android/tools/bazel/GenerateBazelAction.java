@@ -152,7 +152,6 @@ public class GenerateBazelAction extends AnAction {
                 if (orderEntry instanceof LibraryOrderEntry) {
                     // A dependency to a jar file
                     LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
-                    String libName = libraryEntry.getLibraryName();
                     Package libPkg = librariesPkg;
                     List<String> scopes = new LinkedList<>();
                     if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
@@ -160,7 +159,9 @@ public class GenerateBazelAction extends AnAction {
                     }
 
                     JavaLibrary namedLib = null;
+                    String libName = libraryEntry.getLibraryName();
                     if (libName != null) {
+                        libName = libName.replaceAll(":","_");
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(libPkg, libName);
