@@ -28,8 +28,6 @@ import com.android.ide.common.res2.FileStatus;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -42,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -157,9 +156,7 @@ public class IncrementalPackager implements Closeable {
                 Iterables.transform(
                         Iterables.filter(
                                 updates,
-                                Predicates.compose(
-                                        Predicates.equalTo(FileStatus.REMOVED),
-                                        PackagedFileUpdate.EXTRACT_STATUS)),
+                                p -> p.getStatus() == FileStatus.REMOVED),
                         PackagedFileUpdate.EXTRACT_NAME);
 
         for (String deletedPath : deletedPaths) {
@@ -167,11 +164,7 @@ public class IncrementalPackager implements Closeable {
         }
 
         Predicate<PackagedFileUpdate> isNewOrChanged =
-                Predicates.compose(
-                        Predicates.or(
-                                Predicates.equalTo(FileStatus.NEW),
-                                Predicates.equalTo(FileStatus.CHANGED)),
-                        PackagedFileUpdate.EXTRACT_STATUS);
+                pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == FileStatus.CHANGED;
 
         Function<PackagedFileUpdate, File> extractBaseFile =
                 Functions.compose(
@@ -181,11 +174,7 @@ public class IncrementalPackager implements Closeable {
         Iterable<PackagedFileUpdate> newOrChangedNonArchiveFiles =
                 Iterables.filter(
                         updates,
-                        Predicates.and(
-                                isNewOrChanged,
-                                Predicates.compose(
-                                        Files.isDirectory(),
-                                        extractBaseFile)));
+                        pfu -> pfu.getSource().getBase().isDirectory() && isNewOrChanged.test(pfu));
 
         for (PackagedFileUpdate rf : newOrChangedNonArchiveFiles) {
             mApkCreator.writeFile(rf.getSource().getFile(), rf.getName());
@@ -194,11 +183,7 @@ public class IncrementalPackager implements Closeable {
         Iterable<PackagedFileUpdate> newOrChangedArchiveFiles =
                 Iterables.filter(
                         updates,
-                        Predicates.and(
-                                isNewOrChanged,
-                                Predicates.compose(
-                                        Files.isFile(),
-                                        extractBaseFile)));
+                        pfu -> pfu.getSource().getBase().isFile() && isNewOrChanged.test(pfu));
 
         Iterable<File> archives = Iterables.transform(newOrChangedArchiveFiles, extractBaseFile);
         Set<String> names = Sets.newHashSet(
@@ -234,20 +219,12 @@ public class IncrementalPackager implements Closeable {
          * resources. These will be removed here, but this filtering code can -- and should -- be
          * removed once that bug is fixed.
          */
-        Predicate<String> isNotClassFile = new Predicate<String>() {
-            @Override
-            public boolean apply(String input) {
-                return !input.endsWith(SdkConstants.DOT_CLASS);
-            }
-        };
-
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
                         Maps.filterKeys(
                                 files,
-                                Predicates.compose(
-                                        isNotClassFile,
-                                        RelativeFile::getOsIndependentRelativePath))));
+                                rf -> !rf.getOsIndependentRelativePath()
+                                        .endsWith(SdkConstants.DOT_CLASS))));
     }
 
     /**
@@ -290,10 +267,7 @@ public class IncrementalPackager implements Closeable {
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
                         Maps.filterKeys(
                                 files,
-                                Predicates.compose(
-                                        mAbiPredicate,
-                                        RelativeFile::getOsIndependentRelativePath
-                                )
+                                rf -> mAbiPredicate.apply(rf.getOsIndependentRelativePath())
                         )
                 )
         );
@@ -307,18 +281,12 @@ public class IncrementalPackager implements Closeable {
      */
     public void updateAtomMetadata(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
             throws IOException {
-        Predicate<File> isAtomMetadataFile = new Predicate<File>() {
-            @Override
-            public boolean apply(File input) {
-                return input.getName().equals(SdkConstants.FN_ATOM_METADATA) ||
+        Predicate<File> isAtomMetadataFile = input ->
+                input.getName().equals(SdkConstants.FN_ATOM_METADATA) ||
                         input.getName().equals(SdkConstants.FN_INSTANTAPP_METADATA);
-            }
-        };
 
         updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(
-                Maps.filterKeys(files, Predicates.compose(
-                        isAtomMetadataFile,
-                        RelativeFile::getFile)))
+                Maps.filterKeys(files, rf -> isAtomMetadataFile.test(rf.getFile())))
                 .stream()
                 .map(pfu -> new PackagedFileUpdate(
                         pfu.getSource(),
