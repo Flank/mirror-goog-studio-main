@@ -231,13 +231,11 @@ iml_module(
         "//tools/idea/.idea/libraries:JDOM",
         "//tools/idea/.idea/libraries:Log4J",
         "//tools/idea/.idea/libraries:Trove4j",
-        "//tools/idea/.idea/libraries:picocontainer",
         "//tools:idea.platform-resources-en[module]",
         "//tools:idea.annotations[module]",
         "//tools:idea.util-rt[module]",
         "//tools/idea/.idea/libraries:jna",
         "//tools/idea/.idea/libraries:OroMatcher",
-        "//tools/idea/.idea/libraries:ForkJoin",
         "//tools/idea/.idea/libraries:Snappy-Java",
         "//tools/idea/.idea/libraries:imgscalr",
         "//tools/idea/.idea/libraries:batik",
@@ -248,7 +246,6 @@ iml_module(
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools:idea.annotations",
         "//tools:idea.util-rt",
-        "//tools/idea/.idea/libraries:ForkJoin",
         "//tools/idea/.idea/libraries:Snappy-Java",
     ],
     javacopts = ["-extra_checks:off"],
@@ -515,6 +512,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:Mocks[test]",
         "//tools:idea.analysis-api[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
     exports = [
         "//tools:idea.platform-api",
@@ -687,10 +685,7 @@ iml_module(
 iml_module(
     name = "idea.java-psi-api",
     srcs = ["idea/java/java-psi-api/src"],
-    deps = [
-        "//tools:idea.core-api[module]",
-        "//tools:idea.projectModel-api[module]",
-    ],
+    deps = ["//tools:idea.core-api[module]"],
     exports = ["//tools:idea.core-api"],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -729,7 +724,6 @@ iml_module(
     deps = [
         "//tools:idea.core-api[module]",
         "//tools/idea/.idea/libraries:picocontainer",
-        "//tools:idea.boot[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
@@ -801,19 +795,6 @@ iml_module(
 )
 
 iml_module(
-    name = "idea.usageView",
-    srcs = ["idea/platform/usageView/src"],
-    deps = [
-        "//tools:idea.lang-api[module]",
-        "//tools:idea.core-impl[module]",
-        "//tools:idea.editor-ui-ex[module]",
-    ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-iml_module(
     name = "idea.maven-server-api",
     srcs = ["idea/plugins/maven/maven-server-api/src"],
     deps = [
@@ -843,6 +824,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:picocontainer[test]",
         "//tools/idea/.idea/libraries:jna[test]",
+        "//tools:idea.MM_RegExpSupport[module]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -984,10 +966,12 @@ iml_module(
         "idea/xml/xml-analysis-impl/src",
         "idea/xml/xml-psi-impl/src",
         "idea/xml/xml-psi-impl/gen",
+        "idea/platform/usageView/src",
         "idea/platform/lvcs-impl/src",
         "idea/platform/vcs-impl/src",
         "idea/xml/impl/src",
         "idea/spellchecker/src",
+        "idea/spellchecker/gen",
         "idea/xml/relaxng/src",
         "idea/xml/dom-openapi/src",
         "idea/json/src",
@@ -1016,8 +1000,10 @@ iml_module(
         "idea/xml/xml-analysis-impl/resources",
         "idea/xml/xml-psi-impl/resources",
         "idea/xml/impl/resources",
+        "idea/spellchecker/resources",
         "idea/platform/platform-resources/src",
         "idea/json/resources",
+        "idea/platform/lang-impl/resources",
     ],
     deps = [
         "//tools:idea.lang-api[module]",
@@ -1061,7 +1047,6 @@ iml_module(
         "//tools:idea.boot[module]",
         "//tools/idea/.idea/libraries:OroMatcher",
         "//tools/idea/.idea/libraries:Velocity",
-        "//tools:idea.usageView[module]",
         "//tools/idea/.idea/libraries:xpp3-1.1.4-min",
         "//tools/idea/.idea/libraries:cli-parser",
         "//tools:idea.indexing-api[module]",
@@ -1083,11 +1068,13 @@ iml_module(
         "//tools/idea/.idea/libraries:http-client",
         "//tools/idea/.idea/libraries:imgscalr",
         "//tools/idea/.idea/libraries:Slf4j",
+        "//tools/idea/.idea/libraries:com.twelvemonkeys.imageio_imageio-tiff_3.2.1",
         "//tools/analytics-library:analytics-tracker[module]",
         "//tools/analytics-library:analytics-shared[module]",
         "//tools/analytics-library:analytics-publisher[module]",
         "//tools/base/common:studio.common[module]",
         "//tools/analytics-library:analytics-protos[module]",
+        "//tools/idea/.idea/libraries:pty4j",
         "//tools/idea/.idea/libraries:XmlRPC",
         "//tools:idea.tests_bootstrap[module]",
         "//tools:idea.resources-en[module]",
@@ -1104,7 +1091,6 @@ iml_module(
         "//tools:idea.xml-openapi",
         "//tools/idea/.idea/libraries:CGLIB",
         "//tools:idea.lang-api",
-        "//tools:idea.usageView",
         "//tools/idea/.idea/libraries:cli-parser",
         "//tools:idea.indexing-impl",
         "//tools:idea.projectModel-impl",
@@ -1347,6 +1333,7 @@ iml_module(
         "//tools:idea.projectModel-api[module]",
         "//tools:idea.MM_RegExpSupport[module]",
         "//tools:idea.lang-api[module]",
+        "//tools:idea.boot[module]",
     ],
     javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
@@ -1616,7 +1603,6 @@ iml_module(
     ],
     resources = ["idea/plugins/generate-tostring/resources"],
     deps = [
-        "//tools:idea.boot[module]",
         "//tools:idea.util[module]",
         "//tools:idea.openapi[module]",
         "//tools/idea/.idea/libraries:Trove4j",
@@ -1698,7 +1684,6 @@ iml_module(
         "//tools:idea.resources[module]",
         "//tools:idea.xdebugger-api[module]",
         "//tools:idea.jsp-openapi[module]",
-        "//tools:idea.diff-api[module]",
         "//tools:idea.jps-builders[module]",
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools:idea.instrumentation-util[module]",
@@ -1780,6 +1765,8 @@ iml_module(
         "//tools:idea.java-impl[module]",
         "//tools:idea.java-indexing-api[module]",
         "//tools:idea.smRunner[module]",
+        "//tools:idea.junit5_rt[module]",
+        "//tools/idea/.idea/libraries:junit5_rt",
     ],
     exports = ["//tools:idea.smRunner"],
     javacopts = ["-extra_checks:off"],
@@ -1889,7 +1876,6 @@ iml_module(
     srcs = ["idea/plugins/properties/src"],
     test_srcs = ["idea/plugins/properties/testSrc"],
     deps = [
-        "//tools:idea.boot[module]",
         "//tools:idea.lang-api[module]",
         "//tools:idea.platform-api[module]",
         "//tools:idea.MM_RegExpSupport[module]",
@@ -2037,6 +2023,7 @@ iml_module(
     srcs = [
         "idea/plugins/xpath/xpath-lang/src",
         "idea/plugins/xpath/xpath-view/src",
+        "idea/plugins/xpath/xpath-lang/gen",
     ],
     test_srcs = ["idea/plugins/xpath/xpath-lang/test"],
     deps = [
@@ -2628,13 +2615,6 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/jsr166e",
-    jars = ["idea/lib/jsr166e.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_import(
     name = "idea/lib/snappy-in-java-0.3.1",
     jars = ["idea/lib/snappy-in-java-0.3.1.jar"],
     visibility = ["//visibility:public"],
@@ -2733,22 +2713,8 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/netty-all-4.1.0.CR7",
-    jars = ["idea/lib/netty-all-4.1.0.CR7.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_import(
     name = "idea/lib/proxy-vole_20131209",
     jars = ["idea/lib/proxy-vole_20131209.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_import(
-    name = "idea/lib/pty4j-0.6",
-    jars = ["idea/lib/pty4j-0.6.jar"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -2812,13 +2778,6 @@ java_import(
 java_import(
     name = "idea/lib/groovy-all-2.4.6",
     jars = ["idea/lib/groovy-all-2.4.6.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_import(
-    name = "idea/lib/dev/assertj-core-3.2.0",
-    jars = ["idea/lib/dev/assertj-core-3.2.0.jar"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
@@ -3348,15 +3307,141 @@ java_import(
     tags = ["managed"],
 )
 
-java_import(
-    name = "idea/lib/asm4-all",
-    jars = ["idea/lib/asm4-all.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
 filegroup(
     name = "idea/java/jdkAnnotations",
     srcs = glob(["idea/java/jdkAnnotations/**"]),
     visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "idea.junit5_rt",
+    srcs = ["idea/plugins/junit5_rt/src"],
+    deps = [
+        "//tools:idea.junit_rt[module]",
+        "//tools:idea.java-runtime[module]",
+        "//tools/idea/.idea/libraries:junit5_rt",
+        "//tools/idea/.idea/libraries:opentest4j",
+    ],
+    javacopts = ["-extra_checks:off"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/commons-compress-1.10",
+    jars = ["idea/lib/commons-compress-1.10.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-jupiter-engine-5.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-jupiter-engine-5.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-platform-commons-1.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-platform-commons-1.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-platform-engine-1.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-platform-engine-1.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-platform-launcher-1.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-platform-launcher-1.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-platform-runner-1.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-platform-runner-1.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/junit-vintage-engine-4.12.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/junit-vintage-engine-4.12.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/plugins/junit5_rt/lib/opentest4j-1.0.0-M1",
+    jars = ["idea/plugins/junit5_rt/lib/opentest4j-1.0.0-M1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/netty-all-4.1.1.Final",
+    jars = ["idea/lib/netty-all-4.1.1.Final.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/pty4j-0.7.1",
+    jars = ["idea/lib/pty4j-0.7.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/imageio-tiff-3.2.1",
+    jars = ["idea/lib/imageio-tiff-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/imageio-core-3.2.1",
+    jars = ["idea/lib/imageio-core-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/common-lang-3.2.1",
+    jars = ["idea/lib/common-lang-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/common-io-3.2.1",
+    jars = ["idea/lib/common-io-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/common-image-3.2.1",
+    jars = ["idea/lib/common-image-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/imageio-metadata-3.2.1",
+    jars = ["idea/lib/imageio-metadata-3.2.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/dev/assertj-core-3.4.1",
+    jars = ["idea/lib/dev/assertj-core-3.4.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
 )
