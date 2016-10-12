@@ -2615,13 +2615,6 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/snappy-in-java-0.3.1",
-    jars = ["idea/lib/snappy-in-java-0.3.1.jar"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
-)
-
-java_import(
     name = "idea/lib/imgscalr-lib-4.2",
     jars = ["idea/lib/imgscalr-lib-4.2.jar"],
     visibility = ["//visibility:public"],
@@ -3442,6 +3435,13 @@ java_import(
 java_import(
     name = "idea/lib/dev/assertj-core-3.4.1",
     jars = ["idea/lib/dev/assertj-core-3.4.1.jar"],
+    visibility = ["//visibility:public"],
+    tags = ["managed"],
+)
+
+java_import(
+    name = "idea/lib/snappy-in-java-0.5.1",
+    jars = ["idea/lib/snappy-in-java-0.5.1.jar"],
     visibility = ["//visibility:public"],
     tags = ["managed"],
 )
