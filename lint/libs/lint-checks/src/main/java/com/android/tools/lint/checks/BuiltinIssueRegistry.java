@@ -103,6 +103,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(DuplicateResourceDetector.ISSUE);
         issues.add(DuplicateResourceDetector.TYPE_MISMATCH);
         issues.add(DuplicateResourceDetector.STRING_ESCAPING);
+        issues.add(UnpackedNativeCodeDetector.ISSUE);
         issues.add(UnsafeNativeCodeDetector.LOAD);
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
         issues.add(ExtraTextDetector.ISSUE);
@@ -343,7 +344,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 90;
+                initialSize += 91;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
