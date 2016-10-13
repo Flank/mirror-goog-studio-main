@@ -5,7 +5,7 @@ mainClassName = "com.android.apigenerator.Main"
 mainClassName = "com.android.tools.lint.psi.extract.ExtractPsi"
 applicationDefaultJvmArgs = ["-ea", "-Xms2048m", "-Xmx2048m"]
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
 
 repositories {
     jcenter()

@@ -14,7 +14,7 @@ java_library(
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.android.tools.external.com-intellij_uast",
+        "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",

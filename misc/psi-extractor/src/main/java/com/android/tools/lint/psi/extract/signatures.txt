@@ -20,19 +20,15 @@ com/intellij/CommonBundle
     message(Ljava/util/ResourceBundle;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
     messageOrDefault(Ljava/util/ResourceBundle;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
 com/intellij/Patches
-    APPLE_BUG_ID_10514018
     IBM_JDK_DISABLE_COLLECTION_BUG
     JDK_BUG_ID_7162125
-    JDK_BUG_ID_8007219
+    JDK_BUG_ID_8032832
     JDK_BUG_ID_8042123
     JDK_MAC_FONT_STYLE_BUG
     JDK_MAC_FONT_STYLE_DETECTION_WORKAROUND
     SLOW_GETTING_CLIPBOARD_CONTENTS
     SUN_BUG_ID_6322854
-    SUN_BUG_ID_6457572
     SUN_BUG_ID_6486393
-    SUN_BUG_ID_7179799
-    SUN_BUG_ID_8013359
     SUN_BUG_ID_8020443
     USE_REFLECTION_TO_ACCESS_JDK7
     USE_REFLECTION_TO_ACCESS_JDK8
@@ -129,8 +125,11 @@ com/intellij/openapi/application/AccessToken
     EMPTY_ACCESS_TOKEN
     <clinit>()V
     <init>()V
+    close()V
+    finish()V
 com/intellij/openapi/application/AccessToken$1
     <init>()V
+    finish()V
 com/intellij/openapi/application/Application
     acquireReadActionLock()Lcom/intellij/openapi/application/AccessToken;
     acquireWriteActionLock(Ljava/lang/Class;)Lcom/intellij/openapi/application/AccessToken;
@@ -160,7 +159,6 @@ com/intellij/openapi/application/Application
     isCommandLine()Z
     isDispatchThread()Z
     isDisposeInProgress()Z
-    isDisposed()Z
     isEAP()Z
     isHeadlessEnvironment()Z
     isInternal()Z
@@ -186,7 +184,6 @@ com/intellij/openapi/application/ApplicationListener
     writeActionStarted(Ljava/lang/Object;)V
 com/intellij/openapi/application/ApplicationManager
     ourApplication
-    <clinit>()V
     getApplication()Lcom/intellij/openapi/application/Application;
 com/intellij/openapi/application/ModalityInvokator
     invokeLater(Ljava/lang/Runnable;)Lcom/intellij/openapi/util/ActionCallback;
@@ -240,10 +237,15 @@ com/intellij/openapi/components/ServiceManager
     getService(Ljava/lang/Class;)Ljava/lang/Object;
 com/intellij/openapi/diagnostic/Attachment
     EMPTY_ARRAY
+    myDisplayText
+    myPath
     <clinit>()V
+    getDisplayText()Ljava/lang/String;
+    getPath()Ljava/lang/String;
 com/intellij/openapi/diagnostic/ControlFlowException
 com/intellij/openapi/diagnostic/DefaultLogger
     <init>(Ljava/lang/String;)V
+    attachmentsToString(Ljava/lang/Throwable;)Ljava/lang/String;
     debug(Ljava/lang/String;)V
     debug(Ljava/lang/Throwable;)V
     error(Ljava/lang/String;Ljava/lang/Throwable;[Ljava/lang/String;)V
@@ -251,6 +253,10 @@ com/intellij/openapi/diagnostic/DefaultLogger
     info(Ljava/lang/String;Ljava/lang/Throwable;)V
     isDebugEnabled()Z
     warn(Ljava/lang/String;Ljava/lang/Throwable;)V
+com/intellij/openapi/diagnostic/DefaultLogger$1
+    <init>()V
+    fun(Lcom/intellij/openapi/diagnostic/Attachment;)Ljava/lang/String;
+    fun(Ljava/lang/Object;)Ljava/lang/Object;
 com/intellij/openapi/diagnostic/ExceptionWithAttachments
     getAttachments()[Lcom/intellij/openapi/diagnostic/Attachment;
 com/intellij/openapi/diagnostic/LogUtil
@@ -349,12 +355,9 @@ com/intellij/openapi/progress/ProgressIndicatorProvider
     checkCanceled()V
     getInstance()Lcom/intellij/openapi/progress/ProgressIndicatorProvider;
 com/intellij/openapi/progress/ProgressManager
+    ourInstance
     checkCanceled()V
     getInstance()Lcom/intellij/openapi/progress/ProgressManager;
-com/intellij/openapi/progress/ProgressManager$ProgressManagerHolder
-    ourInstance
-    <clinit>()V
-    access$000()Lcom/intellij/openapi/progress/ProgressManager;
 com/intellij/openapi/project/Project
     getBaseDir()Lcom/intellij/openapi/vfs/VirtualFile;
     getBasePath()Ljava/lang/String;
@@ -527,6 +530,7 @@ com/intellij/openapi/util/SystemInfo
     isFreeBSD
     isIbmJvm
     isJetbrainsJvm
+    isKDE
     isLinux
     isMac
     isMacIntel64
@@ -542,6 +546,7 @@ com/intellij/openapi/util/SystemInfo
     isOS2
     isOracleJvm
     isSolaris
+    isStudioJvm
     isSunJvm
     isUnix
     isWin2kOrNewer
@@ -563,6 +568,7 @@ com/intellij/openapi/util/SystemInfo
     isJetbrainsJvm()Z
     isOracleJvm()Z
     isOsVersionAtLeast(Ljava/lang/String;)Z
+    isStudioJvm()Z
     isSunJvm()Z
 com/intellij/openapi/util/SystemInfo$1
     <init>()V
@@ -811,6 +817,7 @@ com/intellij/openapi/util/io/FileUtilRt
     ALL_FILES
     BUFFER
     LARGE_FOR_CONTENT_LOADING
+    RANDOM
     USE_FILE_CHANNELS
     ourCanonicalTempPathCache
     <clinit>()V
@@ -941,6 +948,7 @@ com/intellij/openapi/util/text/StringUtil
     join(Ljava/lang/Iterable;Lcom/intellij/util/Function;Ljava/lang/String;)Ljava/lang/String;
     join(Ljava/lang/Iterable;Ljava/lang/String;)Ljava/lang/String;
     join(Ljava/util/Collection;Lcom/intellij/util/Function;Ljava/lang/String;)Ljava/lang/String;
+    join([Ljava/lang/Object;Lcom/intellij/util/Function;Ljava/lang/String;)Ljava/lang/String;
     lastIndexOf(Ljava/lang/CharSequence;CII)I
     repeatSymbol(Ljava/lang/Appendable;CI)V
     startsWithChar(Ljava/lang/CharSequence;C)Z
@@ -954,6 +962,7 @@ com/intellij/openapi/util/text/StringUtil
     trimEnd(Ljava/lang/String;C)Ljava/lang/String;
     trimEnd(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
     trimEnd(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;
+    trimExtension(Ljava/lang/String;)Ljava/lang/String;
     trimStart(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 com/intellij/openapi/util/text/StringUtil$1
     <init>()V
@@ -1079,6 +1088,7 @@ com/intellij/openapi/vfs/VirtualFile
     setBinaryContent([BJJLjava/lang/Object;)V
     setCharset(Ljava/nio/charset/Charset;)V
     setCharset(Ljava/nio/charset/Charset;Ljava/lang/Runnable;)V
+    setCharset(Ljava/nio/charset/Charset;Ljava/lang/Runnable;Z)V
     setDetectedLineSeparator(Ljava/lang/String;)V
     setPreloadedContentHint([B)V
     setWritable(Z)V
@@ -1552,6 +1562,8 @@ com/intellij/psi/OriginInfoAwareElement
     getOriginInfo()Ljava/lang/String;
 com/intellij/psi/PackagePrefixFileSystemItem
     getDirectory()Lcom/intellij/psi/PsiDirectory;
+com/intellij/psi/PsiAnnotatedJavaCodeReferenceElement
+    getCanonicalText(Z[Lcom/intellij/psi/PsiAnnotation;)Ljava/lang/String;
 com/intellij/psi/PsiAnnotation
     ARRAY_FACTORY
     DEFAULT_REFERENCED_METHOD_NAME
@@ -1665,6 +1677,7 @@ com/intellij/psi/PsiCallExpression
     getTypeArgumentList()Lcom/intellij/psi/PsiReferenceParameterList;
     getTypeArguments()[Lcom/intellij/psi/PsiType;
 com/intellij/psi/PsiCapturedWildcardType
+    $assertionsDisabled
     guard
     myContext
     myExistential
@@ -1763,6 +1776,7 @@ com/intellij/psi/PsiClassType
     <init>(Lcom/intellij/pom/java/LanguageLevel;Lcom/intellij/psi/TypeAnnotationProvider;)V
     <init>(Lcom/intellij/pom/java/LanguageLevel;[Lcom/intellij/psi/PsiAnnotation;)V
     accept(Lcom/intellij/psi/PsiTypeVisitor;)Ljava/lang/Object;
+    annotate(Lcom/intellij/psi/TypeAnnotationProvider;)Lcom/intellij/psi/PsiType;
     getClassName()Ljava/lang/String;
     getLanguageLevel()Lcom/intellij/pom/java/LanguageLevel;
     getParameterCount()I
@@ -1794,6 +1808,7 @@ com/intellij/psi/PsiClassType$ClassResolveResult$1
 com/intellij/psi/PsiClassType$Stub
     <init>(Lcom/intellij/pom/java/LanguageLevel;Lcom/intellij/psi/TypeAnnotationProvider;)V
     <init>(Lcom/intellij/pom/java/LanguageLevel;[Lcom/intellij/psi/PsiAnnotation;)V
+    annotate(Lcom/intellij/psi/TypeAnnotationProvider;)Lcom/intellij/psi/PsiType;
     getCanonicalText()Ljava/lang/String;
     getCanonicalText(Z)Ljava/lang/String;
 com/intellij/psi/PsiCodeBlock
@@ -1833,12 +1848,14 @@ com/intellij/psi/PsiDeclarationStatement
 com/intellij/psi/PsiDiamondType
     ourDiamondGuard
     <clinit>()V
-    <init>([Lcom/intellij/psi/PsiAnnotation;)V
+    <init>()V
+    getStaticFactory()Lcom/intellij/psi/JavaResolveResult;
     resolveInferredTypes()Lcom/intellij/psi/PsiDiamondType$DiamondInferenceResult;
 com/intellij/psi/PsiDiamondType$DiamondInferenceResult
     ANONYMOUS_INNER_RESULT
     EXPLICIT_CONSTRUCTOR_TYPE_ARGS
     NULL_RESULT
+    RAW_RESULT
     UNRESOLVED_CONSTRUCTOR
     myErrorMessage
     myInferredTypes
@@ -1866,6 +1883,10 @@ com/intellij/psi/PsiDiamondType$DiamondInferenceResult$3
     getErrorMessage()Ljava/lang/String;
     getTypes()[Lcom/intellij/psi/PsiType;
 com/intellij/psi/PsiDiamondType$DiamondInferenceResult$4
+    <init>()V
+    getErrorMessage()Ljava/lang/String;
+    getTypes()[Lcom/intellij/psi/PsiType;
+com/intellij/psi/PsiDiamondType$DiamondInferenceResult$5
     <init>()V
     getErrorMessage()Ljava/lang/String;
     getTypes()[Lcom/intellij/psi/PsiType;
@@ -2172,6 +2193,7 @@ com/intellij/psi/PsiInvalidElementAccessException
     myDiagnostic
     myElementReference
     myMessage
+    <init>(Lcom/intellij/lang/ASTNode;Ljava/lang/String;)V
     <init>(Lcom/intellij/psi/PsiElement;)V
     <init>(Lcom/intellij/psi/PsiElement;Ljava/lang/String;)V
     <init>(Lcom/intellij/psi/PsiElement;Ljava/lang/String;Ljava/lang/Throwable;)V
@@ -2213,6 +2235,7 @@ com/intellij/psi/PsiJavaParserFacade
     createMethodFromText(Ljava/lang/String;Lcom/intellij/psi/PsiElement;Lcom/intellij/pom/java/LanguageLevel;)Lcom/intellij/psi/PsiMethod;
     createParameterFromText(Ljava/lang/String;Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiParameter;
     createPrimitiveType(Ljava/lang/String;[Lcom/intellij/psi/PsiAnnotation;)Lcom/intellij/psi/PsiType;
+    createPrimitiveTypeFromText(Ljava/lang/String;)Lcom/intellij/psi/PsiType;
     createReferenceFromText(Ljava/lang/String;Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiJavaCodeReferenceElement;
     createResourceFromText(Ljava/lang/String;Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiResourceVariable;
     createStatementFromText(Ljava/lang/String;Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiStatement;
@@ -2445,6 +2468,8 @@ com/intellij/psi/PsiNameValuePair
 com/intellij/psi/PsiNameValuePair$1
     <init>()V
     create(I)[Ljava/lang/Object;
+com/intellij/psi/PsiNameValuePair$Detachable
+    getDetachedValue()Lcom/intellij/psi/PsiAnnotationMemberValue;
 com/intellij/psi/PsiNamedElement
     EMPTY_ARRAY
     <clinit>()V
@@ -2518,6 +2543,7 @@ com/intellij/psi/PsiPrimitiveType
     <init>(Ljava/lang/String;Ljava/lang/String;)V
     <init>(Ljava/lang/String;[Lcom/intellij/psi/PsiAnnotation;)V
     accept(Lcom/intellij/psi/PsiTypeVisitor;)Ljava/lang/Object;
+    annotate(Lcom/intellij/psi/TypeAnnotationProvider;)Lcom/intellij/psi/PsiType;
     equals(Ljava/lang/Object;)Z
     equalsToText(Ljava/lang/String;)Z
     getAllBoxedTypeNames()Ljava/util/Collection;
@@ -2533,7 +2559,6 @@ com/intellij/psi/PsiPrimitiveType
 com/intellij/psi/PsiQualifiedExpression
     getQualifier()Lcom/intellij/psi/PsiJavaCodeReferenceElement;
 com/intellij/psi/PsiQualifiedNamedElement
-    getContainer()Lcom/intellij/psi/PsiQualifiedNamedElement;
     getName()Ljava/lang/String;
     getQualifiedName()Ljava/lang/String;
 com/intellij/psi/PsiQualifiedReference
@@ -2589,6 +2614,7 @@ com/intellij/psi/PsiReferenceBase
     getCanonicalText()Ljava/lang/String;
     getElement()Lcom/intellij/psi/PsiElement;
     isSoft()Z
+    toString()Ljava/lang/String;
 com/intellij/psi/PsiReferenceBase$Immediate
     myResolveTo
     <init>(Lcom/intellij/psi/PsiElement;Lcom/intellij/openapi/util/TextRange;Lcom/intellij/psi/PsiElement;)V
@@ -2714,6 +2740,7 @@ com/intellij/psi/PsiType
     <init>(Lcom/intellij/psi/TypeAnnotationProvider;)V
     <init>([Lcom/intellij/psi/PsiAnnotation;)V
     accept(Lcom/intellij/psi/PsiTypeVisitor;)Ljava/lang/Object;
+    annotate(Lcom/intellij/psi/TypeAnnotationProvider;)Lcom/intellij/psi/PsiType;
     createArray(I)[Lcom/intellij/psi/PsiType;
     createArrayType()Lcom/intellij/psi/PsiArrayType;
     createArrayType([Lcom/intellij/psi/PsiAnnotation;)Lcom/intellij/psi/PsiArrayType;
@@ -2734,10 +2761,6 @@ com/intellij/psi/PsiType
 com/intellij/psi/PsiType$1
     <init>()V
     create(I)[Ljava/lang/Object;
-com/intellij/psi/PsiType$2
-    val$annotations
-    <init>([Lcom/intellij/psi/PsiAnnotation;)V
-    getAnnotations()[Lcom/intellij/psi/PsiAnnotation;
 com/intellij/psi/PsiType$Stub
     <init>(Lcom/intellij/psi/TypeAnnotationProvider;)V
     <init>([Lcom/intellij/psi/PsiAnnotation;)V
@@ -2829,9 +2852,6 @@ com/intellij/psi/PsiWildcardType
     myBound
     myIsExtending
     accept(Lcom/intellij/psi/PsiTypeVisitor;)Ljava/lang/Object;
-com/intellij/psi/PsiWildcardType$1
-    this$0
-    val$annotations
 com/intellij/psi/ReferenceRange
     <init>()V
     containsOffsetInElement(Lcom/intellij/psi/PsiReference;I)Z
@@ -2908,6 +2928,11 @@ com/intellij/psi/TypeAnnotationProvider
 com/intellij/psi/TypeAnnotationProvider$1
     <init>()V
     getAnnotations()[Lcom/intellij/psi/PsiAnnotation;
+com/intellij/psi/TypeAnnotationProvider$Static
+    myAnnotations
+    <init>([Lcom/intellij/psi/PsiAnnotation;)V
+    create([Lcom/intellij/psi/PsiAnnotation;)Lcom/intellij/psi/TypeAnnotationProvider;
+    getAnnotations()[Lcom/intellij/psi/PsiAnnotation;
 com/intellij/psi/Weigher
     myDebugName
     <init>()V
@@ -2943,7 +2968,6 @@ com/intellij/psi/javadoc/JavadocTagInfo
     <clinit>()V
     checkTagValue(Lcom/intellij/psi/javadoc/PsiDocTagValue;)Ljava/lang/String;
     getName()Ljava/lang/String;
-    getPossibleValues(Lcom/intellij/psi/PsiElement;Lcom/intellij/psi/PsiElement;Ljava/lang/String;)[Ljava/lang/Object;
     getReference(Lcom/intellij/psi/javadoc/PsiDocTagValue;)Lcom/intellij/psi/PsiReference;
     isInline()Z
     isValidInContext(Lcom/intellij/psi/PsiElement;)Z
@@ -3188,6 +3212,7 @@ com/intellij/psi/util/PsiTreeUtil
     firstChild(Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiElement;
     getChildOfAnyType(Lcom/intellij/psi/PsiElement;[Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
     getChildOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
+    getChildrenOfAnyType(Lcom/intellij/psi/PsiElement;[Ljava/lang/Class;)Ljava/util/List;
     getChildrenOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)[Lcom/intellij/psi/PsiElement;
     getChildrenOfTypeAsList(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Ljava/util/List;
     getContextOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;Z)Lcom/intellij/psi/PsiElement;
@@ -3207,6 +3232,8 @@ com/intellij/psi/util/PsiTreeUtil
     getParents(Lcom/intellij/psi/PsiElement;Lcom/intellij/psi/PsiElement;)Ljava/util/ArrayList;
     getPrevSiblingOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
     getRequiredChildOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
+    getStubChildOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
+    getStubChildrenOfTypeAsList(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Ljava/util/List;
     getStubOrPsiParent(Lcom/intellij/psi/PsiElement;)Lcom/intellij/psi/PsiElement;
     getStubOrPsiParentOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
     getTopmostParentOfType(Lcom/intellij/psi/PsiElement;Ljava/lang/Class;)Lcom/intellij/psi/PsiElement;
@@ -3259,7 +3286,9 @@ com/intellij/psi/util/PsiUtil
     $assertionsDisabled
     BY_POSITION
     FILE_LANGUAGE_LEVEL_KEY
+    IGNORED_NAMES
     LOG
+    NULL_PSI_CLASS
     VALID_VOID_TYPE_IN_CODE_FRAGMENT
     accessModifiers
     <clinit>()V
@@ -3271,6 +3300,71 @@ com/intellij/psi/util/PsiUtil$1
     <init>()V
     compare(Lcom/intellij/psi/PsiElement;Lcom/intellij/psi/PsiElement;)I
     compare(Ljava/lang/Object;Ljava/lang/Object;)I
+com/intellij/psi/util/PsiUtil$NullPsiClass
+    <init>()V
+    accept(Lcom/intellij/psi/PsiElementVisitor;)V
+    acceptChildren(Lcom/intellij/psi/PsiElementVisitor;)V
+    findFieldByName(Ljava/lang/String;Z)Lcom/intellij/psi/PsiField;
+    findInnerClassByName(Ljava/lang/String;Z)Lcom/intellij/psi/PsiClass;
+    findMethodBySignature(Lcom/intellij/psi/PsiMethod;Z)Lcom/intellij/psi/PsiMethod;
+    findMethodsAndTheirSubstitutorsByName(Ljava/lang/String;Z)Ljava/util/List;
+    findMethodsByName(Ljava/lang/String;Z)[Lcom/intellij/psi/PsiMethod;
+    findMethodsBySignature(Lcom/intellij/psi/PsiMethod;Z)[Lcom/intellij/psi/PsiMethod;
+    getAllFields()[Lcom/intellij/psi/PsiField;
+    getAllInnerClasses()[Lcom/intellij/psi/PsiClass;
+    getAllMethods()[Lcom/intellij/psi/PsiMethod;
+    getAllMethodsAndTheirSubstitutors()Ljava/util/List;
+    getChildren()[Lcom/intellij/psi/PsiElement;
+    getConstructors()[Lcom/intellij/psi/PsiMethod;
+    getContainingClass()Lcom/intellij/psi/PsiClass;
+    getContainingFile()Lcom/intellij/psi/PsiFile;
+    getContext()Lcom/intellij/psi/PsiElement;
+    getExtendsList()Lcom/intellij/psi/PsiReferenceList;
+    getExtendsListTypes()[Lcom/intellij/psi/PsiClassType;
+    getFields()[Lcom/intellij/psi/PsiField;
+    getFirstChild()Lcom/intellij/psi/PsiElement;
+    getImplementsList()Lcom/intellij/psi/PsiReferenceList;
+    getImplementsListTypes()[Lcom/intellij/psi/PsiClassType;
+    getInitializers()[Lcom/intellij/psi/PsiClassInitializer;
+    getInnerClasses()[Lcom/intellij/psi/PsiClass;
+    getInterfaces()[Lcom/intellij/psi/PsiClass;
+    getLBrace()Lcom/intellij/psi/PsiElement;
+    getLanguage()Lcom/intellij/lang/Language;
+    getLastChild()Lcom/intellij/psi/PsiElement;
+    getMethods()[Lcom/intellij/psi/PsiMethod;
+    getNameIdentifier()Lcom/intellij/psi/PsiElement;
+    getNavigationElement()Lcom/intellij/psi/PsiElement;
+    getNextSibling()Lcom/intellij/psi/PsiElement;
+    getOriginalElement()Lcom/intellij/psi/PsiElement;
+    getParent()Lcom/intellij/psi/PsiElement;
+    getPrevSibling()Lcom/intellij/psi/PsiElement;
+    getQualifiedName()Ljava/lang/String;
+    getRBrace()Lcom/intellij/psi/PsiElement;
+    getReference()Lcom/intellij/psi/PsiReference;
+    getReferences()[Lcom/intellij/psi/PsiReference;
+    getScope()Lcom/intellij/psi/PsiElement;
+    getStartOffsetInParent()I
+    getSuperClass()Lcom/intellij/psi/PsiClass;
+    getSuperTypes()[Lcom/intellij/psi/PsiClassType;
+    getSupers()[Lcom/intellij/psi/PsiClass;
+    getText()Ljava/lang/String;
+    getTextLength()I
+    getTextOffset()I
+    getTextRange()Lcom/intellij/openapi/util/TextRange;
+    getVisibleSignatures()Ljava/util/Collection;
+    isAnnotationType()Z
+    isEnum()Z
+    isInheritor(Lcom/intellij/psi/PsiClass;Z)Z
+    isInheritorDeep(Lcom/intellij/psi/PsiClass;Lcom/intellij/psi/PsiClass;)Z
+    isInterface()Z
+    isPhysical()Z
+    isValid()Z
+    isWritable()Z
+    textContains(C)Z
+    textMatches(Lcom/intellij/psi/PsiElement;)Z
+    textMatches(Ljava/lang/CharSequence;)Z
+    textToCharArray()[C
+    toString()Ljava/lang/String;
 com/intellij/psi/util/PsiUtilCore
     LOG
     NULL_PSI_ELEMENT
@@ -3283,7 +3377,6 @@ com/intellij/psi/util/PsiUtilCore$1
     compute()Ljava/lang/Object;
 com/intellij/psi/util/PsiUtilCore$NullPsiElement
     <init>()V
-    <init>(Lcom/intellij/psi/util/PsiUtilCore$1;)V
     accept(Lcom/intellij/psi/PsiElementVisitor;)V
     acceptChildren(Lcom/intellij/psi/PsiElementVisitor;)V
     createException()Lcom/intellij/psi/PsiInvalidElementAccessException;
@@ -3385,10 +3478,11 @@ com/intellij/util/ArrayUtilRt
 com/intellij/util/BitUtil
     $assertionsDisabled
     <clinit>()V
+    assertOneBitMask(B)V
+    assertOneBitMask(I)V
     assertOneBitMask(J)V
     isSet(BB)Z
     isSet(II)Z
-    notSet(II)Z
 com/intellij/util/BloomFilterBase
     myBitsCount
     myElementsSet
@@ -3404,6 +3498,8 @@ com/intellij/util/Consumer
 com/intellij/util/Consumer$1
     <init>()V
     consume(Ljava/lang/Object;)V
+com/intellij/util/ExceptionUtil
+    getRootCause(Ljava/lang/Throwable;)Ljava/lang/Throwable;
 com/intellij/util/Function
     ID
     NULL
@@ -3436,6 +3532,7 @@ com/intellij/util/NullableFunction$1
 com/intellij/util/ObjectUtils
     NULL
     <clinit>()V
+    chooseNotNull(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
     notNull(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 com/intellij/util/PairProcessor
     FALSE
@@ -3452,6 +3549,7 @@ com/intellij/util/Producer
     produce()Ljava/lang/Object;
 com/intellij/util/ReflectionUtil
     $assertionsDisabled
+    CLASS_STRUCTURE
     LOG
     acquireConstructorAccessorMethod
     getConstructorAccessorMethod
@@ -3469,6 +3567,10 @@ com/intellij/util/ReflectionUtil$2
     <init>(Ljava/lang/String;Ljava/lang/Class;)V
     value(Ljava/lang/Object;)Z
     value(Ljava/lang/reflect/Field;)Z
+com/intellij/util/ReflectionUtil$4
+    <init>()V
+    fun(Ljava/lang/Class;)Ljava/lang/Iterable;
+    fun(Ljava/lang/Object;)Ljava/lang/Object;
 com/intellij/util/SmartList
     myElem
     mySize
@@ -4503,8 +4605,8 @@ com/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$1
 com/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$HardKey
     myHash
     myKey
-    access$300(Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$HardKey;Ljava/lang/Object;I)V
-    access$400(Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$HardKey;)V
+    access$200(Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$HardKey;Ljava/lang/Object;I)V
+    access$300(Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$HardKey;)V
     clear()V
     equals(Ljava/lang/Object;)Z
     get()Ljava/lang/Object;
@@ -4520,7 +4622,6 @@ com/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$SoftValue
     myKeyReference
     <init>(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V
     <init>(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$1;)V
-    access$002(Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$SoftValue;Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$KeyReference;)Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$KeyReference;
     equals(Ljava/lang/Object;)Z
     getKeyReference()Lcom/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$KeyReference;
 com/intellij/util/containers/ConcurrentWeakKeySoftValueHashMap$ValueReference
@@ -4587,15 +4688,18 @@ com/intellij/util/containers/ContainerUtil
     newConcurrentMap()Ljava/util/concurrent/ConcurrentMap;
     newConcurrentMap(IFI)Ljava/util/concurrent/ConcurrentMap;
     newConcurrentMap(IFILgnu/trove/TObjectHashingStrategy;)Ljava/util/concurrent/ConcurrentMap;
+    newSmartList()Ljava/util/List;
+    newTroveSet(Ljava/util/Collection;)Lgnu/trove/THashSet;
+    newTroveSet([Ljava/lang/Object;)Lgnu/trove/THashSet;
     skipNulls(Ljava/util/Collection;)Ljava/util/List;
-com/intellij/util/containers/ContainerUtil$19
+com/intellij/util/containers/ContainerUtil$20
     <init>()V
     createMap()Ljava/util/concurrent/ConcurrentMap;
     createMap(I)Ljava/util/concurrent/ConcurrentMap;
     createMap(IFI)Ljava/util/concurrent/ConcurrentMap;
     createMap(IFILgnu/trove/TObjectHashingStrategy;)Ljava/util/concurrent/ConcurrentMap;
     createMap(Lgnu/trove/TObjectHashingStrategy;)Ljava/util/concurrent/ConcurrentMap;
-com/intellij/util/containers/ContainerUtil$20
+com/intellij/util/containers/ContainerUtil$21
     <init>()V
     createMap()Ljava/util/concurrent/ConcurrentMap;
     createMap(I)Ljava/util/concurrent/ConcurrentMap;
@@ -4800,9 +4904,14 @@ com/intellij/util/indexing/ID
     ourNameToIdRegistry
     ourRegistry
     <clinit>()V
+    access$000()Lgnu/trove/TObjectIntHashMap;
     getEnumFile()Ljava/io/File;
     writeEnumFile()V
 com/intellij/util/indexing/ID$1
+    <init>()V
+    execute(Ljava/lang/Object;I)Z
+    execute(Ljava/lang/String;I)Z
+com/intellij/util/indexing/ID$2
     val$names
     <init>([Ljava/lang/String;)V
     execute(Ljava/lang/Object;I)Z
@@ -4855,6 +4964,7 @@ com/intellij/util/io/URLUtil
     decode(C)I
     splitJarUrl(Ljava/lang/String;)Lcom/intellij/openapi/util/Pair;
     unescapePercentSequences(Ljava/lang/String;)Ljava/lang/String;
+    urlToFile(Ljava/net/URL;)Ljava/io/File;
 com/intellij/util/io/UnsyncByteArrayInputStream
     myBuffer
     myCount
@@ -5161,12 +5271,12 @@ com/intellij/util/lang/Resource$Attribute
     valueOf(Ljava/lang/String;)Lcom/intellij/util/lang/Resource$Attribute;
     values()[Lcom/intellij/util/lang/Resource$Attribute;
 com/intellij/util/lang/UrlClassLoader
-    INDEX_PERSISTENCE_ENABLED
+    HAS_PARALLEL_LOADERS
     myAllowBootstrapResources
     myClassNameInterner
     myClassPath
     myURLs
-    ourParallel
+    ourClassPathIndexEnabled
     <clinit>()V
     <init>(Lcom/intellij/util/lang/UrlClassLoader$Builder;)V
     <init>(Ljava/lang/ClassLoader;)V
@@ -5190,6 +5300,7 @@ com/intellij/util/lang/UrlClassLoader
     getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;
     getUrls()Ljava/util/List;
     internProtocol(Ljava/net/URL;)Ljava/net/URL;
+    isRegisteredAsParallelCapable(Ljava/lang/ClassLoader;)Z
     loadPlatformLibrary(Ljava/lang/String;)V
     mapLibraryName(Ljava/lang/String;)Ljava/lang/String;
 com/intellij/util/lang/UrlClassLoader$1

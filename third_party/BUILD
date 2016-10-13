@@ -7,12 +7,6 @@ java_library(
 )
 
 java_library(
-    name = "com.android.tools.external.com-intellij_uast",
-    visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/com/android/tools/external/com-intellij/uast/145.597.3:jar"],
-)
-
-java_library(
     name = "com.android.tools.external.lombok_lombok-ast",
     visibility = ["//visibility:public"],
     exports = [
