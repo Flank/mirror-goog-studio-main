@@ -45,11 +45,12 @@ import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.devices.Storage.Unit;
+import com.android.sdklib.repository.legacy.local.LocalSdk;
+import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.legacy.local.LocalSysImgPkgInfo;
-import com.android.testutils.MockLog;
 
 import org.junit.rules.ExternalResource;
 
@@ -139,7 +140,7 @@ public class TempSdkManager extends ExternalResource {
         File toolsDir = new File(mFakeSdk, SdkConstants.OS_SDK_TOOLS_FOLDER);
         toolsDir.mkdir();
         createSourceProps(toolsDir, PkgProps.PKG_REVISION, "1.0.1");
-        new File(toolsDir, SdkConstants.androidCmdName()).createNewFile();
+        new File(toolsDir, LocalSdk.androidCmdName()).createNewFile();
         new File(toolsDir, SdkConstants.FN_EMULATOR).createNewFile();
         new File(toolsDir, SdkConstants.mkSdCardCmdName()).createNewFile();
 
