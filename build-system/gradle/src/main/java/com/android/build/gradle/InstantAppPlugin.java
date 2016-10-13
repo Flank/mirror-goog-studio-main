@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -76,8 +76,8 @@ public class InstantAppPlugin extends BasePlugin implements Plugin<Project> {
 
     @NonNull
     @Override
-    protected AndroidStudioStats.GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return AndroidStudioStats.GradleBuildProject.PluginType.INSTANTAPP;
+    protected GradleBuildProject.PluginType getAnalyticsPluginType() {
+        return GradleBuildProject.PluginType.INSTANTAPP;
     }
 
     @NonNull

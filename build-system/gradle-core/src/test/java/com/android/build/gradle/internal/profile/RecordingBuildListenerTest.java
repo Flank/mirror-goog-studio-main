@@ -31,17 +31,11 @@ import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.jimfs.Jimfs;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.TaskState;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleTaskExecution;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +43,13 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.tasks.TaskState;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Tests for {@link RecordingBuildListener}
@@ -75,8 +76,7 @@ public class RecordingBuildListenerTest {
     private static final class TestRecorder implements Recorder {
 
         final AtomicLong recordId = new AtomicLong(0);
-        final List<AndroidStudioStats.GradleBuildProfileSpan> records =
-                new CopyOnWriteArrayList<>();
+        final List<GradleBuildProfileSpan> records = new CopyOnWriteArrayList<>();
 
         @Override
         public <T> T record(@NonNull ExecutionType executionType, @NonNull String project,
@@ -88,8 +88,10 @@ public class RecordingBuildListenerTest {
         @Override
         public <T> T record(
                 @NonNull ExecutionType executionType,
-                @Nullable AndroidStudioStats.GradleTransformExecution transform,
-                @NonNull String project, @Nullable String variant, @NonNull Block<T> block) {
+                @Nullable GradleTransformExecution transform,
+                @NonNull String project,
+                @Nullable String variant,
+                @NonNull Block<T> block) {
             throw new UnsupportedOperationException("record method was not supposed to be called");
         }
 
@@ -99,8 +101,10 @@ public class RecordingBuildListenerTest {
         }
 
         @Override
-        public void closeRecord(@NonNull String project, @Nullable String variant,
-                @NonNull AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord) {
+        public void closeRecord(
+                @NonNull String project,
+                @Nullable String variant,
+                @NonNull GradleBuildProfileSpan.Builder executionRecord) {
             if (project.equals(":projectName")) {
                 executionRecord.setProject(1);
             }
@@ -133,7 +137,7 @@ public class RecordingBuildListenerTest {
         listener.beforeExecute(mTask);
         listener.afterExecute(mTask, mTaskState);
         assertEquals(1, recorder.records.size());
-        AndroidStudioStats.GradleBuildProfileSpan record = recorder.records.get(0);
+        GradleBuildProfileSpan record = recorder.records.get(0);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
     }
@@ -157,10 +161,10 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(mTask, mTaskState);
         ProcessRecorderFactory.shutdown();
 
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
         assertEquals("Span count", 2, profile.getSpanCount());
 
-        AndroidStudioStats.GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
+        GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
         assertEquals(0, record.getParentId());
 
         record = getRecordForId(profile.getSpanList(), 3);
@@ -192,11 +196,10 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(mSecondTask, mTaskState);
 
         ProcessRecorderFactory.shutdown();
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
 
         assertEquals(3, profile.getSpanCount());
-        AndroidStudioStats.GradleBuildProfileSpan record =
-                getRecordForId(profile.getSpanList(), 2);
+        GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
         assertEquals(1, record.getProject());
 
         record = getRecordForId(profile.getSpanList(), 3);
@@ -229,7 +232,7 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(secondTask, mTaskState);
 
         assertEquals(2, recorder.records.size());
-        AndroidStudioStats.GradleBuildProfileSpan record = getRecordForId(recorder.records, 1);
+        GradleBuildProfileSpan record = getRecordForId(recorder.records, 1);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
 
@@ -260,7 +263,7 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(mTask, mTaskState);
 
         assertEquals(2, recorder.records.size());
-        AndroidStudioStats.GradleBuildProfileSpan  record = getRecordForId(recorder.records, 1);
+        GradleBuildProfileSpan record = getRecordForId(recorder.records, 1);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
@@ -287,7 +290,7 @@ public class RecordingBuildListenerTest {
 
         assertEquals(1, recorder.records.size());
         assertThat(recorder.records.get(0).getType()).named("execution type").isEqualTo(ExecutionType.TASK_EXECUTION);
-        AndroidStudioStats.GradleTaskExecution task = recorder.records.get(0).getTask();
+        GradleTaskExecution task = recorder.records.get(0).getTask();
         assertThat(task.getDidWork()).named("task.did_work").isTrue();
         assertThat(task.getFailed()).named("task.failed").isTrue();
         assertThat(task.getSkipped()).named("task.skipped").isFalse();
@@ -297,23 +300,21 @@ public class RecordingBuildListenerTest {
     @Test
     public void checkTasksEnum() {
         assertThat(
-                AnalyticsUtil.getTaskExecutionType(
-                        org.gradle.api.tasks.compile.JavaCompile.class))
+                        AnalyticsUtil.getTaskExecutionType(
+                                org.gradle.api.tasks.compile.JavaCompile.class))
                 .named("JavaCompile")
-                .isEqualTo(AndroidStudioStats.GradleTaskExecution.Type.JAVA_COMPILE);
+                .isEqualTo(GradleTaskExecution.Type.JAVA_COMPILE);
     }
 
 
-    private AndroidStudioStats.GradleBuildProfile loadProfile() throws IOException {
-        return AndroidStudioStats.GradleBuildProfile.parseFrom(
-                Files.readAllBytes(mProfileProtoFile));
+    private GradleBuildProfile loadProfile() throws IOException {
+        return GradleBuildProfile.parseFrom(Files.readAllBytes(mProfileProtoFile));
     }
 
     @NonNull
-    private static AndroidStudioStats.GradleBuildProfileSpan getRecordForId(
-            @NonNull List<AndroidStudioStats.GradleBuildProfileSpan> records,
-            long recordId) {
-        for (AndroidStudioStats.GradleBuildProfileSpan record : records) {
+    private static GradleBuildProfileSpan getRecordForId(
+            @NonNull List<GradleBuildProfileSpan> records, long recordId) {
+        for (GradleBuildProfileSpan record : records) {
             if (record.getId() == recordId) {
                 return record;
             }

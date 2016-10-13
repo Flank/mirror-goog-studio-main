@@ -50,7 +50,6 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessRecorder;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.StringHelper;
@@ -58,18 +57,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Class to create, manage variants.

@@ -21,16 +21,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.builder.profile.Recorder;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleTaskExecution;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.TaskState;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implementation of the {@link TaskExecutionListener} that records the execution span of
@@ -67,7 +65,7 @@ public class RecordingBuildListener implements TaskExecutionListener {
 
         //noinspection ThrowableResultOfMethodCallIgnored Just logging the failure.
         record.setTask(
-                AndroidStudioStats.GradleTaskExecution.newBuilder()
+                GradleTaskExecution.newBuilder()
                         .setType(AnalyticsUtil.getTaskExecutionType(task.getClass()))
                         .setDidWork(taskState.getDidWork())
                         .setSkipped(taskState.getSkipped())

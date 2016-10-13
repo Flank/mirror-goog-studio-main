@@ -21,19 +21,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.jimfs.Jimfs;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.BufferedInputStream;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests for the {@link ProcessRecorder} class
@@ -55,7 +52,7 @@ public class ProcessRecorderTest {
         ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
                 ":projectName", null, () -> 10);
         ProcessRecorderFactory.shutdown();
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
         assertThat(profile.getSpan(0).getId()).isNotEqualTo(0);
         assertThat(profile.getSpan(0).getVariant()).isEqualTo(0);
@@ -67,7 +64,7 @@ public class ProcessRecorderTest {
         ThreadRecorder.get().record(
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", "foo", () -> 10);
         ProcessRecorderFactory.shutdown();
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
         assertThat(profile.getSpan(0).getVariant()).isNotEqualTo(0);
         assertThat(profile.getSpan(0).getStartTimeInMs()).isNotEqualTo(0);
@@ -80,10 +77,10 @@ public class ProcessRecorderTest {
                         ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
                                 "projectName", null, () -> 10));
         ProcessRecorderFactory.shutdown();
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(2);
-        AndroidStudioStats.GradleBuildProfileSpan parent = profile.getSpan(1);
-        AndroidStudioStats.GradleBuildProfileSpan child = profile.getSpan(0);
+        GradleBuildProfileSpan parent = profile.getSpan(1);
+        GradleBuildProfileSpan child = profile.getSpan(0);
         assertThat(child.getId()).isGreaterThan(parent.getId());
         assertThat(child.getParentId()).isEqualTo(parent.getId());
     }
@@ -125,10 +122,10 @@ public class ProcessRecorderTest {
         assertNotNull(value);
         assertEquals(16, value.intValue());
         ProcessRecorderFactory.shutdown();
-        AndroidStudioStats.GradleBuildProfile profile = loadProfile();
+        GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(6);
 
-        List<AndroidStudioStats.GradleBuildProfileSpan> records =
+        List<GradleBuildProfileSpan> records =
                 profile.getSpanList()
                         .stream()
                         .sorted((a, b) -> Long.signum(a.getId() - b.getId()))
@@ -147,7 +144,7 @@ public class ProcessRecorderTest {
         assertThat(records.get(4).getDurationInMs()).isAtLeast(records.get(5).getDurationInMs());
     }
 
-    private AndroidStudioStats.GradleBuildProfile loadProfile() throws IOException {
-        return AndroidStudioStats.GradleBuildProfile.parseFrom(Files.readAllBytes(outputFile));
+    private GradleBuildProfile loadProfile() throws IOException {
+        return GradleBuildProfile.parseFrom(Files.readAllBytes(outputFile));
     }
 }

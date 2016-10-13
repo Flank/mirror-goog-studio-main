@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -120,8 +120,8 @@ public class ProfileCapturer implements Closeable {
                             + " should have been written.");
         }
 
-        AndroidStudioStats.GradleBuildProfile profile =
-                AndroidStudioStats.GradleBuildProfile.parseFrom(Files.readAllBytes(temporaryFile));
+        GradleBuildProfile profile =
+                GradleBuildProfile.parseFrom(Files.readAllBytes(temporaryFile));
 
         Logging.GradleBenchmarkResult.Builder benchmarkResult =
                 Logging.GradleBenchmarkResult.newBuilder()

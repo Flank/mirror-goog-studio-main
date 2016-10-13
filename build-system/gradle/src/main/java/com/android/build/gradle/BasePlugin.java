@@ -85,8 +85,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -269,7 +269,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             @NonNull ExtraModelInfo extraModelInfo);
 
     @NonNull
-    protected abstract AndroidStudioStats.GradleBuildProject.PluginType getAnalyticsPluginType();
+    protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
     protected abstract VariantFactory createVariantFactory(
@@ -325,8 +325,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         ProcessRecorder.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
-                .setPluginGeneration(
-                        AndroidStudioStats.GradleBuildProject.PluginGeneration.FIRST);
+                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
 
         SpanRecorders.record(
                 project, null, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE, this::configureProject);

@@ -18,15 +18,15 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.util.concurrent.Callable;
 
 /**
- * A {@link AndroidStudioStats.GradleBuildProfileSpan} recorder for a block execution.
+ * A {@link GradleBuildProfileSpan} recorder for a block execution.
  *
- * A block is some code that produces a result and may throw exceptions.
+ * <p>A block is some code that produces a result and may throw exceptions.
  */
 public interface Recorder {
 
@@ -57,14 +57,16 @@ public interface Recorder {
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * AndroidStudioStats.GradleBuildProfileSpan} to {@link ProcessRecorder}.
-     *  @param <T>           the type of the returned value from the block.
+     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     *
+     * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param project       the project that contains this span.
-     * @param variant       the variant that contains this span.
-     * @param block         the block of code to execution and measure.
+     * @param project the project that contains this span.
+     * @param variant the variant that contains this span.
+     * @param block the block of code to execution and measure.
      * @return the value returned from the block (including null) or null if the block execution
-     * raised an exception which was subsequently swallowed by {@link Block#handleException(Exception)}
+     *     raised an exception which was subsequently swallowed by {@link
+     *     Block#handleException(Exception)}
      */
     @Nullable
     <T> T record(
@@ -75,40 +77,41 @@ public interface Recorder {
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * AndroidStudioStats.GradleBuildProfileSpan} to {@link ProcessRecorder}.
-     *  @param <T>           the type of the returned value from the block.
+     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     *
+     * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param project       the project that contains this span.
-     * @param variant       the variant that contains this span.
-     * @param block         the block of code to execution and measure.
+     * @param project the project that contains this span.
+     * @param variant the variant that contains this span.
+     * @param block the block of code to execution and measure.
      * @return the value returned from the block (including null) or null if the block execution
-     * raised an exception which was subsequently swallowed by {@link Block#handleException(Exception)}
+     *     raised an exception which was subsequently swallowed by {@link
+     *     Block#handleException(Exception)}
      */
     @Nullable
     <T> T record(
             @NonNull ExecutionType executionType,
-            @Nullable AndroidStudioStats.GradleTransformExecution transform,
+            @Nullable GradleTransformExecution transform,
             @NonNull String project,
             @Nullable String variant,
             @NonNull Block<T> block);
 
     /**
-     * Allocate a new recordId that can be used to create an
-     * {@link AndroidStudioStats.GradleBuildProfileSpan}.
-     * This method is useful when the code span to measure cannot be expressed
-     * as a {@link Block} and therefore cannot directly use the
-     * {@link #record(ExecutionType, String, String, Block)} method.
+     * Allocate a new recordId that can be used to create an {@link GradleBuildProfileSpan}. This
+     * method is useful when the code span to measure cannot be expressed as a {@link Block} and
+     * therefore cannot directly use the {@link #record(ExecutionType, String, String, Block)}
+     * method.
      *
      * @return the unique record id for this process.
      */
     long allocationRecordId();
 
     /**
-     * Closes an execution span measurement using the allocated record id obtained from
-     * {@link #allocationRecordId()} method.
+     * Closes an execution span measurement using the allocated record id obtained from {@link
+     * #allocationRecordId()} method.
      */
     void closeRecord(
             @NonNull String project,
             @Nullable String variant,
-            @NonNull AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord);
+            @NonNull GradleBuildProfileSpan.Builder executionRecord);
 }

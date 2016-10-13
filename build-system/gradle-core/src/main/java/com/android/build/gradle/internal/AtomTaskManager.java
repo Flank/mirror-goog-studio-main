@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
@@ -39,17 +40,13 @@ import com.android.build.gradle.tasks.GenerateAtomMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SyncIssue;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import java.io.File;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import java.io.File;
-import java.util.Set;
 
 /**
  * TaskManager for creating tasks in an Android Atom project.

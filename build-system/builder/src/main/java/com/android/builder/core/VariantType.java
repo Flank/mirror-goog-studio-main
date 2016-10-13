@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.google.common.collect.ImmutableList;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildVariant;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 
 /**
  * Type of a variant.

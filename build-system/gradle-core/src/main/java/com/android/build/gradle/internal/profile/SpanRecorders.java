@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import org.gradle.api.Project;
 import org.jetbrains.annotations.NotNull;
 

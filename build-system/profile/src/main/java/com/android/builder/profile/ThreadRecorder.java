@@ -18,9 +18,9 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.logging.Level;
@@ -38,40 +38,46 @@ public class ThreadRecorder implements Recorder {
     private static final Logger logger = Logger.getLogger(ThreadRecorder.class.getName());
 
     // Dummy implementation that records nothing but comply to the overall recording contracts.
-    protected static final Recorder dummyRecorder = new Recorder() {
+    protected static final Recorder dummyRecorder =
+            new Recorder() {
 
-        @Nullable
-        @Override
-        public <T> T record(@NonNull ExecutionType executionType, @NonNull String project,
-                @Nullable String variant, @NonNull Block<T> block) {
-            try {
-                return block.call();
-            } catch (Exception e) {
-                block.handleException(e);
-            }
-            return null;
-        }
+                @Nullable
+                @Override
+                public <T> T record(
+                        @NonNull ExecutionType executionType,
+                        @NonNull String project,
+                        @Nullable String variant,
+                        @NonNull Block<T> block) {
+                    try {
+                        return block.call();
+                    } catch (Exception e) {
+                        block.handleException(e);
+                    }
+                    return null;
+                }
 
-        @Nullable
-        @Override
-        public <T> T record(
-                @NonNull ExecutionType executionType,
-                @Nullable AndroidStudioStats.GradleTransformExecution transform,
-                @NonNull String project, @Nullable String variant, @NonNull Block<T> block) {
-            return record(executionType, project, variant, block);
-        }
+                @Nullable
+                @Override
+                public <T> T record(
+                        @NonNull ExecutionType executionType,
+                        @Nullable GradleTransformExecution transform,
+                        @NonNull String project,
+                        @Nullable String variant,
+                        @NonNull Block<T> block) {
+                    return record(executionType, project, variant, block);
+                }
 
-        @Override
-        public long allocationRecordId() {
-            return 0;
-        }
+                @Override
+                public long allocationRecordId() {
+                    return 0;
+                }
 
-
-        @Override
-        public void closeRecord(@NonNull String project, @Nullable String variant,
-                @NonNull AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord) {
-        }
-    };
+                @Override
+                public void closeRecord(
+                        @NonNull String project,
+                        @Nullable String variant,
+                        @NonNull GradleBuildProfileSpan.Builder executionRecord) {}
+            };
 
     private static final Recorder recorder = new ThreadRecorder();
 
@@ -104,7 +110,7 @@ public class ThreadRecorder implements Recorder {
     public void closeRecord(
             @NonNull String project,
             @Nullable String variant,
-            @NonNull AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord) {
+            @NonNull GradleBuildProfileSpan.Builder executionRecord) {
         if (recordStacks.get().pop() != executionRecord.getId()) {
             logger.severe("Internal Error : mixed records in profiling stack");
         }
@@ -124,7 +130,7 @@ public class ThreadRecorder implements Recorder {
     @Override
     public <T> T record(
             @NonNull ExecutionType executionType,
-            @Nullable AndroidStudioStats.GradleTransformExecution transform,
+            @Nullable GradleTransformExecution transform,
             @NonNull String project,
             @Nullable String variant,
             @NonNull Block<T> block) {
@@ -137,8 +143,8 @@ public class ThreadRecorder implements Recorder {
 
         long startTimeInMs = System.currentTimeMillis();
 
-        final AndroidStudioStats.GradleBuildProfileSpan.Builder currentRecord =
-                AndroidStudioStats.GradleBuildProfileSpan.newBuilder()
+        final GradleBuildProfileSpan.Builder currentRecord =
+                GradleBuildProfileSpan.newBuilder()
                         .setId(thisRecordId)
                         .setType(executionType)
                         .setStartTimeInMs(startTimeInMs);

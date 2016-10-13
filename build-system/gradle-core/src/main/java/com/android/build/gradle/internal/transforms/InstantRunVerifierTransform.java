@@ -28,17 +28,14 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
-import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier.ClassBytesJarEntryProvider;
+import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
+import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
@@ -47,19 +44,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logging;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.gradle.api.logging.Logging;
 
 /**
  * No-op transform that verifies that changes between 2 versions of the same class are supported

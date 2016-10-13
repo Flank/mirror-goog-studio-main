@@ -47,7 +47,7 @@ import com.android.builder.model.AndroidAtom;
 import com.android.builder.profile.ProcessRecorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

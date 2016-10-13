@@ -18,15 +18,13 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.google.common.jimfs.Jimfs;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests for the {@link ThreadRecorder} class.

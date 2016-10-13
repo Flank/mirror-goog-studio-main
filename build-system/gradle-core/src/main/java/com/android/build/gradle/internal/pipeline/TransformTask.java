@@ -27,8 +27,6 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.ide.common.util.ReferenceHolder;
@@ -39,16 +37,8 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.logging.Logger;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectories;
-import org.gradle.api.tasks.OutputFiles;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -58,6 +48,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectories;
+import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 /**
  * A task running a transform.
@@ -108,11 +106,11 @@ public class TransformTask extends StreamBasedTask implements Context {
 
         isIncremental.setValue(transform.isIncremental() && incrementalTaskInputs.isIncremental());
 
-        AndroidStudioStats.GradleTransformExecution preExecutionInfo =
-                AndroidStudioStats.GradleTransformExecution.newBuilder()
+        GradleTransformExecution preExecutionInfo =
+                GradleTransformExecution.newBuilder()
                         .setType(AnalyticsUtil.getTransformType(transform.getClass()))
                         .setIsIncremental(isIncremental.getValue())
-                .build();
+                        .build();
 
         ThreadRecorder.get().record(ExecutionType.TASK_TRANSFORM_PREPARATION, preExecutionInfo,
                 getProject().getPath(), getVariantName(), new Recorder.Block<Void>() {
@@ -167,7 +165,7 @@ public class TransformTask extends StreamBasedTask implements Context {
                     }
                 });
 
-        AndroidStudioStats.GradleTransformExecution executionInfo =
+        GradleTransformExecution executionInfo =
                 preExecutionInfo.toBuilder().setIsIncremental(isIncremental.getValue()).build();
 
         ThreadRecorder.get().record(ExecutionType.TASK_TRANSFORM, executionInfo,

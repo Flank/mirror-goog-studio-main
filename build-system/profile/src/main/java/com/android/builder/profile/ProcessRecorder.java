@@ -27,9 +27,12 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.AndroidStudioEvent;
-
+import com.google.wireless.android.sdk.stats.AndroidStudioEvent;
+import com.google.wireless.android.sdk.stats.GradleBuildMemorySample;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,17 +42,14 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Records all the {@link AndroidStudioStats.GradleBuildProfileSpan}s for a process, in order it was
- * received.
- */
+/** Records all the {@link GradleBuildProfileSpan}s for a process, in order it was received. */
 public class ProcessRecorder {
 
-    private final AndroidStudioStats.GradleBuildMemorySample mStartMemoryStats;
+    private final GradleBuildMemorySample mStartMemoryStats;
 
     private final NameAnonymizer mNameAnonymizer;
 
-    private final AndroidStudioStats.GradleBuildProfile.Builder mBuild;
+    private final GradleBuildProfile.Builder mBuild;
 
     private final LoadingCache<String, Project> mProjects;
 
@@ -76,7 +76,7 @@ public class ProcessRecorder {
     ProcessRecorder(@Nullable Path benchmarkProfileOutputFile) {
         mBenchmarkProfileOutputFile = benchmarkProfileOutputFile;
         mNameAnonymizer = new NameAnonymizer();
-        mBuild = AndroidStudioStats.GradleBuildProfile.newBuilder();
+        mBuild = GradleBuildProfile.newBuilder();
         mStartMemoryStats = createAndRecordMemorySample();
         mProjects = CacheBuilder.newBuilder().build(new ProjectCacheLoader(mNameAnonymizer));
     }
@@ -84,7 +84,7 @@ public class ProcessRecorder {
     void writeRecord(
             @NonNull String project,
             @Nullable String variant,
-            @NonNull final AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord) {
+            @NonNull final GradleBuildProfileSpan.Builder executionRecord) {
 
         executionRecord.setProject(mNameAnonymizer.anonymizeProjectName(project));
         executionRecord.setVariant(mNameAnonymizer.anonymizeVariant(project, variant));
@@ -94,11 +94,10 @@ public class ProcessRecorder {
 
     /**
      * Done with the recording processing, finish processing the outstanding {@link
-     * AndroidStudioStats.GradleBuildProfileSpan} publication and shutdowns the processing queue.
+     * GradleBuildProfileSpan} publication and shutdowns the processing queue.
      */
     void finish() throws InterruptedException {
-        AndroidStudioStats.GradleBuildMemorySample memoryStats =
-                createAndRecordMemorySample();
+        GradleBuildMemorySample memoryStats = createAndRecordMemorySample();
         mBuild.setBuildTime(
                 memoryStats.getTimestamp() - mStartMemoryStats.getTimestamp());
         mBuild.setGcCount(
@@ -107,8 +106,7 @@ public class ProcessRecorder {
                 memoryStats.getGcTimeMs() - mStartMemoryStats.getGcTimeMs());
 
         for (Project project : mProjects.asMap().values()) {
-            for (AndroidStudioStats.GradleBuildVariant.Builder variant :
-                    project.variants.values()) {
+            for (GradleBuildVariant.Builder variant : project.variants.values()) {
                 project.properties.addVariant(variant);
             }
             if (project.properties != null) {
@@ -139,43 +137,40 @@ public class ProcessRecorder {
         }
     }
 
-    /**
-     * Properties and statistics global to this build invocation.
-     */
+    /** Properties and statistics global to this build invocation. */
     @NonNull
-    public static AndroidStudioStats.GradleBuildProfile.Builder getGlobalProperties() {
+    public static GradleBuildProfile.Builder getGlobalProperties() {
         return get().getProperties();
     }
 
     @NonNull
-    AndroidStudioStats.GradleBuildProfile.Builder getProperties() {
+    GradleBuildProfile.Builder getProperties() {
         return mBuild;
     }
 
     @NonNull
-    public static AndroidStudioStats.GradleBuildProject.Builder getProject(
-            @NonNull String projectPath) {
+    public static GradleBuildProject.Builder getProject(@NonNull String projectPath) {
         return get().mProjects.getUnchecked(projectPath).properties;
     }
 
-    public static AndroidStudioStats.GradleBuildVariant.Builder addVariant(
-            @NonNull String projectPath,
-            @NonNull String variantName) {
-        AndroidStudioStats.GradleBuildVariant.Builder properties =
-                AndroidStudioStats.GradleBuildVariant.newBuilder();
+    public static GradleBuildVariant.Builder addVariant(
+            @NonNull String projectPath, @NonNull String variantName) {
+        GradleBuildVariant.Builder properties = GradleBuildVariant.newBuilder();
         get().addVariant(projectPath, variantName, properties);
         return properties;
     }
 
-    private void addVariant(@NonNull String projectPath, @NonNull String variantName,
-            @NonNull AndroidStudioStats.GradleBuildVariant.Builder properties) {
+    private void addVariant(
+            @NonNull String projectPath,
+            @NonNull String variantName,
+            @NonNull GradleBuildVariant.Builder properties) {
         Project project = mProjects.getUnchecked(projectPath);
         properties.setId(mNameAnonymizer.anonymizeVariant(projectPath, variantName));
         project.variants.put(variantName, properties);
     }
 
-    private AndroidStudioStats.GradleBuildMemorySample createAndRecordMemorySample() {
-        AndroidStudioStats.GradleBuildMemorySample stats = getCurrentProperties();
+    private GradleBuildMemorySample createAndRecordMemorySample() {
+        GradleBuildMemorySample stats = getCurrentProperties();
         if (stats != null) {
             mBuild.addMemorySample(stats);
         }
@@ -204,13 +199,12 @@ public class ProcessRecorder {
     private static class Project {
 
         Project(long id) {
-            properties = AndroidStudioStats.GradleBuildProject.newBuilder();
+            properties = GradleBuildProject.newBuilder();
             properties.setId(id);
         }
 
-        final Map<String, AndroidStudioStats.GradleBuildVariant.Builder> variants =
-                Maps.newConcurrentMap();
-        final AndroidStudioStats.GradleBuildProject.Builder properties;
+        final Map<String, GradleBuildVariant.Builder> variants = Maps.newConcurrentMap();
+        final GradleBuildProject.Builder properties;
     }
 
 }

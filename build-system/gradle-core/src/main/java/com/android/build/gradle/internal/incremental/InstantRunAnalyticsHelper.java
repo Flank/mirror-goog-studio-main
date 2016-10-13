@@ -18,20 +18,17 @@ package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
+import com.google.wireless.android.sdk.stats.InstantRunArtifact;
+import com.google.wireless.android.sdk.stats.InstantRunStatus;
 import org.jetbrains.annotations.Nullable;
 
 public class InstantRunAnalyticsHelper {
 
-    /**
-     * Generate a scrubbed proto of the instant run build context for analytics.
-     */
+    /** Generate a scrubbed proto of the instant run build context for analytics. */
     @NonNull
-    public static AndroidStudioStats.InstantRunStatus generateAnalyticsProto(
+    public static InstantRunStatus generateAnalyticsProto(
             @NonNull InstantRunBuildContext instantRunBuildContext) {
-        AndroidStudioStats.InstantRunStatus.Builder builder =
-                AndroidStudioStats.InstantRunStatus.newBuilder();
+        InstantRunStatus.Builder builder = InstantRunStatus.newBuilder();
 
         builder.setBuildMode(convert(instantRunBuildContext.getBuildMode()));
         builder.setPatchingPolicy(convert(instantRunBuildContext.getPatchingPolicy()));
@@ -41,8 +38,7 @@ public class InstantRunAnalyticsHelper {
         if (last != null) {
             for (InstantRunBuildContext.Artifact artifact : last.getArtifacts()) {
                 builder.addArtifact(
-                        AndroidStudioStats.InstantRunArtifact.newBuilder()
-                                .setType(convert(artifact.getType())));
+                        InstantRunArtifact.newBuilder().setType(convert(artifact.getType())));
             }
         }
         return builder.build();
@@ -51,69 +47,65 @@ public class InstantRunAnalyticsHelper {
 
     @VisibleForTesting
     @NonNull
-    static AndroidStudioStats.InstantRunStatus.BuildMode convert(
-            @NonNull InstantRunBuildMode mode) {
+    static InstantRunStatus.BuildMode convert(@NonNull InstantRunBuildMode mode) {
         switch (mode) {
             case HOT_WARM:
-                return AndroidStudioStats.InstantRunStatus.BuildMode.HOT_WARM;
+                return InstantRunStatus.BuildMode.HOT_WARM;
             case COLD:
-                return AndroidStudioStats.InstantRunStatus.BuildMode.COLD;
+                return InstantRunStatus.BuildMode.COLD;
             case FULL:
-                return AndroidStudioStats.InstantRunStatus.BuildMode.FULL;
+                return InstantRunStatus.BuildMode.FULL;
             default:
-                return AndroidStudioStats.InstantRunStatus.BuildMode.UNKNOWN_BUILD_MODE;
+                return InstantRunStatus.BuildMode.UNKNOWN_BUILD_MODE;
         }
     }
 
     @VisibleForTesting
     @NonNull
-    static AndroidStudioStats.InstantRunStatus.PatchingPolicy convert(
-            @Nullable InstantRunPatchingPolicy policy) {
+    static InstantRunStatus.PatchingPolicy convert(@Nullable InstantRunPatchingPolicy policy) {
         if (policy == null) {
-            return AndroidStudioStats.InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
+            return InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
         }
         switch (policy) {
             case PRE_LOLLIPOP:
-                return AndroidStudioStats.InstantRunStatus.PatchingPolicy.PRE_LOLLIPOP;
+                return InstantRunStatus.PatchingPolicy.PRE_LOLLIPOP;
             case MULTI_DEX:
-                return AndroidStudioStats.InstantRunStatus.PatchingPolicy.MULTI_DEX;
+                return InstantRunStatus.PatchingPolicy.MULTI_DEX;
             case MULTI_APK:
-                return AndroidStudioStats.InstantRunStatus.PatchingPolicy.MULTI_APK;
+                return InstantRunStatus.PatchingPolicy.MULTI_APK;
             default:
-                return AndroidStudioStats.InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
+                return InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
         }
     }
 
     @VisibleForTesting
     @NonNull
-    static AndroidStudioStats.InstantRunStatus.VerifierStatus convert(
-            @NonNull InstantRunVerifierStatus status) {
+    static InstantRunStatus.VerifierStatus convert(@NonNull InstantRunVerifierStatus status) {
         try {
-            return AndroidStudioStats.InstantRunStatus.VerifierStatus.valueOf(status.toString());
+            return InstantRunStatus.VerifierStatus.valueOf(status.toString());
         } catch (IllegalArgumentException ignored) {
-            return AndroidStudioStats.InstantRunStatus.VerifierStatus.UNKNOWN_VERIFIER_STATUS;
+            return InstantRunStatus.VerifierStatus.UNKNOWN_VERIFIER_STATUS;
         }
     }
 
     @VisibleForTesting
     @NonNull
-    static AndroidStudioStats.InstantRunArtifact.Type convert(
-            @NonNull InstantRunBuildContext.FileType type) {
+    static InstantRunArtifact.Type convert(@NonNull InstantRunBuildContext.FileType type) {
         switch (type) {
             case MAIN:
-                return AndroidStudioStats.InstantRunArtifact.Type.MAIN;
+                return InstantRunArtifact.Type.MAIN;
             case SPLIT_MAIN:
-                return AndroidStudioStats.InstantRunArtifact.Type.SPLIT_MAIN;
+                return InstantRunArtifact.Type.SPLIT_MAIN;
             case RELOAD_DEX:
-                return AndroidStudioStats.InstantRunArtifact.Type.RELOAD_DEX;
+                return InstantRunArtifact.Type.RELOAD_DEX;
             case RESTART_DEX:
-                return AndroidStudioStats.InstantRunArtifact.Type.RESTART_DEX;
+                return InstantRunArtifact.Type.RESTART_DEX;
             case DEX:
-                return AndroidStudioStats.InstantRunArtifact.Type.DEX;
+                return InstantRunArtifact.Type.DEX;
             case SPLIT:
-                return AndroidStudioStats.InstantRunArtifact.Type.SPLIT;
+                return InstantRunArtifact.Type.SPLIT;
             case RESOURCES:
-                return AndroidStudioStats.InstantRunArtifact.Type.RESOURCES;
+                return InstantRunArtifact.Type.RESOURCES;
             default:
                 return null;
         }

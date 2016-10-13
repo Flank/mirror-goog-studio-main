@@ -18,10 +18,7 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
-import java.util.ArrayDeque;
-import java.util.Deque;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.util.logging.Logger;
 
 /**
@@ -41,7 +38,7 @@ public class AsyncRecorder extends ThreadRecorder {
     public void closeRecord(
             @NonNull String project,
             @Nullable String variant,
-            @NonNull AndroidStudioStats.GradleBuildProfileSpan.Builder executionRecord) {
+            @NonNull GradleBuildProfileSpan.Builder executionRecord) {
 
         // there is no contract that allocationRecordId and closeRecord will be called in the
         // right order to maintain the stack integrity. Therefore, I used an API which makes

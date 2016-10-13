@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -42,18 +43,14 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats.GradleBuildProfileSpan.ExecutionType;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import java.io.File;
+import java.util.List;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import java.io.File;
-import java.util.List;
-import java.util.Set;
 
 /**
  * TaskManager for creating tasks in an Android application project.

@@ -19,20 +19,20 @@ package com.android.build.gradle.model;
 import static com.android.build.gradle.model.ModelConstants.IS_APPLICATION;
 import static com.android.build.gradle.model.ModelConstants.TASK_MANAGER;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.ProcessRecorder;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -40,8 +40,6 @@ import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.model.Model;
 import org.gradle.model.RuleSource;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
 
 /**
  * Gradle component model plugin class for 'application' projects.
@@ -52,10 +50,8 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
         ProfilerInitializer.init(project);
         ProcessRecorder.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-                .setAndroidPlugin(
-                        AndroidStudioStats.GradleBuildProject.PluginType.LIBRARY)
-                .setPluginGeneration(
-                        AndroidStudioStats.GradleBuildProject.PluginGeneration.COMPONENT_MODEL);
+                .setAndroidPlugin(GradleBuildProject.PluginType.LIBRARY)
+                .setPluginGeneration(GradleBuildProject.PluginGeneration.COMPONENT_MODEL);
 
         project.getPluginManager().apply(BaseComponentModelPlugin.class);
         project.getTasks().create("assembleDefault");

@@ -33,12 +33,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
-import org.gradle.api.logging.Logger;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.tooling.BuildException;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,6 +44,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.tooling.BuildException;
 
 /**
  * Task to package an Android application (APK).
@@ -225,8 +223,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
     private void recordMetrics() {
         long metricsStartTime = System.nanoTime();
-        AndroidStudioStats.GradleBuildProjectMetrics.Builder metrics =
-                AndroidStudioStats.GradleBuildProjectMetrics.newBuilder();
+        GradleBuildProjectMetrics.Builder metrics = GradleBuildProjectMetrics.newBuilder();
 
         Long apkSize = getSize(getOutputFile());
         if (apkSize != null) {

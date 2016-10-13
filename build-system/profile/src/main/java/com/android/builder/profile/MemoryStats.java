@@ -16,8 +16,7 @@
 
 package com.android.builder.profile;
 
-import com.google.wireless.android.sdk.stats.AndroidStudioStats;
-
+import com.google.wireless.android.sdk.stats.GradleBuildMemorySample;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 
@@ -27,7 +26,7 @@ import java.lang.management.ManagementFactory;
 public class MemoryStats {
 
     /** Gets the current memory properties */
-    static AndroidStudioStats.GradleBuildMemorySample getCurrentProperties() {
+    static GradleBuildMemorySample getCurrentProperties() {
         long gcTime = 0;
         long gcCount = 0;
         for(GarbageCollectorMXBean g: ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -39,7 +38,7 @@ public class MemoryStats {
             }
         }
 
-        return AndroidStudioStats.GradleBuildMemorySample.newBuilder()
+        return GradleBuildMemorySample.newBuilder()
                 .setGcCount(gcCount)
                 .setGcTimeMs(gcTime)
                 .setTimestamp(System.currentTimeMillis())
