@@ -221,7 +221,7 @@ public final class DevSdkUpdater {
         }
 
         for (OsEntry osEntry : OS_ENTRIES) {
-            if (!Objects.equals(platform, osEntry.mFolder)) {
+            if (platform != null && !Objects.equals(platform, osEntry.mFolder)) {
                 continue;
             }
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
@@ -260,7 +260,7 @@ public final class DevSdkUpdater {
             System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, filters));
             System.out.flush();
             for (OsEntry osEntry : OS_ENTRIES) {
-                if (!Objects.equals(platform, osEntry.mFolder)) {
+                if (platform != null && !Objects.equals(platform, osEntry.mFolder)) {
                     continue;
                 }
 
