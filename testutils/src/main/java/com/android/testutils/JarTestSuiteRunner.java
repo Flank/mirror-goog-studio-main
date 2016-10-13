@@ -61,17 +61,19 @@ public class JarTestSuiteRunner extends Suite {
 
     private static Class<?>[] getTestClasses(Class<?> suiteClass) throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
+        final Set<String> excludeClassNames = new HashSet<>();
         String name = System.getProperty("test.suite.jar");
-
-        final ClassLoader loader = JarTestSuite.class.getClassLoader();
-        if (loader instanceof URLClassLoader) {
-            for (URL url : ((URLClassLoader)loader).getURLs()) {
-                if (url.getPath().endsWith(name)) {
-                    testClasses.addAll(getTestClasses(url, loader));
+        if (name != null) {
+            final ClassLoader loader = JarTestSuite.class.getClassLoader();
+            if (loader instanceof URLClassLoader) {
+                for (URL url : ((URLClassLoader) loader).getURLs()) {
+                    if (url.getPath().endsWith(name)) {
+                        testClasses.addAll(getTestClasses(url, loader));
+                    }
                 }
             }
+            excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         }
-        Set<String> excludeClassNames = classNamesToExclude(suiteClass, testClasses);
         return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
     }
 
