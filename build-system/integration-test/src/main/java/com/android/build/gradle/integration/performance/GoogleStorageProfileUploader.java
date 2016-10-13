@@ -32,6 +32,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -39,6 +40,8 @@ import java.util.List;
 
 /** Uploads profiling data to Google Storage from the gradle performance tests. */
 public class GoogleStorageProfileUploader implements ProfileUploader {
+
+    private static final Duration UPLOAD_TIMEOUT = Duration.ofMinutes(5);
 
     public static final ProfileUploader INSTANCE = new GoogleStorageProfileUploader();
 
@@ -83,6 +86,11 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
                         .setApplicationName(
                                 "Android-Gradle-Plugin-Performance-Test-Upload/"
                                         + Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                        .setHttpRequestInitializer(
+                                httpRequest -> {
+                                    httpRequest.setConnectTimeout((int) UPLOAD_TIMEOUT.toMillis());
+                                    httpRequest.setReadTimeout((int) UPLOAD_TIMEOUT.toMillis());
+                                })
                         .build();
 
         for (Logging.GradleBenchmarkResult benchmarkResult : benchmarkResults) {
