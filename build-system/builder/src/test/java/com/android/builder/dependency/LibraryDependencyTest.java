@@ -32,6 +32,7 @@ public class LibraryDependencyTest {
                 .withPrefabValues(JarDependency.class, getRedJarValue(), getBlackJarValue())
                 .withRedefinedSuperclass()
                 .suppress(Warning.NONFINAL_FIELDS)
+                .withIgnoredFields("mManifestFile") // pre-computed fields.
                 .verify();
     }
 

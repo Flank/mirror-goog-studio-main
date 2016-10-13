@@ -23,6 +23,10 @@ public class MavenCoordinatesImplTest {
 
     @Test
     public void equals() throws Exception {
-        EqualsVerifier.forClass(MavenCoordinatesImpl.class).verify();
+        EqualsVerifier.forClass(MavenCoordinatesImpl.class)
+                .withCachedHashCode("hashCode", "computeHashCode",
+                        new MavenCoordinatesImpl("foo", "bar", "1.2", "jar", "jar"))
+                .withIgnoredFields("toString", "versionLessId")
+                .verify();
     }
 }
