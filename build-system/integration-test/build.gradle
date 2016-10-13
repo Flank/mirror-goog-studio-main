@@ -183,6 +183,8 @@ task performanceTest(type: Test) {
     outputs.upToDateWhen { false }
 }
 
+performanceTest.dependsOn test
+
 task buildTestDependencies {
     dependsOn ':base:gradle-core:instrumentIncrementalTestPatches',
               ':base:gradle-core:instrumentIncrementalTestBaseClasses',
