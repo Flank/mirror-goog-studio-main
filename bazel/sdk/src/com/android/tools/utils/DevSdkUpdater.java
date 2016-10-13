@@ -228,7 +228,7 @@ public final class DevSdkUpdater {
             // Delegate download operation to SdkManagerCli program
             List<String> args = new ArrayList<>();
             args.add("--channel=3");
-            args.add(osSdkDest.getAbsolutePath());
+            args.add("--sdk_root=" + osSdkDest.getAbsolutePath());
             args.addAll(packages);
 
             Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
