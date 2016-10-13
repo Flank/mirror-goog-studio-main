@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
+import org.jetbrains.kotlin.cli.common.ExitCode;
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
 
 /**
@@ -39,7 +40,7 @@ public class KotlinCompiler extends JarOutputCompiler {
     }
 
     @Override
-    protected void compile(List<String> files, String classPath, File outDir) {
+    protected boolean compile(List<String> files, String classPath, File outDir) {
         // Extracted from CLICompiler.java:
         // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
         // to avoid accidentally starting the UI thread
@@ -51,6 +52,7 @@ public class KotlinCompiler extends JarOutputCompiler {
         args.add("-cp");
         args.add(classPath.replaceAll(":", File.pathSeparator));
         args.addAll(files);
-        CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[]{}));
+        ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[]{}));
+        return exit == ExitCode.OK;
     }
 }

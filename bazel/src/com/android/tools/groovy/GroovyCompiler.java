@@ -38,7 +38,7 @@ public class GroovyCompiler extends JarOutputCompiler {
     }
 
     @Override
-    protected void compile(List<String> files, String classPath, File outDir) {
+    protected boolean compile(List<String> files, String classPath, File outDir) {
         CompilerConfiguration config = new CompilerConfiguration();
         config.setClasspath(classPath);
         config.setTargetDirectory(outDir);
@@ -46,6 +46,7 @@ public class GroovyCompiler extends JarOutputCompiler {
         for (String name : files) {
             cu.addSource(new File(name));
         }
-        cu.compile();
+        cu.compile(); // Throws if there is an error.
+        return true;
     }
 }

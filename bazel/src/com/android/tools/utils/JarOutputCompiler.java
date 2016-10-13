@@ -59,11 +59,13 @@ public abstract class JarOutputCompiler {
             return 1;
         }
         File tmp = new File(out.getAbsolutePath() + ".dir");
-        compile(files, classPath, tmp);
+        if (!compile(files, classPath, tmp)) {
+            return 1;
+        }
         new JarGenerator().directoryToJar(tmp, out);
         return 0;
     }
 
-    protected abstract void compile(List<String> files, String classPath, File outDir)
+    protected abstract boolean compile(List<String> files, String classPath, File outDir)
             throws IOException;
 }
