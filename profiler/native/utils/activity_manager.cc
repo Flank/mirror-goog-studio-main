@@ -19,8 +19,8 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "utils/app_base.h"
 #include "utils/clock.h"
+#include "utils/current_process.h"
 #include "utils/filesystem_notifier.h"
 #include "utils/trace.h"
 
@@ -112,7 +112,7 @@ std::string ActivityManager::GenerateTracePath(
   // And it should use the daemon's steady clock.
   SteadyClock clock;
   std::stringstream path;
-  path << AppBase::Instance()->GetBase();
+  path << CurrentProcess::dir();
   path << app_package_name;
   path << "-";
   path << clock.GetCurrentTime();

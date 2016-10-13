@@ -4,8 +4,8 @@ cc_library(
     name = "profiler_utils",
     srcs = [
         "activity_manager.cc",
-        "app_base.cc",
         "bash_command.cc",
+        "current_process.cc",
         "file_reader.cc",
         "fs/dir.cc",
         "fs/disk_file_system.cc",
@@ -35,10 +35,10 @@ cc_library(
     hdrs = [
         "activity_manager.h",
         "android_studio_version.h",
-        "app_base.h",
         "bash_command.h",
         "clock.h",
         "config.h",
+        "current_process.h",
         "fake_clock.h",
         "file_reader.h",
         "filesystem_notifier.h",
@@ -71,6 +71,7 @@ cc_test(
     name = "profiler_utils_test",
     srcs = [
         "clock_test.cc",
+        "current_process_test.cc",
         "file_reader_test.cc",
         "fs/file_system_test.cc",
         "fs/memory_file_system.cc",

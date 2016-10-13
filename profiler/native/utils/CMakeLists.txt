@@ -1,7 +1,7 @@
 set(UTILS_SOURCES
     activity_manager.cc
-    app_base.cc
     bash_command.cc
+    current_process.cc
     file_reader.cc
     installer.cc
     package_manager.cc
@@ -42,6 +42,7 @@ endif()
 add_unit_test(profiler_utils_test
               file_reader_test.cc
               clock_test.cc
+              current_process_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
               timespec_math_test.cc

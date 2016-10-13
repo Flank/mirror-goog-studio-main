@@ -8,7 +8,7 @@
 #include "bash_command.h"
 #include "package_manager.h"
 #include "profiler_file.h"
-#include "utils/app_base.h"
+#include "utils/current_process.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/trace.h"
@@ -38,7 +38,7 @@ bool Installer::Install(const string &binary_name, string *error_string) const {
   Trace trace("CPU:" + string("Install ") + binary_name.c_str());
   Log::I("Request to install sampler in app '%s'", app_package_name_.c_str());
 
-  string src_path = AppBase::Instance()->GetBase() + binary_name;
+  string src_path = CurrentProcess::dir() + binary_name;
 
   // Check if the sampler is already there.
   string dst_path;
