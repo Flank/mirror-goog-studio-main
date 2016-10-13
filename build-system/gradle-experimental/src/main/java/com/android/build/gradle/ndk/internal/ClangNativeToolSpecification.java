@@ -120,7 +120,6 @@ public class ClangNativeToolSpecification implements NativeToolSpecification {
                     .putAll(SdkConstants.ABI_MIPS, ImmutableList.of(
                             "-fpic",
                             "-fno-strict-aliasing",
-                            "-finline-functions",
                             "-ffunction-sections",
                             "-funwind-tables",
                             "-fmessage-length=0",

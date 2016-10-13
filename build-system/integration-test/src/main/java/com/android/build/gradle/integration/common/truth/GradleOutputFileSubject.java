@@ -77,7 +77,8 @@ public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, Fi
     }
 
     private String getSubjectPattern() {
-        return getSubject().isAbsolute() ? getSubject().getPath() : "\\S*" + getSubject().getPath();
+        return (getSubject().isAbsolute() ? getSubject().getPath() : "\\S*" + getSubject().getPath())
+                .replace("\\", "\\\\");
     }
 
 }

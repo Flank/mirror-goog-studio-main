@@ -7,6 +7,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -56,7 +57,7 @@ public class NdkStlVersionTest {
                 project.file(
                         "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniX86DebugSharedLibraryMainCpp/"
                                 + "options.txt");
-        assertThat(cppOptions).containsAllOf("gnu-libstdc++/4.9/");
+        assertThat(cppOptions).containsAllOf(escape("gnu-libstdc++/4.9/"));
     }
 
     @Test
@@ -98,7 +99,11 @@ public class NdkStlVersionTest {
                     project.file(
                             "build/tmp/compileHello-jniX86DebugSharedLibraryHello-jniX86DebugSharedLibraryMainCpp/"
                                     + "options.txt");
-            assertThat(cppOptions).containsAllOf("gnu-libstdc++/" + stlVersion + "/");
+            assertThat(cppOptions).containsAllOf(escape("gnu-libstdc++/" + stlVersion + "/"));
         }
+    }
+
+    private static String escape(String arg) {
+        return NativeCompilerArgsUtil.transform(FileUtils.toSystemDependentPath(arg));
     }
 }
