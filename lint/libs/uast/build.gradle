@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+group = 'com.android.tools.external.intellij'
+archivesBaseName = 'uast'
+version = '145.597.3'
+
+jar {
+    from zipTree("../../../../../prebuilts/tools/common/uast/uast-" + version + ".jar")
+}
+
+project.ext.pomName = 'IntelliJ IDEA AST API (PSI) Subset'
+project.ext.pomDesc = 'A subset of IntelliJ IDEA\'s AST APIs and implementation, focusing on the read-only aspects, intended for use by Android Lint when running outside of the IDE (typically from Gradle.). Based on IntelliJ IDEA tag idea/' + version + '.'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
+
