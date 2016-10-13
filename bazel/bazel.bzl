@@ -246,7 +246,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     _kotlin_jar(
         name = name + ".kotlins",
         srcs = srcs,
-        deps = deps,
+        deps = ["@local_jdk//:langtools-neverlink"] + deps,
     )
     deps += ["//tools/base/bazel:kotlin-runtime", "lib" + name + ".kotlins.jar"]
     jars += ["lib" + name + ".kotlins.jar"]

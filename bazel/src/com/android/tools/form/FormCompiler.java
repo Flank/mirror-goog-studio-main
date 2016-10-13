@@ -61,7 +61,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
     }
 
     @Override
-    protected void compile(List<String> files, String classPath, File outDir) throws IOException {
+    protected boolean compile(List<String> files, String classPath, File outDir) throws IOException {
         // Files can contain .jar and .form which will be added together into one output jar.
         mOutDir = outDir;
         final ArrayList<URL> urls = new ArrayList<>();
@@ -86,6 +86,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         } finally {
             mFinder.releaseResources();
         }
+        return true;
     }
 
     private void addUrlsTo(String classPath, ArrayList<URL> urls) throws MalformedURLException {
