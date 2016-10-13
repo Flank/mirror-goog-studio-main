@@ -40,5 +40,6 @@
 //tools/base/testutils:studio.testutils_tests
 //tools/base/testutils:tools.tests
 //tools/data-binding:studio.compilerCommon_tests
+//tools/vendor/google/android-apk:android-apk_tests
 //tools:idea.extensions_tests
 //tools:idea.lang-api_tests

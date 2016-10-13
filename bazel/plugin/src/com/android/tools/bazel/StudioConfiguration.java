@@ -60,7 +60,9 @@ public class StudioConfiguration implements Configuration {
 
     @Override
     public List<String> getLabelsToExport() {
-        return ImmutableList.of("tools/adt/idea:uitest-framework");
+        return ImmutableList.of(
+            "tools/adt/idea:uitest-framework",
+            "tools/vendor/google/android-apk:android-apk");
     }
 
     @Override
