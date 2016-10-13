@@ -44,6 +44,12 @@ task sdkManagerStartScripts(type: CreateStartScripts) {
     description "Creates OS specific scripts to start the sdk manager CLI"
     mainClassName = 'com.android.sdklib.tool.SdkManagerCli'
     applicationName = 'sdkmanager'
+    defaultJvmOpts = ["-Dcom.android.sdklib.toolsdir=MY_APP_HOME"]
+
+    doLast {
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0\\..')
+    }
 }
 
 task avdManagerStartScripts(type: CreateStartScripts) {
