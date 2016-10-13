@@ -29,7 +29,6 @@ import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,7 +48,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 @CompileStatic
 @RunWith(Parameterized.class)
 class NativeModelTest {
-    private static enum Compiler {GCC, CLANG}
+    private static enum Compiler {
+        GCC,
+        CLANG,
+        IRRELEVANT  // indicates if the compiler being used is irrelevant to the test
+    }
 
     private static enum Config {
         ANDROID_MK_FILE_C_CLANG("""
@@ -113,7 +116,6 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=clang"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
@@ -130,7 +132,7 @@ class NativeModelTest {
                               EXPECT_EQ(1, 1);
                             }
                             """)],
-                true, 4, 2, 7, Compiler.CLANG, NativeBuildSystem.NDK_BUILD, 0),
+                true, 4, 2, 7, Compiler.IRRELEVANT, NativeBuildSystem.NDK_BUILD, 0),
         ANDROID_MK_FILE_CPP_GCC("""
             apply plugin: 'com.android.application'
 
@@ -190,7 +192,6 @@ class NativeModelTest {
                 defaultConfig {
                     externalNativeBuild {
                         ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=clang"
                             cFlags "-DTEST_C_FLAG"
                             cppFlags "-DTEST_CPP_FLAG"
                         }
@@ -206,7 +207,7 @@ class NativeModelTest {
                     }
                 }
             }
-            """, [androidMkCpp("src/main/cpp")], true, 1, 3, 7, Compiler.CLANG,
+            """, [androidMkCpp("src/main/cpp")], true, 1, 3, 7, Compiler.IRRELEVANT,
                 NativeBuildSystem.NDK_BUILD, 21),
         CMAKELISTS_FILE_CPP("""
             apply plugin: 'com.android.application'
@@ -228,7 +229,7 @@ class NativeModelTest {
                     }
                 }
             }
-            """, [cmakeLists(".")], true, 1, 2, 7, Compiler.GCC,
+            """, [cmakeLists(".")], true, 1, 2, 7, Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE, 14),
         CMAKELISTS_ARGUMENTS("""
             apply plugin: 'com.android.application'
@@ -251,7 +252,7 @@ class NativeModelTest {
                     }
                 }
             }
-            """, [cmakeLists(".")], true, 1, 2, 2, Compiler.GCC, NativeBuildSystem.CMAKE, 4),
+            """, [cmakeLists(".")], true, 1, 2, 2, Compiler.IRRELEVANT, NativeBuildSystem.CMAKE, 4),
         CMAKELISTS_FILE_C("""
             apply plugin: 'com.android.application'
 
@@ -272,7 +273,7 @@ class NativeModelTest {
                     }
                 }
             }
-            """, [cmakeLists(".")], false, 1, 2, 7, Compiler.GCC,
+            """, [cmakeLists(".")], false, 1, 2, 7, Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE, 14);
 
         public final String buildGradle;
@@ -386,10 +387,10 @@ class NativeModelTest {
 
         if (config.compiler == Compiler.GCC) {
             checkGcc(model);
-            checkProblematicGccFlags(model);
-        } else {
+        } else if (config.compiler == Compiler.CLANG) {
             checkClang(model);
         }
+        checkProblematicCompilerFlags(model);
     }
 
     @Test
@@ -521,7 +522,7 @@ class NativeModelTest {
         }
     }
 
-    private static void checkProblematicGccFlags(NativeAndroidProject model) {
+    private static void checkProblematicCompilerFlags(NativeAndroidProject model) {
         for (NativeSettings settings : model.settings) {
             // These flags are known to cause problems, see b.android.com/215555 and
             // b.android.com/213429. They should be stripped (or not present) by JSON producer.
