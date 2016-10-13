@@ -41,15 +41,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
-import org.gradle.tooling.GradleConnectionException;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -58,6 +49,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 /**
  * JUnit4 test rule for integration test.
@@ -480,8 +478,20 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Returns the SDK dir
+     * Return the output atombundle file from the atom plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
      */
+    public File getAtomBundle(String... dimensions) {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
+        dimensionList.add(getName());
+        dimensionList.addAll(Arrays.asList(dimensions));
+        return getOutputFile(
+                "atombundle/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE);
+    }
+
+    /** Returns the SDK dir */
     public File getSdkDir() {
         return sdkDir;
     }
