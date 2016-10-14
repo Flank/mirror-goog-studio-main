@@ -36,6 +36,7 @@ import com.android.sdklib.repository.meta.Library;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.hash.Hashing;
 
 import java.io.File;
 import java.util.Collection;
@@ -287,7 +288,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(
+        return HashCodeUtils.hashCode(
                 super.hashCode(), mSkipped, mIsProvided, mIsSubModule, mJarsRootFolder);
     }
 
