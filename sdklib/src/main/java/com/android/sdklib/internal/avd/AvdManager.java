@@ -25,6 +25,7 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.repository.api.LocalPackage;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.MockFileOp;
@@ -323,23 +324,6 @@ public class AvdManager {
     public static final int SDCARD_NOT_SIZE_PATTERN = -2;
 
     public static final String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
-
-    /**
-     * Status returned by {@link AvdManager#isAvdNameConflicting(String)}.
-     */
-    public enum AvdConflict {
-        /** There is no known conflict for the given AVD name. */
-        NO_CONFLICT,
-        /** The AVD name conflicts with an existing valid AVD. */
-        CONFLICT_EXISTING_AVD,
-        /** The AVD name conflicts with an existing invalid AVD. */
-        CONFLICT_INVALID_AVD,
-        /**
-         * The AVD name does not conflict with any known AVD however there are
-         * files or directory that would cause a conflict if this were to be created.
-         */
-        CONFLICT_EXISTING_PATH,
-    }
 
     // A map where the keys are the locations of the SDK and the values are the corresponding
     // AvdManagers. This prevents us from creating multiple AvdManagers for the same SDK and having
@@ -734,8 +718,7 @@ public class AvdManager {
                 } else if (!editExisting) {
                     // AVD shouldn't already exist if removePrevious is false and
                     // we're not editing an existing AVD.
-                    log.warning(null,
-                            "Folder %1$s is in the way. Move it away to continue.",
+                    log.warning("Folder %1$s is in the way. Move it away to continue.",
                             avdFolder.getAbsolutePath());
                     return null;
                 }
@@ -757,8 +740,7 @@ public class AvdManager {
             String abiType = systemImage.getAbiType();
 
             if (!mFop.exists(userdataSrc)) {
-                log.warning(null,
-                        "Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
+                log.warning("Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
                         USERDATA_IMG,
                         abiType);
                 needCleanup = true;
@@ -770,7 +752,7 @@ public class AvdManager {
             mFop.copyFile(userdataSrc, userdataDest);
 
             if (!mFop.exists(userdataDest)) {
-                log.warning(null, "Unable to create '%1$s' file in the AVD folder.",
+                log.warning("Unable to create '%1$s' file in the AVD folder.",
                         userdataDest);
                 needCleanup = true;
                 return null;
@@ -780,7 +762,7 @@ public class AvdManager {
             HashMap<String, String> values = new HashMap<>();
 
             if (!setImagePathProperties(systemImage, values, log)) {
-               log.warning(null, "Failed to set image path properties in the AVD folder.");
+               log.warning("Failed to set image path properties in the AVD folder.");
                needCleanup = true;
                return null;
             }
@@ -796,7 +778,7 @@ public class AvdManager {
                                              SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER);
                     File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
                     if (!mFop.exists(snapshotBlank)) {
-                        log.warning(null,
+                        log.warning(
                                 "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
                                 SNAPSHOTS_IMG, toolsLib);
                         needCleanup = true;
@@ -824,8 +806,7 @@ public class AvdManager {
                     values.put(AVD_INI_CPU_MODEL, model);
                 }
             } else {
-                log.warning(null,
-                        "ABI %1$s is not supported by this version of the SDK Tools", abiType);
+                log.warning("ABI %1$s is not supported by this version of the SDK Tools", abiType);
                 needCleanup = true;
                 return null;
             }
@@ -847,7 +828,7 @@ public class AvdManager {
             if (skinFolder != null) {
                 // skin does not exist!
                 if (!mFop.exists(skinFolder)) {
-                    log.warning(null, "Skin '%1$s' does not exist at %2$s.", skinName, skinFolder.getPath());
+                    log.warning("Skin '%1$s' does not exist at %2$s.", skinName, skinFolder.getPath());
                     return null;
                 }
 
@@ -882,12 +863,12 @@ public class AvdManager {
                 long sdcardSize = parseSdcardSize(sdcard, null);
 
                 if (sdcardSize == SDCARD_SIZE_NOT_IN_RANGE) {
-                    log.warning(null, "SD Card size must be in the range 9 MiB..1023 GiB.");
+                    log.warning("SD Card size must be in the range 9 MiB..1023 GiB.");
                     needCleanup = true;
                     return null;
 
                 } else if (sdcardSize == SDCARD_SIZE_INVALID) {
-                    log.warning(null, "Unable to parse SD Card size");
+                    log.warning("Unable to parse SD Card size");
                     needCleanup = true;
                     return null;
 
@@ -897,7 +878,7 @@ public class AvdManager {
                         // sdcard value is an external sdcard, so we put its path into the config.ini
                         values.put(AVD_INI_SDCARD_PATH, sdcard);
                     } else {
-                        log.warning(null, "'%1$s' is not recognized as a valid sdcard value.\n"
+                        log.warning("'%1$s' is not recognized as a valid sdcard value.\n"
                                 + "Value should be:\n" + "1. path to an sdcard.\n"
                                 + "2. size of the sdcard to create: <size>[K|M]", sdcard);
                         needCleanup = true;
@@ -925,19 +906,30 @@ public class AvdManager {
                         String path = sdcardFile.getAbsolutePath();
 
                         // execute mksdcard with the proper parameters.
-                        File toolsFolder = new File(mSdkHandler.getLocation(),
-                                SdkConstants.FD_TOOLS);
-                        File mkSdCard = new File(toolsFolder, SdkConstants.mkSdCardCmdName());
+                        LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
+                        LocalPackage p = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR, progress);
+                        if (p == null) {
+                            p = mSdkHandler.getLocalPackage(SdkConstants.FD_TOOLS, progress);
+                        }
+                        if (p == null) {
+                            progress.logWarning(String.format(
+                                    "Unable to find %1$s in the %2$s or %3$s components",
+                                    SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR,
+                                    SdkConstants.FD_TOOLS));
+                            needCleanup = true;
+                            return null;
+                        }
+                        File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());
 
                         if (!mFop.isFile(mkSdCard)) {
-                            log.warning(null, "'%1$s' is missing from the SDK tools folder.",
+                            log.warning("'%1$s' is missing from the SDK tools folder.",
                                     mkSdCard.getName());
                             needCleanup = true;
                             return null;
                         }
 
                         if (!createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log)) {
-                            log.warning(null, "Failed to create sdcard in the AVD folder.");
+                            log.warning("Failed to create sdcard in the AVD folder.");
                             needCleanup = true;
                             return null; // mksdcard output has already been displayed, no need to
                                          // output anything else.
@@ -963,7 +955,7 @@ public class AvdManager {
             HashMap<String, String> finalHardwareValues = new HashMap<>();
 
             FileOpFileWrapper sysImgHardwareFile =
-              new FileOpFileWrapper(new File(systemImage.getLocation(), AvdManager.HARDWARE_INI),
+              new FileOpFileWrapper(new File(systemImage.getLocation(), HARDWARE_INI),
                 mFop, false);
             if (sysImgHardwareFile.exists()) {
                 Map<String, String> imageHardwardConfig = ProjectProperties.parsePropertyFile(
@@ -978,7 +970,7 @@ public class AvdManager {
             // get the hardware properties for this skin
             if (skinFolder != null) {
                 FileOpFileWrapper skinHardwareFile = new FileOpFileWrapper(
-                  new File(skinFolder, AvdManager.HARDWARE_INI), mFop, false);
+                  new File(skinFolder, HARDWARE_INI), mFop, false);
                 if (skinHardwareFile.exists()) {
                     Map<String, String> skinHardwareConfig =
                         ProjectProperties.parsePropertyFile(skinHardwareFile, log);
