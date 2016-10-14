@@ -5,4 +5,5 @@ Thumbs.db
 *.class
 *.DS_Store
 /out
+.idea/inspectionProfiles
 .idea/workspace.xml
