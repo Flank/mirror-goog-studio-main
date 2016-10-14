@@ -36,10 +36,7 @@ import java.util.Set;
  */
 public class JackProcessOptions {
 
-    public static final Revision JACK_MIN_REV = new Revision(24, 0, 0);
-
-    // Revision that Jack version Douarn is released.
-    public static final Revision DOUARN_REV = new Revision(24, 0, 0);
+    public static final Revision JACK_MIN_REV = new Revision(24, 0, 2);
 
     // Revisions with broken coverage plugin for in-process.
     public static final Range<Revision> COVERAGE_BROKEN =

@@ -17,7 +17,6 @@
 package com.android.builder.internal.aapt;
 
 import com.android.annotations.NonNull;
-import com.android.repository.Revision;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -29,11 +28,6 @@ import java.io.File;
  * use version 1 of the {@code aapt} tool.
  */
 public interface Aapt {
-
-    /**
-     * The minimum version of AAPT that supports generating the main dex list for legacy multidex.
-     */
-    Revision VERSION_FOR_MAIN_DEX_LIST = new Revision(24, 0, 0, 4);
 
     /**
      * Invokes {@code aapt} to link the compiled resources into the {@code ap_} file.

@@ -32,7 +32,6 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
-import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -177,15 +176,11 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
                 new LinkedBlockingQueue<>());
         mProcessMode = processMode;
 
-        if (buildToolInfo.getRevision().compareTo(VERSION_FOR_SERVER_AAPT) >= 0) {
-            mCruncher =
-                    QueuedCruncher.Builder.INSTANCE.newCruncher(
-                            getAaptExecutablePath(),
-                            logger,
-                            cruncherProcesses);
-        } else {
-            mCruncher = null;
-        }
+        mCruncher =
+                QueuedCruncher.Builder.INSTANCE.newCruncher(
+                        getAaptExecutablePath(),
+                        logger,
+                        cruncherProcesses);
     }
 
     @Override
@@ -238,9 +233,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         if (config.getMainDexListProguardOutputFile() != null) {
-            Preconditions.checkState(
-                    mBuildToolInfo.getRevision().compareTo(VERSION_FOR_MAIN_DEX_LIST) >= 0,
-                    "AAPT<%s cannot compute the main dex list", VERSION_FOR_MAIN_DEX_LIST);
             builder.addArgs("-D", config.getMainDexListProguardOutputFile().getAbsolutePath());
         }
 
@@ -265,7 +257,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         if (config.isPseudoLocalize()) {
-            Preconditions.checkState(mBuildToolInfo.getRevision().getMajor() >= 21);
             builder.addArgs("--pseudo-localize");
         }
 
@@ -289,7 +280,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         if (config.getOptions().getFailOnMissingConfigEntry()) {
-            Preconditions.checkState(mBuildToolInfo.getRevision().getMajor() > 20);
             builder.addArgs("--error-on-missing-config-entry");
         }
 
@@ -315,52 +305,34 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         List<String> resourceConfigs = new ArrayList<>();
         resourceConfigs.addAll(config.getResourceConfigs());
 
-        if (mBuildToolInfo.getRevision().getMajor() < 21 && config.getPreferredDensity() != null) {
-            resourceConfigs.add(config.getPreferredDensity());
-
-            /*
-             * when adding a density filter, also always add the nodpi option.
-             */
-            resourceConfigs.add(Density.NODPI.getResourceValue());
-        }
-
-
         /*
          * Split the density and language resource configs, since starting in 21, the
          * density resource configs should be passed with --preferred-density to ensure packaging
          * of scalable resources when no resource for the preferred density is present.
          */
         Collection<String> otherResourceConfigs;
-        String preferredDensity = null;
-        if (mBuildToolInfo.getRevision().getMajor() >= 21) {
-            Collection<String> densityResourceConfigs = Lists.newArrayList(
-                    AaptUtils.getDensityResConfigs(resourceConfigs));
-            otherResourceConfigs = Lists.newArrayList(AaptUtils.getNonDensityResConfigs(
-                    resourceConfigs));
-            preferredDensity = config.getPreferredDensity();
+        Collection<String> densityResourceConfigs = Lists.newArrayList(
+                AaptUtils.getDensityResConfigs(resourceConfigs));
+        otherResourceConfigs = Lists.newArrayList(AaptUtils.getNonDensityResConfigs(
+                resourceConfigs));
+        String preferredDensity = config.getPreferredDensity();
 
-            if (preferredDensity != null && !densityResourceConfigs.isEmpty()) {
-                throw new AaptException(
-                        String.format("When using splits in tools 21 and above, "
-                                        + "resConfigs should not contain any densities. Right now, it "
-                                        + "contains \"%1$s\"\nSuggestion: remove these from resConfigs "
-                                        + "from build.gradle",
-                                Joiner.on("\",\"").join(densityResourceConfigs)));
-            }
+        if (preferredDensity != null && !densityResourceConfigs.isEmpty()) {
+            throw new AaptException(
+                    String.format("When using splits, "
+                                    + "resConfigs should not contain any densities. Right now, it "
+                                    + "contains \"%1$s\"\nSuggestion: remove these from resConfigs "
+                                    + "from build.gradle",
+                            Joiner.on("\",\"").join(densityResourceConfigs)));
+        }
 
-            if (densityResourceConfigs.size() > 1) {
-                throw new AaptException("Cannot filter assets for multiple densities using "
-                        + "SDK build tools 21 or later. Consider using apk splits instead.");
-            }
+        if (densityResourceConfigs.size() > 1) {
+            throw new AaptException("Cannot filter assets for multiple densities using "
+                    + "SDK build tools 21 or later. Consider using apk splits instead.");
+        }
 
-            if (preferredDensity == null && densityResourceConfigs.size() == 1) {
-                preferredDensity = Iterables.getOnlyElement(densityResourceConfigs);
-            }
-        } else {
-            /*
-             * Before build tools v21, everything is passed with -c option.
-             */
-            otherResourceConfigs = resourceConfigs;
+        if (preferredDensity == null && densityResourceConfigs.size() == 1) {
+            preferredDensity = Iterables.getOnlyElement(densityResourceConfigs);
         }
 
         if (!otherResourceConfigs.isEmpty()) {
@@ -380,9 +352,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         // All the vector XML files that are outside of an "-anydpi-v21" directory were left there
         // intentionally, for the support library to consume. Leave them alone.
-        if (mBuildToolInfo.getRevision().getMajor() >= 23) {
-            builder.addArgs("--no-version-vectors");
-        }
+        builder.addArgs("--no-version-vectors");
 
         // Add the feature-split configuration if needed.
         if (config.getBaseFeature() != null) {

@@ -165,25 +165,6 @@ public abstract class AbstractAapt implements Aapt {
             //        + "only be defined if there are libraries.");
         }
 
-        if (packageConfig.isPseudoLocalize() && buildToolInfo.getRevision().getMajor() < 21) {
-            throw new AaptException("Pseudolocalization is only available since Build Tools "
-                    + "version 21.0.0, please upgrade or turn it off.");
-        }
-
-        if (packageConfig.getOptions().getFailOnMissingConfigEntry()
-                && buildToolInfo.getRevision().getMajor() < 21) {
-            throw new IllegalStateException("aaptOptions:failOnMissingConfigEntry cannot be used"
-                    + " with SDK Build Tools revision earlier than 21.0.0");
-        }
-
-        if (buildToolInfo.getRevision().getMajor() < 21
-                && packageConfig.getPreferredDensity() != null) {
-            logger.warning(String.format("Warning : Project is building density based "
-                    + "multiple APKs but using tools version %1$s, you should upgrade to "
-                    + "build-tools 21 or above to ensure proper packaging of resources.",
-                    buildToolInfo.getRevision().getMajor()));
-        }
-
         Collection<String> splits = packageConfig.getSplits();
         Collection<String> resourceConfigs = packageConfig.getResourceConfigs();
         if (splits != null && !splits.isEmpty() && !resourceConfigs.isEmpty()) {
