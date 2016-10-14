@@ -25,12 +25,11 @@ import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v01.UnrecoverableException;
+import com.android.jill.api.v01.TranslationException;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -56,6 +55,11 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
 
     private static final JackConversionCache sSingleton = new JackConversionCache();
 
+    // If Jack has been used for conversion
+    private static final String JACK_USED = "jack";
+    // If Jill has been used for conversion
+    private static final String JILL_USED = "jill";
+
     public static JackConversionCache getCache() {
         return sSingleton;
     }
@@ -70,7 +74,7 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
      * Converts a given library to a given output with Jack, using a specific version of the
      * build-tools.
      *
-     * @throws ProcessException
+     * @throws ProcessException if it fails
      */
     public void convertLibrary(
             @NonNull AndroidBuilder androidBuilder,
@@ -78,16 +82,20 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
             @NonNull File outFile,
             @NonNull JackProcessOptions options,
             boolean isJackInProcess)
-            throws ConfigNotSupportedException, ClassNotFoundException, ConfigurationException,
-            CompilationException, UnrecoverableException, ProcessException, InterruptedException,
+            throws ProcessException,
+            JackToolchain.ToolchainException,
+            ClassNotFoundException,
+            InterruptedException,
             IOException {
         Preconditions.checkNotNull(androidBuilder.getTargetInfo());
-        JackDexKey itemKey = JackDexKey.of(
-                inputFile,
-                androidBuilder.getTargetInfo().getBuildTools().getRevision(),
-                options.getJumboMode(),
-                options.getDexOptimize(),
-                options.getAdditionalParameters());
+        JackDexKey itemKey =
+                JackDexKey.of(
+                        inputFile,
+                        androidBuilder.getTargetInfo().getBuildTools().getRevision(),
+                        options.getJumboMode(),
+                        options.getDexOptimize(),
+                        options.getUseJill() ? JILL_USED : JACK_USED,
+                        options.getAdditionalParameters());
 
         Pair<PreProcessCache.Item, Boolean> pair = getItem(androidBuilder.getLogger(), itemKey);
         Item item = pair.getFirst();

@@ -59,17 +59,16 @@ public class JackCompilationOutputTest {
         GradleBuildResult result = sBasic.executor().withArguments(JACK_OPTIONS).expectFailure()
                 .run("assembleDebug");
 
-        // something like - Main.java:15: error: Syntax error, insert ";"
         assertThat(result.getStderr())
                 .containsMatch(
                         Pattern.compile(
-                                "^.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:\\d+:\\s*error:.*", Pattern.MULTILINE));
+                                "^ERROR:.*basic/src/main/java/com/android/tests/basic/Main"
+                                        + "\\.java:.*:.*", Pattern.MULTILINE));
         assertThat(result.getStdout())
                 .containsMatch(
                         Pattern.compile(
-                                "^.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:\\d+:\\s*warning:.*", Pattern.MULTILINE));
+                                "^WARNING:.*basic/src/main/java/com/android/tests/basic/Main"
+                                        + "\\.java:.*:.*", Pattern.MULTILINE));
     }
 
     @Test
@@ -83,11 +82,10 @@ public class JackCompilationOutputTest {
         GradleBuildResult result = sBasic.executor().withArguments(JACK_OPTIONS)
                 .run("assembleDebug");
 
-        // something like - Main.java:15: warning: Syntax warning
         assertThat(result.getStdout())
                 .containsMatch(
                         Pattern.compile(
-                                "^.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:\\d+:\\s*warning:.*", Pattern.MULTILINE));
+                                "^WARNING:.*basic/src/main/java/com/android/tests/basic/Main"
+                                        + "\\.java:.*:.*", Pattern.MULTILINE));
     }
 }

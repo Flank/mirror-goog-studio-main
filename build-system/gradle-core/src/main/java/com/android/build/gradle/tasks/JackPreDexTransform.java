@@ -31,12 +31,9 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.transforms.TransformInputUtil;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.core.JackToolchain;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.ide.common.process.ProcessException;
-import com.android.jack.api.ConfigNotSupportedException;
-import com.android.jack.api.v01.CompilationException;
-import com.android.jack.api.v01.ConfigurationException;
-import com.android.jack.api.v01.UnrecoverableException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,7 +49,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Predex Java libraries and convert to class to jayce format using Jack.
+ * Predex Java libraries and convert to class to .jayce format using Jack for the import libraries,
+ * and Jill for the classpath ones.
  */
 public class JackPreDexTransform extends Transform {
 
@@ -118,21 +116,21 @@ public class JackPreDexTransform extends Transform {
         try {
             runJack(transformInvocation);
         } catch (ProcessException
-                | ConfigurationException
-                | UnrecoverableException
-                | ConfigNotSupportedException
-                | CompilationException
-                | ClassNotFoundException e) {
+                | ClassNotFoundException
+                | JackToolchain.ToolchainException e) {
             throw new TransformException(e);
         }
     }
 
     private void runJack(@NonNull TransformInvocation transformInvocation)
-            throws ConfigNotSupportedException, CompilationException, ProcessException,
-            UnrecoverableException, ConfigurationException, ClassNotFoundException, IOException,
-            InterruptedException {
+            throws JackToolchain.ToolchainException,
+            ClassNotFoundException,
+            ProcessException,
+            InterruptedException,
+            IOException {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         checkNotNull(outputProvider);
+        checkNotNull(androidBuilder.getTargetInfo());
 
         Iterable<File> jarInputs = forPackagedLibs
                 ? TransformInputUtil.getJarFiles(transformInvocation.getInputs())
@@ -141,6 +139,9 @@ public class JackPreDexTransform extends Transform {
                         androidBuilder.getBootClasspath(true));
         for (File file : jarInputs) {
             JackProcessOptions options = new JackProcessOptions();
+            // for classpath libraries (the ones we are not packaging in the apk e.g. android.jar)
+            // we use Jill to convert them to the Jack library format
+            options.setUseJill(!forPackagedLibs);
             options.setImportFiles(ImmutableList.of(file));
             File outFile = outputProvider.getContentLocation(
                     getJackFileName(file),

@@ -54,10 +54,10 @@ public class JackIncrementalTest {
 
     @Test
     public void assembleDebug() throws IOException {
-        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 3, 1);
         project.execute("clean", "assembleDebug");
         File classesDex =
-                FileUtils.find(project.file("build/intermediates/transforms/jack"), "classes.dex").get();
+                FileUtils.find(
+                        project.file("build/intermediates/transforms/jack"), "classes.dex").get();
         long classesDexTimestamp = classesDex.lastModified();
 
         // Check pre-dexed library is not updated
@@ -72,7 +72,8 @@ public class JackIncrementalTest {
 
         project.execute("assembleDebug");
 
-        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug")).isDirectory();
+        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug"))
+                .isDirectory();
 
         assertThat(classesDex).isNewerThan(classesDexTimestamp);
         assertThat(androidJar).wasModifiedAt(androidJarTimestamp);
@@ -83,6 +84,26 @@ public class JackIncrementalTest {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.compileOptions.incremental false\n");
         project.execute("clean", "assembleDebug");
-        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug")).doesNotExist();
+        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug"))
+                .doesNotExist();
+    }
+
+    @Test
+    public void checkFixingCompilationErrorSucceeds() throws Exception {
+        TestFileUtils.addMethod(
+                FileUtils.join(
+                        project.getMainSrcDir(), "com", "example", "helloworld", "HelloWorld.java"),
+                "void invokeMethod() { toImplement(); }"
+        );
+        //noinspection ThrowableResultOfMethodCallIgnored
+        project.executeExpectingFailure("clean", "assembleDebug");
+
+        TestFileUtils.addMethod(
+                FileUtils.join(
+                        project.getMainSrcDir(), "com", "example", "helloworld", "HelloWorld.java"),
+                "void toImplement() {  }"
+        );
+
+        project.execute("assembleDebug");
     }
 }

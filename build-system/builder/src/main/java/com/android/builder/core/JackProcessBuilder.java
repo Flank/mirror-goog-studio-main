@@ -25,6 +25,7 @@ import com.android.ide.common.process.ProcessEnvBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.sdklib.BuildToolInfo;
+import com.android.sdklib.BuildToolInfo.JackVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
@@ -179,40 +180,10 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             }
         }
 
-        BuildToolInfo.JackApiVersion apiVersion = buildToolInfo.getSupportedJackApi();
-        if (apiVersion == BuildToolInfo.JackApiVersion.V2) {
-            if (options.getCoverageMetadataFile() != null) {
-                builder.addArgs("-D", "jack.coverage=true");
-                builder.addArgs(
-                        "-D",
-                        "jack.coverage.metadata.file="
-                                + options.getCoverageMetadataFile().getAbsolutePath());
-            }
-        } else {
-            if (options.getCoverageMetadataFile() != null) {
-                String coveragePluginPath =
-                        buildToolInfo.getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
-                if (coveragePluginPath == null || !new File(coveragePluginPath).isFile()) {
-                    logger.warning(
-                            "Unable to find coverage plugin '%s'.  Disabling code coverage.",
-                            coveragePluginPath);
-                } else {
-                    options.addJackPluginClassPath(new File(coveragePluginPath));
-                    options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
-                    builder.addArgs(
-                            "-D",
-                            "jack.coverage.metadata.file="
-                                    + options.getCoverageMetadataFile().getAbsolutePath());
-                }
-            }
+        JackVersion apiVersion = buildToolInfo.getSupportedJackApi();
 
-            if (!options.getJackPluginClassPath().isEmpty()) {
-                builder.addArgs(
-                        "--pluginpath", FileUtils.joinFilePaths(options.getJackPluginClassPath()));
-            }
-            if (!options.getJackPluginNames().isEmpty()) {
-                builder.addArgs("--plugin", Joiner.on(",").join(options.getJackPluginNames()));
-            }
+        if (apiVersion.getVersion() >= JackVersion.V4.getVersion()) {
+            api04Specific(buildToolInfo, builder);
         }
 
         // apply all additional params
@@ -224,6 +195,34 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
         }
 
         return builder.createJavaProcess();
+    }
+
+    private void api04Specific(
+            @NonNull BuildToolInfo buildToolInfo, @NonNull ProcessInfoBuilder builder) {
+        if (options.getCoverageMetadataFile() != null) {
+            String coveragePluginPath =
+                    buildToolInfo.getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
+            if (coveragePluginPath == null || !new File(coveragePluginPath).isFile()) {
+                logger.warning(
+                        "Unable to find coverage plugin '%s'.  Disabling code coverage.",
+                        coveragePluginPath);
+            } else {
+                options.addJackPluginClassPath(new File(coveragePluginPath));
+                options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
+                builder.addArgs(
+                        "-D",
+                        "jack.coverage.metadata.file="
+                                + options.getCoverageMetadataFile().getAbsolutePath());
+            }
+        }
+
+        if (!options.getJackPluginClassPath().isEmpty()) {
+            builder.addArgs(
+                    "--pluginpath", FileUtils.joinFilePaths(options.getJackPluginClassPath()));
+        }
+        if (!options.getJackPluginNames().isEmpty()) {
+            builder.addArgs("--plugin", Joiner.on(",").join(options.getJackPluginNames()));
+        }
     }
 
     private void createEcjOptionFile() throws IOException {

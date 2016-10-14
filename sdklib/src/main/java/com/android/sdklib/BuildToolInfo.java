@@ -72,6 +72,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
 
 import java.io.File;
 import java.util.Map;
@@ -173,18 +174,42 @@ public class BuildToolInfo {
     }
 
     /** Jack API versions. */
-    public enum JackApiVersion {
-        V2(2),
-        V3(3);
+    public enum JackVersion {
+        V4(4, "24.0.3");
 
-        private final int mVersion;
+        private final int version;
+        private Range<Revision> supportedBetween;
 
-        JackApiVersion(int version) {
-            mVersion = version;
+        JackVersion(int version, @NonNull String lowerRevision) {
+            this.version = version;
+            this.supportedBetween = Range.atLeast(Revision.parseRevision(lowerRevision));
         }
 
+        @SuppressWarnings("unused")
+        JackVersion(int version, @NonNull String lowerRevision, @NonNull String upperRevision) {
+            this.version= version;
+            this.supportedBetween =
+                    Range.closedOpen(
+                            Revision.parseRevision(lowerRevision),
+                            Revision.parseRevision(upperRevision));
+
+        }
+
+        /** Api version. */
         public int getVersion() {
-            return mVersion;
+            return version;
+        }
+
+        /** Minimum build tools version supporting this API. */
+        @NonNull
+        public Revision getMinRevision() {
+            return supportedBetween.lowerEndpoint();
+        }
+
+        /** The range of build tools supporting this as their highest API level. */
+        @NonNull
+        public Range<Revision> getSupportedBetween() {
+            return supportedBetween;
         }
     }
 
@@ -415,16 +440,24 @@ public class BuildToolInfo {
         return true;
     }
 
-    /** Gets the supported Jack API version for this build tools. */
-    public JackApiVersion getSupportedJackApi() {
-        if (getRevision().compareTo(JACK_COVERAGE_PLUGIN.mMinRevision) >= 0) {
-            return JackApiVersion.V3;
-        } else {
-            return JackApiVersion.V2;
-        }
+    /** If this build tools supports Jack. */
+    public boolean supportsJack() {
+        return getRevision().compareTo(JackVersion.V4.getMinRevision()) >= 0;
     }
 
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    /** Gets the supported Jack API version. This throws exception if no API is supported. */
+    @NonNull
+    public JackVersion getSupportedJackApi() {
+        for (JackVersion version : JackVersion.values()) {
+            if (version.getSupportedBetween().contains(getRevision())) {
+                return version;
+            }
+        }
+
+        throw new UnsupportedOperationException("Jack API unsupported; update the build tools.");
+    }
+
+    @VisibleForTesting(visibility = Visibility.PRIVATE)
     @Nullable
     static Revision getCurrentJvmVersion() throws NumberFormatException {
         String javav = System.getProperty("java.version");              //$NON-NLS-1$

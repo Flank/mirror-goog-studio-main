@@ -16,17 +16,19 @@
 
 package com.android.builder.core;
 
-import static com.android.builder.core.JackProcessOptions.JACK_MIN_REV;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.process.JavaProcessExecutor;
+import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.process.ProcessResult;
 import com.android.jack.api.ConfigNotSupportedException;
 import com.android.jack.api.JackProvider;
-import com.android.jack.api.v01.Api01CompilationTask;
 import com.android.jack.api.v01.ChainedException;
 import com.android.jack.api.v01.CompilationException;
 import com.android.jack.api.v01.ConfigurationException;
@@ -34,9 +36,10 @@ import com.android.jack.api.v01.DebugInfoLevel;
 import com.android.jack.api.v01.MultiDexKind;
 import com.android.jack.api.v01.ReporterKind;
 import com.android.jack.api.v01.UnrecoverableException;
-import com.android.jack.api.v02.Api02Config;
-import com.android.jack.api.v03.Api03Config;
-import com.android.repository.Revision;
+import com.android.jack.api.v04.Api04Config;
+import com.android.jill.api.JillProvider;
+import com.android.jill.api.v01.Api01TranslationTask;
+import com.android.jill.api.v01.TranslationException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -44,20 +47,39 @@ import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Features exposed by the Jack toolchain. This is used for invoking Jack to convert inputs (source
- * code, jars etc.) to jack library format, or .dex. It supports doing so in the current process, or
- * in a separate one.
+ * code, jars etc.) to Jack library format, or .dex. Besides Jack, one is also able to use Jill
+ * to convert Java libraries (.jar) to Jack library format. Both Jack and Jill support conversions
+ * in the current, or the separate process.
+ *
+ * <p>Jack is used for processing java libraries that are packaged in the final apk, and also for
+ * the source compilation. It can produce Jack library format or .dex files.
+ *
+ * <p>Jill is used for processing classpath libraries (these are not in the final apk). It accepts
+ * .jar file as input, and produces Jack library format as output. E.g. we are using Jill to
+ * convert android.jar to android.jack. This .jack library is later on added to the classpath when
+ * compiling the sources.
  */
 public class JackToolchain {
+
+    /** Jack toolchain exception. It just wraps to actual exception. */
+    public static class ToolchainException extends Exception {
+        public ToolchainException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     @NonNull private BuildToolInfo buildToolInfo;
     @NonNull private ILogger logger;
 
@@ -67,23 +89,23 @@ public class JackToolchain {
     }
 
     /**
-     * Converts Java source code into android byte codes using Jack.
+     * Converts Java source code or Java byte code into android byte code or Jack library format
+     * using the Jack toolchain. It accepts source files, .jar or .jack as inputs, and produces
+     * .jack or .dex files as outputs.
      *
-     * @param options Options for configuring Jack.
+     * @param options             options for configuring Jack.
      * @param javaProcessExecutor java executor to be used for out of process execution
-     * @param isInProcess Whether to run Jack in memory or spawn another Java process.
+     * @param isInProcess         whether to run Jack in memory or spawn another Java process.
+     * @throws ToolchainException     if there is an exception related to running Jack toolchain
+     * @throws ProcessException       if a process in which the conversion is run fails
+     * @throws ClassNotFoundException if running in process, and unable to load the classes required
+     *                                for the conversion
      */
     public void convert(
             @NonNull JackProcessOptions options,
             @NonNull JavaProcessExecutor javaProcessExecutor,
             boolean isInProcess)
-            throws ConfigNotSupportedException, ClassNotFoundException, CompilationException,
-            ConfigurationException, UnrecoverableException, ProcessException {
-        Revision revision = buildToolInfo.getRevision();
-        if (revision.compareTo(JACK_MIN_REV, Revision.PreviewComparison.IGNORE) < 0) {
-            throw new ConfigNotSupportedException(
-                    "Jack requires Build Tools " + JACK_MIN_REV.toString() + " or later");
-        }
+            throws ToolchainException, ProcessException, ClassNotFoundException {
 
         // Create all the necessary directories if needed.
         if (options.getDexOutputDirectory() != null) {
@@ -110,8 +132,8 @@ public class JackToolchain {
                 FileUtils.mkdirs(options.getIncrementalDir());
             } catch (RuntimeException ignored) {
                 logger.warning(
-                        "Cannot create %1$s directory, "
-                                + "jack incremental support disabled", options.getIncrementalDir());
+                        "Cannot create %1$s directory jack incremental support disabled",
+                        options.getIncrementalDir());
                 // unset the incremental dir if it neither already exists nor can be created.
                 options.setIncrementalDir(null);
             }
@@ -129,156 +151,154 @@ public class JackToolchain {
     }
 
     /**
-     * Converts java source code into android byte codes using the jack integration APIs. Jack will
-     * run in memory.
+     * Converts inputs in process. This is using the Jack toolchain APIs. See the
+     * {@link #convertUsingJackApis(JackProcessOptions)} and
+     * {@link #convertUsingJillApis(JackProcessOptions)} for more details.
      */
     private void convertUsingApis(@NonNull JackProcessOptions options)
-            throws ConfigNotSupportedException, ConfigurationException, CompilationException,
-                    UnrecoverableException, ClassNotFoundException {
+            throws ToolchainException, ClassNotFoundException {
+        if (options.getUseJill()) {
+            convertUsingJillApis(options);
+        } else {
+            convertUsingJackApis(options);
+        }
+    }
+
+    /**
+     * Convert the inputs using Jack in-process and its APIs. Inputs are sources, .jar files and
+     * Jack library format (.jack) files. Depending on the options specified, this can produce
+     * Jack library format or .dex output.
+     *
+     * @param options options how to run Jack
+     */
+    private void convertUsingJackApis(@NonNull JackProcessOptions options)
+            throws ClassNotFoundException, ToolchainException {
 
         BuildToolsServiceLoader.BuildToolServiceLoader buildToolServiceLoader =
                 BuildToolsServiceLoader.INSTANCE.forVersion(buildToolInfo);
 
-        Api01CompilationTask compilationTask = null;
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Optional<JackProvider> jackProvider =
-                buildToolServiceLoader.getSingleService(logger, BuildToolsServiceLoader.JACK);
-        BuildToolInfo.JackApiVersion apiVersion = buildToolInfo.getSupportedJackApi();
-        if (jackProvider.isPresent()) {
+        JackProvider jackProvider =
+                buildToolServiceLoader
+                        .getSingleService(logger, BuildToolsServiceLoader.JACK)
+                        .orElseThrow(() ->
+                                new IllegalStateException("Cannot load Jill from build tools."));
+        BuildToolInfo.JackVersion apiVersion = buildToolInfo.getSupportedJackApi();
 
-            // Get configuration object
-            try {
-                Api02Config config = createJackConfig(jackProvider.get());
 
-                config.setDebugInfoLevel(
-                        options.isDebuggable() ? DebugInfoLevel.FULL : DebugInfoLevel.NONE);
-
-                config.setClasspath(options.getClasspaths());
-                if (options.getDexOutputDirectory() != null) {
-                    config.setOutputDexDir(options.getDexOutputDirectory());
-                }
-                if (options.getOutputFile() != null) {
-                    config.setOutputJackFile(options.getOutputFile());
-                }
-                config.setImportedJackLibraryFiles(options.getImportFiles());
-                if (options.getMinSdkVersion() > 0) {
-                    config.setAndroidMinApiLevel(options.getMinSdkVersion());
-                }
-
-                config.setProguardConfigFiles(options.getProguardFiles());
-                config.setJarJarConfigFiles(options.getJarJarRuleFiles());
-
-                if (options.isMultiDex()) {
-                    if (options.getMinSdkVersion()
-                            < BuildToolInfo.SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT) {
-                        config.setMultiDexKind(MultiDexKind.LEGACY);
-                    } else {
-                        config.setMultiDexKind(MultiDexKind.NATIVE);
-                    }
-                }
-
-                config.setSourceEntries(options.getInputFiles());
-                if (options.getMappingFile() != null) {
-                    config.setProperty("jack.obfuscation.mapping.dump", "true");
-                    config.setObfuscationMappingOutputFile(options.getMappingFile());
-                }
-
-                config.setProperty("jack.import.type.policy", "keep-first");
-                config.setProperty("jack.import.resource.policy", "keep-first");
-
-                config.setReporter(ReporterKind.DEFAULT, outputStream);
-
-                if (options.getSourceCompatibility() != null) {
-                    config.setProperty(
-                            "jack.java.source.version", options.getSourceCompatibility());
-                }
-
-                if (options.getEncoding() != null
-                        && !options.getEncoding().equals(Charset.defaultCharset().name())) {
-                    logger.warning(
-                            "Jack will use %s encoding for the source files. If you would like to "
-                                    + "specify a different one, add org.gradle.jvmargs="
-                                    + "-Dfile.encoding=<encoding> to the gradle.properties file."
-                                    + "Alternatively, set jackInProcess = false, and "
-                                    + "use android.compileOptions.encoding property.",
-                            Charset.defaultCharset().name());
-                }
-
-                if (options.getIncrementalDir() != null && options.getIncrementalDir().exists()) {
-                    config.setIncrementalDir(options.getIncrementalDir());
-                }
-
-                ImmutableList.Builder<File> resourcesDir = ImmutableList.builder();
-                for (File file : options.getResourceDirectories()) {
-                    if (file.exists()) {
-                        resourcesDir.add(file);
-                    }
-                }
-                config.setResourceDirs(resourcesDir.build());
-
-                // due to b.android.com/82031
-                config.setProperty("jack.dex.optimize", "true");
-
-                if (!options.getAnnotationProcessorNames().isEmpty()) {
-                    config.setProcessorNames(options.getAnnotationProcessorNames());
-                }
-                if (options.getAnnotationProcessorOutputDirectory() != null) {
-                    FileUtils.mkdirs(options.getAnnotationProcessorOutputDirectory());
-                    config.setProperty(
-                            "jack.annotation-processor.source.output",
-                            options.getAnnotationProcessorOutputDirectory().getAbsolutePath());
-                }
-                try {
-                    config.setProcessorPath(options.getAnnotationProcessorClassPath());
-                } catch (Exception e) {
-                    logger.error(e, "Could not resolve annotation processor path.");
-                    throw new RuntimeException(e);
-                }
-
-                config.setProcessorOptions(options.getAnnotationProcessorOptions());
-
-                // apply all additional parameters
-                for (String paramKey : options.getAdditionalParameters().keySet()) {
-                    String paramValue = options.getAdditionalParameters().get(paramKey);
-                    config.setProperty(paramKey, paramValue);
-                }
-
-                if (apiVersion == BuildToolInfo.JackApiVersion.V2) {
-                    config = api02Specific(config, options);
-                } else if (apiVersion == BuildToolInfo.JackApiVersion.V3) {
-                    config = api03Specific((Api03Config) config, options);
-                }
-
-                compilationTask = config.getTask();
-            } catch (ConfigNotSupportedException e) {
-                logger.error(
-                        e,
-                        "jack.jar from build tools "
-                                + buildToolInfo.getRevision()
-                                + " does not support Jack API v%d.",
-                        apiVersion.getVersion());
-                throw e;
-            } catch (ConfigurationException e) {
-                logger.error(e, "Jack APIs v%d configuration failed", apiVersion.getVersion());
-                throw e;
-            }
-        }
-
-        checkNotNull(compilationTask);
-
-        // Run the compilation
+        // Get configuration object
         try {
-            compilationTask.run();
-            logger.verbose("Jack created dex: %1$s", outputStream.toString());
-        } catch (ConfigurationException e) {
-            // chained exceptions are configuration exceptions, might contain useful info
-            for (ChainedException i : e) {
-                logger.error(null, i.getMessage());
+            Api04Config config = createJackConfig(jackProvider, apiVersion);
+
+            config.setDebugInfoLevel(
+                    options.isDebuggable() ? DebugInfoLevel.FULL : DebugInfoLevel.NONE);
+
+            config.setClasspath(options.getClasspaths());
+            if (options.getDexOutputDirectory() != null) {
+                config.setOutputDexDir(options.getDexOutputDirectory());
             }
-            throw new RuntimeException("Jack configuration exception occurred.");
+            if (options.getOutputFile() != null) {
+                config.setOutputJackFile(options.getOutputFile());
+            }
+            config.setImportedJackLibraryFiles(options.getImportFiles());
+            if (options.getMinSdkVersion() > 0) {
+                config.setAndroidMinApiLevel(options.getMinSdkVersion());
+            }
+
+            config.setProguardConfigFiles(options.getProguardFiles());
+            config.setJarJarConfigFiles(options.getJarJarRuleFiles());
+
+            if (options.isMultiDex()) {
+                if (options.getMinSdkVersion()
+                        < BuildToolInfo.SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT) {
+                    config.setMultiDexKind(MultiDexKind.LEGACY);
+                } else {
+                    config.setMultiDexKind(MultiDexKind.NATIVE);
+                }
+            }
+
+            config.setSourceEntries(options.getInputFiles());
+            if (options.getMappingFile() != null) {
+                config.setProperty("jack.obfuscation.mapping.dump", "true");
+                config.setObfuscationMappingOutputFile(options.getMappingFile());
+            }
+
+            config.setProperty("jack.import.type.policy", "keep-first");
+            config.setProperty("jack.import.resource.policy", "keep-first");
+
+            config.setReporter(ReporterKind.DEFAULT, outputStream);
+
+            if (options.getSourceCompatibility() != null) {
+                config.setProperty(
+                        "jack.java.source.version", options.getSourceCompatibility());
+            }
+
+            if (options.getIncrementalDir() != null && options.getIncrementalDir().exists()) {
+                config.setIncrementalDir(options.getIncrementalDir());
+            }
+
+            ImmutableList.Builder<File> resourcesDir = ImmutableList.builder();
+            for (File file : options.getResourceDirectories()) {
+                if (file.exists()) {
+                    resourcesDir.add(file);
+                }
+            }
+            config.setResourceDirs(resourcesDir.build());
+
+            // due to b.android.com/82031
+            config.setProperty("jack.dex.optimize", "true");
+
+            if (!options.getAnnotationProcessorNames().isEmpty()) {
+                config.setProcessorNames(options.getAnnotationProcessorNames());
+            }
+            if (options.getAnnotationProcessorOutputDirectory() != null) {
+                FileUtils.mkdirs(options.getAnnotationProcessorOutputDirectory());
+                config.setProperty(
+                        "jack.annotation-processor.source.output",
+                        options.getAnnotationProcessorOutputDirectory().getAbsolutePath());
+            }
+            try {
+                config.setProcessorPath(options.getAnnotationProcessorClassPath());
+            } catch (Exception e) {
+                logger.error(e, "Could not resolve annotation processor path.");
+                throw new RuntimeException(e);
+            }
+
+            config.setProcessorOptions(options.getAnnotationProcessorOptions());
+
+            // apply all additional parameters
+            for (String paramKey : options.getAdditionalParameters().keySet()) {
+                String paramValue = options.getAdditionalParameters().get(paramKey);
+                config.setProperty(paramKey, paramValue);
+            }
+
+            if (apiVersion.getVersion() >= BuildToolInfo.JackVersion.V4.getVersion()) {
+                config = api04Specific(config, options);
+            }
+
+            config.getTask().run();
+
+            logger.verbose("Jack created dex: %1$s", outputStream.toString());
+        } catch (ConfigNotSupportedException e) {
+            String errorMessage =
+                    String.format(
+                            "jack.jar from build tools %s does not support Jack API v%d.",
+                            buildToolInfo.getRevision().toString(),
+                            apiVersion.getVersion());
+            throw new ToolchainException(errorMessage, e);
+        }  catch (ConfigurationException e) {
+            // configuration exceptions are chained exceptions, might contain useful info
+            StringBuilder stringBuilder = new StringBuilder("Jack configuration exception.");
+            for (ChainedException i : e) {
+                stringBuilder.append(System.lineSeparator());
+                stringBuilder.append(i.getMessage());
+            }
+            throw new ToolchainException(stringBuilder.toString(), e);
         } catch (UnrecoverableException e) {
-            logger.error(e, "Something out of Jack control has happened: " + e.getMessage());
-            throw e;
+            throw new ToolchainException(
+                    "Something out of Jack control has happened: " + e.getMessage(), e);
+        } catch (CompilationException e) {
+            throw new ToolchainException("Jack compilation exception", e);
         } finally {
             // always show Jack output, it might contain useful warnings/errors
             processJackOutput(logger, outputStream);
@@ -286,14 +306,35 @@ public class JackToolchain {
     }
 
     /**
-     * Converts the inputs in a separate process.
+     * It performs the same operation like {@link #convertUsingApis(JackProcessOptions)},
+     * but it performs the conversion in a separate process. See
+     * {@link #convertUsingJackCli(JackProcessOptions, ProcessOutputHandler, JavaProcessExecutor)}
+     * and
+     * {@link #convertUsingJillCli(JackProcessOptions, ProcessOutputHandler, JavaProcessExecutor)}
+     * for details.
      *
-     * @param options options specified
-     * @param processOutputHandler used for parsing the output
-     * @param javaProcessExecutor executor used for the separate process
-     * @throws ProcessException if the execution fails
+     * @param options              options how to run Jack
+     * @param processOutputHandler handler for the output
+     * @param javaProcessExecutor  executor for running the process
+     * @throws ProcessException in case that running the process fails
      */
     private void convertUsingCli(
+            @NonNull JackProcessOptions options,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull JavaProcessExecutor javaProcessExecutor)
+            throws ProcessException {
+        if (options.getUseJill()) {
+            convertUsingJillCli(options, processOutputHandler, javaProcessExecutor);
+        } else {
+            convertUsingJackCli(options, processOutputHandler, javaProcessExecutor);
+        }
+    }
+
+    /**
+     * It performs the same operation like {@link #convertUsingJackApis(JackProcessOptions)}
+     * but it does that in a separate process.
+     */
+    private void convertUsingJackCli(
             @NonNull JackProcessOptions options,
             @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull JavaProcessExecutor javaProcessExecutor)
@@ -305,6 +346,7 @@ public class JackToolchain {
                 .assertNormalExitValue();
     }
 
+    /** Parses the Jack compilation output. */
     private static void processJackOutput(
             @NonNull ILogger logger, @NonNull OutputStream outputStream) {
         Iterable<String> msgIterator =
@@ -344,32 +386,20 @@ public class JackToolchain {
         }
     }
 
-    private Api02Config createJackConfig(@NonNull JackProvider jackProvider)
+    private Api04Config createJackConfig(
+            @NonNull JackProvider jackProvider, @NonNull BuildToolInfo.JackVersion apiVersion)
             throws ConfigNotSupportedException {
-        BuildToolInfo.JackApiVersion version = buildToolInfo.getSupportedJackApi();
-        if (version == BuildToolInfo.JackApiVersion.V3) {
-            return jackProvider.createConfig(Api03Config.class);
-        } else if (version == BuildToolInfo.JackApiVersion.V2) {
-            return jackProvider.createConfig(Api02Config.class);
+        if (apiVersion == BuildToolInfo.JackVersion.V4) {
+            return jackProvider.createConfig(Api04Config.class);
         } else {
-            throw new RuntimeException("Cannot determine Jack API version to use = " + version);
+            throw new RuntimeException("Cannot determine Jack API version to use = " + apiVersion);
         }
     }
 
-    private Api02Config api02Specific(
-            @NonNull Api02Config config, @NonNull JackProcessOptions options)
-            throws ConfigurationException {
-        if (options.getCoverageMetadataFile() != null) {
-            config.setProperty("jack.coverage", "true");
-            config.setProperty(
-                    "jack.coverage.metadata.file",
-                    options.getCoverageMetadataFile().getAbsolutePath());
-        }
-        return config;
-    }
-
-    private Api03Config api03Specific(
-            @NonNull Api03Config config, @NonNull JackProcessOptions options)
+    /** Apply Api04 specific values. */
+    @NonNull
+    private Api04Config api04Specific(
+            @NonNull Api04Config config, @NonNull JackProcessOptions options)
             throws ConfigurationException {
         if (options.getCoverageMetadataFile() != null) {
             String coveragePluginPath =
@@ -397,6 +427,96 @@ public class JackToolchain {
         // jack plugins
         config.setPluginNames(Lists.newArrayList(options.getJackPluginNames()));
         config.setPluginPath(options.getJackPluginClassPath());
+
+        if (options.getEncoding() != null) {
+            config.setDefaultCharset(Charset.forName(options.getEncoding()));
+        }
+
         return config;
+    }
+
+    /**
+     * Converts a .jar to the Jack library format, .jack. It uses Jill that is part of
+     * the Jack toolchain. It does so in the current process, using
+     * the {@link com.android.jill.api.v01.Api01Config} for configuration.
+     * <p>It is being used for processing classpath libraries e.g. android.jar.
+     */
+    private void convertUsingJillApis(@NonNull JackProcessOptions jackOptions)
+            throws ClassNotFoundException, ToolchainException {
+        checkState(jackOptions.getImportFiles().size() == 1, "Jill can convert a file at a time.");
+        checkNotNull(jackOptions.getOutputFile(), "Jill output file is required.");
+
+        BuildToolsServiceLoader.BuildToolServiceLoader buildToolServiceLoader =
+                BuildToolsServiceLoader.INSTANCE.forVersion(buildToolInfo);
+        JillProvider jillProvider =
+                buildToolServiceLoader
+                        .getSingleService(logger, BuildToolsServiceLoader.JILL)
+                        .orElseThrow(() ->
+                                new IllegalStateException("Cannot load Jill from build tools."));
+
+        File inputFile = jackOptions.getImportFiles().get(0);
+        Api01TranslationTask translationTask;
+        try {
+            com.android.jill.api.v01.Api01Config config =
+                    jillProvider.createConfig(com.android.jill.api.v01.Api01Config.class);
+            config.setInputJavaBinaryFile(inputFile);
+            config.setOutputJackFile(jackOptions.getOutputFile());
+            config.setVerbose(jackOptions.isVerbose());
+
+            translationTask = config.getTask();
+
+            translationTask.run();
+        } catch (com.android.jill.api.ConfigNotSupportedException e) {
+            String errorMessage =
+                    String.format(
+                            "jill.jar from build tools %s does not support Jill API v1.",
+                            buildToolInfo.getRevision().toString());
+            throw new ToolchainException(errorMessage, e);
+        } catch (com.android.jill.api.v01.ConfigurationException e) {
+            throw new ToolchainException("Jill APIs v1 configuration failed", e);
+        } catch (TranslationException e) {
+            throw new ToolchainException("Jill translation aborted", e);
+        }
+    }
+
+    /**
+     * It performs the same operation like {@link #convertUsingJillApis(JackProcessOptions)},
+     * but it executes the conversion in the separate process.
+     */
+    private void convertUsingJillCli(
+            @NonNull JackProcessOptions jackOptions,
+            @NonNull ProcessOutputHandler outputHandler,
+            @NonNull JavaProcessExecutor javaProcessExecutor)
+            throws ProcessException {
+        checkState(jackOptions.getImportFiles().size() == 1, "Jill can convert a file at a time.");
+        checkNotNull(jackOptions.getOutputFile(), "Jill output file is required.");
+
+        // launch jill: create the command line
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
+
+        String jill = buildToolInfo.getPath(BuildToolInfo.PathId.JILL);
+
+        if (jill == null || !Files.isRegularFile(Paths.get(jill))) {
+            throw new IllegalStateException("jill.jar is missing from the build tools.");
+        }
+
+        builder.setClasspath(jill);
+        builder.setMain("com.android.jill.Main");
+
+        if (jackOptions.getJavaMaxHeapSize() != null) {
+            builder.addJvmArg("-Xmx" + jackOptions.getJavaMaxHeapSize());
+        }
+        builder.addArgs(jackOptions.getImportFiles().get(0).getAbsolutePath());
+        builder.addArgs("--output");
+        builder.addArgs(jackOptions.getOutputFile().getAbsolutePath());
+
+        if (jackOptions.isVerbose()) {
+            builder.addArgs("--verbose");
+        }
+
+        logger.verbose(builder.toString());
+        JavaProcessInfo javaProcessInfo = builder.createJavaProcess();
+        ProcessResult result = javaProcessExecutor.execute(javaProcessInfo, outputHandler);
+        result.rethrowFailure().assertNormalExitValue();
     }
 }

@@ -17,11 +17,13 @@
 package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,18 +42,24 @@ final class JackDexKey extends DexKey {
     private static final String ELEM_ADDITIONAL_PARAMETERS = "custom-flags";
     private static final String ATTR_PARAMETER_KEY = "param-key";
     private static final String ATTR_PARAMETER_VALUE = "param-value";
+    // Attribute containing tool used to convert the input e.g. Jack, Jill.
+    private static final String ATTR_TOOL_USED = "toolUsed";
 
+    @Nullable
+    private final String toolUsed;
     @NonNull
-    private final ImmutableSortedMap<String, String> mAdditionalParameters;
+    private final ImmutableSortedMap<String, String> additionalParameters;
 
     private JackDexKey(
             @NonNull File sourceFile,
             @NonNull Revision buildToolsRevision,
             boolean jumboMode,
             boolean optimize,
+            @Nullable String toolUsed,
             @NonNull Map<String, String> additionalParameters) {
         super(sourceFile, buildToolsRevision, jumboMode, optimize);
-        mAdditionalParameters = ImmutableSortedMap.copyOf(additionalParameters);;
+        this.toolUsed = toolUsed;
+        this.additionalParameters = ImmutableSortedMap.copyOf(additionalParameters);
     }
 
     static JackDexKey of(
@@ -59,9 +67,15 @@ final class JackDexKey extends DexKey {
             @NonNull Revision buildToolsRevision,
             boolean jumboMode,
             boolean optimize,
+            @Nullable String toolUsed,
             @NonNull Map<String, String> additionalParameters) {
         return new JackDexKey(
-                sourceFile, buildToolsRevision, jumboMode, optimize, additionalParameters);
+                sourceFile,
+                buildToolsRevision,
+                jumboMode,
+                optimize,
+                toolUsed,
+                additionalParameters);
     }
 
     static final PreProcessCache.KeyFactory<JackDexKey> FACTORY = (sourceFile, revision, attrMap) -> {
@@ -77,6 +91,12 @@ final class JackDexKey extends DexKey {
         } else {
             // Old code didn't set this attribute and always used optimizations.
             optimize = true;
+        }
+
+        String toolUsed = null;
+        Node toolUsedAttribute = attrMap.getNamedItem(ATTR_TOOL_USED);
+        if (toolUsedAttribute != null) {
+            toolUsed = toolUsedAttribute.getNodeValue();
         }
 
         Map<String, String> additionalParameters = Maps.newHashMap();
@@ -99,7 +119,14 @@ final class JackDexKey extends DexKey {
             }
         }
 
-        return JackDexKey.of(sourceFile, revision, jumboMode, optimize, additionalParameters);
+
+        return JackDexKey.of(
+                sourceFile,
+                revision,
+                jumboMode,
+                optimize,
+                toolUsed,
+                additionalParameters);
     };
 
     @Override
@@ -107,9 +134,14 @@ final class JackDexKey extends DexKey {
         super.writeFieldsToXml(itemNode);
 
         Document document = itemNode.getOwnerDocument();
+
+        Attr toolUsedAttr = document.createAttribute(ATTR_TOOL_USED);
+        toolUsedAttr.setValue(toolUsed);
+        itemNode.getAttributes().setNamedItem(toolUsedAttr);
+
         Element params = document.createElement(ELEM_ADDITIONAL_PARAMETERS);
-        for (String paramKey: mAdditionalParameters.keySet()) {
-            String paramValue = mAdditionalParameters.get(paramKey);
+        for (String paramKey: additionalParameters.keySet()) {
+            String paramValue = additionalParameters.get(paramKey);
 
             Element element = document.createElement(ELEM_ADDITIONAL_PARAMETERS_ENTRY);
             element.setAttribute(ATTR_PARAMETER_KEY, paramKey);
@@ -134,11 +166,12 @@ final class JackDexKey extends DexKey {
 
         JackDexKey dxDexKey = (JackDexKey) o;
 
-        return mAdditionalParameters.equals(dxDexKey.mAdditionalParameters);
+        return Objects.equal(toolUsed, dxDexKey.toolUsed)
+                && additionalParameters.equals(dxDexKey.additionalParameters);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), mAdditionalParameters);
+        return Objects.hashCode(super.hashCode(), toolUsed, additionalParameters);
     }
 }

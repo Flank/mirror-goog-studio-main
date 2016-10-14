@@ -29,10 +29,10 @@ import org.junit.Test;
 public class VersionTest {
 
     @Test
-    public void checkApi04Config() {
+    public void checkApi05Config() {
         try {
-            Class.forName("com.android.jack.api.v04.Api04Config");
-            Assert.fail("Reminder to update test and module version when Api04Config is added.");
+            Class.forName("com.android.jack.api.v05.Api05Config");
+            Assert.fail("Reminder to update test and module version when Api05Config is added.");
         } catch (ClassNotFoundException ignored) {
         }
     }
