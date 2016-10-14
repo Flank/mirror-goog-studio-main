@@ -56,6 +56,10 @@ public class Token {
         return value;
     }
 
+    public boolean isFromFile() {
+        return false;
+    }
+
     @Override
     public String toString() {
         return kind + ": " + value();

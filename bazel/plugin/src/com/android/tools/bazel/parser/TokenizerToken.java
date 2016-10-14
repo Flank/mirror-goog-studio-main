@@ -60,6 +60,11 @@ class TokenizerToken extends Token {
     }
 
     @Override
+    public boolean isFromFile() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return kind + ":[" + tokenizer.range(prefix, start) + "]" + tokenizer.range(start, end);
     }

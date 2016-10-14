@@ -54,4 +54,9 @@ public abstract class Statement extends Node {
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
     }
+
+    /** Whether the statement came from a file, as opposed to being newly generated. */
+    public boolean isFromFile() {
+        return getStart().isFromFile();
+    }
 }
