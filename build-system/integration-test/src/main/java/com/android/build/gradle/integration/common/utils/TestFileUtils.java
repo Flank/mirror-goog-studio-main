@@ -30,6 +30,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -77,21 +78,27 @@ public class TestFileUtils {
             @NonNull File file,
             @NonNull String search,
             @NonNull String replace) throws IOException {
-        String content = Files.toString(file, Charset.defaultCharset());
+        searchAndReplace(file.toPath(), search, replace);
+    }
+
+    public static void searchAndReplace(
+            @NonNull Path file, @NonNull String search, @NonNull String replace)
+            throws IOException {
+        String content = new String(java.nio.file.Files.readAllBytes(file));
         String newContent = content.replaceAll(search, replace);
         assertNotEquals(
-                "No match in file\n - File:   " + file.getPath() + "\n - Search: " + search + "\n",
+                "No match in file\n - File:   " + file + "\n - Search: " + search + "\n",
                 content,
                 newContent);
 
         // Gradle has a bug, where it may not notice rapid changes to build.gradle if the length of
         // the file has not changed. Work around this by appending a new line at the end.
-        if (file.getName().equals(SdkConstants.FN_BUILD_GRADLE)
+        if (file.getFileName().toString().equals(SdkConstants.FN_BUILD_GRADLE)
                 && content.length() == newContent.length()) {
             newContent += System.lineSeparator();
         }
 
-        Files.write(newContent, file, Charset.defaultCharset());
+        java.nio.file.Files.write(file, newContent.getBytes());
     }
 
     /**
