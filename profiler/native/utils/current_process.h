@@ -34,6 +34,15 @@ class CurrentProcess {
   // Returns a singleton instance.
   static CurrentProcess* Instance();
 
+  // Returns a resolved path using given an unresolved (e.g. containing path
+  // modifiers such as '..') one. Ends with a '/'. Returns an empty string on
+  // failure.
+  std::string GetResolvedPath(const char *unresolved_path);
+
+  // Returns the absolute path of the calling process. Ends with a '/'. Returns
+  // an empty string on failure.
+  std::string GetExeDir();
+
   // Absolute path of the directory containing the process's executable. Ends
   // with a '/'.
   std::string dir_;

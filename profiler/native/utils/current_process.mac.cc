@@ -16,33 +16,25 @@
 
 #include "utils/current_process.h"
 
-#include <libgen.h>
 #include <limits.h>
-#include <stdlib.h>
-#include <string>
+#include <mach-o/dyld.h>
 
 using std::string;
 
 namespace profiler {
 
-CurrentProcess::CurrentProcess() { dir_ = GetExeDir(); }
-
-CurrentProcess* CurrentProcess::Instance() {
-  static CurrentProcess* instance = new CurrentProcess();
-  return instance;
-}
-
-string CurrentProcess::GetResolvedPath(const char *unresolved_path) {
+string CurrentProcess::GetExeDir() {
   // It's understood that PATH_MAX doesn't guarantee that the path will fit the
   // buffer. However, it's a faily high value. The buffer can be increased in
   // the future if it's necessary .
-  char buffer[PATH_MAX];
-  // realpath() returns the canonicalized absolute pathname.
-  char* real = realpath(unresolved_path, buffer);
-  if (real == nullptr) {
-    return std::string{}; // Returns an empty string on failure.
+  char path[PATH_MAX];
+  uint32_t size = sizeof(path);
+
+  int ret = _NSGetExecutablePath(path, &size);
+  if (ret == -1) {
+    return string{}; // Returns an empty string on failure.
   }
-  return std::string{dirname(buffer)} + "/";
+  return CurrentProcess::GetResolvedPath(path);
 }
 
 }  // namespace profiler

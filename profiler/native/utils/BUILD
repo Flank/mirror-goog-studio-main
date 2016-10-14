@@ -23,13 +23,15 @@ cc_library(
     ] + select({
         "//tools/base/bazel:darwin": [
             "clock.mac.cc",
+            "current_process.mac.cc",
+            "filesystem_notifier.mac.cc",
             "thread_name.mac.cc",
-            "filesystem_notifier.mac.cc"
         ],
         "//conditions:default": [
             "clock.cc",
-            "thread_name.cc",
+            "current_process.linux.cc",
             "filesystem_notifier.cc",
+            "thread_name.cc",
         ],
     }),
     hdrs = [
