@@ -4,8 +4,11 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.perflib",
     srcs = ["src/main/java"],
-    test_srcs = ["src/test/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
     test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
     deps = [
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -13,7 +16,4 @@ iml_module(
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
     ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )

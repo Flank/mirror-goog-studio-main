@@ -3,7 +3,7 @@ java_library(
     # TODO: move resources out of java?
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(
-        ["src/main/java/**"],
+        include = ["src/main/java/**"],
         exclude = ["src/main/java/**/*.java"],
     ),
     visibility = ["//visibility:public"],

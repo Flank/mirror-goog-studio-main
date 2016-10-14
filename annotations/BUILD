@@ -5,8 +5,8 @@ iml_module(
     name = "studio.android-annotations",
     srcs = ["src/main/java"],
     javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
     tags = ["managed"],
+    visibility = ["//visibility:public"],
 )
 
 # TODO: Keep only only one rule in this BUILD file, since there's no real need for the split here.

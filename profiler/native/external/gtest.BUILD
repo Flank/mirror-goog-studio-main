@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "gtest",
     srcs = glob(
-        ["src/*.cc"],
+        include = ["src/*.cc"],
         exclude = [
             "src/gtest-all.cc",
             "src/gtest_main.cc",

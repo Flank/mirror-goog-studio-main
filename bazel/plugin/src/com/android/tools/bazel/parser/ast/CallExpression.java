@@ -16,11 +16,11 @@
 
 package com.android.tools.bazel.parser.ast;
 
-
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A function call expression.
@@ -50,7 +50,10 @@ public class CallExpression extends Expression {
         }
 
         int i = 0;
-        for (Argument argument : arguments) {
+
+        List<Argument> argumentsInWriteOrder = arguments.stream().allMatch(Argument::hasName) ?
+            arguments.stream().sorted().collect(Collectors.toList()) : arguments;
+        for (Argument argument : argumentsInWriteOrder) {
             if (!singleLine) {
                 writer.append(indent + Build.INDENT);
             }

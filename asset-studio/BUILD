@@ -4,7 +4,14 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.assetstudio",
     srcs = ["src/main/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
     test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    exports = [
+        "//tools/base/common:studio.common",
+        "//tools/base/layoutlib-api:studio.layoutlib-api",
+    ],
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
@@ -13,11 +20,4 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
     ],
-    exports = [
-        "//tools/base/common:studio.common",
-        "//tools/base/layoutlib-api:studio.layoutlib-api",
-    ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )

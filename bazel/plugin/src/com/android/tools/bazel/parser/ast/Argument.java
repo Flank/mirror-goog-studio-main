@@ -16,13 +16,15 @@
 
 package com.android.tools.bazel.parser.ast;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.PrintWriter;
 import java.util.List;
 
 /**
  * An argument of a function call.
  */
-public class Argument extends Node {
+public class Argument extends Node implements Comparable<Argument> {
     private final Token name;
     private Expression expression;
 
@@ -76,4 +78,41 @@ public class Argument extends Node {
     public void setExpression(Expression expression) {
         this.expression = expression;
     }
+
+    @Override
+    public int compareTo(Argument that) {
+        int priority = this.getSortPriority() - that.getSortPriority();
+        return (priority != 0) ? priority : this.name.value().compareTo(that.name.value());
+    }
+
+    private int getSortPriority() {
+        return SORT_PRIORITY_BY_NAME.getOrDefault(name.value(), 0);
+    }
+
+    // copied from http://google3/third_party/bazel_buildifier/core/rewrite.go
+    private static final ImmutableMap<String, Integer> SORT_PRIORITY_BY_NAME =
+        ImmutableMap.<String, Integer>builder()
+            .put("name", -99)
+            .put("size", -95)
+            .put("timeout", -94)
+            .put("testonly", -93)
+            .put("src", -92)
+            .put("srcdir", -91)
+            .put("srcs", -90)
+            .put("out", -89)
+            .put("outs", -88)
+            .put("hdrs", -87)
+            .put("has_services", -86)
+            .put("include", -85)
+            .put("of", -84)
+            .put("baseline", -83)
+            // All others sort here, at 0.
+            .put("destdir", 1)
+            .put("exports", 2)
+            .put("runtime_deps", 3)
+            .put("deps", 4)
+            .put("implementation", 5)
+            .put("implements", 6)
+            .put("alwayslink", 7)
+            .build();
 }

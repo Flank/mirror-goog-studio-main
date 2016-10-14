@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "gmock",
     srcs = glob(
-        ["src/*.cc"],
+        include = ["src/*.cc"],
         exclude = [
             "src/gmock-all.cc",
             "src/gmock_main.cc",

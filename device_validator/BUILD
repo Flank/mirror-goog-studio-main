@@ -6,11 +6,11 @@ iml_module(
         "dvlib/src/main/java",
         "dvlib/src/main/resources",
     ],
-    deps = ["//tools/base/common:studio.common[module]"],
-    exports = ["//tools/base/common:studio.common"],
     javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
     tags = ["managed"],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/base/common:studio.common"],
+    deps = ["//tools/base/common:studio.common[module]"],
 )
 
 java_library(

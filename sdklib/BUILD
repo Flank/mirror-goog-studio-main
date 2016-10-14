@@ -3,8 +3,20 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.sdklib",
     srcs = ["src/main/java"],
-    test_srcs = ["src/test/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
     test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    exports = [
+        "//tools/base/common:studio.common",
+        "//tools/base/device_validator:studio.dvlib",
+        "//tools/base/layoutlib-api:studio.layoutlib-api",
+        "//tools/idea/.idea/libraries:http-client",
+        "//tools/idea/.idea/libraries:commons-compress",
+        "//tools/idea/.idea/libraries:gson",
+        "//tools/base/repository:studio.repository",
+    ],
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/base/device_validator:studio.dvlib[module]",
@@ -17,25 +29,17 @@ iml_module(
         "//tools/base/repository:studio.repository[module]",
         "//tools/base/testutils:studio.testutils[module, test]",
     ],
-    exports = [
-        "//tools/base/common:studio.common",
-        "//tools/base/device_validator:studio.dvlib",
-        "//tools/base/layoutlib-api:studio.layoutlib-api",
-        "//tools/idea/.idea/libraries:http-client",
-        "//tools/idea/.idea/libraries:commons-compress",
-        "//tools/idea/.idea/libraries:gson",
-        "//tools/base/repository:studio.repository",
-    ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )
 
 java_library(
     name = "tools.sdklib",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
-    resources = glob(["src/main/java/**"], exclude = ["src/main/java/**/*.java"]),
+    javacopts = ["-extra_checks:off"],
+    resources = glob(
+        include = ["src/main/java/**"],
+        exclude = ["src/main/java/**/*.java"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -48,14 +52,22 @@ java_library(
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.apache.httpcomponents_httpclient",
     ],
-    javacopts = ["-extra_checks:off"],
 )
 
 java_test(
     name = "tools.tests",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/test/java/**/*.java"]),
-    resources = glob(["src/test/java/**", "src/test/resources/**"], exclude = ["src/test/java/**/*.java"]),
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    resources = glob(
+        include = [
+            "src/test/java/**",
+            "src/test/resources/**",
+        ],
+        exclude = ["src/test/java/**/*.java"],
+    ),
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.sdklib",
         "//tools/base/annotations",
@@ -68,7 +80,4 @@ java_test(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.httpcomponents_httpcore",
     ],
-    runtime_deps = ["//tools/base/testutils:tools.testutils"],
-    test_class = "com.android.testutils.JarTestSuite",
-    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
 )

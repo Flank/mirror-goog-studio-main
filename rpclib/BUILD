@@ -4,6 +4,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.rpclib",
     srcs = ["src/main/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.util[module]",
@@ -12,7 +15,4 @@ iml_module(
         "//tools:idea.platform-api[module]",
         "//tools/idea/.idea/libraries:Guava",
     ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )

@@ -7,9 +7,9 @@ iml_module(
         "src/main/java",
         "src/main/resources",
     ],
-    test_srcs = ["src/test/java"],
-    deps = ["//tools/idea/.idea/libraries:JUnit4[test]"],
     javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
     tags = ["managed"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    deps = ["//tools/idea/.idea/libraries:JUnit4[test]"],
 )

@@ -3,7 +3,11 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.testutils",
     srcs = ["src/main/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
     test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/base/common:studio.common"],
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/idea/.idea/libraries:JUnit4",
@@ -11,15 +15,12 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito",
         "//tools/idea/.idea/libraries:truth",
     ],
-    exports = ["//tools/base/common:studio.common"],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )
 
 java_library(
     name = "tools.testutils",
     srcs = glob(["src/main/java/**"]),
+    visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
@@ -28,14 +29,13 @@ java_library(
         "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:com.google.truth_truth",
     ],
-    visibility = ["//visibility:public"],
 )
 
 java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
-    deps = [":tools.testutils"],
-    test_class = "com.android.testutils.JarTestSuite",
-    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     javacopts = ["-extra_checks:off"],
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [":tools.testutils"],
 )

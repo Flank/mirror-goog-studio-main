@@ -3,8 +3,19 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
-    test_srcs = ["src/test/java"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
     test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    exports = [
+        "//tools/base/layoutlib-api:studio.layoutlib-api",
+        "//tools/base/common:studio.common",
+        "//tools/base/sdklib:studio.sdklib",
+        "//tools/idea/.idea/libraries:kxml2",
+        "//tools/idea/.idea/libraries:builder-model",
+        "//tools/idea/.idea/libraries:gson",
+    ],
     deps = [
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
         "//tools/base/common:studio.common[module]",
@@ -20,22 +31,12 @@ iml_module(
         "//tools/idea/.idea/libraries:bouncy-castle",
         "//tools/idea/.idea/libraries:truth[test]",
     ],
-    exports = [
-        "//tools/base/layoutlib-api:studio.layoutlib-api",
-        "//tools/base/common:studio.common",
-        "//tools/base/sdklib:studio.sdklib",
-        "//tools/idea/.idea/libraries:kxml2",
-        "//tools/idea/.idea/libraries:builder-model",
-        "//tools/idea/.idea/libraries:gson",
-    ],
-    javacopts = ["-extra_checks:off"],
-    visibility = ["//visibility:public"],
-    tags = ["managed"],
 )
 
 java_library(
     name = "tools.sdk-common",
     srcs = glob(["src/main/java/**"]),
+    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -51,13 +52,15 @@ java_library(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
     ],
-    javacopts = ["-extra_checks:off"],
 )
 
 java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**/*.java"]),
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.sdk-common",
         "//tools/base/annotations",
@@ -74,7 +77,4 @@ java_test(
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-all",
     ],
-    runtime_deps = ["//tools/base/testutils:tools.testutils"],
-    test_class = "com.android.testutils.JarTestSuite",
-    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
 )
