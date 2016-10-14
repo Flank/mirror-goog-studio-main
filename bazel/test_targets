@@ -1,4 +1,5 @@
 //tools/adt/idea/adt-ui:adt-ui_tests
+//tools/adt/idea/android-gradle-jps:android-gradle-jps_tests
 //tools/adt/idea:android-common_tests
 //tools/adt/idea:android_tests
 //tools/adt/idea:uitest-framework_tests
