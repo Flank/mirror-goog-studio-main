@@ -190,7 +190,9 @@ public class DependencyManager {
         // are now used through their staging folders rather than their bundled AARs.
         // Therefore there is no dependency on these exploded tasks since remote AARs are
         // downloaded during the dependency resolution process.
-        Set<LibraryDependency> libsToExplode = Sets.newHashSet();
+        // because they are not immutable (them or the children could be skipped()), we use
+        // an identity set.
+        Set<LibraryDependency> libsToExplode = Sets.newIdentityHashSet();
 
         Multimap<AndroidAtom, Configuration> reverseAtomMap = ArrayListMultimap.create();
 
