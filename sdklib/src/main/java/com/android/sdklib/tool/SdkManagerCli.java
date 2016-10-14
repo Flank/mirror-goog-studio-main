@@ -89,7 +89,7 @@ public class SdkManagerCli {
         Settings settings = Settings.createSettings(args, fop.getFileSystem());
         if (settings == null) {
             usage(System.err);
-            return;
+            System.exit(1);
         }
         Path localPath = settings.getLocalPath();
         if (!Files.exists(localPath)) {
@@ -98,7 +98,7 @@ public class SdkManagerCli {
             } catch (IOException e) {
                 System.err.println("Failed to create SDK root dir: " + localPath);
                 System.err.println(e.getMessage());
-                return;
+                System.exit(1);
             }
         }
 
@@ -555,10 +555,19 @@ public class SdkManagerCli {
                 public void logWarning(@NonNull String s, @Nullable Throwable e) {
                     if (mVerbose) {
                         super.logWarning(s, e);
-                    }
-                    else {
+                    } else {
                         super.logWarning(s, null);
                     }
+                }
+
+                @Override
+                public void logError(@NonNull String s, @Nullable Throwable e) {
+                    if (mVerbose) {
+                        super.logError(s, e);
+                    } else {
+                        super.logError(s, null);
+                    }
+                    System.exit(1);
                 }
 
                 @Override
