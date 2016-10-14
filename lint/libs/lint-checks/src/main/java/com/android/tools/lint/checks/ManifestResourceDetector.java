@@ -185,7 +185,8 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                 || "description".equals(name)
                 || "logo".equals(name)
                 || "banner".equals(name)
-                || "sharedUserLabel".equals(name)) {
+                || "sharedUserLabel".equals(name)
+                || "roundIcon".equals(name)) {
             return ANDROID_URI.equals(attribute.getNamespaceURI());
         }
 
