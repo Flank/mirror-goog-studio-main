@@ -38,6 +38,9 @@ public class ImlModule extends BazelRule {
     @Override
     public void update() throws IOException {
         CallStatement call = getCallStatement("iml_module", name);
+        if (getLoad(call) == null) {
+            addLoad("//tools/base/bazel:bazel.bzl", call);
+        }
 
         setArgument(call, "srcs", sources);
         setArgument(call, "test_srcs", testSources);

@@ -97,6 +97,20 @@ public abstract class BazelRule {
         return call;
     }
 
+    /** Returns the load statement for the function called by {@code functionCall}, or null. */
+    final CallStatement getLoad(CallStatement functionCall) throws IOException {
+        return pkg.getBuildFile().getLoad(functionCall);
+    }
+
+    /** Adds a statement to load from {@code label} the function called by {@code functionCall}. */
+    final CallStatement addLoad(String label, CallStatement functionCall) throws IOException {
+        String functionName = functionCall.getCall().getFunctionName();
+        CallStatement loadStatement = new CallStatement(CallExpression.load(label, functionName));
+        loadStatement.setHidden(false);
+        pkg.getBuildFile().addStatementBefore(loadStatement, functionCall);
+        return loadStatement;
+    }
+
     /**
      * Sets the argument of the given call expression named {@code name} to be {@code values}.
      */
@@ -107,7 +121,6 @@ public abstract class BazelRule {
             rule.getCall().setArgument(name, list);
         }
     }
-
 
     /**
      * Ensures an element is in the a list in the given call expression.

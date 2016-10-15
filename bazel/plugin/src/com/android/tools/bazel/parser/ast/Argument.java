@@ -38,6 +38,10 @@ public class Argument extends Node implements Comparable<Argument> {
         this(null, expression);
     }
 
+    public static Argument string(String value) {
+        return new Argument(LiteralExpression.string(value));
+    }
+
     public void write(String indent, PrintWriter writer) {
         for (String comment : preComments) {
             writer.append(comment);

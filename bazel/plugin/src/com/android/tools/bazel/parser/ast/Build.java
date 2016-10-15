@@ -16,6 +16,8 @@
 
 package com.android.tools.bazel.parser.ast;
 
+import com.google.common.base.Preconditions;
+
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -70,8 +72,36 @@ public class Build extends Node {
         return null;
     }
 
+    /** Returns the load statement for the function called by {@code functionCall}, or null. */
+    public CallStatement getLoad(CallStatement functionCall) {
+        String functionNameLiteral = Token.string(functionCall.getCall().getFunctionName()).value();
+        CallStatement loadStatement = null;
+        for (Statement statement : statements) {
+            if (statement == functionCall) {
+                return loadStatement;  // last found before functionCall
+            }
+            if (statement instanceof CallStatement) {
+                CallStatement callStatement = (CallStatement) statement;
+                CallExpression callExpression = callStatement.getCall();
+                if (callExpression.getFunctionName().equals("load") &&
+                    callExpression.getArguments().stream()
+                        .map(Argument::getExpression)
+                        .map(Expression::getLiteral)
+                        .anyMatch(functionNameLiteral::equals)) {
+                    loadStatement = callStatement;  // update last found
+                }
+            }
+        }
+        throw new IllegalArgumentException(functionCall + " is not in " + statements);
+    }
+
     public void addStatement(Statement statement) {
         statements.add(statement);
+    }
+
+    public void addStatementBefore(Statement toAdd, Statement that) {
+        Preconditions.checkArgument(statements.contains(that), that + " is not in " + statements);
+        statements.add(statements.indexOf(that), toAdd);
     }
 
     /**

@@ -16,6 +16,8 @@
 
 package com.android.tools.bazel.parser.ast;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +36,14 @@ public class CallExpression extends Expression {
         super(ident, end);
         this.token = ident;
         this.arguments = arguments;
+    }
+
+    /** Returns an expression to load {@code symbol} from {@code label}. */
+    public static CallExpression load(String label, String symbol) {
+        CallExpression callExpression = new CallExpression(Token.ident("load"),
+            ImmutableList.of(Argument.string(label), Argument.string(symbol)), Token.NONE);
+        callExpression.setSingleLine(true);
+        return callExpression;
     }
 
     @Override
@@ -91,6 +101,14 @@ public class CallExpression extends Expression {
             argument.postOrder(nodes);
         }
         nodes.add(this);
+    }
+
+    public String getFunctionName() {
+        return token.value();
+    }
+
+    public ImmutableList<Argument> getArguments() {
+        return ImmutableList.copyOf(arguments);
     }
 
     public String getLiteralArgument(String name) {
