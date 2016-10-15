@@ -99,7 +99,7 @@ public class ListExpression extends Expression {
     public static ListExpression build(List<String> sources) {
         ListExpression list = new ListExpression();
         for (String source : sources) {
-            list.add(LiteralExpression.build(source));
+            list.add(LiteralExpression.string(source));
         }
         return list;
     }
@@ -118,6 +118,6 @@ public class ListExpression extends Expression {
     }
 
     public boolean contains(String managed) {
-        return contains(LiteralExpression.build(managed));
+        return contains(LiteralExpression.string(managed));
     }
 }

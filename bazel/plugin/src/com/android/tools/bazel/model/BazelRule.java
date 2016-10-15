@@ -128,7 +128,7 @@ public abstract class BazelRule {
             BinaryExpression plus = new BinaryExpression(list, new Token("+", Token.Kind.PLUS), expression);
             call.getCall().setArgument(attribute, plus);
         }
-        list.addIfNew(LiteralExpression.build(element));
+        list.addIfNew(LiteralExpression.string(element));
         list.setSingleLine(list.size() <= 1);
     }
 }

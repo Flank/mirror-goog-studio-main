@@ -46,7 +46,7 @@ public class LiteralExpression extends Expression {
         nodes.add(this);
     }
 
-    public static Expression build(String source) {
+    public static LiteralExpression string(String source) {
         return new LiteralExpression(Token.string(source));
     }
 
