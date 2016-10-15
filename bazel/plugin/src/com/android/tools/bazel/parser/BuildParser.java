@@ -143,10 +143,9 @@ public class BuildParser {
      *     IDENT = EXPRESSION
      */
     private Statement parseStatement() {
-        TokenizerToken ident = token;
-        consume(Kind.IDENT);
+        TokenizerToken ident = consume(Kind.IDENT);
         while (token.kind == Kind.NEWLINE) consume();
-        Statement statement = null;
+        Statement statement;
         switch (token.kind) {
             case LPAREN:
                 int startLine = token.getLine();
@@ -164,6 +163,7 @@ public class BuildParser {
                 break;
             default:
                 System.err.println("Unexpected statement token: " + token);
+                statement = null;
 
         }
         return statement;
