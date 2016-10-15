@@ -19,7 +19,6 @@ legacy/
 lint/
 misc/
 ninepatch/
-perflib/
 pixelprobe/
 repository/
 rpclib/
