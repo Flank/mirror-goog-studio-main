@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal.packaging.zip.utils;
+package com.android.builder.internal.utils;
 
-import java.io.IOException;
+import com.android.annotations.NonNull;
+
+import java.util.function.Supplier;
 
 /**
  * Supplier that will cache a computed value and always supply the same value. It can be used to
  * lazily compute data. For example:
  * <pre>
- * CachedSupplier&lt;Integer&gt; value = new CachedSupplier&lt;Integer&gt;() {
- *     protected Integer compute() {
- *         Integer result;
- *         // Do some expensive computation.
- *         return result;
- *     }
- * }
+ * CachedSupplier&lt;Integer&gt; value = new CachedSupplier&lt;&gt;(() -> {
+ *     Integer result;
+ *     // Do some expensive computation.
+ *     return result;
+ * });
  *
  * if (a) {
  *     // We need the result of the expensive computation.
@@ -43,73 +43,75 @@ import java.io.IOException;
  * // If neither a nor b are true, we avoid doing the computation at all.
  * </pre>
  */
-public abstract class CachedSupplier<T> {
+public class CachedSupplier<T> {
 
     /**
      * The cached data, {@code null} if computation resulted in {@code null}.
      */
-    private T mCached;
+    private T cached;
 
     /**
-     * Is the current data in {@link #mCached} valid?
+     * Is the current data in {@link #cached} valid?
      */
-    private boolean mValid;
+    private boolean valid;
+
+    /**
+     * Actual supplier of data, if computation is needed.
+     */
+    @NonNull
+    private final Supplier<T> supplier;
 
     /**
      * Creates a new supplier.
      */
-    public CachedSupplier() {
-        mValid = false;
+    public CachedSupplier(@NonNull Supplier<T> supplier) {
+        valid = false;
+        this.supplier = supplier;
     }
 
 
     /**
      * Obtains the value.
+     *
      * @return the value, either cached (if one exists) or computed
-     * @throws IOException failed to compute the value
      */
-    public synchronized T get() throws IOException {
-        if (!mValid) {
-            mCached = compute();
-            mValid = true;
+    public synchronized T get() {
+        if (!valid) {
+            cached = supplier.get();
+            valid = true;
         }
 
-        return mCached;
+        return cached;
     }
 
     /**
-     * Computes the supplier value. This method is only invoked once.
-     * @return the result of the computation, {@code null} is allowed and, if returned, then
-     * {@link #get()} will also return {@code null}
-     * @throws IOException failed to compute the value
-     */
-    protected abstract T compute() throws IOException;
-
-    /**
-     * Resets the cache forcing a {@link #compute()} next time {@link #get()} is invoked.
+     * Resets the cache forcing a {@code get()} on the supplier next time {@link #get()} is invoked.
      */
     public synchronized void reset() {
-        mValid = false;
+        cached = null;
+        valid = false;
     }
 
     /**
      * In some cases, we may be able to precompute the cache value (or load it from somewhere we
      * had previously stored it). This method allows the cache value to be loaded.
-     * <p>
-     * If this method is invoked, then an invocation of {@link #get()} will not trigger an
-     * invocation of {@link #compute()}.
+     *
+     * <p>If this method is invoked, then an invocation of {@link #get()} will not trigger an
+     * invocation of the supplier provided in the constructor.
+     *
      * @param t the new cache contents; will replace any currently cache content, if one exists
      */
     public synchronized void precomputed(T t) {
-        mCached = t;
-        mValid = true;
+        cached = t;
+        valid = true;
     }
 
     /**
      * Checks if the contents of the cache are valid.
+     *
      * @return are there valid contents in the cache?
      */
     public synchronized boolean isValid() {
-        return mValid;
+        return valid;
     }
 }

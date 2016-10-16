@@ -17,15 +17,14 @@
 package com.android.builder.internal.packaging.zip;
 
 import com.android.annotations.NonNull;
-import com.android.builder.internal.packaging.zip.utils.CachedSupplier;
-import com.android.builder.internal.utils.IOExceptionWrapper;
+import com.android.builder.internal.utils.CachedSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.primitives.Ints;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -158,12 +157,7 @@ class Eocd {
 
         mComment = new byte[commentSize];
         bytes.get(mComment);
-        mByteSupplier = new CachedSupplier<byte[]>() {
-            @Override
-            protected byte[] compute() throws IOException {
-                return computeByteRepresentation();
-            }
-        };
+        mByteSupplier = new CachedSupplier<>(this::computeByteRepresentation);
     }
 
     /**
@@ -184,16 +178,7 @@ class Eocd {
         mDirectoryOffset = directoryOffset;
         mDirectorySize = directorySize;
         mComment = new byte[0];
-        mByteSupplier = new CachedSupplier<byte[]>() {
-            @Override
-            protected byte[] compute() {
-                try {
-                    return computeByteRepresentation();
-                } catch (IOException e) {
-                    throw new IOExceptionWrapper(e);
-                }
-            }
-        };
+        mByteSupplier = new CachedSupplier<byte[]>(this::computeByteRepresentation);
     }
 
     /**
@@ -248,22 +233,26 @@ class Eocd {
      * Computes the byte representation of the EOCD.
      *
      * @return a byte representation of the EOCD that has exactly {@link #getEocdSize()} bytes
-     * @throws IOException failed to generate the EOCD data
+     * @throws UncheckedIOException failed to generate the EOCD data
      */
     @NonNull
-    private byte[] computeByteRepresentation() throws IOException {
+    private byte[] computeByteRepresentation() {
         ByteBuffer out = ByteBuffer.allocate(F_COMMENT_SIZE.endOffset() + mComment.length);
 
-        F_SIGNATURE.write(out);
-        F_NUMBER_OF_DISK.write(out);
-        F_DISK_CD_START.write(out);
-        F_RECORDS_DISK.write(out, mTotalRecords);
-        F_RECORDS_TOTAL.write(out, mTotalRecords);
-        F_CD_SIZE.write(out, mDirectorySize);
-        F_CD_OFFSET.write(out, mDirectoryOffset);
-        F_COMMENT_SIZE.write(out, mComment.length);
-        out.put(mComment);
+        try {
+            F_SIGNATURE.write(out);
+            F_NUMBER_OF_DISK.write(out);
+            F_DISK_CD_START.write(out);
+            F_RECORDS_DISK.write(out, mTotalRecords);
+            F_RECORDS_TOTAL.write(out, mTotalRecords);
+            F_CD_SIZE.write(out, mDirectorySize);
+            F_CD_OFFSET.write(out, mDirectoryOffset);
+            F_COMMENT_SIZE.write(out, mComment.length);
+            out.put(mComment);
 
-        return out.array();
+            return out.array();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
