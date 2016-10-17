@@ -201,16 +201,15 @@ public class JackToolchain {
                 config.setOutputJackFile(options.getOutputFile());
             }
             config.setImportedJackLibraryFiles(options.getImportFiles());
-            if (options.getMinSdkVersion() > 0) {
-                config.setAndroidMinApiLevel(options.getMinSdkVersion());
+            if (!DefaultApiVersion.isPreview(options.getMinSdkVersion())) {
+                config.setAndroidMinApiLevel(options.getMinSdkVersion().getApiLevel());
             }
 
             config.setProguardConfigFiles(options.getProguardFiles());
             config.setJarJarConfigFiles(options.getJarJarRuleFiles());
 
             if (options.isMultiDex()) {
-                if (options.getMinSdkVersion()
-                        < BuildToolInfo.SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT) {
+                if (DefaultApiVersion.isLegacyMultidex(options.getMinSdkVersion())) {
                     config.setMultiDexKind(MultiDexKind.LEGACY);
                 } else {
                     config.setMultiDexKind(MultiDexKind.NATIVE);

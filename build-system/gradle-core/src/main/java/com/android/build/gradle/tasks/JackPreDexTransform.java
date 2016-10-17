@@ -33,6 +33,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
 import com.android.builder.internal.compiler.JackConversionCache;
+import com.android.builder.model.ApiVersion;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -54,20 +55,28 @@ import java.util.Set;
  */
 public class JackPreDexTransform extends Transform {
 
-    private AndroidBuilder androidBuilder;
-    private String javaMaxHeapSize;
+    @NonNull private AndroidBuilder androidBuilder;
+    @Nullable private String javaMaxHeapSize;
     private boolean forPackagedLibs;
     @NonNull
     private CoreJackOptions coreJackOptions;
+    @NonNull private ApiVersion minSdkVersion;
+
+    /** Gets the builder object for this class. */
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public JackPreDexTransform(
             @NonNull AndroidBuilder androidBuilder,
             @Nullable String javaMaxHeapSize,
             @NonNull CoreJackOptions coreJackOptions,
+            @NonNull ApiVersion minSdkVersion,
             boolean forPackagedLibs) {
         this.androidBuilder = androidBuilder;
         this.javaMaxHeapSize = javaMaxHeapSize;
         this.coreJackOptions = coreJackOptions;
+        this.minSdkVersion = minSdkVersion;
         this.forPackagedLibs = forPackagedLibs;
     }
 
@@ -151,6 +160,7 @@ public class JackPreDexTransform extends Transform {
             options.setOutputFile(outFile);
             options.setJavaMaxHeapSize(javaMaxHeapSize);
             options.setAdditionalParameters(coreJackOptions.getAdditionalParameters());
+            options.setMinSdkVersion(minSdkVersion);
 
             JackConversionCache.getCache().convertLibrary(
                     androidBuilder,
@@ -187,5 +197,54 @@ public class JackPreDexTransform extends Transform {
 
     public boolean isForRuntimeLibs() {
         return !forPackagedLibs;
+    }
+
+    /** Builder class for {@link com.android.build.gradle.tasks.JackPreDexTransform}. */
+    public static class Builder {
+
+        private AndroidBuilder androidBuilder;
+        private String javaMaxHeapSize;
+        private CoreJackOptions coreJackOptions;
+        private Boolean forPackagedLibs;
+        private ApiVersion minApiVersion;
+
+        public Builder androidBuilder(@NonNull AndroidBuilder androidBuilder) {
+            this.androidBuilder = androidBuilder;
+            return this;
+        }
+
+        public Builder javaMaxHeapSize(@Nullable String javaMaxHeapSize) {
+            this.javaMaxHeapSize = javaMaxHeapSize;
+            return this;
+        }
+
+        public Builder coreJackOptions(@NonNull CoreJackOptions coreJackOptions) {
+            this.coreJackOptions = coreJackOptions;
+            return this;
+        }
+
+        public Builder forPackagedLibs() {
+            this.forPackagedLibs = true;
+            return this;
+        }
+
+        public Builder forClasspathLibs() {
+            this.forPackagedLibs = false;
+            return this;
+        }
+
+        public Builder minApiVersion(@NonNull ApiVersion minApiVersion) {
+            this.minApiVersion = minApiVersion;
+            return this;
+        }
+
+        public JackPreDexTransform create() {
+            return new JackPreDexTransform(
+                    androidBuilder,
+                    javaMaxHeapSize,
+                    coreJackOptions,
+                    minApiVersion,
+                    forPackagedLibs);
+        }
     }
 }

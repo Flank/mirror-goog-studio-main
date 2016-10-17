@@ -18,7 +18,9 @@ package com.android.builder.core;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.ApiVersion;
 import com.android.repository.Revision;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,7 +65,8 @@ public class JackProcessOptions {
     @Nullable
     private File mMappingFile = null;
     private boolean mMultiDex;
-    private int mMinSdkVersion;
+    @Nullable
+    private ApiVersion minSdkVersion;
     @NonNull
     private List<File> mResourceDirectories = ImmutableList.of();
     @NonNull
@@ -207,12 +210,14 @@ public class JackProcessOptions {
         mMultiDex = multiDex;
     }
 
-    public int getMinSdkVersion() {
-        return mMinSdkVersion;
+    @NonNull
+    public ApiVersion getMinSdkVersion() {
+        Preconditions.checkNotNull(minSdkVersion, "Min sdk version not set.");
+        return minSdkVersion;
     }
 
-    public void setMinSdkVersion(int minSdkVersion) {
-        mMinSdkVersion = minSdkVersion;
+    public void setMinSdkVersion(@NonNull ApiVersion minSdkVersion) {
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull

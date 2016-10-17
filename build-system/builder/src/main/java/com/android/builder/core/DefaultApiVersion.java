@@ -19,6 +19,7 @@ package com.android.builder.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
+import com.android.sdklib.SdkVersionInfo;
 
 /**
  * Basic implementation of ApiVersion
@@ -52,6 +53,21 @@ public class DefaultApiVersion implements ApiVersion {
         }
 
         return new DefaultApiVersion(1, null);
+    }
+
+    /** Checks if the specified api version is a preview version. */
+    public static boolean isPreview(@NonNull ApiVersion apiVersion) {
+        return apiVersion.getCodename() != null;
+    }
+
+    /** Checks if the specified api version is having legacy multidex support. */
+    public static boolean isLegacyMultidex(@NonNull ApiVersion apiVersion) {
+        if (isPreview(apiVersion)) {
+            //noinspection ConstantConditions - it is preview, so codename is not null
+            return SdkVersionInfo.getApiByPreviewName(apiVersion.getCodename(), true) < 21;
+        } else {
+            return apiVersion.getApiLevel() < 21;
+        }
     }
 
     @Override
