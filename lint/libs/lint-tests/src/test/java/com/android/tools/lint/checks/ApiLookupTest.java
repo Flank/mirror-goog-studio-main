@@ -259,13 +259,8 @@ public class ApiLookupTest extends AbstractCheckTest {
         raf.close();
         lookup = ApiLookup.get(new LookupTestClient());
         // This data is now truncated: lookup returns the wrong size.
-        try {
-            assertNotNull(lookup);
-            lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance");
-            fail("Can't look up bogus data");
-        } catch (Throwable t) {
-            // Expected this: the database is corrupted.
-        }
+        assertNotNull(lookup);
+        lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance");
         assertTrue(message.contains("Please delete the file and restart the IDE/lint:"));
         assertTrue(message.contains(mCacheDir.getPath()));
         ApiLookup.dispose();
