@@ -146,20 +146,28 @@ public class NdkHandler {
         return toolchainVersion;
     }
 
+    @Nullable
+    private static File findNdkDirectory(@NonNull File projectDir) {
+        File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
+        Properties properties = null;
+        if (localProperties.isFile()) {
+            properties = readProperties(localProperties);
+        }
+
+        return findNdkDirectory(properties);
+    }
+
     /**
      * Determine the location of the NDK directory.
      *
-     * The NDK directory can be set in the local.properties file or using the ANDROID_NDK_HOME
-     * environment variable.
+     * The NDK directory can be set in the local.properties file, using the ANDROID_NDK_HOME
+     * environment variable or come bundled with the SDK.
      *
      * Return null if NDK directory is not found.
      */
     @Nullable
-    private static File findNdkDirectory(@NonNull File projectDir) {
-        File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
-
-        if (localProperties.isFile()) {
-            Properties properties = readProperties(localProperties);
+    public static File findNdkDirectory(@Nullable Properties properties) {
+        if (properties != null) {
             String ndkDirProp = properties.getProperty("ndk.dir");
             if (ndkDirProp != null) {
                 return new File(ndkDirProp);
@@ -168,7 +176,7 @@ public class NdkHandler {
 
         String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
         if (ndkEnvVar != null) {
-                return new File(ndkEnvVar);
+            return new File(ndkEnvVar);
         }
 
         String stdEnvVar = System.getenv("ANDROID_HOME");
