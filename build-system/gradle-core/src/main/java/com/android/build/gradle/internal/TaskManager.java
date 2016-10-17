@@ -2041,11 +2041,15 @@ public abstract class TaskManager {
                             .build());
         }
         // ----- Create PreDex tasks for libraries -----
-        JackPreDexTransform preDexPackagedTransform = new JackPreDexTransform(
-                androidBuilder,
-                globalScope.getExtension().getDexOptions().getJavaMaxHeapSize(),
-                scope.getVariantConfiguration().getJackOptions(),
-                true);
+        JackPreDexTransform preDexPackagedTransform =
+                JackPreDexTransform.builder()
+                        .androidBuilder(androidBuilder)
+                        .javaMaxHeapSize(
+                                globalScope.getExtension().getDexOptions().getJavaMaxHeapSize())
+                        .coreJackOptions(scope.getVariantConfiguration().getJackOptions())
+                        .minApiVersion(scope.getMinSdkVersion())
+                        .forPackagedLibs()
+                        .create();
         Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
 
@@ -2061,11 +2065,15 @@ public abstract class TaskManager {
                             jacocoTask));
         }
 
-        JackPreDexTransform preDexRuntimeTransform = new JackPreDexTransform(
-                androidBuilder,
-                globalScope.getExtension().getDexOptions().getJavaMaxHeapSize(),
-                scope.getVariantConfiguration().getJackOptions(),
-                false);
+        JackPreDexTransform preDexRuntimeTransform =
+                JackPreDexTransform.builder()
+                        .androidBuilder(androidBuilder)
+                        .javaMaxHeapSize(
+                                globalScope.getExtension().getDexOptions().getJavaMaxHeapSize())
+                        .coreJackOptions(scope.getVariantConfiguration().getJackOptions())
+                        .minApiVersion(scope.getMinSdkVersion())
+                        .forClasspathLibs()
+                        .create();
         scope.getTransformManager().addTransform(tasks, scope, preDexRuntimeTransform);
 
         // ----- Create Jack Task -----

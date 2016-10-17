@@ -115,7 +115,7 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
 
         if (options.isMultiDex()) {
             builder.addArgs("--multi-dex");
-            if (options.getMinSdkVersion() < 21) {
+            if (DefaultApiVersion.isLegacyMultidex(options.getMinSdkVersion())) {
                 builder.addArgs("legacy");
             } else {
                 builder.addArgs("native");
@@ -134,8 +134,9 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             builder.addArgs("--incremental-folder", options.getIncrementalDir().getAbsolutePath());
         }
 
-        if (options.getMinSdkVersion() > 0) {
-            builder.addArgs("-D", "jack.android.min-api-level=" + options.getMinSdkVersion());
+        if (!DefaultApiVersion.isPreview(options.getMinSdkVersion())) {
+            builder.addArgs(
+                    "-D", "jack.android.min-api-level=" + options.getMinSdkVersion().getApiLevel());
         }
 
         if (!options.getAnnotationProcessorNames().isEmpty()) {

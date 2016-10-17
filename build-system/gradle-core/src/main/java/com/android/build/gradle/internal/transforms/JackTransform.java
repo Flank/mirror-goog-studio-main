@@ -151,7 +151,7 @@ public class JackTransform extends Transform {
         params.put("javaResourcesFolder", options.getResourceDirectories());
         params.put("isDebugLog", options.isDebugLog());
         params.put("multiDexEnabled", options.isMultiDex());
-        params.put("minSdkVersion", options.getMinSdkVersion());
+        params.put("minSdkVersion", options.getMinSdkVersion().getApiString());
         params.put("javaMaxHeapSize", options.getJavaMaxHeapSize());
         params.put("sourceCompatibility", options.getSourceCompatibility());
         params.put("buildToolsRev",
@@ -266,7 +266,7 @@ public class JackTransform extends Transform {
         options.setDebuggable(isDebuggable);
         options.setDexOptimize(true);
         options.setMultiDex(config.isMultiDexEnabled());
-        options.setMinSdkVersion(config.getMinSdkVersion().getApiLevel());
+        options.setMinSdkVersion(config.getMinSdkVersion());
         options.setOutputFile(scope.getJackClassesZip());
         options.setResourceDirectories(ImmutableList.of(scope.getJavaResourcesDestinationDir()));
 
