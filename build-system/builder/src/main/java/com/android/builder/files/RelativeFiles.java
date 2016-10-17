@@ -45,7 +45,7 @@ public final class RelativeFiles {
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    public static Set<RelativeFile> fromDirectory(@NonNull File directory) {
+    public static ImmutableSet<RelativeFile> fromDirectory(@NonNull File directory) {
         return fromDirectory(directory, directory);
     }
 
