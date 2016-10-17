@@ -26,16 +26,17 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class JarFileIssueRegistryTest extends AbstractCheckTest {
-    public void testError() {
+    public void testError() throws Exception {
         try {
             JarFileIssueRegistry.get(createClient(), new File("bogus"));
             fail("Expected exception for bogus path");
-        } catch (Throwable t) {
+        } catch (IOException expected) {
             // pass
         }
     }
