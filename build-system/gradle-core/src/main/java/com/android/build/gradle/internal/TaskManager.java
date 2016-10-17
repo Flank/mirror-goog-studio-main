@@ -93,6 +93,7 @@ import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
+import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -1647,6 +1648,8 @@ public abstract class TaskManager {
         testData.setExtraInstrumentationTestRunnerArgs(
                 AndroidGradleOptions.getExtraInstrumentationTestRunnerArgs(project));
 
+        configureTestData(testData);
+
         // create the check tasks for this test
         // first the connected one.
         ImmutableList<AndroidTask<DefaultTask>> artifactsTasks = ImmutableList.of(
@@ -3013,5 +3016,10 @@ public abstract class TaskManager {
                     .add("compile", SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT + ":" +
                     dataBindingBuilder.getBaseAdaptersVersion(version));
         }
+    }
+
+    protected void configureTestData(AbstractTestDataImpl testData) {
+        testData.setAnimationsDisabled(
+                getGlobalScope().getExtension().getTestOptions().getAnimationsDisabled());
     }
 }

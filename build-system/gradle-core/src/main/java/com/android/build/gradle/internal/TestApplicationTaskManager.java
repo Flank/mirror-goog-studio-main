@@ -98,6 +98,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         TestApplicationTestData testData = new TestApplicationTestData(
                 variantData, testTarget, testTargetMetadata, androidBuilder);
 
+        configureTestData(testData);
+
         // create the test connected check task.
         AndroidTask<DeviceProviderInstrumentTestTask> instrumentTestTask =
                 getAndroidTasks().create(

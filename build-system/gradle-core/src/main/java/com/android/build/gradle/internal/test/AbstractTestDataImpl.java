@@ -40,6 +40,9 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     private Map<String, String> extraInstrumentationTestRunnerArgs;
 
+    @NonNull
+    private boolean animationsDisabled;
+
     public AbstractTestDataImpl(@NonNull VariantConfiguration<?, ?, ?> testVariantConfig) {
         this.testVariantConfig = checkNotNull(testVariantConfig);
         this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
@@ -64,6 +67,16 @@ public abstract class AbstractTestDataImpl implements TestData {
             @NonNull Map<String, String> extraInstrumentationTestRunnerArgs) {
         this.extraInstrumentationTestRunnerArgs =
                 ImmutableMap.copyOf(extraInstrumentationTestRunnerArgs);
+    }
+
+    @NonNull
+    @Override
+    public boolean getAnimationsDisabled() {
+        return animationsDisabled;
+    }
+
+    public void setAnimationsDisabled(boolean animationsDisabled) {
+        this.animationsDisabled = animationsDisabled;
     }
 
     @Override
