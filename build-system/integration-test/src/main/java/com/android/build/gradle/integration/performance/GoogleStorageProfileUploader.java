@@ -88,8 +88,12 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
                                         + Version.ANDROID_GRADLE_PLUGIN_VERSION)
                         .setHttpRequestInitializer(
                                 httpRequest -> {
+                                    // Increase the default timeouts
                                     httpRequest.setConnectTimeout((int) UPLOAD_TIMEOUT.toMillis());
                                     httpRequest.setReadTimeout((int) UPLOAD_TIMEOUT.toMillis());
+                                    // As calling setHttpRequestInitializer *replaces* the default
+                                    // initializer, which is implemented by the credential, we need
+                                    // to manually call the credential initializer.
                                     credential.initialize(httpRequest);
                                 })
                         .build();
