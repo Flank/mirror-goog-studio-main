@@ -94,6 +94,7 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
                         androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                         options.getJumboMode(),
                         options.getDexOptimize(),
+                        options.getMinSdkVersion().getApiString(),
                         options.getUseJill() ? JILL_USED : JACK_USED,
                         options.getAdditionalParameters());
 
