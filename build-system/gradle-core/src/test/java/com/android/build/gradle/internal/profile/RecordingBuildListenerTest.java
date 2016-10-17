@@ -121,9 +121,12 @@ public class RecordingBuildListenerTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(mProject.getPath()).thenReturn(":projectName");
-        when(mTask.getName()).thenReturn("taskName");
+        when(mTask.getName()).thenThrow(new AssertionError("Nothing should be using task name"));
+        when(mTask.getPath()).thenReturn(":projectName:taskName");
         when(mTask.getProject()).thenReturn(mProject);
-        when(mSecondTask.getName()).thenReturn("task2Name");
+        when(mSecondTask.getPath()).thenReturn(":projectName:task2Name");
+        when(mSecondTask.getName())
+                .thenThrow(new AssertionError("Nothing should be using task name"));
         when(mSecondTask.getProject()).thenReturn(mProject);
         mProfileProtoFile = Jimfs.newFileSystem().getPath("profile_proto");
         ProcessRecorderFactory.initializeForTests(mProfileProtoFile);
@@ -184,14 +187,15 @@ public class RecordingBuildListenerTest {
 
         listener.beforeExecute(mTask);
         listener.beforeExecute(mSecondTask);
-        ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
-                ":projectName", null, new Recorder.Block<Object>() {
-                    @Override
-                    public Object call() throws Exception {
-                        logger.verbose("useless block");
-                        return null;
-                    }
-                });
+        ThreadRecorder.get()
+                .record(
+                        ExecutionType.SOME_RANDOM_PROCESSING,
+                        ":projectName",
+                        null,
+                        () -> {
+                            logger.verbose("useless block");
+                            return null;
+                        });
         listener.afterExecute(mTask, mTaskState);
         listener.afterExecute(mSecondTask, mTaskState);
 
@@ -216,7 +220,7 @@ public class RecordingBuildListenerTest {
         TestRecorder recorder = new TestRecorder();
         RecordingBuildListener listener = new RecordingBuildListener(recorder);
         Task secondTask = mock(Task.class);
-        when(secondTask.getName()).thenReturn("secondTaskName");
+        when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(mProject);
 
         // first thread start
@@ -247,7 +251,7 @@ public class RecordingBuildListenerTest {
         TestRecorder recorder = new TestRecorder();
         RecordingBuildListener listener = new RecordingBuildListener(recorder);
         Task secondTask = mock(Task.class);
-        when(secondTask.getName()).thenReturn("secondTaskName");
+        when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(mProject);
 
         // first thread start

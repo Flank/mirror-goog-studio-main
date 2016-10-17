@@ -38,7 +38,7 @@ public class RecordingBuildListener implements TaskExecutionListener {
 
     @NonNull
     private final Recorder mRecorder;
-    // map of outstanding tasks executing, keyed by their name.
+    // map of outstanding tasks executing, keyed by their path.
     @NonNull
     private final Map<String, GradleBuildProfileSpan.Builder> mTaskRecords =
             new ConcurrentHashMap<>();
@@ -54,12 +54,12 @@ public class RecordingBuildListener implements TaskExecutionListener {
         builder.setId(mRecorder.allocationRecordId());
         builder.setStartTimeInMs(System.currentTimeMillis());
 
-        mTaskRecords.put(task.getName(), builder);
+        mTaskRecords.put(task.getPath(), builder);
     }
 
     @Override
     public void afterExecute(@NonNull Task task, @NonNull TaskState taskState) {
-        GradleBuildProfileSpan.Builder record = mTaskRecords.get(task.getName());
+        GradleBuildProfileSpan.Builder record = mTaskRecords.remove(task.getPath());
 
         record.setDurationInMs(System.currentTimeMillis() - record.getStartTimeInMs());
 
