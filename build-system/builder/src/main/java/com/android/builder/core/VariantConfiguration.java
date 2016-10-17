@@ -932,7 +932,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             return runner;
         }
 
-        if (isMultiDexEnabled() && isLegacyMultiDexMode()) {
+        if (isLegacyMultiDexMode()) {
             return MULTIDEX_TEST_RUNNER;
         }
 
@@ -2316,7 +2316,16 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     public boolean isLegacyMultiDexMode() {
-        return isMultiDexEnabled() && getMinSdkVersion().getApiLevel() < 21;
+        if (!isMultiDexEnabled()) {
+            return false;
+        }
+
+        ApiVersion minSdk = getMinSdkVersion();
+        if (minSdk.getCodename() == null) {
+            return minSdk.getApiLevel() < 21;
+        } else {
+            return SdkVersionInfo.getApiByPreviewName(minSdk.getCodename(), true) < 21;
+        }
     }
 
     /**

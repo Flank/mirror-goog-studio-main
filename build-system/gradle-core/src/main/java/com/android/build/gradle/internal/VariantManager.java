@@ -444,7 +444,6 @@ public class VariantManager implements VariantModel {
             variantData.setVariantDependency(variantDep);
 
             if (variantType == VariantType.ANDROID_TEST &&
-                    testVariantConfig.isMultiDexEnabled() &&
                     testVariantConfig.isLegacyMultiDexMode()) {
                 project.getDependencies().add(
                         variantDep.getCompileConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
@@ -613,7 +612,7 @@ public class VariantManager implements VariantModel {
                 variantProviders.toArray(new ConfigurationProvider[variantProviders.size()]));
         variantData.setVariantDependency(variantDep);
 
-        if (variantConfig.isMultiDexEnabled() && variantConfig.isLegacyMultiDexMode()) {
+        if (variantConfig.isLegacyMultiDexMode()) {
             project.getDependencies().add(
                     variantDep.getCompileConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
             project.getDependencies().add(
