@@ -90,6 +90,7 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
                                 httpRequest -> {
                                     httpRequest.setConnectTimeout((int) UPLOAD_TIMEOUT.toMillis());
                                     httpRequest.setReadTimeout((int) UPLOAD_TIMEOUT.toMillis());
+                                    credential.initialize(httpRequest);
                                 })
                         .build();
 
