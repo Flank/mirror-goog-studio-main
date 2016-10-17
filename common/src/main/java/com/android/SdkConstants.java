@@ -1464,6 +1464,7 @@ public final class SdkConstants {
     public static final String FN_BUILD_CONFIG = FN_BUILD_CONFIG_BASE + DOT_JAVA;
 
     public static final String DRAWABLE_FOLDER = "drawable";           //$NON-NLS-1$
+    public static final String MIPMAP_FOLDER = "mipmap";               //$NON-NLS-1$
     public static final String DRAWABLE_XHDPI = "drawable-xhdpi";      //$NON-NLS-1$
     public static final String DRAWABLE_XXHDPI = "drawable-xxhdpi";    //$NON-NLS-1$
     public static final String DRAWABLE_XXXHDPI = "drawable-xxxhdpi";    //$NON-NLS-1$
