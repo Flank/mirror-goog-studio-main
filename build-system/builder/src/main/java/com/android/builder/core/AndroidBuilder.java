@@ -30,7 +30,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.compiling.DependencyFileProcessor;
-import com.android.builder.files.FileModificationType;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
@@ -69,6 +68,7 @@ import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
+import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
@@ -1687,33 +1687,33 @@ public class AndroidBuilder {
          */
         FileUtils.deleteIfExists(outApkLocation);
 
-        Map<RelativeFile, FileModificationType> javaResourceMods = Maps.newHashMap();
-        Map<File, FileModificationType> javaResourceArchiveMods = Maps.newHashMap();
+        Map<RelativeFile, FileStatus> javaResourceMods = Maps.newHashMap();
+        Map<File, FileStatus> javaResourceArchiveMods = Maps.newHashMap();
         for (File resourceLocation : javaResourcesLocations) {
             if (resourceLocation.isFile()) {
-                javaResourceArchiveMods.put(resourceLocation, FileModificationType.NEW);
+                javaResourceArchiveMods.put(resourceLocation, FileStatus.NEW);
             } else {
                 Set<RelativeFile> files =
                         RelativeFiles.fromDirectory(resourceLocation, rf -> rf.getFile().isFile());
                 javaResourceMods.putAll(
-                        Maps.asMap(files, Functions.constant(FileModificationType.NEW)));
+                        Maps.asMap(files, Functions.constant(FileStatus.NEW)));
             }
         }
 
         NativeLibraryAbiPredicate nativeLibraryPredicate =
                 new NativeLibraryAbiPredicate(abiFilters, jniDebugBuild);
-        Map<RelativeFile, FileModificationType> jniMods = Maps.newHashMap();
-        Map<File, FileModificationType> jniArchiveMods = Maps.newHashMap();
+        Map<RelativeFile, FileStatus> jniMods = Maps.newHashMap();
+        Map<File, FileStatus> jniArchiveMods = Maps.newHashMap();
         for (File jniLoc : jniLibsLocations) {
             if (jniLoc.isFile()) {
-                jniArchiveMods.put(jniLoc, FileModificationType.NEW);
+                jniArchiveMods.put(jniLoc, FileStatus.NEW);
             } else {
                 Set<RelativeFile> files =
                         RelativeFiles.fromDirectory(
                                 jniLoc,
                                 RelativeFiles.fromPathPredicate(nativeLibraryPredicate));
                 jniMods.putAll(
-                        Maps.asMap(files, Functions.constant(FileModificationType.NEW)));
+                        Maps.asMap(files, Functions.constant(FileStatus.NEW)));
             }
         }
 
@@ -1763,22 +1763,22 @@ public class AndroidBuilder {
             }
 
             // add the output of the java resource merger
-            for (Map.Entry<RelativeFile, FileModificationType> resourceUpdate :
+            for (Map.Entry<RelativeFile, FileStatus> resourceUpdate :
                     javaResourceMods.entrySet()) {
                 packager.updateResource(resourceUpdate.getKey(), resourceUpdate.getValue());
             }
 
-            for (Map.Entry<File, FileModificationType> resourceArchiveUpdate :
+            for (Map.Entry<File, FileStatus> resourceArchiveUpdate :
                     javaResourceArchiveMods.entrySet()) {
                 packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
                         resourceArchiveUpdate.getValue(), i -> false);
             }
 
-            for (Map.Entry<RelativeFile, FileModificationType> jniLibUpdates : jniMods.entrySet()) {
+            for (Map.Entry<RelativeFile, FileStatus> jniLibUpdates : jniMods.entrySet()) {
                 packager.updateResource(jniLibUpdates.getKey(), jniLibUpdates.getValue());
             }
 
-            for (Map.Entry<File, FileModificationType> resourceArchiveUpdate :
+            for (Map.Entry<File, FileStatus> resourceArchiveUpdate :
                     jniArchiveMods.entrySet()) {
                 packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
                         resourceArchiveUpdate.getValue(), nativeLibraryPredicate.negate());
