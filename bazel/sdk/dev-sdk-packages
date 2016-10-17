@@ -4,6 +4,7 @@
 # other files used by lint tests
 platform-tools:{adb*,api/*,package.xml}
 
+build-tools;24.0.3
 build-tools;24.0.1
 build-tools;23.0.0
 build-tools;22.0.1
