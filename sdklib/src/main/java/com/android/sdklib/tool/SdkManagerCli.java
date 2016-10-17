@@ -42,7 +42,6 @@ import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -302,7 +301,8 @@ public class SdkManagerCli {
     private boolean askYesNo() {
         try {
             String result = mIn.readLine();
-            return result.equalsIgnoreCase("y") || result.equalsIgnoreCase("yes");
+            return result != null
+                    && (result.equalsIgnoreCase("y") || result.equalsIgnoreCase("yes"));
         } catch (IOException e) {
             return false;
         }
