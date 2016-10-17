@@ -15,6 +15,8 @@
  */
 package com.android.tools.perflib.heap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.testutils.TestResources;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import junit.framework.TestCase;
@@ -43,14 +45,14 @@ public class ClassObjTest extends TestCase {
 
   public void testGetAllFieldsCount() {
     ClassObj application = mSnapshot.findClass("android.app.Application");
-    assertNotNull(application);
-    assertEquals(5, application.getAllFieldsCount());
+    assertThat(application).isNotNull();
+    assertThat(application.getAllFieldsCount()).isEqualTo(5);
 
-    assertNull(application.getClassObj());
+    assertThat(application.getClassObj()).isNull();
 
     ClassObj dialer = mSnapshot.findClass("com.android.dialer.DialerApplication");
-    assertNotNull(dialer);
-    assertEquals(5, dialer.getAllFieldsCount());
+    assertThat(dialer).isNotNull();
+    assertThat(dialer.getAllFieldsCount()).isEqualTo(5);
   }
 
   public void testComparison() {
@@ -59,10 +61,10 @@ public class ClassObjTest extends TestCase {
     ClassObj c = new ClassObj(2, null, "TestClassC", 0);
     ClassObj aAlt = new ClassObj(3, null, "TestClassA", 0);
 
-    assertEquals(0, a.compareTo(a));
-    assertEquals(0, a.compareTo(b)); // This is a weird test case, since IDs are supposed to be unique.
-    assertTrue(c.compareTo(a) > 0);
-    assertTrue(aAlt.compareTo(a) > 0);
+    assertThat(a).isEquivalentAccordingToCompareTo(a);
+    assertThat(a).isEquivalentAccordingToCompareTo(b); // This is a weird test case, since IDs are supposed to be unique.
+    assertThat(c).isGreaterThan(a);
+    assertThat(aAlt).isGreaterThan(a);
   }
 
   public void testSubClassNameClash() {
@@ -72,8 +74,8 @@ public class ClassObjTest extends TestCase {
     superClass.addSubclass(subClass1);
     superClass.addSubclass(subClass2);
 
-    assertEquals(2, superClass.getSubclasses().size());
-    assertTrue(superClass.getSubclasses().contains(subClass1));
-    assertTrue(superClass.getSubclasses().contains(subClass2));
+    assertThat(superClass.getSubclasses().size()).isEqualTo(2);
+    assertThat(superClass.getSubclasses()).contains(subClass1);
+    assertThat(superClass.getSubclasses()).contains(subClass2);
   }
 }

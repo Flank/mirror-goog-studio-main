@@ -49,6 +49,7 @@ java_test(
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
+        "//tools/base/third_party:com.google.truth_truth",
     ],
     data = [
         "//prebuilts/studio/sdk:platforms/latest",

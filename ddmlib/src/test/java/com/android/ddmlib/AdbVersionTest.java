@@ -15,36 +15,38 @@
  */
 package com.android.ddmlib;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 public class AdbVersionTest extends TestCase {
     public void testParser() {
         AdbVersion version = AdbVersion.parseFrom("Android Debug Bridge version 1.0.32");
-        assertEquals("1.0.32", version.toString());
+        assertThat(version.toString()).isEqualTo("1.0.32");
 
         version = AdbVersion.parseFrom("Android Debug Bridge version 1.0.32 8b22c293a0e5-android");
-        assertEquals(AdbVersion.parseFrom("1.0.32"), version);
+        assertThat(version).isEqualTo(AdbVersion.parseFrom("1.0.32"));
 
         version = AdbVersion.parseFrom("1.0.unknown");
-        assertEquals(AdbVersion.UNKNOWN, version);
+        assertThat(version).isEqualTo(AdbVersion.UNKNOWN);
     }
 
     public void testComponents() {
         AdbVersion version = AdbVersion
                 .parseFrom("Android Debug Bridge version 1.23.32 8b22c293a0e5-android");
-        assertEquals(1, version.major);
-        assertEquals(23, version.minor);
-        assertEquals(32, version.micro);
+        assertThat(version.major).isEqualTo(1);
+        assertThat(version.minor).isEqualTo(23);
+        assertThat(version.micro).isEqualTo(32);
     }
 
     public void testComparison() {
         AdbVersion min = AdbVersion.parseFrom("1.0.20");
         AdbVersion now = AdbVersion.parseFrom("1.0.32");
-        assertTrue(now.compareTo(min) > 0);
-        assertTrue(min.compareTo(now) < 0);
-        assertTrue(now.compareTo(now) == 0);
+        assertThat(now).isGreaterThan(min);
+        assertThat(min).isLessThan(now);
+        assertThat(now).isEquivalentAccordingToCompareTo(now);
 
         AdbVersion f = AdbVersion.parseFrom("2.0.32");
-        assertTrue(f.compareTo(now) > 0);
+        assertThat(f).isGreaterThan(now);
     }
 }

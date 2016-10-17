@@ -15,6 +15,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:jimfs",
+        "//tools/idea/.idea/libraries:truth[test]",
     ],
 )
 
@@ -50,5 +51,6 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
+        "//tools/base/third_party:com.google.truth_truth",
     ],
 )

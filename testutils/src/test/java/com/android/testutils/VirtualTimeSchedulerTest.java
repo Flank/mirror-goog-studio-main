@@ -16,6 +16,8 @@
 
 package com.android.testutils;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 import org.junit.Assert;
 
@@ -681,8 +683,8 @@ public class VirtualTimeSchedulerTest extends TestCase {
         VirtualTimeFuture<Integer> vtf1 = (VirtualTimeFuture<Integer>) future1;
         Assert.assertTrue(future2 instanceof VirtualTimeFuture);
         VirtualTimeFuture<Integer> vtf2 = (VirtualTimeFuture<Integer>) future2;
-        Assert.assertEquals(0, vtf1.compareTo(vtf1));
-        Assert.assertEquals(-1, vtf1.compareTo(vtf2));
+        assertThat(vtf1).isEquivalentAccordingToCompareTo(vtf1);
+        assertThat(vtf1).isLessThan(vtf2);
 
         // Ensure the jobs result is as expected.
         Assert.assertEquals(3, (int) future1.get(1, TimeUnit.MINUTES));

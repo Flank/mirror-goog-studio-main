@@ -16,159 +16,171 @@
 
 package com.android.repository;
 
-import junit.framework.TestCase;
+import static com.google.common.truth.Truth.assertThat;
 
-import java.util.Arrays;
+import junit.framework.TestCase;
 
 public class RevisionTest extends TestCase {
 
     public final void testRevision() {
 
-        assertEquals("5", Revision.parseRevision("5").toString());
-        assertEquals("5.0", Revision.parseRevision("5.0").toString());
-        assertEquals("5.0.0", Revision.parseRevision("5.0.0").toString());
-        assertEquals("5.1.4", Revision.parseRevision("5.1.4").toString());
-        assertEquals("5.0.0", Revision.parseRevision("5", Revision.Precision.MICRO).toString());
-        assertEquals("5.1.0", Revision.parseRevision("5.1", Revision.Precision.MICRO).toString());
+        assertThat(Revision.parseRevision("5").toString()).isEqualTo("5");
+        assertThat(Revision.parseRevision("5.0").toString()).isEqualTo("5.0");
+        assertThat(Revision.parseRevision("5.0.0").toString()).isEqualTo("5.0.0");
+        assertThat(Revision.parseRevision("5.1.4").toString()).isEqualTo("5.1.4");
+        assertThat(Revision.parseRevision("5", Revision.Precision.MICRO).toString())
+                .isEqualTo("5.0.0");
+        assertThat(Revision.parseRevision("5.1", Revision.Precision.MICRO).toString())
+                .isEqualTo("5.1.0");
 
         Revision p = new Revision(5);
-        assertEquals(5, p.getMajor());
-        assertEquals(Revision.IMPLICIT_MINOR_REV, p.getMinor());
-        assertEquals(Revision.IMPLICIT_MICRO_REV, p.getMicro());
-        assertEquals(Revision.NOT_A_PREVIEW, p.getPreview());
-        assertFalse(p.isPreview());
-        assertEquals("5", p.toShortString());
-        assertEquals(p, Revision.parseRevision("5"));
-        assertEquals("5", p.toString());
-        assertEquals(p, Revision.parseRevision("5"));
-        assertEquals("[5]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[5]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(5);
+        assertThat(p.getMinor()).isEqualTo(Revision.IMPLICIT_MINOR_REV);
+        assertThat(p.getMicro()).isEqualTo(Revision.IMPLICIT_MICRO_REV);
+        assertThat(p.getPreview()).isEqualTo(Revision.NOT_A_PREVIEW);
+        assertThat(p.isPreview()).isFalse();
+        assertThat(p.toShortString()).isEqualTo("5");
+        assertThat(Revision.parseRevision("5")).isEqualTo(p);
+        assertThat(p.toString()).isEqualTo("5");
+        assertThat(Revision.parseRevision("5")).isEqualTo(p);
+        assertThat(p.toIntArray(false /*includePreview*/)).asList().containsExactly(5);
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList().containsExactly(5);
 
         p = new Revision(5, 0);
-        assertEquals(5, p.getMajor());
-        assertEquals(0, p.getMinor());
-        assertEquals(Revision.IMPLICIT_MICRO_REV, p.getMicro());
-        assertEquals(Revision.NOT_A_PREVIEW, p.getPreview());
-        assertFalse(p.isPreview());
-        assertEquals("5", p.toShortString());
-        assertEquals(new Revision(5), Revision.parseRevision("5"));
-        assertEquals("5.0", p.toString());
-        assertEquals(p, Revision.parseRevision("5.0"));
-        assertEquals("[5, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[5, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(5);
+        assertThat(p.getMinor()).isEqualTo(0);
+        assertThat(p.getMicro()).isEqualTo(Revision.IMPLICIT_MICRO_REV);
+        assertThat(p.getPreview()).isEqualTo(Revision.NOT_A_PREVIEW);
+        assertThat(p.isPreview()).isFalse();
+        assertThat(p.toShortString()).isEqualTo("5");
+        assertThat(Revision.parseRevision("5")).isEqualTo(new Revision(5));
+        assertThat(p.toString()).isEqualTo("5.0");
+        assertThat(Revision.parseRevision("5.0")).isEqualTo(p);
+        assertThat(p.toIntArray(false /*includePreview*/)).asList().containsExactly(5, 0).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList().containsExactly(5, 0).inOrder();
 
         p = new Revision(5, 0, 0);
-        assertEquals(5, p.getMajor());
-        assertEquals(0, p.getMinor());
-        assertEquals(0, p.getMicro());
-        assertEquals(Revision.NOT_A_PREVIEW, p.getPreview());
-        assertFalse(p.isPreview());
-        assertEquals("5", p.toShortString());
-        assertEquals(new Revision(5), Revision.parseRevision("5"));
-        assertEquals("5.0.0", p.toString());
-        assertEquals(p, Revision.parseRevision("5.0.0"));
-        assertEquals("[5, 0, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[5, 0, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(5);
+        assertThat(p.getMinor()).isEqualTo(0);
+        assertThat(p.getMicro()).isEqualTo(0);
+        assertThat(p.getPreview()).isEqualTo(Revision.NOT_A_PREVIEW);
+        assertThat(p.isPreview()).isFalse();
+        assertThat(p.toShortString()).isEqualTo("5");
+        assertThat(Revision.parseRevision("5")).isEqualTo(new Revision(5));
+        assertThat(p.toString()).isEqualTo("5.0.0");
+        assertThat(Revision.parseRevision("5.0.0")).isEqualTo(p);
+        assertThat(p.toIntArray(false /*includePreview*/)).asList()
+                .containsExactly(5, 0, 0).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList()
+                .containsExactly(5, 0, 0).inOrder();
 
         p = new Revision(5, 0, 0, 6);
-        assertEquals(5, p.getMajor());
-        assertEquals(Revision.IMPLICIT_MINOR_REV, p.getMinor());
-        assertEquals(Revision.IMPLICIT_MICRO_REV, p.getMicro());
-        assertEquals(6, p.getPreview());
-        assertTrue(p.isPreview());
-        assertEquals("5 rc6", p.toShortString());
-        assertEquals("5.0.0 rc6", p.toString());
-        assertEquals(p, Revision.parseRevision("5.0.0 rc6"));
-        assertEquals("5.0.0-rc6", Revision.parseRevision("5.0.0-rc6").toString());
-        assertEquals("[5, 0, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[5, 0, 0, 6]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(5);
+        assertThat(p.getMinor()).isEqualTo(Revision.IMPLICIT_MINOR_REV);
+        assertThat(p.getMicro()).isEqualTo(Revision.IMPLICIT_MICRO_REV);
+        assertThat(p.getPreview()).isEqualTo(6);
+        assertThat(p.isPreview()).isTrue();
+        assertThat(p.toShortString()).isEqualTo("5 rc6");
+        assertThat(p.toString()).isEqualTo("5.0.0 rc6");
+        assertThat(Revision.parseRevision("5.0.0 rc6")).isEqualTo(p);
+        assertThat(Revision.parseRevision("5.0.0-rc6").toString()).isEqualTo("5.0.0-rc6");
+        assertThat(p.toIntArray(false /*includePreview*/)).asList()
+                .containsExactly(5, 0, 0).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList()
+                .containsExactly(5, 0, 0, 6).inOrder();
 
         p = new Revision(6, 7, 0);
-        assertEquals(6, p.getMajor());
-        assertEquals(7, p.getMinor());
-        assertEquals(0, p.getMicro());
-        assertEquals(0, p.getPreview());
-        assertFalse(p.isPreview());
-        assertEquals("6.7", p.toShortString());
-        assertFalse(p.equals(Revision.parseRevision("6.7")));
-        assertEquals(new Revision(6, 7), Revision.parseRevision("6.7"));
-        assertEquals("6.7.0", p.toString());
-        assertEquals(p, Revision.parseRevision("6.7.0"));
-        assertEquals("[6, 7, 0]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[6, 7, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(6);
+        assertThat(p.getMinor()).isEqualTo(7);
+        assertThat(p.getMicro()).isEqualTo(0);
+        assertThat(p.getPreview()).isEqualTo(0);
+        assertThat(p.isPreview()).isFalse();
+        assertThat(p.toShortString()).isEqualTo("6.7");
+        assertThat(p).isNotEqualTo(Revision.parseRevision("6.7"));
+        assertThat(Revision.parseRevision("6.7")).isEqualTo(new Revision(6, 7));
+        assertThat(p.toString()).isEqualTo("6.7.0");
+        assertThat(Revision.parseRevision("6.7.0")).isEqualTo(p);
+        assertThat(p.toIntArray(false /*includePreview*/)).asList()
+                .containsExactly(6, 7, 0).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList()
+                .containsExactly(6, 7, 0).inOrder();
 
         p = new Revision(10, 11, 12, Revision.NOT_A_PREVIEW);
-        assertEquals(10, p.getMajor());
-        assertEquals(11, p.getMinor());
-        assertEquals(12, p.getMicro());
-        assertEquals(0, p.getPreview());
-        assertFalse(p.isPreview());
-        assertEquals("10.11.12", p.toShortString());
-        assertEquals("10.11.12", p.toString());
-        assertEquals("[10, 11, 12]",    Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[10, 11, 12, 0]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(10);
+        assertThat(p.getMinor()).isEqualTo(11);
+        assertThat(p.getMicro()).isEqualTo(12);
+        assertThat(p.getPreview()).isEqualTo(0);
+        assertThat(p.isPreview()).isFalse();
+        assertThat(p.toShortString()).isEqualTo("10.11.12");
+        assertThat(p.toString()).isEqualTo("10.11.12");
+        assertThat(p.toIntArray(false /*includePreview*/)).asList()
+                .containsExactly(10, 11, 12).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList()
+                .containsExactly(10, 11, 12, 0).inOrder();
 
         p = new Revision(10, 11, 12, 13);
-        assertEquals(10, p.getMajor());
-        assertEquals(11, p.getMinor());
-        assertEquals(12, p.getMicro());
-        assertEquals(13, p.getPreview());
-        assertTrue  (p.isPreview());
-        assertEquals("10.11.12 rc13", p.toShortString());
-        assertEquals("10.11.12 rc13", p.toString());
-        assertEquals(p, Revision.parseRevision("10.11.12 rc13"));
-        assertEquals(p, Revision.parseRevision("   10.11.12 rc13"));
-        assertEquals(p, Revision.parseRevision("10.11.12 rc13   "));
-        assertEquals(p, Revision.parseRevision("   10.11.12   rc13   "));
-        assertEquals("[10, 11, 12]",     Arrays.toString(p.toIntArray(false /*includePreview*/)));
-        assertEquals("[10, 11, 12, 13]", Arrays.toString(p.toIntArray(true  /*includePreview*/)));
+        assertThat(p.getMajor()).isEqualTo(10);
+        assertThat(p.getMinor()).isEqualTo(11);
+        assertThat(p.getMicro()).isEqualTo(12);
+        assertThat(p.getPreview()).isEqualTo(13);
+        assertThat(p.isPreview()).isTrue();
+        assertThat(p.toShortString()).isEqualTo("10.11.12 rc13");
+        assertThat(p.toString()).isEqualTo("10.11.12 rc13");
+        assertThat(Revision.parseRevision("10.11.12 rc13")).isEqualTo(p);
+        assertThat(Revision.parseRevision("   10.11.12 rc13")).isEqualTo(p);
+        assertThat(Revision.parseRevision("10.11.12 rc13   ")).isEqualTo(p);
+        assertThat(Revision.parseRevision("   10.11.12   rc13   ")).isEqualTo(p);
+        assertThat(p.toIntArray(false /*includePreview*/)).asList()
+                .containsExactly(10, 11, 12).inOrder();
+        assertThat(p.toIntArray(true  /*includePreview*/)).asList()
+                .containsExactly(10, 11, 12, 13).inOrder();
     }
 
     public final void testParse() {
         Revision revision = Revision.parseRevision("1");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 0);
-        assertEquals(revision.getMicro(), 0);
-        assertFalse(revision.isPreview());
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(0);
+        assertThat(revision.getMicro()).isEqualTo(0);
+        assertThat(revision.isPreview()).isFalse();
 
         revision = Revision.parseRevision("1.2");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 2);
-        assertEquals(revision.getMicro(), 0);
-        assertFalse(revision.isPreview());
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(2);
+        assertThat(revision.getMicro()).isEqualTo(0);
+        assertThat(revision.isPreview()).isFalse();
 
         revision = Revision.parseRevision("1.2.3");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 2);
-        assertEquals(revision.getMicro(), 3);
-        assertFalse(revision.isPreview());
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(2);
+        assertThat(revision.getMicro()).isEqualTo(3);
+        assertThat(revision.isPreview()).isFalse();
 
         revision = Revision.parseRevision("1.2.3-rc4");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 2);
-        assertEquals(revision.getMicro(), 3);
-        assertTrue(revision.isPreview());
-        assertEquals(revision.getPreview(), 4);
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(2);
+        assertThat(revision.getMicro()).isEqualTo(3);
+        assertThat(revision.isPreview()).isTrue();
+        assertThat(revision.getPreview()).isEqualTo(4);
 
         revision = Revision.parseRevision("1.2.3-alpha5");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 2);
-        assertEquals(revision.getMicro(), 3);
-        assertTrue(revision.isPreview());
-        assertEquals(revision.getPreview(), 5);
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(2);
+        assertThat(revision.getMicro()).isEqualTo(3);
+        assertThat(revision.isPreview()).isTrue();
+        assertThat(revision.getPreview()).isEqualTo(5);
 
         revision = Revision.parseRevision("1.2.3-beta6");
-        assertNotNull(revision);
-        assertEquals(revision.getMajor(), 1);
-        assertEquals(revision.getMinor(), 2);
-        assertEquals(revision.getMicro(), 3);
-        assertTrue(revision.isPreview());
-        assertEquals(revision.getPreview(), 6);
+        assertThat(revision).isNotNull();
+        assertThat(revision.getMajor()).isEqualTo(1);
+        assertThat(revision.getMinor()).isEqualTo(2);
+        assertThat(revision.getMicro()).isEqualTo(3);
+        assertThat(revision.isPreview()).isTrue();
+        assertThat(revision.getPreview()).isEqualTo(6);
 
         try {
             Revision.parseRevision("1.2.3-preview");
@@ -176,7 +188,7 @@ public class RevisionTest extends TestCase {
         } catch (NumberFormatException ignored) {}
 
         revision = Revision.safeParseRevision("1.2.3-preview");
-        assertEquals(revision, Revision.NOT_SPECIFIED);
+        assertThat(Revision.NOT_SPECIFIED).isEqualTo(revision);
     }
 
     public final void testParseError() {
@@ -187,7 +199,7 @@ public class RevisionTest extends TestCase {
         } catch (NumberFormatException e) {
             errorMsg = e.getMessage();
         }
-        assertEquals("Invalid revision: not a number", errorMsg);
+        assertThat(errorMsg).isEqualTo("Invalid revision: not a number");
 
         errorMsg = null;
         try {
@@ -196,7 +208,7 @@ public class RevisionTest extends TestCase {
         } catch (NumberFormatException e) {
             errorMsg = e.getMessage();
         }
-        assertEquals("Invalid revision: 5 .6 .7", errorMsg);
+        assertThat(errorMsg).isEqualTo("Invalid revision: 5 .6 .7");
 
         errorMsg = null;
         try {
@@ -205,7 +217,7 @@ public class RevisionTest extends TestCase {
         } catch (NumberFormatException e) {
             errorMsg = e.getMessage();
         }
-        assertEquals("Invalid revision: 5.0.0 preview 1", errorMsg);
+        assertThat(errorMsg).isEqualTo("Invalid revision: 5.0.0 preview 1");
 
         errorMsg = null;
         try {
@@ -214,7 +226,7 @@ public class RevisionTest extends TestCase {
         } catch (NumberFormatException e) {
             errorMsg = e.getMessage();
         }
-        assertEquals("Invalid revision:   5.1.2 rc 42  ", errorMsg);
+        assertThat(errorMsg).isEqualTo("Invalid revision:   5.1.2 rc 42  ");
     }
 
     public final void testCompareTo() {
@@ -226,21 +238,21 @@ public class RevisionTest extends TestCase {
         Revision o5 = new Revision(5, 0, 0, 7);
         Revision p5 = new Revision(5, 1, 0, 0);
 
-        assertEquals(s4, i4);                   // 4.0.0-0 == 4.0.0-0
-        assertEquals(g5, c5);                   // 5.1.0-6 == 5.1.0-6
+        assertThat(i4).isEqualTo(s4);  // 4.0.0-0 == 4.0.0-0
+        assertThat(c5).isEqualTo(g5);  // 5.1.0-6 == 5.1.0-6
 
-        assertFalse(y5.equals(p5));             // 5.0.0-0 != 5.1.0-0
-        assertFalse(g5.equals(p5));             // 5.1.0-6 != 5.1.0-0
-        assertTrue (s4.compareTo(i4) == 0);     // 4.0.0-0 == 4.0.0-0
-        assertTrue (s4.compareTo(y5)  < 0);     // 4.0.0-0  < 5.0.0-0
-        assertTrue (y5.compareTo(y5) == 0);     // 5.0.0-0 == 5.0.0-0
-        assertTrue (y5.compareTo(p5)  < 0);     // 5.0.0-0  < 5.1.0-0
-        assertTrue (o5.compareTo(y5)  < 0);     // 5.0.0-7  < 5.0.0-0
-        assertTrue (p5.compareTo(p5) == 0);     // 5.1.0-0 == 5.1.0-0
-        assertTrue (c5.compareTo(p5)  < 0);     // 5.1.0-6  < 5.1.0-0
-        assertTrue (p5.compareTo(c5)  > 0);     // 5.1.0-0  > 5.1.0-6
-        assertTrue (p5.compareTo(o5)  > 0);     // 5.1.0-0  > 5.0.0-7
-        assertTrue (c5.compareTo(o5)  > 0);     // 5.1.0-6  > 5.0.0-7
-        assertTrue (o5.compareTo(o5) == 0);     // 5.0.0-7  > 5.0.0-7
+        assertThat(y5).isNotEqualTo(p5);  // 5.0.0-0 != 5.1.0-0
+        assertThat(g5).isNotEqualTo(p5);  // 5.1.0-6 != 5.1.0-0
+        assertThat(s4).isEquivalentAccordingToCompareTo(i4);  // 4.0.0-0 == 4.0.0-0
+        assertThat(s4).isLessThan(y5);  // 4.0.0-0  < 5.0.0-0
+        assertThat(y5).isEquivalentAccordingToCompareTo(y5);  // 5.0.0-0 == 5.0.0-0
+        assertThat(y5).isLessThan(p5);  // 5.0.0-0  < 5.1.0-0
+        assertThat(o5).isLessThan(y5);  // 5.0.0-7  < 5.0.0-0
+        assertThat(p5).isEquivalentAccordingToCompareTo(p5);  // 5.1.0-0 == 5.1.0-0
+        assertThat(c5).isLessThan(p5);  // 5.1.0-6  < 5.1.0-0
+        assertThat(p5).isGreaterThan(c5);  // 5.1.0-0  > 5.1.0-6
+        assertThat(p5).isGreaterThan(o5);  // 5.1.0-0  > 5.0.0-7
+        assertThat(c5).isGreaterThan(o5);  // 5.1.0-6  > 5.0.0-7
+        assertThat(o5).isEquivalentAccordingToCompareTo(o5);  // 5.0.0-7  > 5.0.0-7
     }
 }

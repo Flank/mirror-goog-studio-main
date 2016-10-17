@@ -16,36 +16,38 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 public class SeverityTest extends TestCase {
     public void testGetName() {
-        assertEquals("ERROR", Severity.ERROR.getName());
-        assertEquals("WARNING", Severity.WARNING.getName());
+        assertThat(Severity.ERROR.getName()).isEqualTo("ERROR");
+        assertThat(Severity.WARNING.getName()).isEqualTo("WARNING");
     }
 
     public void testGetDescription() {
-        assertEquals("Error", Severity.ERROR.getDescription());
-        assertEquals("Warning", Severity.WARNING.getDescription());
+        assertThat(Severity.ERROR.getDescription()).isEqualTo("Error");
+        assertThat(Severity.WARNING.getDescription()).isEqualTo("Warning");
     }
 
     public void testFromString() {
-        assertSame(Severity.ERROR, Severity.fromName("ERROR"));
-        assertSame(Severity.ERROR, Severity.fromName("error"));
-        assertSame(Severity.ERROR, Severity.fromName("Error"));
-        assertSame(Severity.WARNING, Severity.fromName("WARNING"));
-        assertSame(Severity.WARNING, Severity.fromName("warning"));
-        assertSame(Severity.FATAL, Severity.fromName("FATAL"));
-        assertSame(Severity.INFORMATIONAL, Severity.fromName("Informational"));
-        assertSame(Severity.IGNORE, Severity.fromName("ignore"));
-        assertSame(Severity.IGNORE, Severity.fromName("IGNORE"));
+        assertThat(Severity.fromName("ERROR")).isSameAs(Severity.ERROR);
+        assertThat(Severity.fromName("error")).isSameAs(Severity.ERROR);
+        assertThat(Severity.fromName("Error")).isSameAs(Severity.ERROR);
+        assertThat(Severity.fromName("WARNING")).isSameAs(Severity.WARNING);
+        assertThat(Severity.fromName("warning")).isSameAs(Severity.WARNING);
+        assertThat(Severity.fromName("FATAL")).isSameAs(Severity.FATAL);
+        assertThat(Severity.fromName("Informational")).isSameAs(Severity.INFORMATIONAL);
+        assertThat(Severity.fromName("ignore")).isSameAs(Severity.IGNORE);
+        assertThat(Severity.fromName("IGNORE")).isSameAs(Severity.IGNORE);
     }
 
     public void testCompare() {
-        assertTrue(Severity.IGNORE.compareTo(Severity.ERROR) > 0);
-        assertTrue(Severity.WARNING.compareTo(Severity.ERROR) > 0);
-        assertTrue(Severity.ERROR.compareTo(Severity.ERROR) == 0);
-        assertTrue(Severity.FATAL.compareTo(Severity.ERROR) < 0);
-        assertTrue(Severity.WARNING.compareTo(Severity.ERROR) > 0);
+        assertThat(Severity.IGNORE).isGreaterThan(Severity.ERROR);
+        assertThat(Severity.WARNING).isGreaterThan(Severity.ERROR);
+        assertThat(Severity.ERROR).isEquivalentAccordingToCompareTo(Severity.ERROR);
+        assertThat(Severity.FATAL).isLessThan(Severity.ERROR);
+        assertThat(Severity.WARNING).isGreaterThan(Severity.ERROR);
     }
 }

@@ -37,5 +37,8 @@ java_test(
     javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
-    deps = [":tools.testutils"],
+    deps = [
+        ":tools.testutils",
+        "//tools/base/third_party:com.google.truth_truth",
+    ],
 )
