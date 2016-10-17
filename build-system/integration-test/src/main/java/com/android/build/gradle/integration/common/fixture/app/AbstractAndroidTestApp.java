@@ -19,9 +19,7 @@ package com.android.build.gradle.integration.common.fixture.app;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 

@@ -33,7 +33,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -108,12 +107,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
 
             List<File> testedSplitApkFiles = getSplitApks();
             List<String> testedSplitApksPath = Lists.transform(testedSplitApkFiles,
-                    new Function<File, String>() {
-                        @Override
-                        public String apply(@Nullable File file) {
-                            return file != null ? file.getAbsolutePath() : null;
-                        }
-                    });
+                    file -> file != null ? file.getAbsolutePath() : null);
             testedApks.addAll(
                     SplitOutputMatcher.computeBestOutput(processExecutor,
                             splitSelectExe,

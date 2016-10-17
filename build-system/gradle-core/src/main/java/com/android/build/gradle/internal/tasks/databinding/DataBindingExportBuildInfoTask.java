@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 import org.gradle.api.Action;

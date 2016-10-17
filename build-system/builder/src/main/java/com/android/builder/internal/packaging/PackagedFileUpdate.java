@@ -19,8 +19,9 @@ package com.android.builder.internal.packaging;
 import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.res2.FileStatus;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
+
+import java.util.function.Function;
 
 /**
  * Elementary update of a file in a package.
@@ -34,39 +35,6 @@ import com.google.common.base.Objects;
  * commonly have different names in the file system and inside the apk.
  */
 class PackagedFileUpdate {
-
-    /**
-     * Function that extracts the name of the file to update.
-     */
-    static final Function<PackagedFileUpdate, String> EXTRACT_NAME =
-            new Function<PackagedFileUpdate, String>() {
-                @Override
-                public String apply(PackagedFileUpdate input) {
-                    return input.getName();
-                }
-            };
-
-    /**
-     * Function that extracts the status of the file.
-     */
-    static final Function<PackagedFileUpdate, FileStatus> EXTRACT_STATUS =
-            new Function<PackagedFileUpdate, FileStatus>() {
-                @Override
-                public FileStatus apply(PackagedFileUpdate input) {
-                    return input.getStatus();
-                }
-            };
-
-    /**
-     * Function that extracts the source of the file to update.
-     */
-    static final Function<PackagedFileUpdate, RelativeFile> EXTRACT_SOURCE =
-            new Function<PackagedFileUpdate, RelativeFile>() {
-                @Override
-                public RelativeFile apply(PackagedFileUpdate input) {
-                    return input.getSource();
-                }
-            };
 
     /**
      * The source. May not exist if {@link #mStatus} is {@link FileStatus#REMOVED}.
