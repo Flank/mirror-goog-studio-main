@@ -56,7 +56,7 @@ public class JackPluginsTest {
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
-                                GradleTestProject.UPCOMING_BUILD_TOOL_VERSION,
+                                GradleTestProject.DEFAULT_BUILD_TOOL_VERSION,
                                 Revision.Precision.MICRO),
                         BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
         updateBuildFile(
@@ -86,7 +86,7 @@ public class JackPluginsTest {
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
-                                GradleTestProject.UPCOMING_BUILD_TOOL_VERSION,
+                                GradleTestProject.DEFAULT_BUILD_TOOL_VERSION,
                                 Revision.Precision.MICRO),
                         BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
         updateBuildFile(ImmutableList.of(), ImmutableList.of(coveragePlugin));
@@ -101,7 +101,7 @@ public class JackPluginsTest {
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
-                                GradleTestProject.UPCOMING_BUILD_TOOL_VERSION,
+                                GradleTestProject.DEFAULT_BUILD_TOOL_VERSION,
                                 Revision.Precision.MICRO),
                         BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
         updateBuildFile(
@@ -123,7 +123,7 @@ public class JackPluginsTest {
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
-                                GradleTestProject.UPCOMING_BUILD_TOOL_VERSION,
+                                GradleTestProject.DEFAULT_BUILD_TOOL_VERSION,
                                 Revision.Precision.MICRO),
                         BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
         updateBuildFile(
@@ -148,7 +148,7 @@ public class JackPluginsTest {
                 mProject.getBuildFile(),
                 "android {\n"
                         + "     buildToolsVersion '"
-                        + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION + "'\n"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
                         + "     defaultConfig {\n"
                         + "        jackOptions {\n"
                         + "            enabled true\n"
