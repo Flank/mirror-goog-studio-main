@@ -102,6 +102,7 @@ public class GccNativeToolSpecification implements NativeToolSpecification {
                             "-funswitch-loops",
                             "-finline-limit=300"))
                     .putAll(SdkConstants.ABI_MIPS, ImmutableList.of(
+                            "-mips32",
                             "-fpic",
                             "-fno-strict-aliasing",
                             "-finline-functions",
@@ -193,7 +194,7 @@ public class GccNativeToolSpecification implements NativeToolSpecification {
     public Iterable<String> getCFlags() {
         return Iterables.concat(
                 RELEASE_CFLAGS.get(platform.getName()),
-                (isDebugBuild ? DEBUG_CFLAGS.get(platform.getName()) : ImmutableList.<String>of()));
+                (isDebugBuild ? DEBUG_CFLAGS.get(platform.getName()) : ImmutableList.of()));
     }
 
     @Override
@@ -203,6 +204,9 @@ public class GccNativeToolSpecification implements NativeToolSpecification {
 
     @Override
     public Iterable<String> getLdFlags() {
+        if (platform.getName().equals(SdkConstants.ABI_MIPS)) {
+            return Iterables.concat(LDFLAGS, ImmutableList.of("-mips32"));
+        }
         return LDFLAGS;
     }
 }

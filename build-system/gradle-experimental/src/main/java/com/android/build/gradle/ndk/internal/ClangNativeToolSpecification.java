@@ -28,6 +28,7 @@ import com.google.common.collect.ListMultimap;
 
 import org.gradle.nativeplatform.platform.NativePlatform;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -118,6 +119,7 @@ public class ClangNativeToolSpecification implements NativeToolSpecification {
                             "-fomit-frame-pointer",
                             "-fstrict-aliasing"))
                     .putAll(SdkConstants.ABI_MIPS, ImmutableList.of(
+                            "-mips32",
                             "-fpic",
                             "-fno-strict-aliasing",
                             "-ffunction-sections",
@@ -210,11 +212,19 @@ public class ClangNativeToolSpecification implements NativeToolSpecification {
 
     @Override
     public Iterable<String> getLdFlags() {
-        return Iterables.concat(
-                getTargetFlags(),
-                platform.getName().equals(SdkConstants.ABI_ARMEABI_V7A)
-                        ? ImmutableList.of("-Wl,--fix-cortex-a8")
-                        : ImmutableList.<String>of());
+        Collection<String> flags;
+
+        switch (platform.getName()) {
+            case SdkConstants.ABI_ARMEABI_V7A:
+                flags = ImmutableList.of("-Wl,--fix-cortex-a8");
+                break;
+            case SdkConstants.ABI_MIPS:
+                flags = ImmutableList.of("-mips32");
+                break;
+            default:
+                flags = ImmutableList.of();
+        }
+        return Iterables.concat(getTargetFlags(), flags);
     }
 
     private Iterable<String> getTargetFlags() {

@@ -203,6 +203,7 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull Toolchain toolchain,
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
+        abi = getToolchainAbi(abi);
         String version = toolchainVersion.isEmpty()
                 ? getDefaultToolchainVersion(toolchain, abi)
                 : toolchainVersion;
@@ -250,6 +251,11 @@ public class DefaultNdkInfo implements NdkInfo {
         }
     }
 
+    @NonNull
+    protected Abi getToolchainAbi(@NonNull Abi abi) {
+        return abi;
+    }
+
     /**
      * Return the executable for compiling C code.
      */
@@ -259,6 +265,7 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull Toolchain toolchain,
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
+        abi = getToolchainAbi(abi);
         String compiler = toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
@@ -272,8 +279,33 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull Toolchain toolchain,
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
+        abi = getToolchainAbi(abi);
         String compiler = toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
+    }
+
+    /**
+     * Return the linker.
+     */
+    @Override
+    @NonNull
+    public File getLinker(
+            @NonNull Toolchain toolchain,
+            @NonNull String toolchainVersion,
+            @NonNull Abi abi) {
+        return getCppCompiler(toolchain, toolchainVersion, abi);
+    }
+
+    /**
+     * Return the assembler.
+     */
+    @Override
+    @NonNull
+    public File getAssembler(
+            @NonNull Toolchain toolchain,
+            @NonNull String toolchainVersion,
+            @NonNull Abi abi) {
+        return getCCompiler(toolchain, toolchainVersion, abi);
     }
 
     @Override
@@ -282,6 +314,7 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull Toolchain toolchain,
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
+        abi = getToolchainAbi(abi);
         // For clang, we use the ar from the GCC toolchain.
         String ar = abi.getGccExecutablePrefix()
                 + (toolchain == Toolchain.CLANG ? "-ar" : "-gcc-ar");
@@ -296,6 +329,7 @@ public class DefaultNdkInfo implements NdkInfo {
     @Override
     @NonNull
     public File getStripExecutable(Toolchain toolchain, String toolchainVersion, Abi abi) {
+        abi = getToolchainAbi(abi);
         return FileUtils.join(
                 getToolchainPath(
                         Toolchain.GCC,
@@ -316,7 +350,8 @@ public class DefaultNdkInfo implements NdkInfo {
      */
     @Override
     @NonNull
-    public String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull final Abi abi) {
+    public String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull Abi abi) {
+        abi = getToolchainAbi(abi);
         String defaultVersion = defaultToolchainVersions.get(Pair.of(toolchain, abi));
         if (defaultVersion != null) {
             return defaultVersion;
