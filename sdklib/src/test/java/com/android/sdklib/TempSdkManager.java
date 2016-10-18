@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.io.FileOpUtils;
-import com.android.repository.testframework.MockFileOp;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -46,11 +45,11 @@ import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.devices.Storage.Unit;
-import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.legacy.local.LocalSysImgPkgInfo;
+import com.android.testutils.MockLog;
 
 import org.junit.rules.ExternalResource;
 
@@ -69,16 +68,17 @@ public class TempSdkManager extends ExternalResource {
 
     private static final String TARGET_DIR_NAME_0 = "v0_0";
 
-    private final String mSdkFileName;
+    private final String mTestName;
 
     private File mFakeSdk;
+    private File mFakeAndroidFolder;
 
     private MockLog mLog;
 
     private AndroidSdkHandler mSdkHandler;
 
-    public TempSdkManager(String sdkFileName) {
-        mSdkFileName = sdkFileName;
+    public TempSdkManager(String testName) {
+        mTestName = testName;
     }
 
     /**
@@ -100,6 +100,7 @@ public class TempSdkManager extends ExternalResource {
     protected void before() throws Throwable {
         mLog = new MockLog();
         makeFakeSdk();
+        makeFakeAndroidFolder();
         createSdkAvdManagers();
     }
 
@@ -109,7 +110,7 @@ public class TempSdkManager extends ExternalResource {
      * will be reparsed.
      */
     private void createSdkAvdManagers() {
-        mSdkHandler = new AndroidSdkHandler(mFakeSdk, new MockFileOp());
+        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder, FileOpUtils.create());
     }
 
     /**
@@ -127,7 +128,7 @@ public class TempSdkManager extends ExternalResource {
      */
     private void makeFakeSdk() throws IOException {
         // First we create a temp file to "reserve" the temp directory name we want to use.
-        mFakeSdk = File.createTempFile(mSdkFileName, null);
+        mFakeSdk = File.createTempFile(mTestName, "sdk");
         // Then erase the file and make the directory
         mFakeSdk.delete();
         mFakeSdk.mkdirs();
@@ -156,6 +157,12 @@ public class TempSdkManager extends ExternalResource {
 
         makeFakeSkin(targetDir, "HVGA");
         makeFakeSourceInternal(mFakeSdk);
+    }
+
+    private void makeFakeAndroidFolder() throws IOException {
+        mFakeAndroidFolder = File.createTempFile(mTestName, "android-home");
+        mFakeAndroidFolder.delete();
+        mFakeAndroidFolder.mkdirs();
     }
 
     private void tearDownSdk() {

@@ -215,8 +215,7 @@ public final class AndroidLocation {
         return findValidPath(EnvVar.USER_HOME, EnvVar.HOME);
     }
 
-    private static String findHomeFolder()
-      throws AndroidLocationException {
+    private static String findHomeFolder() throws AndroidLocationException {
         String home = findValidPath(EnvVar.ANDROID_SDK_HOME, EnvVar.USER_HOME, EnvVar.HOME);
 
         // if the above failed, we throw an exception.

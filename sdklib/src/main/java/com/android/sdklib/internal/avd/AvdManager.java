@@ -76,6 +76,8 @@ import java.util.regex.Pattern;
  */
 public class AvdManager {
 
+    private File mBaseAvdFolder;
+
     /**
      * Exception thrown when something is wrong with a target path.
      */
@@ -339,11 +341,15 @@ public class AvdManager {
             new HashMap<>();
     private final FileOp mFop;
 
-    protected AvdManager(@NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger log,
-      @NonNull FileOp fop)
-      throws AndroidLocationException {
+    protected AvdManager(
+            @NonNull AndroidSdkHandler sdkHandler,
+            @NonNull File baseAvdFolder,
+            @NonNull ILogger log,
+            @NonNull FileOp fop)
+            throws AndroidLocationException {
         mSdkHandler = sdkHandler;
         mFop = fop;
+        mBaseAvdFolder = baseAvdFolder;
         buildAvdList(mAllAvdList, log);
     }
 
@@ -364,12 +370,19 @@ public class AvdManager {
     public static AvdManager getInstance(@NonNull AndroidSdkHandler sdkHandler,
             @NonNull ILogger log)
             throws AndroidLocationException {
-        return getInstance(sdkHandler, log, FileOpUtils.create());
+        return getInstance(
+                sdkHandler,
+                new File(AndroidLocation.getAvdFolder()),
+                log,
+                FileOpUtils.create());
     }
 
     @Nullable
-    public static AvdManager getInstance(@NonNull AndroidSdkHandler sdkHandler,
-            @NonNull ILogger log, @NonNull FileOp fop)
+    public static AvdManager getInstance(
+            @NonNull AndroidSdkHandler sdkHandler,
+            @NonNull File baseAvdFolder,
+            @NonNull ILogger log,
+            @NonNull FileOp fop)
             throws AndroidLocationException {
         if (sdkHandler.getLocation() == null) {
             throw new AndroidLocationException("Local SDK path not set!");
@@ -382,7 +395,7 @@ public class AvdManager {
                 return manager;
             }
             try {
-                manager = new AvdManager(sdkHandler, log, fop);
+                manager = new AvdManager(sdkHandler, baseAvdFolder, log, fop);
             }
             catch (AndroidLocationException e){
                 throw e;
@@ -403,8 +416,8 @@ public class AvdManager {
      * @throws AndroidLocationException
      */
     @NonNull
-    public static String getBaseAvdFolder() throws AndroidLocationException {
-        return AndroidLocation.getAvdFolder();
+    public File getBaseAvdFolder() throws AndroidLocationException {
+        return mBaseAvdFolder;
     }
 
     /**
@@ -1121,7 +1134,12 @@ public class AvdManager {
 
         String absPath = avdFolder.getAbsolutePath();
         String relPath = null;
-        String androidPath = AndroidLocation.getFolder();
+        File androidFolder = mSdkHandler.getAndroidFolder();
+        if (androidFolder == null) {
+            throw new AndroidLocation.AndroidLocationException(
+                    "Can't locate ANDROID_HOME for the AVD .ini file.");
+        }
+        String androidPath = androidFolder.getAbsolutePath() + File.separator;
         if (absPath.startsWith(androidPath)) {
             // Compute the AVD path relative to the android path.
             assert androidPath.endsWith(File.separator);
@@ -1320,19 +1338,17 @@ public class AvdManager {
      * @throws AndroidLocationException if there's a problem getting android root directory.
      */
     private File[] buildAvdFilesList() throws AndroidLocationException {
-        File folder = new File(getBaseAvdFolder());
-
         // ensure folder validity.
-        if (mFop.isFile(folder)) {
+        if (mFop.isFile(mBaseAvdFolder)) {
             throw new AndroidLocationException(
-                    String.format("%1$s is not a valid folder.", folder.getAbsolutePath()));
-        } else if (mFop.exists(folder) == false) {
+                    String.format("%1$s is not a valid folder.", mBaseAvdFolder.getAbsolutePath()));
+        } else if (mFop.exists(mBaseAvdFolder) == false) {
             // folder is not there, we create it and return
-            mFop.mkdirs(folder);
+            mFop.mkdirs(mBaseAvdFolder);
             return null;
         }
 
-        File[] avds = mFop.listFiles(folder, (parent, name) -> {
+        File[] avds = mFop.listFiles(mBaseAvdFolder, (parent, name) -> {
             if (INI_NAME_PATTERN.matcher(name).matches()) {
                 // check it's a file and not a folder
                 return mFop.isFile(new File(parent, name));
@@ -1367,7 +1383,12 @@ public class AvdManager {
     private DeviceManager getDeviceManager(ILogger logger) {
         DeviceManager manager = mDeviceManagers.get(logger);
         if (manager == null) {
-            manager = DeviceManager.createInstance(mSdkHandler.getLocation(), logger);
+            manager =
+                    DeviceManager.createInstance(
+                            mSdkHandler.getLocation(),
+                            mSdkHandler.getAndroidFolder(),
+                            logger,
+                            mFop);
             manager.registerListener(mDeviceManagers::clear);
             mDeviceManagers.put(logger, manager);
         }
@@ -1393,13 +1414,11 @@ public class AvdManager {
             // Try to fallback on the relative path, if present.
             String relPath = map.get(AVD_INFO_REL_PATH);
             if (relPath != null) {
-                try {
-                    String androidPath = AndroidLocation.getFolder();
-                    File f = new File(androidPath, relPath);
-                    if (mFop.isDirectory(f)) {
-                        avdPath = f.getAbsolutePath();
-                    }
-                } catch (AndroidLocationException ignore) {}
+                File androidFolder = mSdkHandler.getAndroidFolder();
+                File f = new File(androidFolder, relPath);
+                if (mFop.isDirectory(f)) {
+                    avdPath = f.getAbsolutePath();
+                }
             }
         }
 
@@ -1768,7 +1787,6 @@ public class AvdManager {
      * @param avd the AVD to update.
      * @param log the log object to receive action logs. Cannot be null.
      * @return The new AVD on success.
-     * @throws IOException
      */
     public AvdInfo updateDeviceChanged(AvdInfo avd, ILogger log) throws IOException {
 

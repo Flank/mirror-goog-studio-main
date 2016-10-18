@@ -518,11 +518,8 @@ class AvdManagerCli extends CommandLineParser {
      * Displays the list of available devices.
      */
     private void displayDeviceList() {
-
-        DeviceManager devman = DeviceManager.createInstance(
-                new File(mOsSdkFolder), mSdkLog);
-
-        List<Device> devices = new ArrayList<>(devman.getDevices(DeviceManager.ALL_DEVICES));
+        List<Device> devices =
+                new ArrayList<>(createDeviceManager().getDevices(DeviceManager.ALL_DEVICES));
         Collections.sort(devices, Device.getDisplayComparator());
 
         // Compact output, suitable for scripts.
@@ -553,6 +550,22 @@ class AvdManagerCli extends CommandLineParser {
                 mSdkLog.info("    Tag : %s\n", tag);
             }
         }
+    }
+
+    @NonNull
+    private DeviceManager createDeviceManager() {
+        File androidFolder;
+        try {
+            androidFolder = new File(AndroidLocation.getFolder());
+        } catch (AndroidLocation.AndroidLocationException e) {
+            mSdkLog.warning(e.getMessage());
+            androidFolder = null;
+        }
+        return DeviceManager.createInstance(
+                new File(mOsSdkFolder),
+                androidFolder,
+                mSdkLog,
+                mSdkHandler.getFileOp());
     }
 
     /**
@@ -686,11 +699,8 @@ class AvdManagerCli extends CommandLineParser {
             Device device = null;
             String deviceParam = getParamDevice();
             if (deviceParam != null) {
-                DeviceManager deviceManager = DeviceManager.createInstance(
-                        new File(mOsSdkFolder), mSdkLog);
-
                 List<Device> devices = new ArrayList<>(
-                        deviceManager.getDevices(DeviceManager.ALL_DEVICES));
+                        createDeviceManager().getDevices(DeviceManager.ALL_DEVICES));
                 Collections.sort(devices, Device.getDisplayComparator());
 
                 int index = -1;

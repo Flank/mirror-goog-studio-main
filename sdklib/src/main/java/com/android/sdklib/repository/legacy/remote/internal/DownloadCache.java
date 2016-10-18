@@ -175,17 +175,28 @@ public class DownloadCache {
         DIRECT
     }
 
-    /** Creates a default instance of the URL cache */
-    public DownloadCache(@NonNull Strategy strategy, @NonNull SettingsController settings) {
-        this(FileOpUtils.create(), strategy, settings);
+    public static DownloadCache inUserHome(
+            @NonNull FileOp fileOp,
+            @NonNull Strategy strategy,
+            @NonNull SettingsController settings) {
+        File androidFolder;
+        try {
+            androidFolder = new File(AndroidLocation.getFolder());
+        } catch (AndroidLocationException e) {
+            androidFolder = null;
+        }
+        return new DownloadCache(androidFolder, fileOp, strategy, settings);
     }
 
     /** Creates a default instance of the URL cache */
-    public DownloadCache(@NonNull FileOp fileOp, @NonNull Strategy strategy,
+    public DownloadCache(
+            @Nullable File androidFolder,
+            @NonNull FileOp fileOp,
+            @NonNull Strategy strategy,
             @NonNull SettingsController settings) {
         mFileOp = fileOp;
         mSettings = settings;
-        mCacheRoot = initCacheRoot();
+        mCacheRoot = initCacheRoot(androidFolder);
 
         // If this is defined in the environment, never use the cache. Useful for testing.
         if (System.getenv("SDKMAN_DISABLE_CACHE") != null) {                 //$NON-NLS-1$
@@ -203,30 +214,26 @@ public class DownloadCache {
     /**
      * Returns the directory to be used as a cache.
      * Creates it if necessary.
-     * Makes it possible to disable or override the cache location in unit tests.
      *
      * @return An existing directory to use as a cache root dir,
      *   or null in case of error in which case the cache will be disabled.
+     * @param androidFolder
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
     @Nullable
-    protected File initCacheRoot() {
-        try {
-            File root = new File(AndroidLocation.getFolder());
-            root = new File(root, SdkConstants.FD_CACHE);
-            if (!mFileOp.exists(root)) {
-                mFileOp.mkdirs(root);
-            }
-            return root;
-        } catch (AndroidLocationException e) {
-            // No root? Disable the cache.
+    private File initCacheRoot(@Nullable File androidFolder) {
+        if (androidFolder == null) {
             return null;
         }
+
+        File cacheRoot = new File(androidFolder, SdkConstants.FD_CACHE);
+        if (!mFileOp.exists(cacheRoot)) {
+            mFileOp.mkdirs(cacheRoot);
+        }
+        return cacheRoot;
     }
 
     /**
-     * Calls {@link HttpConfigurable#openHttpConnection(String)}
-     * to actually perform a download.
+     * Calls {@link URL#openConnection()} to actually perform a download.
      * <p>
      * Isolated so that it can be overridden by unit tests.
      */

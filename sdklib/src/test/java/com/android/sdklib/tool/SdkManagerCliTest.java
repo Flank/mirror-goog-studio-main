@@ -84,7 +84,12 @@ public class SdkManagerCliTest {
 
         createLocalRepo(repoManager);
 
-        mSdkHandler = new AndroidSdkHandler(new File(SDK_LOCATION), mFileOp, repoManager);
+        mSdkHandler =
+                new AndroidSdkHandler(
+                        new File(SDK_LOCATION),
+                        null,
+                        mFileOp,
+                        repoManager);
 
         // Doesn't actually need to provide anything, since the remote loader gets them directly.
         repoManager.registerSourceProvider(new FakeRepositorySourceProvider(null));

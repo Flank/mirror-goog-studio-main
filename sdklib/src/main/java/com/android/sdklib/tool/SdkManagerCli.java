@@ -100,8 +100,7 @@ public class SdkManagerCli {
                 System.exit(1);
             }
         }
-
-        AndroidSdkHandler handler = new AndroidSdkHandler(localPath.toFile(), fop);
+        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath.toFile());
         new SdkManagerCli(settings, System.out, System.in, new LegacyDownloader(fop, settings),
                 handler).run();
         System.out.println("done");

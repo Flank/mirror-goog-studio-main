@@ -74,13 +74,14 @@ public class MavenInstallListenerTest extends TestCase {
                     + "  <name>test package 1 version 1.2.3</name>\n"
                     + "</project>";
 
+    private static final File ROOT = new File("/repo");
+
     public void testInstallFirst() throws Exception {
-        File root = new File("/repo");
         MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(root);
+        mgr.setLocalPath(ROOT);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
 
@@ -120,14 +121,16 @@ public class MavenInstallListenerTest extends TestCase {
                 .get("m2repository;com;android;group1;artifact1;1.2.3");
         // Install
         BasicInstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(new FakeInstallListenerFactory(
-                new MavenInstallListener(new AndroidSdkHandler(root, fop))));
+        factory.setListenerFactory(
+                new FakeInstallListenerFactory(
+                        new MavenInstallListener(
+                                new AndroidSdkHandler(ROOT, null, fop))));
         Installer installer = factory.createInstaller(p, mgr, downloader, fop);
         installer.prepare(runner.getProgressIndicator());
         installer.complete(runner.getProgressIndicator());
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
-        File artifactRoot = new File(root, "m2repository/com/android/group1/artifact1");
+        File artifactRoot = new File(ROOT, "m2repository/com/android/group1/artifact1");
         File mavenMetadata = new File(artifactRoot, "maven-metadata.xml");
         MavenInstallListener.MavenMetadata metadata = MavenInstallListener.unmarshal(mavenMetadata,
                 MavenInstallListener.MavenMetadata.class, runner.getProgressIndicator(), fop);
@@ -138,13 +141,13 @@ public class MavenInstallListenerTest extends TestCase {
         assertEquals(ImmutableList.of("1.2.3"), metadata.versioning.versions.version);
 
         File[] contents = fop
-                .listFiles(new File(root, "m2repository/com/android/group1/artifact1/1.2.3"));
+                .listFiles(new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3"));
 
         // Ensure it was installed on the filesystem
         assertArrayEquals(new File[]{
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/a"),
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/package.xml")},
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/a"),
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/package.xml")},
                 contents);
 
         // Reload
@@ -180,11 +183,10 @@ public class MavenInstallListenerTest extends TestCase {
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom",
                 POM_1_0_0_CONTENTS);
-        File root = new File("/repo");
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(root);
+        mgr.setLocalPath(ROOT);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
 
@@ -226,14 +228,16 @@ public class MavenInstallListenerTest extends TestCase {
 
         // Install
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(new FakeInstallListenerFactory(
-                new MavenInstallListener(new AndroidSdkHandler(root, fop))));
+        factory.setListenerFactory(
+                new FakeInstallListenerFactory(
+                        new MavenInstallListener(
+                                new AndroidSdkHandler(ROOT, null, fop))));
         Installer installer = factory.createInstaller(remotePackage, mgr, downloader, fop);
         installer.prepare(runner.getProgressIndicator());
         installer.complete(runner.getProgressIndicator());
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
-        File artifactRoot = new File(root, "m2repository/com/android/group1/artifact1");
+        File artifactRoot = new File(ROOT, "m2repository/com/android/group1/artifact1");
         File mavenMetadata = new File(artifactRoot, "maven-metadata.xml");
         MavenInstallListener.MavenMetadata metadata = MavenInstallListener
                 .unmarshal(mavenMetadata, MavenInstallListener.MavenMetadata.class,
@@ -245,13 +249,13 @@ public class MavenInstallListenerTest extends TestCase {
         assertEquals(ImmutableList.of("1.0.0", "1.2.3"), metadata.versioning.versions.version);
 
         File[] contents = fop
-                .listFiles(new File(root, "m2repository/com/android/group1/artifact1/1.2.3"));
+                .listFiles(new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3"));
 
         // Ensure it was installed on the filesystem
         assertArrayEquals(new File[]{
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/a"),
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
-                        new File(root, "m2repository/com/android/group1/artifact1/1.2.3/package.xml")},
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/a"),
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/artifact1-1.2.3.pom"),
+                        new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/package.xml")},
                 contents);
         // Reload
         mgr.load(0, ImmutableList.<RepoLoadedCallback>of(), ImmutableList.<RepoLoadedCallback>of(),
@@ -334,9 +338,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        File root = new File("/repo");
         RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(root);
+        mgr.setLocalPath(ROOT);
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
@@ -353,8 +356,10 @@ public class MavenInstallListenerTest extends TestCase {
         LocalPackage p = locals.get("m2repository;com;android;group1;artifact1;1.2.3");
         assertNotNull(p);
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(new FakeInstallListenerFactory(
-                new MavenInstallListener(new AndroidSdkHandler(root, fop))));
+        factory.setListenerFactory(
+                new FakeInstallListenerFactory(
+                        new MavenInstallListener(
+                                new AndroidSdkHandler(ROOT, null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
@@ -412,9 +417,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        File root = new File("/repo");
         RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(root);
+        mgr.setLocalPath(ROOT);
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
@@ -431,8 +435,10 @@ public class MavenInstallListenerTest extends TestCase {
         LocalPackage p = locals.get("m2repository;com;android;group1;artifact1;1.2.3");
         assertNotNull(p);
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(new FakeInstallListenerFactory(
-                new MavenInstallListener(new AndroidSdkHandler(root, fop))));
+        factory.setListenerFactory(
+                new FakeInstallListenerFactory(
+                        new MavenInstallListener(
+                                new AndroidSdkHandler(ROOT, null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);

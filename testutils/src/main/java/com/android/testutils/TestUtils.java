@@ -18,6 +18,7 @@ package com.android.testutils;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
@@ -208,24 +209,6 @@ public class TestUtils {
     }
 
     /**
-     * Given a path to a file relative to the SDK's root, return the file.
-     *
-     * @throws IllegalStateException if the current OS is not supported.
-     * @throws IllegalArgumentException if the path results in a file not found.
-     */
-    @NonNull
-    public static File getSdkFile(String path) {
-        OsType osType = OsType.getHostOs();
-        if (osType == OsType.UNKNOWN) {
-            throw new IllegalStateException(
-                    "SDK test not supported on unknown platform: " + OsType.getOsName());
-        }
-
-        String hostDir = osType.getFolderName();
-        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir + (path.isEmpty() ? path : "/" + path));
-    }
-
-    /**
      * Returns a file at {@code path} relative to the root for {@link #getLatestAndroidPlatform}.
      *
      * @throws IllegalStateException if the current OS is not supported.
@@ -233,7 +216,8 @@ public class TestUtils {
      */
     @NonNull
     public static File getPlatformFile(String path) {
-        return getSdkFile("platforms/" + getLatestAndroidPlatform() + "/" + path);
+        return FileUtils.join(
+                getSdk(), SdkConstants.FD_PLATFORMS, getLatestAndroidPlatform(), path);
     }
 
     /**
@@ -246,7 +230,14 @@ public class TestUtils {
      */
     @NonNull
     public static File getSdk() {
-        return getSdkFile("");
+        OsType osType = OsType.getHostOs();
+        if (osType == OsType.UNKNOWN) {
+            throw new IllegalStateException(
+                    "SDK test not supported on unknown platform: " + OsType.getOsName());
+        }
+
+        String hostDir = osType.getFolderName();
+        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir);
     }
 
     @NonNull

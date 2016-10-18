@@ -20,14 +20,13 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.PkgProps;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
@@ -70,14 +69,18 @@ public class DeviceManager {
     private static final String  DEVICE_PROFILES_PROP = "DeviceProfiles";
     private static final Pattern PATH_PROPERTY_PATTERN =
         Pattern.compile('^' + PkgProps.EXTRA_PATH + '=' + DEVICE_PROFILES_PROP + '$');
+    @Nullable
+    private final File mAndroidFolder;
     private ILogger mLog;
+    @NonNull
+    private final FileOp mFop;
     private Table<String, String, Device> mVendorDevices;
     private Table<String, String, Device> mSysImgDevices;
     private Table<String, String, Device> mUserDevices;
     private Table<String, String, Device> mDefaultDevices;
     private final Object mLock = new Object();
     private final List<DevicesChangedListener> sListeners = new ArrayList<DevicesChangedListener>();
-    private final String mOsSdkPath;
+    private final File mOsSdkPath;
 
     public enum DeviceFilter {
         /** getDevices() flag to list default devices from the bundled devices.xml definitions. */
@@ -110,27 +113,57 @@ public class DeviceManager {
     }
 
     /**
+     * Creates a new instance of {@link DeviceManager}, using the user's android folder.
+     *
+     * @see #createInstance(File, File, ILogger, FileOp)
+     */
+    public static DeviceManager createInstance(@Nullable File sdkLocation, @NonNull ILogger log) {
+        File androidFolder;
+        try {
+            androidFolder = new File(AndroidLocation.getFolder());
+        } catch (AndroidLocation.AndroidLocationException e) {
+            androidFolder = null;
+        }
+
+        return createInstance(sdkLocation, androidFolder, log, FileOpUtils.create());
+    }
+
+    /**
      * Creates a new instance of DeviceManager.
      *
      * @param sdkLocation Path to the current SDK. If null or invalid, vendor and system images
      *                    devices are ignored.
+     * @param androidFolder Path to the users' Android folder. If null or invalid, user devices are ignored.
      * @param log SDK logger instance. Should be non-null.
      */
-    public static DeviceManager createInstance(@Nullable File sdkLocation, @NonNull ILogger log) {
+    public static DeviceManager createInstance(
+            @Nullable File sdkLocation,
+            @Nullable File androidFolder,
+            @NonNull ILogger log,
+            @NonNull FileOp fop) {
         // TODO consider using a cache and reusing the same instance of the device manager
         // for the same manager/log combo.
-        return new DeviceManager(sdkLocation == null ? null : sdkLocation.getPath(), log);
+        return new DeviceManager(sdkLocation, androidFolder, log, fop);
     }
 
     /**
      * Creates a new instance of DeviceManager.
      *
      * @param osSdkPath Path to the current SDK. If null or invalid, vendor devices are ignored.
+     * @param androidFolder Path to the user's android folder. If null or invalid, user devices
+     *                      are ignored.
      * @param log SDK logger instance. Should be non-null.
+     * @param fop {@link FileOp} used for file I/O.
      */
-    private DeviceManager(@Nullable String osSdkPath, @NonNull ILogger log) {
+    private DeviceManager(
+            @Nullable File osSdkPath,
+            @Nullable File androidFolder,
+            @NonNull ILogger log,
+            @NonNull FileOp fop) {
         mOsSdkPath = osSdkPath;
+        mAndroidFolder = androidFolder;
         mLog = log;
+        mFop = fop;
     }
 
     /**
@@ -362,26 +395,25 @@ public class DeviceManager {
             // Load devices from tagged system-images
             // Path pattern is /sdk/system-images/<platform-N>/<tag>/<abi>/devices.xml
 
-            FileOp fop = FileOpUtils.create();
             File sysImgFolder = new File(mOsSdkPath, SdkConstants.FD_SYSTEM_IMAGES);
 
-            for (File platformFolder : fop.listFiles(sysImgFolder)) {
-                if (!fop.isDirectory(platformFolder)) {
+            for (File platformFolder : mFop.listFiles(sysImgFolder)) {
+                if (!mFop.isDirectory(platformFolder)) {
                     continue;
                 }
 
-                for (File tagFolder : fop.listFiles(platformFolder)) {
-                    if (!fop.isDirectory(tagFolder)) {
+                for (File tagFolder : mFop.listFiles(platformFolder)) {
+                    if (!mFop.isDirectory(tagFolder)) {
                         continue;
                     }
 
-                    for (File abiFolder : fop.listFiles(tagFolder)) {
-                        if (!fop.isDirectory(abiFolder)) {
+                    for (File abiFolder : mFop.listFiles(tagFolder)) {
+                        if (!mFop.isDirectory(abiFolder)) {
                             continue;
                         }
 
                         File deviceXml = new File(abiFolder, SdkConstants.FN_DEVICES_XML);
-                        if (fop.isFile(deviceXml)) {
+                        if (mFop.isFile(deviceXml)) {
                             mSysImgDevices.putAll(loadDevices(deviceXml));
                         }
                     }
@@ -406,21 +438,19 @@ public class DeviceManager {
             File userDevicesFile = null;
             try {
                 userDevicesFile = new File(
-                        AndroidLocation.getFolder(),
+                        mAndroidFolder,
                         SdkConstants.FN_DEVICES_XML);
-                if (userDevicesFile.exists()) {
+                if (mFop.exists(userDevicesFile)) {
                     mUserDevices.putAll(DeviceParser.parse(userDevicesFile));
                     return true;
                 }
-            } catch (AndroidLocationException e) {
-                mLog.warning("Couldn't load user devices: %1$s", e.getMessage());
             } catch (SAXException e) {
                 // Probably an old config file which we don't want to overwrite.
                 if (userDevicesFile != null) {
                     String base = userDevicesFile.getAbsoluteFile() + ".old";
                     File renamedConfig = new File(base);
                     int i = 0;
-                    while (renamedConfig.exists()) {
+                    while (mFop.exists(renamedConfig)) {
                         renamedConfig = new File(base + '.' + (i++));
                     }
                     mLog.error(e, "Error parsing %1$s, backing up to %2$s",
@@ -482,22 +512,17 @@ public class DeviceManager {
     }
 
     /**
-     * Saves out the user devices to {@link SdkConstants#FN_DEVICES_XML} in
-     * {@link AndroidLocation#getFolder()}.
+     * Saves out the user devices to {@link SdkConstants#FN_DEVICES_XML} in the Android folder.
      */
     public void saveUserDevices() {
         if (mUserDevices == null) {
             return;
         }
-
-        File userDevicesFile = null;
-        try {
-            userDevicesFile = new File(AndroidLocation.getFolder(),
-                    SdkConstants.FN_DEVICES_XML);
-        } catch (AndroidLocationException e) {
-            mLog.warning("Couldn't find user directory: %1$s", e.getMessage());
+        if (mAndroidFolder == null) {
             return;
         }
+
+        File userDevicesFile = new File(mAndroidFolder, SdkConstants.FN_DEVICES_XML);
 
         if (mUserDevices.isEmpty()) {
             userDevicesFile.delete();
