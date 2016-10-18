@@ -25,5 +25,4 @@
 //tools/data-binding:tools.compilerCommon_tests
 //tools/vendor/google/...
 //tools:idea.extensions_tests
-//tools:idea.forms-compiler_tests
 //tools:idea.lang-api_tests
