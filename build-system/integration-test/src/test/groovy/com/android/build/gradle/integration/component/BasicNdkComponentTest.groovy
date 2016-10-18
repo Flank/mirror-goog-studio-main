@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.category.SmokeTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.internal.ndk.NdkHandler
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -29,6 +30,7 @@ import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
 
@@ -120,6 +122,13 @@ model {
         assertThatNativeLib(lib).isStripped();
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
+
+        // Clang do not use response file with NDK <= r12 due to b.android.com/204552.
+        if (toolchain.equals("clang")
+                || NdkHandler.findRevision(project.getNdkDir()).getMajor() >= 13) {
+            assertThat(project.file("build/tmp/compileHello-jniArmeabiDebugSharedLibraryHello-jniArmeabiDebugSharedLibraryMainCpp/options.txt")).exists()
+            assertThat(project.file("build/tmp/linkHello-jniArmeabiDebugSharedLibrary/options.txt")).exists()
+        }
     }
 
     @Test
