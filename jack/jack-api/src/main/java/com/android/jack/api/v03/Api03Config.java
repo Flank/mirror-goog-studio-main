@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.jack.api.v03;
 
 import com.android.jack.api.v01.ConfigurationException;
 import com.android.jack.api.v02.Api02Config;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -33,12 +32,12 @@ public interface Api03Config extends Api02Config {
    * @param pluginNames Plugin names, each name must be unique
    * @throws ConfigurationException if something is wrong in Jack's configuration
    */
-  void setPluginNames(@Nonnull Collection<String> pluginNames) throws ConfigurationException;
+  void setPluginNames(@Nonnull List<String> pluginNames) throws ConfigurationException;
 
   /**
    * Sets the path where to find Jack plugins.
-   * @param pluginPath A collection of jar files where Jack plugins reside
+   * @param pluginPath The plugin path as a list
    * @throws ConfigurationException if something is wrong in Jack's configuration
    */
-  void setPluginPath(@Nonnull Collection<File> pluginPath) throws ConfigurationException;
+  void setPluginPath(@Nonnull List<File> pluginPath) throws ConfigurationException;
 }
