@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_JAR;
+import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.dependency.DependencyChecker.computeVersionLessCoordinateKey;
 import static com.android.builder.core.BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE;
@@ -29,11 +30,9 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.tasks.PrepareAtomTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -83,7 +82,6 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.plugins.ApplicationPlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.specs.Specs;
 import org.gradle.util.GUtil;
@@ -113,7 +111,6 @@ public class DependencyManager {
     private boolean repositoriesUpdated = false;
 
     private final Map<String, PrepareLibraryTask> prepareLibTaskMap = Maps.newHashMap();
-    private final Map<String, PrepareAtomTask> prepareAtomTaskMap = Maps.newHashMap();
 
     public DependencyManager(
             @NonNull Project project,
@@ -132,11 +129,6 @@ public class DependencyManager {
         VariantDependencies variantDeps = variantData.getVariantDependency();
         for (AndroidLibrary androidLibrary : variantDeps.getCompileDependencies().getAndroidDependencies()) {
             addDependencyToPrepareTask(tasks, androidLibrary, prepareDependenciesTask,
-                    variantData.getScope().getPreBuildTask());
-        }
-
-        for (AndroidAtom androidAtom : variantDeps.getCompileDependencies().getAtomDependencies()) {
-            addDependencyToPrepareTask(tasks, androidAtom, prepareDependenciesTask,
                     variantData.getScope().getPreBuildTask());
         }
 
@@ -162,26 +154,6 @@ public class DependencyManager {
         }
     }
 
-    private void addDependencyToPrepareTask(
-            @NonNull TaskFactory tasks,
-            @NonNull AndroidAtom atom,
-            @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask,
-            @NonNull AndroidTask<DefaultTask> preBuildTask) {
-        PrepareAtomTask prepareAtomTask = prepareAtomTaskMap.get(atom.getResolvedCoordinates().toString());
-        if (prepareAtomTask != null) {
-            prepareDependenciesTask.dependsOn(tasks, prepareAtomTask);
-            prepareAtomTask.dependsOn(preBuildTask.getName());
-        }
-
-        for (AndroidAtom childAtom : atom.getAtomDependencies()) {
-            addDependencyToPrepareTask(tasks, childAtom, prepareDependenciesTask, preBuildTask);
-        }
-
-        for (AndroidLibrary childLib : atom.getLibraryDependencies()) {
-            addDependencyToPrepareTask(tasks, childLib, prepareDependenciesTask, preBuildTask);
-        }
-    }
-
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
@@ -194,60 +166,19 @@ public class DependencyManager {
         // an identity set.
         Set<LibraryDependency> libsToExplode = Sets.newIdentityHashSet();
 
-        Multimap<AndroidAtom, Configuration> reverseAtomMap = ArrayListMultimap.create();
-
         resolveDependencyForConfig(
                 variantDeps,
                 testedVariantDeps,
                 testedProjectPath,
-                libsToExplode,
-                reverseAtomMap);
+                libsToExplode);
 
         processLibraries(libsToExplode);
-        processAtoms(reverseAtomMap);
     }
 
     private void processLibraries(@NonNull Set<LibraryDependency> libsToExplode) {
         for (LibraryDependency lib: libsToExplode) {
             maybeCreatePrepareLibraryTask(lib, project);
         }
-    }
-
-    private void processAtoms(@NonNull Multimap<AndroidAtom, Configuration> reverseMap) {
-        for (AndroidAtom atom : reverseMap.keySet()) {
-            setupPrepareAtomTask(atom, reverseMap.get(atom));
-        }
-    }
-
-    private void setupPrepareAtomTask(
-            @NonNull AndroidAtom androidAtom,
-            @Nullable Collection<Configuration> configurationList) {
-        Task task = maybeCreatePrepareAtomTask(androidAtom, project);
-
-        // Use the reverse map to find all the configurations that included this android
-        // library so that we can make sure they are built.
-        // TODO fix, this is not optimum as we bring in more dependencies than we should.
-        if (configurationList != null && !configurationList.isEmpty()) {
-            for (Configuration configuration: configurationList) {
-                task.dependsOn(configuration.getBuildDependencies());
-            }
-        }
-
-        // check if this library is created by a parent (this is based on the
-        // output file.
-        // TODO Fix this as it's fragile
-            /*
-            This is a somewhat better way but it doesn't work in some project with
-            weird setups...
-            Project parentProject = DependenciesImpl.getProject(atom.getBundle(), projects)
-            if (parentProject != null) {
-                String configName = atom.getProjectVariant()
-                if (configName == null) {
-                    configName = "default"
-                }
-
-                prepareAtomTask.dependsOn parentProject.getPath() + ":assemble${configName.capitalize()}"
-            }*/
     }
 
     /**
@@ -294,55 +225,11 @@ public class DependencyManager {
         return prepareLibraryTask;
     }
 
-    /**
-     * Handles the atom and returns a task to "prepare" the atom (ie unarchive it). The task
-     * will be reused for all projects using the same atp,.
-     *
-     * @param atom the atom.
-     * @param project the project
-     * @return the prepare task.
-     */
-    private PrepareAtomTask maybeCreatePrepareAtomTask(
-            @NonNull AndroidAtom atom,
-            @NonNull Project project) {
-        AtomDependency atomDependency = (AtomDependency) atom;
-
-        // create proper key for the map. atom here contains all the dependencies which
-        // are not relevant for the task (since the task only extract the aar which does not
-        // include the dependencies.
-        // However there is a possible case of a rewritten dependencies (with resolution strategy)
-        // where the aar here could have different dependencies, in which case we would still
-        // need the same task.
-        // So we extract a AbstractAtomDependency (no dependencies) from the AtomDependency to
-        // make the map key that doesn't take into account the dependencies.
-        String key = atom.getResolvedCoordinates().toString();
-
-        PrepareAtomTask prepareAtomTask = prepareAtomTaskMap.get(key);
-
-        if (prepareAtomTask == null) {
-            String bundleName = GUtil.toCamelCase(atomDependency.getName().replaceAll("\\:", " "));
-
-            prepareAtomTask = project.getTasks().create(
-                    "prepare" + bundleName + "Atom", PrepareAtomTask.class);
-
-            prepareAtomTask.setDescription("Prepare " + atomDependency.getName());
-            prepareAtomTask.setBundle(atomDependency.getBundle());
-            prepareAtomTask.setExplodedDir(atomDependency.getFolder());
-            prepareAtomTask.setVariantName("");
-
-            prepareAtomTaskMap.put(key, prepareAtomTask);
-        }
-
-        return prepareAtomTask;
-    }
-
     private void resolveDependencyForConfig(
             @NonNull final VariantDependencies variantDeps,
             @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Set<LibraryDependency> libsToExplodeOut,
-            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap) {
-
+            @NonNull Set<LibraryDependency> libsToExplodeOut) {
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
             // if we're only syncing (building the model), then we only need the package
@@ -378,7 +265,6 @@ public class DependencyManager {
                     packageClasspath,
                     variantDeps,
                     libsToExplodeOut,
-                    reverseAtomMap,
                     currentUnresolvedDependencies,
                     testedProjectPath,
                     artifactSet,
@@ -397,7 +283,6 @@ public class DependencyManager {
                 compileClasspath,
                 variantDeps,
                 libsToExplodeOut,
-                reverseAtomMap,
                 currentUnresolvedDependencies,
                 testedProjectPath,
                 artifactSet,
@@ -454,7 +339,7 @@ public class DependencyManager {
 
         if (DEBUG_DEPENDENCY) {
             System.out.println(project.getName() + ":" + compileClasspath.getName() + "/" +packageClasspath.getName());
-            System.out.println("<<<<<<`<");
+            System.out.println("<<<<<<<<<<");
         }
     }
 
@@ -469,7 +354,6 @@ public class DependencyManager {
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
             @NonNull Set<LibraryDependency> libsToExplodeOut,
-            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
@@ -499,7 +383,6 @@ public class DependencyManager {
                 addDependency(
                         ((ResolvedDependencyResult) dependencyResult).getSelected(),
                         variantDeps,
-                        configuration,
                         libraryDependencies,
                         atomDependencies,
                         jarDependencies,
@@ -508,7 +391,6 @@ public class DependencyManager {
                         foundJars,
                         artifacts,
                         libsToExplodeOut,
-                        reverseAtomMap,
                         currentUnresolvedDependencies,
                         testedProjectPath,
                         Collections.emptyList(),
@@ -699,7 +581,6 @@ public class DependencyManager {
     private void addDependency(
             @NonNull ResolvedComponentResult resolvedComponentResult,
             @NonNull VariantDependencies configDependencies,
-            @NonNull Configuration configuration,
             @NonNull Collection<LibraryDependency> outLibraries,
             @NonNull Collection<AtomDependency> outAtoms,
             @NonNull List<JarDependency> outJars,
@@ -708,7 +589,6 @@ public class DependencyManager {
             @NonNull Map<ModuleVersionIdentifier, List<JarDependency>> alreadyFoundJars,
             @NonNull Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
             @NonNull Set<LibraryDependency> libsToExplodeOut,
-            @NonNull Multimap<AndroidAtom, Configuration> reverseAtomMap,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull List<String> projectChain,
@@ -747,10 +627,6 @@ public class DependencyManager {
                 printIndent(indent, "FOUND ATOM: " + moduleVersion.getName());
             }
             outAtoms.addAll(atomsForThisModule);
-
-            for (AndroidAtom atom : atomsForThisModule) {
-                reverseAtomMap.put(atom, configuration);
-            }
         } else if (jarsForThisModule != null) {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "FOUND JAR: " + moduleVersion.getName());
@@ -812,7 +688,6 @@ public class DependencyManager {
                     addDependency(
                             selected,
                             configDependencies,
-                            configuration,
                             nestedLibraries,
                             nestedAtoms,
                             nestedJars,
@@ -821,7 +696,6 @@ public class DependencyManager {
                             alreadyFoundJars,
                             artifacts,
                             libsToExplodeOut,
-                            reverseAtomMap,
                             currentUnresolvedDependencies,
                             testedProjectPath,
                             newProjectChain,
@@ -993,12 +867,25 @@ public class DependencyManager {
                             printIndent(indent, "PATH: " + path);
                         }
 
-                        File explodedDir = project.file(project.getBuildDir() + "/" + FD_INTERMEDIATES + "/exploded-atombundle/" + path);
+                        final String variantName = artifact.getClassifier();
+
+                        // if there is a variant name then we use it for the leaf
+                        // (this means the subproject is publishing all its variants and each
+                        // artifact has a classifier that is the variant Name).
+                        // Otherwise the subproject only outputs a single artifact
+                        // and the location was set to default.
+                        String pathLeaf = variantName != null ? variantName : "default";
+
+                        Project subProject = project.findProject(gradlePath);
+                        File stagingDir = FileUtils.join(
+                                subProject.getBuildDir(),
+                                FD_INTERMEDIATES, DIR_ATOMBUNDLES,
+                                pathLeaf);
 
                         @SuppressWarnings("unchecked")
                         AtomDependency atomDependency = new AtomDependency(
                                 artifact.getFile(),
-                                explodedDir,
+                                stagingDir,
                                 nestedLibraries,
                                 nestedAtoms,
                                 nestedJars,
@@ -1011,7 +898,6 @@ public class DependencyManager {
 
                         atomsForThisModule.add(atomDependency);
                         outAtoms.add(atomDependency);
-                        reverseAtomMap.put(atomDependency, configuration);
                     } else if (EXT_JAR.equals(artifact.getExtension())) {
                         if (DEBUG_DEPENDENCY) {
                             printIndent(indent, "TYPE: JAR");

@@ -325,6 +325,17 @@ public class AtomTaskManager extends TaskManager {
 
             getAssembleDefault().dependsOn(variantScope.getAssembleTask().getName());
         }
+
+        // also publish the artifact with its full config name
+        if (getExtension().getPublishNonDefault()) {
+            String classifier =
+                    variantData.getVariantDependency().getPublishConfiguration().getName();
+            bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
+                    new AtomPublishArtifact(
+                            getGlobalScope().getProjectBaseName(),
+                            classifier,
+                            packageTask)));
+        }
     }
 
     @NonNull

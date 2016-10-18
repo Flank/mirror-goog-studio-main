@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -51,31 +50,53 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
 
+    private static void deleteDirectoryContents(@NonNull File directory) throws IOException {
+        if (!directory.exists()) {
+            FileUtils.mkdirs(directory);
+        } else if (!directory.isDirectory()) {
+            FileUtils.delete(directory);
+            FileUtils.mkdirs(directory);
+        } else {
+            FileUtils.deleteDirectoryContents(directory);
+        }
+    }
+
     @TaskAction
     public void taskAction() throws IOException {
-        // Map of files to be bundled with their internal bundle location.
-        ImmutableSet.Builder<ZipFileLocation> fileListBuilder = ImmutableSet.builder();
+        File bundleFolder = getBundleFolder();
 
-        // Find all the native libs to be bundled.
+        // Copy all the native libs to be bundled.
+        File libBundleFolder = new File(bundleFolder, FD_NATIVE_LIBS);
+        deleteDirectoryContents(libBundleFolder);
         for (File jniFolder : getJniFolders()) {
             for (File lib : FileUtils.find(jniFolder, Pattern.compile("\\.so$"))) {
-                fileListBuilder.add(new ZipFileLocation(lib,
-                        FD_NATIVE_LIBS + "/" + FileUtils.relativePath(lib, jniFolder)));
+                File destLibFile =
+                        new File(libBundleFolder, FileUtils.relativePath(lib, jniFolder));
+                FileUtils.copyFile(lib, destLibFile);
             }
         }
 
-        // Find all the dex files to be bundled.
+        // Copy all the dex files to be bundled.
+        File dexBundleFolder = new File(bundleFolder, FD_DEX);
+        deleteDirectoryContents(dexBundleFolder);
         for (File dexFolder : getDexFolders()) {
             for (File dexFile : FileUtils.find(dexFolder, Pattern.compile("\\.dex$"))) {
-                fileListBuilder.add(new ZipFileLocation(dexFile,
-                        FD_DEX + "/" + dexFile.getName()));
+                File destDexFile = new File(dexBundleFolder, dexFile.getName());
+                FileUtils.copyFile(dexFile, destDexFile);
             }
         }
 
-        // Find all the other files to be bundled.
-        for (File file : FileUtils.getAllFiles(getBundleFolder())) {
-            fileListBuilder.add(new ZipFileLocation(file,
-                    FileUtils.relativePath(file, getBundleFolder())));
+        // Copy all the java resource files to be bundled.
+        File javaResBundleFolder = new File(bundleFolder, FD_JAVA_RES);
+        deleteDirectoryContents(javaResBundleFolder);
+        for (File javaResFolder : getJavaResFolders()) {
+            for (File javaResFile : FileUtils.getAllFiles(javaResFolder)) {
+                File destJavaResFile =
+                        new File(
+                                javaResBundleFolder,
+                                FileUtils.relativePath(javaResFile, javaResBundleFolder));
+                FileUtils.copyFile(javaResFile, destJavaResFile);
+            }
         }
 
         // Bundle all the files in the output bundle.
@@ -93,15 +114,16 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             zipOutputStream.putNextEntry(new ZipEntry(FD_DEX + "/"));
             zipOutputStream.closeEntry();
 
-            for (ZipFileLocation entry : fileListBuilder.build()) {
-                try (FileInputStream fileInputStream = new FileInputStream(entry.file)) {
+            // Find all the other files to be bundled.
+            for (File file : FileUtils.getAllFiles(bundleFolder)) {
+                try (FileInputStream fileInputStream = new FileInputStream(file)) {
                     byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);
-                    zipOutputStream.putNextEntry(new ZipEntry(entry.path));
+                    zipOutputStream.putNextEntry(
+                            new ZipEntry(FileUtils.relativePath(file, bundleFolder)));
                     zipOutputStream.write(inputBuffer, 0, inputBuffer.length);
                     zipOutputStream.closeEntry();
                 }
             }
-            zipOutputStream.close();
         }
     }
 
@@ -167,16 +189,6 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
     @Override
     public File get() {
         return getBundleFile();
-    }
-
-    private static class ZipFileLocation {
-        private ZipFileLocation(File file, String path) {
-            this.file = file;
-            this.path = path;
-        }
-
-        private File file;
-        private String path;
     }
 
     public static class ConfigAction implements TaskConfigAction<BundleAtom> {
