@@ -25,6 +25,8 @@ import com.android.tools.lint.checks.ObjectAnimatorDetectorTest;
 import com.android.tools.lint.checks.SupportAnnotationDetectorTest;
 import com.android.tools.lint.checks.TypoDetectorTest;
 import com.android.tools.lint.checks.TypoLookupTest;
+import com.android.tools.lint.checks.UnpackedNativeCodeDetectorTest;
+import com.android.tools.lint.client.api.CustomRuleTest;
 
 import org.junit.runner.RunWith;
 
@@ -36,6 +38,7 @@ import org.junit.runner.RunWith;
         AnnotationDetectorTest.class,
         ApiDetectorTest.class,
         CallSuperDetectorTest.class,
+        CustomRuleTest.class,
         JavaScriptInterfaceDetectorTest.class,
         LintBazelSuite.class,
         MainTest.class,
@@ -43,5 +46,6 @@ import org.junit.runner.RunWith;
         SupportAnnotationDetectorTest.class,
         TypoDetectorTest.class,
         TypoLookupTest.class,
+        UnpackedNativeCodeDetectorTest.class,
 })
 public class LintBazelSuite {}
