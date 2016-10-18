@@ -343,7 +343,7 @@ public class FileCacheTest {
             fail("expected IllegalStateException");
         } catch (IllegalStateException exception) {
             assertThat(exception).hasMessage("Some exception");
-            assertThat(cacheFolder.getRoot().list().length == 0);
+            assertThat(cacheFolder.getRoot().list()).isEmpty();
         }
 
         assertEquals(0, fileCache.getHits());
