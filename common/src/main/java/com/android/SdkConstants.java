@@ -1366,6 +1366,8 @@ public final class SdkConstants {
     public static final String EXT_AAR = "aar"; //$NON-NLS-1$
     /** Extension for Android atom files. */
     public static final String EXT_ATOM = "atom"; //$NON-NLS-1$
+    /** Extension for Android atombundle files. */
+    public static final String EXT_ATOMBUNDLE = "atombundle"; //$NON-NLS-1$
     /** Extension of java files, i.e. "java" */
     public static final String EXT_JAVA = "java"; //$NON-NLS-1$
     /** Extension of compiled java files, i.e. "class" */
@@ -1411,6 +1413,8 @@ public final class SdkConstants {
     public static final String DOT_AAR = DOT + EXT_AAR; //$NON-NLS-1$
     /** Dot-Extension for Android atom files. */
     public static final String DOT_ATOM = DOT + EXT_ATOM; //$NON-NLS-1$
+    /** Dot-Extension for Android atombundle files. */
+    public static final String DOT_ATOMBUNDLE = DOT + EXT_ATOMBUNDLE; //$NON-NLS-1$
     /** Dot-Extension of aidl files, i.e. ".aidl" */
     public static final String DOT_AIDL = DOT + EXT_AIDL;
     /** Dot-Extension of renderscript files, i.e. ".rs" */

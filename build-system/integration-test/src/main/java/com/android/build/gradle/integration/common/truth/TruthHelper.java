@@ -103,6 +103,11 @@ public class TruthHelper {
     }
 
     @NonNull
+    public static AtomBundleSubject assertThatAtomBundle(@Nullable File atombundle) {
+        return assert_().about(AtomBundleSubject.FACTORY).that(atombundle);
+    }
+
+    @NonNull
     public static ZipFileSubject assertThatZip(@Nullable File file) {
         return assert_().about(ZipFileSubject.Factory.get()).that(file);
     }

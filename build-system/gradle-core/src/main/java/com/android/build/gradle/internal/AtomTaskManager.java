@@ -191,6 +191,10 @@ public class AtomTaskManager extends TaskManager {
                 variantScope,
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_COMPILE_TASK,
                 () -> {
+                    // create data binding merge task before the javac task so that it can
+                    // parse jars before any consumer
+                    createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+
                     // First, build the .class files with javac and compile the jar.
                     AndroidTask<? extends JavaCompile> javacTask =
                             createJavacTask(tasks, variantScope);
@@ -199,8 +203,8 @@ public class AtomTaskManager extends TaskManager {
 
                     setJavaCompilerTask(javacTask, tasks, variantScope);
 
-                    getAndroidTasks().create(tasks,
-                            new AndroidJarTask.JarClassesConfigAction(variantScope));
+                    getAndroidTasks()
+                            .create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
 
                     // Then, build the dex with jack if enabled.
                     // TODO: This means recompiling everything twice if jack is enabled.
@@ -213,20 +217,31 @@ public class AtomTaskManager extends TaskManager {
                     } else {
                         // Prevent the use of java 1.8 without jack, which would otherwise cause an
                         // internal javac error.
-                        if (variantScope.getGlobalScope().getExtension().getCompileOptions()
-                                .getTargetCompatibility().isJava8Compatible()) {
+                        if (variantScope
+                                .getGlobalScope()
+                                .getExtension()
+                                .getCompileOptions()
+                                .getTargetCompatibility()
+                                .isJava8Compatible()) {
                             // Only warn for users of retrolambda and dexguard
                             if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
                                     || project.getPlugins().hasPlugin("dexguard")) {
-                                getLogger().warn("Jack is disabled, but one of the plugins you "
-                                        + "are using supports Java 8 language features.");
+                                getLogger()
+                                        .warn(
+                                                "Jack is disabled, but one of the plugins you "
+                                                        + "are using supports Java 8 language features.");
                             } else {
-                                androidBuilder.getErrorReporter().handleSyncError(
-                                        variantScope.getVariantConfiguration().getFullName(),
-                                        SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
-                                        "Jack is required to support java 8 language features. "
-                                                + "Either enable Jack or remove "
-                                                + "sourceCompatibility JavaVersion.VERSION_1_8.");
+                                androidBuilder
+                                        .getErrorReporter()
+                                        .handleSyncError(
+                                                variantScope
+                                                        .getVariantConfiguration()
+                                                        .getFullName(),
+                                                SyncIssue
+                                                        .TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
+                                                "Jack is required to support java 8 language features. "
+                                                        + "Either enable Jack or remove "
+                                                        + "sourceCompatibility JavaVersion.VERSION_1_8.");
                             }
                         }
                         createPostCompilationTasks(tasks, variantScope);
