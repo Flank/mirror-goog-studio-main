@@ -590,7 +590,7 @@ class VdPath extends VdElement{
         //noinspection ImplicitArrayToString
         return "Path:" +
                 " Name: " + mName +
-                " Node: " + mNodeList.toString() +
+                " Node: " + Arrays.toString(mNodeList) +
                 " mFillColor: " + Integer.toHexString(mFillColor) +
                 " mFillAlpha:" + mFillAlpha +
                 " mFillType:" + mFillType +
