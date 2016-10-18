@@ -20,17 +20,15 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
 
 /**
  * Instant run task to finalize and write the {@code build-info.xml}.
@@ -81,8 +79,9 @@ public class BuildInfoWriterTask extends BaseTask {
         }
 
         // Record instant run status in analytics for this build
-        ProcessRecorder.getGlobalProperties().setInstantRunStatus(
-                InstantRunAnalyticsHelper.generateAnalyticsProto(instantRunBuildContext));
+        ProcessProfileWriter.getGlobalProperties()
+                .setInstantRunStatus(
+                        InstantRunAnalyticsHelper.generateAnalyticsProto(instantRunBuildContext));
     }
 
     public static class ConfigAction implements TaskConfigAction<BuildInfoWriterTask> {

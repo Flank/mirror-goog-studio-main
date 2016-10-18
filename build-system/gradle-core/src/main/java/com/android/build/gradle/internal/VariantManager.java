@@ -49,7 +49,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.StringHelper;
@@ -813,7 +813,7 @@ public class VariantManager implements VariantModel {
                 variantDataList.add(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-                ProcessRecorder.addVariant(project.getPath(), variantData.getName())
+                ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
                         .setIsDebug(variantConfig.getBuildType().isDebuggable())
                         .setUseJack(variantConfig.getJackOptions().isEnabled())
                         .setMinifyEnabled(variantConfig.isMinifyEnabled())

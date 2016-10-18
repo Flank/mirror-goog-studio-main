@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.ide.common.res2.FileStatus;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -134,7 +134,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
         metrics.setMetricsTimeNs(System.nanoTime() - metricsStartTime);
 
-        ProcessRecorder.getProject(getProject().getPath()).setMetrics(metrics);
+        ProcessProfileWriter.getProject(getProject().getPath()).setMetrics(metrics);
     }
 
     @Nullable

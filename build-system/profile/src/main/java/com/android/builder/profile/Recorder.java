@@ -57,7 +57,7 @@ public interface Recorder {
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     * GradleBuildProfileSpan} to {@link ProcessProfileWriter}.
      *
      * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
@@ -77,7 +77,7 @@ public interface Recorder {
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     * GradleBuildProfileSpan} to {@link ProcessProfileWriter}.
      *
      * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
@@ -95,23 +95,4 @@ public interface Recorder {
             @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block);
-
-    /**
-     * Allocate a new recordId that can be used to create an {@link GradleBuildProfileSpan}. This
-     * method is useful when the code span to measure cannot be expressed as a {@link Block} and
-     * therefore cannot directly use the {@link #record(ExecutionType, String, String, Block)}
-     * method.
-     *
-     * @return the unique record id for this process.
-     */
-    long allocationRecordId();
-
-    /**
-     * Closes an execution span measurement using the allocated record id obtained from {@link
-     * #allocationRecordId()} method.
-     */
-    void closeRecord(
-            @NonNull String project,
-            @Nullable String variant,
-            @NonNull GradleBuildProfileSpan.Builder executionRecord);
 }
