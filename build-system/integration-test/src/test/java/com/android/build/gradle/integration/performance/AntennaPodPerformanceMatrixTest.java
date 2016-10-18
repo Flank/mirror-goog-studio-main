@@ -128,6 +128,7 @@ public class AntennaPodPerformanceMatrixTest {
                     //TODO
                     continue;
                 case BUILD__FROM_CLEAN:
+                    project.executor().withEnableInfoLogging(false).run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
@@ -146,6 +147,7 @@ public class AntennaPodPerformanceMatrixTest {
                     //TODO
                     continue;
                 case INSTANT_RUN_BUILD__FROM_CLEAN:
+                    project.executor().withEnableInfoLogging(false).run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
                 case INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
@@ -168,12 +170,15 @@ public class AntennaPodPerformanceMatrixTest {
                     //TODO
                     continue;
                 case BUILD_ANDROID_TESTS_FROM_CLEAN:
+                    project.executor().withEnableInfoLogging(false).run("clean");
                     tasks = ImmutableList.of(":app:assembleDebugAndroidTest");
                     break;
                 case BUILD_UNIT_TESTS_FROM_CLEAN:
+                    project.executor().withEnableInfoLogging(false).run("clean");
                     tasks = ImmutableList.of(":app:assembleDebugUnitTest");
                     break;
                 case GENERATE_SOURCES:
+                    project.executor().withEnableInfoLogging(false).run("clean");
                     tasks = ModelHelper.getGenerateSourcesCommands(model);
                     break;
                 case NO_OP:
