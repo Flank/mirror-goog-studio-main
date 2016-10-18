@@ -571,11 +571,11 @@ public class BinaryResourceConfiguration implements SerializableResource {
   @Override
   public int hashCode() {
     return Objects
-      .hash(size, mcc, mnc, language, region, orientation, touchscreen, density, keyboard, navigation, inputFlags, screenWidth,
+      .hash(size, mcc, mnc, Arrays.hashCode(language), Arrays.hashCode(region), orientation, touchscreen, density, keyboard, navigation, inputFlags, screenWidth,
             screenHeight,
-            sdkVersion, minorVersion, screenLayout, uiMode, smallestScreenWidthDp, screenWidthDp, screenHeightDp, localeScript,
-            localeVariant,
-            screenLayout2, unknown);
+            sdkVersion, minorVersion, screenLayout, uiMode, smallestScreenWidthDp, screenWidthDp, screenHeightDp, Arrays.hashCode(localeScript),
+            Arrays.hashCode(localeVariant),
+            screenLayout2, Arrays.hashCode(unknown));
   }
 
   @Override
