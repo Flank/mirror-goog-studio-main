@@ -7,7 +7,6 @@ iml_module(
         "src/main/java",
         "src/test/tools",
     ],
-    javacopts = ["-extra_checks:off"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],

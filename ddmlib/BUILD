@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.ddmlib",
     srcs = ["src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
@@ -26,7 +25,6 @@ iml_module(
 java_library(
     name = "tools.ddmlib",
     srcs = glob(["src/main/java/**"]),
-    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -40,7 +38,6 @@ java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
     data = ["//prebuilts/studio/sdk:platform-tools"],
-    javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

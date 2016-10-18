@@ -6,7 +6,6 @@ iml_module(
         "src/main/java",
         "src/main/resources",
     ],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

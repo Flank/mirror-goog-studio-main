@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = [
@@ -57,7 +56,6 @@ java_library(
 iml_module(
     name = "studio.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.lint-api"],

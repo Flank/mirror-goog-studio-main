@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.testutils",
     srcs = ["src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -34,7 +33,6 @@ java_library(
 java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
-    javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

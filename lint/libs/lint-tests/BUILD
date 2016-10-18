@@ -24,7 +24,6 @@ java_library(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
-    javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.tools.lint.LintBazelSuite",
     deps = [

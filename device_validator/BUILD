@@ -6,7 +6,6 @@ iml_module(
         "dvlib/src/main/java",
         "dvlib/src/main/resources",
     ],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.common"],

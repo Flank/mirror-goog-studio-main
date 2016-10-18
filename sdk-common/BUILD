@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -36,7 +35,6 @@ iml_module(
 java_library(
     name = "tools.sdk-common",
     srcs = glob(["src/main/java/**"]),
-    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.binary-resources",
     srcs = ["binary-resources/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_resources = ["binary-resources/testResources"],
     test_srcs = ["binary-resources/javatests"],

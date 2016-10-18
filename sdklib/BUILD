@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.sdklib",
     srcs = ["src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -35,7 +34,6 @@ java_library(
     name = "tools.sdklib",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
-    javacopts = ["-extra_checks:off"],
     resources = glob(
         include = ["src/main/java/**"],
         exclude = ["src/main/java/**/*.java"],

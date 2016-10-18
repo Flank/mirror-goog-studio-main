@@ -3,7 +3,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.layoutlib-api",
     srcs = ["src/main/java"],
-    javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -23,7 +22,6 @@ iml_module(
 java_library(
     name = "tools.layoutlib-api",
     srcs = glob(["src/main/java/**"]),
-    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
