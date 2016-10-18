@@ -20,13 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Represents a Jar dependency. This could be the output of a Java project.
@@ -164,7 +164,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mJarFile", mJarFile)
                 .add("mIsProvided", mIsProvided)
                 .add("mProjectPath", mProjectPath)

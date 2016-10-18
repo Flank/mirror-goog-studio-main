@@ -17,7 +17,7 @@
 package com.android.build.gradle.shrinker;
 
 import com.android.annotations.NonNull;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
@@ -84,7 +84,7 @@ class PostProcessingData<T> {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("method", method)
                     .add("target", target)
                     .add("invokespecial", invokespecial)

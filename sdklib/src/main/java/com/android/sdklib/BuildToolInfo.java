@@ -70,7 +70,7 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.utils.ILogger;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
@@ -477,7 +477,7 @@ public class BuildToolInfo {
      */
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("rev", mRevision)
                 .add("mPath", mPath)
                 .add("mPaths", getPathString())

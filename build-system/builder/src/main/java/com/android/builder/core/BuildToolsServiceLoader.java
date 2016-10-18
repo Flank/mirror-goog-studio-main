@@ -23,6 +23,7 @@ import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -123,7 +124,7 @@ public enum BuildToolsServiceLoader {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("serviceClass", serviceClass)
                     .add("classpath", Joiner.on(",").join(classpath))
                     .toString();

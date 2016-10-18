@@ -22,6 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -231,7 +232,7 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", getName())
                 .add("project", getProject())
                 .add("variant", variant)

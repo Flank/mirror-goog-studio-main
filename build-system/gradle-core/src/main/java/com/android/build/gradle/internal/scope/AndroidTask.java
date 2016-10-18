@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskFactory;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 import org.gradle.api.Action;
@@ -178,7 +178,7 @@ public class AndroidTask<T extends Task> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", name)
                 .add("taskType", taskType)
                 .toString();

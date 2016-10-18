@@ -23,7 +23,7 @@ import com.android.builder.tasks.Job;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.ILogger;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 
 import java.io.File;
@@ -122,7 +122,7 @@ public class AaptProcess {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("hashcode", hashCode())
                 .add("\nlocation", mAaptLocation)
                 .add("\nready", mReady.get())

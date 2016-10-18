@@ -18,6 +18,7 @@ package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import org.w3c.dom.Attr;
@@ -89,7 +90,7 @@ class DexKey extends PreProcessCache.Key {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("buildTools", getBuildToolsRevision())
                 .add("sourceFile", getSourceFile())
                 .add("mJumboMode", mJumboMode)

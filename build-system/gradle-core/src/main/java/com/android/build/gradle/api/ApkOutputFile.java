@@ -22,7 +22,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -100,7 +100,7 @@ public class ApkOutputFile implements OutputFile, Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("OutputType", outputType)
                 .add("Filters", Joiner.on(',').join(filters, new Function<FilterData, String>() {
 

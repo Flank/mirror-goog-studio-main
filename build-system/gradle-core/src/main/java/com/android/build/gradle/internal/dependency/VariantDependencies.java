@@ -23,7 +23,7 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.model.SyncIssue;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
 import org.gradle.api.Project;
@@ -370,7 +370,7 @@ public class VariantDependencies {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", variantName)
                 .toString();
     }

@@ -19,7 +19,7 @@ package com.android.builder.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.VectorDrawablesOptions;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
 import java.io.Serializable;
@@ -88,7 +88,7 @@ public class DefaultVectorDrawablesOptions implements VectorDrawablesOptions, Se
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mGeneratedDensities", mGeneratedDensities)
                 .add("mUseSupportLibrary", mUseSupportLibrary)
                 .toString();

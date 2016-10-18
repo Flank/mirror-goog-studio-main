@@ -25,7 +25,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.LineCollector;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.io.File;
 import java.util.List;
@@ -79,7 +79,7 @@ public class ApkInfoParser {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("packageName", mPackageName)
                     .add("versionCode", mVersionCode)
                     .add("versionName", mVersionName)

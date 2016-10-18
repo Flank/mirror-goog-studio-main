@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.ddmlib.logcat.LogCatMessage;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
@@ -62,7 +62,7 @@ public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat
         if (getSubject() == null) {
             return super.getDisplaySubject();
         }
-        return Objects.toStringHelper(getSubject())
+        return MoreObjects.toStringHelper(getSubject())
                 .addValue(getSubject().getFilteredLogCatMessages())
                 .toString();
     }

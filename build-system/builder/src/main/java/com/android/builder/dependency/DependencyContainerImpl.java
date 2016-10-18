@@ -22,7 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -299,7 +299,7 @@ public class DependencyContainerImpl implements DependencyContainer {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mLibraryDependencies", mLibraryDependencies)
                 .add("mAtomDependencies", mAtomDependencies)
                 .add("mJavaDependencies", mJavaDependencies)
