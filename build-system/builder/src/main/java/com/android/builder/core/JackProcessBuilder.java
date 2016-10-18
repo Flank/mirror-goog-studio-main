@@ -77,9 +77,11 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
         // due to b.android.com/82031
         builder.addArgs("-D", "jack.dex.optimize=true");
 
-        if (options.isDebugLog()) {
+        if (options.isDebugJackInternals()) {
             builder.addJvmArg("-Dcom.android.jack.log=DEBUG");
-        } else if (options.isVerbose()) {
+        }
+
+        if (options.isVerboseProcessing()) {
             builder.addArgs("--verbose", "info");
         }
 

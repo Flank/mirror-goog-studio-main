@@ -54,6 +54,7 @@ import com.google.common.collect.Sets;
 
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.logging.LogLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,7 +150,7 @@ public class JackTransform extends Transform {
     public Map<String, Object> getParameterInputs() {
         Map<String, Object> params = Maps.newHashMap();
         params.put("javaResourcesFolder", options.getResourceDirectories());
-        params.put("isDebugLog", options.isDebugLog());
+        params.put("isDebuggable", options.isDebuggable());
         params.put("multiDexEnabled", options.isMultiDex());
         params.put("minSdkVersion", options.getMinSdkVersion().getApiString());
         params.put("javaMaxHeapSize", options.getJavaMaxHeapSize());
@@ -247,12 +248,10 @@ public class JackTransform extends Transform {
 
     public JackTransform(
             final VariantScope scope,
-            final boolean isDebugLog,
             final boolean compileJavaSources) {
 
         options = new JackProcessOptions();
 
-        options.setDebugLog(isDebugLog);
         GlobalScope globalScope = scope.getGlobalScope();
 
         androidBuilder = globalScope.getAndroidBuilder();
@@ -261,6 +260,10 @@ public class JackTransform extends Transform {
         if (compileJavaSources) {
             sourceFileTrees.addAll(scope.getVariantData().getJavaSources());
         }
+
+        options.setDebugJackInternals(project.getLogger().isEnabled(LogLevel.DEBUG));
+        options.setVerboseProcessing(project.getLogger().isEnabled(LogLevel.INFO));
+
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
         options.setJavaMaxHeapSize(globalScope.getExtension().getDexOptions().getJavaMaxHeapSize());
         options.setJumboMode(globalScope.getExtension().getDexOptions().getJumboMode());
