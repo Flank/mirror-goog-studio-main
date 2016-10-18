@@ -574,11 +574,16 @@ public class NdkSampleTest {
     @Test
     public void google_test_example() throws IOException, InterruptedException {
        NativeBuildConfigValue config = checkJson("samples/google-test-example");
-       assertThat(config).hasExactLibraryOutputs(
-               "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_static.a",
-               "{NDK}/debug/obj/local/arm64-v8a/sample1_unittest",
-               "{NDK}/debug/obj/local/arm64-v8a/libsample1.so",
-               "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_main.a");
+        assertThat(config)
+                .hasExactLibraryOutputs(
+                        FileUtils.toSystemDependentPath(
+                                "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_static.a"),
+                        FileUtils.toSystemDependentPath(
+                                "{NDK}/debug/obj/local/arm64-v8a/sample1_unittest"),
+                        FileUtils.toSystemDependentPath(
+                                "{NDK}/debug/obj/local/arm64-v8a/libsample1.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_main.a"));
     }
 
     @Test
@@ -636,13 +641,20 @@ public class NdkSampleTest {
     @Test
     public void HelloComputeNDK() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/HelloComputeNDK");
-        assertThat(config).hasExactLibraryOutputs(
-                "{ndkPath}/samples/HelloComputeNDK/obj/local/x86/libhellocomputendk.so",
-                "{ndkPath}/samples/HelloComputeNDK/libs/armeabi-v7a/librs.mono.so",
-                "{ndkPath}/samples/HelloComputeNDK/obj/local/mips/libhellocomputendk.so",
-                "{ndkPath}/samples/HelloComputeNDK/libs/mips/librs.mono.so",
-                "{ndkPath}/samples/HelloComputeNDK/libs/x86/librs.mono.so",
-                "{ndkPath}/samples/HelloComputeNDK/obj/local/armeabi-v7a/libhellocomputendk.so");
+        assertThat(config)
+                .hasExactLibraryOutputs(
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/obj/local/x86/libhellocomputendk.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/libs/armeabi-v7a/librs.mono.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/obj/local/mips/libhellocomputendk.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/libs/mips/librs.mono.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/libs/x86/librs.mono.so"),
+                        FileUtils.toSystemDependentPath(
+                                "{ndkPath}/samples/HelloComputeNDK/obj/local/armeabi-v7a/libhellocomputendk.so"));
     }
     // input: support-files/ndk-sample-baselines/test-libstdc++.json
     @Test

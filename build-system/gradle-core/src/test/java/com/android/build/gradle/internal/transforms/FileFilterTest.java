@@ -24,20 +24,17 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link FileFilter}
@@ -99,7 +96,7 @@ public class FileFilterTest {
 
     @Test
     public void testSimpleExclusion() throws IOException {
-        setExcludes(ImmutableSet.of(FileUtils.join("foo", "text.properties")));
+        setExcludes(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -110,7 +107,7 @@ public class FileFilterTest {
 
     @Test
     public void testExclusionFromMultipleFiles() throws IOException {
-        setExcludes(ImmutableSet.of(FileUtils.join("foo", "text.properties")));
+        setExcludes(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -122,9 +119,7 @@ public class FileFilterTest {
 
     @Test
     public void testMultipleExclusions() throws IOException {
-        setExcludes(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties"),
-                FileUtils.join("bar", "other.properties")));
+        setExcludes(ImmutableSet.of("foo/text.properties", "bar/other.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -136,9 +131,7 @@ public class FileFilterTest {
 
     @Test
     public void textNonExclusion() throws IOException {
-        setExcludes(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties"),
-                FileUtils.join("bar", "other.properties")));
+        setExcludes(ImmutableSet.of("foo/text.properties", "bar/other.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -153,8 +146,7 @@ public class FileFilterTest {
 
     @Test
     public void testSingleMerge() throws IOException {
-        setMerges(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties")));
+        setMerges(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -174,8 +166,7 @@ public class FileFilterTest {
 
     @Test
     public void testMultipleMerges() throws IOException {
-        setMerges(ImmutableSet.of(
-                FileUtils.join("foo" , "text.properties")));
+        setMerges(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -196,8 +187,7 @@ public class FileFilterTest {
 
     @Test
     public void testMergeAddon() throws IOException {
-        setMerges(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties")));
+        setMerges(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -226,8 +216,7 @@ public class FileFilterTest {
 
     @Test
     public void testMergeUpdate() throws IOException {
-        setMerges(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties")));
+        setMerges(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -259,8 +248,7 @@ public class FileFilterTest {
 
     @Test
     public void testMergeRemoval() throws IOException {
-        setMerges(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties")));
+        setMerges(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);
@@ -275,13 +263,13 @@ public class FileFilterTest {
         File mergedFile = new File(mMergedFolder, "foo/text.properties");
         assertTrue(mergedFile.exists());
         assertContentInAnyOrder(
-                Files.asCharSource(mergedFile, Charset.defaultCharset()).read()
-                , ImmutableList.of("one", "two", "three"));
+                Files.asCharSource(mergedFile, Charset.defaultCharset()).read(),
+                ImmutableList.of("one", "two", "three"));
 
         // remove one...
         assertTrue(secondFile.delete());
 
-        mFileFilter.handleRemoved(mMergedFolder, FileUtils.join("foo", "text.properties"));
+        mFileFilter.handleRemoved(mMergedFolder, "foo/text.properties");
 
         assertTrue(mergedFile.exists());
         assertContentInAnyOrder(
@@ -353,8 +341,7 @@ public class FileFilterTest {
 
     @Test
     public void testPickFirstRemoval() throws IOException {
-        setPickFirsts(ImmutableSet.of(
-                FileUtils.join("foo", "text.properties")));
+        setPickFirsts(ImmutableSet.of("foo/text.properties"));
         mFileFilter = new FileFilter(
                 mPackagedJarExpansionSubStreams,
                 mPackagingOptions);

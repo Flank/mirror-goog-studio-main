@@ -189,10 +189,26 @@ public class FileUtilsTest {
         File inputDir = new File("/folders/1/5/main");
         File folder = new File(inputDir, "com/obsidian/v4/tv/home/playback");
         File fileToProcess = new File(folder, "CameraPlaybackGlue$1.class");
-        assertEquals("com/obsidian/v4/tv/home/playback/CameraPlaybackGlue$1.class",
+        assertEquals(
+                FileUtils.join(
+                        "com",
+                        "obsidian",
+                        "v4",
+                        "tv",
+                        "home",
+                        "playback",
+                        "CameraPlaybackGlue$1.class"),
                 FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
         fileToProcess = new File(folder, "CameraPlaybackGlue$CameraPlaybackHost.class");
-        assertEquals("com/obsidian/v4/tv/home/playback/CameraPlaybackGlue$CameraPlaybackHost.class",
+        assertEquals(
+                FileUtils.join(
+                        "com",
+                        "obsidian",
+                        "v4",
+                        "tv",
+                        "home",
+                        "playback",
+                        "CameraPlaybackGlue$CameraPlaybackHost.class"),
                 FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
     }
 }

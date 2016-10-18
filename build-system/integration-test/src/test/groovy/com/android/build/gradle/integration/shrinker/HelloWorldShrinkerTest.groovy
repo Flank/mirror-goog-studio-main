@@ -15,6 +15,11 @@
  */
 
 package com.android.build.gradle.integration.shrinker
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.shrinker.ShrinkerTestUtils.checkShrinkerWasUsed
+
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -27,9 +32,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.build.gradle.integration.shrinker.ShrinkerTestUtils.checkShrinkerWasUsed
 /**
  * Tests for integration of the new class shrinker with Gradle.
  */
@@ -117,6 +119,7 @@ class HelloWorldShrinkerTest {
         assertThatApk(project.getApk("debug")).containsClass("Lcom/example/helloworld/HelloWorld;")
         assertThatApk(project.getApk("debug")).doesNotContainClass("Lcom/example/helloworld/Utils;")
 
+        long timestamp = helloWorld.lastModified();
         addUtilityClass()
         project.execute("assembleDebug", "assembleDebugAndroidTest")
 
@@ -124,7 +127,8 @@ class HelloWorldShrinkerTest {
         assertThatApk(project.getApk("debug")).containsClass("Lcom/example/helloworld/HelloWorld;")
         assertThatApk(project.getApk("debug")).containsClass("Lcom/example/helloworld/Utils;")
 
-        assertThat(helloWorld).isSameAgeAs(utils)
+        assertThat(helloWorld).isNewerThan(timestamp)
+        assertThat(utils).isNewerThan(timestamp)
     }
 
     @Test

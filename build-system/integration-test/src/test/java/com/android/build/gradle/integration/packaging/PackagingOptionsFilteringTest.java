@@ -26,16 +26,14 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Checks that the packaging options filtering are honored. Currently, only tests for excluding
@@ -230,21 +228,21 @@ public class PackagingOptionsFilteringTest {
         byte[] c2 = new byte[] { 6, 7, 8 };
 
         dummyFile(c0, "src", "main", "resources", "I_am_ign");
-        dummyFile(c0, "src", "main", "resources", "sccs", "I stay");
+        dummyFile(c0, "src", "main", "resources", "ssccs", "I stay");
         dummyFile(c1, "src", "main", "resources", "Ignoring", "this", "fileign");
         dummyFile(c1, "src", "main", "resources", "SSensitive", "files", "may", "leak");
         dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
-        dummyFile(c2, "src", "main", "resources", "pkg", "cvs", "very-sensitive-info");
+        dummyFile(c2, "src", "main", "resources", "pkg", "ccvs", "very-sensitive-info");
 
         project.execute(":assembleDebug");
 
         ApkSubject apk = assertThatApk(project.getApk("debug"));
         apk.doesNotContainJavaResource("I_am_ign");
-        apk.containsJavaResourceWithContent("sccs/I stay", c0);
+        apk.containsJavaResourceWithContent("ssccs/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");
         apk.containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
         apk.doesNotContainJavaResource("some/sensitive/files/dont");
-        apk.containsJavaResourceWithContent("pkg/cvs/very-sensitive-info", c2);
+        apk.containsJavaResourceWithContent("pkg/ccvs/very-sensitive-info", c2);
     }
 
     /**

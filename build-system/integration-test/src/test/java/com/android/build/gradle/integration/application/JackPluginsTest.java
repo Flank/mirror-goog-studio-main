@@ -29,14 +29,12 @@ import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Tests for Jack plugins that can be run as part of the Jack pipeline.
@@ -142,7 +140,7 @@ public class JackPluginsTest {
                 pluginNames.stream().map(m -> "'" + m + "'").collect(Collectors.joining(","));
         String deps = "";
         for (File p : paths) {
-            deps += "jackPlugin files('" + p + "')\n";
+            deps += "jackPlugin files('" + p.getAbsolutePath().replace("\\", "\\\\") + "')\n";
         }
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
