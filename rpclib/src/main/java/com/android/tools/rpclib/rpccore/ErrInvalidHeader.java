@@ -23,6 +23,7 @@ import com.android.tools.rpclib.binary.*;
 import com.android.tools.rpclib.schema.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public final class ErrInvalidHeader extends RpcException implements BinaryObject {
     //<<<Start:Java.ClassBody:1>>>
@@ -58,7 +59,7 @@ public final class ErrInvalidHeader extends RpcException implements BinaryObject
 
     @Override
     public String getMessage() {
-        return "Invalid RPC header: " + mHeader;
+        return "Invalid RPC header: " + Arrays.toString(mHeader);
     }
 
     public enum Klass implements BinaryClass {
