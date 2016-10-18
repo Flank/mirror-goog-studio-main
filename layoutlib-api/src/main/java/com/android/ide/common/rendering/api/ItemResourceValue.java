@@ -41,7 +41,7 @@ public class ItemResourceValue extends ResourceValue {
      */
     public ItemResourceValue(String attributeName, boolean isFrameworkAttr, String value,
             boolean isFrameworkStyle) {
-        this(attributeName, isFrameworkStyle, value, isFrameworkStyle, null);
+        this(attributeName, isFrameworkAttr, value, isFrameworkStyle, null);
     }
 
     /**
