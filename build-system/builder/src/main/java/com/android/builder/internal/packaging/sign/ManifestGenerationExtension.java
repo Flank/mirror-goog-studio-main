@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.ZFile;
 import com.android.builder.internal.packaging.zip.ZFileExtension;
-import com.android.builder.internal.packaging.zip.utils.CachedSupplier;
+import com.android.builder.internal.utils.CachedSupplier;
 import com.android.builder.internal.utils.IOExceptionRunnable;
 import com.android.builder.packaging.ManifestAttributes;
 import com.google.common.base.Preconditions;
@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -130,14 +131,16 @@ public class ManifestGenerationExtension {
         mCreatedBy = createdBy;
         mManifest = new Manifest();
         mDirty = false;
-        mManifestBytes = new CachedSupplier<byte[]>() {
-            @Override
-            protected byte[] compute() throws IOException {
-                ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+        mManifestBytes = new CachedSupplier<>(() -> {
+            ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+            try {
                 mManifest.write(outBytes);
-                return outBytes.toByteArray();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-        };
+
+            return outBytes.toByteArray();
+        });
     }
 
     /**

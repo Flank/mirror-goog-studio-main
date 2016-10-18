@@ -17,7 +17,7 @@
 package com.android.builder.internal.packaging.zip;
 
 import com.android.annotations.NonNull;
-import com.android.builder.internal.packaging.zip.utils.CachedSupplier;
+import com.android.builder.internal.utils.CachedSupplier;
 import com.android.builder.internal.packaging.zip.utils.MsDosDateTimeUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
@@ -196,12 +197,7 @@ class CentralDirectory {
     CentralDirectory(@NonNull ZFile file) {
         mEntries = Maps.newHashMap();
         mFile = file;
-        mBytesSupplier = new CachedSupplier<byte[]>() {
-            @Override
-            protected byte[] compute() throws IOException {
-                return computeByteRepresentation();
-            }
-        };
+        mBytesSupplier = new CachedSupplier<>(this::computeByteRepresentation);
     }
 
     /**
@@ -403,9 +399,9 @@ class CentralDirectory {
      * Computes the byte representation of the central directory.
      *
      * @return a byte array containing the whole central directory
-     * @throws IOException failed to write the byte array
+     * @throws UncheckedIOException failed to write the byte array
      */
-    private byte[] computeByteRepresentation() throws IOException {
+    private byte[] computeByteRepresentation() {
 
         List<StoredEntry> sorted = Lists.newArrayList(mEntries.values());
         Collections.sort(sorted, StoredEntry.COMPARE_BY_NAME);
@@ -417,59 +413,62 @@ class CentralDirectory {
         byte[][] extraFields = new byte[mEntries.size()][];
         byte[][] comments = new byte[mEntries.size()][];
 
-        /*
-         * First collect all the data and compute the total size of the central directory.
-         */
-        int idx = 0;
-        int total = 0;
-        for (StoredEntry entry : sorted) {
-            cdhs[idx] = entry.getCentralDirectoryHeader();
-            compressInfos[idx] = cdhs[idx].getCompressionInfoWithWait();
-            encodedFileNames[idx] = cdhs[idx].getEncodedFileName();
-            extraFields[idx] = new byte[cdhs[idx].getExtraField().size()];
-            cdhs[idx].getExtraField().write(ByteBuffer.wrap(extraFields[idx]));
-            comments[idx] = cdhs[idx].getComment();
+        try {
+            /*
+             * First collect all the data and compute the total size of the central directory.
+             */
+            int idx = 0;
+            int total = 0;
+            for (StoredEntry entry : sorted) {
+                cdhs[idx] = entry.getCentralDirectoryHeader();
+                compressInfos[idx] = cdhs[idx].getCompressionInfoWithWait();
+                encodedFileNames[idx] = cdhs[idx].getEncodedFileName();
+                extraFields[idx] = new byte[cdhs[idx].getExtraField().size()];
+                cdhs[idx].getExtraField().write(ByteBuffer.wrap(extraFields[idx]));
+                comments[idx] = cdhs[idx].getComment();
 
-            total += F_OFFSET.endOffset() + encodedFileNames[idx].length
-                    + extraFields[idx].length + comments[idx].length;
-            idx++;
-        }
-
-        ByteBuffer out = ByteBuffer.allocate(total);
-
-
-        for (idx = 0; idx < mEntries.size(); idx++) {
-            F_SIGNATURE.write(out);
-            F_MADE_BY.write(out, cdhs[idx].getMadeBy());
-            F_VERSION_EXTRACT.write(out, compressInfos[idx].getVersionExtract());
-            F_GP_BIT.write(out, cdhs[idx].getGpBit().getValue());
-            F_METHOD.write(out, compressInfos[idx].getMethod().methodCode);
-
-            if (mFile.areTimestampsIgnored()) {
-                F_LAST_MOD_TIME.write(out, 0);
-                F_LAST_MOD_DATE.write(out, 0);
-            } else {
-                F_LAST_MOD_TIME.write(out, cdhs[idx].getLastModTime());
-                F_LAST_MOD_DATE.write(out, cdhs[idx].getLastModDate());
+                total += F_OFFSET.endOffset() + encodedFileNames[idx].length
+                        + extraFields[idx].length + comments[idx].length;
+                idx++;
             }
 
-            F_CRC32.write(out, cdhs[idx].getCrc32());
-            F_COMPRESSED_SIZE.write(out, compressInfos[idx].getCompressedSize());
-            F_UNCOMPRESSED_SIZE.write(out, cdhs[idx].getUncompressedSize());
+            ByteBuffer out = ByteBuffer.allocate(total);
 
-            F_FILE_NAME_LENGTH.write(out, cdhs[idx].getEncodedFileName().length);
-            F_EXTRA_FIELD_LENGTH.write(out, cdhs[idx].getExtraField().size());
-            F_COMMENT_LENGTH.write(out, cdhs[idx].getComment().length);
-            F_DISK_NUMBER_START.write(out);
-            F_INTERNAL_ATTRIBUTES.write(out, cdhs[idx].getInternalAttributes());
-            F_EXTERNAL_ATTRIBUTES.write(out, cdhs[idx].getExternalAttributes());
-            F_OFFSET.write(out, cdhs[idx].getOffset());
+            for (idx = 0; idx < mEntries.size(); idx++) {
+                F_SIGNATURE.write(out);
+                F_MADE_BY.write(out, cdhs[idx].getMadeBy());
+                F_VERSION_EXTRACT.write(out, compressInfos[idx].getVersionExtract());
+                F_GP_BIT.write(out, cdhs[idx].getGpBit().getValue());
+                F_METHOD.write(out, compressInfos[idx].getMethod().methodCode);
 
-            out.put(encodedFileNames[idx]);
-            out.put(extraFields[idx]);
-            out.put(comments[idx]);
+                if (mFile.areTimestampsIgnored()) {
+                    F_LAST_MOD_TIME.write(out, 0);
+                    F_LAST_MOD_DATE.write(out, 0);
+                } else {
+                    F_LAST_MOD_TIME.write(out, cdhs[idx].getLastModTime());
+                    F_LAST_MOD_DATE.write(out, cdhs[idx].getLastModDate());
+                }
+
+                F_CRC32.write(out, cdhs[idx].getCrc32());
+                F_COMPRESSED_SIZE.write(out, compressInfos[idx].getCompressedSize());
+                F_UNCOMPRESSED_SIZE.write(out, cdhs[idx].getUncompressedSize());
+
+                F_FILE_NAME_LENGTH.write(out, cdhs[idx].getEncodedFileName().length);
+                F_EXTRA_FIELD_LENGTH.write(out, cdhs[idx].getExtraField().size());
+                F_COMMENT_LENGTH.write(out, cdhs[idx].getComment().length);
+                F_DISK_NUMBER_START.write(out);
+                F_INTERNAL_ATTRIBUTES.write(out, cdhs[idx].getInternalAttributes());
+                F_EXTERNAL_ATTRIBUTES.write(out, cdhs[idx].getExternalAttributes());
+                F_OFFSET.write(out, cdhs[idx].getOffset());
+
+                out.put(encodedFileNames[idx]);
+                out.put(extraFields[idx]);
+                out.put(comments[idx]);
+            }
+
+            return out.array();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        return out.array();
     }
 }
