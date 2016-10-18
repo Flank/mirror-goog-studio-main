@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
@@ -30,6 +29,7 @@ import org.junit.runners.model.InitializationError;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Allows project files to be modified, but stores their original content, so it can be restored for
@@ -129,25 +129,14 @@ public class TemporaryProjectModification {
     public void replaceFile(
             @NonNull String relativePath,
             @NonNull final String content) throws IOException {
-        modifyFile(relativePath, new Function<String, String>() {
-            @Override
-            public String apply(String input) {
-                return content;
-            }
-        });
+        modifyFile(relativePath, input -> content);
     }
 
     public void replaceInFile(
             @NonNull String relativePath,
             @NonNull final String search,
             @NonNull final String replace) throws IOException {
-        modifyFile(relativePath, new Function<String, String>() {
-            @Override
-            public String apply(String input) {
-                return input.replaceAll(search, replace);
-            }
-        });
-
+        modifyFile(relativePath, input -> input.replaceAll(search, replace));
     }
 
     public void removeFile(@NonNull String relativePath) throws IOException {

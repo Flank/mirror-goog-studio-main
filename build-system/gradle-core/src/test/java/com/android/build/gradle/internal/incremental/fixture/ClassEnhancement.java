@@ -23,7 +23,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
 import com.android.tools.fd.runtime.AndroidInstantRuntime;
 import com.android.utils.FileUtils;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -96,14 +95,11 @@ public class ClassEnhancement implements TestRule {
                     Files.fileTreeTraverser()
                             .preOrderTraversal(outputFolder)
                             .filter(Files.isFile());
-            Iterable<String> classNames = Iterables.transform(files, new Function<File, String>() {
-                @Override
-                public String apply(File file) {
+            Iterable<String> classNames = Iterables.transform(files, (File file) -> {
                     String relativePath = FileUtils.relativePath(file, outputFolder);
                     return relativePath.substring(0, relativePath.length() - 6 /*.class */)
                             .replace(File.separatorChar, '.');
-                }
-            });
+                });
 
             for (String changedClassName : classNames) {
                 if (changedClassName.endsWith("$override")) {
@@ -155,13 +151,14 @@ public class ClassEnhancement implements TestRule {
             final ClassLoader mainClassLoader,
             final Map<String, File> instrumentedPatches,
             final boolean tracing) {
-        return Maps.transformValues(instrumentedPatches, new Function<File, ClassLoader>() {
-            @Override
-            public ClassLoader apply(File instrumentedPatchFolder) {
-                return new IncrementalChangeClassLoader(
-                        classLoaderUrls, mainClassLoader, instrumentedPatchFolder, tracing);
-            }
-        });
+        return Maps.transformValues(
+                instrumentedPatches,
+                (File instrumentedPatchFolder) ->
+                        new IncrementalChangeClassLoader(
+                                classLoaderUrls,
+                                mainClassLoader,
+                                instrumentedPatchFolder,
+                                tracing));
     }
 
 

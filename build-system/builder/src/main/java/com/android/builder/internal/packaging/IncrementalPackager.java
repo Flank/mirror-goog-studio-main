@@ -25,8 +25,6 @@ import com.android.builder.packaging.ApkCreator;
 import com.android.builder.packaging.ApkCreatorFactory;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.res2.FileStatus;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -156,7 +154,7 @@ public class IncrementalPackager implements Closeable {
                         Iterables.filter(
                                 updates,
                                 p -> p.getStatus() == FileStatus.REMOVED),
-                        PackagedFileUpdate.EXTRACT_NAME);
+                        PackagedFileUpdate::getName);
 
         for (String deletedPath : deletedPaths) {
             mApkCreator.deleteFile(deletedPath);
@@ -164,11 +162,6 @@ public class IncrementalPackager implements Closeable {
 
         Predicate<PackagedFileUpdate> isNewOrChanged =
                 pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == FileStatus.CHANGED;
-
-        Function<PackagedFileUpdate, File> extractBaseFile =
-                Functions.compose(
-                        RelativeFile::getBase,
-                        PackagedFileUpdate.EXTRACT_SOURCE);
 
         Iterable<PackagedFileUpdate> newOrChangedNonArchiveFiles =
                 Iterables.filter(
@@ -184,11 +177,12 @@ public class IncrementalPackager implements Closeable {
                         updates,
                         pfu -> pfu.getSource().getBase().isFile() && isNewOrChanged.test(pfu));
 
-        Iterable<File> archives = Iterables.transform(newOrChangedArchiveFiles, extractBaseFile);
+        Iterable<File> archives =
+                Iterables.transform(newOrChangedArchiveFiles, pfu -> pfu.getSource().getBase());
         Set<String> names = Sets.newHashSet(
                 Iterables.transform(
                         newOrChangedArchiveFiles,
-                        PackagedFileUpdate.EXTRACT_NAME));
+                        PackagedFileUpdate::getName));
 
         /*
          * Build the name map. The name of the file in the filesystem (or zip file) may not

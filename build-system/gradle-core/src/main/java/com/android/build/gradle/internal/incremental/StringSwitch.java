@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.incremental;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -32,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 
 /**
@@ -143,14 +143,10 @@ abstract class StringSwitch {
         visitHashMethod(mv);
 
         // Group strings by hash code.
-        Multimap<Integer, String> buckets = Multimaps.index(strings, HASH_METHOD);
+        Multimap<Integer, String> buckets = Multimaps.index(strings, HASH_METHOD::apply);
         List<Map.Entry<Integer, Collection<String>>> sorted = Ordering.natural()
-                .onResultOf(new Function<Map.Entry<Integer, Collection<String>>, Integer>() {
-                    @Override
-                    public Integer apply(Map.Entry<Integer, Collection<String>> entry) {
-                        return entry.getKey();
-                    }
-                }).immutableSortedCopy(buckets.asMap().entrySet());
+                .onResultOf(Map.Entry<Integer, Collection<String>>::getKey)
+                .immutableSortedCopy(buckets.asMap().entrySet());
 
         int sortedHashes[] = new int[sorted.size()];
         List<String> sortedCases[] = new List[sorted.size()];

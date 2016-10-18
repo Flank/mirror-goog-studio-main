@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -30,6 +29,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 /**
  * Represents a resource output from a variant configuration.
@@ -84,12 +84,8 @@ public class ApkOutputFile implements OutputFile, Serializable {
     @NonNull
     public String getSplitIdentifiers(char separatorChar) {
 
-        return Joiner.on(separatorChar).join(Iterables.transform(filters, new Function<FilterData, Object>() {
-            @Override
-            public Object apply(FilterData filterData) {
-                return filterData.getIdentifier();
-            }
-        }));
+        return Joiner.on(separatorChar)
+                .join(Iterables.transform(filters, FilterData::getIdentifier));
     }
 
     @Override
