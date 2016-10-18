@@ -27,8 +27,10 @@ public class JarDependencyTest {
     public void equals() throws Exception {
         // because of recursive data structure, equalsVerifier needs prefab values.
         EqualsVerifier.forClass(JarDependency.class)
-                .suppress(Warning.NONFINAL_FIELDS)
+                .withCachedHashCode("hashcode", "computeHashCode",
+                        new JarDependency(new File("foo")))
                 .withPrefabValues(JarDependency.class, getRedValue(), getBlackValue())
+                .suppress(Warning.NULL_FIELDS)
                 .verify();
     }
 

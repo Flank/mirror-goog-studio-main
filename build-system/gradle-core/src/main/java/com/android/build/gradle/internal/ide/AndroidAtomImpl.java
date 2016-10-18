@@ -76,7 +76,7 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
             @NonNull List<AndroidAtom> androidAtoms,
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries) {
-        super(clonedAtom);
+        super(clonedAtom, false /* isSkipped */);
         this.androidAtoms = ImmutableList.copyOf(androidAtoms);
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);

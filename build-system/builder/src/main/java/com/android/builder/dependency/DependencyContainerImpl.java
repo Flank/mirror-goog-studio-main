@@ -25,9 +25,10 @@ import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,11 +53,16 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Nullable
     private final AndroidAtom mBaseAtom;
 
+    @NonNull
+    private final DependenciesMutableData dependenciesMutableData;
+
     public DependencyContainerImpl(
+            @NonNull DependenciesMutableData mutableDependencyContainer,
             @NonNull List<? extends AndroidLibrary> aars,
             @NonNull List<? extends AndroidAtom> atoms,
             @NonNull Collection<? extends JavaLibrary> jars,
             @NonNull Collection<? extends JavaLibrary> localJars) {
+        dependenciesMutableData = mutableDependencyContainer;
         mLibraryDependencies = ImmutableList.copyOf(aars);
         mAtomDependencies = ImmutableList.copyOf(atoms);
         mJavaDependencies = ImmutableList.copyOf(jars);
@@ -80,6 +86,7 @@ public class DependencyContainerImpl implements DependencyContainer {
 
     public static DependencyContainer getEmpty() {
         return new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -148,19 +155,19 @@ public class DependencyContainerImpl implements DependencyContainer {
         than the original ones.
          */
 
-        List<AndroidLibrary> flatAndroidLibs = Lists.newArrayList();
-        List<AndroidAtom> flatAndroidAtoms = Lists.newArrayList();
-        Set<JavaLibrary> flatJavaLibs = Sets.newLinkedHashSet();
+        Set<AndroidLibrary> flatAndroidLibs = new LinkedHashSet<>();
+        Set<AndroidAtom> flatAndroidAtoms = new LinkedHashSet<>();
+        Set<JavaLibrary> flatJavaLibs = new LinkedHashSet<>();
 
-        computeFlatAtomList(mAtomDependencies, flatAndroidAtoms, flatAndroidLibs, flatJavaLibs);
-        computeFlatLibraryList(mLibraryDependencies, flatAndroidLibs, flatJavaLibs);
+        computeFlatAtomList(dependenciesMutableData, mAtomDependencies, flatAndroidAtoms, flatAndroidLibs, flatJavaLibs);
+        computeFlatLibraryList(dependenciesMutableData, mLibraryDependencies, flatAndroidLibs, flatJavaLibs);
 
-        // add the tested libs after since it'll be added at the beginning of the list.
+        // add the tested libs after since it'll be added at the beginning of the list once it is reversed, see below.
         if (testedLibrary != null) {
-            computeFlatLibraryList(testedLibrary, flatAndroidLibs, flatJavaLibs);
+            computeFlatLibraryList(dependenciesMutableData, testedLibrary, flatAndroidLibs, flatJavaLibs);
         }
 
-        computeFlatJarList(mJavaDependencies, flatJavaLibs);
+        computeFlatJarList(dependenciesMutableData, mJavaDependencies, flatJavaLibs);
 
         // handle the local jars. Remove the duplicated ones from mLocalJars.
         // They will actually show up through the testedLibrary's local jars.
@@ -176,11 +183,22 @@ public class DependencyContainerImpl implements DependencyContainer {
             }
         }
 
+        /**
+         * reverse the flatAndroidLibs and flatAndroidAtoms collections since the graph is visited
+         * in reverse order.
+         */
         return new DependencyContainerImpl(
-                flatAndroidLibs,
-                flatAndroidAtoms,
+                dependenciesMutableData,
+                Lists.reverse(new ArrayList<>(flatAndroidLibs)),
+                Lists.reverse(new ArrayList<>(flatAndroidAtoms)),
                 flatJavaLibs,
                 localJars);
+
+    }
+
+    @Override
+    public DependenciesMutableData getDependenciesMutableData() {
+        return dependenciesMutableData;
     }
 
     /**
@@ -195,12 +213,14 @@ public class DependencyContainerImpl implements DependencyContainer {
      * @param outFlatJavaLibs where to store all the java libraries.
      */
     private static void computeFlatAtomList(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull List<? extends AndroidAtom> androidAtoms,
-            @NonNull List<AndroidAtom> outFlatAndroidAtoms,
-            @NonNull List<AndroidLibrary> outFlatAndroidLibs,
+            @NonNull Set<AndroidAtom> outFlatAndroidAtoms,
+            @NonNull Set<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         for (int i = androidAtoms.size() - 1  ; i >= 0 ; i--) {
             computeFlatAtomList(
+                    dependenciesMutableData,
                     androidAtoms.get(i),
                     outFlatAndroidAtoms,
                     outFlatAndroidLibs,
@@ -218,8 +238,9 @@ public class DependencyContainerImpl implements DependencyContainer {
      * @param outFlatJavaLibs where to store all the java libraries
      */
     private static void computeFlatLibraryList(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull List<? extends AndroidLibrary> androidLibs,
-            @NonNull List<AndroidLibrary> outFlatAndroidLibs,
+            @NonNull Set<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         // loop in the inverse order to resolve dependencies on the libraries, so that if a library
         // is required by two higher level libraries it can be inserted in the correct place
@@ -235,6 +256,7 @@ public class DependencyContainerImpl implements DependencyContainer {
         // So that both B and C override D (and B overrides C)
         for (int i = androidLibs.size() - 1  ; i >= 0 ; i--) {
             computeFlatLibraryList(
+                    dependenciesMutableData,
                     androidLibs.get(i),
                     outFlatAndroidLibs,
                     outFlatJavaLibs);
@@ -242,12 +264,14 @@ public class DependencyContainerImpl implements DependencyContainer {
     }
 
     private static void computeFlatAtomList(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull AndroidAtom androidAtom,
-            @NonNull List<AndroidAtom> outFlatAndroidAtoms,
-            @NonNull List<AndroidLibrary> outFlatAndroidLibs,
+            @NonNull Set<AndroidAtom> outFlatAndroidAtoms,
+            @NonNull Set<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         // resolve the dependencies for those atoms
         computeFlatAtomList(
+                dependenciesMutableData,
                 androidAtom.getAtomDependencies(),
                 outFlatAndroidAtoms,
                 outFlatAndroidLibs,
@@ -255,45 +279,52 @@ public class DependencyContainerImpl implements DependencyContainer {
 
         // resolve the dependencies for those libraries
         computeFlatLibraryList(
+                dependenciesMutableData,
                 androidAtom.getLibraryDependencies(),
                 outFlatAndroidLibs,
                 outFlatJavaLibs);
 
-        computeFlatJarList(androidAtom.getJavaDependencies(), outFlatJavaLibs);
+        computeFlatJarList(dependenciesMutableData, androidAtom.getJavaDependencies(), outFlatJavaLibs);
 
-        // and add the current atom (if needed) in front (higher priority)
+        // and add the current atom (if needed) last, the lists will be reversed and it will
+        // get moved in the front (higher priority)
         if (!outFlatAndroidAtoms.contains(androidAtom)) {
-            outFlatAndroidAtoms.add(0, androidAtom);
+            outFlatAndroidAtoms.add(androidAtom);
         }
     }
 
     private static void computeFlatLibraryList(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull AndroidLibrary androidLibrary,
-            @NonNull List<AndroidLibrary> outFlatAndroidLibs,
+            @NonNull Set<AndroidLibrary> outFlatAndroidLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
         // resolve the dependencies for those libraries
         computeFlatLibraryList(
+                dependenciesMutableData,
                 androidLibrary.getLibraryDependencies(),
                 outFlatAndroidLibs,
                 outFlatJavaLibs);
 
-        computeFlatJarList(androidLibrary.getJavaDependencies(), outFlatJavaLibs);
+        computeFlatJarList(dependenciesMutableData, androidLibrary.getJavaDependencies(), outFlatJavaLibs);
 
-        // and add the current one (if needed) in front (higher priority)
-        if (!androidLibrary.isSkipped() && !outFlatAndroidLibs.contains(androidLibrary)) {
-            outFlatAndroidLibs.add(0, androidLibrary);
+        // and add the current one (if needed) in back, the list will get reversed and it
+        // will get moved to the front (higher priority)
+        if (!dependenciesMutableData.isSkipped(androidLibrary)
+                && !outFlatAndroidLibs.contains(androidLibrary)) {
+            outFlatAndroidLibs.add(androidLibrary);
         }
     }
 
     private static void computeFlatJarList(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull Collection<? extends JavaLibrary> javaLibs,
             @NonNull Set<JavaLibrary> outFlatJavaLibs) {
 
         for (JavaLibrary javaLib : javaLibs) {
-            if (!javaLib.isSkipped()) {
+            if (!dependenciesMutableData.isSkipped(javaLib)) {
                 outFlatJavaLibs.add(javaLib);
             }
-            computeFlatJarList(javaLib.getDependencies(), outFlatJavaLibs);
+            computeFlatJarList(dependenciesMutableData, javaLib.getDependencies(), outFlatJavaLibs);
         }
     }
 
@@ -306,4 +337,4 @@ public class DependencyContainerImpl implements DependencyContainer {
                 .add("mLocalJars", mLocalJars)
                 .toString();
     }
- }
+}

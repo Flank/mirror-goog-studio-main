@@ -59,12 +59,12 @@ abstract class LibraryImpl implements Library, Serializable {
         this.isProvided = isProvided;
     }
 
-    protected LibraryImpl(@NonNull Library clonedLibrary) {
+    protected LibraryImpl(@NonNull Library clonedLibrary, boolean isSkipped) {
         name = clonedLibrary.getName();
         project = clonedLibrary.getProject();
         requestedCoordinates = clonedLibrary.getRequestedCoordinates();
         resolvedCoordinates = clonedLibrary.getResolvedCoordinates();
-        isSkipped = clonedLibrary.isSkipped();
+        this.isSkipped = isSkipped;
         isProvided = clonedLibrary.isProvided();
     }
 

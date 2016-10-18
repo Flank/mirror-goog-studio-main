@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.AtomDependency;
+import com.android.builder.dependency.DependenciesMutableData;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.DependencyContainerImpl;
 import com.android.builder.dependency.JarDependency;
@@ -54,18 +55,15 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import org.gradle.api.CircularReferenceException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.UnknownProjectException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -378,9 +376,17 @@ public class DependencyManager {
         Set<? extends DependencyResult> dependencyResultSet = configuration.getIncoming()
                 .getResolutionResult().getRoot().getDependencies();
 
+        // create a container for all the dependency related mutable data, only when creating
+        // the package dependencies for a test project.
+        DependenciesMutableData mutableDependencyContainer =
+                scopeType == ScopeType.PACKAGE
+                    ? DependenciesMutableData.newInstance()
+                    : DependenciesMutableData.EMPTY;
+
         for (DependencyResult dependencyResult : dependencyResultSet) {
             if (dependencyResult instanceof ResolvedDependencyResult) {
                 addDependency(
+                        mutableDependencyContainer,
                         ((ResolvedDependencyResult) dependencyResult).getSelected(),
                         variantDeps,
                         libraryDependencies,
@@ -461,6 +467,7 @@ public class DependencyManager {
         }
 
         return new DependencyContainerImpl(
+                mutableDependencyContainer,
                 libraryDependencies,
                 atomDependencies,
                 jarDependencies,
@@ -579,6 +586,7 @@ public class DependencyManager {
     }
 
     private void addDependency(
+            @NonNull DependenciesMutableData mutableDependencyContainer,
             @NonNull ResolvedComponentResult resolvedComponentResult,
             @NonNull VariantDependencies configDependencies,
             @NonNull Collection<LibraryDependency> outLibraries,
@@ -686,6 +694,7 @@ public class DependencyManager {
                     }
 
                     addDependency(
+                            mutableDependencyContainer,
                             selected,
                             configDependencies,
                             nestedLibraries,
@@ -855,8 +864,8 @@ public class DependencyManager {
 
                         // if this is a package scope, then skip the dependencies.
                         if (scopeType == ScopeType.PACKAGE) {
-                            recursiveLibSkip(nestedLibraries);
-                            recursiveJavaSkip(nestedJars);
+                            recursiveLibSkip(mutableDependencyContainer, nestedLibraries);
+                            recursiveJavaSkip(mutableDependencyContainer, nestedJars);
                         }
 
                         String path = computeArtifactPath(moduleVersion, artifact);
@@ -920,7 +929,7 @@ public class DependencyManager {
 
                                 // if this is a package scope, then skip the dependencies.
                                 if (scopeType == ScopeType.PACKAGE) {
-                                    recursiveLibSkip(nestedLibraries);
+                                    recursiveLibSkip(mutableDependencyContainer, nestedLibraries);
                                 } else {
                                     // if it's compile scope, make it optional.
                                     provided = true;
@@ -968,10 +977,11 @@ public class DependencyManager {
                         // app module then skip it.
                         if (scopeType == ScopeType.PACKAGE &&
                                 testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
-                            jarDependency.skip();
+                            mutableDependencyContainer.skip(jarDependency);
 
                             //noinspection unchecked
-                            recursiveJavaSkip((List<JarDependency>) jarDependency.getDependencies());
+                            recursiveJavaSkip(mutableDependencyContainer,
+                                    (List<JarDependency>) jarDependency.getDependencies());
                         }
 
                         if (DEBUG_DEPENDENCY) {
@@ -1029,23 +1039,27 @@ public class DependencyManager {
                 resolvedArtifact.getClassifier());
     }
 
-    private static void recursiveLibSkip(@NonNull List<LibraryDependency> libs) {
+    private static void recursiveLibSkip(DependenciesMutableData dependenciesMutableData,
+            @NonNull List<LibraryDependency> libs) {
         for (LibraryDependency lib : libs) {
-            lib.skip();
+            dependenciesMutableData.skip(lib);
 
             //noinspection unchecked
-            recursiveLibSkip((List<LibraryDependency>) lib.getLibraryDependencies());
+            recursiveLibSkip(dependenciesMutableData,
+                    (List<LibraryDependency>) lib.getLibraryDependencies());
             //noinspection unchecked
-            recursiveJavaSkip((List<JarDependency>) lib.getJavaDependencies());
+            recursiveJavaSkip(dependenciesMutableData,
+                    (List<JarDependency>) lib.getJavaDependencies());
         }
     }
 
-    private static void recursiveJavaSkip(@NonNull List<JarDependency> libs) {
+    private static void recursiveJavaSkip(DependenciesMutableData dependenciesMutableData,
+            @NonNull List<JarDependency> libs) {
         for (JarDependency lib : libs) {
-            lib.skip();
+            dependenciesMutableData.skip(lib);
 
             //noinspection unchecked
-            recursiveJavaSkip((List<JarDependency>) lib.getDependencies());
+            recursiveJavaSkip(dependenciesMutableData, (List<JarDependency>) lib.getDependencies());
         }
     }
 
