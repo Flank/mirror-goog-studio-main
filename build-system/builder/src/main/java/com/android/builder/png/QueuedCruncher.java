@@ -16,7 +16,6 @@
 
 package com.android.builder.png;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
@@ -30,7 +29,6 @@ import com.android.ide.common.internal.PngException;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -215,18 +213,6 @@ public class QueuedCruncher implements PngCruncher {
     @Override
     public void crunchPng(int key, @NonNull final File from, @NonNull final File to)
             throws PngException {
-
-        if (from.getAbsolutePath().length() > 240
-                && SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            throw new PngException("File path too long on Windows, keep below 240 characters : "
-                    + from.getAbsolutePath());
-        }
-        if (to.getAbsolutePath().length() > 240
-                && SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            throw new PngException("File path too long on Windows, keep below 240 characters : "
-                    + to.getAbsolutePath());
-        }
-
         try {
             final Job<AaptProcess> aaptProcessJob = new QueuedJob(
                     key,

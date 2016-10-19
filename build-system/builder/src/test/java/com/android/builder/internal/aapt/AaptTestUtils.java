@@ -22,17 +22,17 @@ import com.android.annotations.NonNull;
 import com.android.testutils.TestResources;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Utility files for Aapt tests.
  */
 public class AaptTestUtils {
+
     /**
      * Obtains a PNG for testing.
      *
@@ -45,6 +45,24 @@ public class AaptTestUtils {
         File drawables = new File(temporaryFolder.getRoot(), "drawable");
         FileUtils.mkdirs(drawables);
         File dstPng = new File(drawables, "lena.png");
+        Resources.asByteSource(Resources.getResource("testData/aapt/lena.png"))
+                .copyTo(Files.asByteSink(dstPng));
+        return dstPng;
+    }
+
+    /**
+     * Obtains a PNG with a long filename for testing
+     *
+     * @param temporaryFolder the temporary folder where temporery files should be places
+     * @return a file with a PNG with a long filename in a {@code drawables} folder
+     * @throws Exception failed to create the PNG
+     */
+    @NonNull
+    public static File getTestPngWithLongFileName(@NonNull TemporaryFolder temporaryFolder)
+            throws Exception {
+        File drawables = new File(temporaryFolder.getRoot(), "drawable");
+        FileUtils.mkdirs(drawables);
+        File dstPng = new File(drawables, Strings.repeat("a", 230) + ".png");
         Resources.asByteSource(Resources.getResource("testData/aapt/lena.png"))
                 .copyTo(Files.asByteSink(dstPng));
         return dstPng;

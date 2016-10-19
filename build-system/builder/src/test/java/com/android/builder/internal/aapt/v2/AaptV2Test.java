@@ -19,6 +19,7 @@ package com.android.builder.internal.aapt.v2;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptTestUtils;
@@ -31,13 +32,12 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-
+import java.io.File;
+import java.util.concurrent.Future;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.concurrent.Future;
 
 /**
  * Tests for {@code aapt2}.
@@ -81,6 +81,21 @@ public class AaptV2Test {
         Future<File> compiledFuture =
                 aapt.compile(
                         AaptTestUtils.getTestPng(mTemporaryFolder),
+                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+        File compiled = compiledFuture.get();
+        assertNotNull(compiled);
+        assertTrue(compiled.isFile());
+    }
+
+    @Test
+    public void pngWithLongPathCrunchingTest() throws Exception {
+        // This fails on Windows due to issues in aapt handling of long paths.
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+
+        Aapt aapt = makeAapt();
+        Future<File> compiledFuture =
+                aapt.compile(
+                        AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
                         AaptTestUtils.getOutputDir(mTemporaryFolder));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);

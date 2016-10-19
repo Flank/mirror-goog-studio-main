@@ -30,7 +30,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -363,6 +362,22 @@ public final class FileUtils {
             path = path.replace(File.separatorChar, '/');
         }
         return path;
+    }
+
+    /**
+     * Returns an absolute path that can be open by system APIs for all platforms.
+     *
+     * @param file The file whose path needs to be converted.
+     * @return On non-Windows platforms, the absolute path of the file. On Windows, the absolute
+     *     path preceded by "\\?\". This ensures that Windows API calls can open the path even if it
+     *     is more than 260 characters long.
+     */
+    @NonNull
+    public static String toExportableSystemDependentPath(@NonNull File file) {
+        if (File.separatorChar != '/' && !file.getAbsolutePath().startsWith("\\\\?\\")) {
+            return "\\\\?\\" + file.getAbsolutePath();
+        }
+        return file.getAbsolutePath();
     }
 
     @NonNull

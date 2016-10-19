@@ -142,7 +142,9 @@ public class FileUtilsTest {
         File directory = new File("/Users/foo");
         assertFalse(FileUtils.isFilePathTooLong("bar", directory));
 
-        assertFalse(FileUtils.isFilePathTooLong(Strings.repeat("a", 255), directory));
+        // Windows path limit is 260.
+        int fileLength = 260 - directory.getAbsolutePath().length() - 1;
+        assertFalse(FileUtils.isFilePathTooLong(Strings.repeat("a", fileLength), directory));
         assertTrue(FileUtils.isFilePathTooLong(Strings.repeat("a", 256), directory));
 
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {

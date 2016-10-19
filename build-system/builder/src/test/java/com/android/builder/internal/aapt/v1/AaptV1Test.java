@@ -49,11 +49,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.time.Duration;
 import java.util.Collection;
@@ -63,6 +58,9 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link AaptV1}.
@@ -186,6 +184,18 @@ public class AaptV1Test {
         Future<File> compiledFuture =
                 aapt.compile(
                         AaptTestUtils.getTestPng(mTemporaryFolder),
+                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+        File compiled = compiledFuture.get();
+        assertNotNull(compiled);
+        assertTrue(compiled.isFile());
+    }
+
+    @Test
+    public void compilePngWithLongPath() throws Exception {
+        Aapt aapt = makeAapt();
+        Future<File> compiledFuture =
+                aapt.compile(
+                        AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
                         AaptTestUtils.getOutputDir(mTemporaryFolder));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
