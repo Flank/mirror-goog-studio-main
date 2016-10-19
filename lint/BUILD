@@ -8,9 +8,9 @@ iml_module(
     exports = [
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/idea/.idea/libraries:lombok-ast",
-        "//tools/idea/.idea/libraries:builder-model",
         "//tools/base/annotations:studio.android-annotations",
         "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/base/build-system/builder-model:studio.builder-model",
         "//tools/base/sdk-common:studio.sdk-common",
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools:idea.java-psi-api",
@@ -18,9 +18,9 @@ iml_module(
     deps = [
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/idea/.idea/libraries:lombok-ast",
-        "//tools/idea/.idea/libraries:builder-model",
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/base/build-system/builder-model:studio.builder-model[module]",
         "//tools/base/common:studio.common[module]",
         "//tools/base/sdklib:studio.sdklib[module]",
         "//tools/base/sdk-common:studio.sdk-common[module]",
