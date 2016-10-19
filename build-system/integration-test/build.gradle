@@ -181,6 +181,10 @@ task performanceTest(type: Test) {
         junitXml.destination "${project.buildDir}/perf-results"
     }
     outputs.upToDateWhen { false }
+
+    testLogging {
+       exceptionFormat = 'full'
+    }
 }
 
 performanceTest.dependsOn test
