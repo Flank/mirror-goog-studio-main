@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.OutputFile
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AssumeUtil
@@ -60,6 +61,8 @@ class CombinedAbiDensityPureSplits {
 
     @Test
     public void "test combined density and abi pure splits"() throws Exception {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
 
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants()
