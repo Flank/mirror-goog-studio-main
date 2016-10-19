@@ -5,7 +5,7 @@ This directory contains the core files to run studio-master-dev tests using baze
 ## Running bazel
 Bazel has the concept of a _workspace_: the root of all your source files. For us, it is where we `repo init` our source tree. For google3 vets, this is the "google3" directory. In this document we assume the current directory to be the workspace, but note that bazel can be run from anywhere in the tree.
 
-Bazel is checked-in at `tools/base/bazel/bazel`. For conveniency you might want to link it like this:
+Bazel is checked-in at `tools/base/bazel/bazel`. To make things easy you might want to link it like this:
 
 ```shell
 ln -s <workspace>/tools/base/bazel ~/bin/bazel
@@ -84,7 +84,7 @@ iml_module(
 |`name`          | The name of the rule (usually matching Studio's module name)                                        |
 |`srcs`          | A list of directories containing the sources. .java, .groovy, .kotlin and .form files are supported.|
 |`resources`     | A list directories with the production resources.                                                   |
-|`deps`          | A tag ehnanced list of dependencies, of the form `//label[tag1,tag2,...]`. Supported tags are: `module`, for iml_module dependencies, and `test` for test only dependencies |
+|`deps`          | A tag enhanced list of dependencies, of the form `//label[tag1,tag2,...]`. Supported tags are: `module`, for iml_module dependencies, and `test` for test only dependencies |
 |`test_srcs`     | A list of directories with the test sources.                                                        |
 |`test_resources`| A list of directories with the test resources.                                                      |
 |`test_data`     | The files needed to run the test                                                                    |
@@ -100,7 +100,7 @@ _Just don't_. IntelliJ has support for circular dependencies of modules, but we 
 
 ## Additional tools
 
-There are several other tools in this package that can be used to manage dependecies in prebuilts.
+There are several other tools in this package that can be used to manage dependencies in prebuilts.
 
 ### third_party_build_generator
 
