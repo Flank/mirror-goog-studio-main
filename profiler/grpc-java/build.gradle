@@ -17,7 +17,17 @@ ext {
     grpcVersion = '0.13.2'
 }
 
+configurations {
+    packaging
+}
+
 dependencies {
+    packaging("com.google.protobuf:protobuf-java:$protobufVersion") {
+        transitive false
+    }
+    packaging("io.grpc:grpc-all:$grpcVersion") {
+        transitive false
+    }
     compile "com.google.protobuf:protobuf-java:$protobufVersion"
     compile "io.grpc:grpc-all:$grpcVersion"
 }
@@ -58,7 +68,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 
 jarjar.repackage('jarjarLibs') {
     destinationName = archivesBaseName + '-' + version + '-jarjar.jar'
-    from configurations.compile
+    from configurations.packaging
     from files(sourceSets.main.output.classesDir)
     dependsOn sourceSets.main.output
     classRename 'com.google.protobuf.**', 'com.google.protobuf3jarjar.@1'
