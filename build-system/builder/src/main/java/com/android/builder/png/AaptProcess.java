@@ -21,11 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
 import com.android.ide.common.process.ProcessException;
+import com.android.utils.FileUtils;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -92,9 +92,9 @@ public class AaptProcess {
                 hashCode(), in.getAbsolutePath().length(), out.getAbsolutePath().length());
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write("s\n");
-        mWriter.write(in.getAbsolutePath());
+        mWriter.write(FileUtils.toExportableSystemDependentPath(in));
         mWriter.write("\n");
-        mWriter.write(out.getAbsolutePath());
+        mWriter.write(FileUtils.toExportableSystemDependentPath(out));
         mWriter.write("\n");
         mWriter.flush();
         mLogger.verbose("Processed(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());

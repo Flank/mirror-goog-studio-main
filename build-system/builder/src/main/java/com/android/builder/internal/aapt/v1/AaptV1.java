@@ -45,7 +45,6 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +57,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import javax.imageio.ImageIO;
 
 /**
@@ -212,7 +210,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         File manifestFile = config.getManifestFile();
         Preconditions.checkNotNull(manifestFile);
-        builder.addArgs("-M", manifestFile.getAbsolutePath());
+        builder.addArgs("-M", FileUtils.toExportableSystemDependentPath(manifestFile));
 
         if (config.getResourceDir() != null) {
             builder.addArgs("-S", config.getResourceDir().getAbsolutePath());
@@ -221,19 +219,26 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         // outputs
         if (config.getSourceOutputDir() != null) {
             builder.addArgs("-m");
-            builder.addArgs("-J", config.getSourceOutputDir().getAbsolutePath());
+            builder.addArgs(
+                    "-J", FileUtils.toExportableSystemDependentPath(config.getSourceOutputDir()));
         }
 
         if (config.getResourceOutputApk() != null) {
-            builder.addArgs("-F", config.getResourceOutputApk().getAbsolutePath());
+            builder.addArgs(
+                    "-F", FileUtils.toExportableSystemDependentPath(config.getResourceOutputApk()));
         }
 
         if (config.getProguardOutputFile() != null) {
-            builder.addArgs("-G", config.getProguardOutputFile().getAbsolutePath());
+            builder.addArgs(
+                    "-G",
+                    FileUtils.toExportableSystemDependentPath(config.getProguardOutputFile()));
         }
 
         if (config.getMainDexListProguardOutputFile() != null) {
-            builder.addArgs("-D", config.getMainDexListProguardOutputFile().getAbsolutePath());
+            builder.addArgs(
+                    "-D",
+                    FileUtils.toExportableSystemDependentPath(
+                            config.getMainDexListProguardOutputFile()));
         }
 
         if (config.getSplits() != null) {
@@ -346,8 +351,9 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         if (config.getSymbolOutputDir() != null && (config.getVariantType() == VariantType.LIBRARY
                 || !config.getLibraries().isEmpty())) {
-            builder.addArgs("--output-text-symbols",
-                    config.getSymbolOutputDir().getAbsolutePath());
+            builder.addArgs(
+                    "--output-text-symbols",
+                    FileUtils.toExportableSystemDependentPath(config.getSymbolOutputDir()));
         }
 
         // All the vector XML files that are outside of an "-anydpi-v21" directory were left there
