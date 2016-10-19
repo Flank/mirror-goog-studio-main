@@ -26,8 +26,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * A collection of modules with cyclic dependencies that form a strongly connected component.
@@ -45,8 +47,13 @@ public class BazelModule {
         modules.add(module);
     }
 
+    private static final Function<Module, Integer> GET_NUM_ORDER_ENTRIES =
+        module -> ModuleRootManager.getInstance(module).getOrderEntries().length;
+    private static final Comparator<Module> BY_NUM_ORDER_ENTRIES =
+        (m1, m2) -> GET_NUM_ORDER_ENTRIES.apply(m1) - GET_NUM_ORDER_ENTRIES.apply(m2);
+
     public String getName() {
-        return (isSingle() ? "" : "MM_") + modules.get(0).getName();
+        return (isSingle() ? "" : "MM_") + modules.stream().max(BY_NUM_ORDER_ENTRIES).get().getName();
     }
 
     public boolean isSingle() {
