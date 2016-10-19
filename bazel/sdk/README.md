@@ -134,7 +134,8 @@ You only have to do this step once.
 ```
 $ cd /path/to/studio-master-dev/
 
-# Of course, your branch name will be different...
+# This branch name will become the topic name for your CLs so choose a unique name.
+# Of course, your branch name will be different... 
 $ repo start devsdk+build-tools+19_0_3 \
     prebuilts/studio/sdk/darwin \
     prebuilts/studio/sdk/linux \
@@ -201,9 +202,9 @@ See also: [bazel filegroup rule](http://bazel.io/docs/be/general.html#filegroup)
 ### Make sure tests still pass
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-master-dev/tools/base/bazel
 
-$ bazel test ...
+$ ./bazel test $(<test_targets)
 ```
 
 ### Upload code review
@@ -216,7 +217,7 @@ $ repo forall \
     prebuilts/studio/sdk/linux \
     prebuilts/studio/sdk/windows \
     tools/base \
-    -c git commit -a -m "Updated SDK with build-tools;19.0.3"
+    -c git add -A; git commit -a -m "Updated SDK with build-tools;19.0.3"
 
 # When uploading, include -t to ensure all code reviews have the
 # same topic (the topic will be set to your current branch name).
