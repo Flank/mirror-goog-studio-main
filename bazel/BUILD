@@ -189,6 +189,8 @@ java_binary(
         "org.easymock:easymock:3.3",
         "org.jsoup:jsoup:1.6.3",
         "org.mockito:mockito-all:1.9.5",
+        # GRPC for profilers
+        "io.grpc:grpc-all:1.0.1",
     ],
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],

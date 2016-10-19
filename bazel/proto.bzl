@@ -16,10 +16,12 @@ def _gen_proto_impl(ctx):
     out_path = ctx.var["GENDIR"] + "/" + gen_dir
     args += [
         "--cpp_out=" + out_path,
-        "--grpc_out=" + out_path,
-        "--plugin=protoc-gen-grpc=" + ctx.executable.grpc_plugin.path
     ]
-
+    if ctx.executable.grpc_plugin.path != None:
+      args += [
+          "--grpc_out=" + out_path,
+          "--plugin=protoc-gen-grpc=" + ctx.executable.grpc_plugin.path
+      ]
     outs = ctx.outputs.outs
 
   # Try to generate java protos only if we won't generate cc protos
@@ -30,10 +32,14 @@ def _gen_proto_impl(ctx):
     out_path = outs[0].path
     args += [
         "--java_out=" + out_path,
-        "--java_rpc_out=" + out_path,
-        "--plugin=protoc-gen-java_rpc=" + ctx.executable.grpc_plugin.path
     ]
+    if ctx.executable.grpc_plugin != None:
+      args += [
+          "--java_rpc_out=" + out_path,
+          "--plugin=protoc-gen-java_rpc=" + ctx.executable.grpc_plugin.path
+      ]
 
+  if ctx.executable.grpc_plugin != None:
     inputs += [ctx.executable.grpc_plugin]
 
   ctx.action(
@@ -73,7 +79,6 @@ _gen_proto_rule = rule(
       "grpc_plugin": attr.label(
           cfg = "host",
           executable = True,
-          mandatory = True,
           single_file = True,
       ),
       "target_language": attr.int(),
@@ -83,7 +88,7 @@ _gen_proto_rule = rule(
   implementation = _gen_proto_impl,
 )
 
-def java_proto_library(name, srcs=None, deps=[], visibility=None):
+def java_proto_library(name, srcs=None, deps=[], visibility=None, grpc_support=False):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
   _gen_proto_rule(
@@ -91,23 +96,24 @@ def java_proto_library(name, srcs=None, deps=[], visibility=None):
       srcs = srcs,
       deps = deps,
       outs = outs,
-      protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0-beta-2:exe",
-      grpc_plugin = "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/0.13.2:exe",
+      protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+      grpc_plugin =
+          "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.1:exe"
+              if grpc_support else None,
       target_language = proto_languages.JAVA
-  )
+    )
 
+  deps = ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
+  if grpc_support:
+    deps += ["//tools/base/third_party:io.grpc_grpc-all"]
   native.java_library(
       name  = name,
       srcs = outs,
-      deps = [
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0-beta-2:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/0.13.2:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0:jar",
-      ],
+      deps = deps,
       visibility = visibility,
   )
 
-def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None):
+def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, grpc_support=False):
   outs = []
   for src in srcs:
     # .proto suffix should not be present in the output files
@@ -120,7 +126,7 @@ def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None):
       deps = deps,
       outs = outs,
       protoc = "//external:protoc",
-      grpc_plugin = "//external:grpc_cpp_plugin",
+      grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,
       target_language = proto_languages.CPP
   )
 

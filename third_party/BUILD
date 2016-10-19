@@ -16,15 +16,22 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.google.auth_google-auth-library-credentials",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auth/google-auth-library-credentials/0.4.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.google.code.findbugs_jsr305",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "com.google.code.gson_gson",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.2.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -44,10 +51,28 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.google.protobuf.nano_protobuf-javanano",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/nano/protobuf-javanano/3.0.0-alpha-5:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.google.protobuf_protobuf-java",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+maven_java_library(
+    name = "com.google.protobuf_protobuf-java-util",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.0.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.gson_gson",
+        ":com.google.guava_guava",
+        ":com.google.protobuf_protobuf-java",
+    ],
 )
 
 maven_java_library(
@@ -70,6 +95,20 @@ maven_java_library(
 maven_java_library(
     name = "com.intellij_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/intellij/annotations/12.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.squareup.okhttp_okhttp",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.squareup.okio_okio"],
+)
+
+maven_java_library(
+    name = "com.squareup.okio_okio",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -100,6 +139,179 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-all",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.grpc_grpc-auth",
+        ":io.grpc_grpc-context",
+        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-netty",
+        ":io.grpc_grpc-okhttp",
+        ":io.grpc_grpc-protobuf",
+        ":io.grpc_grpc-protobuf-lite",
+        ":io.grpc_grpc-protobuf-nano",
+        ":io.grpc_grpc-stub",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-auth",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.auth_google-auth-library-credentials",
+        ":io.grpc_grpc-core",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-context",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.guava_guava",
+        ":io.grpc_grpc-context",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-netty",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.grpc_grpc-core",
+        ":io.netty_netty-codec-http2",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-okhttp",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.squareup.okhttp_okhttp",
+        ":com.squareup.okio_okio",
+        ":io.grpc_grpc-core",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-protobuf",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        ":com.google.protobuf_protobuf-java",
+        ":com.google.protobuf_protobuf-java-util",
+        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-protobuf-lite",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-protobuf-lite",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        ":io.grpc_grpc-core",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-protobuf-nano",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        ":com.google.protobuf.nano_protobuf-javanano",
+        ":io.grpc_grpc-core",
+    ],
+)
+
+maven_java_library(
+    name = "io.grpc_grpc-stub",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.grpc_grpc-core"],
+)
+
+maven_java_library(
+    name = "io.netty_netty-buffer",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.netty_netty-common"],
+)
+
+maven_java_library(
+    name = "io.netty_netty-codec",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.netty_netty-transport"],
+)
+
+maven_java_library(
+    name = "io.netty_netty-codec-http",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.netty_netty-codec"],
+)
+
+maven_java_library(
+    name = "io.netty_netty-codec-http2",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.netty_netty-codec-http",
+        ":io.netty_netty-handler",
+    ],
+)
+
+maven_java_library(
+    name = "io.netty_netty-common",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "io.netty_netty-handler",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-codec",
+        ":io.netty_netty-transport",
+    ],
+)
+
+maven_java_library(
+    name = "io.netty_netty-resolver",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.netty_netty-common"],
+)
+
+maven_java_library(
+    name = "io.netty_netty-transport",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.3.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-resolver",
+    ],
 )
 
 maven_java_library(
