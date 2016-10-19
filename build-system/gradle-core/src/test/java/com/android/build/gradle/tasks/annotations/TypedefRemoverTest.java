@@ -21,17 +21,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.Collections;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TypedefRemoverTest {
     @Rule
@@ -119,7 +117,6 @@ public class TypedefRemoverTest {
         assertThat(filtered).isNotNull();
         assertThat(filtered).isNotSameAs(input);
         byte[] rewritten = ByteStreams.toByteArray(filtered);
-        Files.write(rewritten, new File("/tmp/rewritten.class"));
         assertThat(rewritten).isNotEqualTo(outerClass);
 
         assertThat(rewritten).isEqualTo(REWRITTEN_OUTER_CLASS);
