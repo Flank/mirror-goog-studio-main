@@ -25,14 +25,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-
-import org.gradle.tooling.LongRunningOperation;
-import org.gradle.tooling.ProjectConnection;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.gradle.tooling.LongRunningOperation;
+import org.gradle.tooling.ProjectConnection;
 
 /**
  * Common flags shared by {@link BuildModel} and {@link RunGradleTasks}.
@@ -55,7 +53,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @Nullable Logging.BenchmarkMode benchmarkMode;
 
-    boolean enableInfoLogging = true;
+    boolean enableInfoLogging;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -63,6 +61,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @Nullable String heapSize) {
         this.benchmarkRecorder = benchmarkRecorder;
+        this.enableInfoLogging = benchmarkRecorder == null;
         this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getName().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.getPath());
