@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.ndk
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.NdkHelper
 import com.android.builder.model.AndroidArtifact
@@ -76,6 +77,9 @@ android {
 
     @Test
     void "check native libraries with splits"() {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         project.buildFile <<
 """
 android {
@@ -94,6 +98,9 @@ android {
 
     @Test
     void "check native libraries with splits and universalApk"() {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         project.buildFile <<
                 """
 android {
@@ -121,6 +128,9 @@ android {
 
     @Test
     void "check native libraries with abiFilters"() {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         project.buildFile <<
                 """
 android {
@@ -151,6 +161,9 @@ android {
 
     @Test
     void "check using add on string for compileSdkVersion"() {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         project.buildFile <<
 """
 android {

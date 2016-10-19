@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.Revision;
 
@@ -49,4 +50,9 @@ public class AssumeUtil {
     public static void assumeNotUsingJack() {
         Assume.assumeFalse(GradleTestProject.USE_JACK);
     }
+
+    public static void assumeNotWindows() {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+    }
+
 }

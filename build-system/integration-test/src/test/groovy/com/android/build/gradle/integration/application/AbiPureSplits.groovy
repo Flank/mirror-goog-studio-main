@@ -96,6 +96,9 @@ class AbiPureSplits {
 
     @Test
     void "test adding an abi pure split"() throws Exception {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
 
         // get the last modified time of the initial APKs so we can make sure incremental build
@@ -139,6 +142,9 @@ class AbiPureSplits {
 
     @Test
     void "test deleting an abi pure split"() throws Exception {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
         AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
 
         // record the build time of each APK to ensure we don't rebuild those in incremental mode.
