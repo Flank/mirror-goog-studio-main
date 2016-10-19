@@ -43,6 +43,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.GradleCoordinate;
@@ -883,6 +884,66 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                 + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
                                 + "    compile \"com.android.support:cardview-v7:24.2\""
                                 + "    compile \"com.android.support:multidex:1.0.1\""
+                                + "    compile \"com.android.support:support-annotations:25.0.0\""
+                                + "}\n")));
+    }
+
+    public void testWearableConsistency1() throws Exception {
+        // Regression test 1 for b/29006320.
+        // Requires custom model mocks
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                    + "build.gradle:4: Error: Project depends on com.google.android.support:wearable:2.0.0-alpha3, so it must also depend (as a provided dependency) on com.google.android.wearable:wearable:2.0.0-alpha3 [GradleCompatible]\n"
+                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                    + "1 errors, 0 warnings\n",
+
+                lintProjectIncrementally("build.gradle",
+                        source("build.gradle", ""
+                                + "apply plugin: 'android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                                + "}\n")));
+    }
+
+    public void testWearableConsistency2() throws Exception {
+        // Regression test 2 for b/29006320.
+        // Requires custom model mocks
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                    + "build.gradle:4: Error: The wearable libraries for com.google.android.support and com.google.android.wearable must use exactly the same versions; found 2.0.0-alpha3 and 2.0.0-alpha4 [GradleCompatible]\n"
+                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                    + "1 errors, 0 warnings\n",
+
+                lintProjectIncrementally("build.gradle",
+                source("build.gradle", ""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                        + "    provided \"com.google.android.wearable:wearable:2.0.0-alpha4\"\n"
+                        + "}\n")));
+    }
+
+    public void testWearableConsistency3() throws Exception {
+        // Regression test 3 for b/29006320.
+        // Requires custom model mocks
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals(""
+                    + "build.gradle:4: Error: This dependency should be marked as provided, not compile [GradleCompatible]\n"
+                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                    + "1 errors, 0 warnings\n",
+
+                lintProjectIncrementally("build.gradle",
+                        source("build.gradle", ""
+                                + "apply plugin: 'android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                                + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
                                 + "}\n")));
     }
 
@@ -1186,6 +1247,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         when(dependencies.getLibraries()).thenReturn(libraries);
 
                         AndroidArtifact artifact = mock(AndroidArtifact.class);
+                        //noinspection deprecation
                         when(artifact.getDependencies()).thenReturn(dependencies);
                         when(artifact.getCompileDependencies()).thenReturn(dependencies);
 
@@ -1234,6 +1296,70 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     };
                 }
 
+                if (getName().startsWith("testWearableConsistency")) {
+                    return new Project(this, dir, referenceDir) {
+                        @Override
+                        public boolean isGradleProject() {
+                            return true;
+                        }
+
+                        @Nullable
+                        @Override
+                        public Variant getCurrentVariant() {
+                            // Simulate variant which has an AndroidLibrary various combinations
+                            // of the com.google.android.support:wearable and
+                            // com.google.android.wearable libraries, which must be in sync.
+                            // See b/29006320.
+                            List<AndroidLibrary> androidLibraries;
+                            List<JavaLibrary> javaLibraries;
+                            if ("testWearableConsistency1".equals(GradleDetectorTest.this.getName())) {
+                                // Missing wearable library: not ok
+                                androidLibraries = Collections.singletonList(
+                                        createMockLibrary(
+                                                "com.google.android.support:wearable:2.0.0-alpha3")
+                                );
+                                javaLibraries = Collections.emptyList();
+                            } else if ("testWearableConsistency2".equals(GradleDetectorTest.this.getName())) {
+                                // Different versions: not ok
+                                androidLibraries = Collections.singletonList(
+                                        createMockLibrary(
+                                                "com.google.android.support:wearable:2.0.0-alpha3")
+                                );
+                                javaLibraries = Collections.singletonList(
+                                        createMockJavaLibrary("com.google.android.wearable:wearable:2.0.0-alpha4", true)
+                                );
+                            } else if ("testWearableConsistency3".equals(GradleDetectorTest.this.getName())) {
+                                // Same versions, but wear library wasn't reported
+                                androidLibraries = Collections.singletonList(
+                                        createMockLibrary(
+                                                "com.google.android.support:wearable:2.0.0-alpha3")
+                                );
+                                javaLibraries = Collections.singletonList(
+                                        createMockJavaLibrary(
+                                                "com.google.android.wearable:wearable:2.0.0-alpha3", false)
+                                );
+                            } else {
+                                fail("Unexpected test " + getName());
+                                return null;
+                            }
+
+
+                            Dependencies dependencies = mock(Dependencies.class);
+                            when(dependencies.getLibraries()).thenReturn(androidLibraries);
+                            when(dependencies.getJavaLibraries()).thenReturn(javaLibraries);
+
+                            AndroidArtifact artifact = mock(AndroidArtifact.class);
+                            //noinspection deprecation
+                            when(artifact.getDependencies()).thenReturn(dependencies);
+                            when(artifact.getCompileDependencies()).thenReturn(dependencies);
+
+                            Variant variant = mock(Variant.class);
+                            when(variant.getMainArtifact()).thenReturn(artifact);
+                            return variant;
+                        }
+                    };
+                }
+
                 if ("testSupportLibraryConsistency".equals(getName())
                         || "testSupportLibraryConsistencyNonIncremental".equals(getName())) {
                     return new Project(this, dir, referenceDir) {
@@ -1245,15 +1371,16 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         @Nullable
                         @Override
                         public Variant getCurrentVariant() {
-                        /*
-                        Simulate variant which has an AndroidLibrary with
-                        resolved coordinates
+                            /*
+                            Simulate variant which has an AndroidLibrary with
+                            resolved coordinates
 
-                        compile "com.android.support:appcompat-v7:24.2"
-                        compile "com.android.support:support-v13:24.1"
-                        compile "com.android.support:preference-v7:25.0-SNAPSHOT"
-                        compile "com.android.support:cardview-v7:24.2"
-                         */
+                            compile "com.android.support:appcompat-v7:24.2"
+                            compile "com.android.support:support-v13:24.1"
+                            compile "com.android.support:preference-v7:25.0-SNAPSHOT"
+                            compile "com.android.support:cardview-v7:24.2"
+                            compile "com.android.support:support-annotations:25.0.0" // allowed
+                             */
                             List<AndroidLibrary> libraries = Arrays.asList(
                                     createMockLibrary("com.android.support:appcompat-v7:24.2"),
                                     createMockLibrary("com.android.support:support-v13:24.1"),
@@ -1261,11 +1388,16 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                     createMockLibrary("com.android.support:cardview-v7:24.2"),
                                     createMockLibrary("com.android.support:multidex:1.0.1")
                             );
+                            List<JavaLibrary> javaLibraries = Collections.singletonList(
+                                    createMockJavaLibrary(
+                                            "com.android.support:support-annotations:25.0.0"));
 
                             Dependencies dependencies = mock(Dependencies.class);
                             when(dependencies.getLibraries()).thenReturn(libraries);
+                            when(dependencies.getJavaLibraries()).thenReturn(javaLibraries);
 
                             AndroidArtifact artifact = mock(AndroidArtifact.class);
+                            //noinspection deprecation
                             when(artifact.getDependencies()).thenReturn(dependencies);
                             when(artifact.getCompileDependencies()).thenReturn(dependencies);
 
@@ -1280,6 +1412,10 @@ public class GradleDetectorTest extends AbstractCheckTest {
             }
 
             private AndroidLibrary createMockLibrary(String s) {
+                return createMockLibrary(s, false);
+            }
+
+            private AndroidLibrary createMockLibrary(String s, boolean isProvided) {
                 GradleCoordinate coordinate = GradleCoordinate.parseCoordinateString(s);
                 assertNotNull(coordinate);
                 MavenCoordinates mavenCoordinates = mock(MavenCoordinates.class);
@@ -1291,6 +1427,27 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 AndroidLibrary library1 = mock(AndroidLibrary.class);
                 when(library1.getResolvedCoordinates()).thenReturn(mavenCoordinates);
                 when(library1.getLintJar()).thenReturn(new File("lint.jar"));
+                when(library1.isProvided()).thenReturn(isProvided);
+
+                return library1;
+            }
+
+            private JavaLibrary createMockJavaLibrary(String s) {
+                return createMockJavaLibrary(s, false);
+            }
+
+            private JavaLibrary createMockJavaLibrary(String s, boolean isProvided) {
+                GradleCoordinate coordinate = GradleCoordinate.parseCoordinateString(s);
+                assertNotNull(coordinate);
+                MavenCoordinates mavenCoordinates = mock(MavenCoordinates.class);
+                when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
+                when(mavenCoordinates.getArtifactId()).thenReturn(coordinate.getArtifactId());
+                when(mavenCoordinates.getVersion()).thenReturn(coordinate.getRevision());
+                when(mavenCoordinates.toString()).thenReturn(s);
+
+                JavaLibrary library1 = mock(JavaLibrary.class);
+                when(library1.getResolvedCoordinates()).thenReturn(mavenCoordinates);
+                when(library1.isProvided()).thenReturn(isProvided);
 
                 return library1;
             }
