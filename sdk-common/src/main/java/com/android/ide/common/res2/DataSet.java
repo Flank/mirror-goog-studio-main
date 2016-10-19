@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.utils.ILogger;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -571,7 +571,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(getClass())
                 .addValue(mConfigName)
                 .add("sources", Arrays.toString(mSourceFiles.toArray()))
                 .toString();

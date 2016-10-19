@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.truth.FailureStrategy;
 
 /**
@@ -49,7 +49,7 @@ class FakeFailureStrategy extends FailureStrategy {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("message", message)
                 .add("throwable", throwable)
                 .add("expected", expected)

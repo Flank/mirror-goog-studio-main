@@ -22,7 +22,7 @@ import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.io.File;
 import java.util.Set;
@@ -61,7 +61,7 @@ class ImmutableJarInput extends QualifiedContentImpl implements JarInput {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", getName())
                 .add("file", getFile())
                 .add("contentTypes", Joiner.on(',').join(getContentTypes()))

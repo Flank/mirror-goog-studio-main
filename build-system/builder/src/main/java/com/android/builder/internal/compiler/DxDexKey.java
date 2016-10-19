@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -162,7 +163,7 @@ final class DxDexKey extends DexKey {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("dexKey", super.toString())
                 .add("mAdditionalParameters", mAdditionalParameters)
                 .add("mIsMultiDex", mIsMultiDex)

@@ -52,7 +52,7 @@ import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -705,7 +705,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .addValue(variantConfiguration.getFullName())
                 .toString();
     }

@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.TransformInput;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -61,7 +61,7 @@ class ImmutableTransformInput implements TransformInput {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("rootLocation", optionalRootLocation)
                 .add("jarInputs", jarInputs)
                 .add("folderInputs", directoryInputs)

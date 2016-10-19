@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.io.File;
 import java.security.KeyStore;
@@ -205,7 +205,7 @@ public class DefaultSigningConfig implements SigningConfig {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("storeFile", mStoreFile.getAbsolutePath())
                 .add("storePassword", mStorePassword)
                 .add("keyAlias", mKeyAlias)

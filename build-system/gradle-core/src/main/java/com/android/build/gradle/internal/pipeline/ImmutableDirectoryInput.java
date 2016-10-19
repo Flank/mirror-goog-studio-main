@@ -21,7 +21,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Status;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
@@ -64,7 +64,7 @@ class ImmutableDirectoryInput extends QualifiedContentImpl implements DirectoryI
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", getName())
                 .add("file", getFile())
                 .add("contentTypes", Joiner.on(',').join(getContentTypes()))

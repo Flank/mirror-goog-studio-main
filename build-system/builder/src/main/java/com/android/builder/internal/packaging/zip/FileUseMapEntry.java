@@ -18,7 +18,7 @@ package com.android.builder.internal.packaging.zip;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
@@ -154,7 +154,7 @@ class FileUseMapEntry<T> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("start", mStart)
                 .add("end", mEnd)
                 .add("store", mStore)

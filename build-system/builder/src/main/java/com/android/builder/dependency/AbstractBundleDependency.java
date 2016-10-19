@@ -26,6 +26,7 @@ import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -209,7 +210,7 @@ public abstract class AbstractBundleDependency implements AndroidBundle {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mBundle", mBundle)
                 .add("mBundleFolder", mBundleFolder)
                 .add("mLibraryDependencies", mLibraryDependencies)

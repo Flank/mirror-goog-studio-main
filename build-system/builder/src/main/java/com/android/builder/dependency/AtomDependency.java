@@ -30,6 +30,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.MavenCoordinates;
 import com.android.utils.FileUtils;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -160,7 +161,7 @@ public class AtomDependency extends AbstractBundleDependency implements AndroidA
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mAtomDependencies", mAtomDependencies)
                 .add("mAtomName", mAtomName)
                 .add("super", super.toString())

@@ -28,7 +28,7 @@ import com.android.builder.tasks.WorkQueue;
 import com.android.ide.common.internal.PngCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.utils.ILogger;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
@@ -253,7 +253,7 @@ public class QueuedCruncher implements PngCruncher {
 
                         @Override
                         public String toString() {
-                            return Objects.toStringHelper(this)
+                            return MoreObjects.toStringHelper(this)
                                     .add("from", from.getAbsolutePath())
                                     .add("to", to.getAbsolutePath())
                                     .toString();

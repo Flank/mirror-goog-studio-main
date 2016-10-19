@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.prefs.AndroidLocation;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import org.gradle.api.Named;
 import org.gradle.api.tasks.Input;
@@ -179,7 +179,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", mName)
                 .add("storeFile", getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
                 .add("storePassword", getStorePassword())

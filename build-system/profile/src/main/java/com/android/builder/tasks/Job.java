@@ -18,7 +18,7 @@ package com.android.builder.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -87,7 +87,7 @@ public class Job<T> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("\ntitle", mJobTitle)
                 .add("\ntask", mTask)
                 .add("\nlatch", mBooleanLatch)

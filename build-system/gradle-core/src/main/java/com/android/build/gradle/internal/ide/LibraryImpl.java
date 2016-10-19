@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import java.io.Serializable;
@@ -126,7 +127,7 @@ abstract class LibraryImpl implements Library, Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", name)
                 .add("requestedCoordinates", requestedCoordinates)
                 .add("resolvedCoordinates", resolvedCoordinates)
