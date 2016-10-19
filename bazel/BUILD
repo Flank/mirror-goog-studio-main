@@ -21,30 +21,30 @@ java_library(
     # making it unsuitable for bazel or any other reasonable tool.
     # TODO: Update and use the prebuilts dependency
     deps = [
-        "//tools:idea/lib/groovy-all-2.4.6",
         ":utils",
+        "//tools:idea/lib/groovy-all-2.4.6",
     ],
 )
 
 java_binary(
     name = "groovy_stub_gen",
-    runtime_deps = [":groovy-compiler"],
     main_class = "com.android.tools.groovy.GroovyStubGenerator",
     visibility = ["//visibility:public"],
+    runtime_deps = [":groovy-compiler"],
 )
 
 java_binary(
     name = "groovyc",
-    runtime_deps = [":groovy-compiler"],
     main_class = "com.android.tools.groovy.GroovyCompiler",
     visibility = ["//visibility:public"],
+    runtime_deps = [":groovy-compiler"],
 )
 
 java_binary(
     name = "unzipper",
     main_class = "com.android.tools.utils.Unzipper",
-    runtime_deps = [":utils"],
     visibility = ["//visibility:public"],
+    runtime_deps = [":utils"],
 )
 
 genrule(
@@ -63,8 +63,8 @@ genrule(
         "kotlin-reflect.jar",
     ],
     cmd = "$(location :unzipper) $< " +
-        "Kotlin/kotlinc/lib/kotlin-runtime.jar:$(@D)/kotlin-runtime.jar " +
-        "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar",
+          "Kotlin/kotlinc/lib/kotlin-runtime.jar:$(@D)/kotlin-runtime.jar " +
+          "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar",
     tools = [":unzipper"],
     visibility = ["//visibility:public"],
 )
@@ -73,24 +73,24 @@ java_binary(
     name = "kotlinc",
     srcs = ["src/com/android/tools/kotlin/KotlinCompiler.java"],
     main_class = "com.android.tools.kotlin.KotlinCompiler",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":kotlin-runtime"],
     deps = [
         ":kotlin-compiler",
         ":utils",
     ],
-    runtime_deps = [":kotlin-runtime"],
-    visibility = ["//visibility:public"],
 )
 
 java_binary(
     name = "formc",
     srcs = ["src/com/android/tools/form/FormCompiler.java"],
     main_class = "com.android.tools.form.FormCompiler",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":kotlin-runtime"],
     deps = [
         ":formc-deps",
         ":utils",
     ],
-    runtime_deps = [":kotlin-runtime"],
-    visibility = ["//visibility:public"],
 )
 
 java_import(
@@ -113,8 +113,8 @@ java_library(
         ":utils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
-        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
         "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
     ],
 )
 
@@ -129,9 +129,6 @@ java_binary(
 # See README.md
 java_binary(
     name = "third_party_build_generator",
-    main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
-    visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
     args = [
         "com.android.tools.external.com-intellij:uast:145.597.3",
         "com.android.tools.external.lombok:lombok-ast:0.2.3",
@@ -168,6 +165,9 @@ java_binary(
         "org.easymock:easymock:3.3",
         "org.mockito:mockito-all:1.9.5",
     ],
+    main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
 )
 
 # See README.md
@@ -181,6 +181,7 @@ java_binary(
 java_binary(
     name = "jarjar",
     main_class = "com.tonicsystems.jarjar.Main",
+    visibility = ["//visibility:public"],
     runtime_deps = [
         "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
         "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-command/1.0.0:jar",
@@ -189,7 +190,6 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.7:jar",
     ],
-    visibility = ["//visibility:public"],
 )
 
 config_setting(
