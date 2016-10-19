@@ -46,10 +46,7 @@ public class BazelModule {
     }
 
     public String getName() {
-        for (Module module : modules) {
-            return (isSingle() ? "" : "MM_") + module.getName();
-        }
-        return "";
+        return (isSingle() ? "" : "MM_") + modules.get(0).getName();
     }
 
     public boolean isSingle() {
