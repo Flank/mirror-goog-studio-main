@@ -6,11 +6,16 @@ filegroup(
 )
 
 filegroup(
-    name = "perfd/network",
-    srcs = glob(["perfd/network/**"]),
+    name = "perfd/cpu",
+    srcs = glob(["perfd/cpu/**"]),
 )
 
 filegroup(
     name = "perfd/memory",
     srcs = glob(["perfd/memory/**"]),
+)
+
+filegroup(
+    name = "perfd/network",
+    srcs = glob(["perfd/network/**"]),
 )

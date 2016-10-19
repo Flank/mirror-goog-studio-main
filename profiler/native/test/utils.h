@@ -23,6 +23,10 @@ namespace profiler {
 // Class to define methods used across all the native tests.
 class TestUtils {
  public:
+  // Returns the correct testdata path correspondent to perfd cpu package
+  // given a relative path.
+  static std::string getCpuTestData(const std::string &path);
+
   // Returns the correct testdata path correspondent to the utils package
   // given a relative path.
   static std::string getUtilsTestData(const std::string &path);
