@@ -1,41 +1,143 @@
-# Bazel utilities
+# How to Bazel
 
-This package contains code related to our Bazel setup: support for compiling IntelliJ
-forms, Kotlin, custom macros, BUILD files generators etc.
+This directory contains the core files to run studio-master-dev tests using bazel.
 
-## BUILD files generators
+## Running bazel
+Bazel has the concept of a _workspace_: the root of all your source files. For us, it is where we `repo init` our source tree. For google3 vets, this is the "google3" directory. In this document we assume the current directory to be the workspace, but note that bazel can be run from anywhere in the tree.
 
-There are three `java_binaries` here that can be used to manage dependecies in
-prebuilts. Please note that these tools don't format the BUILD files, so you
-should run `buildifer` over the newly created files afterwards.
+Bazel is checked-in at `tools/base/bazel/bazel`. For conveniency you might want to link it like this:
 
-### `third_party_build_generator`
+```shell
+ln -s <workspace>/tools/base/bazel ~/bin/bazel
+```
+
+Then no matter where you are in the workspace, bazel will find the right, platform specific, binary and run it.
+
+## Running all the tests
+
+The command to run all the bazel tests run by the PSQ is:
+
+```shell
+bazel test $(<tools/base/bazel/test_targets)
+```
+
+To run all the tests found in `tools/base`:
+
+```shell
+bazel test //tools/base/...
+```
+
+To run all the tests in the IntelliJ Android plugin:
+```
+bazel test //tools/adt/idea:android_tests
+```
+To build without runnig the tests:
+```
+bazel test //tools/adt/idea:android_tests
+```
+To run a single test:
+```
+bazel test //tools/adt/idea:android_tests --test_filter=AndroidLayoutDomTest
+```
+To debug a single test, which will open remote debugging:
+```
+bazel test //tools/adt/idea:android_tests --test_filter=AndroidLayoutDomTest --java_debug
+```
+
+## BUILD files
+
+BUILD files define a package with a set build and test rules. In order to support Android Studio we created a new kind of rule, that matches an IntelliJ module: the `iml_module` rule.
+
+> Note that we modify these BUILD files manually, so whenever you make a change to an `.iml` file, its corresponding BUILD file will have to be changed.
+
+### iml_module
+```
+iml_module(name, srcs, test_srcs, exclude, resources, test_resources, deps, test_runtime_deps,
+visibility, exports,javacopts, test_data, test_timeout, test_class, test_shard_count, tags)
+```
+
+This rule will generate the targets:
+
+* _name_: The production library for this module.
+* _name_\_testlib: The test library for this module.
+* _name_\_tests: The test target to run this module's tests.
+
+#### Example
+```
+iml_module(
+    name = "android",
+    srcs = ["src/main/java"],
+    test_srcs = ["src/test/java"],
+    test_data = glob("testData/**"),
+    resources = ["src/main/resources"]
+    test_resources = ["src/test/resources"],
+    deps = [
+        "//path/to/module:name[module]",
+        "//path/to/libs:junit-4.12[test]",
+        "//a/module/only/needed/in/tests:name[module, test]",
+        "//a/standard/java/dependency:dep",
+    ],
+)
+```
+|    Attribute   | Description                                                                                         |
+|----------------|-----------------------------------------------------------------------------------------------------|
+|`name`          | The name of the rule (usually matching Studio's module name)                                        |
+|`srcs`          | A list of directories containing the sources. .java, .groovy, .kotlin and .form files are supported.|
+|`resources`     | A list directories with the production resources.                                                   |
+|`deps`          | A tag ehnanced list of dependencies, of the form `//label[tag1,tag2,...]`. Supported tags are: `module`, for iml_module dependencies, and `test` for test only dependencies |
+|`test_srcs`     | A list of directories with the test sources.                                                        |
+|`test_resources`| A list of directories with the test resources.                                                      |
+|`test_data`     | The files needed to run the test                                                                    |
+
+
+> A major difference with actual iml modules is that in bazel we must specify the files needed to run the tests.
+> These files are known as _runfiles_ and are specified via the `test_data` attribute. This is essential to determining
+> which test targets need to be run when an arbitrary file has changed.
+
+## Circular Dependencies
+
+_Just don't_. IntelliJ has support for circular dependencies of modules, but we do not use it in our code base.
+
+## Additional tools
+
+There are several other tools in this package that can be used to manage dependecies in prebuilts.
+
+### third_party_build_generator
 
 Used to generate `//tools/base/third_party/BUILD`. Computes effective versions of
 all necessary dependencies and creates a `java_library` rule for each one of
 them. It will also download missing jars into `//prebuilts/tools/common/m2/repository`.
 
-Can be invoked by running `bazel run //tools/base/bazel:third_party_build_generator`.
+Invoked by running:
+```
+bazel run //tools/base/bazel:third_party_build_generator
+```
 
 The dependencies we need are specified in the BUILD file in this package.
 
-### `add_dependency`
+### add_dependency
 
 Can be used to download one or more Maven artifacts into prebuilts, including
 all transitive dependencies.
  
 Invoked by running
-`bazel run //tools/base/bazel:add_dependency com.example:foo:1.0`.
+```
+bazel run //tools/base/bazel:add_dependency com.example:foo:1.0
+```
 
 You can also use it to download protoc binaries, like this:
 
-`bazel run //tools/base/bazel:add_dependency com.google.protobuf:protoc:exe:linux-x86_64:3.0.0`
+```
+bazel run //tools/base/bazel:add_dependency com.google.protobuf:protoc:exe:linux-x86_64:3.0.0
+```
 
-### `java_import_generator`
+### java_import_generator
 
 Creates a BUILD file for every POM file in the prebuilts maven repo. Both of
 the binaries above do the same, but this can be useful if prebuilts was
 modified using Gradle's `cloneArtifacts` tasks or manually.
 
 Invoked by running
-`bazel run //tools/base/bazel:java_import_generator`.
+```
+bazel run //tools/base/bazel:java_import_generator
+```
