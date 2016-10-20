@@ -314,18 +314,7 @@ public class JackTransform extends Transform {
         jackInProcess = isInProcess(config.getJackOptions().isJackInProcess());
 
         if (config.getBuildType().isTestCoverageEnabled()) {
-            if (JackProcessOptions.COVERAGE_BROKEN.contains(
-                            androidBuilder.getTargetInfo().getBuildTools().getRevision())) {
-                androidBuilder
-                        .getErrorReporter()
-                        .handleSyncWarning(
-                                null,
-                                SyncIssue.TYPE_GENERIC,
-                                "Test coverage is disabled for Jack. Next versions of build tools "
-                                        + "will fix this issue.");
-            } else {
-                options.setCoverageMetadataFile(scope.getJackCoverageMetadataFile());
-            }
+            options.setCoverageMetadataFile(scope.getJackCoverageMetadataFile());
         }
 
         if (config.isMinifyEnabled()) {
