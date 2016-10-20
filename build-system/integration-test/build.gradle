@@ -20,6 +20,7 @@ dependencies {
     compile project(':analytics-library:protos')
     compile project(':base:builder-model')
     compile project(':base:builder')
+    compile project(':base:gradle-experimental')
     compile project(':base:sdk-common')
     compile project(':base:lint')
     compile project(':base:instant-run:instant-run-client')

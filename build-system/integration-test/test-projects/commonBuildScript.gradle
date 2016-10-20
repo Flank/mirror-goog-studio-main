@@ -18,7 +18,7 @@ def env = new Object() {
     String buildVersion
     String experimentalVersion
     String experimentalGradleVersion
-};
+}
 
 def commonScriptFolder = buildscript.sourceFile.parent
 apply from: "$commonScriptFolder/commonGradlePluginVersion.gradle", to: env
@@ -27,10 +27,7 @@ project.buildscript { buildscript ->
     apply from: "$commonScriptFolder/commonLocalRepo.gradle", to:buildscript
     dependencies {
         classpath "com.android.tools.build:gradle:$env.buildVersion"
-        if (env.experimentalGradleVersion != null
-                && project.gradle.gradleVersion.startsWith(env.experimentalGradleVersion)) {
-            classpath "com.android.tools.build:gradle-experimental:$env.experimentalVersion"
-        }
+        classpath "com.android.tools.build:gradle-experimental:$env.experimentalVersion"
         classpath 'com.android.tools.internal.build.test:devicepool:0.1'
     }
 }
