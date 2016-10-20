@@ -34,6 +34,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -72,6 +73,8 @@ public class IconDetectorTest extends AbstractCheckTest {
         ALL.add(IconDetector.ICON_XML_AND_PNG);
         ALL.add(IconDetector.ICON_LAUNCHER_SHAPE);
         ALL.add(IconDetector.ICON_MIX_9PNG);
+        ALL.add(IconDetector.WEBP_ELIGIBLE);
+        ALL.add(IconDetector.WEBP_UNSUPPORTED);
     }
 
     @Override
@@ -255,6 +258,18 @@ public class IconDetectorTest extends AbstractCheckTest {
                             + "</selector>\n")));
     }
 
+    public void testNoWarningForMipmapsOnly() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=162958
+        mEnabled = ImmutableSet.of(IconDetector.ICON_MISSING_FOLDER);
+        assertEquals("No warnings.",
+
+                lintProject(
+                        xml("res/drawable/foo.xml", "<bitmap/>"),
+                        image("res/drawable-nodpi/file1.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                        image("res/mipmap-hdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                        image("res/mipmap-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000)));
+    }
+
     public void testMixedFormat() throws Exception {
         mEnabled = ALL;
         // Test having a mixture of .xml and .png resources for the same name
@@ -329,6 +344,22 @@ public class IconDetectorTest extends AbstractCheckTest {
                     image("res/drawable-mdpi/sample_icon.jpg", 48, 48).format("GIF").fill(10, 10, 20, 20, 0xFF00FFFF),
                     image("res/drawable-mdpi/sample_icon.jpeg", 48, 48).format("GIF").fill(10, 10, 20, 20, 0xFF00FFFF),
                     image("res/drawable-mdpi/sample_icon.png", 48, 48).format("GIF").fill(10, 10, 20, 20, 0xFF00FFFF)));
+    }
+
+    public void testMisleadingWebpFileName() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_EXTENSION);
+        assertEquals(""
+                    + "res/drawable-mdpi/foo.png: Warning: Misleading file extension; named .png but the file format is webp [IconExtension]\n"
+                    + "0 errors, 1 warnings\n",
+
+                lintProject(
+                        base64gzip("res/drawable-mdpi/foo.png", ""
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+                        base64gzip("res/drawable-mdpi/ok.webp", ""
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
+        ));
     }
 
     public void testColors() throws Exception {
@@ -460,6 +491,23 @@ public class IconDetectorTest extends AbstractCheckTest {
                 image("res/drawable-mdpi/icon4.png", 24, 24),
                 image("res/drawable-mdpi/ic_launcher2.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF)
             ));
+    }
+
+    public void testExpectedSizeMipmap() throws Exception {
+        mEnabled = Collections.singleton(IconDetector.ICON_EXPECTED_SIZE);
+        //noinspection all // Sample code
+        assertEquals(""
+                    + "res/mipmap-mdpi/ic_launcher.png: Warning: Incorrect icon size for mipmap-mdpi/ic_launcher.png: expected 48x48, but was 24x24 [IconExpectedSize]\n"
+                    + "0 errors, 1 warnings\n",
+
+                lintProject(
+                        manifest().minSdk(14),
+                        // 3 wrong-sized icons:
+                        image("res/mipmap-mdpi/ic_launcher.png", 24, 24),
+
+                        // OK sizes
+                        image("res/mipmap-xxhdpi/ic_launcher2.png", 144, 144).fill(10, 10, 20, 20, 0xFF00FFFF)
+                ));
     }
 
     public void testAbbreviate() throws Exception {
@@ -626,6 +674,34 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testClaimedSizeWebp() throws Exception {
+        // Check size decoding of webp headers
+        mEnabled = Collections.singleton(IconDetector.ICON_DIP_SIZE);
+        assertEquals(""
+                    + "res/drawable-mdpi/my_lossless_72dp.webp: Warning: Suspicious file name my_lossless_72dp.webp: The implied 72 dp size does not match the actual dp size (pixel size 58×56 in a drawable-mdpi folder computes to 58×56 dp) [IconDipSize]\n"
+                    + "res/mipmap-mdpi/my_lossy2_72dp.webp: Warning: Suspicious file name my_lossy2_72dp.webp: The implied 72 dp size does not match the actual dp size (pixel size 58×56 in a mipmap-mdpi folder computes to 58×56 dp) [IconDipSize]\n"
+                    + "res/drawable-mdpi/my_lossy_72dp.webp: Warning: Suspicious file name my_lossy_72dp.webp: The implied 72 dp size does not match the actual dp size (pixel size 58×56 in a drawable-mdpi folder computes to 58×56 dp) [IconDipSize]\n"
+                    + "0 errors, 3 warnings\n",
+                lintProject(
+                        manifest().minSdk(1),
+                        base64gzip("res/drawable-mdpi/my_lossy_72dp.webp", ""
+                                // Lossy
+                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                                + "AADVeQHzUAAAAA=="),
+                        base64gzip("res/mipmap-mdpi/my_lossy2_72dp.webp", ""
+                                // Lossy
+                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                                + "AADVeQHzUAAAAA=="),
+
+                        base64gzip("res/drawable-mdpi/my_lossless_72dp.webp", ""
+                                // Lossless
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
+                ));
+    }
+
     public void testResConfigs1() throws Exception {
         // resConfigs in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
@@ -671,6 +747,67 @@ public class IconDetectorTest extends AbstractCheckTest {
                         image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
                         image("res/drawable-nodpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
                         image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000)));
+    }
+
+    public void testWebpEligible() throws Exception {
+        mEnabled = ImmutableSet.of(IconDetector.WEBP_ELIGIBLE);
+
+        assertEquals(""
+                    + "res/drawable/ic_launcher.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion. [ConvertToWebp]\n"
+                    + "0 errors, 1 warnings\n",
+
+                lintProject(
+                        manifest().minSdk(17),
+                        image("res/drawable/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF)));
+    }
+
+    public void testWebpUnsupported() throws Exception {
+        mEnabled = ImmutableSet.of(IconDetector.WEBP_ELIGIBLE, IconDetector.WEBP_UNSUPPORTED);
+        assertEquals(""
+                    + "res/mipmap-mdpi/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 10 [WebpUnsupported]\n"
+                    + "res/drawable-mdpi-v13/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 13 [WebpUnsupported]\n"
+                    + "res/drawable-mdpi/my_lossy.webp: Error: WebP requires Android 4.0 (API 15); current minSdkVersion is 10 [WebpUnsupported]\n"
+                    + "3 errors, 0 warnings\n",
+
+                lintProject(
+                        manifest().minSdk(10),
+                        // "PNG" format: cheating since we don't have a WEBP encoder outside of
+                        // Studio, but we know lint won't actually look inside these files
+                        // yet
+
+                        // OK: lossy webp okay in API 15 and up
+                        base64gzip("res/drawable-mdpi-v15/my_lossy.webp", ""
+                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                                + "AADVeQHzUAAAAA=="),
+
+                        // Error: requires API level 15
+                        base64gzip("res/drawable-mdpi/my_lossy.webp", ""
+                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                                + "AADVeQHzUAAAAA=="),
+
+                        // Error: requires API level 18
+                        base64gzip("res/mipmap-mdpi/my_lossless.webp", ""
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+
+                        // Error: requires API level 18; has minSdk 13
+                        base64gzip("res/drawable-mdpi-v13/my_lossless.webp", ""
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+
+                        // OK: requires API 15 but is in v16 folder
+                        base64gzip("res/drawable-mdpi-v16/my_lossless.webp", "" // still not okay needs 18
+                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                                + "AADVeQHzUAAAAA=="),
+
+                        // OK: requires API 18 but is in v18 folder
+                        base64gzip("res/drawable-mdpi-v18/my_lossless.webp", "" // OK 18
+                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
+                ));
     }
 
     @Override
