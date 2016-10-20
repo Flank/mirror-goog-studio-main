@@ -7,6 +7,7 @@ iml_module(
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",

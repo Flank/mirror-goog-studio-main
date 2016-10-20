@@ -7,6 +7,7 @@ iml_module(
     test_resources = ["binary-resources/testResources"],
     test_srcs = ["binary-resources/javatests"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:jsr305",
         "//tools/idea/.idea/libraries:guava-tools",

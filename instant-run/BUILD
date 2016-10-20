@@ -15,6 +15,7 @@ iml_module(
     test_resources = ["instant-run-client/src/test/resources"],
     test_srcs = ["instant-run-client/src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/instant-run:studio.instant-run-common[module]",
         "//tools/base/ddmlib:studio.ddmlib[module]",

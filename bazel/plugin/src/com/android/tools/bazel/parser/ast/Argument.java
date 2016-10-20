@@ -83,6 +83,15 @@ public class Argument extends Node implements Comparable<Argument> {
         this.expression = expression;
     }
 
+    /** Adds a comment for buildifier not to sort this argument for {@code reason}. */
+    public void setDoNotSort(String reason) {
+        if (preComments.stream().noneMatch(s -> s.toLowerCase().contains("do not sort"))
+            && expression instanceof ListExpression
+            && ((ListExpression) expression).size() > 1) {
+            preComments.add(String.format("# do not sort: %s\n", reason));
+        }
+    }
+
     @Override
     public int compareTo(Argument that) {
         int priority = this.getSortPriority() - that.getSortPriority();

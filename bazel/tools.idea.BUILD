@@ -42,6 +42,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.util-rt[module]",
@@ -105,6 +106,7 @@ iml_module(
     test_srcs = ["idea/java/compiler/forms-compiler/testSrc"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.instrumentation-util"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JDOM",
         "//tools:idea.forms_rt[module]",
@@ -121,6 +123,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit3",
         "//tools/idea/.idea/libraries:JUnit4",
@@ -134,6 +137,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools:idea.java-runtime[module]",
@@ -146,6 +150,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:TestNG",
         "//tools:idea.java-runtime[module]",
@@ -176,6 +181,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea/plugins/maven/maven2-server-impl/lib/maven2/lib/maven-2.2.1-uber",
         "//tools:idea.maven-artifact-resolver-common[module]",
@@ -189,6 +195,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/aether-api-1.13.1",
         "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5",
@@ -205,6 +212,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.maven-artifact-resolver-common"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/maven-core-3.0.5",
         "//tools:idea/plugins/maven/maven30-server-impl/lib/maven3/lib/plexus-component-annotations-1.5.5",
@@ -228,12 +236,14 @@ iml_module(
     resources = ["idea/platform/util/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools:idea.annotations",
         "//tools:idea.util-rt",
         "//tools/idea/.idea/libraries:Snappy-Java",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Mac",
         "//tools/idea/.idea/libraries:JDOM",
@@ -258,6 +268,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.jps-model-api[module]",
@@ -271,6 +282,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:JDOM"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.jps-model-api[module]",
@@ -284,6 +296,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JDOM",
@@ -297,6 +310,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.jps-model-api[module]",
@@ -321,10 +335,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/platform/extensions/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:XStream",
         "//tools/idea/.idea/libraries:JDOM",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:XStream",
         "//tools/idea/.idea/libraries:JDOM",
@@ -342,12 +358,14 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.util",
         "//tools:idea.extensions",
         "//tools/idea/.idea/libraries:picocontainer",
         "//tools:idea.platform-resources-en",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.extensions[module]",
@@ -365,10 +383,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.core-api",
         "//tools:idea.jps-model-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.jps-model-api[module]",
@@ -382,6 +402,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.core-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.projectModel-api[module]",
@@ -395,6 +416,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.util[module]",
@@ -411,6 +433,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.editor-ui-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JDOM",
@@ -427,6 +450,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.util",
         "//tools:idea.extensions",
@@ -439,6 +463,7 @@ iml_module(
         "//tools:idea.analysis-api",
         "//tools:idea.editor-ui-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.extensions[module]",
@@ -470,6 +495,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools/idea/.idea/libraries:Netty",
@@ -505,6 +531,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/platform/lang-api/testSources"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.platform-api",
         "//tools:idea.lvcs-api",
@@ -513,6 +540,7 @@ iml_module(
         "//tools:idea.projectModel-api",
         "//tools:idea.analysis-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.platform-api[module]",
         "//tools:idea.lvcs-api[module]",
@@ -542,6 +570,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.projectModel-api[module]",
@@ -555,6 +584,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.xml-psi-api",
         "//tools:idea.analysis-api",
@@ -563,6 +593,7 @@ iml_module(
         "//tools:idea.extensions",
         "//tools:idea.util",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.xml-psi-api[module]",
         "//tools:idea.analysis-api[module]",
@@ -580,6 +611,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.xml-psi-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.xml-psi-api[module]",
@@ -593,11 +625,13 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.xml-psi-api",
         "//tools:idea.xml-analysis-api",
         "//tools:idea.xml-structure-view-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.lang-api[module]",
         "//tools:idea.xml-psi-api[module]",
@@ -613,6 +647,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.xml-openapi"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.platform-api[module]",
         "//tools:idea.xml-openapi[module]",
@@ -626,6 +661,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.editor-ui-api",
         "//tools:idea.util",
@@ -635,6 +671,7 @@ iml_module(
         "//tools:idea.platform-resources-en",
         "//tools:idea.projectModel-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.editor-ui-api[module]",
         "//tools:idea.util[module]",
@@ -655,6 +692,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.core-api[module]",
@@ -668,11 +706,13 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.platform-api",
         "//tools:idea.vcs-api-core",
         "//tools:idea.diff-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.platform-api[module]",
         "//tools/idea/.idea/libraries:microba",
@@ -697,6 +737,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.analysis-api[module]",
         "//tools:idea.java-psi-api[module]",
@@ -710,6 +751,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.java-psi-api[module]",
@@ -724,6 +766,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.core-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools/idea/.idea/libraries:picocontainer",
@@ -738,10 +781,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.projectModel-api",
         "//tools:idea.jps-model-serialization",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.projectModel-api[module]",
         "//tools:idea.core-impl[module]",
@@ -758,10 +803,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.indexing-api",
         "//tools/idea/.idea/libraries:NanoXML",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-impl[module]",
         "//tools:idea.indexing-api[module]",
@@ -776,12 +823,14 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.editor-ui-api",
         "//tools:idea.util",
         "//tools:idea.annotations",
         "//tools:idea.core-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.editor-ui-api[module]",
         "//tools:idea.util[module]",
@@ -799,11 +848,13 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.util",
         "//tools/idea/.idea/libraries:JDOM",
         "//tools:idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JDOM",
@@ -817,6 +868,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/platform/util/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Groovy[test]",
         "//tools:idea.util[module, test]",
@@ -844,10 +896,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.analysis-api",
         "//tools:idea.core-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.analysis-api[module]",
         "//tools:idea.core-api[module]",
@@ -867,6 +921,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.analysis-impl",
         "//tools:idea.annotations",
@@ -876,6 +931,7 @@ iml_module(
         "//tools:idea.projectModel-api",
         "//tools:idea.projectModel-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.analysis-impl[module]",
         "//tools:idea.annotations[module]",
@@ -889,6 +945,7 @@ iml_module(
 
 iml_module(
     name = "idea.java-psi-impl",
+    # do not sort: must match IML order
     srcs = [
         "idea/java/java-psi-impl/src",
         "idea/java/java-psi-impl/gen",
@@ -896,10 +953,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.java-psi-api",
         "//tools:idea.core-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.java-psi-api[module]",
         "//tools:idea.core-impl[module]",
@@ -916,6 +975,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.structure-view-impl"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.structure-view-impl[module]",
         "//tools:idea.java-psi-impl[module]",
@@ -928,6 +988,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.java-psi-api",
         "//tools:idea.java-psi-impl",
@@ -936,6 +997,7 @@ iml_module(
         "//tools:idea.projectModel-api",
         "//tools:idea.java-indexing-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.java-psi-api[module]",
         "//tools:idea.java-psi-impl[module]",
@@ -959,6 +1021,8 @@ iml_module(
 
 iml_module(
     name = "idea.MM_platform-impl",
+    name = "idea.MM_RegExpSupport",
+    # do not sort: must match IML order
     srcs = [
         "idea/RegExpSupport/src",
         "idea/RegExpSupport/gen",
@@ -988,6 +1052,7 @@ iml_module(
         "idea/xml/xml-structure-view-impl/src",
     ],
     javacopts = ["-extra_checks:off"],
+    # do not sort: must match IML order
     resources = [
         "idea/xml/xml-analysis-impl/resources",
         "idea/xml/xml-psi-impl/resources",
@@ -1007,6 +1072,7 @@ iml_module(
         "idea/platform/testFramework/testSrc",
     ],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.xml-analysis-api",
         "//tools:idea.xml-psi-api",
@@ -1035,6 +1101,7 @@ iml_module(
         "//tools:idea.java-runtime",
         "//tools/idea/.idea/libraries:Groovy",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.lang-api[module]",
         "//tools/idea/.idea/libraries:JUnit4",
@@ -1122,6 +1189,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.MM_platform-impl[module]",
         "//tools:idea.platform-api[module]",
@@ -1135,10 +1203,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.MM_platform-impl",
         "//tools:idea.community-resources",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.MM_platform-impl[module]",
         "//tools:idea.community-resources[module]",
@@ -1152,6 +1222,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.util",
         "//tools:idea.extensions",
@@ -1166,6 +1237,7 @@ iml_module(
         "//tools:idea.java-indexing-api",
         "//tools:idea.java-analysis-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -1197,6 +1269,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.xdebugger-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.resources[module]",
@@ -1220,10 +1293,12 @@ iml_module(
     resources = ["idea/platform/external-system-api/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.annotations",
         "//tools:idea.external-system-rt",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.util[module]",
@@ -1242,6 +1317,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.jsp-base-openapi"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.util[module]",
@@ -1255,6 +1331,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.jsp-openapi[module]",
@@ -1269,6 +1346,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jsp-openapi[module]",
         "//tools:idea.xml-openapi[module]",
@@ -1285,10 +1363,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.jsp-openapi",
         "//tools:idea.openapi",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jsp-openapi[module]",
         "//tools:idea.openapi[module]",
@@ -1302,6 +1382,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools:idea.util[module]",
@@ -1318,6 +1399,7 @@ iml_module(
 
 iml_module(
     name = "idea.properties-psi-api",
+    # do not sort: must match IML order
     srcs = [
         "idea/plugins/properties/properties-psi-api/src",
         "idea/plugins/properties/properties-psi-api/gen",
@@ -1326,6 +1408,7 @@ iml_module(
     resources = ["idea/plugins/properties/properties-psi-api/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.core-api[module]",
         "//tools:idea.editor-ui-api[module]",
@@ -1346,6 +1429,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.properties-psi-api"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.properties-psi-api[module]",
         "//tools:idea.core-impl[module]",
@@ -1365,6 +1449,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.platform-api[module]",
         "//tools:idea.MM_platform-impl[module]",
@@ -1379,10 +1464,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/platform/smRunner/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.testRunner",
         "//tools/idea/.idea/libraries:tcServiceMessages",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.MM_platform-impl[module]",
         "//tools:idea.testRunner[module]",
@@ -1400,6 +1487,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.MM_platform-impl[module]",
         "//tools:idea.bootstrap[module]",
@@ -1413,6 +1501,7 @@ iml_module(
     test_srcs = ["idea/jps/model-impl/testSrc"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.MM_platform-impl"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-impl[module]",
         "//tools:idea.MM_platform-impl[module]",
@@ -1426,6 +1515,7 @@ iml_module(
     test_srcs = ["idea/jps/model-serialization/testSrc"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.jps-model-tests"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-serialization[module]",
         "//tools:idea.jps-model-tests[module, test]",
@@ -1443,11 +1533,13 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/jps/jps-builders/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.util",
         "//tools/idea/.idea/libraries:asm5",
         "//tools/idea/.idea/libraries:protobuf",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.forms_rt[module]",
@@ -1481,6 +1573,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/ant/jps-plugin/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-api[module]",
         "//tools:idea.jps-model-serialization[module]",
@@ -1498,6 +1591,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:Ant"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.jps-builders[module]",
@@ -1516,6 +1610,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-api[module]",
         "//tools:idea.jps-builders[module]",
@@ -1534,6 +1629,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:Groovy"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Groovy",
         "//tools:idea.jps-builders[module]",
@@ -1551,6 +1647,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/maven/jps-plugin/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-api[module]",
         "//tools:idea.jps-model-impl[module]",
@@ -1564,6 +1661,7 @@ iml_module(
 
 iml_module(
     name = "idea.java-analysis-impl",
+    # do not sort: must match IML order
     srcs = [
         "idea/java/java-analysis-impl/src",
         "idea/plugins/InspectionGadgets/InspectionGadgetsAnalysis/src",
@@ -1571,6 +1669,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.analysis-impl",
         "//tools:idea.java-indexing-impl",
@@ -1579,6 +1678,7 @@ iml_module(
         "//tools:idea.java-analysis-api",
         "//tools/idea/.idea/libraries:asm5",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.analysis-impl[module]",
         "//tools:idea.java-indexing-impl[module]",
@@ -1593,6 +1693,7 @@ iml_module(
 
 iml_module(
     name = "idea.java-impl",
+    # do not sort: must match IML order
     srcs = [
         "idea/java/java-impl/src",
         "idea/java/java-impl/gen",
@@ -1604,6 +1705,7 @@ iml_module(
     resources = ["idea/plugins/generate-tostring/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.MM_platform-impl",
         "//tools:idea.java-psi-impl",
@@ -1611,6 +1713,7 @@ iml_module(
         "//tools:idea.java-analysis-impl",
         "//tools:idea.java-structure-view",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.openapi[module]",
@@ -1643,6 +1746,7 @@ iml_module(
 
 iml_module(
     name = "idea.MM_compiler-impl",
+    # do not sort: must match IML order
     srcs = [
         "idea/java/idea-ui/src",
         "idea/platform/external-system-impl/src",
@@ -1659,6 +1763,7 @@ iml_module(
         "idea/java/compiler/impl/testSrc",
     ],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.openapi",
         "//tools:idea.util",
@@ -1670,6 +1775,7 @@ iml_module(
         "//tools:idea.debugger-openapi",
         "//tools:idea.compiler-openapi",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.compiler-openapi[module]",
@@ -1716,6 +1822,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:asm5",
         "//tools:idea.util[module]",
@@ -1736,6 +1843,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.MM_platform-impl[module]",
@@ -1755,6 +1863,7 @@ iml_module(
     test_srcs = ["idea/plugins/junit/test"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.smRunner"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.openapi[module]",
@@ -1775,6 +1884,7 @@ iml_module(
 
 iml_module(
     name = "idea.groovy-psi",
+    # do not sort: must match IML order
     srcs = [
         "idea/plugins/groovy/groovy-psi/src",
         "idea/plugins/groovy/groovy-psi/gen",
@@ -1784,6 +1894,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:Groovy"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Groovy",
         "//tools/idea/.idea/libraries:Guava",
@@ -1806,6 +1917,7 @@ iml_module(
 
 iml_module(
     name = "idea.eclipse",
+    # do not sort: must match IML order
     srcs = [
         "idea/plugins/eclipse/src",
         "idea/plugins/eclipse/gen",
@@ -1815,6 +1927,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/eclipse/testSources"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JDOM",
         "//tools:idea.openapi[module]",
@@ -1835,10 +1948,12 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Slf4j",
         "//tools/idea/.idea/libraries:Gradle",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.external-system-rt[module]",
         "//tools:idea.annotations[module]",
@@ -1858,6 +1973,7 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/idea/.idea/libraries:Gradle"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.external-system-rt[module]",
@@ -1877,10 +1993,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/properties/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.properties-psi-api",
         "//tools:idea.properties-psi-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.lang-api[module]",
         "//tools:idea.platform-api[module]",
@@ -1901,10 +2019,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/ant/tests/src"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Ant",
         "//tools:idea.MM_platform-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.MM_compiler-impl[module]",
@@ -1929,10 +2049,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/java-i18n/testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.properties",
         "//tools:idea.java-impl",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.lang-api[module]",
         "//tools:idea.openapi[module]",
@@ -1953,6 +2075,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.structuralsearch[module]",
         "//tools:idea.MM_platform-impl[module]",
@@ -1969,6 +2092,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/java/typeMigration/test"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.lang-api[module]",
@@ -1989,6 +2113,7 @@ iml_module(
     test_srcs = ["idea/plugins/testng/testSources"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.smRunner"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.MM_compiler-impl[module]",
@@ -2019,6 +2144,7 @@ iml_module(
 
 iml_module(
     name = "idea.xpath",
+    # do not sort: must match IML order
     srcs = [
         "idea/plugins/xpath/xpath-lang/src",
         "idea/plugins/xpath/xpath-view/src",
@@ -2028,6 +2154,7 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/xpath/xpath-lang/test"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.xml-openapi[module]",
         "//tools:idea.lang-api[module]",
@@ -2047,6 +2174,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.MM_platform-impl[module]",
         "//tools/idea/.idea/libraries:asm5",
@@ -2064,10 +2192,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/plugins/groovy/test"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Groovy",
         "//tools:idea.groovy-psi",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
         "//tools:idea.debugger-openapi[module]",
@@ -2099,6 +2229,7 @@ iml_module(
 
 iml_module(
     name = "idea.MM_maven",
+    # do not sort: must match IML order
     srcs = [
         "idea/plugins/maven/maven2-server-impl/src",
         "idea/plugins/maven/src/main/java",
@@ -2111,6 +2242,7 @@ iml_module(
         "idea/plugins/maven/src/test/java",
     ],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.maven-server-api",
         "//tools:idea.openapi",
@@ -2122,6 +2254,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools:idea.external-system-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.maven-server-api[module]",
         "//tools:idea.util[module]",
@@ -2170,6 +2303,7 @@ iml_module(
     resources = ["idea/plugins/gradle/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:idea.external-system-api",
         "//tools:idea.MM_compiler-impl",
@@ -2179,6 +2313,7 @@ iml_module(
         "//tools/idea/.idea/libraries:GradleGuava",
         "//tools/idea/.idea/libraries:commons-io",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.external-system-api[module]",
         "//tools:idea.MM_compiler-impl[module]",
@@ -2215,6 +2350,7 @@ iml_module(
     test_resources = ["idea/plugins/gradle/tooling-extension-impl/testData"],
     test_srcs = ["idea/plugins/gradle/tooling-extension-impl/testSources"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.gradle-tooling-extension-impl[module]",
         "//tools:idea.gradle[module]",
@@ -2231,6 +2367,7 @@ iml_module(
         "idea/plugins/gradle/testSources",
     ],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Mocks[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -3311,6 +3448,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.junit_rt[module]",
         "//tools:idea.java-runtime[module]",
@@ -3453,10 +3591,12 @@ iml_module(
     test_resources = ["swing-testing/fest-swing/src/test/resources"],
     test_srcs = ["swing-testing/fest-swing/src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT",
         "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT",
         "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",

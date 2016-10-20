@@ -55,6 +55,12 @@ public class ImlModule extends BazelRule {
             call.setArgument("javacopts", ImmutableList.of("-extra_checks:off"));
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
+        String reason = "must match IML order";
+        call.setDoNotSort("srcs", reason);
+        call.setDoNotSort("resources", reason);
+        call.setDoNotSort("exports", reason);
+        call.setDoNotSort("deps", reason);
+
         call.addElementToList("tags", "managed");
     }
 

@@ -8,10 +8,12 @@ iml_module(
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/base/common:studio.common",
         "//tools/idea/.idea/libraries:kxml2",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/idea/.idea/libraries:kxml2",

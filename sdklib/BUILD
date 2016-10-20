@@ -7,6 +7,7 @@ iml_module(
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/base/common:studio.common",
         "//tools/base/device_validator:studio.dvlib",
@@ -16,6 +17,7 @@ iml_module(
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/repository:studio.repository",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/base/device_validator:studio.dvlib[module]",

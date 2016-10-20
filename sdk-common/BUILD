@@ -7,6 +7,7 @@ iml_module(
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools/base/build-system/builder-model:studio.builder-model",
@@ -15,6 +16,7 @@ iml_module(
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:gson",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
         "//tools/base/build-system/builder-model:studio.builder-model[module]",

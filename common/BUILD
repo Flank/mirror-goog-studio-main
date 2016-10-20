@@ -6,10 +6,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:guava-tools",
         "//tools/base/annotations:studio.android-annotations",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:guava-tools",
         "//tools/idea/.idea/libraries:JUnit4[test]",
