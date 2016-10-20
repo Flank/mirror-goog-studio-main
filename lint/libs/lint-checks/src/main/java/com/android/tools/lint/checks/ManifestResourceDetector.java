@@ -33,6 +33,8 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.ide.common.resources.ResourceUrl;
+import com.android.ide.common.resources.configuration.DensityQualifier;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
@@ -211,8 +213,27 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                             continue;
                         }
 
-                        // Version qualifier is okay
-                        if (VersionQualifier.getQualifier(qualifiers) != null) {
+                        // Version qualifier is okay, as is density qualifiers (or both)
+                        int qualifierCount = 1;
+                        for (int i = 0, n = qualifiers.length(); i < n; i++) {
+                            if (qualifiers.charAt(i) == '-') {
+                                qualifierCount++;
+                            }
+                        }
+                        FolderConfiguration configuration = item.getConfiguration();
+                        if (configuration == null) {
+                            // shouldn't happen, but don't throw NPE on invalid projects
+                            continue;
+                        }
+                        DensityQualifier densityQualifier = configuration.getDensityQualifier();
+                        VersionQualifier versionQualifier = configuration.getVersionQualifier();
+                        if (qualifierCount == 1 &&
+                                (versionQualifier != null && versionQualifier.isValid()
+                                || densityQualifier != null && densityQualifier.isValid())) {
+                            continue;
+                        } else if (qualifierCount == 2 &&
+                                densityQualifier != null && densityQualifier.isValid() &&
+                                versionQualifier != null && versionQualifier.isValid()) {
                             continue;
                         }
 

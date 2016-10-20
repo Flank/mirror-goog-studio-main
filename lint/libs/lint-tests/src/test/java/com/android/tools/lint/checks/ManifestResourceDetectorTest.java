@@ -292,4 +292,43 @@ public class ManifestResourceDetectorTest extends AbstractCheckTest {
                                 + "</resources>")
                 ));
     }
+
+    public void testRoundIcon() throws Exception {
+        // Allow round icons in density folders
+        // Regression test for https://code.google.com/p/android/issues/detail?id=225711
+        assertEquals("No warnings.",
+                lintProjectIncrementally(
+                        "AndroidManifest.xml",
+                        xml("AndroidManifest.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"webp.test.tools.android.com.myapplication\" >\n"
+                                + "    <application\n"
+                                + "        android:roundIcon=\"@mipmap/round_icon\" />\n"
+                                + "</manifest>"),
+                        image("res/mipmap-mdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-hdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-xhdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-xxhdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-xxxhdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF)
+                ));
+    }
+
+    public void testAnyDensity() throws Exception {
+        // Allow round icons in density folders
+        assertEquals("No warnings.",
+                lintProjectIncrementally(
+                        "AndroidManifest.xml",
+                        xml("AndroidManifest.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"webp.test.tools.android.com.myapplication\" >\n"
+                                + "    <application\n"
+                                + "        android:randomAttribute=\"@mipmap/round_icon\" />\n"
+                                + "</manifest>"),
+                        image("res/mipmap-mdpi/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-hdpi-v4/round_icon.png", 472, 290).fill(0xFFFFFFFF),
+                        image("res/mipmap-v21/round_icon.png", 472, 290).fill(0xFFFFFFFF)
+                ));
+    }
 }
