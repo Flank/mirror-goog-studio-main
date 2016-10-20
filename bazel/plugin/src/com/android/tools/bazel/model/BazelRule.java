@@ -17,14 +17,11 @@
 package com.android.tools.bazel.model;
 
 import com.android.tools.bazel.parser.ast.*;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public abstract class BazelRule {
 
@@ -109,39 +106,5 @@ public abstract class BazelRule {
         loadStatement.setHidden(false);
         pkg.getBuildFile().addStatementBefore(loadStatement, functionCall);
         return loadStatement;
-    }
-
-    /**
-     * Sets the argument of the given call expression named {@code name} to be {@code values}.
-     */
-    protected final void setArgument(CallStatement rule, String name, Collection<?> values) {
-        if (!values.isEmpty()) {
-            ListExpression list = ListExpression.build(values.stream().map(Object::toString).collect(Collectors.toList()));
-            list.setSingleLine(values.size() <= 1);
-            rule.getCall().setArgument(name, list);
-        }
-    }
-
-    /**
-     * Ensures an element is in the a list in the given call expression.
-     */
-    protected void addElementToList(CallStatement call, String attribute, String element) {
-        Expression expression = call.getCall().getArgument(attribute);
-        ListExpression list;
-        if (expression == null) {
-            list = ListExpression.build(ImmutableList.of());
-            call.getCall().setArgument(attribute, list);
-        } else if (expression instanceof BinaryExpression
-                && (((BinaryExpression)expression).getLeft() instanceof ListExpression)) {
-            list = (ListExpression) ((BinaryExpression) expression).getLeft();
-        } else if (expression instanceof ListExpression) {
-            list = (ListExpression) expression;
-        } else {
-            list = ListExpression.build(ImmutableList.of());
-            BinaryExpression plus = new BinaryExpression(list, new Token("+", Token.Kind.PLUS), expression);
-            call.getCall().setArgument(attribute, plus);
-        }
-        list.addIfNew(LiteralExpression.string(element));
-        list.setSingleLine(list.size() <= 1);
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.model;
 
+import com.android.tools.bazel.parser.ast.CallExpression;
 import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
 
@@ -32,12 +33,13 @@ public class JavaLibrary extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        CallStatement call = getCallStatement("java_library", name);
+        CallStatement statement = getCallStatement("java_library", name);
+        CallExpression call = statement.getCall();
 
-        setArgument(call, "runtime_deps", dependencies);
-        setArgument(call, "exports", exported);
-        setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
-        addElementToList(call, "tags", "managed");
+        call.setArgument("runtime_deps", dependencies);
+        call.setArgument("exports", exported);
+        call.setArgument("visibility", ImmutableList.of("//visibility:public"));
+        call.addElementToList("tags", "managed");
     }
 }
 

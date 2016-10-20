@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.model;
 
+import com.android.tools.bazel.parser.ast.CallExpression;
 import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
 
@@ -37,23 +38,24 @@ public class ImlModule extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        CallStatement call = getCallStatement("iml_module", name);
-        if (getLoad(call) == null) {
-            addLoad("//tools/base/bazel:bazel.bzl", call);
+        CallStatement statement = getCallStatement("iml_module", name);
+        if (getLoad(statement) == null) {
+            addLoad("//tools/base/bazel:bazel.bzl", statement);
         }
 
-        setArgument(call, "srcs", sources);
-        setArgument(call, "test_srcs", testSources);
-        setArgument(call, "exclude", exclude);
-        setArgument(call, "resources", resources);
-        setArgument(call, "test_resources", testResources);
-        setArgument(call, "deps", tagDependencies(dependencies));
-        setArgument(call, "exports", exported);
-        if (!call.isFromFile()) {
-            setArgument(call, "javacopts", ImmutableList.of("-extra_checks:off"));
-            setArgument(call, "visibility", ImmutableList.of("//visibility:public"));
+        CallExpression call = statement.getCall();
+        call.setArgument("srcs", sources);
+        call.setArgument("test_srcs", testSources);
+        call.setArgument("exclude", exclude);
+        call.setArgument("resources", resources);
+        call.setArgument("test_resources", testResources);
+        call.setArgument("deps", tagDependencies(dependencies));
+        call.setArgument("exports", exported);
+        if (!statement.isFromFile()) {
+            call.setArgument("javacopts", ImmutableList.of("-extra_checks:off"));
+            call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
-        addElementToList(call, "tags", "managed");
+        call.addElementToList("tags", "managed");
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {

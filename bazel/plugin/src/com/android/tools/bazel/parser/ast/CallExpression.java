@@ -19,6 +19,7 @@ package com.android.tools.bazel.parser.ast;
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +138,15 @@ public class CallExpression extends Expression {
         return new CallExpression(Token.ident(ident), list, Token.NONE);
     }
 
+    public final void setArgument(String name, Collection<?> values) {
+        if (!values.isEmpty()) {
+            ListExpression list = ListExpression.build(
+                values.stream().map(Object::toString).collect(Collectors.toList()));
+            list.setSingleLine(values.size() <= 1);
+            setArgument(name, list);
+        }
+    }
+
     public void setArgument(String name, Expression expression) {
         Argument arg = getNamedArgument(name);
         if (arg == null) {
@@ -153,5 +163,26 @@ public class CallExpression extends Expression {
         } else {
             return arg.getExpression();
         }
+    }
+
+    /** Ensures {@code element} is in the list {@code attribute}. */
+    public void addElementToList(String attribute, String element) {
+        Expression expression = getArgument(attribute);
+        ListExpression list;
+        if (expression == null) {
+            list = ListExpression.build(ImmutableList.of());
+            setArgument(attribute, list);
+        } else if (expression instanceof BinaryExpression
+                && (((BinaryExpression)expression).getLeft() instanceof ListExpression)) {
+            list = (ListExpression) ((BinaryExpression) expression).getLeft();
+        } else if (expression instanceof ListExpression) {
+            list = (ListExpression) expression;
+        } else {
+            list = ListExpression.build(ImmutableList.of());
+            BinaryExpression plus = new BinaryExpression(list, new Token("+", Token.Kind.PLUS), expression);
+            setArgument(attribute, plus);
+        }
+        list.addIfNew(LiteralExpression.string(element));
+        list.setSingleLine(list.size() <= 1);
     }
 }
