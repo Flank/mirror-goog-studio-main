@@ -53,7 +53,8 @@ public class BazelModule {
         (m1, m2) -> GET_NUM_ORDER_ENTRIES.apply(m1) - GET_NUM_ORDER_ENTRIES.apply(m2);
 
     public String getName() {
-        return (isSingle() ? "" : "MM_") + modules.stream().max(BY_NUM_ORDER_ENTRIES).get().getName();
+        return modules.stream().max(BY_NUM_ORDER_ENTRIES).get().getName()
+            + (isSingle() ? "" : "_and_others");
     }
 
     public boolean isSingle() {
