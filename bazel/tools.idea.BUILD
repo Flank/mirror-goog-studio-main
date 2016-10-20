@@ -878,7 +878,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:picocontainer[test]",
         "//tools/idea/.idea/libraries:jna[test]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
     ],
 )
 
@@ -1020,7 +1020,7 @@ iml_module(
 )
 
 iml_module(
-    name = "idea.MM_platform-impl",
+    name = "idea.platform-impl_and_others",
     # do not sort: must match IML order
     srcs = [
         "idea/RegExpSupport/src",
@@ -1190,7 +1190,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.platform-api[module]",
         "//tools/idea/.idea/libraries:Jaxen",
     ],
@@ -1204,12 +1204,12 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools:idea.MM_platform-impl",
+        "//tools:idea.platform-impl_and_others",
         "//tools:idea.community-resources",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.community-resources[module]",
         "//tools:idea.util[module]",
     ],
@@ -1253,7 +1253,7 @@ iml_module(
         "//tools:idea.lang-api[module]",
         "//tools:idea.vcs-api[module]",
         "//tools/idea/.idea/libraries:XmlRPC",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.resources-en[module]",
         "//tools:idea.java-psi-api[module]",
         "//tools:idea.java-indexing-api[module]",
@@ -1350,7 +1350,7 @@ iml_module(
         "//tools:idea.jsp-openapi[module]",
         "//tools:idea.xml-openapi[module]",
         "//tools:idea.lang-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.openapi[module]",
         "//tools/idea/.idea/libraries:Velocity",
     ],
@@ -1387,7 +1387,7 @@ iml_module(
         "//tools:idea.util[module]",
         "//tools/idea/.idea/libraries:JDOM",
         "//tools/idea/.idea/libraries:Trove4j",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools/idea/.idea/libraries:Groovy",
         "//tools:idea.platform-api[module]",
         "//tools:idea.lang-api[module]",
@@ -1415,7 +1415,7 @@ iml_module(
         "//tools:idea.indexing-api[module]",
         "//tools:idea.xml-psi-api[module]",
         "//tools:idea.projectModel-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.lang-api[module]",
         "//tools:idea.boot[module]",
     ],
@@ -1435,7 +1435,7 @@ iml_module(
         "//tools:idea.editor-ui-api[module]",
         "//tools:idea.analysis-api[module]",
         "//tools:idea.xml-psi-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.indexing-impl[module]",
         "//tools:idea.structure-view-impl[module]",
         "//tools:idea.analysis-impl[module]",
@@ -1451,7 +1451,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools:idea.platform-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.xdebugger-api[module]",
     ],
 )
@@ -1470,7 +1470,7 @@ iml_module(
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.testRunner[module]",
         "//tools:idea.xdebugger-api[module]",
         "//tools/idea/.idea/libraries:tcServiceMessages",
@@ -1488,7 +1488,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.bootstrap[module]",
     ],
 )
@@ -1499,11 +1499,11 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["idea/jps/model-impl/testSrc"],
     visibility = ["//visibility:public"],
-    exports = ["//tools:idea.MM_platform-impl"],
+    exports = ["//tools:idea.platform-impl_and_others"],
     # do not sort: must match IML order
     deps = [
         "//tools:idea.jps-model-impl[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
     ],
 )
 
@@ -1554,7 +1554,7 @@ iml_module(
         "//tools:idea.java-runtime[module]",
         "//tools/idea/.idea/libraries:Log4J",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools/idea/.idea/libraries:Eclipse[test]",
         "//tools:idea.jps-model-api[module]",
         "//tools:idea.jps-model-serialization[module]",
@@ -1685,7 +1685,7 @@ iml_module(
         "//tools:idea.projectModel-impl[module]",
         "//tools:idea.java-analysis-api[module]",
         "//tools:idea.resources-en[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools/idea/.idea/libraries:asm5",
     ],
 )
@@ -1706,7 +1706,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools:idea.MM_platform-impl",
+        "//tools:idea.platform-impl_and_others",
         "//tools:idea.java-psi-impl",
         "//tools:idea.java-indexing-impl",
         "//tools:idea.java-analysis-impl",
@@ -1718,7 +1718,7 @@ iml_module(
         "//tools:idea.openapi[module]",
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools/idea/.idea/libraries:OroMatcher",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.java-runtime[module]",
         "//tools:idea.compiler-openapi[module]",
         "//tools:idea.jsp-openapi[module]",
@@ -1744,7 +1744,7 @@ iml_module(
 )
 
 iml_module(
-    name = "idea.MM_compiler-impl",
+    name = "idea.compiler-impl_and_others",
     # do not sort: must match IML order
     srcs = [
         "idea/java/idea-ui/src",
@@ -1768,7 +1768,7 @@ iml_module(
         "//tools:idea.util",
         "//tools:idea.lang-api",
         "//tools:idea.java-impl",
-        "//tools:idea.MM_platform-impl",
+        "//tools:idea.platform-impl_and_others",
         "//tools:idea.execution-openapi",
         "//tools:idea.testRunner",
         "//tools:idea.debugger-openapi",
@@ -1780,7 +1780,7 @@ iml_module(
         "//tools:idea.compiler-openapi[module]",
         "//tools:idea.java-impl[module]",
         "//tools/idea/.idea/libraries:OroMatcher",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools:idea.external-system-api[module]",
         "//tools:idea.projectModel-impl[module]",
@@ -1827,12 +1827,12 @@ iml_module(
         "//tools:idea.util[module]",
         "//tools:idea.core-api[module]",
         "//tools:idea.platform-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.lang-api[module]",
         "//tools:idea.java-psi-api[module]",
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
     ],
 )
 
@@ -1845,8 +1845,8 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_platform-impl[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools/idea/.idea/libraries:asm5",
         "//tools:idea.platform-api[module]",
         "//tools:idea.java-impl[module]",
@@ -1866,7 +1866,7 @@ iml_module(
     deps = [
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.java-runtime[module]",
         "//tools:idea.testRunner[module]",
         "//tools/idea/.idea/libraries:JUnit3",
@@ -1897,7 +1897,7 @@ iml_module(
     deps = [
         "//tools/idea/.idea/libraries:Groovy",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.junit[module, test]",
         "//tools:idea.java-indexing-api[module]",
         "//tools:idea.java-psi-impl[module]",
@@ -1905,7 +1905,7 @@ iml_module(
         "//tools:idea.core-impl[module]",
         "//tools:idea.extensions[module]",
         "//tools:idea.annotations[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.editor-ui-ex[module]",
         "//tools:idea.java-analysis-impl[module]",
         "//tools:idea.java-structure-view[module]",
@@ -1932,7 +1932,7 @@ iml_module(
         "//tools:idea.openapi[module]",
         "//tools:idea.bootstrap[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.compiler-openapi[module]",
         "//tools:idea.annotations[module]",
         "//tools:idea.java-impl[module]",
@@ -1956,8 +1956,8 @@ iml_module(
     deps = [
         "//tools:idea.external-system-rt[module]",
         "//tools:idea.annotations[module]",
-        "//tools:idea.MM_platform-impl[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools/idea/.idea/libraries:Slf4j",
         "//tools/idea/.idea/libraries:Gradle",
         "//tools/idea/.idea/libraries:GradleGuava",
@@ -2001,12 +2001,12 @@ iml_module(
     deps = [
         "//tools:idea.lang-api[module]",
         "//tools:idea.platform-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.annotations[module]",
         "//tools:idea.resources[module, test]",
         "//tools:idea.properties-psi-api[module]",
         "//tools:idea.properties-psi-impl[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
     ],
 )
 
@@ -2021,16 +2021,16 @@ iml_module(
     # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Ant",
-        "//tools:idea.MM_platform-impl",
+        "//tools:idea.platform-impl_and_others",
     ],
     # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:Ant",
         "//tools:idea.java-runtime[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.properties[module]",
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.xml-openapi[module]",
@@ -2058,11 +2058,11 @@ iml_module(
         "//tools:idea.lang-api[module]",
         "//tools:idea.openapi[module]",
         "//tools:idea.properties[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.java-impl[module]",
         "//tools:idea.jsp-base-openapi[module]",
         "//tools:idea.jsp-openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.properties-psi-api[module]",
         "//tools:idea.properties-psi-impl[module]",
     ],
@@ -2077,7 +2077,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools:idea.structuralsearch[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.openapi[module]",
         "//tools:idea.java-impl[module]",
         "//tools:idea.duplicates-analysis[module]",
@@ -2095,11 +2095,11 @@ iml_module(
     deps = [
         "//tools:idea.util[module]",
         "//tools:idea.lang-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.openapi[module]",
         "//tools:idea.structuralsearch[module]",
         "//tools:idea.java-impl[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.structuralsearch-java[module]",
     ],
 )
@@ -2115,7 +2115,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.debugger-openapi[module]",
         "//tools/idea/.idea/libraries:JUnit3[test]",
         "//tools:idea.testRunner[module]",
@@ -2127,7 +2127,7 @@ iml_module(
         "//tools:idea.jsp-openapi[module]",
         "//tools/idea/.idea/libraries:TestNG",
         "//tools:idea.java-indexing-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.smRunner[module]",
         "//tools:idea.typeMigration[module]",
     ],
@@ -2157,7 +2157,7 @@ iml_module(
     deps = [
         "//tools:idea.xml-openapi[module]",
         "//tools:idea.lang-api[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.xslt-rt[module]",
         "//tools:idea.annotations[module]",
         "//tools/idea/.idea/libraries:Jaxen",
@@ -2175,7 +2175,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools/idea/.idea/libraries:asm5",
         "//tools:idea.xpath[module]",
         "//tools:idea.platform-api[module]",
@@ -2201,7 +2201,7 @@ iml_module(
         "//tools:idea.openapi[module]",
         "//tools:idea.debugger-openapi[module]",
         "//tools:idea.groovy_rt[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.lang-api[module]",
         "//tools:idea.properties[module]",
         "//tools:idea.compiler-openapi[module]",
@@ -2215,7 +2215,7 @@ iml_module(
         "//tools:idea.IntelliLang-java[module]",
         "//tools:idea.IntelliLang-xml[module, test]",
         "//tools:idea.jps-builders[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.junit[module, test]",
         "//tools:idea.java-indexing-api[module]",
         "//tools:idea.groovy-jps-plugin[module]",
@@ -2227,7 +2227,7 @@ iml_module(
 )
 
 iml_module(
-    name = "idea.MM_maven",
+    name = "idea.maven_and_others",
     # do not sort: must match IML order
     srcs = [
         "idea/plugins/maven/maven2-server-impl/src",
@@ -2245,9 +2245,9 @@ iml_module(
     exports = [
         "//tools:idea.maven-server-api",
         "//tools:idea.openapi",
-        "//tools:idea.MM_platform-impl",
+        "//tools:idea.platform-impl_and_others",
         "//tools:idea.compiler-openapi",
-        "//tools:idea.MM_compiler-impl",
+        "//tools:idea.compiler-impl_and_others",
         "//tools:idea.execution-openapi",
         "//tools:idea.forms_rt",
         "//tools/idea/.idea/libraries:JUnit4",
@@ -2264,12 +2264,12 @@ iml_module(
         "//tools/idea/.idea/libraries:commons-logging",
         "//tools:idea/plugins/maven/maven2-server-impl/lib/commons-beanutils",
         "//tools:idea.openapi[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.java-impl[module]",
         "//tools:idea.IntelliLang-xml[module]",
         "//tools:idea.properties[module]",
         "//tools:idea.compiler-openapi[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.forms_rt[module]",
         "//tools/idea/.idea/libraries:jgoodies-forms",
@@ -2305,7 +2305,7 @@ iml_module(
     # do not sort: must match IML order
     exports = [
         "//tools:idea.external-system-api",
-        "//tools:idea.MM_compiler-impl",
+        "//tools:idea.compiler-impl_and_others",
         "//tools:idea.gradle-tooling-extension-api",
         "//tools/idea/.idea/libraries:Slf4j",
         "//tools/idea/.idea/libraries:Gradle",
@@ -2315,18 +2315,18 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools:idea.external-system-api[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.gradle-tooling-extension-api[module]",
         "//tools:idea.gradle-tooling-extension-impl[module]",
         "//tools:idea.gradle-jps-plugin[module]",
         "//tools:idea.lang-api[module]",
         "//tools:idea.compiler-openapi[module]",
         "//tools:idea.jetgroovy[module]",
-        "//tools:idea.MM_platform-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
         "//tools:idea.execution-openapi[module]",
         "//tools:idea.openapi[module]",
         "//tools:idea.java-impl[module]",
-        "//tools:idea.MM_maven[module]",
+        "//tools:idea.maven_and_others[module]",
         "//tools:idea.junit[module]",
         "//tools/idea/.idea/libraries:swingx",
         "//tools/idea/.idea/libraries:Slf4j",
@@ -2353,7 +2353,7 @@ iml_module(
     deps = [
         "//tools:idea.gradle-tooling-extension-impl[module]",
         "//tools:idea.gradle[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
     ],
 )
 
@@ -2370,8 +2370,8 @@ iml_module(
     deps = [
         "//tools/idea/.idea/libraries:Mocks[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools:idea.MM_platform-impl[module]",
-        "//tools:idea.MM_compiler-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.gradle[module, test]",
         "//tools:idea.gradle-tooling-extension-tests[module, test]",
         "//tools:idea.maven-server-api[module, test]",
