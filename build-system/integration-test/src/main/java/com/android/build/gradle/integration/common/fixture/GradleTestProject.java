@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.model.Version;
 import com.android.builder.core.BuilderConstants;
@@ -91,11 +92,12 @@ public final class GradleTestProject implements TestRule {
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
-    public static final String DEVICE_PROVIDER_NAME = REMOTE_TEST_PROVIDER != null ?
-            REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
+    public static final String DEVICE_PROVIDER_NAME =
+            REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
-    public static final String GRADLE_TEST_VERSION = "2.14.1";
-    public static final String GRADLE_EXP_TEST_VERSION = "2.14.1";
+    public static final String GRADLE_TEST_VERSION;
+    public static final String GRADLE_EXP_TEST_VERSION;
+    public static final String GRADLE_NIGHTLY_VERSION = "3.3-20161020000024+0000";
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
@@ -106,6 +108,14 @@ public final class GradleTestProject implements TestRule {
     private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
 
     static {
+        boolean useNightly =
+                Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
+        GRADLE_TEST_VERSION =
+                useNightly ? GRADLE_NIGHTLY_VERSION : BasePlugin.GRADLE_MIN_VERSION.toString();
+
+        // For now, the two are in sync.
+        GRADLE_EXP_TEST_VERSION = GRADLE_TEST_VERSION;
+
         // These are some properties that we use in the integration test projects, when generating
         // build.gradle files. In case you would like to change any of the parameters, for instance
         // when testing cross product of versions of buildtools, compile sdks, plugin versions,

@@ -125,7 +125,9 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  */
 public abstract class BasePlugin implements ToolingRegistryProvider {
 
-    private static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("2.14.1");
+    @VisibleForTesting
+    public static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("2.14.1");
+
     /** default retirement age in days since its inception date for RC or beta versions. */
     private static final int DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS = 40;
 
