@@ -83,6 +83,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             builder.addArgs("--verbose", "info");
         }
 
+        builder.addArgs("-D", "jack.reporter=sdk");
+
         builder.addArgs("-D", "jack.dex.debug.vars=" + options.isDebuggable());
 
         if (!options.getClasspaths().isEmpty()) {

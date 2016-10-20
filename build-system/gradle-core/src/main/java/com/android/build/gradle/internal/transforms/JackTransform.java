@@ -223,7 +223,9 @@ public class JackTransform extends Transform {
 
         JackToolchain toolchain =
                 new JackToolchain(
-                        androidBuilder.getTargetInfo().getBuildTools(), androidBuilder.getLogger());
+                        androidBuilder.getTargetInfo().getBuildTools(),
+                        androidBuilder.getLogger(),
+                        androidBuilder.getErrorReporter());
         toolchain.convert(options, androidBuilder.getJavaProcessExecutor(), jackInProcess);
     }
 

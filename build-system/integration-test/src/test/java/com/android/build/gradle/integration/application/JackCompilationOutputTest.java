@@ -17,75 +17,118 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
+import com.google.api.client.util.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 
-import org.gradle.api.JavaVersion;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * Tests to verify we process Jack compilation output properly.
  */
+@RunWith(FilterableParameterized.class)
 public class JackCompilationOutputTest {
 
-    @Rule
-    public GradleTestProject sBasic = GradleTestProject.builder().withName("basic")
-            .fromTestProject("basic").create();
+    @Parameters(name = "in_process = {0}")
+    public static List<Boolean> jackOptions() {
+        return ImmutableList.of(true, false);
+    }
 
-    private static final List<String> JACK_OPTIONS = ImmutableList
-            .of("-Pcom.android.build.gradle.integratonTest.useJack=true",
-                    "-PCUSTOM_BUILDTOOLS=" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION);
+    @Parameter
+    public boolean inProcess;
+
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().withName("basic").fromTestProject("basic").create();
+
+    @Before
+    public void updateBuildFile() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        jackOptions {\n"
+                        + "            enabled true\n"
+                        + "            jackInProcess " + inProcess + "\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+    }
 
     @Test
     public void checkErrorsAndWarningsInOutput() throws Exception {
-        File main =
-                FileUtils.join(
-                        sBasic.getMainSrcDir(), "com", "android", "tests", "basic", "Main.java");
-        TestFileUtils.addMethod(main,
-                "java.util.List wrong =  new java.util.ArrayList();\n"
-                        + "int i = 10 //missing semicolon");
+        File userJava = FileUtils.join(project.getMainSrcDir(), "testing", "User.java");
+        FileUtils.mkdirs(userJava.getParentFile());
+        Files.write(
+                "package testing;\n"
+                        + "import java.util.List;\n"
+                        + "import java.util.ArrayList;\n"
+                        + "public class User {\n"
+                        + "    int age =;\n"
+                        + "    List<String> names = new ArrayList();\n"
+                        + "}\n",
+                userJava,
+                Charsets.UTF_8);
 
-        GradleBuildResult result = sBasic.executor().withArguments(JACK_OPTIONS).expectFailure()
-                .run("assembleDebug");
+        GradleBuildResult result =
+                project.executor()
+                        .withProperty(AndroidProject.PROPERTY_INVOKED_FROM_IDE, "true")
+                        .expectFailure()
+                        .run("assembleDebug");
 
         assertThat(result.getStderr())
                 .containsMatch(
                         Pattern.compile(
-                                "^ERROR:.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:.*:.*", Pattern.MULTILINE));
+                                "^AGPBI.*error.*User.java.*\"startLine\":4.*",
+                                Pattern.MULTILINE));
         assertThat(result.getStdout())
                 .containsMatch(
                         Pattern.compile(
-                                "^WARNING:.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:.*:.*", Pattern.MULTILINE));
+                                "^AGPBI.*warning.*User.java.*\"startLine\":5.*",
+                                Pattern.MULTILINE));
     }
 
     @Test
     public void checkWarningsInOutput() throws Exception {
-        File main =
-                FileUtils.join(
-                        sBasic.getMainSrcDir(), "com", "android", "tests", "basic", "Main.java");
-        TestFileUtils.addMethod(main,
-                "java.util.List wrong =  new java.util.ArrayList();");
+        File userJava = FileUtils.join(project.getMainSrcDir(), "testing", "User.java");
+        FileUtils.mkdirs(userJava.getParentFile());
+        Files.write(
+                "package testing;\n"
+                        + "import java.util.List;\n"
+                        + "import java.util.ArrayList;\n"
+                        + "public class User {\n"
+                        + "    List<String> names = new ArrayList();\n"
+                        + "}\n",
+                userJava,
+                Charsets.UTF_8);
 
-        GradleBuildResult result = sBasic.executor().withArguments(JACK_OPTIONS)
-                .run("assembleDebug");
+        GradleBuildResult result =
+                project.executor()
+                        .withProperty(AndroidProject.PROPERTY_INVOKED_FROM_IDE, "true")
+                        .run("assembleDebug");
 
         assertThat(result.getStdout())
                 .containsMatch(
                         Pattern.compile(
-                                "^WARNING:.*basic/src/main/java/com/android/tests/basic/Main"
-                                        + "\\.java:.*:.*", Pattern.MULTILINE));
+                                "^AGPBI.*warning.*User.java.*\"startLine\":4.*",
+                                Pattern.MULTILINE));
     }
 }

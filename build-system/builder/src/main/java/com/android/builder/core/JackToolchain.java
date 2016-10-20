@@ -20,11 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser;
+import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.JavaProcessInfo;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.jack.api.ConfigNotSupportedException;
@@ -43,19 +47,15 @@ import com.android.jill.api.v01.TranslationException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Features exposed by the Jack toolchain. This is used for invoking Jack to convert inputs (source
@@ -82,10 +82,15 @@ public class JackToolchain {
 
     @NonNull private BuildToolInfo buildToolInfo;
     @NonNull private ILogger logger;
+    @NonNull private ErrorReporter errorReporter;
 
-    public JackToolchain(@NonNull BuildToolInfo buildToolInfo, @NonNull ILogger logger) {
+    public JackToolchain(
+            @NonNull BuildToolInfo buildToolInfo,
+            @NonNull ILogger logger,
+            @NonNull ErrorReporter errorReporter) {
         this.buildToolInfo = buildToolInfo;
         this.logger = logger;
+        this.errorReporter = errorReporter;
     }
 
     /**
@@ -93,19 +98,19 @@ public class JackToolchain {
      * using the Jack toolchain. It accepts source files, .jar or .jack as inputs, and produces
      * .jack or .dex files as outputs.
      *
-     * @param options             options for configuring Jack.
+     * @param options options for configuring Jack.
      * @param javaProcessExecutor java executor to be used for out of process execution
-     * @param isInProcess         whether to run Jack in memory or spawn another Java process.
-     * @throws ToolchainException     if there is an exception related to running Jack toolchain
-     * @throws ProcessException       if a process in which the conversion is run fails
+     * @param isInProcess whether to run Jack in memory or spawn another Java process.
+     * @throws ToolchainException if there is an exception related to running Jack toolchain
+     * @throws ProcessException if a process in which the conversion is run fails
      * @throws ClassNotFoundException if running in process, and unable to load the classes required
-     *                                for the conversion
+     *     for the conversion
      */
     public void convert(
             @NonNull JackProcessOptions options,
             @NonNull JavaProcessExecutor javaProcessExecutor,
             boolean isInProcess)
-            throws ToolchainException, ProcessException, ClassNotFoundException {
+            throws ToolchainException, ProcessException, ClassNotFoundException, IOException {
 
         // Create all the necessary directories if needed.
         if (options.getDexOutputDirectory() != null) {
@@ -143,35 +148,50 @@ public class JackToolchain {
             logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
         }
 
-        if (isInProcess) {
-            convertUsingApis(options);
+        ParsingProcessOutputHandler parser =
+                new ParsingProcessOutputHandler(
+                        new ToolOutputParser(
+                                new JsonEncodedGradleMessageParser(), Message.Kind.ERROR, logger),
+                        errorReporter);
+
+        if (!isInProcess) {
+            convertUsingCli(options, parser, javaProcessExecutor);
         } else {
-            convertUsingCli(options, new LoggedProcessOutputHandler(logger), javaProcessExecutor);
+            ProcessOutput output = parser.createOutput();
+            try (Closer c = Closer.create()) {
+                c.register(output);
+                convertUsingApis(options, output);
+            } finally {
+                parser.handleOutput(output);
+            }
         }
     }
 
     /**
-     * Converts inputs in process. This is using the Jack toolchain APIs. See the
-     * {@link #convertUsingJackApis(JackProcessOptions)} and
-     * {@link #convertUsingJillApis(JackProcessOptions)} for more details.
+     * Converts inputs in process. This is using the Jack toolchain APIs. See the {@link
+     * #convertUsingJackApis(JackProcessOptions, ProcessOutput)} and {@link
+     * #convertUsingJillApis(JackProcessOptions)} for more details.
      */
-    private void convertUsingApis(@NonNull JackProcessOptions options)
-            throws ToolchainException, ClassNotFoundException {
+    private void convertUsingApis(
+            @NonNull JackProcessOptions options, @NonNull ProcessOutput output)
+            throws ToolchainException, ClassNotFoundException, ProcessException {
+
         if (options.getUseJill()) {
             convertUsingJillApis(options);
         } else {
-            convertUsingJackApis(options);
+            convertUsingJackApis(options, output);
         }
     }
 
     /**
      * Convert the inputs using Jack in-process and its APIs. Inputs are sources, .jar files and
-     * Jack library format (.jack) files. Depending on the options specified, this can produce
-     * Jack library format or .dex output.
+     * Jack library format (.jack) files. Depending on the options specified, this can produce Jack
+     * library format or .dex output.
      *
      * @param options options how to run Jack
      */
-    private void convertUsingJackApis(@NonNull JackProcessOptions options)
+    private void convertUsingJackApis(
+            @NonNull JackProcessOptions options, @NonNull ProcessOutput output)
             throws ClassNotFoundException, ToolchainException {
 
         BuildToolsServiceLoader.BuildToolServiceLoader buildToolServiceLoader =
@@ -225,7 +245,7 @@ public class JackToolchain {
             config.setProperty("jack.import.type.policy", "keep-first");
             config.setProperty("jack.import.resource.policy", "keep-first");
 
-            config.setReporter(ReporterKind.DEFAULT, outputStream);
+            config.setReporter(ReporterKind.SDK, output.getStandardOutput());
 
             if (options.getSourceCompatibility() != null) {
                 config.setProperty(
@@ -298,23 +318,19 @@ public class JackToolchain {
                     "Something out of Jack control has happened: " + e.getMessage(), e);
         } catch (CompilationException e) {
             throw new ToolchainException("Jack compilation exception", e);
-        } finally {
-            // always show Jack output, it might contain useful warnings/errors
-            processJackOutput(logger, outputStream);
         }
     }
 
     /**
-     * It performs the same operation like {@link #convertUsingApis(JackProcessOptions)},
-     * but it performs the conversion in a separate process. See
-     * {@link #convertUsingJackCli(JackProcessOptions, ProcessOutputHandler, JavaProcessExecutor)}
-     * and
+     * It performs the same operation like {@link #convertUsingApis(JackProcessOptions,
+     * ProcessOutput)} , but it performs the conversion in a separate process. See {@link
+     * #convertUsingJackCli(JackProcessOptions, ProcessOutputHandler, JavaProcessExecutor)} and
      * {@link #convertUsingJillCli(JackProcessOptions, ProcessOutputHandler, JavaProcessExecutor)}
      * for details.
      *
-     * @param options              options how to run Jack
+     * @param options options how to run Jack
      * @param processOutputHandler handler for the output
-     * @param javaProcessExecutor  executor for running the process
+     * @param javaProcessExecutor executor for running the process
      * @throws ProcessException in case that running the process fails
      */
     private void convertUsingCli(
@@ -330,8 +346,8 @@ public class JackToolchain {
     }
 
     /**
-     * It performs the same operation like {@link #convertUsingJackApis(JackProcessOptions)}
-     * but it does that in a separate process.
+     * It performs the same operation like {@link #convertUsingJackApis(JackProcessOptions,
+     * ProcessOutput)} but it does that in a separate process.
      */
     private void convertUsingJackCli(
             @NonNull JackProcessOptions options,
@@ -343,46 +359,6 @@ public class JackToolchain {
                 .execute(builder.build(buildToolInfo), processOutputHandler)
                 .rethrowFailure()
                 .assertNormalExitValue();
-    }
-
-    /** Parses the Jack compilation output. */
-    private static void processJackOutput(
-            @NonNull ILogger logger, @NonNull OutputStream outputStream) {
-        Iterable<String> msgIterator =
-                Splitter.on(SdkUtils.getLineSeparator()).split(outputStream.toString());
-
-        for (String msg : msgIterator) {
-            if (msg.startsWith("ERROR") || msg.startsWith("WARNING")) {
-                // (ERROR|WARNING):file:position in file:message
-                // TODO add JackParser to process the output; it will be used on studio side as well
-                Pattern pattern = Pattern.compile("^(ERROR|WARNING):\\s*(.*):(\\d+):\\s*(.*)");
-                Matcher matcher = pattern.matcher(msg);
-                if (matcher.matches()) {
-                    String msgType = matcher.group(1);
-                    String content = matcher.group(4);
-
-                    if (msgType.equals("ERROR")) {
-                        logger.error(
-                                null,
-                                matcher.group(2) + ":" + matcher.group(3) + ": error: " + content);
-                    } else if (msgType.equals("WARNING")) {
-                        logger.warning(
-                                matcher.group(2)
-                                        + ":"
-                                        + matcher.group(3)
-                                        + ": warning: "
-                                        + content);
-                    }
-                } else if (msg.startsWith("ERROR")) {
-                    logger.error(null, msg);
-                } else {
-                    // starts with WARNING
-                    logger.warning(msg);
-                }
-            } else {
-                logger.info(msg);
-            }
-        }
     }
 
     private Api04Config createJackConfig(
