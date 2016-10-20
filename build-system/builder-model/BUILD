@@ -5,9 +5,7 @@ iml_module(
     srcs = ["src/main/java"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
-    deps = [
-         "//tools/base/annotations:studio.android-annotations[module]",
-    ]
+    deps = ["//tools/base/annotations:studio.android-annotations[module]"],
 )
 
 java_library(

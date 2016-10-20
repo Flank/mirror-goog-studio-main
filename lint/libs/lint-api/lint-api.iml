@@ -13,11 +13,11 @@
     <orderEntry type="library" exported="" name="lombok-ast" level="project" />
     <orderEntry type="module" module-name="android-annotations" exported="" />
     <orderEntry type="library" exported="" name="guava-tools" level="project" />
+    <orderEntry type="module" module-name="builder-model" exported="" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module" module-name="sdklib" />
     <orderEntry type="module" module-name="sdk-common" exported="" />
     <orderEntry type="module" module-name="layoutlib-api" exported="" />
     <orderEntry type="module" module-name="java-psi-api" exported="" />
-    <orderEntry type="module" module-name="builder-model" exported="" />
   </component>
 </module>
