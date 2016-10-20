@@ -123,7 +123,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                     "jcenter\\(\\)",
                     "maven { url '"
                             + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                            + "'}");
+                            + "'}\njcenter()");
         }
 
         TestFileUtils.searchAndReplace(
