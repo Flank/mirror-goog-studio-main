@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -35,7 +34,6 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -80,7 +78,7 @@ public class JackJava8Test {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
-                        + "    buildToolsVersion '" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION + "'\n"
+                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
                         + "    compileSdkVersion 'android-24'\n"
                         + "    defaultConfig {\n"
                         + minSdkVersionSpec

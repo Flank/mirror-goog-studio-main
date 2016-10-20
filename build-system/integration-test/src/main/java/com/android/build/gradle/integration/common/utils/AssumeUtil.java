@@ -47,6 +47,13 @@ public class AssumeUtil {
 
     }
 
+    public static void assumeBuildToolsGreaterThan(Revision revision) {
+        Assume.assumeTrue(
+                "Test needs build tools higher than " + revision.toString(),
+                Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
+                        .compareTo(revision) > 0);
+    }
+
     public static void assumeNotUsingJack() {
         Assume.assumeFalse(GradleTestProject.USE_JACK);
     }

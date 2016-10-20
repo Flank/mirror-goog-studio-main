@@ -110,7 +110,7 @@ public class CheckAll {
                     "ndkRsHelloCompute",
                     p -> false,
 
-                    // We need buildtools 24.0.0
+                    // We need build tools at least 24.0.0
                     "jarjarWithJack",
                     p ->
                             Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)

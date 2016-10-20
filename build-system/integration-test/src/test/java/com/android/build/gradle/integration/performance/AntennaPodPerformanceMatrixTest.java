@@ -105,7 +105,7 @@ public class AntennaPodPerformanceMatrixTest {
         TestFileUtils.searchAndReplace(
                 buildGradleFile,
                 "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
-                "buildToolsVersion$1 \"24.0.3\"");
+                "buildToolsVersion$1 \"25.0.0\"");
     }
 
     @Test

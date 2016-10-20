@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -40,8 +39,10 @@ public class MinifyWithJackTest {
 
     @Before
     public void setUp() throws Exception {
-        assume().that(GradleTestProject.USE_JACK).isTrue();
-        project.execute("clean", "assembleMinified", "assembleDebugAndroidTest");
+        project
+                .executor()
+                .withProperty("com.android.build.gradle.integratonTest.useJack", "true")
+                .run("clean", "assembleMinified", "assembleDebugAndroidTest");
     }
 
     @Test

@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.AssumeUtil
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.AndroidProject
-import com.android.repository.Revision
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import groovy.transform.CompileStatic
@@ -95,8 +95,8 @@ android {
 
     @Test
     public void invalidateBuildTools() {
-        // Min build tools for Jack is the latest one
-        AssumeUtil.assumeNotUsingJack();
+        // We need at least 2 valid versions of the build tools for this test.
+        AssumeUtil.assumeBuildToolsGreaterThan(AndroidBuilder.MIN_BUILD_TOOLS_REV)
 
         project.getBuildFile() << """
 apply plugin: 'com.android.application'
@@ -109,7 +109,7 @@ android {
 
         project.execute("assemble")
 
-        String otherBuildToolsVersion = new Revision(24,0,2);
+        String otherBuildToolsVersion = AndroidBuilder.MIN_BUILD_TOOLS_REV;
         // Sanity check:
         assertThat(otherBuildToolsVersion).isNotEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
 
