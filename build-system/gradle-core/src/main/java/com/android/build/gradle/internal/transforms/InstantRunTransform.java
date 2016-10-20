@@ -186,73 +186,77 @@ public class InstantRunTransform extends Transform {
             }
 
             for (TransformInput input : invocation.getInputs()) {
-                for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                    File inputDir = directoryInput.getFile();
-                    if (invocation.isIncremental()) {
-                        for (Map.Entry<File, Status> fileEntry : directoryInput.getChangedFiles()
-                                .entrySet()) {
+              input.getDirectoryInputs().parallelStream().forEach(directoryInput -> {
+                  try {
+                      File inputDir = directoryInput.getFile();
+                      if (invocation.isIncremental()) {
+                          for (Map.Entry<File, Status> fileEntry : directoryInput.getChangedFiles()
+                                  .entrySet()) {
 
-                            File inputFile = fileEntry.getKey();
-                            if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS))
-                                continue;
-                            switch (fileEntry.getValue()) {
-                                case ADDED:
-                                    // a new file was added, we only generate the classes.2 format
-                                    transformToClasses2Format(
-                                            inputDir,
-                                            inputFile,
-                                            classesTwoOutput,
-                                            Status.ADDED);
-                                    break;
-                                case REMOVED:
-                                    // remove the classes.2 and classes.3 files.
-                                    deleteOutputFile(IncrementalSupportVisitor.VISITOR_BUILDER,
-                                            inputDir, inputFile, classesTwoOutput);
-                                    deleteOutputFile(IncrementalChangeVisitor.VISITOR_BUILDER,
-                                            inputDir, inputFile, classesThreeOutput);
-                                    break;
-                                case CHANGED:
-                                    transformToClasses2Format(
-                                            inputDir,
-                                            inputFile,
-                                            classesTwoOutput,
-                                            Status.CHANGED);
+                              File inputFile = fileEntry.getKey();
+                              if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS))
+                                  continue;
+                              switch (fileEntry.getValue()) {
+                                  case ADDED:
+                                      // a new file was added, we only generate the classes.2 format
+                                      transformToClasses2Format(
+                                              inputDir,
+                                              inputFile,
+                                              classesTwoOutput,
+                                              Status.ADDED);
+                                      break;
+                                  case REMOVED:
+                                      // remove the classes.2 and classes.3 files.
+                                      deleteOutputFile(IncrementalSupportVisitor.VISITOR_BUILDER,
+                                              inputDir, inputFile, classesTwoOutput);
+                                      deleteOutputFile(IncrementalChangeVisitor.VISITOR_BUILDER,
+                                              inputDir, inputFile, classesThreeOutput);
+                                      break;
+                                  case CHANGED:
+                                      transformToClasses2Format(
+                                              inputDir,
+                                              inputFile,
+                                              classesTwoOutput,
+                                              Status.CHANGED);
 
-                                    if (!cleanUpClassesThree) {
-                                        transformToClasses3Format(
-                                                inputDir,
-                                                inputFile,
-                                                classesThreeOutput);
-                                    }
-                                    break;
-                                case NOTCHANGED:
-                                    break;
-                                default:
-                                    throw new IllegalStateException("Unhandled file status "
-                                            + fileEntry.getValue());
-                            }
-                        }
-                    } else {
-                        // non incremental mode, we need to traverse the TransformInput#getFiles()
-                        // folder
-                        for (File file : Files.fileTreeTraverser().breadthFirstTraversal(inputDir)) {
-                            if (file.isDirectory()) {
-                                continue;
-                            }
+                                      if (!cleanUpClassesThree) {
+                                          transformToClasses3Format(
+                                                  inputDir,
+                                                  inputFile,
+                                                  classesThreeOutput);
+                                      }
+                                      break;
+                                  case NOTCHANGED:
+                                      break;
+                                  default:
+                                      throw new IllegalStateException("Unhandled file status "
+                                              + fileEntry.getValue());
+                              }
+                          }
+                      } else {
+                          // non incremental mode, we need to traverse the TransformInput#getFiles()
+                          // folder
+                          for (File file : Files.fileTreeTraverser().breadthFirstTraversal(inputDir)) {
+                              if (file.isDirectory()) {
+                                  continue;
+                              }
 
-                            try {
-                                transformToClasses2Format(
-                                        inputDir,
-                                        file,
-                                        classesTwoOutput,
-                                        Status.ADDED);
-                            } catch (IOException e) {
-                                throw new RuntimeException("Exception while preparing "
-                                        + file.getAbsolutePath());
-                            }
-                        }
-                    }
-                }
+                              try {
+                                  transformToClasses2Format(
+                                          inputDir,
+                                          file,
+                                          classesTwoOutput,
+                                          Status.ADDED);
+                              } catch (IOException e) {
+                                  throw new RuntimeException("Exception while preparing "
+                                          + file.getAbsolutePath());
+                              }
+                          }
+                      }
+                  } catch (IOException x) {
+                    throw new RuntimeException(x);  // Lambdas don't like checked exceptions.
+                  }
+              });
             }
 
             wrapUpOutputs(classesTwoOutput, classesThreeOutput);
