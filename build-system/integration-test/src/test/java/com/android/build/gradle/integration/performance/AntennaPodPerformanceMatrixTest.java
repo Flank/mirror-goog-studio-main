@@ -124,8 +124,10 @@ public class AntennaPodPerformanceMatrixTest {
 
             switch (benchmarkMode) {
                 case EVALUATION:
+                    tasks = ImmutableList.of("tasks");
+                    break;
                 case SYNC:
-                    //TODO
+                    project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
                     continue;
                 case BUILD__FROM_CLEAN:
                     project.executor().withEnableInfoLogging(false).run("clean");
