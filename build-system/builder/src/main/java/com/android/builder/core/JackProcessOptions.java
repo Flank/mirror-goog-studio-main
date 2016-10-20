@@ -19,13 +19,11 @@ package com.android.builder.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
-import com.android.repository.Revision;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 
 import java.io.File;
 import java.util.Collection;
@@ -37,10 +35,6 @@ import java.util.Set;
  * Options for configuring Jack compilation.
  */
 public class JackProcessOptions {
-
-    // Revisions with broken coverage plugin for in-process.
-    public static final Range<Revision> COVERAGE_BROKEN =
-            Range.singleton(new Revision(24, 0, 3));
 
     // Class name of the code coverage plugin.
     public static final String COVERAGE_PLUGIN_NAME = "com.android.jack.coverage.CodeCoverage";

@@ -2019,17 +2019,6 @@ public abstract class TaskManager {
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope,
             final boolean compileJavaSources) {
-        if (androidBuilder.getTargetInfo() != null
-                && !androidBuilder.getTargetInfo().getBuildTools().supportsJack()) {
-            androidBuilder
-                    .getErrorReporter()
-                    .handleSyncError(
-                            BuildToolInfo.JackVersion.V4.getMinRevision().toString(),
-                            SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
-                            String.format(
-                                    "Jack requires Build Tools %s or later.",
-                                    BuildToolInfo.JackVersion.V4.getMinRevision().toString()));
-        }
 
         if (scope.getTestedVariantData() != null) {
             scope.getTransformManager().addStream(

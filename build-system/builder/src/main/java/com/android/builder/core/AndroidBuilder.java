@@ -140,7 +140,7 @@ public class AndroidBuilder {
     /**
      * Minimal supported version of build tools.
      */
-    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(24, 0, 2);
+    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(25, 0, 0);
 
     /**
      * API level for split APKs.

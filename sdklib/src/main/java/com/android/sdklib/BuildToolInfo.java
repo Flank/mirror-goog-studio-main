@@ -440,11 +440,6 @@ public class BuildToolInfo {
         return true;
     }
 
-    /** If this build tools supports Jack. */
-    public boolean supportsJack() {
-        return getRevision().compareTo(JackVersion.V4.getMinRevision()) >= 0;
-    }
-
     /** Gets the supported Jack API version. This throws exception if no API is supported. */
     @NonNull
     public JackVersion getSupportedJackApi() {
