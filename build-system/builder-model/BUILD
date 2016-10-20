@@ -2,6 +2,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
     name = "studio.builder-model",
+    # do not sort: must match IML order
     srcs = ["src/main/java"],
     tags = ["managed"],
     visibility = ["//visibility:public"],

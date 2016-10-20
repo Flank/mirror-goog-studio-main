@@ -5,6 +5,7 @@ iml_module(
     srcs = ["libs/lint-api/src/main/java"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/idea/.idea/libraries:lombok-ast",
@@ -15,6 +16,7 @@ iml_module(
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools:idea.java-psi-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/idea/.idea/libraries:lombok-ast",

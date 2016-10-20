@@ -5,6 +5,7 @@ iml_module(
     srcs = ["src/main/java"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools:idea.annotations[module]",
         "//tools:idea.util[module]",

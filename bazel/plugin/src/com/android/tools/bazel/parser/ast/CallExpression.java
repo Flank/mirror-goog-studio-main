@@ -165,6 +165,14 @@ public class CallExpression extends Expression {
         }
     }
 
+    /** Adds a comment for buildifier not to sort {@code argumentName} for {@code reason}. */
+    public void setDoNotSort(String argumentName, String reason) {
+        Argument argument = getNamedArgument(argumentName);
+        if (argument != null) {
+            argument.setDoNotSort(reason);
+        }
+    }
+
     /** Ensures {@code element} is in the list {@code attribute}. */
     public void addElementToList(String attribute, String element) {
         Expression expression = getArgument(attribute);

@@ -6,10 +6,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["builder-test-api/src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/base/ddmlib:studio.ddmlib",
         "//tools/idea/.idea/libraries:guava-tools",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:guava-tools",
@@ -24,6 +26,7 @@ iml_module(
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.sdklib"],
+    # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:gson",

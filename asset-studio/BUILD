@@ -6,10 +6,12 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     exports = [
         "//tools/base/common:studio.common",
         "//tools/base/layoutlib-api:studio.layoutlib-api",
     ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
