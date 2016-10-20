@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.model.OptionalCompilationStep;
@@ -78,7 +79,6 @@ public class SdkHandler {
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
 
-    public static final String NDK_BUNDLE_SUBPATH = "ndk-bundle";
     public static void setTestSdkFolder(File testSdkFolder) {
         sTestSdkFolder = testSdkFolder;
     }
@@ -241,26 +241,6 @@ public class SdkHandler {
         }
     }
 
-    private void findNdkLocation(@NonNull Properties properties) {
-        String ndkDirProp = properties.getProperty("ndk.dir");
-        if (ndkDirProp != null) {
-            ndkFolder = new File(ndkDirProp);
-            return;
-        }
-
-        String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
-        if (ndkEnvVar != null) {
-            ndkFolder = new File(ndkEnvVar);
-            return;
-        }
-
-        String stdEnvVar = System.getenv("ANDROID_HOME");
-        if (stdEnvVar != null && !stdEnvVar.isEmpty()) {
-            // Worth checking if the NDK came bundled with the SDK
-            ndkFolder = new File(stdEnvVar, NDK_BUNDLE_SUBPATH);
-        }
-    }
-
     private void findLocation(@NonNull Project project) {
         if (sTestSdkFolder != null) {
             sdkFolder = sTestSdkFolder;
@@ -295,7 +275,7 @@ public class SdkHandler {
         }
 
         findSdkLocation(properties, rootDir);
-        findNdkLocation(properties);
+        ndkFolder = NdkHandler.findNdkDirectory(properties);
     }
 
     public void setSdkLibData(SdkLibData sdkLibData) {
