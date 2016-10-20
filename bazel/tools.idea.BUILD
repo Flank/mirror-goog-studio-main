@@ -1021,7 +1021,6 @@ iml_module(
 
 iml_module(
     name = "idea.MM_platform-impl",
-    name = "idea.MM_RegExpSupport",
     # do not sort: must match IML order
     srcs = [
         "idea/RegExpSupport/src",
