@@ -18,12 +18,9 @@ package com.android.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.android.SdkConstants;
-import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -74,97 +71,6 @@ public class FileUtilsTest {
         f2.mkdir();
 
         assertEquals("bar" + File.separator, FileUtils.relativePath(f2, d1));
-    }
-
-    @Test
-    public void testGetValidFileName() throws IOException {
-        File directory = new File("/Users/foo");
-
-        // Test the "normal" case
-        assertThat(FileUtils.getValidFileName("foo", "txt", directory)).isEqualTo("foo.txt");
-
-        // Test real-world file path
-        assertThat(
-                FileUtils.getValidFileName(
-                        "com.android.support/design/23.3.0/jars/classes.jar"
-                                + "_build=23.0_jumbo=false_multidex=true_optimize=false",
-                        "jar",
-                        directory))
-                .isEqualTo(
-                        "com_android_support_design_23_3_0_jars_classes_jar"
-                                + "_build_23_0_jumbo_false_multidex_true_optimize_false"
-                                + "_0979f3a79bbb13e755cfaa70190a4dbc116600f5.jar");
-
-        // Test Windows-based file path
-        assertThat(
-                FileUtils.getValidFileName(
-                        "com.android.support\\design\\23.3.0\\jars\\classes.jar"
-                                + "_build=23.0_jumbo=false_multidex=true_optimize=false",
-                        "jar",
-                        directory))
-                .isEqualTo(
-                        "com_android_support_design_23_3_0_jars_classes_jar"
-                                + "_build_23_0_jumbo_false_multidex_true_optimize_false"
-                                + "_48d7fda3351450337c26a2990bef21df95f65685.jar");
-
-        // Test unusual file name
-        assertThat(
-                FileUtils.getValidFileName(
-                        "foo`-=[]\\\\;',./~!@#$%^&*()_+{}|:\\\"<>?", "...!@#", directory))
-                .isEqualTo(
-                        "foo__________________________________"
-                                + "_387e0d11003e554ddceaeca12af15839dbd51643.______");
-
-        // Test empty extension
-        assertThat(FileUtils.getValidFileName("foo", "", directory)).isEqualTo("foo");
-
-        // Test long file name
-        assertThat(FileUtils.getValidFileName(Strings.repeat("a", 252), "txt", directory))
-                .isEqualTo("7d872a53e320bcdb5adce13b87a7e7671fef6780.txt");
-
-        // Test long file path
-        try {
-            FileUtils.getValidFileName("foo", "txt", new File("/", Strings.repeat("a", 4088)));
-            fail("expected IOException");
-        } catch (IOException exception) {
-            assertTrue(exception.getMessage().startsWith("File name or file path is too long: "));
-        }
-    }
-
-    @Test
-    public void testIsFileNameTooLong() throws IOException {
-        assertFalse(FileUtils.isFileNameTooLong(Strings.repeat("a", 255)));
-        assertTrue(FileUtils.isFileNameTooLong(Strings.repeat("a", 256)));
-    }
-
-    @Test
-    public void testIsFilePathTooLong() throws IOException {
-        File directory = new File("/Users/foo");
-        assertFalse(FileUtils.isFilePathTooLong("bar", directory));
-
-        // Windows path limit is 260.
-        int fileLength = 260 - directory.getAbsolutePath().length() - 1;
-        assertFalse(FileUtils.isFilePathTooLong(Strings.repeat("a", fileLength), directory));
-        assertTrue(FileUtils.isFilePathTooLong(Strings.repeat("a", 256), directory));
-
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            assertFalse(
-                    FileUtils.isFilePathTooLong(
-                            "foo.txt", new File("C:\\", Strings.repeat("a", 249))));
-            assertTrue(
-                    FileUtils.isFilePathTooLong(
-                            "foo.txt", new File("C:\\", Strings.repeat("a", 250))));
-        } else {
-            assertFalse(
-                    FileUtils.isFilePathTooLong(
-                            "foo.txt", new File("/", Strings.repeat("a", 4087))));
-            assertTrue(
-                    FileUtils.isFilePathTooLong(
-                            "foo.txt", new File("/", Strings.repeat("a", 4088))));
-        }
-
-        // Test Windows-based file path
-        assertFalse(FileUtils.isFilePathTooLong("bar", new File("C:\\Users\\foo")));
     }
 
     @Test
