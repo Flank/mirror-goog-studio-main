@@ -89,7 +89,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "buildToolsVersion: '\\d+.\\d+.\\d+',",
-                "buildToolsVersion: '24.0.2'");
+                "buildToolsVersion: '25.0.0'");
 
         // Fix project compilation.
         TestFileUtils.searchAndReplace(

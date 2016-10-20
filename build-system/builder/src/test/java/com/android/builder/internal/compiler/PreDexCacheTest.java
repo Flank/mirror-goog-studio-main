@@ -548,7 +548,7 @@ public class PreDexCacheTest {
         Files.write("dx!", dx, Charsets.UTF_8);
 
         return BuildToolInfo.modifiedLayout(
-                new Revision(24, 0, 2),
+                new Revision(25, 0, 0),
                 toolDir,
                 new File(toolDir, FN_AAPT),
                 new File(toolDir, FN_AIDL),

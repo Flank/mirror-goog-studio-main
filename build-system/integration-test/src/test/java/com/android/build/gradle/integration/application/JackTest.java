@@ -79,7 +79,7 @@ public class JackTest {
                         + "${model_start}"
                         + "android {\n"
                         + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "    buildToolsVersion '" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION + "'\n"
+                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
                         + "    defaultConfig {\n"
                         + "        jackOptions {\n"
                         + "            enabled true\n"
