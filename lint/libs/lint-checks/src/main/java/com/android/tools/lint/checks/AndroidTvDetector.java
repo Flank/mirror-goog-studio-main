@@ -405,7 +405,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    private static List<Element> findPermissionElements(Collection<String> permissions,
+    static List<Element> findPermissionElements(Collection<String> permissions,
             Document document) {
         Node manifestElement = document.getDocumentElement();
         if (manifestElement == null) {
@@ -432,7 +432,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
      * @param document The document/root node to use for iterating.
      * @return A list of all <code>&lt;uses-feature&gt;</code> elements that match the featureNames.
      */
-    private static List<Element> findUsesFeatureElements(@NonNull Set<String> featureNames,
+    static List<Element> findUsesFeatureElements(@NonNull Set<String> featureNames,
             @NonNull Document document) {
         Node manifestElement = document.getDocumentElement();
         if (manifestElement == null) {

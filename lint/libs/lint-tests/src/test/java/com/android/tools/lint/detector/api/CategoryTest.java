@@ -44,6 +44,7 @@ public class CategoryTest extends TestCase {
                 + "Lint\n"
                 + "Correctness\n"
                 + "Correctness:Messages\n"
+                + "Correctness:Chrome OS\n"
                 + "Security\n"
                 + "Performance\n"
                 + "Usability:Typography\n"
