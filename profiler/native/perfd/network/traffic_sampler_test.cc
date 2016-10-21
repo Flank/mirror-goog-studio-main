@@ -65,3 +65,15 @@ TEST(GetTrafficData, OutputFiltersOutLoopbackTraffic) {
   EXPECT_EQ(0, data.traffic_data().bytes_received());
   EXPECT_EQ(0, data.traffic_data().bytes_sent());
 }
+
+TEST(GetTrafficData, OutputFiltersOutLoopbackAndKeepNonLoopbackTraffic) {
+  std::string file_name(
+    TestUtils::getNetworkTestData(
+        "traffic_having_loopback_and_nonloopback_traffic.txt"));
+  TrafficSampler collector("12345", file_name);
+  profiler::proto::NetworkProfilerData data;
+  collector.GetData(&data);
+  EXPECT_TRUE(data.has_traffic_data());
+  EXPECT_EQ(2222, data.traffic_data().bytes_received());
+  EXPECT_EQ(3333, data.traffic_data().bytes_sent());
+}
