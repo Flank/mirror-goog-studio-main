@@ -21,9 +21,9 @@ import static com.android.utils.SdkUtils.fileToUrlString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
@@ -64,7 +64,7 @@ public class ExtractAnnotationsDriverTest {
     public void testProGuard() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar(false);
+        File androidJar = findAndroidJar();
 
         File project = createProject(mKeepTest, mKeepAnnotation);
 
@@ -115,7 +115,7 @@ public class ExtractAnnotationsDriverTest {
     public void testIncludeClassRetention() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar(false);
+        File androidJar = findAndroidJar();
 
         File project = createProject(
                 mIntDefTest,
@@ -197,7 +197,7 @@ public class ExtractAnnotationsDriverTest {
     public void testSkipClassRetention() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar(false);
+        File androidJar = findAndroidJar();
 
         File project = createProject(
                 mIntDefTest,
@@ -260,7 +260,7 @@ public class ExtractAnnotationsDriverTest {
     public void testWriteJarRecipeFile() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar(false);
+        File androidJar = findAndroidJar();
 
         File project = createProject(
                 mIntDefTest,
@@ -510,19 +510,10 @@ public class ExtractAnnotationsDriverTest {
     }
 
     @NonNull
-    private static File findAndroidJar(boolean requireExists) {
-        String androidHomePath = System.getenv("ANDROID_HOME");
-        assertNotNull("Must set $ANDROID_HOME to run this test", androidHomePath);
-        File androidHome = new File(androidHomePath);
-        if (!androidHome.exists()) {
-            if (!requireExists) {
-                throw new AssumptionViolatedException("Android jar not present");
-            }
-            fail(androidHomePath + " does not exist");
-        }
-        File androidJar = new File(androidHome, "platforms/android-22/android.jar");
+    private static File findAndroidJar() {
+        File androidJar = new File(TestUtils.getSdk(), "platforms/android-24/android.jar");
         assertTrue(
-                androidJar + " does not exist: make sure you have Lollipop installed in your SDK",
+                androidJar + " does not exist: make sure you have android N installed in your SDK",
                 androidJar.exists());
         return androidJar;
     }
