@@ -49,7 +49,7 @@ public class AddDependency {
         List<String> args = Lists.newArrayList(argsArray);
 
         Path repoDirectory;
-        if (!MavenUtils.isMavenCoordinate(args.get(0))) {
+        if (!MavenCoordinates.isMavenCoordinate(args.get(0))) {
             repoDirectory = Paths.get(args.get(0));
             args.remove(0);
         } else {
