@@ -8,6 +8,7 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# TODO: Bump up to 25.0.0 once we fix AS tests.
 filegroup(
     name = "build-tools/latest",
     srcs = [":build-tools/24.0.3"],
@@ -15,6 +16,13 @@ filegroup(
 )
 
 # TODO: Migrate the packages below that depend on specific versions.
+filegroup(
+    name = "build-tools/25.0.0",
+    srcs = glob(
+        include = ["*/build-tools/25.0.0/**"],
+    ),
+)
+
 filegroup(
     name = "build-tools/24.0.3",
     srcs = glob(
