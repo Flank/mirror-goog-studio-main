@@ -300,52 +300,6 @@ class AtomPluginDslTest  extends BaseTest {
         }
     }
 
-    public void testSettingLanguageLevelFromCompileSdk() {
-        def testLanguageLevel = { version, expectedLanguageLevel, useJack ->
-            Project project = ProjectBuilder.builder().withProjectDir(
-                    new File(testDir, "${FOLDER_TEST_PROJECTS}/basic")).build()
-
-            project.apply plugin: 'com.android.atom'
-            project.android {
-                compileSdkVersion version
-                buildToolsVersion BUILD_TOOL_VERSION
-                defaultConfig {
-                    versionName '1.0'
-                }
-            }
-
-            AtomPlugin plugin = project.plugins.getPlugin(AtomPlugin)
-            plugin.createAndroidTasks(false)
-
-            assertEquals(
-                    "target compatibility for ${version}",
-                    expectedLanguageLevel.toString(),
-                    project.compileReleaseAtomJavaWithJavac.targetCompatibility)
-            assertEquals(
-                    "source compatibility for ${version}",
-                    expectedLanguageLevel.toString(),
-                    project.compileReleaseAtomJavaWithJavac.sourceCompatibility)
-        }
-
-        for (useJack in [true, false]) {
-            def propName = 'java.specification.version'
-            String originalVersion = System.getProperty(propName)
-            try{
-                System.setProperty(propName, '1.7')
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_7, useJack)
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_7, useJack)
-                testLanguageLevel('Google Inc.:Google APIs:22', JavaVersion.VERSION_1_7, useJack)
-
-                System.setProperty(propName, '1.6')
-                testLanguageLevel(21, JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel('Google Inc.:Google APIs:22', JavaVersion.VERSION_1_6, useJack)
-            } finally {
-                System.setProperty(propName, originalVersion)
-            }
-        }
-    }
-
     public void testSettingLanguageLevelFromCompileSdk_dontOverride() {
         Project project = ProjectBuilder.builder().withProjectDir(
                 new File(testDir, "${FOLDER_TEST_PROJECTS}/basic")).build()

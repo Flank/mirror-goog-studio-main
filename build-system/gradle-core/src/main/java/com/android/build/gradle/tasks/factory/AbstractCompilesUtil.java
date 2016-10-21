@@ -16,26 +16,25 @@
 
 package com.android.build.gradle.tasks.factory;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.CompileOptions;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SyncIssue;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Common code for configuring {@link AbstractCompile} instances.
@@ -60,6 +59,19 @@ public class AbstractCompilesUtil {
             final CompileOptions compileOptions,
             String compileSdkVersion,
             boolean jackEnabled) {
+        compileOptions.setDefaultJavaVersion(
+                chooseDefaultJavaVersion(
+                        compileSdkVersion,
+                        System.getProperty("java.specification.version"),
+                        jackEnabled));
+    }
+
+    @NonNull
+    @VisibleForTesting
+    static JavaVersion chooseDefaultJavaVersion(
+            @NonNull String compileSdkVersion,
+            @NonNull String currentJdkVersion,
+            boolean jackEnabled) {
         final AndroidVersion hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         Integer compileSdkLevel = (hash == null ? null : hash.getFeatureLevel());
 
@@ -80,8 +92,8 @@ public class AbstractCompilesUtil {
             }
         }
 
-        JavaVersion jdkVersion =
-                JavaVersion.toVersion(System.getProperty("java.specification.version"));
+        JavaVersion jdkVersion = JavaVersion.toVersion(currentJdkVersion);
+
         if (jdkVersion.compareTo(javaVersionToUse) < 0) {
             Logging.getLogger(AbstractCompilesUtil.class).warn(
                     "Default language level for compileSdkVersion '{}' is " +
@@ -91,8 +103,7 @@ public class AbstractCompilesUtil {
                     jdkVersion);
             javaVersionToUse = jdkVersion;
         }
-
-        compileOptions.setDefaultJavaVersion(javaVersionToUse);
+        return javaVersionToUse;
     }
 
     public static boolean isIncremental(Project project, VariantScope variantScope,
