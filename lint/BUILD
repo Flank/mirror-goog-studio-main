@@ -41,6 +41,7 @@ java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
+        "//prebuilts/tools/common/uast:uast-145.597.3",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -48,7 +49,6 @@ java_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "//prebuilts/tools/common/uast:uast-145.597.3",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
@@ -75,6 +75,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
+        "//prebuilts/tools/common/uast:uast-145.597.3",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -82,7 +83,6 @@ java_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "//prebuilts/tools/common/uast:uast-145.597.3",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",

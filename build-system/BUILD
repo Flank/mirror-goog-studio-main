@@ -44,8 +44,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )

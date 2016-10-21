@@ -1,22 +1,22 @@
 cc_library(
-  name = "profiler_event",
-  srcs = [
-    "event_cache.cc",
-    "event_service.cc",
-    "internal_event_service.cc",
-  ],
-  hdrs = [
-    "event_cache.h",
-    "event_profiler_component.h",
-    "event_service.h",
-    "internal_event_service.h",
-  ],
-  deps = [
-    "//tools/base/profiler/native/utils:profiler_utils",
-    "//tools/base/profiler/proto:profiler_cc_proto",
-  ],
-  copts = [
-    "-Itools/base/profiler/native",
-    "-I$(GENDIR)/tools/base/profiler"
-  ],
+    name = "profiler_event",
+    srcs = [
+        "event_cache.cc",
+        "event_service.cc",
+        "internal_event_service.cc",
+    ],
+    hdrs = [
+        "event_cache.h",
+        "event_profiler_component.h",
+        "event_service.h",
+        "internal_event_service.h",
+    ],
+    copts = [
+        "-Itools/base/profiler/native",
+        "-I$(GENDIR)/tools/base/profiler",
+    ],
+    deps = [
+        "//tools/base/profiler/native/utils:profiler_utils",
+        "//tools/base/profiler/proto:profiler_cc_proto",
+    ],
 )

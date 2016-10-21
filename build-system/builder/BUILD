@@ -33,9 +33,15 @@ java_library(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
+    data = [
+        "//prebuilts/studio/sdk:build-tools/20.0.0",
+        "//prebuilts/studio/sdk:build-tools/23.0.0",
+        "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:platforms/latest",
+    ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
     resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":builder",
         "//tools/base/annotations",
@@ -53,10 +59,4 @@ java_test(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.mockito_mockito-all",
     ],
-    data = [
-        "//prebuilts/studio/sdk:build-tools/20.0.0",
-        "//prebuilts/studio/sdk:build-tools/23.0.0",
-        "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/latest",
-    ]
 )

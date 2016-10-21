@@ -6,9 +6,9 @@ java_library(
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint/cli",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
+        "//tools/base/lint/cli",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
@@ -24,6 +24,10 @@ java_library(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**"]),
+    data = [
+        "//prebuilts/studio/sdk:platform-tools",
+        "//prebuilts/studio/sdk:platforms/latest",
+    ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.tools.lint.LintBazelSuite",
     deps = [
@@ -32,9 +36,9 @@ java_test(
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint/cli",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
+        "//tools/base/lint/cli",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
@@ -42,16 +46,12 @@ java_test(
         "//tools/base/third_party:com.android.tools.external.com-intellij_uast",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:com.google.truth_truth",
     ],
-    data = [
-        "//prebuilts/studio/sdk:platforms/latest",
-        "//prebuilts/studio/sdk:platform-tools",
-    ]
 )
