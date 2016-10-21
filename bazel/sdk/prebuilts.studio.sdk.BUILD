@@ -100,3 +100,7 @@ platform_filegroup(
     ],
 )
 
+filegroup(
+    name = "add-ons/addon-google_apis-google-24",
+    srcs = glob(["*/add-ons/addon-google_apis-google-24/**"],
+)
