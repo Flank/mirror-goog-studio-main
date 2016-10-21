@@ -291,7 +291,9 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(desc, expected, actual);
     }
 
-    public void testFindEverything() throws Exception {
+    // Flaky test - http://b.android.com/225879
+    @SuppressWarnings("unused")
+    public void ignoredTestFindEverything() throws Exception {
         // Load the API versions file and look up every single method/field/class in there
         // (provided since != 1) and also check the deprecated calls.
 
