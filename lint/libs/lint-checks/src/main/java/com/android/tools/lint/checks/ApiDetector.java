@@ -672,6 +672,7 @@ public class ApiDetector extends ResourceXmlDetector
         return ATTR_LABEL_FOR.equals(name)
                || ATTR_TEXT_IS_SELECTABLE.equals(name)
                || "textAlignment".equals(name)
+               || "roundIcon".equals(name)
                || ATTR_FULL_BACKUP_CONTENT.equals(name);
     }
 
