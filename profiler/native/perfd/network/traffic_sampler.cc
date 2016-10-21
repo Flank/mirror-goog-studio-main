@@ -33,8 +33,14 @@ void TrafficSampler::GetData(profiler::proto::NetworkProfilerData *data) {
     Tokenizer t(line);
     // Line, broken into tokens, with tokens we care about |highlighted|:
     // idx iface acct_tag_hex |uid| cnt_set |rx_bytes| rx_packets |tx_bytes|
-    std::string uid_str;
-    if (t.EatTokens(3) && t.GetNextToken(&uid_str) && uid_str == uid_) {
+    // Currently, we are not only sampling the user's traffic but also the
+    // bytes sent between perfa <-> perfd, which to the user is noise. Here,
+    // we ignore the bytes sent on the loopback device to avoid counting such
+    // traffic. We agree as of right now that, users care about traffic from
+    // outside much more than inter-process traffic.
+    std::string str;
+    if (t.EatTokens(1) && t.GetNextToken(&str) && str != "lo" && t.EatTokens(1)
+        && t.GetNextToken(&str) && str == uid_) {
       std::string rx_str;
       std::string tx_str;
       if (t.EatTokens(1) && t.GetNextToken(&rx_str) && t.EatTokens(1) &&
