@@ -29,19 +29,17 @@ import com.android.builder.internal.packaging.zip.ZFile;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Tests that users can align an APK externally generated.
@@ -100,17 +98,21 @@ public class AlignExternallyGeneratedApkTest {
          */
         Files.append(
                 "afterEvaluate {\n"
-                        + "project ->\n"
-                        + "android.applicationVariants.all { variant ->\n"
-                        + "variant.outputs.each { output ->\n"
-                        + "if (output.name.equals(\"debug\")) {\n"
-                        + "output.createZipAlignTask(\n"
-                        + "\"ZA\",\n"
-                        + "new File(\""+ testApk.getAbsolutePath() + "\"),\n"
-                        + "new File(\"" + alignedApk.getAbsolutePath() + "\"));\n"
-                        + "}\n"
-                        + "}\n"
-                        + "}\n"
+                        + "    project ->\n"
+                        + "    android.applicationVariants.all { variant ->\n"
+                        + "        variant.outputs.each { output ->\n"
+                        + "            if (output.name.equals(\"debug\")) {\n"
+                        + "                output.createZipAlignTask(\n"
+                        + "                \"ZA\",\n"
+                        + "                new File(\""
+                        + testApk.getAbsolutePath().replace("\\", "\\\\")
+                        + "\"),\n"
+                        + "                new File(\""
+                        + alignedApk.getAbsolutePath().replace("\\", "\\\\")
+                        + "\"));\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
                         + "}\n",
                 project.getBuildFile(),
                 Charsets.US_ASCII);

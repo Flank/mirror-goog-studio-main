@@ -224,8 +224,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         if (config.getResourceOutputApk() != null) {
-            builder.addArgs(
-                    "-F", FileUtils.toExportableSystemDependentPath(config.getResourceOutputApk()));
+            builder.addArgs("-F", config.getResourceOutputApk().getAbsolutePath());
         }
 
         if (config.getProguardOutputFile() != null) {

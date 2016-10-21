@@ -22,7 +22,6 @@ import com.google.common.io.Files;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -125,10 +124,6 @@ public class FileSubject extends Subject<FileSubject, File> {
 
     public void isNewerThan(File other) {
         isNewerThan(other.lastModified());
-    }
-
-    public void isSameAgeAs(File other) {
-        wasModifiedAt(other.lastModified());
     }
 
     public void contentWithUnixLineSeparatorsIsExactly(String expected) throws IOException {
