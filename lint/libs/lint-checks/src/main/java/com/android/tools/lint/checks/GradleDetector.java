@@ -32,6 +32,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.GradleCoordinate;
@@ -58,7 +59,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
+import com.google.common.collect.Sets;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -304,7 +305,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     /** Group ID for GMS */
     public static final String GMS_GROUP_ID = "com.google.android.gms";
     public static final String GOOGLE_SUPPORT_GROUP_ID = "com.google.android.support";
-    public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.support";
+    public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.wearable";
+    private static final String WEARABLE_ARTIFACT_ID = "wearable";
 
     private static final GradleCoordinate PLAY_SERVICES_V650 = GradleCoordinate
             .parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
@@ -940,8 +942,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 report(context, cookie, COMPATIBILITY, message);
 
             } else if (context.isEnabled(BUNDLED_GMS)
-              && PLAY_SERVICES_V650.isSameArtifact(dependency)
-              && COMPARE_PLUS_HIGHER.compare(dependency, PLAY_SERVICES_V650) >= 0) {
+                  && PLAY_SERVICES_V650.isSameArtifact(dependency)
+                  && COMPARE_PLUS_HIGHER.compare(dependency, PLAY_SERVICES_V650) >= 0) {
                 // Play services 6.5.0 is the first version to allow un-bundling, so if the user is
                 // at or above 6.5.0, recommend un-bundling
                 String message = "Avoid using bundled version of Google Play services SDK.";
@@ -1257,6 +1259,13 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      */
     private boolean mCheckedSupportLibs;
 
+    /**
+     * If incrementally editing a single build.gradle file, tracks whether we've already
+     * transitively checked wearable library versions such that we don't flag the same
+     * error on every single dependency declaration
+     */
+    private boolean mCheckedWearableLibs;
+
     private void checkPlayServices(Context context, GradleCoordinate dependency, Object cookie) {
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
@@ -1274,14 +1283,27 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     repository);
         }
 
-        if (!mCheckedGms) {
-            mCheckedGms = true;
-            // Incremental analysis only? If so, tie the check to
-            // a specific GMS play dependency if only, such that it's highlighted
-            // in the editor
-            if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
-                // Incremental editing: try flagging them in this file!
-                checkConsistentPlayServices(context, cookie);
+        if (GMS_GROUP_ID.equals(dependency.getGroupId())) {
+            if (!mCheckedGms) {
+                mCheckedGms = true;
+                // Incremental analysis only? If so, tie the check to
+                // a specific GMS play dependency if only, such that it's highlighted
+                // in the editor
+                if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                    // Incremental editing: try flagging them in this file!
+                    checkConsistentPlayServices(context, cookie);
+                }
+            }
+        } else {
+            if (!mCheckedWearableLibs) {
+                mCheckedWearableLibs = true;
+                // Incremental analysis only? If so, tie the check to
+                // a specific GMS play dependency if only, such that it's highlighted
+                // in the editor
+                if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                    // Incremental editing: try flagging them in this file!
+                    checkConsistentWearableLibraries(context, cookie);
+                }
             }
         }
     }
@@ -1296,34 +1318,126 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         checkConsistentLibraries(context, cookie, GMS_GROUP_ID);
     }
 
+    private void checkConsistentWearableLibraries(@NonNull Context context,
+            @Nullable Object cookie) {
+        // Make sure we have both
+        //   compile 'com.google.android.support:wearable:2.0.0-alpha3'
+        //   provided 'com.google.android.wearable:wearable:2.0.0-alpha3'
+        Project project = context.getMainProject();
+        if (!project.isGradleProject()) {
+            return;
+        }
+        Set<String> supportVersions = Sets.newHashSet();
+        Set<String> wearableVersions = Sets.newHashSet();
+        for (AndroidLibrary library : getAndroidLibraries(project)) {
+            MavenCoordinates coordinates = library.getResolvedCoordinates();
+            if (WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
+                    GOOGLE_SUPPORT_GROUP_ID.equals(coordinates.getGroupId())) {
+                supportVersions.add(coordinates.getVersion());
+            }
+        }
+        for (JavaLibrary library : getJavaLibraries(project)) {
+            MavenCoordinates coordinates = library.getResolvedCoordinates();
+            if (WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
+                    ANDROID_WEAR_GROUP_ID.equals(coordinates.getGroupId())) {
+                if (!library.isProvided()) {
+                    if (cookie != null) {
+                        String message = "This dependency should be marked as "
+                                        + "`provided`, not `compile`";
+
+                        report(context, cookie, COMPATIBILITY, message);
+                    } else {
+                        String message = String.format("The %1$s:%2$s dependency should be "
+                                        + "marked as `provided`, not `compile`",
+                                ANDROID_WEAR_GROUP_ID,
+                                WEARABLE_ARTIFACT_ID);
+                        context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                                message);
+                    }
+                }
+                wearableVersions.add(coordinates.getVersion());
+            }
+        }
+
+        if (!supportVersions.isEmpty()) {
+            if (wearableVersions.isEmpty()) {
+                List<String> list = Lists.newArrayList(supportVersions);
+                String first = Collections.min(list);
+                String message = String.format("Project depends on %1$s:%2$s:%3$s, so it must "
+                                + "also depend (as a provided dependency) on %4$s:%5$s:%6$s",
+                        GOOGLE_SUPPORT_GROUP_ID,
+                        WEARABLE_ARTIFACT_ID,
+                        first,
+                        ANDROID_WEAR_GROUP_ID,
+                        WEARABLE_ARTIFACT_ID,
+                        first);
+                if (cookie != null) {
+                    report(context, cookie, COMPATIBILITY, message);
+                } else {
+                    context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                            message);
+                }
+            } else {
+                // Check that they have the same versions
+                if (!supportVersions.equals(wearableVersions)) {
+                    List<String> sortedSupportVersions = Lists.newArrayList(supportVersions);
+                    Collections.sort(sortedSupportVersions);
+                    List<String> supportedWearableVersions = Lists.newArrayList(wearableVersions);
+                    Collections.sort(supportedWearableVersions);
+                    String message = String.format("The wearable libraries for %1$s and %2$s " +
+                                    "must use *exactly* the same versions; found %3$s " +
+                                    "and %4$s",
+                            GOOGLE_SUPPORT_GROUP_ID,
+                            ANDROID_WEAR_GROUP_ID,
+                            sortedSupportVersions.size() == 1 ? sortedSupportVersions.get(0)
+                                    : sortedSupportVersions.toString(),
+                            supportedWearableVersions.size() == 1 ? supportedWearableVersions.get(0)
+                                    : supportedWearableVersions.toString());
+                    if (cookie != null) {
+                        report(context, cookie, COMPATIBILITY, message);
+                    } else {
+                        context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                                message);
+                    }
+                }
+            }
+        }
+    }
+
     private void checkConsistentLibraries(@NonNull Context context,
             @Nullable Object cookie, @NonNull String groupId) {
         // Make sure we're using a consistent version across all play services libraries
         // (b/22709708)
 
         Project project = context.getMainProject();
-        if (!project.isGradleProject()) {
-            return;
-        }
-        Variant variant = project.getCurrentVariant();
-        if (variant == null) {
-            return;
-        }
-        AndroidArtifact artifact = variant.getMainArtifact();
-        GradleVersion version = project.getGradleModelVersion();
-        Collection<AndroidLibrary> libraries;
-        Dependencies compileDependencies = getCompileDependencies(artifact, version);
-        libraries = compileDependencies.getLibraries();
         Multimap<String, MavenCoordinates> versionToCoordinate = ArrayListMultimap.create();
-        for (AndroidLibrary library : libraries) {
-            addLibraryVersions(versionToCoordinate, library, groupId);
+        for (AndroidLibrary library : getAndroidLibraries(project)) {
+            MavenCoordinates coordinates = library.getResolvedCoordinates();
+            if (coordinates.getGroupId().equals(groupId)
+                    // Historically the multidex library ended up in the support package but
+                    // decided to do its own numbering (and isn't tied to the rest in terms
+                    // of implementation dependencies)
+                    && !coordinates.getArtifactId().equals("multidex")) {
+                versionToCoordinate.put(coordinates.getVersion(), coordinates);
+            }
         }
+
+        for (JavaLibrary library : getJavaLibraries(project)) {
+            MavenCoordinates coordinates = library.getResolvedCoordinates();
+            if (coordinates.getGroupId().equals(groupId)
+                    // The Android annotations library is decoupled from the rest and doesn't
+                    // need to be matched to the other exact support library versions
+                    && !coordinates.getArtifactId().equals("support-annotations")) {
+                versionToCoordinate.put(coordinates.getVersion(), coordinates);
+            }
+        }
+
         Set<String> versions = versionToCoordinate.keySet();
         if (versions.size() > 1) {
             List<String> sortedVersions = Lists.newArrayList(versions);
             Collections.sort(sortedVersions, Collections.reverseOrder());
-            MavenCoordinates c1 = versionToCoordinate.get(sortedVersions.get(0)).iterator().next();
-            MavenCoordinates c2 = versionToCoordinate.get(sortedVersions.get(1)).iterator().next();
+            MavenCoordinates c1 = findFirst(versionToCoordinate.get(sortedVersions.get(0)));
+            MavenCoordinates c2 = findFirst(versionToCoordinate.get(sortedVersions.get(1)));
             // Not using toString because in the IDE, these are model proxies which display garbage output
             String example1 = c1.getGroupId() + ":" + c1.getArtifactId() + ":" + c1 .getVersion();
             String example2 = c2.getGroupId() + ":" + c2.getArtifactId() + ":" + c2 .getVersion();
@@ -1340,19 +1454,53 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
     }
 
-    private static void addLibraryVersions(@NonNull Multimap<String, MavenCoordinates> versions,
-            @NonNull AndroidLibrary library, @NonNull String groupId) {
-        MavenCoordinates coordinates = library.getResolvedCoordinates();
-        if (coordinates.getGroupId().equals(groupId)
-                // Historically the multidex library ended up in the support package but
-                // decided to do its own numbering (and isn't tied to the rest in terms
-                // of implementation dependencies)
-                && !coordinates.getArtifactId().equals("multidex")) {
-            versions.put(coordinates.getVersion(), coordinates);
+    private static MavenCoordinates findFirst(@NonNull Collection<MavenCoordinates> coordinates) {
+        return Collections.min(coordinates, (o1, o2) -> o1.toString().compareTo(o2.toString()));
+    }
+
+    @NonNull
+    public static Collection<AndroidLibrary> getAndroidLibraries(@NonNull Project project) {
+        Dependencies compileDependencies = getCompileDependencies(project);
+        if (compileDependencies == null) {
+            return Collections.emptyList();
         }
 
-        for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addLibraryVersions(versions, dependency, groupId);
+        Set<AndroidLibrary> allLibraries = Sets.newHashSet();
+        addIndirectAndroidLibraries(compileDependencies.getLibraries(), allLibraries);
+        return allLibraries;
+    }
+
+    @NonNull
+    public static Collection<JavaLibrary> getJavaLibraries(@NonNull Project project) {
+        Dependencies compileDependencies = getCompileDependencies(project);
+        if (compileDependencies == null) {
+            return Collections.emptyList();
+        }
+
+        Set<JavaLibrary> allLibraries = Sets.newHashSet();
+        addIndirectJavaLibraries(compileDependencies.getJavaLibraries(), allLibraries);
+        return allLibraries;
+    }
+
+    private static void addIndirectAndroidLibraries(
+            @NonNull Collection<? extends AndroidLibrary> libraries,
+            @NonNull Set<AndroidLibrary> result) {
+        for (AndroidLibrary library : libraries) {
+            if (!result.contains(library)) {
+                result.add(library);
+                addIndirectAndroidLibraries(library.getLibraryDependencies(), result);
+            }
+        }
+    }
+
+    private static void addIndirectJavaLibraries(
+            @NonNull Collection<? extends JavaLibrary> libraries,
+            @NonNull Set<JavaLibrary> result) {
+        for (JavaLibrary library : libraries) {
+            if (!result.contains(library)) {
+                result.add(library);
+                addIndirectJavaLibraries(library.getDependencies(), result);
+            }
         }
     }
 
@@ -1363,6 +1511,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             checkConsistentPlayServices(context, null);
             checkConsistentSupportLibraries(context, null);
+            checkConsistentWearableLibraries(context, null);
         }
     }
 
@@ -1448,6 +1597,21 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     @SuppressWarnings({"MethodMayBeStatic", "UnusedParameters"})
     protected Location createLocation(@NonNull Context context, @NonNull Object cookie) {
         return null;
+    }
+
+    @Nullable
+    public static Dependencies getCompileDependencies(@NonNull Project project) {
+        if (!project.isGradleProject()) {
+            return null;
+        }
+        Variant variant = project.getCurrentVariant();
+        if (variant == null) {
+            return null;
+        }
+
+        AndroidArtifact artifact = variant.getMainArtifact();
+        GradleVersion version = project.getGradleModelVersion();
+        return getCompileDependencies(artifact, version);
     }
 
     @NonNull
