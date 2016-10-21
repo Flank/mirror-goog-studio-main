@@ -24,10 +24,10 @@ java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-all",
-        "//tools/base/third_party:com.google.truth_truth",
     ],
 )
 

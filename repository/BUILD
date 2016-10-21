@@ -48,8 +48,8 @@ java_test(
         ":tools.repository",
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
-        "//tools/base/third_party:com.google.truth_truth",
     ],
 )
