@@ -144,11 +144,11 @@ public class CallSuperDetector extends Detector implements JavaPsiScanner {
         }
 
         PsiAnnotation[] annotations = evaluator.getAllAnnotations(directSuper, true);
-        annotations = filterRelevantAnnotations(evaluator, annotations);
         for (PsiAnnotation annotation : annotations) {
             String signature = annotation.getQualifiedName();
             if (CALL_SUPER_ANNOTATION.equals(signature) || signature != null
-                    && signature.endsWith(".OverrideMustInvoke")) {
+                    && (signature.endsWith(".OverrideMustInvoke")
+                            || signature.endsWith(".OverridingMethodsMustInvokeSuper"))) {
                 return directSuper;
             }
         }
