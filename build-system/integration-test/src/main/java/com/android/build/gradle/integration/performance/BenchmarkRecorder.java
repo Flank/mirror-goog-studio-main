@@ -23,6 +23,8 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -55,8 +57,7 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProfileUploader uploader;
 
-    @NonNull private final List<Logging.GradleBenchmarkResult.Builder> benchmarkResults =
-            new ArrayList<>();
+    @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
@@ -73,8 +74,7 @@ public final class BenchmarkRecorder {
         this.uploader = uploader;
     }
 
-    public void recordBenchmarkResult(
-            @NonNull Logging.GradleBenchmarkResult.Builder benchmarkResult) {
+    public void recordBenchmarkResult(@NonNull GradleBenchmarkResult.Builder benchmarkResult) {
 
         benchmarkResult.setResultId(UUID.randomUUID().toString());
 
@@ -90,16 +90,16 @@ public final class BenchmarkRecorder {
 
         String buildBotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
         if (buildBotBuildNumber != null) {
-            Logging.GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
-                    Logging.GradleBenchmarkResult.ScheduledBuild.newBuilder();
+            GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
+                    GradleBenchmarkResult.ScheduledBuild.newBuilder();
             Long buildNumber = Longs.tryParse(buildBotBuildNumber);
             if (buildNumber != null) {
                 scheduledBuild.setBuildbotBuildNumber(buildNumber);
             }
             benchmarkResult.setScheduledBuild(scheduledBuild);
         } else {
-            Logging.GradleBenchmarkResult.Experiment.Builder experiment =
-                    Logging.GradleBenchmarkResult.Experiment.newBuilder();
+            GradleBenchmarkResult.Experiment.Builder experiment =
+                    GradleBenchmarkResult.Experiment.newBuilder();
             String experimentComment = System.getenv("BENCHMARK_EXPERIMENT");
             if (experimentComment != null) {
                 experiment.setComment(experimentComment);
@@ -107,15 +107,26 @@ public final class BenchmarkRecorder {
             benchmarkResult.setExperiment(experiment);
         }
 
-        benchmarkResult.setFlags(projectScenario.getFlags());
+        GradleBenchmarkResult.Flags.Builder flags = projectScenario.getFlags().toBuilder();
+        GradleBuildProfile profile = benchmarkResult.getProfile();
+
+        if (profile.hasGradleVersion()) {
+            if (profile.getGradleVersion().endsWith("+0000")) {
+                // Using nightly gradle version.
+                flags.setGradleVersion(GradleBenchmarkResult.Flags.GradleVersion.UPCOMING_GRADLE);
+            }
+        }
+
+        benchmarkResult.setFlags(flags);
         benchmarkResult.setBenchmark(benchmark);
         benchmarkResults.add(benchmarkResult);
     }
 
     public void doUploads() throws IOException {
         Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
-        List<Logging.GradleBenchmarkResult> results =
-                benchmarkResults.stream()
+        List<GradleBenchmarkResult> results =
+                benchmarkResults
+                        .stream()
                         .map(builder -> builder.setTimestamp(timestamp).build())
                         .collect(Collectors.toList());
 
@@ -125,8 +136,8 @@ public final class BenchmarkRecorder {
     }
 
     private static void checkAllUploadsAreDistinct(
-            @NonNull List<Logging.GradleBenchmarkResult> benchmarkResults) {
-        Set<Logging.GradleBenchmarkResult> benchmarkResultIds =
+            @NonNull List<GradleBenchmarkResult> benchmarkResults) {
+        Set<GradleBenchmarkResult> benchmarkResultIds =
                 benchmarkResults
                         .stream()
                         .map(
@@ -148,7 +159,7 @@ public final class BenchmarkRecorder {
                             + Joiner.on('\n').join(benchmarkResultIds));
         }
 
-        for (Logging.GradleBenchmarkResult benchmarkResult : benchmarkResultIds) {
+        for (GradleBenchmarkResult benchmarkResult : benchmarkResultIds) {
             if (!PerformanceTestUtil.BENCHMARK_MODES.contains(benchmarkResult.getBenchmarkMode())) {
                 throw new IllegalStateException(
                         "Cannot upload benchmark result, invalid benchmark mode "
