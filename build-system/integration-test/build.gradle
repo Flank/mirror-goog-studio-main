@@ -18,14 +18,15 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     compile project(':analytics-library:protos')
-    compile project(':base:builder-model')
     compile project(':base:builder')
+    compile project(':base:builder-model')
+    compile project(':base:gradle')
     compile project(':base:gradle-experimental')
-    compile project(':base:sdk-common')
-    compile project(':base:lint')
     compile project(':base:instant-run:instant-run-client')
-    compile project(':base:testutils')
+    compile project(':base:lint')
+    compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
+    compile project(':base:testutils')
 
     compile "junit:junit:4.12"
     compile 'commons-io:commons-io:2.4'
