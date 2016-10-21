@@ -121,7 +121,7 @@ public final class GradleTestProject implements TestRule {
         USE_JACK = !Strings.isNullOrEmpty(envJack);
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
-        DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "23");
+        DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
     }
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
