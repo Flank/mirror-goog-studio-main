@@ -22,9 +22,9 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.SyncIssue
+import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -405,7 +405,7 @@ class NativeBuildOutputTest {
 
         project.file("CMakeLists.txt") << cmakeLists;
 
-        checkSucceeded(["building", "x86/libhello-jni.so"], []);
+        checkSucceeded(["building", FileUtils.join("x86", "libhello-jni.so")], []);
     }
 
     private void checkSucceeded(List<String> expectInStdout, List<String> dontExpectInStdout) {

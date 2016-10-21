@@ -102,18 +102,6 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
         // Bundle all the files in the output bundle.
         try (ZipOutputStream zipOutputStream =
                      new ZipOutputStream(new FileOutputStream(getBundleFile()))) {
-            // Ensure all the directories are always created even if they are empty.
-            zipOutputStream.putNextEntry(new ZipEntry(FD_JAVA_RES + "/"));
-            zipOutputStream.closeEntry();
-            zipOutputStream.putNextEntry(new ZipEntry(FD_RES + "/"));
-            zipOutputStream.closeEntry();
-            zipOutputStream.putNextEntry(new ZipEntry(FD_NATIVE_LIBS + "/"));
-            zipOutputStream.closeEntry();
-            zipOutputStream.putNextEntry(new ZipEntry(FD_ASSETS + "/"));
-            zipOutputStream.closeEntry();
-            zipOutputStream.putNextEntry(new ZipEntry(FD_DEX + "/"));
-            zipOutputStream.closeEntry();
-
             // Find all the other files to be bundled.
             for (File file : FileUtils.getAllFiles(bundleFolder)) {
                 try (FileInputStream fileInputStream = new FileInputStream(file)) {

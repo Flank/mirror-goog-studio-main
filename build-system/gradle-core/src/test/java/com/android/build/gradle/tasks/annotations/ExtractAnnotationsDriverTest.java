@@ -29,18 +29,16 @@ import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.AssumptionViolatedException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.AssumptionViolatedException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ExtractAnnotationsDriverTest {
 
@@ -134,7 +132,6 @@ public class ExtractAnnotationsDriverTest {
                 new File(project, "src").getPath(),
                 "--classpath",
                 androidJar.getPath(),
-
                 "--quiet",
                 "--language-level",
                 "1.6",
@@ -216,7 +213,6 @@ public class ExtractAnnotationsDriverTest {
                 new File(project, "src").getPath(),
                 "--classpath",
                 androidJar.getPath(),
-
                 "--quiet",
                 "--skip-class-retention",
                 "--language-level",
@@ -251,7 +247,6 @@ public class ExtractAnnotationsDriverTest {
                 + "  </item>\n"
                 + "</root>\n"
                 + "\n");
-
 
         deleteFile(project);
     }
@@ -502,7 +497,7 @@ public class ExtractAnnotationsDriverTest {
         try {
             byte[] bytes = ByteStreams.toByteArray(stream);
             assertNotNull(bytes);
-            String xml = new String(bytes, Charsets.UTF_8);
+            String xml = new String(bytes, Charsets.UTF_8).replace("\r\n", "\n");
             assertEquals(expected, xml);
         } finally {
             Closeables.closeQuietly(stream);

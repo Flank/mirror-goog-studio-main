@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
@@ -615,7 +616,11 @@ public class FileCacheTest {
         inputFile = new File("com.android.support/design/23.3.0/jars/classes.jar");
         inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
         assertThat(inputs.toString()).isEqualTo("file=" + inputFile.getPath());
-        assertThat(inputs.getKey()).isEqualTo("25dcc2247956f01b9dbdca420eff87c96aaf2874");
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            assertThat(inputs.getKey()).isEqualTo("4b30578b0f46117c61911c027a589b48b80bd3d1");
+        } else {
+            assertThat(inputs.getKey()).isEqualTo("25dcc2247956f01b9dbdca420eff87c96aaf2874");
+        }
 
         // Test Windows-based input file path
         inputFile =
@@ -639,7 +644,11 @@ public class FileCacheTest {
         inputFile = new File("foo`-=[]\\\\;',./~!@#$%^&*()_+{}|:\\\"<>?");
         inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
         assertThat(inputs.toString()).isEqualTo("file=" + inputFile.getPath());
-        assertThat(inputs.getKey()).isEqualTo("7f205499565a454d0186f34313e63281c7192a43");
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            assertThat(inputs.getKey()).isEqualTo("c9a5f22f392f6186b18b66f70e59fa20583533dd");
+        } else {
+            assertThat(inputs.getKey()).isEqualTo("7f205499565a454d0186f34313e63281c7192a43");
+        }
 
         // Test empty file path
         inputFile = new File("");

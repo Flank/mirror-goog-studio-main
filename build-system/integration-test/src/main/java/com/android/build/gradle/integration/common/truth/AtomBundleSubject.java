@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.DexUtils;
 import com.android.ide.common.process.ProcessException;
+import com.android.utils.FileUtils;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.SubjectFactory;
 import java.io.File;
@@ -95,7 +96,8 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
 
         switch (scope) {
             case MAIN:
-                byte[] classesDex = extractContentAsByte(SdkConstants.FD_DEX + "/classes.dex");
+                byte[] classesDex =
+                        extractContentAsByte(FileUtils.join(SdkConstants.FD_DEX, "classes.dex"));
                 if (classesDex == null) {
                     return null;
                 }
@@ -111,7 +113,7 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
                     while (zipFile.getEntry(dexFileName) != null) {
                         DexBackedClassDef result =
                                 extractEntryAndRunAction(
-                                        SdkConstants.FD_DEX + "/" + dexFileName,
+                                        FileUtils.join(SdkConstants.FD_DEX, dexFileName),
                                         bytes -> getDexClass(bytes, className));
                         if (result != null) {
                             return result;

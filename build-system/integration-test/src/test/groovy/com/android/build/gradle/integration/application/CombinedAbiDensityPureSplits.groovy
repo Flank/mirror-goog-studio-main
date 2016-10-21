@@ -49,6 +49,8 @@ class CombinedAbiDensityPureSplits {
 
     @BeforeClass
     static void setup() {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
         AssumeUtil.assumeBuildToolsAtLeast(21)
         model = project.executeAndReturnModel("clean", "assembleDebug")
     }
@@ -61,9 +63,6 @@ class CombinedAbiDensityPureSplits {
 
     @Test
     public void "test combined density and abi pure splits"() throws Exception {
-        // This test uses the deprecated NDK integration, which does not work properly on Windows.
-        AssumeUtil.assumeNotWindows();
-
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants()
         assertEquals("Variant Count", 2 , variants.size())
