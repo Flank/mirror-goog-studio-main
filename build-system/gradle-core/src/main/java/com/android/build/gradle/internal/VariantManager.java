@@ -422,25 +422,19 @@ public class VariantManager implements VariantModel {
             // now add the default config
             testVariantProviders.add(defaultConfigData.getTestConfigurationProvider(variantType));
 
-            assert(testVariantConfig.getTestedConfig() != null);
-            VariantDependencies parentVariant = null;
-            if (testVariantConfig.getTestedConfig().getType() == VariantType.LIBRARY) {
-                parentVariant = testedVariantData.getVariantDependency();
-            }
-
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
-            final VariantDependencies variantDep = VariantDependencies.compute(
-                    project,
-                    androidBuilder.getErrorReporter(),
-                    testVariantConfig.getFullName(),
-                    false /*publishVariant*/,
-                    variantType,
-                    testedVariantType,
-                    parentVariant,
-                    testVariantProviders.toArray(
-                            new ConfigurationProvider[testVariantProviders.size()]));
+            VariantDependencies.Builder builder = VariantDependencies
+                    .builder(project, androidBuilder.getErrorReporter(),
+                            testVariantConfig.getFullName(), variantType)
+                    .setPublishVariant(false)
+                    .setTestedVariantType(testedVariantType)
+                    .addProviders(testVariantProviders)
+                    .addTestedVariant(testedVariantData.getVariantConfiguration(),
+                            testedVariantData.getVariantDependency());
+
+            final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
 
             if (variantType == VariantType.ANDROID_TEST &&
@@ -454,20 +448,16 @@ public class VariantManager implements VariantModel {
             SpanRecorders.record(project,
                     testVariantConfig.getFullName(),
                     ExecutionType.RESOLVE_DEPENDENCIES,
-                    new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() {
-                            taskManager.resolveDependencies(variantDep,
-                                    testVariantConfig.getTestedConfig().getType() == VariantType.LIBRARY
-                                            ? null
-                                            : testedVariantData.getVariantDependency(),
-                                    null /*testedProjectPath*/);
-                            return null;
-                        }
+                    (Recorder.Block<Void>) () -> {
+                        taskManager.resolveDependencies(variantDep,
+                                null /*testedProjectPath*/);
+                        return null;
                     });
             testVariantConfig.setDependencies(
                     variantDep.getCompileDependencies(),
-                    variantDep.getPackageDependencies());
+                    variantDep.getFlattenedCompileDependencies(),
+                    variantDep.getPackageDependencies(),
+                    variantDep.getFlattenedPackageDependencies());
             switch (variantType) {
                 case ANDROID_TEST:
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
@@ -601,15 +591,13 @@ public class VariantManager implements VariantModel {
         BaseVariantData<?> variantData =
                 variantFactory.createVariantData(variantConfig, taskManager);
 
-        final VariantDependencies variantDep = VariantDependencies.compute(
-                project,
-                androidBuilder.getErrorReporter(),
-                variantConfig.getFullName(),
-                isVariantPublished(),
-                variantData.getType(),
-                null /*testedVariantType*/,
-                null /*parentVariant*/,
-                variantProviders.toArray(new ConfigurationProvider[variantProviders.size()]));
+        VariantDependencies.Builder builder = VariantDependencies
+                .builder(project, androidBuilder.getErrorReporter(),
+                        variantConfig.getFullName(), variantData.getType())
+                .setPublishVariant(isVariantPublished())
+                .addProviders(variantProviders);
+
+        final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);
 
         if (variantConfig.isLegacyMultiDexMode()) {
@@ -632,7 +620,6 @@ public class VariantManager implements VariantModel {
                     public Void call() {
                         taskManager.resolveDependencies(
                                 variantDep,
-                                null /*testedVariantDeps*/,
                                 testedProjectPath);
                         return null;
                     }
@@ -640,7 +627,9 @@ public class VariantManager implements VariantModel {
 
         variantConfig.setDependencies(
                 variantDep.getCompileDependencies(),
-                variantDep.getPackageDependencies());
+                variantDep.getFlattenedCompileDependencies(),
+                variantDep.getPackageDependencies(),
+                variantDep.getFlattenedPackageDependencies());
 
         return variantData;
     }

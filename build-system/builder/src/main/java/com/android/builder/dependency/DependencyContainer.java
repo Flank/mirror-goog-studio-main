@@ -84,7 +84,9 @@ public interface DependencyContainer {
      * Returns a version of this container where the graph is flattened into direct dependencies.
      *
      * This also adds (if applicable) the tested library and its transitive dependencies.
-
+     *
+     * This shares the {@link DependenciesMutableData} instance of the original container.
+     *
      * @param testedLibrary the tested aar
      * @param testedDependencyContainer the container of the tested aar
      * @return the flattened container.
@@ -95,8 +97,21 @@ public interface DependencyContainer {
             @Nullable DependencyContainer testedDependencyContainer);
 
     /**
+     * Returns a version of this container where the skipped libraries have been removed.
+     *
+     * This must be called on the flattened container.
+     *
+     * This shares the {@link DependenciesMutableData} instance of the original container.
+     *
+     * @return the filtered container.
+     */
+    @NonNull
+    DependencyContainer filterSkippedLibraries();
+
+    /**
      * Returns the container for all mutable data related to dependencies in this container context.
      * @return the dependencies mutable data.
      */
+    @NonNull
     DependenciesMutableData getDependenciesMutableData();
 }
