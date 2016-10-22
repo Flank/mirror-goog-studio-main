@@ -128,6 +128,7 @@ task initSdkForTests(type: JavaExec) {
                     'build-tools;21.0.0',
                     'build-tools;20.0.0',
                     'build-tools;19.1.0',
+                    'platforms;android-25',
                     'platforms;android-24',
                     'platforms;android-23',
                     'platforms;android-22',
