@@ -506,7 +506,7 @@ public class ExtractAnnotationsDriverTest {
 
     @NonNull
     private static File findAndroidJar() {
-        File androidJar = new File(TestUtils.getSdk(), "platforms/android-24/android.jar");
+        File androidJar = TestUtils.getPlatformFile("android.jar");
         assertTrue(
                 androidJar + " does not exist: make sure you have android N installed in your SDK",
                 androidJar.exists());
