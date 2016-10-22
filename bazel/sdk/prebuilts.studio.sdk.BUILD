@@ -87,14 +87,14 @@ filegroup(
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-24"],
+    srcs = [":platforms/android-25"],
     visibility = ["//visibility:public"],
 )
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
-    name = "platforms/android-24",
+    name = "platforms/android-25",
     visibility = [
         "//tools/base/build-system/builder:__pkg__",
     ],
