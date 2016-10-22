@@ -62,7 +62,7 @@ public class ExtractAnnotationsDriverTest {
     public void testProGuard() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar();
+        File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(mKeepTest, mKeepAnnotation);
 
@@ -113,7 +113,7 @@ public class ExtractAnnotationsDriverTest {
     public void testIncludeClassRetention() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar();
+        File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
                 mIntDefTest,
@@ -194,7 +194,7 @@ public class ExtractAnnotationsDriverTest {
     public void testSkipClassRetention() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar();
+        File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
                 mIntDefTest,
@@ -255,7 +255,7 @@ public class ExtractAnnotationsDriverTest {
     public void testWriteJarRecipeFile() throws Exception {
         checkValidEcj();
 
-        File androidJar = findAndroidJar();
+        File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
                 mIntDefTest,
@@ -502,15 +502,6 @@ public class ExtractAnnotationsDriverTest {
         } finally {
             Closeables.closeQuietly(stream);
         }
-    }
-
-    @NonNull
-    private static File findAndroidJar() {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
-        assertTrue(
-                androidJar + " does not exist: make sure you have android N installed in your SDK",
-                androidJar.exists());
-        return androidJar;
     }
 
     @Test
