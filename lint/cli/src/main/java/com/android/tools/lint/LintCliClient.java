@@ -16,8 +16,10 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
+import static com.android.tools.lint.client.api.IssueRegistry.BASELINE;
 import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
 import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.tools.lint.detector.api.CharSequences.indexOf;
@@ -25,11 +27,13 @@ import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
+import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
@@ -48,7 +52,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -116,6 +119,14 @@ public class LintCliClient extends LintClient {
         mDriver = new LintDriver(registry, this);
 
         mDriver.setAbbreviating(!mFlags.isShowEverything());
+
+        File baselineFile = mFlags.getBaselineFile();
+        LintBaseline baseline = null;
+        if (baselineFile != null) {
+            baseline = new LintBaseline(this, baselineFile);
+            mDriver.setBaseline(baseline);
+        }
+
         addProgressPrinter();
         mDriver.addLintListener((driver, type, context) -> {
             if (type == LintListener.EventType.SCANNING_PROJECT && !mValidatedIds) {
@@ -129,17 +140,69 @@ public class LintCliClient extends LintClient {
 
         Collections.sort(mWarnings);
 
+        int baselineErrorCount = 0;
+        int baselineWarningCount = 0;
+        int fixedCount = 0;
+        if (baseline != null) {
+            baselineErrorCount = baseline.getFoundErrorCount();
+            baselineWarningCount = baseline.getFoundWarningCount();
+            fixedCount = baseline.getFixedCount();
+        }
+
+        Stats stats = new Stats(mErrorCount, mWarningCount,
+                baselineErrorCount, baselineWarningCount, fixedCount);
+
         boolean hasConsoleOutput = false;
         for (Reporter reporter : mFlags.getReporters()) {
-            reporter.write(mErrorCount, mWarningCount, mWarnings);
+            reporter.write(stats, mWarnings);
             if (reporter instanceof TextReporter && ((TextReporter)reporter).isWriteToConsole()) {
                 hasConsoleOutput = true;
             }
         }
 
         if (!mFlags.isQuiet() && !hasConsoleOutput) {
-            System.out.println(String.format(
-                    "Lint found %1$d errors and %2$d warnings", mErrorCount, mWarningCount));
+            System.out.print(String.format("Lint found %1$s",
+                    LintUtils.describeCounts(mErrorCount, mWarningCount, true)));
+            if (baselineErrorCount > 0 || baselineWarningCount > 0) {
+                System.out.print(String.format(" (%1$s filtered by baseline %2$s)",
+                        LintUtils.describeCounts(stats.baselineErrorCount,
+                                stats.baselineWarningCount, true),
+                        mFlags.getBaselineFile().getName()));
+            }
+            System.out.println();
+            if (fixedCount > 0) {
+                System.out.println(String.format("%1$d errors/warnings were listed in the "
+                        + "baseline file (%2$s) but not found in the project; perhaps they have "
+                        + "been fixed?\n", fixedCount, baselineFile));
+            }
+        }
+
+        if (baselineFile != null && !baselineFile.exists()) {
+            File dir = baselineFile.getParentFile();
+            boolean ok = true;
+            if (dir != null && !dir.isDirectory()) {
+                ok = dir.mkdirs();
+            }
+            if (!ok) {
+                System.err.println("Couldn't create baseline folder " + dir);
+            } else {
+                XmlReporter reporter = new XmlReporter(this, baselineFile);
+                reporter.setIntendedForBaseline(true);
+                reporter.write(stats, mWarnings
+                );
+                String message = ""
+                        + "Created baseline file " + baselineFile + "\n"
+                        + "\n"
+                        + "Also breaking the build in case this was not intentional. If you\n"
+                        + "deliberately created the baseline file, re-run the build and this\n"
+                        + "time it should succeed without warnings.\n"
+                        + "\n"
+                        + "If not, investigate the baseline path in the lintOptions config\n"
+                        + "or verify that the baseline file has been checked into version\n"
+                        + "control.\n";
+                System.err.println(message);
+                return ERRNO_CREATED_BASELINE;
+            }
         }
 
         return mFlags.isSetExitCode() ? (mHasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
@@ -479,7 +542,8 @@ public class LintCliClient extends LintClient {
                 return severity;
             }
 
-            if (check != null && issue != LINT_ERROR && issue != PARSER_ERROR) {
+            if (check != null && issue != LINT_ERROR && issue != PARSER_ERROR &&
+                    issue != BASELINE) {
                 return Severity.IGNORE;
             }
 

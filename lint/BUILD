@@ -50,6 +50,7 @@ java_library(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
+        "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],

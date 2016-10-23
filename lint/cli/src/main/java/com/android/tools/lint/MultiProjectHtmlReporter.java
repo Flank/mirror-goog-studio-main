@@ -16,7 +16,7 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.HtmlReporter.INLINE_RESOURCES;
+import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Project;
@@ -25,7 +25,6 @@ import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,18 +44,21 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
     private static final String INDEX_NAME = "index.html"; //$NON-NLS-1$
     private final File mDir;
 
-    public MultiProjectHtmlReporter(LintCliClient client, File dir) throws IOException {
-        super(client, new File(dir, INDEX_NAME));
+    public MultiProjectHtmlReporter(
+            @NonNull LintCliClient client,
+            @NonNull File dir,
+            @NonNull LintCliFlags flags) throws IOException {
+        super(client, new File(dir, INDEX_NAME), flags);
         mDir = dir;
     }
 
     @Override
-    public void write(int errorCount, int warningCount, List<Warning> allIssues) throws IOException {
-        Map<Project, List<Warning>> projectToWarnings = new HashMap<Project, List<Warning>>();
+    public void write(@NonNull Stats stats, List<Warning> allIssues) throws IOException {
+        Map<Project, List<Warning>> projectToWarnings = new HashMap<>();
         for (Warning warning : allIssues) {
             List<Warning> list = projectToWarnings.get(warning.project);
             if (list == null) {
-                list = new ArrayList<Warning>();
+                list = new ArrayList<>();
                 projectToWarnings.put(warning.project, list);
             }
             list.add(warning);
@@ -98,7 +100,7 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
                 mClient.log(null, "Cannot write output file %1$s", output);
                 continue;
             }
-            HtmlReporter reporter = new HtmlReporter(mClient, output);
+            HtmlReporter reporter = new HtmlReporter(mClient, output, mFlags);
             reporter.setBundleResources(mBundleResources);
             reporter.setSimpleFormat(mSimpleFormat);
             reporter.setUrlMap(mUrlMap);
@@ -128,7 +130,8 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
             }
             reporter.setTitle(String.format("Lint Report for %1$s", relative));
             reporter.setStripPrefix(relative);
-            reporter.write(projectErrorCount, projectWarningCount, issues);
+            reporter.write(stats, issues
+            );
 
             projects.add(new ProjectEntry(fileName, projectErrorCount, projectWarningCount,
                     relative));
@@ -138,7 +141,7 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
         // Write overview index?
         try {
             closer.register(mWriter);
-            writeOverview(errorCount, warningCount, projects);
+            writeOverview(stats, projects);
         } catch (Throwable e) {
             throw closer.rethrow(e);
         } finally {
@@ -146,14 +149,14 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
         }
 
         if (!mClient.getFlags().isQuiet()
-                && (mDisplayEmpty || errorCount > 0 || warningCount > 0)) {
+                && (stats.errorCount > 0 || stats.warningCount > 0)) {
             File index = new File(mDir, INDEX_NAME);
             String url = SdkUtils.fileToUrlString(index.getAbsoluteFile());
             System.out.println(String.format("Wrote overview index to %1$s", url));
         }
     }
 
-    private void writeOverview(int errorCount, int warningCount, List<ProjectEntry> projects)
+    private void writeOverview(@NonNull Stats stats, List<ProjectEntry> projects)
             throws IOException {
         mWriter.write(
                 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" + //$NON-NLS-1$
@@ -175,13 +178,20 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
 
         mWriter.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
-        mWriter.write("<br/>\n");                                        //$NON-NLS-1$
-        mWriter.write(String.format("%1$d errors and %2$d warnings found:\n",
-                errorCount, warningCount));
+        mWriter.write("<br/>\n");
+        appendEscapedText(String.format("%1$s found",
+                describeCounts(stats.errorCount, stats.warningCount, false)));
+        if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+            File baselineFile = mFlags.getBaselineFile();
+            assert baselineFile != null;
+            appendEscapedText(String.format(" (%1$ss filtered by "
+                            + "baseline %2$s)",
+                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
+                    baselineFile.getName()));
+        }
+        mWriter.write(":\n<br/><br/>\n");                                   //$NON-NLS-1$
 
-        mWriter.write("<br/><br/>\n");                                   //$NON-NLS-1$
-
-        if (errorCount == 0 && warningCount == 0) {
+        if (stats.errorCount == 0 && stats.warningCount == 0) {
             mWriter.write("Congratulations!");
             return;
         }

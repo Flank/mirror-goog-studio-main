@@ -90,15 +90,6 @@ import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiWhiteSpace;
-
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -115,8 +106,14 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
 import lombok.ast.ImportDeclaration;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 /**
@@ -241,6 +238,42 @@ public class LintUtils {
         } else {
             return fileName;
         }
+    }
+
+    /**
+     * Returns a description of counts for errors and warnings, such as
+     * "5 errors and 2 warnings" or "3 errors" or "2 warnings"
+     *
+     * @param errorCount   the count of errors
+     * @param warningCount the count of warnings
+     * @param comma        if true, use a comma to separate messages, otherwise "and"
+     * @return a description string
+     */
+    @NonNull
+    public static String describeCounts(int errorCount, int warningCount, boolean comma) {
+        if (errorCount == 0 && warningCount == 0) {
+            return "No errors or warnings";
+        }
+        String errors = pluralize(errorCount, "error");
+        String warnings = pluralize(warningCount, "warning");
+        if (errorCount == 0) {
+            return String.format("%1$d %2$s", warningCount, warnings);
+        } else if (warningCount == 0) {
+            return String.format("%1$d %2$s", errorCount, errors);
+        } else {
+            String conjunction = comma ? "," : " and";
+            return String.format("%1$d %2$s%3$s %4$d %5$s",
+                    errorCount, errors, conjunction, warningCount, warnings);
+        }
+    }
+
+    // PRIVATE because it only works for limited scenarios
+    @NonNull
+    private static String pluralize(int count, @NonNull String one) {
+        if (count == 1) {
+            return one;
+        }
+        return one + "s";
     }
 
     /**

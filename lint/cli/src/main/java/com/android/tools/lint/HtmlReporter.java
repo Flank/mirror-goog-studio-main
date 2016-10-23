@@ -19,10 +19,12 @@ package com.android.tools.lint;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.tools.lint.detector.api.TextFormat.HTML;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
@@ -40,7 +42,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +65,7 @@ import java.util.Set;
  */
 @Beta
 public class HtmlReporter extends Reporter {
-    public static boolean INLINE_RESOURCES =
+    public static final boolean INLINE_RESOURCES =
             !VALUE_FALSE.equals(System.getProperty("lint.inline-resources"));
     private static final boolean USE_HOLO_STYLE = true;
     @SuppressWarnings("ConstantConditions")
@@ -83,6 +84,7 @@ public class HtmlReporter extends Reporter {
     private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
 
     protected final Writer mWriter;
+    protected final LintCliFlags mFlags;
     private String mStripPrefix;
     private String mFixUrl;
 
@@ -91,15 +93,20 @@ public class HtmlReporter extends Reporter {
      *
      * @param client the associated client
      * @param output the output file
+     * @param flags the command line flags
      * @throws IOException if an error occurs
      */
-    public HtmlReporter(LintCliClient client, File output) throws IOException {
+    public HtmlReporter(
+            @NonNull LintCliClient client,
+            @NonNull File output,
+            @NonNull LintCliFlags flags) throws IOException {
         super(client, output);
         mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
+        mFlags = flags;
     }
 
     @Override
-    public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+    public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
         Map<Issue, String> missing = computeMissingIssues(issues);
 
         mWriter.write(
@@ -137,18 +144,26 @@ public class HtmlReporter extends Reporter {
         mWriter.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
         mWriter.write("<br/>\n");                                        //$NON-NLS-1$
-        mWriter.write(String.format("%1$d errors and %2$d warnings found:",
-                errorCount, warningCount));
-        mWriter.write("<br/><br/>\n");                                   //$NON-NLS-1$
+        mWriter.write(String.format("%1$s found",
+                describeCounts(stats.errorCount, stats.warningCount, false)));
+        if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+            File baselineFile = mFlags.getBaselineFile();
+            assert baselineFile != null;
+            mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
+                    baselineFile.getName()));
+        }
+        mWriter.write(":");
+        mWriter.write("<br/><br/>\n");
 
         Issue previousIssue = null;
         if (!issues.isEmpty()) {
-            List<List<Warning>> related = new ArrayList<List<Warning>>();
+            List<List<Warning>> related = new ArrayList<>();
             List<Warning> currentList = null;
             for (Warning warning : issues) {
                 if (warning.issue != previousIssue) {
                     previousIssue = warning.issue;
-                    currentList = new ArrayList<Warning>();
+                    currentList = new ArrayList<>();
                     related.add(currentList);
                 }
                 assert currentList != null;
@@ -340,7 +355,7 @@ public class HtmlReporter extends Reporter {
         mWriter.close();
 
         if (!mClient.getFlags().isQuiet()
-                && (mDisplayEmpty || errorCount > 0 || warningCount > 0)) {
+                && (stats.errorCount > 0 || stats.warningCount > 0)) {
             String url = SdkUtils.fileToUrlString(mOutput.getAbsoluteFile());
             System.out.println(String.format("Wrote HTML report to %1$s", url));
         }
@@ -450,8 +465,8 @@ public class HtmlReporter extends Reporter {
     }
 
     protected Map<Issue, String> computeMissingIssues(List<Warning> warnings) {
-        Set<Project> projects = new HashSet<Project>();
-        Set<Issue> seen = new HashSet<Issue>();
+        Set<Project> projects = new HashSet<>();
+        Set<Issue> seen = new HashSet<>();
         for (Warning warning : warnings) {
             projects.add(warning.project);
             seen.add(warning.issue);
@@ -502,7 +517,7 @@ public class HtmlReporter extends Reporter {
                 "more lint.xml configuration files in the project directories.");
         mWriter.write("\n<br/><br/>\n"); //$NON-NLS-1$
 
-        List<Issue> list = new ArrayList<Issue>(missing.keySet());
+        List<Issue> list = new ArrayList<>(missing.keySet());
         Collections.sort(list);
 
 
@@ -673,7 +688,7 @@ public class HtmlReporter extends Reporter {
             if (location.getSecondary() != null) {
                 // Emit many images
                 // Add in linked images as well
-                List<String> urls = new ArrayList<String>();
+                List<String> urls = new ArrayList<>();
                 while (location != null && location.getFile() != null) {
                     String imageUrl = getUrl(location.getFile());
                     if (imageUrl != null

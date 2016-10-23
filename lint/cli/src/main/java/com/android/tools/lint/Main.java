@@ -95,6 +95,7 @@ public class Main {
     private static final String ARG_SOURCES    = "--sources";      //$NON-NLS-1$
     private static final String ARG_RESOURCES  = "--resources";    //$NON-NLS-1$
     private static final String ARG_LIBRARIES  = "--libraries";    //$NON-NLS-1$
+    private static final String ARG_BASELINE   = "--baseline";     //$NON-NLS-1$
 
     private static final String ARG_NO_WARN_2  = "--nowarn";       //$NON-NLS-1$
     // GCC style flag names for options
@@ -352,7 +353,7 @@ public class Main {
                     }
                     try {
                         MultiProjectHtmlReporter reporter =
-                                new MultiProjectHtmlReporter(client, output);
+                                new MultiProjectHtmlReporter(client, output, mFlags);
                         if (arg.equals(ARG_SIMPLE_HTML)) {
                             reporter.setSimpleFormat(true);
                         }
@@ -375,7 +376,7 @@ public class Main {
                     System.exit(ERRNO_EXISTS);
                 }
                 try {
-                    HtmlReporter htmlReporter = new HtmlReporter(client, output);
+                    HtmlReporter htmlReporter = new HtmlReporter(client, output, mFlags);
                     if (arg.equals(ARG_SIMPLE_HTML)) {
                         htmlReporter.setSimpleFormat(true);
                     }
@@ -618,6 +619,18 @@ public class Main {
                     }
                     libraries.add(input);
                 }
+            } else if (arg.equals(ARG_BASELINE)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing baseline file path");
+                    System.exit(ERRNO_INVALID_ARGS);
+                }
+                String path = args[++index];
+                File input = getInArgumentPath(path);
+                if (!input.exists()) {
+                    System.err.println("Library " + input + " does not exist.");
+                    System.exit(ERRNO_INVALID_ARGS);
+                }
+                mFlags.setBaselineFile(input);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -1005,6 +1018,7 @@ public class Main {
             ARG_CONFIG + " <filename>", "Use the given configuration file to " +
                     "determine whether issues are enabled or disabled. If a project contains " +
                     "a lint.xml file, then this config file will be used as a fallback.",
+            ARG_BASELINE, "Use (or create) the given baseline file to filter out known issues.",
 
 
             "", "\nOutput Options:",

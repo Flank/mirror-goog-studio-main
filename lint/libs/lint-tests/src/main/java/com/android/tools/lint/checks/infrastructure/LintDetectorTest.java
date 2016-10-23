@@ -46,6 +46,7 @@ import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
+import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -84,19 +85,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.intellij.lang.annotations.Language;
-import org.objectweb.asm.Opcodes;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -126,8 +114,18 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-
 import javax.imageio.ImageIO;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.intellij.lang.annotations.Language;
+import org.objectweb.asm.Opcodes;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Test case for lint detectors.
@@ -1126,8 +1124,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 prev = warning;
             }
 
+            Stats stats = new Stats(mErrorCount, mWarningCount);
             for (Reporter reporter : mFlags.getReporters()) {
-                reporter.write(mErrorCount, mWarningCount, mWarnings);
+                reporter.write(stats, mWarnings);
             }
 
             mOutput.append(mWriter.toString());
@@ -1198,7 +1197,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 @NonNull TextFormat format) {
             assertNotNull(location);
 
-            if (ignoreSystemErrors() && (issue == IssueRegistry.LINT_ERROR)) {
+            if (ignoreSystemErrors() && issue == IssueRegistry.LINT_ERROR) {
                 return;
             }
             // Use plain ascii in the test golden files for now. (This also ensures
