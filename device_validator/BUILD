@@ -5,8 +5,8 @@ iml_module(
     # do not sort: must match IML order
     srcs = [
         "dvlib/src/main/java",
-        "dvlib/src/main/resources",
     ],
+    resources = ["dvlib/src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.common"],

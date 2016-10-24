@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 def env = new Object() {
+    String baseVersion
     String buildVersion
     String experimentalVersion
     String experimentalGradleVersion

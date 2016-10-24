@@ -15,6 +15,7 @@
  */
 
 def env = new Object() {
+    String baseVersion
     String buildVersion
     String experimentalVersion
     String experimentalGradleVersion
