@@ -27,16 +27,16 @@ import com.google.common.annotations.Beta;
 @Beta
 public class DefaultPosition extends Position {
     /** The line number (0-based where the first line is line 0) */
-    private final int mLine;
+    private final int line;
 
     /**
      * The column number (where the first character on the line is 0), or -1 if
      * unknown
      */
-    private final int mColumn;
+    private final int column;
 
     /** The character offset */
-    private final int mOffset;
+    private final int offset;
 
     /**
      * Creates a new {@link DefaultPosition}
@@ -46,23 +46,23 @@ public class DefaultPosition extends Position {
      * @param offset the offset, or -1 if unknown
      */
     public DefaultPosition(int line, int column, int offset) {
-        mLine = line;
-        mColumn = column;
-        mOffset = offset;
+        this.line = line;
+        this.column = column;
+        this.offset = offset;
     }
 
     @Override
     public int getLine() {
-        return mLine;
+        return line;
     }
 
     @Override
     public int getOffset() {
-        return mOffset;
+        return offset;
     }
 
     @Override
     public int getColumn() {
-        return mColumn;
+        return column;
     }
 }

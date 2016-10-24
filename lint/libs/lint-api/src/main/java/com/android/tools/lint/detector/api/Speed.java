@@ -39,10 +39,10 @@ public enum Speed {
     /** The detector might take a huge amount of time to run */
     REALLY_SLOW("Really Slow");
 
-    private final String mDisplayName;
+    private final String displayName;
 
     Speed(@NonNull String displayName) {
-        mDisplayName = displayName;
+        this.displayName = displayName;
     }
 
     /**
@@ -53,6 +53,6 @@ public enum Speed {
      */
     @NonNull
     public String getDisplayName() {
-        return mDisplayName;
+        return displayName;
     }
 }

@@ -167,7 +167,7 @@ public class ProjectTest extends AbstractCheckTest {
         }
 
         public void setDirectLibraries(List<Project> libraries) {
-            mDirectLibraries = libraries;
+            directLibraries = libraries;
         }
     }
 

@@ -49,8 +49,8 @@ public class HtmlReporterTest extends AbstractCheckTest {
             LintCliClient client = new LintCliClient() {
                 @Override
                 IssueRegistry getRegistry() {
-                    if (mRegistry == null) {
-                        mRegistry = new IssueRegistry()  {
+                    if (registry == null) {
+                        registry = new IssueRegistry()  {
                             @NonNull
                             @Override
                             public List<Issue> getIssues() {
@@ -62,7 +62,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                             }
                         };
                     }
-                    return mRegistry;
+                    return registry;
                 }
             };
 

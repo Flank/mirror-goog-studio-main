@@ -633,7 +633,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             // Check for duplicate name definitions? No, because there can be
             // additional customizations like product=
             //if (mNames.contains(name)) {
-            //    context.mClient.report(ISSUE, context.getLocation(attribute),
+            //    context.client.report(ISSUE, context.getLocation(attribute),
             //        String.format("Duplicate name %1$s, already defined earlier in this file",
             //            name));
             //}

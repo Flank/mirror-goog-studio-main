@@ -49,21 +49,21 @@ import java.util.Map;
 import org.gradle.api.GradleException;
 
 public class LintGradleClient extends LintCliClient {
-    private final AndroidProject mModelProject;
+    private final AndroidProject modelProject;
 
     /**
      * Variant to run the client on.
      */
-    @NonNull private final Variant mVariant;
+    @NonNull private final Variant variant;
 
-    private final org.gradle.api.Project mGradleProject;
+    private final org.gradle.api.Project gradleProject;
     /**
      * Note that as soon as we disable {@link Lint#MODEL_LIBRARIES} this is
      * unused and we can delete it and all the callers passing it recursively
      */
-    private List<File> mCustomRules = Lists.newArrayList();
-    private File mSdkHome;
-    private final BuildToolInfo mBuildToolInfo;
+    private List<File> customRules = Lists.newArrayList();
+    private File sdkHome;
+    private final BuildToolInfo buildToolInfo;
 
     public LintGradleClient(
             @NonNull IssueRegistry registry,
@@ -74,22 +74,22 @@ public class LintGradleClient extends LintCliClient {
             @NonNull Variant variant,
             @Nullable BuildToolInfo buildToolInfo) {
         super(flags, CLIENT_GRADLE);
-        mGradleProject = gradleProject;
-        mModelProject = modelProject;
-        mSdkHome = sdkHome;
-        mRegistry = registry;
-        mBuildToolInfo = buildToolInfo;
-        mVariant = variant;
+        this.gradleProject = gradleProject;
+        this.modelProject = modelProject;
+        this.sdkHome = sdkHome;
+        this.registry = registry;
+        this.buildToolInfo = buildToolInfo;
+        this.variant = variant;
     }
 
     public void setCustomRules(List<File> customRules) {
-        mCustomRules = customRules;
+        this.customRules = customRules;
     }
 
     @NonNull
     @Override
     public List<File> findRuleJars(@NonNull Project project) {
-        return mCustomRules;
+        return customRules;
     }
 
     @NonNull
@@ -102,8 +102,8 @@ public class LintGradleClient extends LintCliClient {
 
     @Override
     public File getSdkHome() {
-        if (mSdkHome != null) {
-            return mSdkHome;
+        if (sdkHome != null) {
+            return sdkHome;
         }
         return super.getSdkHome();
     }
@@ -111,7 +111,7 @@ public class LintGradleClient extends LintCliClient {
     @Override
     @Nullable
     public File getCacheDir(boolean create) {
-        File dir = new File(mGradleProject.getRootProject().getBuildDir(),
+        File dir = new File(gradleProject.getRootProject().getBuildDir(),
                 FD_INTERMEDIATES + separator + "lint-cache"); //$NON-NLS-1$
         if (dir.exists() || create && dir.mkdirs()) {
             return dir;
@@ -126,12 +126,12 @@ public class LintGradleClient extends LintCliClient {
         LintRequest lintRequest = new LintRequest(this, files);
         if (Lint.MODEL_LIBRARIES) {
             LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
-            Project project = search.getProject(this, mGradleProject, mVariant.getName());
+            Project project = search.getProject(this, gradleProject, variant.getName());
             lintRequest.setProjects(Collections.singletonList(project));
             setCustomRules(search.customViewRuleJars);
         } else {
             Pair<LintGradleProject,List<File>> result = LintGradleProject.create(
-                    this, mModelProject, mVariant, mGradleProject);
+                    this, modelProject, variant, gradleProject);
             lintRequest.setProjects(Collections.singletonList(result.getFirst()));
             setCustomRules(result.getSecond());
         }
@@ -149,7 +149,7 @@ public class LintGradleClient extends LintCliClient {
             throw new GradleException("Aborting build since new baseline file was created");
         }
 
-        return Pair.of(mWarnings, mDriver.getBaseline());
+        return Pair.of(warnings, driver.getBaseline());
     }
 
     /**
@@ -238,7 +238,7 @@ public class LintGradleClient extends LintCliClient {
     @Nullable
     @Override
     public BuildToolInfo getBuildTools(@NonNull Project project) {
-        return mBuildToolInfo;
+        return buildToolInfo;
     }
 
     @Override

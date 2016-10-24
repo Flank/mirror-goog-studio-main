@@ -67,8 +67,8 @@ import java.util.stream.Stream;
  * library)
  */
 public class LintGradleProject extends Project {
-    protected AndroidVersion mMinSdkVersion;
-    protected AndroidVersion mTargetSdkVersion;
+    protected AndroidVersion minSdkVersion;
+    protected AndroidVersion targetSdkVersion;
 
     private LintGradleProject(
             @NonNull LintGradleClient client,
@@ -76,9 +76,9 @@ public class LintGradleProject extends Project {
             @NonNull File referenceDir,
             @Nullable File manifest) {
         super(client, dir, referenceDir);
-        mGradleProject = true;
-        mMergeManifests = true;
-        mDirectLibraries = Lists.newArrayList();
+        gradleProject = true;
+        mergeManifests = true;
+        directLibraries = Lists.newArrayList();
         if (manifest != null) {
             readManifest(manifest);
         }
@@ -138,7 +138,7 @@ public class LintGradleProject extends Project {
                     readManifest(document);
                 }
             } catch (IOException e) {
-                mClient.log(e, "Could not read manifest %1$s", manifest);
+                client.log(e, "Could not read manifest %1$s", manifest);
             }
         }
     }
@@ -181,7 +181,7 @@ public class LintGradleProject extends Project {
     }
 
     void addDirectLibrary(@NonNull Project project) {
-        mDirectLibraries.add(project);
+        directLibraries.add(project);
     }
 
     @NonNull
@@ -329,29 +329,29 @@ public class LintGradleProject extends Project {
         @NonNull
         @Override
         public List<File> getManifestFiles() {
-            if (mManifestFiles == null) {
-                mManifestFiles = Lists.newArrayList();
+            if (manifestFiles == null) {
+                manifestFiles = Lists.newArrayList();
                 for (SourceProvider provider : getSourceProviders()) {
                     File manifestFile = provider.getManifestFile();
                     if (manifestFile.exists()) { // model returns path whether or not it exists
-                        mManifestFiles.add(manifestFile);
+                        manifestFiles.add(manifestFile);
                     }
                 }
             }
 
-            return mManifestFiles;
+            return manifestFiles;
         }
 
         @NonNull
         @Override
         public List<File> getProguardFiles() {
-            if (mProguardFiles == null) {
+            if (proguardFiles == null) {
                 ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
-                mProguardFiles = flavor.getProguardFiles().stream()
+                proguardFiles = flavor.getProguardFiles().stream()
                         .filter(File::exists)
                         .collect(Collectors.toList());
                 try {
-                    mProguardFiles.addAll(
+                    proguardFiles.addAll(
                             flavor.getConsumerProguardFiles().stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList()));
@@ -363,98 +363,98 @@ public class LintGradleProject extends Project {
                 }
             }
 
-            return mProguardFiles;
+            return proguardFiles;
         }
 
         @NonNull
         @Override
         public List<File> getResourceFolders() {
-            if (mResourceFolders == null) {
-                mResourceFolders = Lists.newArrayList();
+            if (resourceFolders == null) {
+                resourceFolders = Lists.newArrayList();
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> resDirs = provider.getResDirectories();
                     // model returns path whether or not it exists
-                    mResourceFolders.addAll(resDirs.stream()
+                    resourceFolders.addAll(resDirs.stream()
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
 
-                mResourceFolders.addAll(
+                resourceFolders.addAll(
                         mVariant.getMainArtifact().getGeneratedResourceFolders().stream()
                                 .filter(File::exists)
                                 .collect(Collectors.toList()));
             }
 
-            return mResourceFolders;
+            return resourceFolders;
         }
 
         @NonNull
         @Override
         public List<File> getAssetFolders() {
-            if (mAssetFolders == null) {
-                mAssetFolders = Lists.newArrayList();
+            if (assetFolders == null) {
+                assetFolders = Lists.newArrayList();
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> dirs = provider.getAssetsDirectories();
                     // model returns path whether or not it exists
-                    mAssetFolders.addAll(dirs.stream()
+                    assetFolders.addAll(dirs.stream()
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
             }
 
-            return mAssetFolders;
+            return assetFolders;
         }
 
         @NonNull
         @Override
         public List<File> getJavaSourceFolders() {
-            if (mJavaSourceFolders == null) {
-                mJavaSourceFolders = Lists.newArrayList();
+            if (javaSourceFolders == null) {
+                javaSourceFolders = Lists.newArrayList();
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> srcDirs = provider.getJavaDirectories();
                     // model returns path whether or not it exists
-                    mJavaSourceFolders.addAll(srcDirs.stream()
+                    javaSourceFolders.addAll(srcDirs.stream()
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
 
-                mJavaSourceFolders.addAll(
+                javaSourceFolders.addAll(
                         mVariant.getMainArtifact().getGeneratedSourceFolders().stream()
                                 .filter(File::exists)
                                 .collect(Collectors.toList()));
             }
 
-            return mJavaSourceFolders;
+            return javaSourceFolders;
         }
 
         @NonNull
         @Override
         public List<File> getTestSourceFolders() {
-            if (mTestSourceFolders == null) {
-                mTestSourceFolders = Lists.newArrayList();
+            if (testSourceFolders == null) {
+                testSourceFolders = Lists.newArrayList();
                 for (SourceProvider provider : getTestSourceProviders()) {
                     // model returns path whether or not it exists
-                    mTestSourceFolders.addAll(provider.getJavaDirectories().stream()
+                    testSourceFolders.addAll(provider.getJavaDirectories().stream()
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
             }
 
-            return mTestSourceFolders;
+            return testSourceFolders;
         }
 
         @NonNull
         @Override
         public List<File> getJavaClassFolders() {
-            if (mJavaClassFolders == null) {
-                mJavaClassFolders = new ArrayList<>(1);
+            if (javaClassFolders == null) {
+                javaClassFolders = new ArrayList<>(1);
                 File outputClassFolder = mVariant.getMainArtifact().getClassesFolder();
                 if (outputClassFolder.exists()) {
-                    mJavaClassFolders.add(outputClassFolder);
+                    javaClassFolders.add(outputClassFolder);
                 }
             }
 
-            return mJavaClassFolders;
+            return javaClassFolders;
         }
 
         private static boolean sProvidedAvailable = true;
@@ -463,24 +463,24 @@ public class LintGradleProject extends Project {
         @Override
         public List<File> getJavaLibraries(boolean includeProvided) {
             if (includeProvided) {
-                if (mJavaLibraries == null) {
+                if (javaLibraries == null) {
                     Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
                     Collection<JavaLibrary> libs = dependencies.getJavaLibraries();
-                    mJavaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
+                    javaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
                     for (JavaLibrary lib : libs) {
                         File jar = lib.getJarFile();
                         if (jar.exists()) {
-                            mJavaLibraries.add(jar);
+                            javaLibraries.add(jar);
                         }
                     }
                 }
-                return mJavaLibraries;
+                return javaLibraries;
             } else {
                 // Skip provided libraries?
-                if (mNonProvidedJavaLibraries == null) {
+                if (nonProvidedJavaLibraries == null) {
                     Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
                     Collection<JavaLibrary> libs = dependencies.getJavaLibraries();
-                    mNonProvidedJavaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
+                    nonProvidedJavaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
                     for (JavaLibrary lib : libs) {
                         File jar = lib.getJarFile();
                         if (jar.exists()) {
@@ -497,11 +497,11 @@ public class LintGradleProject extends Project {
                                 }
                             }
 
-                            mNonProvidedJavaLibraries.add(jar);
+                            nonProvidedJavaLibraries.add(jar);
                         }
                     }
                 }
-                return mNonProvidedJavaLibraries;
+                return nonProvidedJavaLibraries;
             }
         }
 
@@ -511,7 +511,7 @@ public class LintGradleProject extends Project {
             // For now, lint only needs the manifest package; not the potentially variant specific
             // package. As part of the Gradle work on the Lint API we should make two separate
             // package lookup methods -- one for the manifest package, one for the build package
-            if (mPackage == null) { // only used as a fallback in case manifest somehow is null
+            if (pkg == null) { // only used as a fallback in case manifest somehow is null
                 String packageName = mProject.getDefaultConfig().getProductFlavor()
                         .getApplicationId();
                 if (packageName != null) {
@@ -519,45 +519,45 @@ public class LintGradleProject extends Project {
                 }
             }
 
-            return mPackage; // from manifest
+            return pkg; // from manifest
         }
 
         @Override
         @NonNull
         public AndroidVersion getMinSdkVersion() {
-            if (mMinSdkVersion == null) {
+            if (minSdkVersion == null) {
                 ApiVersion minSdk = mVariant.getMergedFlavor().getMinSdkVersion();
                 if (minSdk == null) {
                     ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
                     minSdk = flavor.getMinSdkVersion();
                 }
                 if (minSdk != null) {
-                    mMinSdkVersion = LintUtils.convertVersion(minSdk, mClient.getTargets());
+                    minSdkVersion = LintUtils.convertVersion(minSdk, client.getTargets());
                 } else {
-                    mMinSdkVersion = super.getMinSdkVersion(); // from manifest
+                    minSdkVersion = super.getMinSdkVersion(); // from manifest
                 }
             }
 
-            return mMinSdkVersion;
+            return minSdkVersion;
         }
 
         @Override
         @NonNull
         public AndroidVersion getTargetSdkVersion() {
-            if (mTargetSdkVersion == null) {
+            if (targetSdkVersion == null) {
                 ApiVersion targetSdk = mVariant.getMergedFlavor().getTargetSdkVersion();
                 if (targetSdk == null) {
                     ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
                     targetSdk = flavor.getTargetSdkVersion();
                 }
                 if (targetSdk != null) {
-                    mTargetSdkVersion = LintUtils.convertVersion(targetSdk, mClient.getTargets());
+                    targetSdkVersion = LintUtils.convertVersion(targetSdk, client.getTargets());
                 } else {
-                    mTargetSdkVersion = super.getTargetSdkVersion(); // from manifest
+                    targetSdkVersion = super.getTargetSdkVersion(); // from manifest
                 }
             }
 
-            return mTargetSdkVersion;
+            return targetSdkVersion;
         }
 
         @Override
@@ -575,17 +575,17 @@ public class LintGradleProject extends Project {
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
             if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (mSupportLib == null) {
+                if (supportLib == null) {
                     Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
-                    mSupportLib = dependsOn(dependencies, artifact);
+                    supportLib = dependsOn(dependencies, artifact);
                 }
-                return mSupportLib;
+                return supportLib;
             } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (mAppCompat == null) {
+                if (appCompat == null) {
                     Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
-                    mAppCompat = dependsOn(dependencies, artifact);
+                    appCompat = dependsOn(dependencies, artifact);
                 }
-                return mAppCompat;
+                return appCompat;
             } else {
                 return super.dependsOn(artifact);
             }
@@ -604,7 +604,7 @@ public class LintGradleProject extends Project {
             mLibrary = library;
 
             // TODO: Make sure we don't use this project for any source library projects!
-            mReportIssues = false;
+            reportIssues = false;
         }
 
         @Override
@@ -625,61 +625,61 @@ public class LintGradleProject extends Project {
         @NonNull
         @Override
         public List<File> getManifestFiles() {
-            if (mManifestFiles == null) {
+            if (manifestFiles == null) {
                 File manifest = mLibrary.getManifest();
                 if (manifest.exists()) {
-                    mManifestFiles = Collections.singletonList(manifest);
+                    manifestFiles = Collections.singletonList(manifest);
                 } else {
-                    mManifestFiles = Collections.emptyList();
+                    manifestFiles = Collections.emptyList();
                 }
             }
 
-            return mManifestFiles;
+            return manifestFiles;
         }
 
         @NonNull
         @Override
         public List<File> getProguardFiles() {
-            if (mProguardFiles == null) {
+            if (proguardFiles == null) {
                 File proguardRules = mLibrary.getProguardRules();
                 if (proguardRules.exists()) {
-                    mProguardFiles = Collections.singletonList(proguardRules);
+                    proguardFiles = Collections.singletonList(proguardRules);
                 } else {
-                    mProguardFiles = Collections.emptyList();
+                    proguardFiles = Collections.emptyList();
                 }
             }
 
-            return mProguardFiles;
+            return proguardFiles;
         }
 
         @NonNull
         @Override
         public List<File> getResourceFolders() {
-            if (mResourceFolders == null) {
+            if (resourceFolders == null) {
                 File folder = mLibrary.getResFolder();
                 if (folder.exists()) {
-                    mResourceFolders = Collections.singletonList(folder);
+                    resourceFolders = Collections.singletonList(folder);
                 } else {
-                    mResourceFolders = Collections.emptyList();
+                    resourceFolders = Collections.emptyList();
                 }
             }
 
-            return mResourceFolders;
+            return resourceFolders;
         }
 
         @NonNull
         @Override
         public List<File> getAssetFolders() {
-            if (mAssetFolders == null) {
+            if (assetFolders == null) {
                 File folder = mLibrary.getAssetsFolder();
                 if (folder.exists()) {
-                    mAssetFolders = Collections.singletonList(folder);
+                    assetFolders = Collections.singletonList(folder);
                 } else {
-                    mAssetFolders = Collections.emptyList();
+                    assetFolders = Collections.emptyList();
                 }
             }
 
-            return mAssetFolders;
+            return assetFolders;
         }
 
         @NonNull
@@ -707,8 +707,8 @@ public class LintGradleProject extends Project {
                 return Collections.emptyList();
             }
 
-            if (mJavaLibraries == null) {
-                mJavaLibraries =
+            if (javaLibraries == null) {
+                javaLibraries =
                         Stream.concat(
                                 Stream.of(mLibrary.getJarFile()),
                                 mLibrary.getLocalJars().stream())
@@ -716,22 +716,22 @@ public class LintGradleProject extends Project {
                         .collect(Collectors.toList());
             }
 
-            return mJavaLibraries;
+            return javaLibraries;
         }
 
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
             if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (mSupportLib == null) {
-                    mSupportLib = dependsOn(mLibrary, artifact);
+                if (supportLib == null) {
+                    supportLib = dependsOn(mLibrary, artifact);
                 }
-                return mSupportLib;
+                return supportLib;
             } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (mAppCompat == null) {
-                    mAppCompat = dependsOn(mLibrary, artifact);
+                if (appCompat == null) {
+                    appCompat = dependsOn(mLibrary, artifact);
                 }
-                return mAppCompat;
+                return appCompat;
             } else {
                 return super.dependsOn(artifact);
             }
@@ -791,15 +791,15 @@ public class LintGradleProject extends Project {
         }
 
         public Project getProject(
-                @NonNull LintGradleClient client,
+                @NonNull LintGradleClient lintClient,
                 @NonNull org.gradle.api.Project gradleProject,
                 @NonNull String variantName) {
-            AndroidProject androidProject = getAndroidProject(client, gradleProject);
+            AndroidProject androidProject = getAndroidProject(lintClient, gradleProject);
             if (androidProject != null) {
                 Collection<Variant> variants = androidProject.getVariants();
                 for (Variant variant : variants) {
                     if (variantName.equals(variant.getName())) {
-                        return getProject(client, androidProject, variant, gradleProject);
+                        return getProject(lintClient, androidProject, variant, gradleProject);
                     }
                 }
 
@@ -808,7 +808,7 @@ public class LintGradleProject extends Project {
                 // yet available, but planned.)
                 if (!variants.isEmpty()) {
                     Variant defaultVariant = variants.iterator().next();
-                    return getProject(client, androidProject, defaultVariant, gradleProject);
+                    return getProject(lintClient, androidProject, defaultVariant, gradleProject);
                 }
 
                 // This shouldn't happen; we didn't get an AndroidProject for an expected
@@ -864,20 +864,20 @@ public class LintGradleProject extends Project {
                     // up its class path.
                 }
 
-                File dir = gradleProject.getProjectDir();
+                File projectDir = gradleProject.getProjectDir();
                 final List<Project> directLibraries = Lists.newArrayList();
-                Project project = new Project(client, dir, dir) {
+                Project project = new Project(lintClient, projectDir, projectDir) {
                     @Override
                     protected void initialize() {
                         // Deliberately not calling super; that code is for ADT compatibility
 
-                        mGradleProject = true;
-                        mMergeManifests = true;
-                        mDirectLibraries = directLibraries;
-                        mJavaSourceFolders = sources;
-                        mJavaClassFolders = classes;
-                        mJavaLibraries = libs;
-                        mTestSourceFolders = tests;
+                        gradleProject = true;
+                        mergeManifests = true;
+                        directLibraries = directLibraries;
+                        javaSourceFolders = sources;
+                        javaClassFolders = classes;
+                        javaLibraries = libs;
+                        testSourceFolders = tests;
                     }
 
                     @Override
@@ -906,7 +906,7 @@ public class LintGradleProject extends Project {
                             org.gradle.api.Project p =
                                     ((ProjectDependency) dependency).getDependencyProject();
                             if (p != null) {
-                                Project lintProject = getProject(client, p.getName(), p,
+                                Project lintProject = getProject(lintClient, p.getName(), p,
                                         variantName);
                                 if (lintProject != null) {
                                     directLibraries.add(lintProject);
@@ -1122,7 +1122,7 @@ public class LintGradleProject extends Project {
                 @NonNull JavaLibrary library) {
             super(client, dir, referenceDir, null);
             mLibrary = library;
-            mReportIssues = false;
+            reportIssues = false;
         }
 
         @Override
@@ -1179,11 +1179,11 @@ public class LintGradleProject extends Project {
                 return Collections.emptyList();
             }
 
-            if (mJavaLibraries == null) {
-                mJavaLibraries = Collections.singletonList(mLibrary.getJarFile());
+            if (javaLibraries == null) {
+                javaLibraries = Collections.singletonList(mLibrary.getJarFile());
             }
 
-            return mJavaLibraries;
+            return javaLibraries;
         }
     }
 }

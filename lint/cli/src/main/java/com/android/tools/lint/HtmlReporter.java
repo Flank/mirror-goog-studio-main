@@ -82,10 +82,10 @@ public class HtmlReporter extends Reporter {
      */
     private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
 
-    protected final Writer mWriter;
-    protected final LintCliFlags mFlags;
-    private String mStripPrefix;
-    private String mFixUrl;
+    protected final Writer writer;
+    protected final LintCliFlags flags;
+    private String stripPrefix;
+    private String fixUrl;
 
     /**
      * Creates a new {@link HtmlReporter}
@@ -100,26 +100,26 @@ public class HtmlReporter extends Reporter {
             @NonNull File output,
             @NonNull LintCliFlags flags) throws IOException {
         super(client, output);
-        mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
-        mFlags = flags;
+        writer = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
+        this.flags = flags;
     }
 
     @Override
     public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
         Map<Issue, String> missing = computeMissingIssues(issues);
 
-        mWriter.write(
+        writer.write(
                 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
                 "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
                 "<head>\n" +
                 "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />" +
-                "<title>" + mTitle + "</title>\n");
+                "<title>" + title + "</title>\n");
 
         writeStyleSheet();
 
-        if (!mSimpleFormat) {
+        if (!simpleFormat) {
             // JavaScript for collapsing/expanding long lists
-            mWriter.write(
+            writer.write(
                 "<script language=\"javascript\" type=\"text/javascript\"> \n" +
                 "<!--\n" +
                 "function reveal(id) {\n" +
@@ -132,28 +132,28 @@ public class HtmlReporter extends Reporter {
                 "</script>\n");
         }
 
-        mWriter.write(
+        writer.write(
                 "</head>\n" +
                 "<body>\n" +
                 "<h1>" +
-                mTitle +
+                        title +
                 "</h1>\n" +
                 "<div class=\"titleSeparator\"></div>\n");
 
-        mWriter.write(String.format("Check performed at %1$s.",
+        writer.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
-        mWriter.write("<br/>\n");
-        mWriter.write(String.format("%1$s found",
+        writer.write("<br/>\n");
+        writer.write(String.format("%1$s found",
                 describeCounts(stats.errorCount, stats.warningCount, false)));
         if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
-            File baselineFile = mFlags.getBaselineFile();
+            File baselineFile = flags.getBaselineFile();
             assert baselineFile != null;
-            mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+            writer.write(String.format(" (%1$s filtered by baseline %2$s)",
                     describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
                     baselineFile.getName()));
         }
-        mWriter.write(":");
-        mWriter.write("<br/><br/>\n");
+        writer.write(":");
+        writer.write("<br/><br/>\n");
 
         Issue previousIssue = null;
         if (!issues.isEmpty()) {
@@ -178,51 +178,51 @@ public class HtmlReporter extends Reporter {
 
                 if (issue.getCategory() != previousCategory) {
                     previousCategory = issue.getCategory();
-                    mWriter.write("\n<a name=\"");
-                    mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("\"></a>\n");
-                    mWriter.write("<div class=\"category\"><a href=\"#\" title=\"Return to top\">");
-                    mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("</a><div class=\"categorySeparator\"></div>\n");
-                    mWriter.write("</div>\n");
+                    writer.write("\n<a name=\"");
+                    writer.write(issue.getCategory().getFullName());
+                    writer.write("\"></a>\n");
+                    writer.write("<div class=\"category\"><a href=\"#\" title=\"Return to top\">");
+                    writer.write(issue.getCategory().getFullName());
+                    writer.write("</a><div class=\"categorySeparator\"></div>\n");
+                    writer.write("</div>\n");
                 }
 
-                mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n");
-                mWriter.write("<div class=\"issue\">\n");
+                writer.write("<a name=\"" + issue.getId() + "\"></a>\n");
+                writer.write("<div class=\"issue\">\n");
 
                 // Explain this issue
-                mWriter.write("<div class=\"id\"><a href=\"#\" title=\"Return to top\">");
-                mWriter.write(issue.getId());
-                mWriter.write(": ");
-                mWriter.write(issue.getBriefDescription(HTML));
-                mWriter.write("</a><div class=\"issueSeparator\"></div>\n");
-                mWriter.write("</div>\n");
+                writer.write("<div class=\"id\"><a href=\"#\" title=\"Return to top\">");
+                writer.write(issue.getId());
+                writer.write(": ");
+                writer.write(issue.getBriefDescription(HTML));
+                writer.write("</a><div class=\"issueSeparator\"></div>\n");
+                writer.write("</div>\n");
 
-                mWriter.write("<div class=\"warningslist\">\n");
-                boolean partialHide = !mSimpleFormat && warnings.size() > SPLIT_LIMIT;
+                writer.write("<div class=\"warningslist\">\n");
+                boolean partialHide = !simpleFormat && warnings.size() > SPLIT_LIMIT;
 
                 int count = 0;
                 for (Warning warning : warnings) {
                     if (partialHide && count == SHOWN_COUNT) {
                         String id = warning.issue.getId() + "Div";
-                        mWriter.write("<button id=\"");
-                        mWriter.write(id);
-                        mWriter.write("Link\" onclick=\"reveal('");
-                        mWriter.write(id);
-                        mWriter.write("');\" />");
-                        mWriter.write(String.format("+ %1$d More Occurrences...",
+                        writer.write("<button id=\"");
+                        writer.write(id);
+                        writer.write("Link\" onclick=\"reveal('");
+                        writer.write(id);
+                        writer.write("');\" />");
+                        writer.write(String.format("+ %1$d More Occurrences...",
                                 warnings.size() - SHOWN_COUNT));
-                        mWriter.write("</button>\n");
-                        mWriter.write("<div id=\"");
-                        mWriter.write(id);
-                        mWriter.write("\" style=\"display: none\">\n");
+                        writer.write("</button>\n");
+                        writer.write("<div id=\"");
+                        writer.write(id);
+                        writer.write("\" style=\"display: none\">\n");
                     }
                     count++;
                     String url = null;
                     if (warning.path != null) {
                         url = writeLocation(warning.file, warning.path, warning.line);
-                        mWriter.write(':');
-                        mWriter.write(' ');
+                        writer.write(':');
+                        writer.write(' ');
                     }
 
                     // Is the URL for a single image? If so, place it here near the top
@@ -233,24 +233,24 @@ public class HtmlReporter extends Reporter {
                             && warning.location.getSecondary() == null) {
                         addedImage = addImage(url, warning.location);
                     }
-                    mWriter.write("<span class=\"message\">");
-                    mWriter.append(RAW.convertTo(warning.message, HTML));
-                    mWriter.write("</span>");
+                    writer.write("<span class=\"message\">");
+                    writer.append(RAW.convertTo(warning.message, HTML));
+                    writer.write("</span>");
                     if (addedImage) {
-                        mWriter.write("<br clear=\"right\"/>");
+                        writer.write("<br clear=\"right\"/>");
                     } else {
-                        mWriter.write("<br />");
+                        writer.write("<br />");
                     }
 
                     // Insert surrounding code block window
                     if (warning.line >= 0 && warning.fileContents != null) {
-                        mWriter.write("<pre class=\"errorlines\">\n");
+                        writer.write("<pre class=\"errorlines\">\n");
                         appendCodeBlock(warning.fileContents, warning.line, warning.offset);
-                        mWriter.write("\n</pre>");
+                        writer.write("\n</pre>");
                     }
-                    mWriter.write('\n');
+                    writer.write('\n');
                     if (warning.location != null && warning.location.getSecondary() != null) {
-                        mWriter.write("<ul>");
+                        writer.write("<ul>");
                         Location l = warning.location.getSecondary();
                         int otherLocations = 0;
                         while (l != null) {
@@ -258,23 +258,23 @@ public class HtmlReporter extends Reporter {
                             if (message != null && !message.isEmpty()) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
-                                String path = mClient.getDisplayPath(warning.project, l.getFile());
+                                String path = client.getDisplayPath(warning.project, l.getFile());
                                 writeLocation(l.getFile(), path, line);
-                                mWriter.write(':');
-                                mWriter.write(' ');
-                                mWriter.write("<span class=\"message\">");
-                                mWriter.append(RAW.convertTo(message, HTML));
-                                mWriter.write("</span>");
-                                mWriter.write("<br />");
+                                writer.write(':');
+                                writer.write(' ');
+                                writer.write("<span class=\"message\">");
+                                writer.append(RAW.convertTo(message, HTML));
+                                writer.write("</span>");
+                                writer.write("<br />");
 
                                 String name = l.getFile().getName();
                                 if (!(endsWith(name, DOT_PNG) || endsWith(name, DOT_JPG))) {
-                                    CharSequence s = mClient.readFile(l.getFile());
+                                    CharSequence s = client.readFile(l.getFile());
                                     if (s.length() > 0) {
-                                        mWriter.write("<pre class=\"errorlines\">\n");
+                                        writer.write("<pre class=\"errorlines\">\n");
                                         int offset = start != null ? start.getOffset() : -1;
                                         appendCodeBlock(s, line, offset);
-                                        mWriter.write("\n</pre>");
+                                        writer.write("\n</pre>");
                                     }
                                 }
                             } else {
@@ -283,36 +283,36 @@ public class HtmlReporter extends Reporter {
 
                             l = l.getSecondary();
                         }
-                        mWriter.write("</ul>");
+                        writer.write("</ul>");
                         if (otherLocations > 0) {
                             String id = "Location" + count + "Div";
-                            mWriter.write("<button id=\"");
-                            mWriter.write(id);
-                            mWriter.write("Link\" onclick=\"reveal('");
-                            mWriter.write(id);
-                            mWriter.write("');\" />");
-                            mWriter.write(String.format("+ %1$d Additional Locations...",
+                            writer.write("<button id=\"");
+                            writer.write(id);
+                            writer.write("Link\" onclick=\"reveal('");
+                            writer.write(id);
+                            writer.write("');\" />");
+                            writer.write(String.format("+ %1$d Additional Locations...",
                                     otherLocations));
-                            mWriter.write("</button>\n");
-                            mWriter.write("<div id=\"");
-                            mWriter.write(id);
-                            mWriter.write("\" style=\"display: none\">\n");
+                            writer.write("</button>\n");
+                            writer.write("<div id=\"");
+                            writer.write(id);
+                            writer.write("\" style=\"display: none\">\n");
 
-                            mWriter.write("Additional locations: ");
-                            mWriter.write("<ul>\n");
+                            writer.write("Additional locations: ");
+                            writer.write("<ul>\n");
                             l = warning.location.getSecondary();
                             while (l != null) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
-                                String path = mClient.getDisplayPath(warning.project, l.getFile());
-                                mWriter.write("<li> ");
+                                String path = client.getDisplayPath(warning.project, l.getFile());
+                                writer.write("<li> ");
                                 writeLocation(l.getFile(), path, line);
-                                mWriter.write("\n");
+                                writer.write("\n");
                                 l = l.getSecondary();
                             }
-                            mWriter.write("</ul>\n");
+                            writer.write("</ul>\n");
 
-                            mWriter.write("</div><br/><br/>\n");
+                            writer.write("</div><br/><br/>\n");
                         }
                     }
 
@@ -323,48 +323,48 @@ public class HtmlReporter extends Reporter {
                     }
 
                     if (warning.isVariantSpecific()) {
-                        mWriter.write("\n");
-                        mWriter.write("Applies to variants: ");
-                        mWriter.write(Joiner.on(", ").join(warning.getIncludedVariantNames()));
-                        mWriter.write("<br/>\n");
-                        mWriter.write("Does <b>not</b> apply to variants: ");
-                        mWriter.write(Joiner.on(", ").join(warning.getExcludedVariantNames()));
-                        mWriter.write("<br/>\n");
+                        writer.write("\n");
+                        writer.write("Applies to variants: ");
+                        writer.write(Joiner.on(", ").join(warning.getIncludedVariantNames()));
+                        writer.write("<br/>\n");
+                        writer.write("Does <b>not</b> apply to variants: ");
+                        writer.write(Joiner.on(", ").join(warning.getExcludedVariantNames()));
+                        writer.write("<br/>\n");
                     }
                 }
                 if (partialHide) { // Close up the extra div
-                    mWriter.write("</div>\n");
+                    writer.write("</div>\n");
                 }
 
-                mWriter.write("</div>\n");
+                writer.write("</div>\n");
                 writeIssueMetadata(issue, first.severity, null);
 
-                mWriter.write("</div>\n");
+                writer.write("</div>\n");
             }
 
-            if (!mClient.isCheckingSpecificIssues()) {
+            if (!client.isCheckingSpecificIssues()) {
                 writeMissingIssues(missing);
             }
 
             writeSuppressInfo();
         } else {
-            mWriter.write("Congratulations!");
+            writer.write("Congratulations!");
         }
-        mWriter.write("\n</body>\n</html>");
-        mWriter.close();
+        writer.write("\n</body>\n</html>");
+        writer.close();
 
-        if (!mClient.getFlags().isQuiet()
+        if (!client.getFlags().isQuiet()
                 && (stats.errorCount > 0 || stats.warningCount > 0)) {
-            String url = SdkUtils.fileToUrlString(mOutput.getAbsoluteFile());
+            String url = SdkUtils.fileToUrlString(output.getAbsoluteFile());
             System.out.println(String.format("Wrote HTML report to %1$s", url));
         }
     }
 
     private void writeIssueMetadata(Issue issue, Severity severity, String disabledBy)
             throws IOException {
-        mWriter.write("<div class=\"metadata\">");
+        writer.write("<div class=\"metadata\">");
 
-        if (mClient.getRegistry() instanceof BuiltinIssueRegistry) {
+        if (client.getRegistry() instanceof BuiltinIssueRegistry) {
             boolean adtHasFix = QuickfixHandler.ADT.hasAutoFix(issue);
             boolean studioHasFix = QuickfixHandler.STUDIO.hasAutoFix(issue);
             if (adtHasFix || studioHasFix) {
@@ -372,95 +372,95 @@ public class HtmlReporter extends Reporter {
                 String studio = "Android Studio/IntelliJ";
                 String tools = adtHasFix && studioHasFix
                         ? (studio + " & " + adt) : studioHasFix ? studio : adt;
-                mWriter.write("Note: This issue has an associated quickfix operation in " + tools);
+                writer.write("Note: This issue has an associated quickfix operation in " + tools);
                 if (!INLINE_RESOURCES) {
-                    mWriter.write(getFixIcon());
-                } else if (mFixUrl != null) {
-                    mWriter.write("&nbsp;<img alt=\"Fix\" border=\"0\" align=\"top\" src=\"");
-                    mWriter.write(mFixUrl);
-                    mWriter.write("\" />\n");
+                    writer.write(getFixIcon());
+                } else if (fixUrl != null) {
+                    writer.write("&nbsp;<img alt=\"Fix\" border=\"0\" align=\"top\" src=\"");
+                    writer.write(fixUrl);
+                    writer.write("\" />\n");
                 }
 
-                mWriter.write("<br>\n");
+                writer.write("<br>\n");
             }
         }
 
         if (disabledBy != null) {
-            mWriter.write(String.format("Disabled By: %1$s<br/>\n", disabledBy));
+            writer.write(String.format("Disabled By: %1$s<br/>\n", disabledBy));
         }
 
-        mWriter.write("Priority: ");
-        mWriter.write(String.format("%1$d / 10", issue.getPriority()));
-        mWriter.write("<br/>\n");
-        mWriter.write("Category: ");
-        mWriter.write(issue.getCategory().getFullName());
-        mWriter.write("</div>\n");
+        writer.write("Priority: ");
+        writer.write(String.format("%1$d / 10", issue.getPriority()));
+        writer.write("<br/>\n");
+        writer.write("Category: ");
+        writer.write(issue.getCategory().getFullName());
+        writer.write("</div>\n");
 
-        mWriter.write("Severity: ");
+        writer.write("Severity: ");
         if (severity == Severity.ERROR || severity == Severity.FATAL) {
-            mWriter.write("<span class=\"error\">");
+            writer.write("<span class=\"error\">");
         } else if (severity == Severity.WARNING) {
-            mWriter.write("<span class=\"warning\">");
+            writer.write("<span class=\"warning\">");
         } else {
-            mWriter.write("<span>");
+            writer.write("<span>");
         }
         appendEscapedText(severity.getDescription());
-        mWriter.write("</span>");
+        writer.write("</span>");
 
-        mWriter.write("<div class=\"summary\">\n");
-        mWriter.write("Explanation: ");
+        writer.write("<div class=\"summary\">\n");
+        writer.write("Explanation: ");
         String description = issue.getBriefDescription(HTML);
-        mWriter.write(description);
+        writer.write(description);
         if (!description.isEmpty()
                 && Character.isLetter(description.charAt(description.length() - 1))) {
-            mWriter.write('.');
+            writer.write('.');
         }
-        mWriter.write("</div>\n");
-        mWriter.write("<div class=\"explanation\">\n");
+        writer.write("</div>\n");
+        writer.write("<div class=\"explanation\">\n");
         String explanationHtml = issue.getExplanation(HTML);
-        mWriter.write(explanationHtml);
-        mWriter.write("\n</div>\n");
+        writer.write(explanationHtml);
+        writer.write("\n</div>\n");
         List<String> moreInfo = issue.getMoreInfo();
-        mWriter.write("<br/>");
-        mWriter.write("<div class=\"moreinfo\">");
-        mWriter.write("More info: ");
+        writer.write("<br/>");
+        writer.write("<div class=\"moreinfo\">");
+        writer.write("More info: ");
         int count = moreInfo.size();
         if (count > 1) {
-            mWriter.write("<ul>");
+            writer.write("<ul>");
         }
         for (String uri : moreInfo) {
             if (count > 1) {
-                mWriter.write("<li>");
+                writer.write("<li>");
             }
-            mWriter.write("<a href=\"");
-            mWriter.write(uri);
-            mWriter.write("\">"    );
-            mWriter.write(uri);
-            mWriter.write("</a>\n");
+            writer.write("<a href=\"");
+            writer.write(uri);
+            writer.write("\">"    );
+            writer.write(uri);
+            writer.write("</a>\n");
         }
         if (count > 1) {
-            mWriter.write("</ul>");
+            writer.write("</ul>");
         }
-        mWriter.write("</div>");
+        writer.write("</div>");
 
-        mWriter.write("<br/>");
-        mWriter.write(String.format(
+        writer.write("<br/>");
+        writer.write(String.format(
                 "To suppress this error, use the issue id \"%1$s\" as explained in the " +
                 "%2$sSuppressing Warnings and Errors%3$s section.",
                 issue.getId(),
                 "<a href=\"#SuppressInfo\">", "</a>"));
-        mWriter.write("<br/>\n");
+        writer.write("<br/>\n");
     }
 
     private void writeSuppressInfo() throws IOException {
         //getSuppressHelp
-        mWriter.write("\n<a name=\"SuppressInfo\"></a>\n");
-        mWriter.write("<div class=\"category\">");
-        mWriter.write("Suppressing Warnings and Errors");
-        mWriter.write("<div class=\"categorySeparator\"></div>\n");
-        mWriter.write("</div>\n");
-        mWriter.write(TextFormat.RAW.convertTo(Main.getSuppressHelp(), TextFormat.HTML));
-        mWriter.write('\n');
+        writer.write("\n<a name=\"SuppressInfo\"></a>\n");
+        writer.write("<div class=\"category\">");
+        writer.write("Suppressing Warnings and Errors");
+        writer.write("<div class=\"categorySeparator\"></div>\n");
+        writer.write("</div>\n");
+        writer.write(TextFormat.RAW.convertTo(Main.getSuppressHelp(), TextFormat.HTML));
+        writer.write('\n');
     }
 
     protected Map<Issue, String> computeMissingIssues(List<Warning> warnings) {
@@ -470,16 +470,16 @@ public class HtmlReporter extends Reporter {
             projects.add(warning.project);
             seen.add(warning.issue);
         }
-        Configuration cliConfiguration = mClient.getConfiguration();
+        Configuration cliConfiguration = client.getConfiguration();
         Map<Issue, String> map = Maps.newHashMap();
-        for (Issue issue : mClient.getRegistry().getIssues()) {
+        for (Issue issue : client.getRegistry().getIssues()) {
             if (!seen.contains(issue)) {
-                if (mClient.isSuppressed(issue)) {
+                if (client.isSuppressed(issue)) {
                     map.put(issue, "Command line flag");
                     continue;
                 }
 
-                if (!issue.isEnabledByDefault() && !mClient.isAllEnabled()) {
+                if (!issue.isEnabledByDefault() && !client.isAllEnabled()) {
                     map.put(issue, "Default");
                     continue;
                 }
@@ -503,49 +503,49 @@ public class HtmlReporter extends Reporter {
     }
 
     private void writeMissingIssues(Map<Issue, String> missing) throws IOException {
-        mWriter.write("\n<a name=\"MissingIssues\"></a>\n");
-        mWriter.write("<div class=\"category\">");
-        mWriter.write("Disabled Checks");
-        mWriter.write("<div class=\"categorySeparator\"></div>\n");
-        mWriter.write("</div>\n");
+        writer.write("\n<a name=\"MissingIssues\"></a>\n");
+        writer.write("<div class=\"category\">");
+        writer.write("Disabled Checks");
+        writer.write("<div class=\"categorySeparator\"></div>\n");
+        writer.write("</div>\n");
 
-        mWriter.write(
+        writer.write(
                 "The following issues were not run by lint, either " +
                 "because the check is not enabled by default, or because " +
                 "it was disabled with a command line flag or via one or " +
                 "more lint.xml configuration files in the project directories.");
-        mWriter.write("\n<br/><br/>\n");
+        writer.write("\n<br/><br/>\n");
 
         List<Issue> list = new ArrayList<>(missing.keySet());
         Collections.sort(list);
 
 
         for (Issue issue : list) {
-            mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n");
-            mWriter.write("<div class=\"issue\">\n");
+            writer.write("<a name=\"" + issue.getId() + "\"></a>\n");
+            writer.write("<div class=\"issue\">\n");
 
             // Explain this issue
-            mWriter.write("<div class=\"id\">");
-            mWriter.write(issue.getId());
-            mWriter.write("<div class=\"issueSeparator\"></div>\n");
-            mWriter.write("</div>\n");
+            writer.write("<div class=\"id\">");
+            writer.write(issue.getId());
+            writer.write("<div class=\"issueSeparator\"></div>\n");
+            writer.write("</div>\n");
             String disabledBy = missing.get(issue);
             writeIssueMetadata(issue, issue.getDefaultSeverity(), disabledBy);
-            mWriter.write("</div>\n");
+            writer.write("</div>\n");
         }
     }
 
     protected void writeStyleSheet() throws IOException {
         if (USE_HOLO_STYLE) {
-            mWriter.write(
+            writer.write(
                 "<link rel=\"stylesheet\" type=\"text/css\" " +
                 "href=\"http://fonts.googleapis.com/css?family=Roboto\" />\n" );
         }
 
         URL cssUrl = HtmlReporter.class.getResource(CSS);
-        if (mSimpleFormat || INLINE_RESOURCES) {
+        if (simpleFormat || INLINE_RESOURCES) {
             // Inline the CSS
-            mWriter.write("<style>\n");
+            writer.write("<style>\n");
             InputStream input = cssUrl.openStream();
             byte[] bytes = ByteStreams.toByteArray(input);
             try {
@@ -554,12 +554,12 @@ public class HtmlReporter extends Reporter {
                 // cannot happen
             }
             String css = new String(bytes, Charsets.UTF_8);
-            mWriter.write(css);
-            mWriter.write("</style>\n");
+            writer.write(css);
+            writer.write("</style>\n");
         } else {
             String ref = addLocalResources(cssUrl);
             if (ref != null) {
-                mWriter.write(
+                writer.write(
                 "<link rel=\"stylesheet\" type=\"text/css\" href=\""
                             + ref + "\" />\n");
             }
@@ -569,14 +569,14 @@ public class HtmlReporter extends Reporter {
     private void writeOverview(List<List<Warning>> related, int missingCount)
             throws IOException {
         // Write issue id summary
-        mWriter.write("<table class=\"overview\">\n");
+        writer.write("<table class=\"overview\">\n");
 
         String errorUrl = null;
         String warningUrl = null;
-        if (!INLINE_RESOURCES && !mSimpleFormat) {
+        if (!INLINE_RESOURCES && !simpleFormat) {
             errorUrl = addLocalResources(getErrorIconUrl());
             warningUrl = addLocalResources(getWarningIconUrl());
-            mFixUrl = addLocalResources(HtmlReporter.class.getResource("lint-run.png"));
+            fixUrl = addLocalResources(HtmlReporter.class.getResource("lint-run.png"));
         }
 
         Category previousCategory = null;
@@ -592,93 +592,93 @@ public class HtmlReporter extends Reporter {
             }
 
             if (issue.getCategory() != previousCategory) {
-                mWriter.write("<tr><td></td><td class=\"categoryColumn\">");
+                writer.write("<tr><td></td><td class=\"categoryColumn\">");
                 previousCategory = issue.getCategory();
                 String categoryName = issue.getCategory().getFullName();
-                mWriter.write("<a href=\"#");
-                mWriter.write(categoryName);
-                mWriter.write("\">");
-                mWriter.write(categoryName);
-                mWriter.write("</a>\n");
-                mWriter.write("</td></tr>");
-                mWriter.write("\n");
+                writer.write("<a href=\"#");
+                writer.write(categoryName);
+                writer.write("\">");
+                writer.write(categoryName);
+                writer.write("</a>\n");
+                writer.write("</td></tr>");
+                writer.write("\n");
             }
-            mWriter.write("<tr>\n");
+            writer.write("<tr>\n");
 
             // Count column
-            mWriter.write("<td class=\"countColumn\">");
-            mWriter.write(Integer.toString(warnings.size()));
-            mWriter.write("</td>");
+            writer.write("<td class=\"countColumn\">");
+            writer.write(Integer.toString(warnings.size()));
+            writer.write("</td>");
 
-            mWriter.write("<td class=\"issueColumn\">");
+            writer.write("<td class=\"issueColumn\">");
 
             if (INLINE_RESOURCES) {
                 String markup = isError ? getErrorIcon() : getWarningIcon();
-                mWriter.write(markup);
-                mWriter.write('\n');
+                writer.write(markup);
+                writer.write('\n');
             } else {
                 String imageUrl = isError ? errorUrl : warningUrl;
                 if (imageUrl != null) {
-                    mWriter.write("<img border=\"0\" align=\"top\" src=\"");
-                    mWriter.write(imageUrl);
-                    mWriter.write("\" alt=\"");
-                    mWriter.write(isError ? "Error" : "Warning");
-                    mWriter.write("\" />\n");
+                    writer.write("<img border=\"0\" align=\"top\" src=\"");
+                    writer.write(imageUrl);
+                    writer.write("\" alt=\"");
+                    writer.write(isError ? "Error" : "Warning");
+                    writer.write("\" />\n");
                 }
             }
 
-            mWriter.write("<a href=\"#");
-            mWriter.write(issue.getId());
-            mWriter.write("\">");
-            mWriter.write(issue.getId());
-            mWriter.write(": ");
-            mWriter.write(issue.getBriefDescription(HTML));
-            mWriter.write("</a>\n");
+            writer.write("<a href=\"#");
+            writer.write(issue.getId());
+            writer.write("\">");
+            writer.write(issue.getId());
+            writer.write(": ");
+            writer.write(issue.getBriefDescription(HTML));
+            writer.write("</a>\n");
 
-            mWriter.write("</td></tr>\n");
+            writer.write("</td></tr>\n");
         }
 
-        if (missingCount > 0 && !mClient.isCheckingSpecificIssues()) {
-            mWriter.write("<tr><td></td>");
-            mWriter.write("<td class=\"categoryColumn\">");
-            mWriter.write("<a href=\"#MissingIssues\">");
-            mWriter.write(String.format("Disabled Checks (%1$d)",
+        if (missingCount > 0 && !client.isCheckingSpecificIssues()) {
+            writer.write("<tr><td></td>");
+            writer.write("<td class=\"categoryColumn\">");
+            writer.write("<a href=\"#MissingIssues\">");
+            writer.write(String.format("Disabled Checks (%1$d)",
                     missingCount));
 
-            mWriter.write("</a>\n");
-            mWriter.write("</td></tr>");
+            writer.write("</a>\n");
+            writer.write("</td></tr>");
         }
 
-        mWriter.write("</table>\n");
-        mWriter.write("<br/>");
+        writer.write("</table>\n");
+        writer.write("<br/>");
     }
 
     private String writeLocation(File file, String path, int line) throws IOException {
         String url;
-        mWriter.write("<span class=\"location\">");
+        writer.write("<span class=\"location\">");
 
         url = getUrl(file);
         if (url != null) {
-            mWriter.write("<a href=\"");
-            mWriter.write(url);
-            mWriter.write("\">");
+            writer.write("<a href=\"");
+            writer.write(url);
+            writer.write("\">");
         }
 
         String displayPath = stripPath(path);
         if (url != null && url.startsWith("../") && new File(displayPath).isAbsolute()) {
             displayPath = url;
         }
-        mWriter.write(displayPath);
+        writer.write(displayPath);
         //noinspection VariableNotUsedInsideIf
         if (url != null) {
-            mWriter.write("</a>");
+            writer.write("</a>");
         }
         if (line >= 0) {
             // 0-based line numbers, but display 1-based
-            mWriter.write(':');
-            mWriter.write(Integer.toString(line + 1));
+            writer.write(':');
+            writer.write(Integer.toString(line + 1));
         }
-        mWriter.write("</span>");
+        writer.write("</span>");
         return url;
     }
 
@@ -699,43 +699,43 @@ public class HtmlReporter extends Reporter {
                 if (!urls.isEmpty()) {
                     // Sort in order
                     Collections.sort(urls, (s1, s2) -> getDpiRank(s1) - getDpiRank(s2));
-                    mWriter.write("<table>");
-                    mWriter.write("<tr>");
+                    writer.write("<table>");
+                    writer.write("<tr>");
                     for (String linkedUrl : urls) {
                         // Image series: align top
-                        mWriter.write("<td>");
-                        mWriter.write("<a href=\"");
-                        mWriter.write(linkedUrl);
-                        mWriter.write("\">");
-                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");
-                        mWriter.write(linkedUrl);
-                        mWriter.write("\" /></a>\n");
-                        mWriter.write("</td>");
+                        writer.write("<td>");
+                        writer.write("<a href=\"");
+                        writer.write(linkedUrl);
+                        writer.write("\">");
+                        writer.write("<img border=\"0\" align=\"top\" src=\"");
+                        writer.write(linkedUrl);
+                        writer.write("\" /></a>\n");
+                        writer.write("</td>");
                     }
-                    mWriter.write("</tr>");
+                    writer.write("</tr>");
 
-                    mWriter.write("<tr>");
+                    writer.write("<tr>");
                     for (String linkedUrl : urls) {
-                        mWriter.write("<th>");
+                        writer.write("<th>");
                         int index = linkedUrl.lastIndexOf("drawable-");
                         if (index != -1) {
                             index += "drawable-".length();
                             int end = linkedUrl.indexOf('/', index);
                             if (end != -1) {
-                                mWriter.write(linkedUrl.substring(index, end));
+                                writer.write(linkedUrl.substring(index, end));
                             }
                         }
-                        mWriter.write("</th>");
+                        writer.write("</th>");
                     }
-                    mWriter.write("</tr>\n");
+                    writer.write("</tr>\n");
 
-                    mWriter.write("</table>\n");
+                    writer.write("</table>\n");
                 }
             } else {
                 // Just this image: float to the right
-                mWriter.write("<img class=\"embedimage\" align=\"right\" src=\"");
-                mWriter.write(url);
-                mWriter.write("\" />");
+                writer.write("<img class=\"embedimage\" align=\"right\" src=\"");
+                writer.write(url);
+                writer.write("\" />");
             }
 
             return true;
@@ -770,7 +770,7 @@ public class HtmlReporter extends Reporter {
                     break;
                 }
 
-                mWriter.write(String.format("<span class=\"lineno\">%1$4d</span> ", (l + 1)));
+                writer.write(String.format("<span class=\"lineno\">%1$4d</span> ", (l + 1)));
 
                 String line = LintCliClient.getLineOfOffset(contents, lineOffset);
                 if (offset != -1 && lineOffset <= offset && lineOffset+line.length() >= offset) {
@@ -781,18 +781,18 @@ public class HtmlReporter extends Reporter {
                     // First print everything before
                     int delta = offset - lineOffset;
                     appendEscapedText(line.substring(0, delta));
-                    mWriter.write("<span class=\"errorspan\">");
+                    writer.write("<span class=\"errorspan\">");
                     appendEscapedText(line.substring(delta));
-                    mWriter.write("</span>");
+                    writer.write("</span>");
                 } else if (offset == -1 && l == lineno) {
-                    mWriter.write("<span class=\"errorline\">");
+                    writer.write("<span class=\"errorline\">");
                     appendEscapedText(line);
-                    mWriter.write("</span>");
+                    writer.write("</span>");
                 } else {
                     appendEscapedText(line);
                 }
                 if (l < max - 1) {
-                    mWriter.write("\n");
+                    writer.write("\n");
                 }
             }
         }
@@ -802,27 +802,27 @@ public class HtmlReporter extends Reporter {
         for (int i = 0, n = textValue.length(); i < n; i++) {
             char c = textValue.charAt(i);
             if (c == '<') {
-                mWriter.write("&lt;");
+                writer.write("&lt;");
             } else if (c == '&') {
-                mWriter.write("&amp;");
+                writer.write("&amp;");
             } else if (c == '\n') {
-                mWriter.write("<br/>\n");
+                writer.write("<br/>\n");
             } else {
                 if (c > 255) {
-                    mWriter.write("&#");
-                    mWriter.write(Integer.toString(c));
-                    mWriter.write(';');
+                    writer.write("&#");
+                    writer.write(Integer.toString(c));
+                    writer.write(';');
                 } else {
-                    mWriter.write(c);
+                    writer.write(c);
                 }
             }
         }
     }
 
     private String stripPath(String path) {
-        if (mStripPrefix != null && path.startsWith(mStripPrefix)
-                && path.length() > mStripPrefix.length()) {
-            int index = mStripPrefix.length();
+        if (stripPrefix != null && path.startsWith(stripPrefix)
+                && path.length() > stripPrefix.length()) {
+            int index = stripPrefix.length();
             if (path.charAt(index) == File.separatorChar) {
                 index++;
             }
@@ -834,7 +834,7 @@ public class HtmlReporter extends Reporter {
 
     /** Sets path prefix to strip from displayed file names */
     void setStripPrefix(String prefix) {
-        mStripPrefix = prefix;
+        stripPrefix = prefix;
     }
 
     static URL getWarningIconUrl() {

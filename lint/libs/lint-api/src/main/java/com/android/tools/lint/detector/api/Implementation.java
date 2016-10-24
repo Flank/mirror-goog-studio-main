@@ -29,9 +29,9 @@ import java.util.EnumSet;
  */
 @Beta
 public class Implementation {
-    private final Class<? extends Detector> mClass;
-    private final EnumSet<Scope> mScope;
-    private EnumSet<Scope>[] mAnalysisScopes;
+    private final Class<? extends Detector> detectorClass;
+    private final EnumSet<Scope> scope;
+    private EnumSet<Scope>[] analysisScopes;
 
     @SuppressWarnings("unchecked")
     private static final EnumSet<Scope>[] EMPTY = new EnumSet[0];
@@ -61,9 +61,9 @@ public class Implementation {
             @NonNull Class<? extends Detector> detectorClass,
             @NonNull EnumSet<Scope> scope,
             @NonNull EnumSet<Scope>... analysisScopes) {
-        mClass = detectorClass;
-        mScope = scope;
-        mAnalysisScopes = analysisScopes;
+        this.detectorClass = detectorClass;
+        this.scope = scope;
+        this.analysisScopes = analysisScopes;
     }
 
     /**
@@ -73,12 +73,12 @@ public class Implementation {
      */
     @NonNull
     public Class<? extends Detector> getDetectorClass() {
-        return mClass;
+        return detectorClass;
     }
 
     @Override
     public String toString() {
-        return mClass.toString();
+        return detectorClass.toString();
     }
 
     /**
@@ -89,7 +89,7 @@ public class Implementation {
      */
     @NonNull
     public EnumSet<Scope> getScope() {
-        return mScope;
+        return scope;
     }
 
     /**
@@ -133,7 +133,7 @@ public class Implementation {
      */
     @NonNull
     public EnumSet<Scope>[] getAnalysisScopes() {
-        return mAnalysisScopes;
+        return analysisScopes;
     }
 
     /**
@@ -172,12 +172,12 @@ public class Implementation {
      * @return true if this issue can be analyzed with the given available scope
      */
     public boolean isAdequate(@NonNull EnumSet<Scope> scope) {
-        if (scope.containsAll(mScope)) {
+        if (scope.containsAll(this.scope)) {
             return true;
         }
 
-        if (mAnalysisScopes != null) {
-            for (EnumSet<Scope> analysisScope : mAnalysisScopes) {
+        if (analysisScopes != null) {
+            for (EnumSet<Scope> analysisScope : analysisScopes) {
                 if (scope.containsAll(analysisScope)) {
                     return true;
                 }

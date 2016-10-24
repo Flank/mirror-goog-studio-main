@@ -45,10 +45,10 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.mFlags, file, writer, true);
+            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
             Project project = Project.create(client, new File("/foo/bar/Foo"),
                     new File("/foo/bar/Foo"));
-            client.mFlags.setShowEverything(true);
+            client.flags.setShowEverything(true);
 
             Warning warning1 = new Warning(ManifestDetector.USES_SDK,
                     "<uses-sdk> tag should specify a target API level (the highest verified " +
@@ -122,11 +122,11 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.mFlags, file, writer, true);
-            client.mFlags.setExplainIssues(true);
+            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
+            client.flags.setExplainIssues(true);
             Project project = Project.create(client, new File("/foo/bar/Foo"),
                     new File("/foo/bar/Foo"));
-            client.mFlags.setShowEverything(true);
+            client.flags.setShowEverything(true);
 
             Warning warning1 = new Warning(ManifestDetector.USES_SDK,
                     "<uses-sdk> tag should specify a target API level (the highest verified " +

@@ -92,10 +92,10 @@ public class WarningTest extends AbstractCheckTest {
             @Override
             public String analyze(List<File> files) throws Exception {
                 //String analyze = super.analyze(files);
-                mDriver = new LintDriver(new CustomIssueRegistry(), this);
-                configureDriver(mDriver);
-                mDriver.analyze(new LintRequest(this, files).setScope(getLintScope(files)));
-                warningsHolder.set(mWarnings);
+                driver = new LintDriver(new CustomIssueRegistry(), this);
+                configureDriver(driver);
+                driver.analyze(new LintRequest(this, files).setScope(getLintScope(files)));
+                warningsHolder.set(warnings);
                 return null;
             }
         };

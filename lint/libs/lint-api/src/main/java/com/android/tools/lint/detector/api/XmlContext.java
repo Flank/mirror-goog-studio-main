@@ -38,7 +38,7 @@ public class XmlContext extends ResourceContext {
     static final String SUPPRESS_COMMENT_PREFIX = "<!--suppress ";
 
     /** The XML parser */
-    private final XmlParser mParser;
+    private final XmlParser parser;
     /** The XML document */
     public Document document;
 
@@ -62,7 +62,7 @@ public class XmlContext extends ResourceContext {
             @Nullable ResourceFolderType folderType,
             @NonNull XmlParser parser) {
         super(driver, project, main, file, folderType);
-        mParser = parser;
+        this.parser = parser;
     }
 
     /**
@@ -73,7 +73,7 @@ public class XmlContext extends ResourceContext {
      */
     @NonNull
     public Location getLocation(@NonNull Node node) {
-        return mParser.getLocation(this, node);
+        return parser.getLocation(this, node);
     }
 
     /**
@@ -84,7 +84,7 @@ public class XmlContext extends ResourceContext {
      */
     @NonNull
     public Location getNameLocation(@NonNull Node node) {
-        return mParser.getNameLocation(this, node);
+        return parser.getNameLocation(this, node);
     }
 
     /**
@@ -95,7 +95,7 @@ public class XmlContext extends ResourceContext {
      */
     @NonNull
     public Location getValueLocation(@NonNull Attr node) {
-        return mParser.getValueLocation(this, node);
+        return parser.getValueLocation(this, node);
     }
 
     /**
@@ -110,12 +110,12 @@ public class XmlContext extends ResourceContext {
     public Location getLocation(@NonNull Node textNode, int begin, int end) {
         assert textNode.getNodeType() == Node.TEXT_NODE
                 || textNode.getNodeType() == Node.COMMENT_NODE;
-        return mParser.getLocation(this, textNode, begin, end);
+        return parser.getLocation(this, textNode, begin, end);
     }
 
     @NonNull
     public XmlParser getParser() {
-        return mParser;
+        return parser;
     }
 
     /**
@@ -134,7 +134,7 @@ public class XmlContext extends ResourceContext {
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message) {
-        if (scope != null && mDriver.isSuppressed(this, issue, scope)) {
+        if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.report(issue, location, message);
@@ -167,11 +167,11 @@ public class XmlContext extends ResourceContext {
         // Warn if clients use the non-scoped form? No, there are cases where an
         //  XML detector's error isn't applicable to one particular location (or it's
         //  not feasible to compute it cheaply)
-        //mDriver.getClient().log(null, "Warning: Issue " + issue
+        //driver.getClient().log(null, "Warning: Issue " + issue
         //        + " was reported without a scope node: Can't be suppressed.");
 
         // For now just check the document root itself
-        if (document != null && mDriver.isSuppressed(this, issue, document)) {
+        if (document != null && driver.isSuppressed(this, issue, document)) {
             return;
         }
 
@@ -189,7 +189,7 @@ public class XmlContext extends ResourceContext {
         CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
 
-        int start = mParser.getNodeStartOffset(this, node);
+        int start = parser.getNodeStartOffset(this, node);
         if (start != -1) {
             return isSuppressedWithComment(start, issue);
         }
@@ -199,6 +199,6 @@ public class XmlContext extends ResourceContext {
 
     @NonNull
     public Location.Handle createLocationHandle(@NonNull Node node) {
-        return mParser.createLocationHandle(this, node);
+        return parser.createLocationHandle(this, node);
     }
 }

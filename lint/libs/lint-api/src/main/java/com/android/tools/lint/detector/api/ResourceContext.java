@@ -33,7 +33,7 @@ import java.io.File;
  */
 @Beta
 public class ResourceContext extends Context {
-    private final ResourceFolderType mFolderType;
+    private final ResourceFolderType folderType;
 
     /**
      * Construct a new {@link com.android.tools.lint.detector.api.ResourceContext}
@@ -54,7 +54,7 @@ public class ResourceContext extends Context {
             @NonNull File file,
             @Nullable ResourceFolderType folderType) {
         super(driver, project, main, file);
-        mFolderType = folderType;
+        this.folderType = folderType;
     }
 
     /**
@@ -64,7 +64,7 @@ public class ResourceContext extends Context {
      */
     @Nullable
     public ResourceFolderType getResourceFolderType() {
-        return mFolderType;
+        return folderType;
     }
 
     /**
@@ -74,6 +74,6 @@ public class ResourceContext extends Context {
      * @return the folder version, or -1 if no specific version was specified
      */
     public int getFolderVersion() {
-        return mDriver.getResourceFolderVersion(file);
+        return driver.getResourceFolderVersion(file);
     }
 }

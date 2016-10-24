@@ -40,12 +40,12 @@ import java.io.File;
 public class Location {
     private static final String SUPER_KEYWORD = "super";
 
-    private final File mFile;
-    private final Position mStart;
-    private final Position mEnd;
-    private String mMessage;
-    private Location mSecondary;
-    private Object mClientData;
+    private final File file;
+    private final Position start;
+    private final Position end;
+    private String message;
+    private Location secondary;
+    private Object clientData;
 
     /**
      * Special marker location which means location not available, or not applicable, or filtered out, etc.
@@ -71,9 +71,9 @@ public class Location {
      */
     protected Location(@NonNull File file, @Nullable Position start, @Nullable Position end) {
         super();
-        mFile = file;
-        mStart = start;
-        mEnd = end;
+        this.file = file;
+        this.start = start;
+        this.end = end;
     }
 
     /**
@@ -88,7 +88,7 @@ public class Location {
      */
     @NonNull
     public File getFile() {
-        return mFile;
+        return file;
     }
 
     /**
@@ -98,7 +98,7 @@ public class Location {
      */
     @Nullable
     public Position getStart() {
-        return mStart;
+        return start;
     }
 
     /**
@@ -108,7 +108,7 @@ public class Location {
      */
     @Nullable
     public Position getEnd() {
-        return mEnd;
+        return end;
     }
 
     /**
@@ -119,7 +119,7 @@ public class Location {
      */
     @Nullable
     public Location getSecondary() {
-        return mSecondary;
+        return secondary;
     }
 
     /**
@@ -128,7 +128,7 @@ public class Location {
      * @param secondary a secondary location associated with this location
      */
     public void setSecondary(@Nullable Location secondary) {
-        mSecondary = secondary;
+        this.secondary = secondary;
     }
 
     /**
@@ -157,7 +157,7 @@ public class Location {
      * @param message the message to apply to this location
      */
     public void setMessage(@NonNull String message) {
-        mMessage = message;
+        this.message = message;
     }
 
     /**
@@ -173,7 +173,7 @@ public class Location {
      */
     @Nullable
     public String getMessage() {
-        return mMessage;
+        return message;
     }
 
     /**
@@ -184,7 +184,7 @@ public class Location {
      * @param clientData the data to store with this location
      */
     public void setClientData(@Nullable Object clientData) {
-        mClientData = clientData;
+        this.clientData = clientData;
     }
 
     /**
@@ -196,13 +196,13 @@ public class Location {
      */
     @Nullable
     public Object getClientData() {
-        return mClientData;
+        return clientData;
     }
 
     @Override
     public String toString() {
-        return "Location [file=" + mFile + ", start=" + mStart + ", end=" + mEnd + ", message="
-                + mMessage + ']';
+        return "Location [file=" + file + ", start=" + start + ", end=" + end + ", message="
+                + message + ']';
     }
 
     /**
@@ -363,7 +363,7 @@ public class Location {
             if (patternStart != null) {
                 SearchDirection direction = SearchDirection.NEAREST;
                 if (hints != null) {
-                    direction = hints.mDirection;
+                    direction = hints.direction;
                 }
 
                 int index;
@@ -633,11 +633,11 @@ public class Location {
 
     /** A default {@link Handle} implementation for simple file offsets */
     public static class DefaultLocationHandle implements Handle {
-        private final File mFile;
-        private final CharSequence mContents;
-        private final int mStartOffset;
-        private final int mEndOffset;
-        private Object mClientData;
+        private final File file;
+        private final CharSequence contents;
+        private final int startOffset;
+        private final int endOffset;
+        private Object clientData;
 
         /**
          * Constructs a new {@link DefaultLocationHandle}
@@ -647,43 +647,43 @@ public class Location {
          * @param endOffset the end offset within the file
          */
         public DefaultLocationHandle(@NonNull Context context, int startOffset, int endOffset) {
-            mFile = context.file;
-            mContents = context.getContents();
-            mStartOffset = startOffset;
-            mEndOffset = endOffset;
+            file = context.file;
+            contents = context.getContents();
+            this.startOffset = startOffset;
+            this.endOffset = endOffset;
         }
 
         @Override
         @NonNull
         public Location resolve() {
-            return create(mFile, mContents, mStartOffset, mEndOffset);
+            return create(file, contents, startOffset, endOffset);
         }
 
         @Override
         public void setClientData(@Nullable Object clientData) {
-            mClientData = clientData;
+            this.clientData = clientData;
         }
 
         @Override
         @Nullable
         public Object getClientData() {
-            return mClientData;
+            return clientData;
         }
     }
 
     public static class ResourceItemHandle implements Handle {
-        private final ResourceItem mItem;
+        private final ResourceItem item;
 
         public ResourceItemHandle(@NonNull ResourceItem item) {
-            mItem = item;
+            this.item = item;
         }
         @NonNull
         @Override
         public Location resolve() {
             // TODO: Look up the exact item location more
             // closely
-            ResourceFile source = mItem.getSource();
-            assert source != null : mItem;
+            ResourceFile source = item.getSource();
+            assert source != null : item;
             return create(source.getFile());
         }
 
@@ -741,26 +741,26 @@ public class Location {
          * {@code patternStart} is non null)
          */
         @NonNull
-        private final SearchDirection mDirection;
+        private final SearchDirection direction;
 
         /** Whether the matched pattern should be a whole word */
-        private boolean mWholeWord;
+        private boolean wholeWord;
 
         /**
          * Whether the matched pattern should be a Java symbol (so for example,
          * a match inside a comment or string literal should not be used)
          */
-        private boolean mJavaSymbol;
+        private boolean javaSymbol;
 
         /**
          * Whether the matched pattern corresponds to a constructor; if so, look for
          * some other possible source aliases too, such as "super".
          */
-        private boolean mConstructor;
+        private boolean constructor;
 
         private SearchHints(@NonNull SearchDirection direction) {
             super();
-            mDirection = direction;
+            this.direction = direction;
         }
 
         /**
@@ -781,14 +781,14 @@ public class Location {
          */
         @NonNull
         public SearchHints matchWholeWord() {
-            mWholeWord = true;
+            wholeWord = true;
 
             return this;
         }
 
         /** @return true if the pattern match should be for whole words only */
         public boolean isWholeWord() {
-            return mWholeWord;
+            return wholeWord;
         }
 
         /**
@@ -798,15 +798,15 @@ public class Location {
          */
         @NonNull
         public SearchHints matchJavaSymbol() {
-            mJavaSymbol = true;
-            mWholeWord = true;
+            javaSymbol = true;
+            wholeWord = true;
 
             return this;
         }
 
         /** @return true if the pattern match should be for Java symbols only */
         public boolean isJavaSymbol() {
-            return mJavaSymbol;
+            return javaSymbol;
         }
 
         /**
@@ -817,16 +817,16 @@ public class Location {
          */
         @NonNull
         public SearchHints matchConstructor() {
-            mConstructor = true;
-            mWholeWord = true;
-            mJavaSymbol = true;
+            constructor = true;
+            wholeWord = true;
+            javaSymbol = true;
 
             return this;
         }
 
         /** @return true if the pattern match should be for a constructor */
         public boolean isConstructor() {
-            return mConstructor;
+            return constructor;
         }
     }
 }

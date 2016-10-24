@@ -59,19 +59,19 @@ import org.w3c.dom.NodeList;
  */
 @Beta
 class ResourceVisitor {
-    private final Map<String, List<Detector.XmlScanner>> mElementToCheck =
+    private final Map<String, List<Detector.XmlScanner>> elementToCheck =
             new HashMap<>();
-    private final Map<String, List<Detector.XmlScanner>> mAttributeToCheck =
+    private final Map<String, List<Detector.XmlScanner>> attributeToCheck =
             new HashMap<>();
-    private final List<Detector.XmlScanner> mDocumentDetectors =
+    private final List<Detector.XmlScanner> documentDetectors =
             new ArrayList<>();
-    private final List<Detector.XmlScanner> mAllElementDetectors =
+    private final List<Detector.XmlScanner> allElementDetectors =
             new ArrayList<>();
-    private final List<Detector.XmlScanner> mAllAttributeDetectors =
+    private final List<Detector.XmlScanner> allAttributeDetectors =
             new ArrayList<>();
-    private final List<? extends Detector> mAllDetectors;
-    private final List<? extends Detector> mBinaryDetectors;
-    private final XmlParser mParser;
+    private final List<? extends Detector> allDetectors;
+    private final List<? extends Detector> binaryDetectors;
+    private final XmlParser parser;
 
     // Really want this:
     //<T extends List<Detector> & Detector.XmlScanner> XmlVisitor(IDomParser parser,
@@ -79,38 +79,38 @@ class ResourceVisitor {
     // but it makes client code tricky and ugly.
     ResourceVisitor(
             @NonNull XmlParser parser,
-            @NonNull List<? extends Detector> xmlDetectors,
+            @NonNull List<? extends Detector> allDetectors,
             @Nullable List<Detector> binaryDetectors) {
-        mParser = parser;
-        mAllDetectors = xmlDetectors;
-        mBinaryDetectors = binaryDetectors;
+        this.parser = parser;
+        this.binaryDetectors = binaryDetectors;
+        this.allDetectors = allDetectors;
 
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
-        for (Detector detector : xmlDetectors) {
+        for (Detector detector : allDetectors) {
             Detector.XmlScanner xmlDetector = (XmlScanner) detector;
             Collection<String> attributes = xmlDetector.getApplicableAttributes();
             if (attributes == XmlScanner.ALL) {
-                mAllAttributeDetectors.add(xmlDetector);
+                allAttributeDetectors.add(xmlDetector);
             }  else if (attributes != null) {
                 for (String attribute : attributes) {
-                    List<Detector.XmlScanner> list = mAttributeToCheck.get(attribute);
+                    List<Detector.XmlScanner> list = attributeToCheck.get(attribute);
                     if (list == null) {
                         list = new ArrayList<>();
-                        mAttributeToCheck.put(attribute, list);
+                        attributeToCheck.put(attribute, list);
                     }
                     list.add(xmlDetector);
                 }
             }
             Collection<String> elements = xmlDetector.getApplicableElements();
             if (elements == XmlScanner.ALL) {
-                mAllElementDetectors.add(xmlDetector);
+                allElementDetectors.add(xmlDetector);
             } else if (elements != null) {
                 for (String element : elements) {
-                    List<Detector.XmlScanner> list = mElementToCheck.get(element);
+                    List<Detector.XmlScanner> list = elementToCheck.get(element);
                     if (list == null) {
                         list = new ArrayList<>();
-                        mElementToCheck.put(element, list);
+                        elementToCheck.put(element, list);
                     }
                     list.add(xmlDetector);
                 }
@@ -120,7 +120,7 @@ class ResourceVisitor {
                     && attributes != XmlScanner.ALL))
                   && (elements == null || (elements.isEmpty()
                   && elements != XmlScanner.ALL))) {
-                mDocumentDetectors.add(xmlDetector);
+                documentDetectors.add(xmlDetector);
             }
         }
     }
@@ -130,7 +130,7 @@ class ResourceVisitor {
 
         try {
             if (context.document == null) {
-                context.document = mParser.parseXml(context);
+                context.document = parser.parseXml(context);
                 if (context.document == null) {
                     // No need to log this; the parser should be reporting
                     // a full warning (such as IssueRegistry#PARSER_ERROR)
@@ -143,45 +143,45 @@ class ResourceVisitor {
                 }
             }
 
-            for (Detector check : mAllDetectors) {
+            for (Detector check : allDetectors) {
                 check.beforeCheckFile(context);
             }
 
-            for (Detector.XmlScanner check : mDocumentDetectors) {
+            for (Detector.XmlScanner check : documentDetectors) {
                 check.visitDocument(context, context.document);
             }
 
-            if (!mElementToCheck.isEmpty() || !mAttributeToCheck.isEmpty()
-                    || !mAllAttributeDetectors.isEmpty() || !mAllElementDetectors.isEmpty()) {
+            if (!elementToCheck.isEmpty() || !attributeToCheck.isEmpty()
+                    || !allAttributeDetectors.isEmpty() || !allElementDetectors.isEmpty()) {
                 visitElement(context, context.document.getDocumentElement());
             }
 
-            for (Detector check : mAllDetectors) {
+            for (Detector check : allDetectors) {
                 check.afterCheckFile(context);
             }
         } finally {
             if (context.document != null) {
-                mParser.dispose(context, context.document);
+                parser.dispose(context, context.document);
                 context.document = null;
             }
         }
     }
 
     private void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        List<Detector.XmlScanner> elementChecks = mElementToCheck.get(element.getTagName());
+        List<Detector.XmlScanner> elementChecks = elementToCheck.get(element.getTagName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;
             for (XmlScanner check : elementChecks) {
                 check.visitElement(context, element);
             }
         }
-        if (!mAllElementDetectors.isEmpty()) {
-            for (XmlScanner check : mAllElementDetectors) {
+        if (!allElementDetectors.isEmpty()) {
+            for (XmlScanner check : allElementDetectors) {
                 check.visitElement(context, element);
             }
         }
 
-        if (!mAttributeToCheck.isEmpty() || !mAllAttributeDetectors.isEmpty()) {
+        if (!attributeToCheck.isEmpty() || !allAttributeDetectors.isEmpty()) {
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
@@ -189,14 +189,14 @@ class ResourceVisitor {
                 if (name == null) {
                     name = attribute.getName();
                 }
-                List<Detector.XmlScanner> list = mAttributeToCheck.get(name);
+                List<Detector.XmlScanner> list = attributeToCheck.get(name);
                 if (list != null) {
                     for (XmlScanner check : list) {
                         check.visitAttribute(context, attribute);
                     }
                 }
-                if (!mAllAttributeDetectors.isEmpty()) {
-                    for (XmlScanner check : mAllAttributeDetectors) {
+                if (!allAttributeDetectors.isEmpty()) {
+                    for (XmlScanner check : allAttributeDetectors) {
                         check.visitAttribute(context, attribute);
                     }
                 }
@@ -218,8 +218,8 @@ class ResourceVisitor {
                 check.visitElementAfter(context, element);
             }
         }
-        if (!mAllElementDetectors.isEmpty()) {
-            for (XmlScanner check : mAllElementDetectors) {
+        if (!allElementDetectors.isEmpty()) {
+            for (XmlScanner check : allElementDetectors) {
                 check.visitElementAfter(context, element);
             }
         }
@@ -227,14 +227,14 @@ class ResourceVisitor {
 
     @NonNull
     public XmlParser getParser() {
-        return mParser;
+        return parser;
     }
 
     public void visitBinaryResource(@NonNull ResourceContext context) {
-        if (mBinaryDetectors == null) {
+        if (binaryDetectors == null) {
             return;
         }
-        for (Detector check : mBinaryDetectors) {
+        for (Detector check : binaryDetectors) {
             check.beforeCheckFile(context);
             check.checkBinaryResource(context);
             check.afterCheckFile(context);

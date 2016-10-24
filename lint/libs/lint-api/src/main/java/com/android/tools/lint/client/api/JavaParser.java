@@ -514,16 +514,16 @@ public abstract class JavaParser {
     @Deprecated
     public static class DefaultTypeDescriptor extends TypeDescriptor {
 
-        private String mName;
+        private String name;
 
         public DefaultTypeDescriptor(String name) {
-            mName = name;
+            this.name = name;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return mName;
+            return name;
         }
 
         @NonNull
@@ -534,17 +534,17 @@ public abstract class JavaParser {
 
         @Override
         public boolean matchesName(@NonNull String name) {
-            return mName.equals(name);
+            return this.name.equals(name);
         }
 
         @Override
         public boolean isArray() {
-            return mName.endsWith("[]");
+            return name.endsWith("[]");
         }
 
         @Override
         public boolean isPrimitive() {
-            return mName.indexOf('.') != -1;
+            return name.indexOf('.') != -1;
         }
 
         @Override
@@ -574,13 +574,13 @@ public abstract class JavaParser {
 
             DefaultTypeDescriptor that = (DefaultTypeDescriptor) o;
 
-            return !(mName != null ? !mName.equals(that.mName) : that.mName != null);
+            return !(name != null ? !name.equals(that.name) : that.name != null);
 
         }
 
         @Override
         public int hashCode() {
-            return mName != null ? mName.hashCode() : 0;
+            return name != null ? name.hashCode() : 0;
         }
     }
 

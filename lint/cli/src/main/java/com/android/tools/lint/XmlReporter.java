@@ -42,8 +42,8 @@ import java.util.List;
  */
 @Beta
 public class XmlReporter extends Reporter {
-    private final Writer mWriter;
-    private boolean mIntendedForBaseline;
+    private final Writer writer;
+    private boolean intendedForBaseline;
 
     /**
      * Constructs a new {@link XmlReporter}
@@ -54,58 +54,58 @@ public class XmlReporter extends Reporter {
      */
     public XmlReporter(LintCliClient client, File output) throws IOException {
         super(client, output);
-        mWriter = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
+        writer = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
     }
 
     public boolean isIntendedForBaseline() {
-        return mIntendedForBaseline;
+        return intendedForBaseline;
     }
 
     public void setIntendedForBaseline(boolean intendedForBaseline) {
-        mIntendedForBaseline = intendedForBaseline;
+        this.intendedForBaseline = intendedForBaseline;
     }
 
     @Override
     public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
-        mWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         // Format 4: added urls= attribute with all more info links, comma separated
-        mWriter.write("<issues format=\"4\"");
-        String revision = mClient.getRevision();
+        writer.write("<issues format=\"4\"");
+        String revision = client.getRevision();
         if (revision != null) {
-            mWriter.write(String.format(" by=\"lint %1$s\"", revision));
+            writer.write(String.format(" by=\"lint %1$s\"", revision));
         }
-        mWriter.write(">\n");
+        writer.write(">\n");
 
         if (!issues.isEmpty()) {
             for (Warning warning : issues) {
-                mWriter.write('\n');
-                indent(mWriter, 1);
-                mWriter.write("<issue");
+                writer.write('\n');
+                indent(writer, 1);
+                writer.write("<issue");
                 Issue issue = warning.issue;
-                writeAttribute(mWriter, 2, "id", issue.getId());
-                if (!mIntendedForBaseline) {
-                    writeAttribute(mWriter, 2, "severity",
+                writeAttribute(writer, 2, "id", issue.getId());
+                if (!intendedForBaseline) {
+                    writeAttribute(writer, 2, "severity",
                             warning.severity.getDescription());
                 }
-                writeAttribute(mWriter, 2, "message", warning.message);
+                writeAttribute(writer, 2, "message", warning.message);
 
                 if (!isIntendedForBaseline()) {
-                    writeAttribute(mWriter, 2, "category",
+                    writeAttribute(writer, 2, "category",
                             issue.getCategory().getFullName());
-                    writeAttribute(mWriter, 2, "priority",
+                    writeAttribute(writer, 2, "priority",
                             Integer.toString(issue.getPriority()));
                     // We don't need issue metadata in baselines
-                    writeAttribute(mWriter, 2, "summary",
+                    writeAttribute(writer, 2, "summary",
                             issue.getBriefDescription(RAW));
-                    writeAttribute(mWriter, 2, "explanation",
+                    writeAttribute(writer, 2, "explanation",
                             issue.getExplanation(RAW));
 
                     List<String> moreInfo = issue.getMoreInfo();
                     if (!moreInfo.isEmpty()) {
                         // Compatibility with old format: list first URL
-                        writeAttribute(mWriter, 2, "url",
+                        writeAttribute(writer, 2, "url",
                                 moreInfo.get(0));
-                        writeAttribute(mWriter, 2, "urls",
+                        writeAttribute(writer, 2, "urls",
 
                                 Joiner.on(',').join(issue.getMoreInfo()));
                     }
@@ -118,24 +118,24 @@ public class XmlReporter extends Reporter {
                         if (index2 != -1) {
                             String line1 = line.substring(0, index1);
                             String line2 = line.substring(index1 + 1, index2);
-                            writeAttribute(mWriter, 2, "errorLine1", line1);
-                            writeAttribute(mWriter, 2, "errorLine2", line2);
+                            writeAttribute(writer, 2, "errorLine1", line1);
+                            writeAttribute(writer, 2, "errorLine2", line2);
                         }
                     }
                 }
 
                 if (warning.isVariantSpecific()) {
-                    writeAttribute(mWriter, 2, "includedVariants", Joiner.on(',').join(warning.getIncludedVariantNames()));
-                    writeAttribute(mWriter, 2, "excludedVariants", Joiner.on(',').join(warning.getExcludedVariantNames()));
+                    writeAttribute(writer, 2, "includedVariants", Joiner.on(',').join(warning.getIncludedVariantNames()));
+                    writeAttribute(writer, 2, "excludedVariants", Joiner.on(',').join(warning.getExcludedVariantNames()));
                 }
 
                 if (!isIntendedForBaseline() &&
-                        mClient.getRegistry() instanceof BuiltinIssueRegistry) {
+                        client.getRegistry() instanceof BuiltinIssueRegistry) {
                     boolean adt = QuickfixHandler.ADT.hasAutoFix(issue);
                     boolean studio = QuickfixHandler.STUDIO.hasAutoFix(issue);
                     if (adt || studio) {
                         String value = adt && studio ? "studio,adt" : studio ? "studio" : "adt";
-                        writeAttribute(mWriter, 2, "quickfix", value);
+                        writeAttribute(writer, 2, "quickfix", value);
                     }
                 }
 
@@ -147,12 +147,12 @@ public class XmlReporter extends Reporter {
 
                 Location location = warning.location;
                 if (location != null) {
-                    mWriter.write(">\n");
+                    writer.write(">\n");
                     while (location != null) {
-                        indent(mWriter, 2);
-                        mWriter.write("<location");
-                        String path = mClient.getDisplayPath(warning.project, location.getFile());
-                        writeAttribute(mWriter, 3, "file", path);
+                        indent(writer, 2);
+                        writer.write("<location");
+                        String path = client.getDisplayPath(warning.project, location.getFile());
+                        writeAttribute(writer, 3, "file", path);
                         Position start = location.getStart();
                         if (start != null) {
                             int line = start.getLine();
@@ -160,34 +160,34 @@ public class XmlReporter extends Reporter {
                             if (line >= 0) {
                                 // +1: Line numbers internally are 0-based, report should be
                                 // 1-based.
-                                writeAttribute(mWriter, 3, "line",
+                                writeAttribute(writer, 3, "line",
                                         Integer.toString(line + 1));
                                 if (column >= 0) {
-                                    writeAttribute(mWriter, 3, "column",
+                                    writeAttribute(writer, 3, "column",
                                             Integer.toString(column + 1));
                                 }
                             }
                         }
 
-                        mWriter.write("/>\n");
+                        writer.write("/>\n");
                         location = location.getSecondary();
                     }
-                    indent(mWriter, 1);
-                    mWriter.write("</issue>\n");
+                    indent(writer, 1);
+                    writer.write("</issue>\n");
                 } else {
-                    mWriter.write('\n');
-                    indent(mWriter, 1);
-                    mWriter.write("/>\n");
+                    writer.write('\n');
+                    indent(writer, 1);
+                    writer.write("/>\n");
                 }
             }
         }
 
-        mWriter.write("\n</issues>\n");
-        mWriter.close();
+        writer.write("\n</issues>\n");
+        writer.close();
 
-        if (!mClient.getFlags().isQuiet()
+        if (!client.getFlags().isQuiet()
                 && (stats.errorCount > 0 || stats.warningCount > 0)) {
-            String url = SdkUtils.fileToUrlString(mOutput.getAbsoluteFile());
+            String url = SdkUtils.fileToUrlString(output.getAbsoluteFile());
             System.out.println(String.format("Wrote XML report to %1$s", url));
         }
     }

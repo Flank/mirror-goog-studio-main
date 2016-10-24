@@ -51,17 +51,17 @@ public class LintBaseline {
     private static final String TAG_ISSUE = "issue";
     private static final String TAG_LOCATION = "location";
 
-    private final LintClient mClient;
-    private int mFoundErrorCount;
-    private int mFoundWarningCount;
-    private int mBaselineIssueCount;
+    private final LintClient client;
+    private int foundErrorCount;
+    private int foundWarningCount;
+    private int baselineIssueCount;
 
-    private Multimap<String, Entry> mMessageToEntry = ArrayListMultimap.create(100, 20);
-    private final File mBaselineFile;
+    private Multimap<String, Entry> messageToEntry = ArrayListMultimap.create(100, 20);
+    private final File baselineFile;
 
     public LintBaseline(@Nullable LintClient client, @NonNull File baselineFile) {
-        mClient = client;
-        mBaselineFile = baselineFile;
+        this.client = client;
+        this.baselineFile = baselineFile;
         readBaselineFile();
     }
 
@@ -84,7 +84,7 @@ public class LintBaseline {
      */
     public boolean findAndMark(@NonNull Issue issue, @NonNull Location location,
             @NonNull String message, @Nullable Severity severity) {
-        Collection<Entry> entries = mMessageToEntry.get(message);
+        Collection<Entry> entries = messageToEntry.get(message);
         if (entries == null) {
             return false;
         }
@@ -102,7 +102,7 @@ public class LintBaseline {
                         entry = entry.previous;
                     }
                     while (entry != null) {
-                        mMessageToEntry.remove(entry.message, entry);
+                        messageToEntry.remove(entry.message, entry);
                         entry = entry.next;
                     }
 
@@ -110,9 +110,9 @@ public class LintBaseline {
                         severity = issue.getDefaultSeverity();
                     }
                     if (severity == Severity.ERROR || severity == Severity.FATAL) {
-                        mFoundErrorCount++;
+                        foundErrorCount++;
                     } else {
-                        mFoundWarningCount++;
+                        foundWarningCount++;
                     }
 
                     return true;
@@ -124,15 +124,15 @@ public class LintBaseline {
     }
 
     public int getFoundErrorCount() {
-        return mFoundErrorCount;
+        return foundErrorCount;
     }
 
     public int getFoundWarningCount() {
-        return mFoundWarningCount;
+        return foundWarningCount;
     }
 
     public int getFixedCount() {
-        return mBaselineIssueCount - mFoundErrorCount - mFoundWarningCount;
+        return baselineIssueCount - foundErrorCount - foundWarningCount;
     }
 
     /** Like path.endsWith(suffix), but considers \\ and / identical */
@@ -163,11 +163,11 @@ public class LintBaseline {
 
     /** Read in the XML report */
     private void readBaselineFile() {
-        if (!mBaselineFile.exists()) {
+        if (!baselineFile.exists()) {
             return;
         }
 
-        try (Reader reader = new BufferedReader(new FileReader(mBaselineFile))) {
+        try (Reader reader = new BufferedReader(new FileReader(baselineFile))) {
             KXmlParser parser = new KXmlParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
             parser.setInput(reader);
@@ -190,10 +190,10 @@ public class LintBaseline {
                             }
                             entry.previous = currentEntry;
                             currentEntry = entry;
-                            mMessageToEntry.put(entry.message, entry);
+                            messageToEntry.put(entry.message, entry);
                         }
                     } else if (tag.equals(TAG_ISSUE)) {
-                        mBaselineIssueCount++;
+                        baselineIssueCount++;
                         issue = null;
                         message = null;
                         path = null;
@@ -216,8 +216,8 @@ public class LintBaseline {
                 }
             }
         } catch (IOException | XmlPullParserException e) {
-            if (mClient != null) {
-                mClient.log(e, null);
+            if (client != null) {
+                client.log(e, null);
             } else {
                 e.printStackTrace();
             }
@@ -230,7 +230,7 @@ public class LintBaseline {
      */
     @NonNull
     public File getFile() {
-        return mBaselineFile;
+        return baselineFile;
     }
 
     private static class Entry {
