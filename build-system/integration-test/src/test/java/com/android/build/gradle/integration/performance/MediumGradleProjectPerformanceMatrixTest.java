@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -107,7 +108,10 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
         List<Path> buildGradleFiles =
                 ImmutableList.of(
+                                "WordPress/build.gradle",
                                 "libs/utils/WordPressUtils/build.gradle",
+                                "libs/editor/example/build.gradle",
+                                "libs/editor/WordPressEditor/build.gradle",
                                 "libs/networking/WordPressNetworking/build.gradle",
                                 "libs/analytics/WordPressAnalytics/build.gradle")
                         .stream()
@@ -124,19 +128,12 @@ public class MediumGradleProjectPerformanceMatrixTest {
                     "maven { url '"
                             + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
                             + "'}\njcenter()");
+
+            TestFileUtils.searchAndReplace(
+                    file,
+                    "buildToolsVersion \"[^\"]+\"",
+                    String.format("buildToolsVersion \"%s\"", AndroidBuilder.MIN_BUILD_TOOLS_REV));
         }
-
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"),
-                "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'",
-                "");
-
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"),
-                "jcenter\\(\\)",
-                "maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'} \njcenter()");
 
         //TODO: Upstream some of this?
 
