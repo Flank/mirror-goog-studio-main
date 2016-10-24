@@ -14,149 +14,150 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.SyncIssue
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * Check that a project can depend on a jar dependency published by another app project.
  */
-@CompileStatic
-class ExternalTestProjectTest {
+public class ExternalTestProjectTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder().create()
+    public GradleTestProject project = GradleTestProject.builder().create();
 
-    private File app2BuildFile
+    private File app2BuildFile;
 
     @Before
-    public void setUp() {
-        File rootFile = project.getTestDir()
-        new File(rootFile, "settings.gradle") << """
-include ':app1'
-include ':app2'
-"""
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(project.getSettingsFile(),
+                "include ':app1'\ninclude ':app2'\n");
+
+        File rootFile = project.getTestDir();
+
         // app1 module
-        File app1 = new File(rootFile, "app1")
-        HelloWorldApp.noBuildFile().write(app1, null)
-        new File(app1, "build.gradle") << """
-apply plugin: 'com.android.application'
+        File app1 = new File(rootFile, "app1");
+        HelloWorldApp.noBuildFile().write(app1, null);
+        TestFileUtils.appendToFile(new File(app1, "build.gradle"),
+                "apply plugin: 'com.android.application'\n"
+                + "\n"
+                + "android {\n"
+                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                + "}\n"
+                + "\n"
+                + "task testJar(type: Jar, dependsOn: 'assembleRelease') {\n"
+                + "\n"
+                + "}\n"
+                + "\n"
+                + "configurations {\n"
+                + "    testLib\n"
+                + "}\n"
+                + "\n"
+                + "artifacts {\n"
+                + "    testLib testJar\n"
+                + "}\n");
 
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-
-task testJar(type: Jar, dependsOn: 'assembleRelease') {
-
-}
-
-configurations {
-    testLib
-}
-
-artifacts {
-    testLib testJar
-}
-
-"""
         // app2 module
-        File app2 = new File(rootFile, "app2")
-        HelloWorldApp.noBuildFile().write(app2, null)
-        app2BuildFile = new File(app2, "build.gradle")
+        File app2 = new File(rootFile, "app2");
+        HelloWorldApp.noBuildFile().write(app2, null);
+        app2BuildFile = new File(app2, "build.gradle");
     }
 
     @Test
-    public void testExtraJarDependency() {
-        app2BuildFile << """
-apply plugin: 'com.android.application'
+    public void testExtraJarDependency() throws IOException {
+        TestFileUtils.appendToFile(app2BuildFile,
+                "apply plugin: 'com.android.application'\n"
+                + "\n"
+                + "android {\n"
+                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                + "}\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(path: ':app1', configuration: 'testLib')\n"
+                + "}\n");
 
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-
-dependencies {
-    compile project(path: ':app1', configuration: 'testLib')
-}
-"""
-
-        project.execute('clean', 'app2:assembleDebug')
+        project.execute("clean", "app2:assembleDebug");
     }
 
     @Test
-    void testApkDependencyInBuild() {
-        app2BuildFile << """
-apply plugin: 'com.android.application'
+    public void testApkDependencyInBuild() throws IOException {
+        TestFileUtils.appendToFile(app2BuildFile,
+                "apply plugin: 'com.android.application'\n"
+                + "\n"
+                + "android {\n"
+                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                + "}\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(path: ':app1')\n"
+                + "}\n");
 
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-
-dependencies {
-    compile project(path: ':app1')
-}
-"""
         GradleBuildResult result =
-                project.executor().expectFailure().run('clean', 'app2:assembleDebug')
+                project.executor().expectFailure().run("clean", "app2:assembleDebug");
 
         Throwable t = result.getException();
         while (t.getCause() != null) {
-            t = t.getCause()
+            t = t.getCause();
         }
 
         // looks like we can't actually test the instance t against GradleException
         // due to it coming through the tooling API from a different class loader.
-        assertEquals("org.gradle.api.GradleException", t.getClass().canonicalName)
-        assertEquals("Dependency Error. See console for details.", t.getMessage())
+        assertEquals("org.gradle.api.GradleException", t.getClass().getCanonicalName());
+        assertEquals("Dependency Error. See console for details.", t.getMessage());
 
 
         // check there is a version of the error, after the task name:
 
         assertTrue("stderr contains error", result.getStderr().contains(
-                "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:"))
+                "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:"));
 
     }
 
     @Test
-    void testApkDependencyInModel() {
-        app2BuildFile << """
-apply plugin: 'com.android.application'
+    public void testApkDependencyInModel() throws IOException {
+        TestFileUtils.appendToFile(app2BuildFile,
+                "apply plugin: 'com.android.application'\n"
+                + "\n"
+                + "android {\n"
+                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                + "}\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(path: ':app1')\n"
+                + "}\n");
 
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
+        Map<String, AndroidProject> modelMap = project.model().ignoreSyncIssues().getMulti();
 
-dependencies {
-    compile project(path: ':app1')
-}
-"""
-
-        Map<String, AndroidProject> modelMap = project.model().ignoreSyncIssues().getMulti()
-
-        AndroidProject model = modelMap.get(':app2')
-        assertNotNull(model)
+        AndroidProject model = modelMap.get(":app2");
+        assertNotNull(model);
 
         SyncIssue issue = assertThat(model).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_DEPENDENCY_IS_APK,
-                'project:app1:unspecified')
+                "project:app1:unspecified");
 
-        String expectedMsg = "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:"
-        assertThat(issue.getMessage()).startsWith(expectedMsg)
+        String expectedMsg = "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:";
+        assertThat(issue.getMessage()).startsWith(expectedMsg);
     }
 }
