@@ -34,21 +34,12 @@ import static com.android.build.gradle.internal.incremental.InstantRunVerifierSt
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceMethodVisitor;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +52,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.gradle.api.logging.Logging;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
 
 /**
  * Instant Run Verifier responsible for checking that a class change (between two developers
@@ -71,6 +72,8 @@ import java.util.jar.JarFile;
 public class InstantRunVerifier {
 
     private static final Comparator<MethodNode> METHOD_COMPARATOR = new MethodNodeComparator();
+    private static final ILogger LOGGER =
+            new LoggerWrapper(Logging.getLogger(InstantRunVerifier.class));
 
     @VisibleForTesting
     static final Comparator<AnnotationNode> ANNOTATION_COMPARATOR =
@@ -196,6 +199,10 @@ public class InstantRunVerifier {
                     // potentially, we could try to see if anything has really changed between
                     // the two classes but the fact that we got an updated class means so far that
                     // we have a new version and should restart.
+                    LOGGER.info(
+                            "Class %s annotated with %s.",
+                            updatedClass.name,
+                            IncrementalVisitor.DISABLE_ANNOTATION_TYPE.getClassName());
                     return INSTANT_RUN_DISABLED;
                 }
             }
@@ -345,9 +352,12 @@ public class InstantRunVerifier {
         if ((disabledMethod || usingBlackListedAPIs) &&
                 !METHOD_COMPARATOR.areEqual(methodNode, updatedMethod)) {
 
-            return disabledMethod
-                    ? INSTANT_RUN_DISABLED
-                    : REFLECTION_USED;
+            if (disabledMethod) {
+                LOGGER.info("Instant Run disabled for method %s.", updatedMethod.name);
+                return INSTANT_RUN_DISABLED;
+            } else {
+                return REFLECTION_USED;
+            }
 
         }
         return COMPATIBLE;
