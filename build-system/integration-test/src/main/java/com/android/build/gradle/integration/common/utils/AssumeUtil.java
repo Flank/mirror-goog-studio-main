@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.Revision;
-
 import org.junit.Assume;
 
 /**
@@ -62,4 +61,7 @@ public class AssumeUtil {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
     }
 
+    public static void assumeIsLinux() {
+        Assume.assumeTrue(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX);
+    }
 }
