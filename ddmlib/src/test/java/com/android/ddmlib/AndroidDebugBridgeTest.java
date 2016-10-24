@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,9 +40,8 @@ public class AndroidDebugBridgeTest {
 
     // https://code.google.com/p/android/issues/detail?id=63170
     @Test
+    @Ignore  // Flaky: Disabled in CI
     public void recreateAdb() throws IOException {
-        Assume.assumeTrue("Flaky: Disabled in CI",
-                System.getenv("BUILDBOT_BUILDNUMBER") == null);
         AndroidDebugBridge adb = AndroidDebugBridge.createBridge(mAdbPath.getCanonicalPath(), true);
         assertNotNull(adb);
         AndroidDebugBridge.terminate();
