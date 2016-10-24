@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.incremental.IncrementalSupportVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalVisitor;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
-import com.android.build.gradle.internal.incremental.InstantRunVerifier;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -53,12 +52,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logging;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -69,6 +62,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.logging.Logging;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Implementation of the {@link Transform} to run the byte code enhancement logic on compiled
@@ -389,6 +386,7 @@ public class InstantRunTransform extends Transform {
         if (outputFile == null) {
             transformScope.getInstantRunBuildContext().setVerifierStatus(
                     InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
+            LOGGER.info("Class %s cannot be hot swapped.", inputFile);
             return;
         }
         generatedClasses3Names.add(
