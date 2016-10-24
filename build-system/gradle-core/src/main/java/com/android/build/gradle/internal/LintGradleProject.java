@@ -865,15 +865,14 @@ public class LintGradleProject extends Project {
                 }
 
                 File projectDir = gradleProject.getProjectDir();
-                final List<Project> directLibraries = Lists.newArrayList();
+                final List<Project> dependencies = Lists.newArrayList();
                 Project project = new Project(lintClient, projectDir, projectDir) {
                     @Override
                     protected void initialize() {
                         // Deliberately not calling super; that code is for ADT compatibility
-
                         gradleProject = true;
                         mergeManifests = true;
-                        directLibraries = directLibraries;
+                        directLibraries = dependencies;
                         javaSourceFolders = sources;
                         javaClassFolders = classes;
                         javaLibraries = libs;
@@ -909,7 +908,7 @@ public class LintGradleProject extends Project {
                                 Project lintProject = getProject(lintClient, p.getName(), p,
                                         variantName);
                                 if (lintProject != null) {
-                                    directLibraries.add(lintProject);
+                                    dependencies.add(lintProject);
                                 }
                             }
                         } else if (dependency instanceof ExternalDependency) {
@@ -921,7 +920,7 @@ public class LintGradleProject extends Project {
                             Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
                             //noinspection StatementWithEmptyBody
                             if (javaLib != null) {
-                                directLibraries.add(javaLib);
+                                dependencies.add(javaLib);
                             } else {
                                 // Else: Create wrapper here. Unfortunately, we don't have a
                                 // pointer to the actual .jar file to add (getArtifacts()
