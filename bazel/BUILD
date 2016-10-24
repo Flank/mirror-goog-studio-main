@@ -118,6 +118,20 @@ java_library(
     ],
 )
 
+java_binary(
+    name = "pom_modifier",
+    main_class = "com.android.tools.maven.PomModifier",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
+)
+
+java_binary(
+    name = "repo_builder",
+    main_class = "com.android.tools.maven.RepoBuilder",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":maven"],
+)
+
 # See README.md
 java_binary(
     name = "java_import_generator",

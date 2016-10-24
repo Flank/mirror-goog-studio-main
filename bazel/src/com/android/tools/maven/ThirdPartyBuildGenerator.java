@@ -50,7 +50,7 @@ public class ThirdPartyBuildGenerator {
         Path buildFile;
         Path localRepo;
 
-        if (!MavenUtils.isMavenCoordinate(args.get(0))) {
+        if (!MavenCoordinates.isMavenCoordinate(args.get(0))) {
             buildFile = Paths.get(args.get(0));
             localRepo = Paths.get(args.get(1));
             args.remove(0);
