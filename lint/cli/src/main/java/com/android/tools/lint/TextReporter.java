@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
@@ -23,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
@@ -31,7 +33,6 @@ import com.android.utils.SdkUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -80,13 +81,22 @@ public class TextReporter extends Reporter {
     }
 
     @Override
-    public void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
+    public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
         boolean abbreviate = !mFlags.isShowEverything();
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.isEmpty()) {
             if (mDisplayEmpty) {
-                mWriter.write("No issues found.");
+                mWriter.write("No issues found");
+                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                    File baselineFile = mFlags.getBaselineFile();
+                    assert baselineFile != null;
+                    mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+                            describeCounts(stats.baselineErrorCount, stats.baselineWarningCount,
+                                    true),
+                            baselineFile.getName()));
+                }
+                mWriter.write('.');
                 mWriter.write('\n');
                 mWriter.flush();
             }
@@ -221,8 +231,16 @@ public class TextReporter extends Reporter {
 
             mWriter.write(output.toString());
 
+            // TODO: Update to using describeCounts
             mWriter.write(String.format("%1$d errors, %2$d warnings",
-                    errorCount, warningCount));
+                    stats.errorCount, stats.warningCount));
+            if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                File baselineFile = mFlags.getBaselineFile();
+                assert baselineFile != null;
+                mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+                        describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, true),
+                        baselineFile.getName()));
+            }
             mWriter.write('\n');
             mWriter.flush();
             if (mClose) {

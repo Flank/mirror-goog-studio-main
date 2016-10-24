@@ -81,7 +81,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -185,7 +185,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -276,7 +276,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             List<Warning> warnings = new ArrayList<Warning>();
             warnings.add(warning1);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(""

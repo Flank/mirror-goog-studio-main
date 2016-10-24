@@ -78,7 +78,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -107,22 +106,18 @@ public abstract class Reporter {
     protected boolean mBundleResources;
     protected Map<String, String> mUrlMap;
     protected File mResources;
-    protected final Map<File, String> mResourceUrl = new HashMap<File, String>();
-    protected final Map<String, File> mNameToFile = new HashMap<String, File>();
+    protected final Map<File, String> mResourceUrl = new HashMap<>();
+    protected final Map<String, File> mNameToFile = new HashMap<>();
     protected boolean mDisplayEmpty = true;
 
     /**
      * Write the given warnings into the report
-     *
-     * @param errorCount the number of errors
-     * @param warningCount the number of warnings
-     * @param issues the issues to be reported
-     * @throws IOException if an error occurs
+     * @param stats  the vital statistics for the lint report
+     * @param issues the issues to be reported  @throws IOException if an error occurs
      */
-    public abstract void write(int errorCount, int warningCount, List<Warning> issues)
-            throws IOException;
+    public abstract void write(@NonNull Stats stats, List<Warning> issues) throws IOException;
 
-    protected Reporter(LintCliClient client, File output) {
+    protected Reporter(@NonNull LintCliClient client, @NonNull File output) {
         mClient = client;
         mOutput = output;
     }
@@ -386,16 +381,14 @@ public abstract class Reporter {
     }
 
     /**
-     * Returns whether this report should display info (such as a path to the report) if
-     * no issues were found
+     * Returns whether this report should display info if no issues were found
      */
     public boolean isDisplayEmpty() {
         return mDisplayEmpty;
     }
 
     /**
-     * Sets whether this report should display info (such as a path to the report) if
-     * no issues were found
+     * Sets whether this report should display info if no issues were found
      */
     public void setDisplayEmpty(boolean displayEmpty) {
         mDisplayEmpty = displayEmpty;
@@ -536,5 +529,36 @@ public abstract class Reporter {
         }
 
         return false;
+    }
+
+    /**
+     * Value object passed to {@link Reporter} instances providing statistics to include in
+     * the summary
+     */
+    public static final class Stats {
+        public final int errorCount;
+        public final int warningCount;
+        public final int baselineWarningCount;
+        public final int baselineErrorCount;
+        public final int baselineFixedCount;
+
+        public Stats(
+                int errorCount,
+                int warningCount,
+                int baselineErrorCount,
+                int baselineWarningCount,
+                int baselineFixedCount) {
+            this.errorCount = errorCount;
+            this.warningCount = warningCount;
+            this.baselineWarningCount = baselineWarningCount;
+            this.baselineErrorCount = baselineErrorCount;
+            this.baselineFixedCount = baselineFixedCount;
+        }
+
+        public Stats(
+                int errorCount,
+                int warningCount) {
+            this(errorCount, warningCount, 0, 0, 0);
+        }
     }
 }

@@ -61,7 +61,8 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
 
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
-            MultiProjectHtmlReporter reporter = new MultiProjectHtmlReporter(client, dir);
+            MultiProjectHtmlReporter reporter = new MultiProjectHtmlReporter(client, dir,
+                    new LintCliFlags());
             Project project = Project.create(client, new File("/foo/bar/Foo"),
                     new File("/foo/bar/Foo"));
 
@@ -92,7 +93,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(new File(dir, "index.html"), Charsets.UTF_8);
 
@@ -300,7 +301,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
                     + "<h1>Lint Report</h1>\n"
                     + "<div class=\"titleSeparator\"></div>\n"
                     + "Check performed at $DATE.<br/>\n"
-                    + "0 errors and 2 warnings found:\n"
+                    + "2 warnings found:\n"
                     + "<br/><br/>\n"
                     + "<table class=\"overview\">\n"
                     + "<tr><th>Project</th><th class=\"countColumn\"><img border=\"0\" align=\"top\" width=\"15\" height=\"15\" alt=\"Error\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAB00lEQVR42nWTS0hbQRiF587MzkUXooi6UHAjhNKNSkGhCDXxkZhUIwWhBLoRsQpi3bXmIboSV2aliI+WKqLUtqsuSxclrhRBUMnVmIpa2oIkQon+zhlr9F7jwOEw/znfLO6dYcy2Arys6AUv6x7klTNh4ViFY485u2+N8Uc8yB1DH0Vt6ki2UkZ20LkS/Eh6CXPk6FnAKVHNJ3nViind9E/6tTKto3TxaU379Qw5euhn4QXxOGzKFjqT7Vmlwx8IC357jh76GvzC64pj4mn6VLbRbf0Nvdcw3J6hr7gS9o3XDxwIN/0RPot+h95pGG7P0AfH1oVz6UR4ya5foXkNw3Pl4Ngub/p6yD1k13FoTsPwXDk4ti89SwnuJrtigYiGY4FhypWDY2aeb0CJ4rzZou9GPc0Y1drtGfrgWLzweUm8uPNsx2ikrHgjHT6LUOrzD/rpDpIlU0JfcaX6d8UfdoW38/20ZbiuxF10MHL1tRNvp2/mSuihn70kZl2/MJ+8Xtkq8NOm4VRqoIUKLy0Hx2mx3PN/5iTk6KFvuaJmyxux3zE8tFPTm9p84KMNdcAGa9COvZqnkaN37wNJvpooSvZFexIvx2b3OkdX4dgne6N3XtUl5wqoyBY2uZQAAAAASUVORK5CYII=\" />\n"

@@ -90,7 +90,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warnings.add(warning2);
             Collections.sort(warnings);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(""
@@ -184,7 +184,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warnings.add(warning3);
             Collections.sort(warnings);
 
-            reporter.write(0, 3, warnings);
+            reporter.write(new Reporter.Stats(0, 3), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(""

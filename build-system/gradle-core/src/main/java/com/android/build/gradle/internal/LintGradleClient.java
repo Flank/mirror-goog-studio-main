@@ -29,6 +29,7 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -40,14 +41,12 @@ import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.gradle.api.GradleException;
 
 public class LintGradleClient extends LintCliClient {
     private final AndroidProject mModelProject;
@@ -133,7 +132,7 @@ public class LintGradleClient extends LintCliClient {
         } else {
             Pair<LintGradleProject,List<File>> result = LintGradleProject.create(
                     this, mModelProject, mVariant, mGradleProject);
-            lintRequest.setProjects(Collections.<Project>singletonList(result.getFirst()));
+            lintRequest.setProjects(Collections.singletonList(result.getFirst()));
             setCustomRules(result.getSecond());
         }
 
@@ -142,9 +141,15 @@ public class LintGradleClient extends LintCliClient {
 
     /** Run lint with the given registry and return the resulting warnings */
     @NonNull
-    public List<Warning> run(@NonNull IssueRegistry registry) throws IOException {
-        run(registry, Collections.<File>emptyList());
-        return mWarnings;
+    public Pair<List<Warning>,LintBaseline> run(@NonNull IssueRegistry registry)
+            throws IOException {
+        int exitCode = run(registry, Collections.emptyList());
+
+        if (exitCode == LintCliFlags.ERRNO_CREATED_BASELINE) {
+            throw new GradleException("Aborting build since new baseline file was created");
+        }
+
+        return Pair.of(mWarnings, mDriver.getBaseline());
     }
 
     /**
