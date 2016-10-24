@@ -22,13 +22,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import junit.framework.TestCase;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -216,8 +214,14 @@ public class TestUtils {
      */
     @NonNull
     public static File getPlatformFile(String path) {
-        return FileUtils.join(
-                getSdk(), SdkConstants.FD_PLATFORMS, getLatestAndroidPlatform(), path);
+        String latestAndroidPlatform = getLatestAndroidPlatform();
+        File file =
+                FileUtils.join(getSdk(), SdkConstants.FD_PLATFORMS, latestAndroidPlatform, path);
+        if (!file.exists()) {
+            throw new IllegalArgumentException(
+                    "File \"" + path + "\" not found in platform " + latestAndroidPlatform);
+        }
+        return file;
     }
 
     /**
