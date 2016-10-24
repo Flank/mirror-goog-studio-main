@@ -682,6 +682,14 @@ public final class SdkConstants {
     /** Latest known version of the ConstraintLayout library (as a string) */
     public static final String LATEST_CONSTRAINT_LAYOUT_VERSION = "1.0.0-alpha9";
 
+    /* FlexboxLayout constants */
+    public static final String CLASS_FLEXBOX_LAYOUT = "com.google.android.flexbox.FlexboxLayout";
+    public static final String FLEXBOX_LAYOUT = CLASS_FLEXBOX_LAYOUT;
+    public static final String FLEXBOX_LAYOUT_LIB_GROUP_ID = "com.google.android";
+    public static final String FLEXBOX_LAYOUT_LIB_ARTIFACT_ID = "flexbox";
+    public static final String FLEXBOX_LAYOUT_LIB_ARTIFACT = FLEXBOX_LAYOUT_LIB_GROUP_ID + ":" + FLEXBOX_LAYOUT_LIB_ARTIFACT_ID;
+    public static final String LATEST_FLEXBOX_LAYOUT_VERSION = "0.2.3";
+
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.
@@ -1187,6 +1195,25 @@ public final class SdkConstants {
     public static final String LAYOUT_CONSTRAINT_GUIDE_END = "layout_constraintGuide_end"; //$NON-NLS-1$
     public static final String LAYOUT_CONSTRAINT_GUIDE_PERCENT = "layout_constraintGuide_percent"; //$NON-NLS-1$
     public static final String LAYOUT_CONSTRAINT_DEPRECATED_GUIDE_PERCENT = "layout_constraintGuide_Percent"; //$NON-NLS-1$
+
+    // FlexboxLayout params
+    public static final String ATTR_FLEX_DIRECTION = "flexDirection";
+    public static final String ATTR_FLEX_WRAP = "flexWrap";
+    public static final String ATTR_JUSTIFY_CONTENT = "justifyContent";
+    public static final String ATTR_ALIGN_ITEMS = "alignItems";
+    public static final String ATTR_ALIGN_CONTENT = "alignContent";
+
+    // FlexboxLayout layout params
+    public static final String ATTR_LAYOUT_ORDER = "layout_order";
+    public static final String ATTR_LAYOUT_FLEX_GROW = "layout_flexGrow";
+    public static final String ATTR_LAYOUT_FLEX_SHRINK = "layout_flexShrink";
+    public static final String ATTR_LAYOUT_ALIGN_SELF = "layout_alignSelf";
+    public static final String ATTR_LAYOUT_FLEX_BASIS_PERCENT = "layout_flexBasisPercent";
+    public static final String ATTR_LAYOUT_MIN_WIDTH = "layout_minWidth";
+    public static final String ATTR_LAYOUT_MIN_HEIGHT = "layout_minHeight";
+    public static final String ATTR_LAYOUT_MAX_WIDTH = "layout_maxWidth";
+    public static final String ATTR_LAYOUT_MAX_HEIGHT = "layout_maxHeight";
+    public static final String ATTR_LAYOUT_WRAP_BEFORE = "layout_wrapBefore";
 
     // TableRow
     public static final String ATTR_LAYOUT_SPAN = "layout_span";       //$NON-NLS-1$
