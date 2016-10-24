@@ -152,30 +152,30 @@ public class LintCliXmlParser extends XmlParser {
 
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
     private static class LocationHandle implements Handle {
-        private final File mFile;
-        private final Node mNode;
-        private Object mClientData;
+        private final File file;
+        private final Node node;
+        private Object clientData;
 
         public LocationHandle(File file, Node node) {
-            mFile = file;
-            mNode = node;
+            this.file = file;
+            this.node = node;
         }
 
         @NonNull
         @Override
         public Location resolve() {
-            return Location.create(mFile, PositionXmlParser.getPosition(mNode));
+            return Location.create(file, PositionXmlParser.getPosition(node));
         }
 
         @Override
         public void setClientData(@Nullable Object clientData) {
-            mClientData = clientData;
+            this.clientData = clientData;
         }
 
         @Override
         @Nullable
         public Object getClientData() {
-            return mClientData;
+            return clientData;
         }
     }
 }

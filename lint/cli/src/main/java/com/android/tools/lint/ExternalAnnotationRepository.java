@@ -106,10 +106,10 @@ public class ExternalAnnotationRepository {
 
     private static ExternalAnnotationRepository sSingleton;
 
-    private final List<AnnotationsDatabase> mDatabases;
+    private final List<AnnotationsDatabase> databases;
 
     private ExternalAnnotationRepository(@NonNull List<AnnotationsDatabase> databases) {
-        mDatabases = databases;
+        this.databases = databases;
     }
 
     @NonNull
@@ -256,7 +256,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public ResolvedAnnotation getAnnotation(@NonNull ResolvedMethod method, @NonNull String type) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             ResolvedAnnotation annotation = database.getAnnotation(method, type);
             if (annotation != null) {
                 return annotation;
@@ -268,7 +268,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<ResolvedAnnotation> getAnnotations(@NonNull ResolvedMethod method) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(method);
             if (annotations != null) {
                 return annotations;
@@ -280,7 +280,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<PsiAnnotation> getAnnotations(@NonNull ReferenceBinding cls) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<PsiAnnotation> annotations = database.getAnnotations(cls);
             if (annotations != null) {
                 return annotations;
@@ -292,7 +292,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<PsiAnnotation> getAnnotations(@NonNull MethodBinding method) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<PsiAnnotation> annotations = database.getAnnotations(method);
             if (annotations != null) {
                 return annotations;
@@ -305,7 +305,7 @@ public class ExternalAnnotationRepository {
     @Nullable
     public Collection<PsiAnnotation> getParameterAnnotations(@NonNull MethodBinding method,
             int parameterIndex) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<PsiAnnotation> annotations = database.getAnnotations(method,
                     parameterIndex);
             if (annotations != null) {
@@ -318,7 +318,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<PsiAnnotation> getAnnotations(@NonNull FieldBinding field) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<PsiAnnotation> annotations = database.getAnnotations(field);
             if (annotations != null) {
                 return annotations;
@@ -330,7 +330,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<PsiAnnotation> getAnnotations(@NonNull PackageBinding pkg) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<PsiAnnotation> annotations = database.getAnnotations(pkg);
             if (annotations != null) {
                 return annotations;
@@ -344,7 +344,7 @@ public class ExternalAnnotationRepository {
     @Nullable
     public ResolvedAnnotation getAnnotation(@NonNull ResolvedMethod method,
             int parameterIndex, @NonNull String type) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             ResolvedAnnotation annotation = database.getAnnotation(method, parameterIndex, type);
             if (annotation != null) {
                 return annotation;
@@ -358,7 +358,7 @@ public class ExternalAnnotationRepository {
     public Collection<ResolvedAnnotation> getAnnotations(
             @NonNull ResolvedMethod method,
             int parameterIndex) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(method,
                     parameterIndex);
             if (annotations != null) {
@@ -371,7 +371,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public ResolvedAnnotation getAnnotation(@NonNull ResolvedClass cls, @NonNull String type) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             ResolvedAnnotation annotation = database.getAnnotation(cls, type);
             if (annotation != null) {
                 return annotation;
@@ -383,7 +383,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<ResolvedAnnotation> getAnnotations(@NonNull ResolvedClass cls) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(cls);
             if (annotations != null) {
                 return annotations;
@@ -395,7 +395,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public ResolvedAnnotation getAnnotation(@NonNull ResolvedField field, @NonNull String type) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             ResolvedAnnotation annotation = database.getAnnotation(field, type);
             if (annotation != null) {
                 return annotation;
@@ -407,7 +407,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<ResolvedAnnotation> getAnnotations(@NonNull ResolvedField field) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(field);
             if (annotations != null) {
                 return annotations;
@@ -419,7 +419,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public Collection<ResolvedAnnotation> getAnnotations(@NonNull ResolvedAnnotation cls) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(cls);
             if (annotations != null) {
                 return annotations;
@@ -431,7 +431,7 @@ public class ExternalAnnotationRepository {
 
     @Nullable
     public ResolvedAnnotation getAnnotation(@NonNull ResolvedPackage pkg, @NonNull String type) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             ResolvedAnnotation annotation = database.getAnnotation(pkg, type);
             if (annotation != null) {
                 return annotation;
@@ -442,7 +442,7 @@ public class ExternalAnnotationRepository {
     }
     @Nullable
     public Collection<ResolvedAnnotation> getAnnotations(@NonNull ResolvedPackage pkg) {
-        for (AnnotationsDatabase database : mDatabases) {
+        for (AnnotationsDatabase database : databases) {
             Collection<ResolvedAnnotation> annotations = database.getAnnotations(pkg);
             if (annotations != null) {
                 return annotations;

@@ -44,9 +44,9 @@ import java.util.Set;
  */
 @Beta
 public abstract class IssueRegistry {
-    private static volatile List<Category> sCategories;
-    private static volatile Map<String, Issue> sIdToIssue;
-    private static Map<EnumSet<Scope>, List<Issue>> sScopeIssues = Maps.newHashMap();
+    private static volatile List<Category> categories;
+    private static volatile Map<String, Issue> idToIssue;
+    private static Map<EnumSet<Scope>, List<Issue>> scopeIssues = Maps.newHashMap();
 
     /**
      * Creates a new {@linkplain IssueRegistry}
@@ -163,7 +163,7 @@ public abstract class IssueRegistry {
      */
     @NonNull
     protected List<Issue> getIssuesForScope(@NonNull EnumSet<Scope> scope) {
-        List<Issue> list = sScopeIssues.get(scope);
+        List<Issue> list = scopeIssues.get(scope);
         if (list == null) {
             List<Issue> issues = getIssues();
             if (scope.equals(Scope.ALL)) {
@@ -177,7 +177,7 @@ public abstract class IssueRegistry {
                     }
                 }
             }
-            sScopeIssues.put(scope, list);
+            scopeIssues.put(scope, list);
         }
 
         return list;
@@ -303,12 +303,12 @@ public abstract class IssueRegistry {
     @SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
     @NonNull
     public List<Category> getCategories() {
-        List<Category> categories = sCategories;
+        List<Category> categories = IssueRegistry.categories;
         if (categories == null) {
             synchronized (IssueRegistry.class) {
-                categories = sCategories;
+                categories = IssueRegistry.categories;
                 if (categories == null) {
-                    sCategories = categories = Collections.unmodifiableList(createCategoryList());
+                    IssueRegistry.categories = categories = Collections.unmodifiableList(createCategoryList());
                 }
             }
         }
@@ -336,13 +336,13 @@ public abstract class IssueRegistry {
     @SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
     @Nullable
     public final Issue getIssue(@NonNull String id) {
-        Map<String, Issue> map = sIdToIssue;
+        Map<String, Issue> map = idToIssue;
         if (map == null) {
             synchronized (IssueRegistry.class) {
-                map = sIdToIssue;
+                map = idToIssue;
                 if (map == null) {
                     map = createIdToIssueMap();
-                    sIdToIssue = map;
+                    idToIssue = map;
                 }
             }
         }
@@ -368,8 +368,8 @@ public abstract class IssueRegistry {
      * Reset the registry such that it recomputes its available issues.
      */
     protected static void reset() {
-        sIdToIssue = null;
-        sCategories = null;
-        sScopeIssues = Maps.newHashMap();
+        idToIssue = null;
+        categories = null;
+        scopeIssues = Maps.newHashMap();
     }
 }

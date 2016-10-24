@@ -279,7 +279,7 @@ public abstract class JavaEvaluator {
 
 
     /** Cache for {@link #findGroup(PsiElement)} */
-    private Map<String,String> mJarToGroup;
+    private Map<String,String> jarToGroup;
 
     /**
      * Return the Gradle group id for the given element, <b>if</b> applicable. For example, for
@@ -293,10 +293,10 @@ public abstract class JavaEvaluator {
         //          /appcompat-v7/25.0.0-SNAPSHOT/jars/classes.jar
         // and we want to pick out "com.android.support"
         if (jarFile != null) {
-            if (mJarToGroup == null) {
-                mJarToGroup = Maps.newHashMap();
+            if (jarToGroup == null) {
+                jarToGroup = Maps.newHashMap();
             }
-            String group = mJarToGroup.get(jarFile);
+            String group = jarToGroup.get(jarFile);
             if (group == null) {
                 int index = jarFile.indexOf("exploded-aar");
                 if (index != -1) {
@@ -312,7 +312,7 @@ public abstract class JavaEvaluator {
                 if (group == null) {
                     group = "";
                 }
-                mJarToGroup.put(jarFile, group);
+                jarToGroup.put(jarFile, group);
             }
             return group.isEmpty() ? null : group;
         }

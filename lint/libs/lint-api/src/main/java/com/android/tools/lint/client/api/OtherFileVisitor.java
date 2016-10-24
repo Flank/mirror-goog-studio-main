@@ -44,13 +44,13 @@ import java.util.Map;
  */
 class OtherFileVisitor {
     @NonNull
-    private final List<Detector> mDetectors;
+    private final List<Detector> detectors;
 
     @NonNull
-    private Map<Scope, List<File>> mFiles = new EnumMap<>(Scope.class);
+    private Map<Scope, List<File>> files = new EnumMap<>(Scope.class);
 
     OtherFileVisitor(@NonNull List<Detector> detectors) {
-        mDetectors = detectors;
+        this.detectors = detectors;
     }
 
     /** Analyze other files in the given project */
@@ -62,7 +62,7 @@ class OtherFileVisitor {
         File projectFolder = project.getDir();
 
         EnumSet<Scope> scopes = EnumSet.noneOf(Scope.class);
-        for (Detector detector : mDetectors) {
+        for (Detector detector : detectors) {
             OtherFileScanner fileScanner = (OtherFileScanner) detector;
             EnumSet<Scope> applicable = fileScanner.getApplicableFiles();
             if (applicable.contains(Scope.OTHER)) {
@@ -84,7 +84,7 @@ class OtherFileVisitor {
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.RESOURCE_FILE, files);
+                    this.files.put(Scope.RESOURCE_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -96,7 +96,7 @@ class OtherFileVisitor {
                     collectFiles(files, assets);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.RESOURCE_FILE, files);
+                    this.files.put(Scope.RESOURCE_FILE, files);
                 }
             }
         }
@@ -110,7 +110,7 @@ class OtherFileVisitor {
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.JAVA_FILE, files);
+                    this.files.put(Scope.JAVA_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -118,7 +118,7 @@ class OtherFileVisitor {
                     collectFiles(files, srcFolder);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.JAVA_FILE, files);
+                    this.files.put(Scope.JAVA_FILE, files);
                 }
             }
         }
@@ -132,7 +132,7 @@ class OtherFileVisitor {
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.CLASS_FILE, files);
+                    this.files.put(Scope.CLASS_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -140,7 +140,7 @@ class OtherFileVisitor {
                     collectFiles(files, classFolder);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.CLASS_FILE, files);
+                    this.files.put(Scope.CLASS_FILE, files);
                 }
             }
         }
@@ -154,21 +154,21 @@ class OtherFileVisitor {
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.MANIFEST, files);
+                    this.files.put(Scope.MANIFEST, files);
                 }
             } else {
                 List<File> manifestFiles = project.getManifestFiles();
                 if (manifestFiles != null) {
-                    mFiles.put(Scope.MANIFEST, manifestFiles);
+                    files.put(Scope.MANIFEST, manifestFiles);
                 }
             }
         }
 
-        for (Map.Entry<Scope, List<File>> entry : mFiles.entrySet()) {
+        for (Map.Entry<Scope, List<File>> entry : files.entrySet()) {
             Scope scope = entry.getKey();
             List<File> files = entry.getValue();
-            List<Detector> applicable = new ArrayList<>(mDetectors.size());
-            for (Detector detector : mDetectors) {
+            List<Detector> applicable = new ArrayList<>(detectors.size());
+            for (Detector detector : detectors) {
                 OtherFileScanner fileScanner = (OtherFileScanner) detector;
                 EnumSet<Scope> appliesTo = fileScanner.getApplicableFiles();
                 if (appliesTo.contains(Scope.OTHER) || appliesTo.contains(scope)) {

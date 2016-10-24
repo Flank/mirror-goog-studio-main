@@ -148,7 +148,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     return "unittest"; // Hardcode version to keep unit test output stable
                 }
             };
-            client.mFlags.setFullPath(true);
+            client.flags.setFullPath(true);
 
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();

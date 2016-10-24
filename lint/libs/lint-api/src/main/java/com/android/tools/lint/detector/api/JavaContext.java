@@ -75,19 +75,19 @@ public class JavaContext extends Context {
     /**
      * The parse tree
      *
-     * @deprecated Use {@link #mJavaFile} instead (see {@link JavaPsiScanner})
+     * @deprecated Use {@link #javaFile} instead (see {@link JavaPsiScanner})
      */
     @Deprecated
-    private Node mCompilationUnit;
+    private Node compilationUnit;
 
     /** The parse tree */
-    private PsiJavaFile mJavaFile;
+    private PsiJavaFile javaFile;
 
     /** The parser which produced the parse tree */
-    private final JavaParser mParser;
+    private final JavaParser parser;
 
     /** Whether this context is in a test source folder */
-    private boolean mTestSource;
+    private boolean testSource;
 
     /**
      * Constructs a {@link JavaContext} for running lint on the given file, with
@@ -110,7 +110,7 @@ public class JavaContext extends Context {
             @NonNull File file,
             @NonNull JavaParser parser) {
         super(driver, project, main, file);
-        mParser = parser;
+        this.parser = parser;
     }
 
     /**
@@ -121,7 +121,7 @@ public class JavaContext extends Context {
      */
     @NonNull
     public Location getLocation(@NonNull Node node) {
-        return mParser.getLocation(this, node);
+        return parser.getLocation(this, node);
     }
 
     /**
@@ -140,7 +140,7 @@ public class JavaContext extends Context {
             int fromDelta,
             @NonNull Node to,
             int toDelta) {
-        return mParser.getRangeLocation(this, from, fromDelta, to, toDelta);
+        return parser.getRangeLocation(this, from, fromDelta, to, toDelta);
     }
 
     /**
@@ -159,7 +159,7 @@ public class JavaContext extends Context {
             int fromDelta,
             @NonNull PsiElement to,
             int toDelta) {
-        return mParser.getRangeLocation(this, from, fromDelta, to, toDelta);
+        return parser.getRangeLocation(this, from, fromDelta, to, toDelta);
     }
 
     /**
@@ -173,7 +173,7 @@ public class JavaContext extends Context {
      */
     @NonNull
     public Location getNameLocation(@NonNull Node node) {
-        return mParser.getNameLocation(this, node);
+        return parser.getNameLocation(this, node);
     }
 
     /**
@@ -189,29 +189,29 @@ public class JavaContext extends Context {
     public Location getNameLocation(@NonNull PsiElement element) {
         if (element instanceof PsiSwitchStatement) {
             // Just use keyword
-            return mParser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
+            return parser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
         }
-        return mParser.getNameLocation(this, element);
+        return parser.getNameLocation(this, element);
     }
 
     @NonNull
     public Location getLocation(@NonNull PsiElement node) {
-        return mParser.getLocation(this, node);
+        return parser.getLocation(this, node);
     }
 
     @NonNull
     public JavaParser getParser() {
-        return mParser;
+        return parser;
     }
 
     @NonNull
     public JavaEvaluator getEvaluator() {
-        return mParser.getEvaluator();
+        return parser.getEvaluator();
     }
 
     @Nullable
     public Node getCompilationUnit() {
-        return mCompilationUnit;
+        return compilationUnit;
     }
 
     /**
@@ -221,7 +221,7 @@ public class JavaContext extends Context {
      * @param compilationUnit the parse tree
      */
     public void setCompilationUnit(@Nullable Node compilationUnit) {
-        mCompilationUnit = compilationUnit;
+        this.compilationUnit = compilationUnit;
     }
 
     /**
@@ -231,7 +231,7 @@ public class JavaContext extends Context {
      */
     @Nullable
     public PsiJavaFile getJavaFile() {
-        return mJavaFile;
+        return javaFile;
     }
 
     /**
@@ -241,13 +241,13 @@ public class JavaContext extends Context {
      * @param javaFile the parse tree
      */
     public void setJavaFile(@Nullable PsiJavaFile javaFile) {
-        mJavaFile = javaFile;
+        this.javaFile = javaFile;
     }
 
     @Override
     public void report(@NonNull Issue issue, @NonNull Location location,
             @NonNull String message) {
-        if (mDriver.isSuppressed(this, issue, mJavaFile)) {
+        if (driver.isSuppressed(this, issue, javaFile)) {
             return;
         }
         super.report(issue, location, message);
@@ -269,7 +269,7 @@ public class JavaContext extends Context {
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message) {
-        if (scope != null && mDriver.isSuppressed(this, issue, scope)) {
+        if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.report(issue, location, message);
@@ -280,7 +280,7 @@ public class JavaContext extends Context {
             @Nullable PsiElement scope,
             @NonNull Location location,
             @NonNull String message) {
-        if (scope != null && mDriver.isSuppressed(this, issue, scope)) {
+        if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.report(issue, location, message);
@@ -389,7 +389,7 @@ public class JavaContext extends Context {
     @Deprecated
     @NonNull
     public Location.Handle createLocationHandle(@NonNull Node node) {
-        return mParser.createLocationHandle(this, node);
+        return parser.createLocationHandle(this, node);
     }
 
     /**
@@ -399,7 +399,7 @@ public class JavaContext extends Context {
     @Deprecated
     @Nullable
     public ResolvedNode resolve(@NonNull Node node) {
-        return mParser.resolve(this, node);
+        return parser.resolve(this, node);
     }
 
     /**
@@ -408,7 +408,7 @@ public class JavaContext extends Context {
     @Deprecated
     @Nullable
     public ResolvedClass findClass(@NonNull String fullyQualifiedName) {
-        return mParser.findClass(this, fullyQualifiedName);
+        return parser.findClass(this, fullyQualifiedName);
     }
 
     /**
@@ -417,7 +417,7 @@ public class JavaContext extends Context {
     @Deprecated
     @Nullable
     public TypeDescriptor getType(@NonNull Node node) {
-        return mParser.getType(this, node);
+        return parser.getType(this, node);
     }
 
     /**
@@ -725,11 +725,11 @@ public class JavaContext extends Context {
 
     /** Whether this compilation unit is in a test folder */
     public boolean isTestSource() {
-        return mTestSource;
+        return testSource;
     }
 
     /** Sets whether this compilation unit is in a test folder */
     public void setTestSource(boolean testSource) {
-        mTestSource = testSource;
+        this.testSource = testSource;
     }
 }

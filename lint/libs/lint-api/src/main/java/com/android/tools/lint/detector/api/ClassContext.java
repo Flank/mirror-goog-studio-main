@@ -48,22 +48,22 @@ import org.objectweb.asm.tree.MethodNode;
  */
 @Beta
 public class ClassContext extends Context {
-    private final File mBinDir;
+    private final File binDir;
     /** The class file DOM root node */
-    private final ClassNode mClassNode;
+    private final ClassNode classNode;
     /** The class file byte data */
-    private final byte[] mBytes;
+    private final byte[] bytes;
     /** The source file, if known/found */
-    private File mSourceFile;
+    private File sourceFile;
     /** The contents of the source file, if source file is known/found */
-    private CharSequence mSourceContents;
+    private CharSequence sourceContents;
     /** Whether we've searched for the source file (used to avoid repeated failed searches) */
-    private boolean mSearchedForSource;
+    private boolean searchedForSource;
     /** If the file is a relative path within a jar file, this is the jar file, otherwise null */
-    private final File mJarFile;
+    private final File jarFile;
     /** Whether this class is part of a library (rather than corresponding to one of the
      * source files in this project */
-    private final boolean mFromLibrary;
+    private final boolean fromLibrary;
 
     /**
      * Construct a new {@link ClassContext}
@@ -97,12 +97,12 @@ public class ClassContext extends Context {
             boolean fromLibrary,
             @Nullable CharSequence sourceContents) {
         super(driver, project, main, file);
-        mJarFile = jarFile;
-        mBinDir = binDir;
-        mBytes = bytes;
-        mClassNode = classNode;
-        mFromLibrary = fromLibrary;
-        mSourceContents = sourceContents;
+        this.jarFile = jarFile;
+        this.binDir = binDir;
+        this.bytes = bytes;
+        this.classNode = classNode;
+        this.fromLibrary = fromLibrary;
+        this.sourceContents = sourceContents;
     }
 
     /**
@@ -112,7 +112,7 @@ public class ClassContext extends Context {
      */
     @NonNull
     public byte[] getBytecode() {
-        return mBytes;
+        return bytes;
     }
 
     /**
@@ -122,7 +122,7 @@ public class ClassContext extends Context {
      */
     @NonNull
     public ClassNode getClassNode() {
-        return mClassNode;
+        return classNode;
     }
 
     /**
@@ -133,7 +133,7 @@ public class ClassContext extends Context {
      */
     @Nullable
     public File getJarFile() {
-        return mJarFile;
+        return jarFile;
     }
 
     /**
@@ -142,7 +142,7 @@ public class ClassContext extends Context {
      * @return true if this class is part of a library
      */
     public boolean isFromClassLibrary() {
-        return mFromLibrary;
+        return fromLibrary;
     }
 
     /**
@@ -152,10 +152,10 @@ public class ClassContext extends Context {
      */
     @Nullable
     public File getSourceFile() {
-        if (mSourceFile == null && !mSearchedForSource) {
-            mSearchedForSource = true;
+        if (sourceFile == null && !searchedForSource) {
+            searchedForSource = true;
 
-            String source = mClassNode.sourceFile;
+            String source = classNode.sourceFile;
             if (source == null) {
                 source = file.getName();
                 if (source.endsWith(DOT_CLASS)) {
@@ -166,19 +166,19 @@ public class ClassContext extends Context {
                     source = source.substring(0, index) + DOT_JAVA;
                 }
             }
-            if (mJarFile != null) {
+            if (jarFile != null) {
                 String relative = file.getParent() + File.separator + source;
                 List<File> sources = getProject().getJavaSourceFolders();
                 for (File dir : sources) {
                     File sourceFile = new File(dir, relative);
                     if (sourceFile.exists()) {
-                        mSourceFile = sourceFile;
+                        this.sourceFile = sourceFile;
                         break;
                     }
                 }
             } else {
                 // Determine package
-                String topPath = mBinDir.getPath();
+                String topPath = binDir.getPath();
                 String parentPath = file.getParentFile().getPath();
                 if (parentPath.startsWith(topPath)) {
                     int start = topPath.length() + 1;
@@ -188,7 +188,7 @@ public class ClassContext extends Context {
                     for (File dir : sources) {
                         File sourceFile = new File(dir, relative + File.separator + source);
                         if (sourceFile.exists()) {
-                            mSourceFile = sourceFile;
+                            this.sourceFile = sourceFile;
                             break;
                         }
                     }
@@ -196,7 +196,7 @@ public class ClassContext extends Context {
             }
         }
 
-        return mSourceFile;
+        return sourceFile;
     }
 
     /**
@@ -206,18 +206,18 @@ public class ClassContext extends Context {
      */
     @NonNull
     public CharSequence getSourceContents() {
-        if (mSourceContents == null) {
+        if (sourceContents == null) {
             File sourceFile = getSourceFile();
             if (sourceFile != null) {
-                mSourceContents = getClient().readFile(sourceFile);
+                sourceContents = getClient().readFile(sourceFile);
             }
 
-            if (mSourceContents == null) {
-                mSourceContents = "";
+            if (sourceContents == null) {
+                sourceContents = "";
             }
         }
 
-        return mSourceContents;
+        return sourceContents;
     }
 
     /**
@@ -238,7 +238,7 @@ public class ClassContext extends Context {
         if (read) {
             return getSourceContents();
         } else {
-            return mSourceContents;
+            return sourceContents;
         }
     }
 
@@ -291,13 +291,13 @@ public class ClassContext extends Context {
             @NonNull Issue issue,
             @NonNull Location location,
             @NonNull String message) {
-        if (mDriver.isSuppressed(issue, mClassNode)) {
+        if (driver.isSuppressed(issue, classNode)) {
             return;
         }
-        ClassNode curr = mClassNode;
+        ClassNode curr = classNode;
         while (curr != null) {
             ClassNode prev = curr;
-            curr = mDriver.getOuterClassNode(curr);
+            curr = driver.getOuterClassNode(curr);
             if (curr != null) {
                 if (prev.outerMethod != null) {
                     @SuppressWarnings("rawtypes") // ASM API
@@ -309,7 +309,7 @@ public class ClassContext extends Context {
                             // Found the outer method for this anonymous class; continue
                             // reporting on it (which will also work its way up the parent
                             // class hierarchy)
-                            if (method != null && mDriver.isSuppressed(issue, mClassNode, method,
+                            if (method != null && driver.isSuppressed(issue, classNode, method,
                                     null)) {
                                 return;
                             }
@@ -317,7 +317,7 @@ public class ClassContext extends Context {
                         }
                     }
                 }
-                if (mDriver.isSuppressed(issue, curr)) {
+                if (driver.isSuppressed(issue, curr)) {
                     return;
                 }
             }
@@ -355,7 +355,7 @@ public class ClassContext extends Context {
             @Nullable AbstractInsnNode instruction,
             @NonNull Location location,
             @NonNull String message) {
-        if (method != null && mDriver.isSuppressed(issue, mClassNode, method, instruction)) {
+        if (method != null && driver.isSuppressed(issue, classNode, method, instruction)) {
             return;
         }
         report(issue, location, message); // also checks the class node
@@ -376,7 +376,7 @@ public class ClassContext extends Context {
             @Nullable FieldNode field,
             @NonNull Location location,
             @NonNull String message) {
-        if (field != null && mDriver.isSuppressed(issue, field)) {
+        if (field != null && driver.isSuppressed(issue, field)) {
             return;
         }
         report(issue, location, message); // also checks the class node

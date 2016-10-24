@@ -57,25 +57,25 @@ class JarFileIssueRegistry extends IssueRegistry {
     private static final String MF_LINT_REGISTRY_OLD = "Lint-Registry";
     private static final String MF_LINT_REGISTRY = "Lint-Registry-v2";
 
-    private static Map<File, SoftReference<JarFileIssueRegistry>> sCache;
+    private static Map<File, SoftReference<JarFileIssueRegistry>> cache;
 
-    private final List<Issue> myIssues;
+    private final List<Issue> issues;
 
-    private boolean mHasLegacyDetectors;
+    private boolean hasLegacyDetectors;
 
     /** True if one or more java detectors were found that use the old Lombok-based API */
     public boolean hasLegacyDetectors() {
-        return mHasLegacyDetectors;
+        return hasLegacyDetectors;
     }
 
     @NonNull
     static JarFileIssueRegistry get(@NonNull LintClient client, @NonNull File jarFile)
             throws IOException, ClassNotFoundException, IllegalAccessException,
             InstantiationException {
-        if (sCache == null) {
-           sCache = new HashMap<>();
+        if (cache == null) {
+           cache = new HashMap<>();
         } else {
-            SoftReference<JarFileIssueRegistry> reference = sCache.get(jarFile);
+            SoftReference<JarFileIssueRegistry> reference = cache.get(jarFile);
             if (reference != null) {
                 JarFileIssueRegistry registry = reference.get();
                 if (registry != null) {
@@ -88,14 +88,14 @@ class JarFileIssueRegistry extends IssueRegistry {
         IssueRegistry.reset();
 
         JarFileIssueRegistry registry = new JarFileIssueRegistry(client, jarFile);
-        sCache.put(jarFile, new SoftReference<>(registry));
+        cache.put(jarFile, new SoftReference<>(registry));
         return registry;
     }
 
     private JarFileIssueRegistry(@NonNull LintClient client, @NonNull File file)
             throws IOException, ClassNotFoundException, IllegalAccessException,
                     InstantiationException {
-        myIssues = Lists.newArrayList();
+        issues = Lists.newArrayList();
         JarFile jarFile = null;
         try {
             //noinspection IOResourceOpenedButNotSafelyClosed
@@ -109,7 +109,7 @@ class JarFileIssueRegistry extends IssueRegistry {
                 //noinspection VariableNotUsedInsideIf
                 if (object != null) {
                     // It's an old rule. We don't yet conclude that
-                    //   mHasLegacyDetectors=true
+                    //   hasLegacyDetectors=true
                     // because the lint checks may not be Java related.
                     isLegacy = true;
                 }
@@ -122,16 +122,16 @@ class JarFileIssueRegistry extends IssueRegistry {
                         JarFileIssueRegistry.class.getClassLoader());
                 Class<?> registryClass = Class.forName(className, true, loader);
                 IssueRegistry registry = (IssueRegistry) registryClass.newInstance();
-                myIssues.addAll(registry.getIssues());
+                issues.addAll(registry.getIssues());
 
                 if (isLegacy) {
                     // If it's an old registry, look through the issues to see if it
                     // provides Java scanning and if so create the old style visitors
-                    for (Issue issue : myIssues) {
+                    for (Issue issue : issues) {
                         EnumSet<Scope> scope = issue.getImplementation().getScope();
                         if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.JAVA_LIBRARIES)
                                 || scope.contains(Scope.ALL_JAVA_FILES)) {
-                            mHasLegacyDetectors = true;
+                            hasLegacyDetectors = true;
                             break;
                         }
                     }
@@ -224,6 +224,6 @@ class JarFileIssueRegistry extends IssueRegistry {
     @NonNull
     @Override
     public List<Issue> getIssues() {
-        return myIssues;
+        return issues;
     }
 }

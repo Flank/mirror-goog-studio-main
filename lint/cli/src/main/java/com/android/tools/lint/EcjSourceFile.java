@@ -28,12 +28,12 @@ import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
  * on char[]'s exclusively, whereas for PSI we'll need Strings) and serve it back quickly.
  */
 public class EcjSourceFile extends CompilationUnit {
-    private File mFile;
+    private File file;
 
     private EcjSourceFile(@NonNull char[] source, @NonNull String path,
             @NonNull String encoding, @NonNull File file) {
         super(source, path, encoding);
-        mFile = file;
+        this.file = file;
     }
 
     @NonNull
@@ -45,7 +45,7 @@ public class EcjSourceFile extends CompilationUnit {
 
     @NonNull
     public File getFile() {
-        return mFile;
+        return file;
     }
 
 

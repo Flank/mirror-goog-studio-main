@@ -28,9 +28,9 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 public final class Category implements Comparable<Category> {
-    private final String mName;
-    private final int mPriority;
-    private final Category mParent;
+    private final String name;
+    private final int priority;
+    private final Category parent;
 
     /**
      * Creates a new {@link Category}.
@@ -43,9 +43,9 @@ public final class Category implements Comparable<Category> {
             @Nullable Category parent,
             @NonNull String name,
             int priority) {
-        mParent = parent;
-        mName = name;
-        mPriority = priority;
+        this.parent = parent;
+        this.name = name;
+        this.priority = priority;
     }
 
     /**
@@ -79,7 +79,7 @@ public final class Category implements Comparable<Category> {
      * @return the parent category, or null if this is a top level category
      */
     public Category getParent() {
-        return mParent;
+        return parent;
     }
 
     /**
@@ -88,7 +88,7 @@ public final class Category implements Comparable<Category> {
      * @return the name of this category
      */
     public String getName() {
-        return mName;
+        return name;
     }
 
     /**
@@ -99,10 +99,10 @@ public final class Category implements Comparable<Category> {
      * @return a full name for this category
      */
     public String getFullName() {
-        if (mParent != null) {
-            return mParent.getFullName() + ':' + mName;
+        if (parent != null) {
+            return parent.getFullName() + ':' + name;
         } else {
-            return mName;
+            return name;
         }
     }
 
@@ -118,10 +118,10 @@ public final class Category implements Comparable<Category> {
         Category category = (Category) o;
 
         //noinspection SimplifiableIfStatement
-        if (!mName.equals(category.mName)) {
+        if (!name.equals(category.name)) {
             return false;
         }
-        return mParent != null ? mParent.equals(category.mParent) : category.mParent == null;
+        return parent != null ? parent.equals(category.parent) : category.parent == null;
 
     }
 
@@ -132,25 +132,25 @@ public final class Category implements Comparable<Category> {
 
     @Override
     public int hashCode() {
-        return mName.hashCode();
+        return name.hashCode();
     }
 
     @Override
     public int compareTo(@NonNull Category other) {
-        if (other.mPriority == mPriority) {
-            if (mParent == other) {
+        if (other.priority == priority) {
+            if (parent == other) {
                 return 1;
-            } else if (other.mParent == this) {
+            } else if (other.parent == this) {
                 return -1;
             }
         }
 
-        int delta = other.mPriority - mPriority;
+        int delta = other.priority - priority;
         if (delta != 0) {
             return delta;
         }
 
-        return mName.compareTo(other.mName);
+        return name.compareTo(other.name);
     }
 
     /** Issues related to running lint itself */
