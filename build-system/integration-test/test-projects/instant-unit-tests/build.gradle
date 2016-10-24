@@ -19,19 +19,12 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply from: "../commonLocalRepo.gradle"
 
 def env = new Object() {
-    Object project = new Object() {
-        Object ext = new Object() {
-            String buildVersion
-            String baseVersion
-            String apiVersion
-            String nativeApiVersion
-            String experimentalVersion
-            String experimentalGradleVersion
-            String versionModifier
-        }
-    }
+    String baseVersion
+    String buildVersion
+    String experimentalVersion
+    String experimentalGradleVersion
 }
-apply from: "$System.env.CUSTOM_REPO/../../tools/buildSrc/base/version.gradle", to: env
+apply from: "../commonGradlePluginVersion.gradle", to: env
 
 
 import com.android.utils.FileUtils
@@ -80,7 +73,7 @@ if (!instantRunServer.exists()) {
 }
 
 dependencies {
-    compile 'com.android.tools:annotations:' + env.project.ext.baseVersion
+    compile 'com.android.tools:annotations:' + env.baseVersion
     compile 'com.google.guava:guava:17.0'
     compile files(instantRunServer)
     compile files("build/incremental-test-classes-jar/instrumentedBaseClasses.jar")
