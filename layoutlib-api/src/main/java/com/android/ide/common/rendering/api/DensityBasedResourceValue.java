@@ -16,21 +16,20 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.layoutlib.api.IDensityBasedResourceValue;
+import com.android.resources.Density;
 import com.android.resources.ResourceType;
 
-@SuppressWarnings("deprecation")
-public class DensityBasedResourceValue extends ResourceValue implements IDensityBasedResourceValue {
+public class DensityBasedResourceValue extends ResourceValue {
 
-    private com.android.resources.Density mDensity;
+    private Density mDensity;
 
     public DensityBasedResourceValue(ResourceType type, String name, String value,
-            com.android.resources.Density density, boolean isFramework) {
+            Density density, boolean isFramework) {
         this(type, name, value, density, isFramework, null);
     }
 
     public DensityBasedResourceValue(ResourceType type, String name, String value,
-            com.android.resources.Density density, boolean isFramework, String libraryName) {
+            Density density, boolean isFramework, String libraryName) {
         super(type, name, value, isFramework, libraryName);
         mDensity = density;
     }
@@ -39,17 +38,8 @@ public class DensityBasedResourceValue extends ResourceValue implements IDensity
      * Returns the density for which this resource is configured.
      * @return the density.
      */
-    public com.android.resources.Density getResourceDensity() {
+    public Density getResourceDensity() {
         return mDensity;
-    }
-
-    /** Legacy method, do not call
-     * @deprecated use {@link #getResourceDensity()} instead.
-     */
-    @Override
-    @Deprecated
-    public Density getDensity() {
-        return Density.getEnum(mDensity.getDpiValue());
     }
 
     @Override

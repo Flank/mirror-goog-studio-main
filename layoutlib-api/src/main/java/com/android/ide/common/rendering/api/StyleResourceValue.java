@@ -17,8 +17,6 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.ide.common.rendering.api.ItemResourceValue.Attribute;
-import com.android.layoutlib.api.IResourceValue;
-import com.android.layoutlib.api.IStyleResourceValue;
 import com.android.resources.ResourceType;
 
 import java.util.ArrayList;
@@ -30,12 +28,11 @@ import java.util.Map;
 /**
  * Represents an android style resource with a name and a list of children {@link ResourceValue}.
  */
-@SuppressWarnings("deprecation")
-public final class StyleResourceValue extends ResourceValue implements IStyleResourceValue {
+public final class StyleResourceValue extends ResourceValue {
 
     private String mParentStyle = null;
     private final Map<Attribute, ItemResourceValue> mItems
-            = new HashMap<Attribute, ItemResourceValue>();
+            = new HashMap<>();
 
     public StyleResourceValue(ResourceType type, String name, boolean isFramework) {
         this(type, name, isFramework, null);
@@ -58,7 +55,6 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
     /**
      * Returns the parent style name or <code>null</code> if unknown.
      */
-    @Override
     public String getParentStyle() {
         return mParentStyle;
     }
@@ -119,19 +115,9 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
         }
     }
 
-    /**
-     * Legacy method.
-     * @deprecated use {@link #getValue()}
-     */
-    @Override
-    @Deprecated
-    public IResourceValue findItem(String name) {
-        return mItems.get(new Attribute(name, true));
-    }
-
     /** Returns the names available in this style, intended for diagnostic purposes */
     public List<String> getNames() {
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for (Attribute item : mItems.keySet()) {
             String name = item.mName;
             if (item.mIsFrameworkAttr) {

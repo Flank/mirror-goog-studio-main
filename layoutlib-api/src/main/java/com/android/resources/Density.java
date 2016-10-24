@@ -101,14 +101,6 @@ public enum Density implements ResourceEnum {
         return mSince;
     }
 
-    public String getLegacyValue() {
-        if (this != NODPI && this != ANYDPI) {
-            return String.format("%1$ddpi", getDpiValue());
-        }
-
-        return "";
-    }
-
     @Override
     public String getShortDisplayValue() {
         return mDisplayValue;
