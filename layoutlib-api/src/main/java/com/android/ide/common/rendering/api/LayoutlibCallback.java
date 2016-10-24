@@ -29,13 +29,9 @@ import org.xmlpull.v1.XmlPullParser;
  * <p>
  * Even newer LayoutLibs use this directly instead of the the interface. This allows the flexibility
  * to add newer methods without having to update {@link Bridge#API_CURRENT LayoutLib API version}.
- * <p>
- * Clients should use this instead of {@link IProjectCallback} to target both old and new
- * Layout Libraries.
  */
-@SuppressWarnings({"deprecation", "MethodMayBeStatic", "unused"})
-public abstract class LayoutlibCallback implements IProjectCallback,
-        com.android.layoutlib.api.IProjectCallback {
+@SuppressWarnings({"MethodMayBeStatic", "unused"})
+public abstract class LayoutlibCallback implements IProjectCallback {
 
     /**
      * Like {@link #loadView(String, Class[], Object[])}, but intended for loading classes that may
@@ -117,12 +113,10 @@ public abstract class LayoutlibCallback implements IProjectCallback,
 
     // ------ implementation of the old interface using the new interface.
 
-    @Override
     public final Integer getResourceValue(String type, String name) {
         return getResourceId(ResourceType.getEnum(type), name);
     }
 
-    @Override
     public final String[] resolveResourceValue(int id) {
         Pair<ResourceType, String> info = resolveResourceId(id);
         if (info != null) {
@@ -132,7 +126,6 @@ public abstract class LayoutlibCallback implements IProjectCallback,
         return null;
     }
 
-    @Override
     public final String resolveResourceValue(int[] id) {
         return resolveResourceId(id);
     }

@@ -17,14 +17,12 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.Nullable;
-import com.android.layoutlib.api.IResourceValue;
 import com.android.resources.ResourceType;
 
 /**
  * Represents an android resource with a name and a string value.
  */
-@SuppressWarnings("deprecation")
-public class ResourceValue extends ResourceReference implements IResourceValue {
+public class ResourceValue extends ResourceReference {
     private final ResourceType mType;
     private final String mLibraryName;
     protected String mValue;
@@ -55,16 +53,6 @@ public class ResourceValue extends ResourceReference implements IResourceValue {
     }
 
     /**
-     * Returns the type of the resource. For instance "drawable", "color", etc...
-     * @deprecated use {@link #getResourceType()} instead.
-     */
-    @Override
-    @Deprecated
-    public String getType() {
-        return mType.getName();
-    }
-
-    /**
      * Returns the name of the library where this resource was found or null if it is not from a library.
      */
     public String getLibraryName() {
@@ -82,7 +70,6 @@ public class ResourceValue extends ResourceReference implements IResourceValue {
      * Returns the value of the resource, as defined in the XML. This can be <code>null</code>,
      * for example for instances of {@link StyleResourceValue}.
      */
-    @Override
     @Nullable
     public String getValue() {
         return mValue;

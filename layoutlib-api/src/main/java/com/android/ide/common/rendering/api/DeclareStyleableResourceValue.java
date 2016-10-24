@@ -20,9 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A Resource value representing a declare-styleable resource.
@@ -32,12 +30,8 @@ import java.util.Map;
  */
 public class DeclareStyleableResourceValue extends ResourceValue {
 
-    /** Used only for {@link #getAttributeValues(String)}, which is used only by old LayoutLibs. */
-    @Deprecated
-    private Map<String, AttrResourceValue> mAttrMap;
-
     @NonNull
-    private List<AttrResourceValue> mAttrs = new ArrayList<AttrResourceValue>();
+    private List<AttrResourceValue> mAttrs = new ArrayList<>();
 
     public DeclareStyleableResourceValue(@NonNull ResourceType type, @NonNull String name,
             boolean isFramework) {
@@ -48,32 +42,6 @@ public class DeclareStyleableResourceValue extends ResourceValue {
             boolean isFramework, String libraryName) {
         super(type, name, isFramework, libraryName);
         assert type == ResourceType.DECLARE_STYLEABLE;
-    }
-
-    /**
-     * Return the enum/flag integer value for a given attribute.
-     *
-     * @param name the name of the attribute
-     * @return the map of (name, integer) values.
-     * @deprecated the method doesn't respect namespaces and is only present for older versions
-     *             of LayoutLibs.
-     */
-    @Deprecated
-    public Map<String, Integer> getAttributeValues(String name) {
-        if (mAttrMap == null && !mAttrs.isEmpty()) {
-            // Preserve insertion order. This order affects the int[] indices for styleables.
-            mAttrMap = new LinkedHashMap<String, AttrResourceValue>(mAttrs.size());
-            for (AttrResourceValue attr : mAttrs) {
-                mAttrMap.put(attr.getName(), attr);
-            }
-        }
-        if (mAttrMap != null) {
-            AttrResourceValue attr = mAttrMap.get(name);
-            if (attr != null) {
-                return attr.getAttributeValues();
-            }
-        }
-        return null;
     }
 
     @NonNull
