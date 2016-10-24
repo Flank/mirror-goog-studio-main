@@ -28,13 +28,11 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiType;
-
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-
-import java.util.List;
 
 class EcjPsiJavaCodeReferenceElement extends EcjPsiSourceElement
         implements PsiJavaCodeReferenceElement {

@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiConditionalExpression extends EcjPsiExpression implements

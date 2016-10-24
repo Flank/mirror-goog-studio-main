@@ -23,7 +23,6 @@ import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiSynchronizedStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiSynchronizedStatement extends EcjPsiStatement implements

@@ -35,7 +35,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class SetTextDetector extends Detector implements JavaPsiScanner {
 
     /** Constructing SimpleDateFormat without an explicit locale */
     public static final Issue SET_TEXT_I18N = Issue.create(
-            "SetTextI18n", //$NON-NLS-1$
+            "SetTextI18n",
             "TextView Internationalization",
 
             "When calling `TextView#setText`\n"  +

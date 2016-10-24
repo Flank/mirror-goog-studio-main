@@ -38,7 +38,6 @@ import com.android.tools.lint.detector.api.Speed;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -69,7 +68,7 @@ public class UnsafeNativeCodeDetector extends Detector implements JavaPsiScanner
             IMPLEMENTATION);
 
     public static final Issue UNSAFE_NATIVE_CODE_LOCATION = Issue.create(
-            "UnsafeNativeCodeLocation", //$NON-NLS-1$
+            "UnsafeNativeCodeLocation",
             "Native code outside library directory",
             "In general, application native code should only be placed in the application's " +
             "library directory, not in other locations such as the res or assets directories. " +
@@ -84,8 +83,8 @@ public class UnsafeNativeCodeDetector extends Detector implements JavaPsiScanner
             Severity.WARNING,
             IMPLEMENTATION);
 
-    private static final String RUNTIME_CLASS = "java.lang.Runtime"; //$NON-NLS-1$
-    private static final String SYSTEM_CLASS = "java.lang.System"; //$NON-NLS-1$
+    private static final String RUNTIME_CLASS = "java.lang.Runtime";
+    private static final String SYSTEM_CLASS = "java.lang.System";
 
     private static final byte[] ELF_MAGIC_VALUE = { (byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46 };
 
@@ -146,13 +145,10 @@ public class UnsafeNativeCodeDetector extends Detector implements JavaPsiScanner
         }
 
         try {
-            FileInputStream fis = new FileInputStream(file);
-            try {
+            try (FileInputStream fis = new FileInputStream(file)) {
                 byte[] bytes = new byte[4];
                 int length = fis.read(bytes);
                 return (length == 4) && (Arrays.equals(ELF_MAGIC_VALUE, bytes));
-            } finally {
-                fis.close();
             }
         } catch (IOException ex) {
             return false;

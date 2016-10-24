@@ -19,7 +19,6 @@ package com.android.tools.lint.psi;
 import com.android.annotations.NonNull;
 import com.intellij.psi.PsiEnumConstant;
 import com.intellij.psi.PsiEnumConstantInitializer;
-
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 class EcjPsiEnumConstantInitializer extends EcjPsiAnonymousClass implements PsiEnumConstantInitializer {

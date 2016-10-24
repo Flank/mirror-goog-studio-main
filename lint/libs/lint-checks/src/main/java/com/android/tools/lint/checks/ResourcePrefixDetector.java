@@ -40,13 +40,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.VisibleForTesting;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Ensure that resources in Gradle projects which specify a resource prefix
@@ -59,7 +57,7 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "ResourceName", //$NON-NLS-1$
+            "ResourceName",
             "Resource with Wrong Prefix",
             "In Gradle projects you can specify a resource prefix that all resources " +
             "in the project must conform to. This makes it easier to ensure that you don't " +

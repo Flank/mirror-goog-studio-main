@@ -17,11 +17,9 @@
 package com.android.tools.lint.detector.api;
 
 import com.android.tools.lint.checks.AccessibilityDetector;
-
-import junit.framework.TestCase;
-
 import java.util.Arrays;
 import java.util.Collections;
+import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class IssueTest extends TestCase {

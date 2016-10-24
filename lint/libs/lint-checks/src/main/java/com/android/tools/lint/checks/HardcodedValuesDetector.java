@@ -35,11 +35,9 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.w3c.dom.Attr;
 
 /**
  * Check which looks at the children of ScrollViews and ensures that they fill/match
@@ -51,7 +49,7 @@ import java.util.Collection;
 public class HardcodedValuesDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "HardcodedText", //$NON-NLS-1$
+            "HardcodedText",
             "Hardcoded text",
 
             "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +

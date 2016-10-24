@@ -21,7 +21,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiElementVisitor;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiArrayInitializerMemberValue extends EcjPsiSourceElement implements

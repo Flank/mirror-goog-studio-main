@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
@@ -46,9 +45,9 @@ import java.util.List;
  */
 @Beta
 public class TextReporter extends Reporter {
-    private final Writer mWriter;
-    private final boolean mClose;
-    private final LintCliFlags mFlags;
+    private final Writer writer;
+    private final boolean close;
+    private final LintCliFlags flags;
 
     /**
      * Constructs a new {@link TextReporter}
@@ -75,30 +74,30 @@ public class TextReporter extends Reporter {
     public TextReporter(@NonNull LintCliClient client, @NonNull LintCliFlags flags,
             @Nullable File file, @NonNull Writer writer, boolean close) {
         super(client, file);
-        mFlags = flags;
-        mWriter = writer;
-        mClose = close;
+        this.flags = flags;
+        this.writer = writer;
+        this.close = close;
     }
 
     @Override
     public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
-        boolean abbreviate = !mFlags.isShowEverything();
+        boolean abbreviate = !flags.isShowEverything();
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.isEmpty()) {
-            if (mDisplayEmpty) {
-                mWriter.write("No issues found");
+            if (displayEmpty) {
+                writer.write("No issues found");
                 if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
-                    File baselineFile = mFlags.getBaselineFile();
+                    File baselineFile = flags.getBaselineFile();
                     assert baselineFile != null;
-                    mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+                    writer.write(String.format(" (%1$s filtered by baseline %2$s)",
                             describeCounts(stats.baselineErrorCount, stats.baselineWarningCount,
                                     true),
                             baselineFile.getName()));
                 }
-                mWriter.write('.');
-                mWriter.write('\n');
-                mWriter.flush();
+                writer.write('.');
+                writer.write('\n');
+                writer.flush();
             }
         } else {
             Issue lastIssue = null;
@@ -152,8 +151,8 @@ public class TextReporter extends Reporter {
                     while (location != null) {
                         if (location.getMessage() != null
                                 && !location.getMessage().isEmpty()) {
-                            output.append("    "); //$NON-NLS-1$
-                            String path = mClient.getDisplayPath(warning.project,
+                            output.append("    ");
+                            String path = client.getDisplayPath(warning.project,
                                     location.getFile());
                             output.append(path);
 
@@ -193,7 +192,7 @@ public class TextReporter extends Reporter {
                                     sb.append(", ");
                                 }
 
-                                String path = mClient.getDisplayPath(warning.project,
+                                String path = client.getDisplayPath(warning.project,
                                         location.getFile());
                                 sb.append(path);
 
@@ -209,7 +208,7 @@ public class TextReporter extends Reporter {
 
                             location = location.getSecondary();
                         }
-                        String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     "); //$NON-NLS-1$
+                        String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     ");
                         output.append(wrapped);
                     }
                 }
@@ -229,25 +228,25 @@ public class TextReporter extends Reporter {
             }
             explainIssue(output, lastIssue);
 
-            mWriter.write(output.toString());
+            writer.write(output.toString());
 
             // TODO: Update to using describeCounts
-            mWriter.write(String.format("%1$d errors, %2$d warnings",
+            writer.write(String.format("%1$d errors, %2$d warnings",
                     stats.errorCount, stats.warningCount));
             if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
-                File baselineFile = mFlags.getBaselineFile();
+                File baselineFile = flags.getBaselineFile();
                 assert baselineFile != null;
-                mWriter.write(String.format(" (%1$s filtered by baseline %2$s)",
+                writer.write(String.format(" (%1$s filtered by baseline %2$s)",
                         describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, true),
                         baselineFile.getName()));
             }
-            mWriter.write('\n');
-            mWriter.flush();
-            if (mClose) {
-                mWriter.close();
+            writer.write('\n');
+            writer.flush();
+            if (close) {
+                writer.close();
 
-                if (!mClient.getFlags().isQuiet() && mOutput != null) {
-                    String path = mOutput.getAbsolutePath();
+                if (!client.getFlags().isQuiet() && this.output != null) {
+                    String path = this.output.getAbsolutePath();
                     System.out.println(String.format("Wrote text report to %1$s", path));
                 }
             }
@@ -256,7 +255,7 @@ public class TextReporter extends Reporter {
 
     private void explainIssue(@NonNull StringBuilder output, @Nullable Issue issue)
             throws IOException {
-        if (issue == null || !mFlags.isExplainIssues() || issue == IssueRegistry.LINT_ERROR) {
+        if (issue == null || !flags.isExplainIssues() || issue == IssueRegistry.LINT_ERROR) {
             return;
         }
 
@@ -292,6 +291,6 @@ public class TextReporter extends Reporter {
     }
 
     boolean isWriteToConsole() {
-        return mOutput == null;
+        return output == null;
     }
 }

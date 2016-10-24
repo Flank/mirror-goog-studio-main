@@ -22,7 +22,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiPackageStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 class EcjPsiPackageStatement extends EcjPsiSourceElement implements PsiPackageStatement {

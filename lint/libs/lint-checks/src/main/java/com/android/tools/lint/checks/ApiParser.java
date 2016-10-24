@@ -17,12 +17,11 @@
 package com.android.tools.lint.checks;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Parser for the simplified XML API format version 1.
@@ -40,8 +39,8 @@ public class ApiParser extends DefaultHandler {
     private static final String ATTR_SINCE = "since";
     private static final String ATTR_DEPRECATED = "deprecated";
 
-    private final Map<String, ApiClass> mClasses = new HashMap<String, ApiClass>(1000);
-    private final Map<String, ApiPackage> mPackages = new HashMap<String, ApiPackage>();
+    private final Map<String, ApiClass> mClasses = new HashMap<>(1000);
+    private final Map<String, ApiPackage> mPackages = new HashMap<>();
 
     private ApiClass mCurrentClass;
 

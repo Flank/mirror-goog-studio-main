@@ -29,7 +29,6 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -53,14 +52,14 @@ public class Context {
     public final File file;
 
     /** The driver running through the checks */
-    protected final LintDriver mDriver;
+    protected final LintDriver driver;
 
     /** The project containing the file being checked */
     @NonNull
-    private final Project mProject;
+    private final Project project;
 
     /**
-     * The "main" project. For normal projects, this is the same as {@link #mProject},
+     * The "main" project. For normal projects, this is the same as {@link #project},
      * but for library projects, it's the root project that includes (possibly indirectly)
      * the various library projects and their library projects.
      * <p>
@@ -69,19 +68,19 @@ public class Context {
      * different top level projects, so there isn't <b>one</b> main project,
      * just one per main project being analyzed with its library projects.
      */
-    private final Project mMainProject;
+    private final Project mainProject;
 
     /** The current configuration controlling which checks are enabled etc */
-    private final Configuration mConfiguration;
+    private final Configuration configuration;
 
     /** The contents of the file */
-    private CharSequence mContents;
+    private CharSequence contents;
 
     /** Map of properties to share results between detectors */
-    private Map<String, Object> mProperties;
+    private Map<String, Object> properties;
 
     /** Whether this file contains any suppress markers (null means not yet determined) */
-    private Boolean mContainsCommentSuppress;
+    private Boolean containsCommentSuppress;
 
     /**
      * Construct a new {@link Context}
@@ -101,10 +100,10 @@ public class Context {
             @NonNull File file) {
         this.file = file;
 
-        mDriver = driver;
-        mProject = project;
-        mMainProject = main;
-        mConfiguration = project.getConfiguration(driver);
+        this.driver = driver;
+        this.project = project;
+        mainProject = main;
+        configuration = project.getConfiguration(driver);
     }
 
     /**
@@ -114,7 +113,7 @@ public class Context {
      */
     @NonNull
     public EnumSet<Scope> getScope() {
-        return mDriver.getScope();
+        return driver.getScope();
     }
 
     /**
@@ -124,7 +123,7 @@ public class Context {
      */
     @NonNull
     public Configuration getConfiguration() {
-        return mConfiguration;
+        return configuration;
     }
 
     /**
@@ -134,7 +133,7 @@ public class Context {
      */
     @NonNull
     public Project getProject() {
-        return mProject;
+        return project;
     }
 
     /**
@@ -146,7 +145,7 @@ public class Context {
      */
     @NonNull
     public Project getMainProject() {
-        return mMainProject != null ? mMainProject : mProject;
+        return mainProject != null ? mainProject : project;
     }
 
     /**
@@ -156,7 +155,7 @@ public class Context {
      */
     @NonNull
     public LintClient getClient() {
-        return mDriver.getClient();
+        return driver.getClient();
     }
 
     /**
@@ -166,7 +165,7 @@ public class Context {
      */
     @NonNull
     public LintDriver getDriver() {
-        return mDriver;
+        return driver;
     }
 
     /**
@@ -179,11 +178,11 @@ public class Context {
      */
     @Nullable
     public CharSequence getContents() {
-        if (mContents == null) {
-            mContents = mDriver.getClient().readFile(file);
+        if (contents == null) {
+            contents = driver.getClient().readFile(file);
         }
 
-        return mContents;
+        return contents;
     }
 
     /**
@@ -195,11 +194,11 @@ public class Context {
     @SuppressWarnings("UnusedDeclaration") // Used in ADT
     @Nullable
     public Object getProperty(String name) {
-        if (mProperties == null) {
+        if (properties == null) {
             return null;
         }
 
-        return mProperties.get(name);
+        return properties.get(name);
     }
 
     /**
@@ -211,14 +210,14 @@ public class Context {
     @SuppressWarnings("UnusedDeclaration") // Used in ADT
     public void setProperty(@NonNull String name, @Nullable Object value) {
         if (value == null) {
-            if (mProperties != null) {
-                mProperties.remove(name);
+            if (properties != null) {
+                properties.remove(name);
             }
         } else {
-            if (mProperties == null) {
-                mProperties = new HashMap<String, Object>();
+            if (properties == null) {
+                properties = new HashMap<>();
             }
-            mProperties.put(name, value);
+            properties.put(name, value);
         }
     }
 
@@ -229,7 +228,7 @@ public class Context {
      */
     @NonNull
     public SdkInfo getSdkInfo() {
-        return mProject.getSdkInfo();
+        return project.getSdkInfo();
     }
 
     // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)
@@ -242,7 +241,7 @@ public class Context {
      * @return false if the issue has been disabled
      */
     public boolean isEnabled(@NonNull Issue issue) {
-        return mConfiguration.isEnabled(issue);
+        return configuration.isEnabled(issue);
     }
 
     /**
@@ -268,22 +267,22 @@ public class Context {
             return;
         }
 
-        Configuration configuration = mConfiguration;
+        Configuration configuration = this.configuration;
 
         // If this error was computed for a context where the context corresponds to
         // a project instead of a file, the actual error may be in a different project (e.g.
         // a library project), so adjust the configuration as necessary.
-        Project project = mDriver.findProjectFor(location.getFile());
+        Project project = driver.findProjectFor(location.getFile());
         if (project != null) {
-            configuration = project.getConfiguration(mDriver);
+            configuration = project.getConfiguration(driver);
         }
 
         // If an error occurs in a library project, but you've disabled that check in the
         // main project, disable it in the library project too. (In some cases you don't
         // control the lint.xml of a library project, and besides, if you're not interested in
         // a check for your main project you probably don't care about it in the library either.)
-        if (configuration != mConfiguration
-                && mConfiguration.getSeverity(issue) == Severity.IGNORE) {
+        if (configuration != this.configuration
+                && this.configuration.getSeverity(issue) == Severity.IGNORE) {
             return;
         }
 
@@ -292,7 +291,7 @@ public class Context {
             return;
         }
 
-        mDriver.getClient().report(this, issue, severity, location, message, TextFormat.RAW);
+        driver.getClient().report(this, issue, severity, location, message, TextFormat.RAW);
     }
 
     /**
@@ -324,7 +323,7 @@ public class Context {
             @Nullable Throwable exception,
             @Nullable String format,
             @Nullable Object... args) {
-        mDriver.getClient().log(exception, format, args);
+        driver.getClient().log(exception, format, args);
     }
 
     /**
@@ -334,7 +333,7 @@ public class Context {
      * @return the current phase, usually 1
      */
     public int getPhase() {
-        return mDriver.getPhase();
+        return driver.getPhase();
     }
 
     /**
@@ -353,7 +352,7 @@ public class Context {
      *       You can pall null to indicate "all".
      */
     public void requestRepeat(@NonNull Detector detector, @Nullable EnumSet<Scope> scope) {
-        mDriver.requestRepeat(detector, scope);
+        driver.requestRepeat(detector, scope);
     }
 
     /** Returns the comment marker used in Studio to suppress statements for language, if any */
@@ -375,18 +374,18 @@ public class Context {
 
     /** Returns whether this file contains any suppress comment markers */
     public boolean containsCommentSuppress() {
-        if (mContainsCommentSuppress == null) {
-            mContainsCommentSuppress = false;
+        if (containsCommentSuppress == null) {
+            containsCommentSuppress = false;
             String prefix = getSuppressCommentPrefix();
             if (prefix != null) {
                 CharSequence contents = getContents();
                 if (contents != null) {
-                    mContainsCommentSuppress = indexOf(contents, prefix) != -1;
+                    containsCommentSuppress = indexOf(contents, prefix) != -1;
                 }
             }
         }
 
-        return mContainsCommentSuppress;
+        return containsCommentSuppress;
     }
 
     /**

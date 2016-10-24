@@ -85,25 +85,25 @@ public class Lint extends BaseTask {
 
     private static final Logger LOG = Logging.getLogger(Lint.class);
 
-    @Nullable private LintOptions mLintOptions;
-    @Nullable private File mSdkHome;
-    private boolean mFatalOnly;
-    private ToolingModelBuilderRegistry mToolingRegistry;
+    @Nullable private LintOptions lintOptions;
+    @Nullable private File sdkHome;
+    private boolean fatalOnly;
+    private ToolingModelBuilderRegistry toolingRegistry;
 
     public void setLintOptions(@NonNull LintOptions lintOptions) {
-        mLintOptions = lintOptions;
+        this.lintOptions = lintOptions;
     }
 
     public void setSdkHome(@NonNull File sdkHome) {
-        mSdkHome = sdkHome;
+        this.sdkHome = sdkHome;
     }
 
     public void setToolingRegistry(ToolingModelBuilderRegistry toolingRegistry) {
-        mToolingRegistry = toolingRegistry;
+        this.toolingRegistry = toolingRegistry;
     }
 
     public void setFatalOnly(boolean fatalOnly) {
-        mFatalOnly = fatalOnly;
+        this.fatalOnly = fatalOnly;
     }
 
     @TaskAction
@@ -144,14 +144,14 @@ public class Lint extends BaseTask {
 
         // Compute error matrix
         boolean quiet = false;
-        if (mLintOptions != null) {
-            quiet = mLintOptions.isQuiet();
+        if (lintOptions != null) {
+            quiet = lintOptions.isQuiet();
         }
 
         for (Map.Entry<Variant,List<Warning>> entry : warningMap.entrySet()) {
             Variant variant = entry.getKey();
             List<Warning> warnings = entry.getValue();
-            if (!mFatalOnly && !quiet) {
+            if (!fatalOnly && !quiet) {
                 LOG.warn("Ran lint on variant {}: {} issues found",
                         variant.getName(), warnings.size());
             }
@@ -181,8 +181,8 @@ public class Lint extends BaseTask {
             LintCliFlags flags = new LintCliFlags();
             LintGradleClient client = new LintGradleClient(
                     registry, flags, getProject(), modelProject,
-                    mSdkHome, variant, getBuildTools());
-            syncOptions(mLintOptions, client, flags, null, getProject(), true, mFatalOnly);
+                    sdkHome, variant, getBuildTools());
+            syncOptions(lintOptions, client, flags, null, getProject(), true, fatalOnly);
 
             // Compute baseline counts. This is tricky because an error could appear in
             // multiple variants, and in that case it should only be counted as filtered
@@ -265,7 +265,7 @@ public class Lint extends BaseTask {
 
     private void abort() {
         String message;
-        if (mFatalOnly) {
+        if (fatalOnly) {
             message = "" +
                     "Lint found fatal errors while assembling a release target.\n" +
                     "\n" +
@@ -315,17 +315,17 @@ public class Lint extends BaseTask {
         IssueRegistry registry = createIssueRegistry();
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client = new LintGradleClient(registry, flags, getProject(), modelProject,
-                mSdkHome, variant, getBuildTools());
-        if (mFatalOnly) {
-            if (mLintOptions != null && !mLintOptions.isCheckReleaseBuilds()) {
+                sdkHome, variant, getBuildTools());
+        if (fatalOnly) {
+            if (lintOptions != null && !lintOptions.isCheckReleaseBuilds()) {
                 return Pair.of(Collections.emptyList(), null);
             }
             flags.setFatalOnly(true);
         }
-        if (mLintOptions != null) {
-            syncOptions(mLintOptions, client, flags, variant, getProject(), report, mFatalOnly);
+        if (lintOptions != null) {
+            syncOptions(lintOptions, client, flags, variant, getProject(), report, fatalOnly);
         }
-        if (!report || mFatalOnly) {
+        if (!report || fatalOnly) {
             flags.setQuiet(true);
         }
 
@@ -361,7 +361,7 @@ public class Lint extends BaseTask {
 
     private AndroidProject createAndroidProject(@NonNull Project gradleProject) {
         String modelName = AndroidProject.class.getName();
-        ToolingModelBuilder modelBuilder = mToolingRegistry.getBuilder(modelName);
+        ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
         assert modelBuilder != null;
         return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
     }

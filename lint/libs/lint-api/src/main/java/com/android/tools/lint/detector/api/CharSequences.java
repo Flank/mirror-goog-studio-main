@@ -19,13 +19,11 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.XmlUtils;
-
-import org.w3c.dom.Document;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.CharBuffer;
 import java.util.Arrays;
+import org.w3c.dom.Document;
 
 /**
  * A number of utility methods around {@link CharSequence} handling, which

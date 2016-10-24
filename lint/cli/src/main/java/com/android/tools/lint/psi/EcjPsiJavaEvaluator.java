@@ -34,7 +34,10 @@ import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
-
+import java.io.File;
+import java.nio.CharBuffer;
+import java.util.Collection;
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
@@ -45,11 +48,6 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
-
-import java.io.File;
-import java.nio.CharBuffer;
-import java.util.Collection;
-import java.util.List;
 
 public class EcjPsiJavaEvaluator extends JavaEvaluator {
     private final EcjPsiManager mManager;

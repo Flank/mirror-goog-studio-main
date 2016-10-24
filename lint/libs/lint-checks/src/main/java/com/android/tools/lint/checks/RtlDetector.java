@@ -75,10 +75,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,6 +82,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Check which looks for RTL issues (right-to-left support) in layouts
@@ -102,7 +100,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
     );
 
     public static final Issue USE_START = Issue.create(
-        "RtlHardcoded", //$NON-NLS-1$
+        "RtlHardcoded",
         "Using left/right instead of start/end attributes",
 
         "Using `Gravity#LEFT` and `Gravity#RIGHT` can lead to problems when a layout is " +
@@ -125,7 +123,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
         Category.RTL, 5, Severity.WARNING, IMPLEMENTATION);
 
     public static final Issue COMPAT = Issue.create(
-        "RtlCompat", //$NON-NLS-1$
+        "RtlCompat",
         "Right-to-left text compatibility issues",
 
         "API 17 adds a `textAlignment` attribute to specify text alignment. However, " +
@@ -136,7 +134,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
         Category.RTL, 6, Severity.ERROR, IMPLEMENTATION);
 
     public static final Issue SYMMETRY = Issue.create(
-        "RtlSymmetry", //$NON-NLS-1$
+        "RtlSymmetry",
         "Padding and margin symmetry",
 
         "If you specify padding or margin on the left side of a layout, you should " +
@@ -147,7 +145,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
 
 
     public static final Issue ENABLED = Issue.create(
-        "RtlEnabled", //$NON-NLS-1$
+        "RtlEnabled",
         "Using RTL attributes without enabling RTL support",
 
         "To enable right-to-left support, when running on API 17 and higher, you must " +
@@ -160,7 +158,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
 
     /* TODO:
     public static final Issue FIELD = Issue.create(
-        "RtlFieldAccess", //$NON-NLS-1$
+        "RtlFieldAccess",
         "Accessing margin and padding fields directly",
 
         "Modifying the padding and margin constants in view objects directly is " +
@@ -170,7 +168,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
         Category.RTL, 3, Severity.WARNING, IMPLEMENTATION).setEnabledByDefault(false);
 
     public static final Issue AWARE = Issue.create(
-        "RtlAware", //$NON-NLS-1$
+        "RtlAware",
         "View code not aware of RTL APIs",
 
         "When manipulating views, and especially when implementing custom layouts, " +
@@ -182,11 +180,11 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
         Category.RTL, 3, Severity.WARNING, IMPLEMENTATION).setEnabledByDefault(false);
     */
 
-    private static final String RIGHT_FIELD = "RIGHT";                          //$NON-NLS-1$
-    private static final String LEFT_FIELD = "LEFT";                            //$NON-NLS-1$
-    private static final String FQCN_GRAVITY = "android.view.Gravity";          //$NON-NLS-1$
-    private static final String ATTR_TEXT_ALIGNMENT = "textAlignment";          //$NON-NLS-1$
-    static final String ATTR_SUPPORTS_RTL = "supportsRtl";                      //$NON-NLS-1$
+    private static final String RIGHT_FIELD = "RIGHT";
+    private static final String LEFT_FIELD = "LEFT";
+    private static final String FQCN_GRAVITY = "android.view.Gravity";
+    private static final String ATTR_TEXT_ALIGNMENT = "textAlignment";
+    static final String ATTR_SUPPORTS_RTL = "supportsRtl";
 
     /** API version in which RTL support was added */
     private static final int RTL_API = 17;
@@ -322,7 +320,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
     @Override
     public Collection<String> getApplicableAttributes() {
         int size = ATTRIBUTES.length + 4;
-        List<String> attributes = new ArrayList<String>(size);
+        List<String> attributes = new ArrayList<>(size);
 
         // For detecting whether RTL support is enabled
         attributes.add(ATTR_SUPPORTS_RTL);

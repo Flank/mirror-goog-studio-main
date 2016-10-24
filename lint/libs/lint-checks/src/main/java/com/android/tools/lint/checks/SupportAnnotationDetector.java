@@ -120,12 +120,6 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,6 +128,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Looks up annotations on method calls and enforces the various things they
@@ -152,7 +150,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Method result should be used */
     public static final Issue RANGE = Issue.create(
-        "Range", //$NON-NLS-1$
+        "Range",
         "Outside Range",
 
         "Some parameters are required to in a particular numerical range; this check " +
@@ -168,7 +166,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
      * Attempting to set a resource id as a color
      */
     public static final Issue RESOURCE_TYPE = Issue.create(
-        "ResourceType", //$NON-NLS-1$
+        "ResourceType",
         "Wrong Resource Type",
 
         "Ensures that resource id's passed to APIs are of the right type; for example, " +
@@ -181,7 +179,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Attempting to set a resource id as a color */
     public static final Issue COLOR_USAGE = Issue.create(
-        "ResourceAsColor", //$NON-NLS-1$
+        "ResourceAsColor",
         "Should pass resolved color instead of resource id",
 
         "Methods that take a color in the form of an integer should be passed " +
@@ -195,7 +193,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Passing the wrong constant to an int or String method */
     public static final Issue TYPE_DEF = Issue.create(
-        "WrongConstant", //$NON-NLS-1$
+        "WrongConstant",
         "Incorrect constant",
 
         "Ensures that when parameter in a method only allows a specific set " +
@@ -208,7 +206,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Using a restricted API */
     public static final Issue RESTRICTED = Issue.create(
-            "RestrictedApi", //$NON-NLS-1$
+            "RestrictedApi",
             "Restricted API",
 
             "This API has been flagged with a restriction that has not been met.\n" +
@@ -228,7 +226,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Using a restricted API */
     public static final Issue TEST_VISIBILITY = Issue.create(
-            "VisibleForTests", //$NON-NLS-1$
+            "VisibleForTests",
             "Visible Only For Tests",
 
             "With the `@VisibleForTesting` annotation you can specify an `otherwise=` " +
@@ -245,7 +243,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Method result should be used */
     public static final Issue CHECK_RESULT = Issue.create(
-        "CheckResult", //$NON-NLS-1$
+        "CheckResult",
         "Ignoring results",
 
         "Some methods have no side effects, an calling them without doing something " +
@@ -258,7 +256,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Failing to enforce security by just calling check permission */
     public static final Issue CHECK_PERMISSION = Issue.create(
-        "UseCheckPermission", //$NON-NLS-1$
+        "UseCheckPermission",
         "Using the result of check permission calls",
 
         "You normally want to use the result of checking a permission; these methods " +
@@ -274,7 +272,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Method result should be used */
     public static final Issue MISSING_PERMISSION = Issue.create(
-            "MissingPermission", //$NON-NLS-1$
+            "MissingPermission",
             "Missing Permissions",
 
             "This check scans through your code and libraries and looks at the APIs being used, " +
@@ -292,7 +290,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** Passing the wrong constant to an int or String method */
     public static final Issue THREAD = Issue.create(
-            "WrongThread", //$NON-NLS-1$
+            "WrongThread",
             "Wrong Thread",
 
             "Ensures that a method which expects to be called on a specific thread, is actually " +
@@ -306,20 +304,20 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             .addMoreInfo(
                     "http://developer.android.com/guide/components/processes-and-threads.html#Threads");
 
-    public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult"; //$NON-NLS-1$
-    public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange"; //$NON-NLS-1$
-    public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange"; //$NON-NLS-1$
-    public static final String SIZE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Size"; //$NON-NLS-1$
-    public static final String PERMISSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresPermission"; //$NON-NLS-1$
-    public static final String UI_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "UiThread"; //$NON-NLS-1$
-    public static final String MAIN_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "MainThread"; //$NON-NLS-1$
-    public static final String WORKER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "WorkerThread"; //$NON-NLS-1$
-    public static final String BINDER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "BinderThread"; //$NON-NLS-1$
-    public static final String ANY_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "AnyThread"; //$NON-NLS-1$
-    public static final String RESTRICT_TO_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RestrictTo"; //$NON-NLS-1$
-    public static final String VISIBLE_FOR_TESTING_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "VisibleForTesting"; //$NON-NLS-1$
-    public static final String PERMISSION_ANNOTATION_READ = PERMISSION_ANNOTATION + ".Read"; //$NON-NLS-1$
-    public static final String PERMISSION_ANNOTATION_WRITE = PERMISSION_ANNOTATION + ".Write"; //$NON-NLS-1$
+    public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult";
+    public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange";
+    public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange";
+    public static final String SIZE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Size";
+    public static final String PERMISSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresPermission";
+    public static final String UI_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "UiThread";
+    public static final String MAIN_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "MainThread";
+    public static final String WORKER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "WorkerThread";
+    public static final String BINDER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "BinderThread";
+    public static final String ANY_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "AnyThread";
+    public static final String RESTRICT_TO_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RestrictTo";
+    public static final String VISIBLE_FOR_TESTING_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "VisibleForTesting";
+    public static final String PERMISSION_ANNOTATION_READ = PERMISSION_ANNOTATION + ".Read";
+    public static final String PERMISSION_ANNOTATION_WRITE = PERMISSION_ANNOTATION + ".Write";
 
     public static final String THREAD_SUFFIX = "Thread";
     public static final String ATTR_SUGGEST = "suggest";

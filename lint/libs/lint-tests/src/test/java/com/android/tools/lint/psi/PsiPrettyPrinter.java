@@ -54,7 +54,6 @@ import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.PsiWildcardType;
-
 import java.util.Map;
 
 /**

@@ -41,7 +41,6 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSwitchStatement;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -56,7 +55,7 @@ public class ViewHolderDetector extends Detector implements JavaPsiScanner {
 
     /** Using a view inflater unconditionally in an AdapterView */
     public static final Issue ISSUE = Issue.create(
-            "ViewHolder", //$NON-NLS-1$
+            "ViewHolder",
             "View Holder Candidates",
 
             "When implementing a view Adapter, you should avoid unconditionally inflating a " +
@@ -71,8 +70,8 @@ public class ViewHolderDetector extends Detector implements JavaPsiScanner {
             .addMoreInfo(
             "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder");
 
-    private static final String GET_VIEW = "getView";  //$NON-NLS-1$
-    static final String INFLATE = "inflate";           //$NON-NLS-1$
+    private static final String GET_VIEW = "getView";
+    static final String INFLATE = "inflate";
 
     /** Constructs a new {@link ViewHolderDetector} check */
     public ViewHolderDetector() {

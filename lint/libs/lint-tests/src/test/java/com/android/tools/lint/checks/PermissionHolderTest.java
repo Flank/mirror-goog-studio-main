@@ -19,10 +19,8 @@ package com.android.tools.lint.checks;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.checks.PermissionHolder.SetPermissionLookup;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
 import java.util.Set;
+import junit.framework.TestCase;
 
 public class PermissionHolderTest extends TestCase {
     public void test() {

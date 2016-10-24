@@ -35,7 +35,6 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -43,7 +42,7 @@ import java.util.List;
 public class ToastDetector extends Detector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ShowToast", //$NON-NLS-1$
+            "ShowToast",
             "Toast created but not shown",
 
             "`Toast.makeText()` creates a `Toast` but does *not* show it. You must call " +
@@ -65,7 +64,7 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("makeText"); //$NON-NLS-1$
+        return Collections.singletonList("makeText");
     }
 
     @Override
@@ -122,7 +121,7 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
             } else {
                 PsiReferenceExpression methodExpression = node.getMethodExpression();
                 if ((mSeenTarget || methodExpression.getQualifier() == mTarget)
-                        && "show".equals(methodExpression.getReferenceName())) { //$NON-NLS-1$
+                        && "show".equals(methodExpression.getReferenceName())) {
                     // TODO: Do more flow analysis to see whether we're really calling show
                     // on the right type of object?
                     mFound = true;

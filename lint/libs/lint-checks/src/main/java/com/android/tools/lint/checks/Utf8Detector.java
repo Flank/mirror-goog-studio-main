@@ -27,11 +27,9 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Document;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Document;
 
 /**
  * Checks that the encoding used in resource files is always UTF-8
@@ -43,7 +41,7 @@ public class Utf8Detector extends ResourceXmlDetector {
 
     /** Detects non-utf8 encodings */
     public static final Issue ISSUE = Issue.create(
-            "EnforceUTF8", //$NON-NLS-1$
+            "EnforceUTF8",
             "Encoding used in resource files is not UTF-8",
             "XML supports encoding in a wide variety of character sets. However, not all " +
             "tools handle the XML encoding attribute correctly, and nearly all Android " +
@@ -61,7 +59,7 @@ public class Utf8Detector extends ResourceXmlDetector {
 
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
     private static final Pattern ENCODING_PATTERN =
-            Pattern.compile("encoding=['\"](\\S*)['\"]");//$NON-NLS-1$
+            Pattern.compile("encoding=['\"](\\S*)['\"]");
 
     /** Constructs a new {@link Utf8Detector} */
     public Utf8Detector() {
@@ -94,7 +92,7 @@ public class Utf8Detector extends ResourceXmlDetector {
             }
         }
 
-        int encodingIndex = lastIndexOf(xml, "encoding", lineEnd); //$NON-NLS-1$
+        int encodingIndex = lastIndexOf(xml, "encoding", lineEnd);
         if (encodingIndex != -1) {
             Matcher matcher = ENCODING_PATTERN.matcher(xml);
             if (matcher.find(encodingIndex)) {

@@ -32,7 +32,6 @@ import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -43,7 +42,7 @@ public class ParcelDetector extends Detector implements JavaPsiScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ParcelCreator", //$NON-NLS-1$
+            "ParcelCreator",
             "Missing Parcelable `CREATOR` field",
 
             "According to the `Parcelable` interface documentation, " +

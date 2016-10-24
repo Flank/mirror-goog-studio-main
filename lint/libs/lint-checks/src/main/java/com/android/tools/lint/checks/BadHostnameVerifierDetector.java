@@ -38,7 +38,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiThrowStatement;
-
 import java.util.Collections;
 import java.util.List;
 

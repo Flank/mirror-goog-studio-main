@@ -40,16 +40,14 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Detector which finds unlabeled text fields
@@ -57,7 +55,7 @@ import java.util.Set;
 public class LabelForDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "LabelFor", //$NON-NLS-1$
+            "LabelFor",
             "Missing `labelFor` attribute",
 
             "Text fields should be labelled with a `labelFor` attribute, " +
@@ -164,7 +162,7 @@ public class LabelForDetector extends LayoutDetector {
         }
 
         if (mTextFields == null) {
-            mTextFields = new ArrayList<Element>();
+            mTextFields = new ArrayList<>();
         }
         mTextFields.add(element);
     }

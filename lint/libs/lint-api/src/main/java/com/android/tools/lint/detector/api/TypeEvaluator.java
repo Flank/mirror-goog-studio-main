@@ -48,9 +48,7 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.ListIterator;
-
 import lombok.ast.BinaryExpression;
 import lombok.ast.BinaryOperator;
 import lombok.ast.BooleanLiteral;
@@ -89,7 +87,7 @@ import lombok.ast.VariableReference;
  * the type "int".
  */
 public class TypeEvaluator {
-    private final JavaContext mContext;
+    private final JavaContext context;
 
     /**
      * Creates a new constant evaluator
@@ -97,7 +95,7 @@ public class TypeEvaluator {
      * @param context the context to use to resolve field references, if any
      */
     public TypeEvaluator(@Nullable JavaContext context) {
-        mContext = context;
+        this.context = context;
     }
 
 
@@ -109,8 +107,8 @@ public class TypeEvaluator {
     @Nullable
     public TypeDescriptor evaluate(@NonNull Node node) {
         ResolvedNode resolved = null;
-        if (mContext != null) {
-            resolved = mContext.resolve(node);
+        if (context != null) {
+            resolved = context.resolve(node);
         }
         if (resolved instanceof ResolvedMethod) {
             TypeDescriptor type;
@@ -186,8 +184,8 @@ public class TypeEvaluator {
             }
         } else if (node instanceof Cast) {
             Cast cast = (Cast) node;
-            if (mContext != null) {
-                ResolvedNode typeReference = mContext.resolve(cast.astTypeReference());
+            if (context != null) {
+                ResolvedNode typeReference = context.resolve(cast.astTypeReference());
                 if (typeReference instanceof ResolvedClass) {
                     return ((ResolvedClass) typeReference).getType();
                 }
@@ -278,8 +276,8 @@ public class TypeEvaluator {
             PsiMethod method = (PsiMethod) resolved;
             if (method.isConstructor()) {
                 PsiClass containingClass = method.getContainingClass();
-                if (containingClass != null && mContext != null) {
-                    return mContext.getEvaluator().getClassType(containingClass);
+                if (containingClass != null && context != null) {
+                    return context.getEvaluator().getClassType(containingClass);
                 }
             } else {
                 return method.getReturnType();

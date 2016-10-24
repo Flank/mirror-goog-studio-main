@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiType;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 

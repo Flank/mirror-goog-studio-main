@@ -32,13 +32,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Check which makes sure that views have the expected number of declared
@@ -52,7 +50,7 @@ public class ChildCountDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue SCROLLVIEW_ISSUE = Issue.create(
-            "ScrollViewCount", //$NON-NLS-1$
+            "ScrollViewCount",
             "ScrollViews can have only one child",
             "ScrollViews can only have one child widget. If you want more children, wrap them " +
             "in a container layout.",
@@ -63,7 +61,7 @@ public class ChildCountDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ADAPTER_VIEW_ISSUE = Issue.create(
-            "AdapterViewChildren", //$NON-NLS-1$
+            "AdapterViewChildren",
             "AdapterViews cannot have children in XML",
             "AdapterViews such as ListViews must be configured with data from Java code, " +
             "such as a ListAdapter.",
@@ -72,7 +70,7 @@ public class ChildCountDetector extends LayoutDetector {
             Severity.WARNING,
             IMPLEMENTATION)
             .addMoreInfo(
-                    "http://developer.android.com/reference/android/widget/AdapterView.html"); //$NON-NLS-1$
+                    "http://developer.android.com/reference/android/widget/AdapterView.html");
 
     /** Constructs a new {@link ChildCountDetector} */
     public ChildCountDetector() {

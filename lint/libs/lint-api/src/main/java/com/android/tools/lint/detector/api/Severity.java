@@ -61,10 +61,10 @@ public enum Severity {
     IGNORE("Ignore");
 
     @NonNull
-    private final String mDisplay;
+    private final String display;
 
     Severity(@NonNull String display) {
-        mDisplay = display;
+        this.display = display;
     }
 
     /**
@@ -74,7 +74,7 @@ public enum Severity {
      */
     @NonNull
     public String getDescription() {
-        return mDisplay;
+        return display;
     }
 
     /** Returns the name of this severity */

@@ -28,7 +28,6 @@ import com.intellij.psi.PsiEnumConstantInitializer;
 import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
-
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 

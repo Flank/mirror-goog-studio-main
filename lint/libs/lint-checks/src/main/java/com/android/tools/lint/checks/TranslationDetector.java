@@ -52,12 +52,6 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +63,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for incomplete translations - e.g. keys that are only present in some
@@ -77,7 +75,7 @@ import java.util.Set;
 public class TranslationDetector extends ResourceXmlDetector {
     @VisibleForTesting
     static boolean sCompleteRegions =
-            System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null; //$NON-NLS-1$
+            System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null;
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             TranslationDetector.class,
@@ -85,7 +83,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     /** Are all translations complete? */
     public static final Issue MISSING = Issue.create(
-            "MissingTranslation", //$NON-NLS-1$
+            "MissingTranslation",
             "Incomplete translation",
             "If an application has more than one locale, then all the strings declared in " +
             "one language should also be translated in all other languages.\n" +
@@ -112,7 +110,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     /** Are there extra translations that are "unused" (appear only in specific languages) ? */
     public static final Issue EXTRA = Issue.create(
-            "ExtraTranslation", //$NON-NLS-1$
+            "ExtraTranslation",
             "Extra translation",
             "If a string appears in a specific language translation file, but there is " +
             "no corresponding string in the default locale, then this string is probably " +
@@ -162,18 +160,18 @@ public class TranslationDetector extends ResourceXmlDetector {
     @Override
     public void beforeCheckProject(@NonNull Context context) {
         if (context.getDriver().getPhase() == 1) {
-            mFileToNames = new HashMap<File, Set<String>>();
+            mFileToNames = new HashMap<>();
         }
     }
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
-            mNames = new HashSet<String>();
+            mNames = new HashSet<>();
         }
 
         // Convention seen in various projects
-        mIgnoreFile = context.file.getName().startsWith("donottranslate") //$NON-NLS-1$
+        mIgnoreFile = context.file.getName().startsWith("donottranslate")
                         || ResourceUsageModel.isAnalyticsFile(context.file);
 
         if (!context.getProject().getReportIssues()) {
@@ -252,7 +250,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     private void checkTranslations(Context context) {
         // Only one file defining strings? If so, no problems.
         Set<File> files = mFileToNames.keySet();
-        Set<File> parentFolders = new HashSet<File>();
+        Set<File> parentFolders = new HashSet<>();
         for (File file : files) {
             parentFolders.add(file.getParentFile());
         }
@@ -268,7 +266,7 @@ public class TranslationDetector extends ResourceXmlDetector {
         // res/strings.xml etc
         String defaultLanguage = "Default";
 
-        Map<File, String> parentFolderToLanguage = new HashMap<File, String>();
+        Map<File, String> parentFolderToLanguage = new HashMap<>();
         for (File parent : parentFolders) {
             String name = parent.getName();
 
@@ -290,8 +288,8 @@ public class TranslationDetector extends ResourceXmlDetector {
 
         // Merge together the various files building up the translations for each language
         Map<String, Set<String>> languageToStrings =
-                new HashMap<String, Set<String>>(languageCount);
-        Set<String> allStrings = new HashSet<String>(200);
+                new HashMap<>(languageCount);
+        Set<String> allStrings = new HashSet<>(200);
         for (File file : files) {
             String language = null;
             if (mFileToLocale != null) {
@@ -323,7 +321,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
         Set<String> defaultStrings = languageToStrings.get(defaultLanguage);
         if (defaultStrings == null) {
-            defaultStrings = new HashSet<String>();
+            defaultStrings = new HashSet<>();
         }
 
         // See if it looks like the user has named a specific locale as the base language
@@ -350,11 +348,11 @@ public class TranslationDetector extends ResourceXmlDetector {
 
         // Treat English is the default language if not explicitly specified
         if (!sCompleteRegions && !languageToStrings.containsKey("en")
-                && mFileToLocale == null) {  //$NON-NLS-1$
+                && mFileToLocale == null) {
             // But only if we have an actual region
             for (String l : languageToStrings.keySet()) {
-                if (l.startsWith("en-")) {  //$NON-NLS-1$
-                    languageToStrings.put("en", defaultStrings); //$NON-NLS-1$
+                if (l.startsWith("en-")) {
+                    languageToStrings.put("en", defaultStrings);
                     break;
                 }
             }
@@ -425,7 +423,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             }
         }
 
-        List<String> languages = new ArrayList<String>(languageToStrings.keySet());
+        List<String> languages = new ArrayList<>(languageToStrings.keySet());
         Collections.sort(languages);
         for (String language : languages) {
             Set<String> strings = languageToStrings.get(language);
@@ -441,10 +439,10 @@ public class TranslationDetector extends ResourceXmlDetector {
                     Set<String> difference = Sets.difference(defaultStrings, strings);
                     if (!difference.isEmpty()) {
                         if (mMissingLocations == null) {
-                            mMissingLocations = new HashMap<String, Location>();
+                            mMissingLocations = new HashMap<>();
                         }
                         if (mDescriptions == null) {
-                            mDescriptions = new HashMap<String, String>();
+                            mDescriptions = new HashMap<>();
                         }
 
                         for (String s : difference) {
@@ -467,10 +465,10 @@ public class TranslationDetector extends ResourceXmlDetector {
                     Set<String> difference = Sets.difference(strings, defaultStrings);
                     if (!difference.isEmpty()) {
                         if (mExtraLocations == null) {
-                            mExtraLocations = new HashMap<String, Location>();
+                            mExtraLocations = new HashMap<>();
                         }
                         if (mDescriptions == null) {
-                            mDescriptions = new HashMap<String, String>();
+                            mDescriptions = new HashMap<>();
                         }
 
                         for (String s : difference) {
@@ -596,7 +594,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         "`values/` folder");
                 } else {
                     if (mNonTranslatable == null) {
-                        mNonTranslatable = new HashSet<String>();
+                        mNonTranslatable = new HashSet<>();
                     }
                     mNonTranslatable.add(name);
                 }
@@ -604,10 +602,10 @@ public class TranslationDetector extends ResourceXmlDetector {
             } else if (isServiceKey(name)
                     // Older versions of the templates shipped with these not marked as
                     // non-translatable; don't flag them
-                    || name.equals("google_maps_key")                  //$NON-NLS-1$
-                    || name.equals("google_maps_key_instructions")) {  //$NON-NLS-1$
+                    || name.equals("google_maps_key")
+                    || name.equals("google_maps_key_instructions")) {
                 if (mNonTranslatable == null) {
-                    mNonTranslatable = new HashSet<String>();
+                    mNonTranslatable = new HashSet<>();
                 }
                 mNonTranslatable.add(name);
                 return;
@@ -626,7 +624,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                 // these arrays "extra" if one of the *translated* versions of the array
                 // perform an inline translation of an array item
                 if (mTranslatedArrays == null) {
-                    mTranslatedArrays = new HashSet<String>();
+                    mTranslatedArrays = new HashSet<>();
                 }
                 mTranslatedArrays.add(name);
                 return;
@@ -635,7 +633,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             // Check for duplicate name definitions? No, because there can be
             // additional customizations like product=
             //if (mNames.contains(name)) {
-            //    context.mClient.report(ISSUE, context.getLocation(attribute),
+            //    context.client.report(ISSUE, context.getLocation(attribute),
             //        String.format("Duplicate name %1$s, already defined earlier in this file",
             //            name));
             //}

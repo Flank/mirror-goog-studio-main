@@ -23,7 +23,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
-
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 class EcjPsiImport extends EcjPsiSourceElement implements PsiImportStatement {

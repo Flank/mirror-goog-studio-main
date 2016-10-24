@@ -32,7 +32,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiType;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class SslCertificateSocketFactoryDetector extends Detector
             Scope.JAVA_FILE_SCOPE);
 
     public static final Issue CREATE_SOCKET = Issue.create(
-            "SSLCertificateSocketFactoryCreateSocket", //$NON-NLS-1$
+            "SSLCertificateSocketFactoryCreateSocket",
             "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
             "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` " +
             "as the first parameter, TLS/SSL hostname verification is not performed, which " +
@@ -60,7 +59,7 @@ public class SslCertificateSocketFactoryDetector extends Detector
             IMPLEMENTATION_JAVA);
 
     public static final Issue GET_INSECURE = Issue.create(
-            "SSLCertificateSocketFactoryGetInsecure", //$NON-NLS-1$
+            "SSLCertificateSocketFactoryGetInsecure",
             "Call to `SSLCertificateSocketFactory.getInsecure()`",
             "The `SSLCertificateSocketFactory.getInsecure()` method returns " +
             "an SSLSocketFactory with all TLS/SSL security checks disabled, which " +

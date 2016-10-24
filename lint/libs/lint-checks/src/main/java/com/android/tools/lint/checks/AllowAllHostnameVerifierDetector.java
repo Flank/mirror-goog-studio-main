@@ -35,7 +35,6 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiNewExpression;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

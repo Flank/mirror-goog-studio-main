@@ -59,16 +59,14 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check which looks for access of private resources.
@@ -87,7 +85,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "PrivateResource", //$NON-NLS-1$
+            "PrivateResource",
             "Using private resources",
 
             "Private resources should not be referenced; the may not be present everywhere, and " +
@@ -172,9 +170,9 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements
                         if (type == null || type.isEmpty()) {
                             type = RESOURCE_CLZ_ID;
                         }
-                    } else if (type.equals("declare-styleable")) {   //$NON-NLS-1$
+                    } else if (type.equals("declare-styleable")) {
                         type = RESOURCE_CLR_STYLEABLE;
-                    } else if (type.contains("array")) {             //$NON-NLS-1$
+                    } else if (type.contains("array")) {
                         // <string-array> etc
                         type = RESOURCE_CLZ_ARRAY;
                     }

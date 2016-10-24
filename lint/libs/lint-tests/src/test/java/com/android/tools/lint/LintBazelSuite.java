@@ -27,7 +27,6 @@ import com.android.tools.lint.checks.TypoDetectorTest;
 import com.android.tools.lint.checks.TypoLookupTest;
 import com.android.tools.lint.checks.UnpackedNativeCodeDetectorTest;
 import com.android.tools.lint.client.api.CustomRuleTest;
-
 import org.junit.runner.RunWith;
 
 /**

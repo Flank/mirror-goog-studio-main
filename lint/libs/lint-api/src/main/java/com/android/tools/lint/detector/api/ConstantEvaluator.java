@@ -58,11 +58,9 @@ import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.ListIterator;
-
 import lombok.ast.ArrayCreation;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.BinaryExpression;
@@ -91,8 +89,8 @@ import lombok.ast.VariableReference;
 
 /** Evaluates constant expressions */
 public class ConstantEvaluator {
-    private final JavaContext mContext;
-    private boolean mAllowUnknown;
+    private final JavaContext context;
+    private boolean allowUnknown;
 
     /**
      * Creates a new constant evaluator
@@ -100,7 +98,7 @@ public class ConstantEvaluator {
      * @param context the context to use to resolve field references, if any
      */
     public ConstantEvaluator(@Nullable JavaContext context) {
-        mContext = context;
+        this.context = context;
     }
 
     /**
@@ -110,7 +108,7 @@ public class ConstantEvaluator {
      * @return this for constructor chaining
      */
     public ConstantEvaluator allowUnknowns() {
-        mAllowUnknown = true;
+        allowUnknown = true;
         return this;
     }
 
@@ -207,7 +205,7 @@ public class ConstantEvaluator {
             Object operandLeft = evaluate(((BinaryExpression) node).astLeft());
             Object operandRight = evaluate(((BinaryExpression) node).astRight());
             if (operandLeft == null || operandRight == null) {
-                if (mAllowUnknown) {
+                if (allowUnknown) {
                     if (operandLeft == null) {
                         return operandRight;
                     } else {
@@ -418,9 +416,9 @@ public class ConstantEvaluator {
                 }
             }
             return operandValue;
-        } else if (mContext != null && (node instanceof VariableReference ||
+        } else if (context != null && (node instanceof VariableReference ||
                 node instanceof Select)) {
-            ResolvedNode resolved = mContext.resolve(node);
+            ResolvedNode resolved = context.resolve(node);
             if (resolved instanceof ResolvedField) {
                 ResolvedField field = (ResolvedField) resolved;
                 Object value = field.getValue();
@@ -504,7 +502,7 @@ public class ConstantEvaluator {
                                 commonType = commonType.getSuperclass();
                             }
                         }
-                    } else if (!mAllowUnknown) {
+                    } else if (!allowUnknown) {
                         // Inconclusive
                         return null;
                     }
@@ -512,8 +510,8 @@ public class ConstantEvaluator {
                 if (!values.isEmpty()) {
                     Object o = Array.newInstance(commonType, values.size());
                     return values.toArray((Object[]) o);
-                } else if (mContext != null) {
-                    ResolvedNode type = mContext.resolve(typeReference);
+                } else if (context != null) {
+                    ResolvedNode type = context.resolve(typeReference);
                     System.out.println(type);
                     // TODO: return new array of this type
                 }
@@ -638,7 +636,7 @@ public class ConstantEvaluator {
             Object operandLeft = evaluate(((PsiBinaryExpression) node).getLOperand());
             Object operandRight = evaluate(((PsiBinaryExpression) node).getROperand());
             if (operandLeft == null || operandRight == null) {
-                if (mAllowUnknown) {
+                if (allowUnknown) {
                     if (operandLeft == null) {
                         return operandRight;
                     } else {
@@ -923,7 +921,7 @@ public class ConstantEvaluator {
                                     commonType = commonType.getSuperclass();
                                 }
                             }
-                        } else if (!mAllowUnknown) {
+                        } else if (!allowUnknown) {
                             // Inconclusive
                             return null;
                         }

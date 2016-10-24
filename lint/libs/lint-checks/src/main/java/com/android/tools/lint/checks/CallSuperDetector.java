@@ -40,7 +40,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSuperExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,9 +47,9 @@ import java.util.List;
  * Makes sure that methods call super when overriding methods.
  */
 public class CallSuperDetector extends Detector implements JavaPsiScanner {
-    private static final String CALL_SUPER_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CallSuper"; //$NON-NLS-1$
-    private static final String ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow";   //$NON-NLS-1$
-    private static final String ON_VISIBILITY_CHANGED = "onVisibilityChanged";      //$NON-NLS-1$
+    private static final String CALL_SUPER_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CallSuper";
+    private static final String ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow";
+    private static final String ON_VISIBILITY_CHANGED = "onVisibilityChanged";
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             CallSuperDetector.class,
@@ -58,7 +57,7 @@ public class CallSuperDetector extends Detector implements JavaPsiScanner {
 
     /** Missing call to super */
     public static final Issue ISSUE = Issue.create(
-            "MissingSuperCall", //$NON-NLS-1$
+            "MissingSuperCall",
             "Missing Super Call",
 
             "Some methods, such as `View#onDetachedFromWindow`, require that you also " +

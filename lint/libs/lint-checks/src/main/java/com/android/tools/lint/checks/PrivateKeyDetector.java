@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -40,7 +39,7 @@ import java.util.EnumSet;
 public class PrivateKeyDetector extends Detector implements Detector.OtherFileScanner {
     /** Packaged private key files */
     public static final Issue ISSUE = Issue.create(
-            "PackagedPrivateKey", //$NON-NLS-1$
+            "PackagedPrivateKey",
             "Packaged private key",
 
             "In general, you should not package private key files inside your app.",
@@ -56,16 +55,16 @@ public class PrivateKeyDetector extends Detector implements Detector.OtherFileSc
 
     private static boolean isPrivateKeyFile(File file) {
         if (!file.isFile() ||
-            (!LintUtils.endsWith(file.getPath(), "pem") &&  //NON-NLS-1$
-             !LintUtils.endsWith(file.getPath(), "key"))) { //NON-NLS-1$
+            (!LintUtils.endsWith(file.getPath(), "pem") &&
+             !LintUtils.endsWith(file.getPath(), "key"))) {
             return false;
         }
 
         try {
             String firstLine = Files.readFirstLine(file, Charsets.US_ASCII);
             return firstLine != null &&
-                firstLine.startsWith("---") &&     //NON-NLS-1$
-                firstLine.contains("PRIVATE KEY"); //NON-NLS-1$
+                firstLine.startsWith("---") &&
+                firstLine.contains("PRIVATE KEY");
         } catch (IOException ex) {
             // Don't care
         }

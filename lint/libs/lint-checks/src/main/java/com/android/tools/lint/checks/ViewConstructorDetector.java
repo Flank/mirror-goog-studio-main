@@ -38,7 +38,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ import java.util.List;
 public class ViewConstructorDetector extends Detector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ViewConstructor", //$NON-NLS-1$
+            "ViewConstructor",
             "Missing View constructors for XML inflation",
 
             "Some layout tools (such as the Android layout editor) need to " +

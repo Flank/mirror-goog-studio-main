@@ -31,7 +31,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;

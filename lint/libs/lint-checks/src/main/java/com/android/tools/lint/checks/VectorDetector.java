@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -47,7 +46,7 @@ import org.w3c.dom.NodeList;
 public class VectorDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "VectorRaster", //$NON-NLS-1$
+            "VectorRaster",
             "Vector Image Generation",
             "Vector icons require API 21, but when using Android Gradle plugin 1.4 or higher, " +
             "vectors placed in the `drawable` folder are automatically moved to `drawable-*dpi-v21` " +

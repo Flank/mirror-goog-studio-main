@@ -69,11 +69,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,6 +82,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * A project contains information about an Android project being scanned for
@@ -97,50 +95,50 @@ import java.util.regex.Pattern;
  */
 @Beta
 public class Project {
-    protected final LintClient mClient;
-    protected final File mDir;
-    protected final File mReferenceDir;
-    protected Configuration mConfiguration;
-    protected String mPackage;
-    protected int mBuildSdk = -1;
-    protected IAndroidTarget mTarget;
+    protected final LintClient client;
+    protected final File dir;
+    protected final File referenceDir;
+    protected Configuration configuration;
+    protected String pkg;
+    protected int buildSdk = -1;
+    protected IAndroidTarget target;
 
-    protected AndroidVersion mManifestMinSdk = AndroidVersion.DEFAULT;
-    protected AndroidVersion mManifestTargetSdk = AndroidVersion.DEFAULT;
+    protected AndroidVersion manifestMinSdk = AndroidVersion.DEFAULT;
+    protected AndroidVersion manifestTargetSdk = AndroidVersion.DEFAULT;
 
-    protected boolean mLibrary;
-    protected String mName;
-    protected String mProguardPath;
-    protected boolean mMergeManifests;
+    protected boolean library;
+    protected String name;
+    protected String proguardPath;
+    protected boolean mergeManifests;
 
     /** The SDK info, if any */
-    protected SdkInfo mSdkInfo;
+    protected SdkInfo sdkInfo;
 
     /**
      * If non null, specifies a non-empty list of specific files under this
      * project which should be checked.
      */
-    protected List<File> mFiles;
-    protected List<File> mProguardFiles;
-    protected List<File> mGradleFiles;
-    protected List<File> mManifestFiles;
-    protected List<File> mJavaSourceFolders;
-    protected List<File> mJavaClassFolders;
-    protected List<File> mNonProvidedJavaLibraries;
-    protected List<File> mJavaLibraries;
-    protected List<File> mTestSourceFolders;
-    protected List<File> mResourceFolders;
-    protected List<File> mAssetFolders;
-    protected List<Project> mDirectLibraries;
-    protected List<Project> mAllLibraries;
-    protected boolean mReportIssues = true;
-    protected Boolean mGradleProject;
-    protected Boolean mSupportLib;
-    protected Boolean mAppCompat;
-    protected GradleVersion mGradleVersion;
-    private Map<String, String> mSuperClassMap;
-    private ResourceVisibilityLookup mResourceVisibility;
-    private BuildToolInfo mBuildTools;
+    protected List<File> files;
+    protected List<File> proguardFiles;
+    protected List<File> gradleFiles;
+    protected List<File> manifestFiles;
+    protected List<File> javaSourceFolders;
+    protected List<File> javaClassFolders;
+    protected List<File> nonProvidedJavaLibraries;
+    protected List<File> javaLibraries;
+    protected List<File> testSourceFolders;
+    protected List<File> resourceFolders;
+    protected List<File> assetFolders;
+    protected List<Project> directLibraries;
+    protected List<Project> allLibraries;
+    protected boolean reportIssues = true;
+    protected Boolean gradleProject;
+    protected Boolean supportLib;
+    protected Boolean appCompat;
+    protected GradleVersion gradleVersion;
+    private Map<String, String> superClassMap;
+    private ResourceVisibilityLookup resourceVisibility;
+    private BuildToolInfo buildTools;
 
     /**
      * Creates a new {@link Project} for the given directory.
@@ -164,11 +162,11 @@ public class Project {
      * @return true if this is a Gradle-based project
      */
     public boolean isGradleProject() {
-        if (mGradleProject == null) {
-            mGradleProject = mClient.isGradleProject(this);
+        if (gradleProject == null) {
+            gradleProject = client.isGradleProject(this);
         }
 
-        return mGradleProject;
+        return gradleProject;
     }
 
     /**
@@ -201,14 +199,14 @@ public class Project {
      */
     @Nullable
     public GradleVersion getGradleModelVersion() {
-        if (mGradleVersion == null && isGradleProject()) {
+        if (gradleVersion == null && isGradleProject()) {
             AndroidProject gradleProjectModel = getGradleProjectModel();
             if (gradleProjectModel != null) {
-                mGradleVersion = GradleVersion.tryParse(gradleProjectModel.getModelVersion());
+                gradleVersion = GradleVersion.tryParse(gradleProjectModel.getModelVersion());
             }
         }
 
-        return mGradleVersion;
+        return gradleVersion;
     }
 
     /**
@@ -242,9 +240,9 @@ public class Project {
             @NonNull LintClient client,
             @NonNull File dir,
             @NonNull File referenceDir) {
-        mClient = client;
-        mDir = dir;
-        mReferenceDir = referenceDir;
+        this.client = client;
+        this.dir = dir;
+        this.referenceDir = referenceDir;
         initialize();
     }
 
@@ -253,20 +251,20 @@ public class Project {
         try {
             // Read properties file and initialize library state
             Properties properties = new Properties();
-            File propFile = new File(mDir, PROJECT_PROPERTIES);
+            File propFile = new File(dir, PROJECT_PROPERTIES);
             if (propFile.exists()) {
                 BufferedInputStream is = new BufferedInputStream(new FileInputStream(propFile));
                 try {
                     properties.load(is);
                     String value = properties.getProperty(ANDROID_LIBRARY);
-                    mLibrary = VALUE_TRUE.equals(value);
+                    library = VALUE_TRUE.equals(value);
                     String proguardPath = properties.getProperty(PROGUARD_CONFIG);
                     if (proguardPath != null) {
-                        mProguardPath = proguardPath;
+                        this.proguardPath = proguardPath;
                     }
-                    mMergeManifests = VALUE_TRUE.equals(properties.getProperty(
-                            "manifestmerger.enabled")); //$NON-NLS-1$
-                    String target = properties.getProperty("target"); //$NON-NLS-1$
+                    mergeManifests = VALUE_TRUE.equals(properties.getProperty(
+                            "manifestmerger.enabled"));
+                    String target = properties.getProperty("target");
                     if (target != null) {
                         int index = target.lastIndexOf('-');
                         if (index == -1) {
@@ -275,9 +273,9 @@ public class Project {
                         if (index != -1) {
                             String versionString = target.substring(index + 1);
                             try {
-                                mBuildSdk = Integer.parseInt(versionString);
+                                buildSdk = Integer.parseInt(versionString);
                             } catch (NumberFormatException nufe) {
-                                mClient.log(Severity.WARNING, null,
+                                client.log(Severity.WARNING, null,
                                         "Unexpected build target format: %1$s", target);
                             }
                         }
@@ -291,20 +289,20 @@ public class Project {
                             break;
                         }
 
-                        File libraryDir = new File(mDir, library).getCanonicalFile();
+                        File libraryDir = new File(dir, library).getCanonicalFile();
 
-                        if (mDirectLibraries == null) {
-                            mDirectLibraries = new ArrayList<Project>();
+                        if (directLibraries == null) {
+                            directLibraries = new ArrayList<>();
                         }
 
                         // Adjust the reference dir to be a proper prefix path of the
                         // library dir
-                        File libraryReferenceDir = mReferenceDir;
-                        if (!libraryDir.getPath().startsWith(mReferenceDir.getPath())) {
+                        File libraryReferenceDir = referenceDir;
+                        if (!libraryDir.getPath().startsWith(referenceDir.getPath())) {
                             // Symlinks etc might have been resolved, so do those to
                             // the reference dir as well
                             libraryReferenceDir = libraryReferenceDir.getCanonicalFile();
-                            if (!libraryDir.getPath().startsWith(mReferenceDir.getPath())) {
+                            if (!libraryDir.getPath().startsWith(referenceDir.getPath())) {
                                 File file = libraryReferenceDir;
                                 while (file != null && !file.getPath().isEmpty()) {
                                     if (libraryDir.getPath().startsWith(file.getPath())) {
@@ -317,9 +315,9 @@ public class Project {
                         }
 
                         try {
-                            Project libraryPrj = mClient.getProject(libraryDir,
+                            Project libraryPrj = client.getProject(libraryDir,
                                     libraryReferenceDir);
-                            mDirectLibraries.add(libraryPrj);
+                            directLibraries.add(libraryPrj);
                             // By default, we don't report issues in inferred library projects.
                             // The driver will set report = true for those library explicitly
                             // requested.
@@ -339,23 +337,23 @@ public class Project {
                 }
             }
         } catch (IOException ioe) {
-            mClient.log(ioe, "Initializing project state");
+            client.log(ioe, "Initializing project state");
         }
 
-        if (mDirectLibraries != null) {
-            mDirectLibraries = Collections.unmodifiableList(mDirectLibraries);
+        if (directLibraries != null) {
+            directLibraries = Collections.unmodifiableList(directLibraries);
         } else {
-            mDirectLibraries = Collections.emptyList();
+            directLibraries = Collections.emptyList();
         }
 
         if (isAospBuildEnvironment()) {
-            if (isAospFrameworksRelatedProject(mDir)) {
+            if (isAospFrameworksRelatedProject(dir)) {
                 // No manifest file for this project: just init the manifest values here
-                mManifestMinSdk = mManifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
-            } else if (mBuildSdk == -1) {
+                manifestMinSdk = manifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
+            } else if (buildSdk == -1) {
                 // only set BuildSdk for projects other than frameworks and
                 // the ones that don't have one set in project.properties.
-                mBuildSdk = getClient().getHighestKnownApiLevel();
+                buildSdk = getClient().getHighestKnownApiLevel();
             }
 
         }
@@ -363,12 +361,12 @@ public class Project {
 
     @Override
     public String toString() {
-        return "Project [dir=" + mDir + ']';
+        return "Project [dir=" + dir + ']';
     }
 
     @Override
     public int hashCode() {
-        return mDir.hashCode();
+        return dir.hashCode();
     }
 
     @Override
@@ -380,7 +378,7 @@ public class Project {
         if (getClass() != obj.getClass())
             return false;
         Project other = (Project) obj;
-        return mDir.equals(other.mDir);
+        return dir.equals(other.dir);
     }
 
     /**
@@ -390,10 +388,10 @@ public class Project {
      * @param file the file to be checked
      */
     public void addFile(@NonNull File file) {
-        if (mFiles == null) {
-            mFiles = new ArrayList<File>();
+        if (files == null) {
+            files = new ArrayList<>();
         }
-        mFiles.add(file);
+        files.add(file);
     }
 
     /**
@@ -404,7 +402,7 @@ public class Project {
      */
     @Nullable
     public List<File> getSubset() {
-        return mFiles;
+        return files;
     }
 
     /**
@@ -414,22 +412,22 @@ public class Project {
      */
     @NonNull
     public List<File> getJavaSourceFolders() {
-        if (mJavaSourceFolders == null) {
-            if (isAospFrameworksRelatedProject(mDir)) {
-                return Collections.singletonList(new File(mDir, "java")); //$NON-NLS-1$
+        if (javaSourceFolders == null) {
+            if (isAospFrameworksRelatedProject(dir)) {
+                return Collections.singletonList(new File(dir, "java"));
             }
             if (isAospBuildEnvironment()) {
                 String top = getAospTop();
-                if (mDir.getAbsolutePath().startsWith(top)) {
-                    mJavaSourceFolders = getAospJavaSourcePath();
-                    return mJavaSourceFolders;
+                if (dir.getAbsolutePath().startsWith(top)) {
+                    javaSourceFolders = getAospJavaSourcePath();
+                    return javaSourceFolders;
                 }
             }
 
-            mJavaSourceFolders = mClient.getJavaSourceFolders(this);
+            javaSourceFolders = client.getJavaSourceFolders(this);
         }
 
-        return mJavaSourceFolders;
+        return javaSourceFolders;
     }
 
     /**
@@ -438,33 +436,33 @@ public class Project {
      */
     @NonNull
     public List<File> getJavaClassFolders() {
-        if (mJavaClassFolders == null) {
-            if (isAospFrameworksProject(mDir)) {
+        if (javaClassFolders == null) {
+            if (isAospFrameworksProject(dir)) {
                 String top = getAospTop();
                 if (top != null) {
-                    File out = new File(top, "out"); //$NON-NLS-1$
+                    File out = new File(top, "out");
                     if (out.exists()) {
                         String relative =
                             "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
                         File jar = new File(out, relative.replace('/', File.separatorChar));
                         if (jar.exists()) {
-                            mJavaClassFolders = Collections.singletonList(jar);
-                            return mJavaClassFolders;
+                            javaClassFolders = Collections.singletonList(jar);
+                            return javaClassFolders;
                         }
                     }
                 }
             }
             if (isAospBuildEnvironment()) {
                 String top = getAospTop();
-                if (mDir.getAbsolutePath().startsWith(top)) {
-                    mJavaClassFolders = getAospJavaClassPath();
-                    return mJavaClassFolders;
+                if (dir.getAbsolutePath().startsWith(top)) {
+                    javaClassFolders = getAospJavaClassPath();
+                    return javaClassFolders;
                 }
             }
 
-            mJavaClassFolders = mClient.getJavaClassFolders(this);
+            javaClassFolders = client.getJavaClassFolders(this);
         }
-        return mJavaClassFolders;
+        return javaClassFolders;
     }
 
     /**
@@ -483,11 +481,11 @@ public class Project {
     @NonNull
     public List<File> getJavaLibraries(boolean includeProvided) {
         if (includeProvided) {
-            if (mJavaLibraries == null) {
+            if (javaLibraries == null) {
                 // AOSP builds already merge libraries and class folders into
                 // the single classes.jar file, so these have already been processed
                 // in getJavaClassFolders.
-                mJavaLibraries = mClient.getJavaLibraries(this, true);
+                javaLibraries = client.getJavaLibraries(this, true);
                 if (isAospBuildEnvironment()) {
                     // We still need to add the support-annotations library in the case of AOSP
                     File out = new File(getAospTop(), "out");
@@ -495,16 +493,16 @@ public class Project {
                             + "android-support-annotations_intermediates/classes";
                     File annotationsDir = new File(out, relative.replace('/', File.separatorChar));
                     if (annotationsDir.exists()) {
-                        mJavaLibraries.add(annotationsDir);
+                        javaLibraries.add(annotationsDir);
                     }
                 }
             }
-            return mJavaLibraries;
+            return javaLibraries;
         } else {
-            if (mNonProvidedJavaLibraries == null) {
-                mNonProvidedJavaLibraries = mClient.getJavaLibraries(this, false);
+            if (nonProvidedJavaLibraries == null) {
+                nonProvidedJavaLibraries = client.getJavaLibraries(this, false);
             }
-            return mNonProvidedJavaLibraries;
+            return nonProvidedJavaLibraries;
         }
     }
 
@@ -515,11 +513,11 @@ public class Project {
      */
     @NonNull
     public List<File> getTestSourceFolders() {
-        if (mTestSourceFolders == null) {
-            mTestSourceFolders = mClient.getTestSourceFolders(this);
+        if (testSourceFolders == null) {
+            testSourceFolders = client.getTestSourceFolders(this);
         }
 
-        return mTestSourceFolders;
+        return testSourceFolders;
     }
 
     /**
@@ -530,22 +528,22 @@ public class Project {
      */
     @NonNull
     public List<File> getResourceFolders() {
-        if (mResourceFolders == null) {
-            List<File> folders = mClient.getResourceFolders(this);
+        if (resourceFolders == null) {
+            List<File> folders = client.getResourceFolders(this);
 
-            if (folders.size() == 1 && isAospFrameworksRelatedProject(mDir)) {
+            if (folders.size() == 1 && isAospFrameworksRelatedProject(dir)) {
                 // No manifest file for this project: just init the manifest values here
-                mManifestMinSdk = mManifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
+                manifestMinSdk = manifestTargetSdk = new AndroidVersion(HIGHEST_KNOWN_API, null);
                 File folder = new File(folders.get(0), RES_FOLDER);
                 if (!folder.exists()) {
                     folders = Collections.emptyList();
                 }
             }
 
-            mResourceFolders = folders;
+            resourceFolders = folders;
         }
 
-        return mResourceFolders;
+        return resourceFolders;
     }
 
     /**
@@ -556,11 +554,11 @@ public class Project {
      */
     @NonNull
     public List<File> getAssetFolders() {
-        if (mAssetFolders == null) {
-            mAssetFolders = mClient.getAssetFolders(this);
+        if (assetFolders == null) {
+            assetFolders = client.getAssetFolders(this);
         }
 
-        return mAssetFolders;
+        return assetFolders;
     }
 
     /**
@@ -574,7 +572,7 @@ public class Project {
     @NonNull
     public String getDisplayPath(@NonNull File file) {
        String path = file.getPath();
-       String referencePath = mReferenceDir.getPath();
+       String referencePath = referenceDir.getPath();
        if (path.startsWith(referencePath)) {
            int length = referencePath.length();
            if (path.length() > length && path.charAt(length) == File.separatorChar) {
@@ -596,7 +594,7 @@ public class Project {
     @NonNull
     public String getRelativePath(@NonNull File file) {
        String path = file.getPath();
-       String referencePath = mDir.getPath();
+       String referencePath = dir.getPath();
        if (path.startsWith(referencePath)) {
            int length = referencePath.length();
            if (path.length() > length && path.charAt(length) == File.separatorChar) {
@@ -616,7 +614,7 @@ public class Project {
      */
     @NonNull
     public File getDir() {
-        return mDir;
+        return dir;
     }
 
     /**
@@ -630,7 +628,7 @@ public class Project {
      */
     @NonNull
     public File getReferenceDir() {
-        return mReferenceDir;
+        return referenceDir;
     }
 
     /**
@@ -641,10 +639,10 @@ public class Project {
      */
     @NonNull
     public Configuration getConfiguration(@Nullable LintDriver driver) {
-        if (mConfiguration == null) {
-            mConfiguration = mClient.getConfiguration(this, driver);
+        if (configuration == null) {
+            configuration = client.getConfiguration(this, driver);
         }
-        return mConfiguration;
+        return configuration;
     }
 
     /**
@@ -654,7 +652,7 @@ public class Project {
      */
     @Nullable
     public String getPackage() {
-        return mPackage;
+        return pkg;
     }
 
     /**
@@ -664,7 +662,7 @@ public class Project {
      */
     @NonNull
     public AndroidVersion getMinSdkVersion() {
-        return mManifestMinSdk == null ? AndroidVersion.DEFAULT : mManifestMinSdk;
+        return manifestMinSdk == null ? AndroidVersion.DEFAULT : manifestMinSdk;
     }
 
     /**
@@ -686,8 +684,8 @@ public class Project {
      */
     @NonNull
     public AndroidVersion getTargetSdkVersion() {
-        return mManifestTargetSdk == AndroidVersion.DEFAULT
-                ? getMinSdkVersion() : mManifestTargetSdk;
+        return manifestTargetSdk == AndroidVersion.DEFAULT
+                ? getMinSdkVersion() : manifestTargetSdk;
     }
 
     /**
@@ -708,7 +706,7 @@ public class Project {
      * @return the build target API or -1 if unknown
      */
     public int getBuildSdk() {
-        return mBuildSdk;
+        return buildSdk;
     }
 
     /**
@@ -718,11 +716,11 @@ public class Project {
      */
     @Nullable
     public BuildToolInfo getBuildTools() {
-        if (mBuildTools == null) {
-            mBuildTools = mClient.getBuildTools(this);
+        if (buildTools == null) {
+            buildTools = client.getBuildTools(this);
         }
 
-        return mBuildTools;
+        return buildTools;
     }
 
     /**
@@ -732,11 +730,11 @@ public class Project {
      */
     @Nullable
     public IAndroidTarget getBuildTarget() {
-        if (mTarget == null) {
-            mTarget = mClient.getCompileTarget(this);
+        if (target == null) {
+            target = client.getCompileTarget(this);
         }
 
-        return mTarget;
+        return target;
     }
 
     /**
@@ -750,11 +748,11 @@ public class Project {
             return;
         }
 
-        mPackage = root.getAttribute(ATTR_PACKAGE);
+        pkg = root.getAttribute(ATTR_PACKAGE);
 
         // Initialize minSdk and targetSdk
-        mManifestMinSdk = AndroidVersion.DEFAULT;
-        mManifestTargetSdk = AndroidVersion.DEFAULT;
+        manifestMinSdk = AndroidVersion.DEFAULT;
+        manifestTargetSdk = AndroidVersion.DEFAULT;
         NodeList usesSdks = root.getElementsByTagName(TAG_USES_SDK);
         if (usesSdks.getLength() > 0) {
             Element element = (Element) usesSdks.item(0);
@@ -764,22 +762,22 @@ public class Project {
                 minSdk = element.getAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION);
             }
             if (minSdk != null) {
-                IAndroidTarget[] targets = mClient.getTargets();
-                mManifestMinSdk = SdkVersionInfo.getVersion(minSdk, targets);
+                IAndroidTarget[] targets = client.getTargets();
+                manifestMinSdk = SdkVersionInfo.getVersion(minSdk, targets);
             }
 
             if (element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
                 String targetSdk = element.getAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
                 if (targetSdk != null) {
-                    IAndroidTarget[] targets = mClient.getTargets();
-                    mManifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, targets);
+                    IAndroidTarget[] targets = client.getTargets();
+                    manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, targets);
                 }
             } else {
-                mManifestTargetSdk = mManifestMinSdk;
+                manifestTargetSdk = manifestMinSdk;
             }
         } else if (isAospBuildEnvironment()) {
             extractAospMinSdkVersion();
-            mManifestTargetSdk = mManifestMinSdk;
+            manifestTargetSdk = manifestMinSdk;
         }
     }
 
@@ -789,7 +787,7 @@ public class Project {
      * @return true if this project is an Android library project
      */
     public boolean isLibrary() {
-        return mLibrary;
+        return library;
     }
 
     /**
@@ -800,7 +798,7 @@ public class Project {
      */
     @NonNull
     public List<Project> getDirectLibraries() {
-        return mDirectLibraries != null ? mDirectLibraries : Collections.<Project>emptyList();
+        return directLibraries != null ? directLibraries : Collections.<Project>emptyList();
     }
 
     /**
@@ -810,21 +808,21 @@ public class Project {
      */
     @NonNull
     public List<Project> getAllLibraries() {
-        if (mAllLibraries == null) {
-            if (mDirectLibraries.isEmpty()) {
-                return mDirectLibraries;
+        if (allLibraries == null) {
+            if (directLibraries.isEmpty()) {
+                return directLibraries;
             }
 
-            List<Project> all = new ArrayList<Project>();
+            List<Project> all = new ArrayList<>();
             Set<Project> seen = Sets.newHashSet();
             Set<Project> path = Sets.newHashSet();
             seen.add(this);
             path.add(this);
             addLibraryProjects(all, seen, path);
-            mAllLibraries = all;
+            allLibraries = all;
         }
 
-        return mAllLibraries;
+        return allLibraries;
     }
 
     /**
@@ -837,10 +835,10 @@ public class Project {
      */
     private void addLibraryProjects(@NonNull Collection<Project> collection,
             @NonNull Set<Project> seen, @NonNull Set<Project> path) {
-        for (Project library : mDirectLibraries) {
+        for (Project library : directLibraries) {
             if (seen.contains(library)) {
                 if (path.contains(library)) {
-                    mClient.log(Severity.WARNING, null,
+                    client.log(Severity.WARNING, null,
                             "Internal lint error: cyclic library dependency for %1$s", library);
                 }
                 continue;
@@ -861,11 +859,11 @@ public class Project {
      */
     @NonNull
     public SdkInfo getSdkInfo() {
-        if (mSdkInfo == null) {
-            mSdkInfo = mClient.getSdkInfo(this);
+        if (sdkInfo == null) {
+            sdkInfo = client.getSdkInfo(this);
         }
 
-        return mSdkInfo;
+        return sdkInfo;
     }
 
     /**
@@ -877,16 +875,16 @@ public class Project {
      */
     @NonNull
     public List<File> getManifestFiles() {
-        if (mManifestFiles == null) {
-            File manifestFile = new File(mDir, ANDROID_MANIFEST_XML);
+        if (manifestFiles == null) {
+            File manifestFile = new File(dir, ANDROID_MANIFEST_XML);
             if (manifestFile.exists()) {
-                mManifestFiles = Collections.singletonList(manifestFile);
+                manifestFiles = Collections.singletonList(manifestFile);
             } else {
-                mManifestFiles = Collections.emptyList();
+                manifestFiles = Collections.emptyList();
             }
         }
 
-        return mManifestFiles;
+        return manifestFiles;
     }
 
     /**
@@ -896,12 +894,12 @@ public class Project {
      */
     @NonNull
     public List<File> getProguardFiles() {
-        if (mProguardFiles == null) {
-            List<File> files = new ArrayList<File>();
-            if (mProguardPath != null) {
-                Splitter splitter = Splitter.on(CharMatcher.anyOf(":;")); //$NON-NLS-1$
-                for (String path : splitter.split(mProguardPath)) {
-                    if (path.contains("${")) { //$NON-NLS-1$
+        if (proguardFiles == null) {
+            List<File> files = new ArrayList<>();
+            if (proguardPath != null) {
+                Splitter splitter = Splitter.on(CharMatcher.anyOf(":;"));
+                for (String path : splitter.split(proguardPath)) {
+                    if (path.contains("${")) {
                         // Don't analyze the global/user proguard files
                         continue;
                     }
@@ -924,9 +922,9 @@ public class Project {
                     files.add(file);
                 }
             }
-            mProguardFiles = files;
+            proguardFiles = files;
         }
-        return mProguardFiles;
+        return proguardFiles;
     }
 
     /**
@@ -936,23 +934,23 @@ public class Project {
      */
     @NonNull
     public List<File> getGradleBuildScripts() {
-        if (mGradleFiles == null) {
+        if (gradleFiles == null) {
             if (isGradleProject()) {
-                mGradleFiles = Lists.newArrayListWithExpectedSize(2);
-                File build = new File(mDir, SdkConstants.FN_BUILD_GRADLE);
+                gradleFiles = Lists.newArrayListWithExpectedSize(2);
+                File build = new File(dir, SdkConstants.FN_BUILD_GRADLE);
                 if (build.exists()) {
-                    mGradleFiles.add(build);
+                    gradleFiles.add(build);
                 }
-                File settings = new File(mDir, SdkConstants.FN_SETTINGS_GRADLE);
+                File settings = new File(dir, SdkConstants.FN_SETTINGS_GRADLE);
                 if (settings.exists()) {
-                    mGradleFiles.add(settings);
+                    gradleFiles.add(settings);
                 }
             } else {
-                mGradleFiles = Collections.emptyList();
+                gradleFiles = Collections.emptyList();
             }
         }
 
-        return mGradleFiles;
+        return gradleFiles;
     }
 
     /**
@@ -962,11 +960,11 @@ public class Project {
      */
     @NonNull
     public String getName() {
-        if (mName == null) {
-            mName = mClient.getProjectName(this);
+        if (name == null) {
+            name = client.getProjectName(this);
         }
 
-        return mName;
+        return name;
     }
 
     /**
@@ -976,7 +974,7 @@ public class Project {
      */
     public void setName(@NonNull String name) {
         assert !name.isEmpty();
-        mName = name;
+        this.name = name;
     }
 
     /**
@@ -986,7 +984,7 @@ public class Project {
      * @param reportIssues whether lint should report issues in this project
      */
     public void setReportIssues(boolean reportIssues) {
-        mReportIssues = reportIssues;
+        this.reportIssues = reportIssues;
     }
 
     /**
@@ -1004,7 +1002,7 @@ public class Project {
      * @return whether lint should report issues in this project
      */
     public boolean getReportIssues() {
-        return mReportIssues;
+        return reportIssues;
     }
 
     /**
@@ -1013,7 +1011,7 @@ public class Project {
      * @return true if manifests in library projects should be merged into main projects
      */
     public boolean isMergingManifests() {
-        return mMergeManifests;
+        return mergeManifests;
     }
 
 
@@ -1045,9 +1043,9 @@ public class Project {
      */
     public static boolean isAospFrameworksRelatedProject(@NonNull File dir) {
         if (isAospBuildEnvironment()) {
-            File frameworks = new File(getAospTop(), "frameworks"); //$NON-NLS-1$
+            File frameworks = new File(getAospTop(), "frameworks");
             String frameworksDir = frameworks.getAbsolutePath();
-            String supportDir = new File(frameworks, "support").getAbsolutePath(); //$NON-NLS-1$
+            String supportDir = new File(frameworks, "support").getAbsolutePath();
             if (dir.exists()
                     && !dir.getAbsolutePath().startsWith(supportDir)
                     && dir.getAbsolutePath().startsWith(frameworksDir)
@@ -1066,9 +1064,9 @@ public class Project {
     public static boolean isAospFrameworksProject(@NonNull File dir) {
         String top = getAospTop();
         if (top != null) {
-            File toCompare = new File(top, "frameworks" //$NON-NLS-1$
-                    + File.separator + "base"           //$NON-NLS-1$
-                    + File.separator + "core");         //$NON-NLS-1$
+            File toCompare = new File(top, "frameworks"
+                    + File.separator + "base"
+                    + File.separator + "core");
             try {
                 return dir.getCanonicalFile().equals(toCompare) && dir.exists();
             } catch (IOException e) {
@@ -1081,37 +1079,37 @@ public class Project {
 
     /** Get the root AOSP dir, if any */
     private static String getAospTop() {
-        return System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+        return System.getenv("ANDROID_BUILD_TOP");
     }
 
     /** Get the host out directory in AOSP, if any */
     private static String getAospHostOut() {
-        return System.getenv("ANDROID_HOST_OUT");    //$NON-NLS-1$
+        return System.getenv("ANDROID_HOST_OUT");
     }
 
     /** Get the product out directory in AOSP, if any */
     private static String getAospProductOut() {
-        return System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
+        return System.getenv("ANDROID_PRODUCT_OUT");
     }
 
     private List<File> getAospJavaSourcePath() {
-        List<File> sources = new ArrayList<File>(2);
+        List<File> sources = new ArrayList<>(2);
         // Normal sources
-        File src = new File(mDir, "src"); //$NON-NLS-1$
+        File src = new File(dir, "src");
         if (src.exists()) {
             sources.add(src);
         }
 
         // Generates sources
         for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "src"); //$NON-NLS-1$
+            File classes = new File(dir, "src");
             if (classes.exists()) {
                 sources.add(classes);
             }
         }
 
         if (sources.isEmpty()) {
-            mClient.log(null,
+            client.log(null,
                     "Warning: Could not find sources or generated sources for project %1$s",
                     getName());
         }
@@ -1120,14 +1118,14 @@ public class Project {
     }
 
     private List<File> getAospJavaClassPath() {
-        List<File> classDirs = new ArrayList<File>(1);
+        List<File> classDirs = new ArrayList<>(1);
 
         for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "classes"); //$NON-NLS-1$
+            File classes = new File(dir, "classes");
             if (classes.exists()) {
                 classDirs.add(classes);
             } else {
-                classes = new File(dir, "classes.jar"); //$NON-NLS-1$
+                classes = new File(dir, "classes.jar");
                 if (classes.exists()) {
                     classDirs.add(classes);
                 }
@@ -1135,7 +1133,7 @@ public class Project {
         }
 
         if (classDirs.isEmpty()) {
-            mClient.log(null,
+            client.log(null,
                     "No bytecode found: Has the project been built? (%1$s)", getName());
         }
 
@@ -1145,37 +1143,37 @@ public class Project {
     /** Find the _intermediates directories for a given module name */
     private List<File> getIntermediateDirs() {
         // See build/core/definitions.mk and in particular the "intermediates-dir-for" definition
-        List<File> intermediates = new ArrayList<File>();
+        List<File> intermediates = new ArrayList<>();
 
         // TODO: Look up the module name, e.g. LOCAL_MODULE. However,
         // some Android.mk files do some complicated things with it - and most
         // projects use the same module name as the directory name.
-        String moduleName = mDir.getName();
+        String moduleName = dir.getName();
         try {
             // Get the actual directory name instead of '.' that's possible
             // when using this via CLI.
-            moduleName = mDir.getCanonicalFile().getName();
+            moduleName = dir.getCanonicalFile().getName();
         } catch (IOException ioe) {
             // pass
         }
 
         String top = getAospTop();
         final String[] outFolders = new String[] {
-            top + "/out/host/common/obj",             //$NON-NLS-1$
-            top + "/out/target/common/obj",           //$NON-NLS-1$
-            getAospHostOut() + "/obj",                //$NON-NLS-1$
-            getAospProductOut() + "/obj"              //$NON-NLS-1$
+            top + "/out/host/common/obj",
+            top + "/out/target/common/obj",
+            getAospHostOut() + "/obj",
+            getAospProductOut() + "/obj"
         };
         final String[] moduleClasses = new String[] {
-                "APPS",                //$NON-NLS-1$
-                "JAVA_LIBRARIES",      //$NON-NLS-1$
+                "APPS",
+                "JAVA_LIBRARIES",
         };
 
         for (String out : outFolders) {
             assert new File(out.replace('/', File.separatorChar)).exists() : out;
             for (String moduleClass : moduleClasses) {
                 String path = out + '/' + moduleClass + '/' + moduleName
-                        + "_intermediates"; //$NON-NLS-1$
+                        + "_intermediates";
                 File file = new File(path.replace('/', File.separatorChar));
                 if (file.exists()) {
                     intermediates.add(file);
@@ -1189,33 +1187,33 @@ public class Project {
     private void extractAospMinSdkVersion() {
         // Is the SDK level specified by a Makefile?
         boolean found = false;
-        File makefile = new File(mDir, "Android.mk"); //$NON-NLS-1$
+        File makefile = new File(dir, "Android.mk");
         if (makefile.exists()) {
             try {
                 List<String> lines = Files.readLines(makefile, Charsets.UTF_8);
-                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)"); //$NON-NLS-1$
+                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)");
                 for (String line : lines) {
                     line = line.trim();
                     Matcher matcher = p.matcher(line);
                     if (matcher.matches()) {
                         found = true;
                         String version = matcher.group(1);
-                        if (version.equals("current")) { //$NON-NLS-1$
-                            mManifestMinSdk = findCurrentAospVersion();
+                        if (version.equals("current")) {
+                            manifestMinSdk = findCurrentAospVersion();
                         } else {
-                            mManifestMinSdk = SdkVersionInfo.getVersion(version,
-                                    mClient.getTargets());
+                            manifestMinSdk = SdkVersionInfo.getVersion(version,
+                                    client.getTargets());
                         }
                         break;
                     }
                 }
             } catch (IOException ioe) {
-                mClient.log(ioe, null);
+                client.log(ioe, null);
             }
         }
 
         if (!found) {
-            mManifestMinSdk = findCurrentAospVersion();
+            manifestMinSdk = findCurrentAospVersion();
         }
     }
 
@@ -1225,7 +1223,7 @@ public class Project {
     /** In an AOSP build environment, identify the currently built image version, if available */
     private static AndroidVersion findCurrentAospVersion() {
         if (sCurrentVersion == null) {
-            File versionMk = new File(getAospTop(), "build/core/version_defaults.mk" //$NON-NLS-1$
+            File versionMk = new File(getAospTop(), "build/core/version_defaults.mk"
                     .replace('/', File.separatorChar));
 
             if (!versionMk.exists()) {
@@ -1271,54 +1269,54 @@ public class Project {
     @Nullable
     public Boolean dependsOn(@NonNull String artifact) {
         if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-            if (mSupportLib == null) {
+            if (supportLib == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.equals("android-support-v4.jar")      //$NON-NLS-1$
-                            || name.startsWith("support-v4-")) {   //$NON-NLS-1$
-                        mSupportLib = true;
+                    if (name.equals("android-support-v4.jar")
+                            || name.startsWith("support-v4-")) {
+                        supportLib = true;
                         break;
                     }
                 }
-                if (mSupportLib == null) {
+                if (supportLib == null) {
                     for (Project dependency : getDirectLibraries()) {
                         Boolean b = dependency.dependsOn(artifact);
                         if (b != null && b) {
-                            mSupportLib = true;
+                            supportLib = true;
                             break;
                         }
                     }
                 }
-                if (mSupportLib == null) {
-                    mSupportLib = false;
+                if (supportLib == null) {
+                    supportLib = false;
                 }
             }
 
-            return mSupportLib;
+            return supportLib;
         } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-            if (mAppCompat == null) {
+            if (appCompat == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.startsWith("appcompat-v7-")) { //$NON-NLS-1$
-                        mAppCompat = true;
+                    if (name.startsWith("appcompat-v7-")) {
+                        appCompat = true;
                         break;
                     }
                 }
-                if (mAppCompat == null) {
+                if (appCompat == null) {
                     for (Project dependency : getDirectLibraries()) {
                         Boolean b = dependency.dependsOn(artifact);
                         if (b != null && b) {
-                            mAppCompat = true;
+                            appCompat = true;
                             break;
                         }
                     }
                 }
-                if (mAppCompat == null) {
-                    mAppCompat = false;
+                if (appCompat == null) {
+                    appCompat = false;
                 }
             }
 
-            return mAppCompat;
+            return appCompat;
         }
 
         return null;
@@ -1400,11 +1398,11 @@ public class Project {
      */
     @NonNull
     public Map<String, String> getSuperClassMap() {
-        if (mSuperClassMap == null) {
-            mSuperClassMap = mClient.createSuperClassMap(this);
+        if (superClassMap == null) {
+            superClassMap = client.createSuperClassMap(this);
         }
 
-        return mSuperClassMap;
+        return superClassMap;
     }
 
     /**
@@ -1435,17 +1433,17 @@ public class Project {
      */
     @NonNull
     public ResourceVisibilityLookup getResourceVisibility() {
-        if (mResourceVisibility == null) {
+        if (resourceVisibility == null) {
             if (isGradleProject()) {
                 AndroidProject project = getGradleProjectModel();
                 Variant variant = getCurrentVariant();
                 if (project != null && variant != null) {
-                    mResourceVisibility = mClient.getResourceVisibilityProvider().get(project,
+                    resourceVisibility = client.getResourceVisibilityProvider().get(project,
                             variant);
 
                 } else if (getGradleLibraryModel() != null) {
                     try {
-                        mResourceVisibility = mClient.getResourceVisibilityProvider()
+                        resourceVisibility = client.getResourceVisibilityProvider()
                                 .get(getGradleLibraryModel());
                     } catch (Exception ignore) {
                         // Handle talking to older Gradle plugins (where we don't
@@ -1453,12 +1451,12 @@ public class Project {
                     }
                 }
             }
-            if (mResourceVisibility == null) {
-                mResourceVisibility = ResourceVisibilityLookup.NONE;
+            if (resourceVisibility == null) {
+                resourceVisibility = ResourceVisibilityLookup.NONE;
             }
         }
 
-        return mResourceVisibility;
+        return resourceVisibility;
     }
 
     /**
@@ -1468,6 +1466,6 @@ public class Project {
      */
     @NonNull
     public LintClient getClient() {
-        return mClient;
+        return client;
     }
 }

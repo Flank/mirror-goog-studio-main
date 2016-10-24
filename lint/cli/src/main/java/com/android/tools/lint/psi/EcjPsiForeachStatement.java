@@ -25,7 +25,6 @@ import com.intellij.psi.PsiForeachStatement;
 import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiForeachStatement extends EcjPsiStatement implements PsiForeachStatement {

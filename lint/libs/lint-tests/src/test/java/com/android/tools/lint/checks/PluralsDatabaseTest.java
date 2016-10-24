@@ -40,9 +40,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -52,6 +49,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
 
 public class PluralsDatabaseTest extends TestCase {
     public void testGetRelevant() {

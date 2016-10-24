@@ -35,7 +35,6 @@ import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -51,7 +50,7 @@ import java.util.List;
 public class FragmentDetector extends Detector implements JavaPsiScanner {
     /** Are fragment subclasses instantiatable? */
     public static final Issue ISSUE = Issue.create(
-        "ValidFragment", //$NON-NLS-1$
+        "ValidFragment",
         "Fragment not instantiatable",
 
         "From the Fragment documentation:\n" +
@@ -69,7 +68,7 @@ public class FragmentDetector extends Detector implements JavaPsiScanner {
                 FragmentDetector.class,
                 Scope.JAVA_FILE_SCOPE)
         ).addMoreInfo(
-            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()"); //$NON-NLS-1$
+            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()");
 
 
     /** Constructs a new {@link FragmentDetector} */

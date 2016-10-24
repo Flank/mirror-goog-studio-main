@@ -32,7 +32,17 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiTypeParameter;
-
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import lombok.ast.AstVisitor;
+import lombok.ast.ClassDeclaration;
+import lombok.ast.ConstructorInvocation;
+import lombok.ast.MethodInvocation;
+import lombok.ast.Node;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -40,19 +50,6 @@ import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-
-import lombok.ast.AstVisitor;
-import lombok.ast.ClassDeclaration;
-import lombok.ast.ConstructorInvocation;
-import lombok.ast.MethodInvocation;
-import lombok.ast.Node;
 
 /**
  * A detector is able to find a particular problem (or a set of related problems).
@@ -873,7 +870,7 @@ public abstract class Detector {
          * invoked on all elements or all attributes
          */
         @NonNull
-        List<String> ALL = new ArrayList<String>(0); // NOT Collections.EMPTY!
+        List<String> ALL = new ArrayList<>(0); // NOT Collections.EMPTY!
         // We want to distinguish this from just an *empty* list returned by the caller!
     }
 

@@ -42,15 +42,13 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-
-import org.mockito.stubbing.Answer;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.mockito.stubbing.Answer;
 
 @SuppressWarnings("javadoc")
 public class ManifestDetectorTest extends AbstractCheckTest {
@@ -1530,17 +1528,17 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         @NonNull
                         @Override
                         public List<File> getManifestFiles() {
-                            if (mManifestFiles == null) {
-                                mManifestFiles = Lists.newArrayList();
-                                addManifestFiles(mDir);
+                            if (manifestFiles == null) {
+                                manifestFiles = Lists.newArrayList();
+                                addManifestFiles(this.dir);
                             }
 
-                            return mManifestFiles;
+                            return manifestFiles;
                         }
 
                         private void addManifestFiles(File dir) {
                             if (dir.getName().equals(ANDROID_MANIFEST_XML)) {
-                                mManifestFiles.add(dir);
+                                manifestFiles.add(dir);
                             } else if (dir.isDirectory()) {
                                 File[] files = dir.listFiles();
                                 if (files != null) {
@@ -1564,9 +1562,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 return null;
                             }
 
-                            File main = new File(mDir, ANDROID_MANIFEST_XML);
-                            File debug = new File(mDir, "debug" + File.separator + ANDROID_MANIFEST_XML);
-                            File test = new File(mDir, "test" + File.separator + ANDROID_MANIFEST_XML);
+                            File main = new File(dir, ANDROID_MANIFEST_XML);
+                            File debug = new File(dir, "debug" + File.separator + ANDROID_MANIFEST_XML);
+                            File test = new File(dir, "test" + File.separator + ANDROID_MANIFEST_XML);
 
                             SourceProvider defaultSourceProvider = createSourceProvider(main);
                             SourceProvider debugSourceProvider = createSourceProvider(debug);

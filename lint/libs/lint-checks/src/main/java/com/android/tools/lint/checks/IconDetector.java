@@ -86,9 +86,6 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-
-import org.w3c.dom.Element;
-
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -112,10 +109,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import org.w3c.dom.Element;
 
 /**
  * Checks for common icon problems, such as wrong icon sizes, placing icons in the
@@ -127,7 +124,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     static {
         boolean includeLdpi = false;
 
-        String value = System.getenv("ANDROID_LINT_INCLUDE_LDPI"); //$NON-NLS-1$
+        String value = System.getenv("ANDROID_LINT_INCLUDE_LDPI");
         if (value != null) {
             includeLdpi = Boolean.valueOf(value);
         }
@@ -136,11 +133,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Pattern for the expected density folders to be found in the project */
     private static final Pattern DENSITY_PATTERN = Pattern.compile(
-            "^drawable-(nodpi|xxxhdpi|xxhdpi|xhdpi|hdpi|mdpi"     //$NON-NLS-1$
-                + (INCLUDE_LDPI ? "|ldpi" : "") + ")$");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            "^drawable-(nodpi|xxxhdpi|xxhdpi|xhdpi|hdpi|mdpi"
+                + (INCLUDE_LDPI ? "|ldpi" : "") + ")$");
 
     /** Pattern for icon names that include their dp size as part of the name */
-    private static final Pattern DP_NAME_PATTERN = Pattern.compile(".+_(\\d+)dp\\.[a-zA-Z]+"); //$NON-NLS-1$
+    private static final Pattern DP_NAME_PATTERN = Pattern.compile(".+_(\\d+)dp\\.[a-zA-Z]+");
 
     /** Cache for {@link #getRequiredDensityFolders(Context)} */
     private List<String> mCachedRequiredDensities;
@@ -151,12 +148,12 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     // for qualifier lookup
     private static final String[] DENSITY_QUALIFIERS =
         new String[] {
-            "-ldpi",  //$NON-NLS-1$
-            "-mdpi",  //$NON-NLS-1$
-            "-hdpi",  //$NON-NLS-1$
-            "-xhdpi", //$NON-NLS-1$
-            "-xxhdpi",//$NON-NLS-1$
-            "-xxxhdpi",//$NON-NLS-1$
+            "-ldpi",
+            "-mdpi",
+            "-hdpi",
+            "-xhdpi",
+            "-xxhdpi",
+            "-xxxhdpi",
     };
 
     /** Scope needed to detect the types of icons (which involves scanning .java files,
@@ -175,7 +172,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Wrong icon size according to published conventions */
     public static final Issue ICON_EXPECTED_SIZE = Issue.create(
-            "IconExpectedSize", //$NON-NLS-1$
+            "IconExpectedSize",
             "Icon has incorrect size",
             "There are predefined sizes (for each density) for launcher icons. You " +
             "should follow these conventions to make sure your icons fit in with the " +
@@ -187,11 +184,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             // Still some potential false positives:
             .setEnabledByDefault(false)
             .addMoreInfo(
-                    "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
+                    "http://developer.android.com/design/style/iconography.html");
 
     /** Inconsistent dip size across densities */
     public static final Issue ICON_DIP_SIZE = Issue.create(
-            "IconDipSize", //$NON-NLS-1$
+            "IconDipSize",
             "Icon density-independent size validation",
             "Checks the all icons which are provided in multiple densities, all compute to " +
             "roughly the same density-independent pixel (`dip`) size. This catches errors where " +
@@ -204,7 +201,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Images in res/drawable folder */
     public static final Issue ICON_LOCATION = Issue.create(
-            "IconLocation", //$NON-NLS-1$
+            "IconLocation",
             "Image defined in density-independent drawable folder",
             "The res/drawable folder is intended for density-independent graphics such as " +
             "shapes defined in XML. For bitmaps, move it to `drawable-mdpi` and consider " +
@@ -215,11 +212,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             5,
             Severity.WARNING,
             IMPLEMENTATION_RES_ONLY).addMoreInfo(
-            "http://developer.android.com/guide/practices/screens_support.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/practices/screens_support.html");
 
     /** Missing density versions of image */
     public static final Issue ICON_DENSITIES = Issue.create(
-            "IconDensities", //$NON-NLS-1$
+            "IconDensities",
             "Icon densities validation",
             "Icons will look best if a custom version is provided for each of the " +
             "major screen density classes (low, medium, high, extra high). " +
@@ -235,11 +232,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             4,
             Severity.WARNING,
             IMPLEMENTATION_RES_ONLY).addMoreInfo(
-            "http://developer.android.com/guide/practices/screens_support.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/practices/screens_support.html");
 
     /** Missing density folders */
     public static final Issue ICON_MISSING_FOLDER = Issue.create(
-            "IconMissingDensityFolder", //$NON-NLS-1$
+            "IconMissingDensityFolder",
             "Missing density folder",
             "Icons will look best if a custom version is provided for each of the " +
             "major screen density classes (low, medium, high, extra-high, extra-extra-high). " +
@@ -254,11 +251,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             3,
             Severity.WARNING,
             IMPLEMENTATION_RES_ONLY).addMoreInfo(
-            "http://developer.android.com/guide/practices/screens_support.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/practices/screens_support.html");
 
     /** Using .gif bitmaps */
     public static final Issue GIF_USAGE = Issue.create(
-            "GifUsage", //$NON-NLS-1$
+            "GifUsage",
             "Using `.gif` format for bitmaps is discouraged",
             "The `.gif` file format is discouraged. Consider using `.png` (preferred) " +
             "or `.jpg` (acceptable) instead.",
@@ -266,11 +263,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             5,
             Severity.WARNING,
             IMPLEMENTATION_RES_ONLY).addMoreInfo(
-            "http://developer.android.com/guide/topics/resources/drawable-resource.html#Bitmap"); //$NON-NLS-1$
+            "http://developer.android.com/guide/topics/resources/drawable-resource.html#Bitmap");
 
     /** Duplicated icons across different names */
     public static final Issue DUPLICATES_NAMES = Issue.create(
-            "IconDuplicates", //$NON-NLS-1$
+            "IconDuplicates",
             "Duplicated icons under different names",
             "If an icon is repeated under different names, you can consolidate and just " +
             "use one of the icons and delete the others to make your application smaller. " +
@@ -283,7 +280,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Duplicated contents across configurations for a given name */
     public static final Issue DUPLICATES_CONFIGURATIONS = Issue.create(
-            "IconDuplicatesConfig", //$NON-NLS-1$
+            "IconDuplicatesConfig",
             "Identical bitmaps across various configurations",
             "If an icon is provided under different configuration parameters such as " +
             "`drawable-hdpi` or `-v11`, they should typically be different. This detector " +
@@ -296,7 +293,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Icons appearing in both -nodpi and a -Ndpi folder */
     public static final Issue ICON_NODPI = Issue.create(
-            "IconNoDpi", //$NON-NLS-1$
+            "IconNoDpi",
             "Icon appears in both `-nodpi` and dpi folders",
             "Bitmaps that appear in `drawable-nodpi` folders will not be scaled by the " +
             "Android framework. If a drawable resource of the same name appears *both* in " +
@@ -310,7 +307,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Drawables provided as both .9.png and .png files */
     public static final Issue ICON_MIX_9PNG = Issue.create(
-            "IconMixedNinePatch", //$NON-NLS-1$
+            "IconMixedNinePatch",
             "Clashing PNG and 9-PNG files",
 
             "If you accidentally name two separate resources `file.png` and `file.9.png`, " +
@@ -323,7 +320,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Icons appearing as both drawable xml files and bitmaps */
     public static final Issue ICON_XML_AND_PNG = Issue.create(
-            "IconXmlAndPng", //$NON-NLS-1$
+            "IconXmlAndPng",
             "Icon is specified both as `.xml` file and as a bitmap",
             "If a drawable resource appears as an `.xml` file in the `drawable/` folder, " +
             "it's usually not intentional for it to also appear as a bitmap using the " +
@@ -336,7 +333,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Wrong filename according to the format */
     public static final Issue ICON_EXTENSION = Issue.create(
-            "IconExtension", //$NON-NLS-1$
+            "IconExtension",
             "Icon format does not match the file extension",
 
             "Ensures that icons have the correct file extension (e.g. a `.png` file is " +
@@ -348,7 +345,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Wrong filename according to the format */
     public static final Issue ICON_COLORS = Issue.create(
-            "IconColors", //$NON-NLS-1$
+            "IconColors",
             "Icon colors do not follow the recommended visual style",
 
             "Notification icons and Action Bar icons should only white and shades of gray. " +
@@ -362,11 +359,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             6,
             Severity.WARNING,
             IMPLEMENTATION_JAVA).addMoreInfo(
-                "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
+                "http://developer.android.com/design/style/iconography.html");
 
     /** Wrong launcher icon shape */
     public static final Issue ICON_LAUNCHER_SHAPE = Issue.create(
-            "IconLauncherShape", //$NON-NLS-1$
+            "IconLauncherShape",
             "The launcher icon shape should use a distinct silhouette",
 
             "According to the Android Design Guide " +
@@ -381,11 +378,11 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             6,
             Severity.WARNING,
             IMPLEMENTATION_JAVA).addMoreInfo(
-                "http://developer.android.com/design/style/iconography.html"); //$NON-NLS-1$
+                "http://developer.android.com/design/style/iconography.html");
 
     /** Switch to webp? */
     public static final Issue WEBP_ELIGIBLE = Issue.create(
-            "ConvertToWebp", //$NON-NLS-1$
+            "ConvertToWebp",
             "Convert to WebP",
 
             "The WebP format is typically more compact than PNG and JPEG. As of Android 4.2.1 " +
@@ -398,7 +395,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     /** Webp unsupported? */
     public static final Issue WEBP_UNSUPPORTED = Issue.create(
-            "WebpUnsupported", //$NON-NLS-1$
+            "WebpUnsupported",
             "WebP Unsupported",
 
             "The WebP format requires Android 4.0 (API 15). Certain features, such as lossless " +
@@ -754,7 +751,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                             StringBuilder sb = new StringBuilder(sameFiles.size() * 16);
                             for (File file : sameFiles) {
                                 if (sb.length() > 0) {
-                                    sb.append(", "); //$NON-NLS-1$
+                                    sb.append(", ");
                                 }
                                 sb.append(file.getParentFile().getName());
                             }
@@ -768,7 +765,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                             StringBuilder sb = new StringBuilder(sameFiles.size() * 16);
                             for (File file : sameFiles) {
                                 if (sb.length() > 0) {
-                                    sb.append(", "); //$NON-NLS-1$
+                                    sb.append(", ");
                                 }
                                 sb.append(file.getName());
                             }
@@ -1658,7 +1655,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
                                 if (!formatName.equalsIgnoreCase(extension)) {
                                     if (endsWith(path, DOT_JPG)
-                                            && formatName.equals("JPEG")) { //$NON-NLS-1$
+                                            && formatName.equals("JPEG")) {
                                         return;
                                     }
                                     String message = String.format(
@@ -1795,10 +1792,10 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 checkSize(context, folderName, file, 48, 48, true, /*exact*/folderConfig);
             } else if (isActionBarIcon(baseName)) {
                 checkSize(context, folderName, file, 32, 32, true, /*exact*/folderConfig);
-            } else if (name.startsWith("ic_dialog_")) { //$NON-NLS-1$
+            } else if (name.startsWith("ic_dialog_")) {
                 // Dialog
                 checkSize(context, folderName, file, 32, 32, true, /*exact*/folderConfig);
-            } else if (name.startsWith("ic_tab_")) { //$NON-NLS-1$
+            } else if (name.startsWith("ic_tab_")) {
                 // Tab icons
                 checkSize(context, folderName, file, 32, 32, true, /*exact*/folderConfig);
             } else if (isNotificationIcon(baseName)) {
@@ -1812,7 +1809,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                     // TODO: Should this be done for each folder size?
                     checkSize(context, folderName, file, 25, 25, true, /*exact*/folderConfig);
                 }
-            } else if (name.startsWith("ic_menu_")) { //$NON-NLS-1$
+            } else if (name.startsWith("ic_menu_")) {
                 if (isAndroid30(context, folderVersion)) {
                  // Menu icons (<=2.3 only: Replaced by action bar icons (ic_action_ in 3.0).
                  // However the table halfway down the page on
@@ -1865,17 +1862,17 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     private static float getMdpiScalingFactor(String folderName) {
         // Can't do startsWith(DRAWABLE_MDPI) because the folder could
         // be something like "drawable-sw600dp-mdpi".
-        if (folderName.contains("-mdpi")) {            //$NON-NLS-1$
+        if (folderName.contains("-mdpi")) {
             return 1.0f;
-        } else if (folderName.contains("-hdpi")) {     //$NON-NLS-1$
+        } else if (folderName.contains("-hdpi")) {
             return 1.5f;
-        } else if (folderName.contains("-xhdpi")) {    //$NON-NLS-1$
+        } else if (folderName.contains("-xhdpi")) {
             return 2.0f;
-        } else if (folderName.contains("-xxhdpi")) {   //$NON-NLS-1$
+        } else if (folderName.contains("-xxhdpi")) {
             return 3.0f;
-        } else if (folderName.contains("-xxxhdpi")) {   //$NON-NLS-1$
+        } else if (folderName.contains("-xxxhdpi")) {
             return 4.0f;
-        } else if (folderName.contains("-ldpi")) {     //$NON-NLS-1$
+        } else if (folderName.contains("-ldpi")) {
             return 0.75f;
         } else {
             return 0f;
@@ -2193,7 +2190,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
         // Naming convention
         //noinspection SimplifiableIfStatement
-        if (name.startsWith("ic_launcher")) { //$NON-NLS-1$
+        if (name.startsWith("ic_launcher")) {
             return true;
         }
         return mLauncherIcons != null && mLauncherIcons.contains(name);
@@ -2204,7 +2201,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
         // Naming convention
         //noinspection SimplifiableIfStatement
-        if (name.startsWith("ic_stat_")) { //$NON-NLS-1$
+        if (name.startsWith("ic_stat_")) {
             return true;
         }
 
@@ -2216,7 +2213,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
         // Naming convention
         //noinspection SimplifiableIfStatement
-        if (name.startsWith("ic_action_")) { //$NON-NLS-1$
+        if (name.startsWith("ic_action_")) {
             return true;
         }
 
@@ -2232,7 +2229,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
         // As of Android 3.0 ic_menu_ are action icons
         //noinspection SimplifiableIfStatement,RedundantIfStatement
-        if (file != null && name.startsWith("ic_menu_") //$NON-NLS-1$
+        if (file != null && name.startsWith("ic_menu_")
                 && isAndroid30(context, context.getDriver().getResourceFolderVersion(file))) {
             // Naming convention
             return true;

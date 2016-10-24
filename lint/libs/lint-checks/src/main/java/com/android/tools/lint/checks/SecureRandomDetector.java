@@ -35,7 +35,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -45,7 +44,7 @@ import java.util.List;
 public class SecureRandomDetector extends Detector implements JavaPsiScanner {
     /** Unregistered activities and services */
     public static final Issue ISSUE = Issue.create(
-            "SecureRandom", //$NON-NLS-1$
+            "SecureRandom",
             "Using a fixed seed with `SecureRandom`",
 
             "Specifying a fixed seed will cause the instance to return a predictable sequence " +
@@ -59,7 +58,7 @@ public class SecureRandomDetector extends Detector implements JavaPsiScanner {
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo("http://developer.android.com/reference/java/security/SecureRandom.html");
 
-    private static final String SET_SEED = "setSeed"; //$NON-NLS-1$
+    private static final String SET_SEED = "setSeed";
     public static final String JAVA_SECURITY_SECURE_RANDOM = "java.security.SecureRandom";
     public static final String JAVA_UTIL_RANDOM = "java.util.Random";
 

@@ -62,7 +62,6 @@ import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.PsiWhileStatement;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,7 +77,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
 
     /** Problems with missing recycle calls */
     public static final Issue RECYCLE_RESOURCE = Issue.create(
-        "Recycle", //$NON-NLS-1$
+        "Recycle",
         "Missing `recycle()` calls",
 
         "Many resources, such as TypedArrays, VelocityTrackers, etc., " +
@@ -92,7 +91,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
 
     /** Problems with missing commit calls. */
     public static final Issue COMMIT_FRAGMENT = Issue.create(
-            "CommitTransaction", //$NON-NLS-1$
+            "CommitTransaction",
             "Missing `commit()` calls",
 
             "After creating a `FragmentTransaction`, you typically need to commit it as well",
@@ -104,7 +103,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
 
     /** Failing to commit a shared preference */
     public static final Issue SHARED_PREF = Issue.create(
-            "CommitPrefEdits", //$NON-NLS-1$
+            "CommitPrefEdits",
             "Missing `commit()` on `SharedPreference` editor",
 
             "After calling `edit()` on a `SharedPreference`, you must call `commit()` " +
@@ -119,7 +118,7 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
 
     /** Using commit instead of apply on a shared preference */
     public static final Issue APPLY_SHARED_PREF = Issue.create(
-            "ApplySharedPref", //$NON-NLS-1$
+            "ApplySharedPref",
             "Use `apply()` on `SharedPreferences`",
 
             "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
@@ -134,41 +133,41 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
                     Scope.JAVA_FILE_SCOPE));
 
     // Target method names
-    private static final String RECYCLE = "recycle";                                  //$NON-NLS-1$
-    private static final String RELEASE = "release";                                  //$NON-NLS-1$
-    private static final String OBTAIN = "obtain";                                    //$NON-NLS-1$
-    private static final String SHOW = "show";                                        //$NON-NLS-1$
-    private static final String ACQUIRE_CPC = "acquireContentProviderClient";         //$NON-NLS-1$
-    private static final String OBTAIN_NO_HISTORY = "obtainNoHistory";                //$NON-NLS-1$
-    private static final String OBTAIN_ATTRIBUTES = "obtainAttributes";               //$NON-NLS-1$
-    private static final String OBTAIN_TYPED_ARRAY = "obtainTypedArray";              //$NON-NLS-1$
-    private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes";  //$NON-NLS-1$
-    private static final String BEGIN_TRANSACTION = "beginTransaction";               //$NON-NLS-1$
-    private static final String COMMIT = "commit";                                    //$NON-NLS-1$
-    private static final String COMMIT_NOW = "commitNow";                             //$NON-NLS-1$
-    private static final String APPLY = "apply";                                      //$NON-NLS-1$
-    private static final String COMMIT_ALLOWING_LOSS = "commitAllowingStateLoss";     //$NON-NLS-1$
-    private static final String COMMIT_NOW_ALLOWING_LOSS = "commitNowAllowingStateLoss";//$NON-NLS-1$
-    private static final String QUERY = "query";                                      //$NON-NLS-1$
-    private static final String RAW_QUERY = "rawQuery";                               //$NON-NLS-1$
-    private static final String QUERY_WITH_FACTORY = "queryWithFactory";              //$NON-NLS-1$
-    private static final String RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory";       //$NON-NLS-1$
-    private static final String CLOSE = "close";                                      //$NON-NLS-1$
-    private static final String EDIT = "edit";                                        //$NON-NLS-1$
+    private static final String RECYCLE = "recycle";
+    private static final String RELEASE = "release";
+    private static final String OBTAIN = "obtain";
+    private static final String SHOW = "show";
+    private static final String ACQUIRE_CPC = "acquireContentProviderClient";
+    private static final String OBTAIN_NO_HISTORY = "obtainNoHistory";
+    private static final String OBTAIN_ATTRIBUTES = "obtainAttributes";
+    private static final String OBTAIN_TYPED_ARRAY = "obtainTypedArray";
+    private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes";
+    private static final String BEGIN_TRANSACTION = "beginTransaction";
+    private static final String COMMIT = "commit";
+    private static final String COMMIT_NOW = "commitNow";
+    private static final String APPLY = "apply";
+    private static final String COMMIT_ALLOWING_LOSS = "commitAllowingStateLoss";
+    private static final String COMMIT_NOW_ALLOWING_LOSS = "commitNowAllowingStateLoss";
+    private static final String QUERY = "query";
+    private static final String RAW_QUERY = "rawQuery";
+    private static final String QUERY_WITH_FACTORY = "queryWithFactory";
+    private static final String RAW_QUERY_WITH_FACTORY = "rawQueryWithFactory";
+    private static final String CLOSE = "close";
+    private static final String EDIT = "edit";
 
-    private static final String MOTION_EVENT_CLS = "android.view.MotionEvent";        //$NON-NLS-1$
-    private static final String PARCEL_CLS = "android.os.Parcel";                     //$NON-NLS-1$
-    private static final String VELOCITY_TRACKER_CLS = "android.view.VelocityTracker";//$NON-NLS-1$
-    private static final String DIALOG_FRAGMENT = "android.app.DialogFragment";       //$NON-NLS-1$
+    private static final String MOTION_EVENT_CLS = "android.view.MotionEvent";
+    private static final String PARCEL_CLS = "android.os.Parcel";
+    private static final String VELOCITY_TRACKER_CLS = "android.view.VelocityTracker";
+    private static final String DIALOG_FRAGMENT = "android.app.DialogFragment";
     private static final String DIALOG_V4_FRAGMENT =
-            "android.support.v4.app.DialogFragment";                                  //$NON-NLS-1$
-    private static final String FRAGMENT_MANAGER_CLS = "android.app.FragmentManager"; //$NON-NLS-1$
+            "android.support.v4.app.DialogFragment";
+    private static final String FRAGMENT_MANAGER_CLS = "android.app.FragmentManager";
     private static final String FRAGMENT_MANAGER_V4_CLS =
-            "android.support.v4.app.FragmentManager";                                 //$NON-NLS-1$
+            "android.support.v4.app.FragmentManager";
     private static final String FRAGMENT_TRANSACTION_CLS =
-            "android.app.FragmentTransaction";                                        //$NON-NLS-1$
+            "android.app.FragmentTransaction";
     private static final String FRAGMENT_TRANSACTION_V4_CLS =
-            "android.support.v4.app.FragmentTransaction";                             //$NON-NLS-1$
+            "android.support.v4.app.FragmentTransaction";
 
     public static final String SURFACE_CLS = "android.view.Surface";
     public static final String SURFACE_TEXTURE_CLS = "android.graphics.SurfaceTexture";
@@ -183,9 +182,9 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
     public static final String CURSOR_CLS = "android.database.Cursor";
 
     public static final String ANDROID_CONTENT_SHARED_PREFERENCES =
-            "android.content.SharedPreferences"; //$NON-NLS-1$
+            "android.content.SharedPreferences";
     private static final String ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
-            "android.content.SharedPreferences.Editor"; //$NON-NLS-1$
+            "android.content.SharedPreferences.Editor";
 
     /** Constructs a new {@link CleanupDetector} */
     public CleanupDetector() {

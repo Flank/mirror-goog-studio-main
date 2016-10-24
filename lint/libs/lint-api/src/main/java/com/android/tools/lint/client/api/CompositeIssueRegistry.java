@@ -18,7 +18,6 @@ package com.android.tools.lint.client.api;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Issue;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**
@@ -29,24 +28,24 @@ import java.util.List;
  * to adjust your code for the next tools release.</b>
  */
 class CompositeIssueRegistry extends IssueRegistry {
-    private final List<IssueRegistry> myRegistries;
-    private List<Issue> myIssues;
+    private final List<IssueRegistry> registries;
+    private List<Issue> issues;
 
     public CompositeIssueRegistry(@NonNull List<IssueRegistry> registries) {
-        myRegistries = registries;
+        this.registries = registries;
     }
 
     @NonNull
     @Override
     public List<Issue> getIssues() {
-        if (myIssues == null) {
+        if (issues == null) {
             List<Issue> issues = Lists.newArrayListWithExpectedSize(200);
-            for (IssueRegistry registry : myRegistries) {
+            for (IssueRegistry registry : registries) {
                 issues.addAll(registry.getIssues());
             }
-            myIssues = issues;
+            this.issues = issues;
         }
 
-        return myIssues;
+        return issues;
     }
 }

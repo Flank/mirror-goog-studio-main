@@ -52,7 +52,6 @@ import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ import java.util.Map;
 public class CutPasteDetector extends Detector implements Detector.JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "CutPasteId", //$NON-NLS-1$
+            "CutPasteId",
             "Likely cut & paste mistakes",
 
             "This lint check looks for cases where you have cut & pasted calls to " +
@@ -93,7 +92,7 @@ public class CutPasteDetector extends Detector implements Detector.JavaPsiScanne
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("findViewById"); //$NON-NLS-1$
+        return Collections.singletonList("findViewById");
     }
 
     @Override

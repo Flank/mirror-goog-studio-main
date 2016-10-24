@@ -52,7 +52,6 @@ import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,7 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
     /** Invalid cast to a type from the service constant */
     public static final Issue ISSUE = Issue.create(
-            "ServiceCast", //$NON-NLS-1$
+            "ServiceCast",
             "Wrong system service casts",
 
             "When you call `Context#getSystemService()`, the result is typically cast to " +
@@ -81,7 +80,7 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
     /** Using wifi manager from the wrong context */
     public static final Issue WIFI_MANAGER = Issue.create(
-            "WifiManagerLeak", //$NON-NLS-1$
+            "WifiManagerLeak",
             "WifiManager Leak",
 
             "On versions prior to Android N (24), initializing the `WifiManager` via " +
@@ -96,7 +95,7 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
     /** Using wifi manager from the wrong context: unknown Context origin */
     public static final Issue WIFI_MANAGER_UNCERTAIN = Issue.create(
-            "WifiManagerPotentialLeak", //$NON-NLS-1$
+            "WifiManagerPotentialLeak",
             "WifiManager Potential Leak",
 
             "On versions prior to Android N (24), initializing the `WifiManager` via " +
@@ -123,7 +122,7 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("getSystemService"); //$NON-NLS-1$
+        return Collections.singletonList("getSystemService");
     }
 
     @Override
@@ -329,8 +328,8 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
     }
 
     private static boolean isClipboard(@NonNull String cls) {
-        return cls.equals("android.content.ClipboardManager")      //$NON-NLS-1$
-                || cls.equals("android.text.ClipboardManager");    //$NON-NLS-1$
+        return cls.equals("android.content.ClipboardManager")
+                || cls.equals("android.text.ClipboardManager");
     }
 
     private static String stripPackage(@NonNull String fqcn) {

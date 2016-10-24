@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.intellij.psi.PsiClass;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class ItemDecoratorDetector extends Detector implements JavaPsiScanner {
 
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE = Issue.create(
-            "DuplicateDivider", //$NON-NLS-1$
+            "DuplicateDivider",
             "Unnecessary Divider Copy",
 
             "Older versions of the RecyclerView library did not include a divider decorator, "

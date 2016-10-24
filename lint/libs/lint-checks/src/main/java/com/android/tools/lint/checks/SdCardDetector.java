@@ -30,7 +30,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +39,7 @@ import java.util.List;
 public class SdCardDetector extends Detector implements Detector.JavaPsiScanner {
     /** Hardcoded /sdcard/ references */
     public static final Issue ISSUE = Issue.create(
-            "SdCardPath", //$NON-NLS-1$
+            "SdCardPath",
             "Hardcoded reference to `/sdcard`",
 
             "Your code should not reference the `/sdcard` path directly; instead use " +
@@ -57,7 +56,7 @@ public class SdCardDetector extends Detector implements Detector.JavaPsiScanner 
                     SdCardDetector.class,
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo(
-            "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal"); //$NON-NLS-1$
+            "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal");
 
     /** Constructs a new {@link SdCardDetector} check */
     public SdCardDetector() {
@@ -96,17 +95,17 @@ public class SdCardDetector extends Detector implements Detector.JavaPsiScanner 
                     return;
                 }
 
-                if (s.startsWith("/sdcard")                        //$NON-NLS-1$
-                        || s.startsWith("/mnt/sdcard/")            //$NON-NLS-1$
-                        || s.startsWith("/system/media/sdcard")    //$NON-NLS-1$
-                        || s.startsWith("file://sdcard/")          //$NON-NLS-1$
-                        || s.startsWith("file:///sdcard/")) {      //$NON-NLS-1$
+                if (s.startsWith("/sdcard")
+                        || s.startsWith("/mnt/sdcard/")
+                        || s.startsWith("/system/media/sdcard")
+                        || s.startsWith("file://sdcard/")
+                        || s.startsWith("file:///sdcard/")) {
                     String message = "Do not hardcode \"/sdcard/\"; " +
                             "use `Environment.getExternalStorageDirectory().getPath()` instead";
                     Location location = mContext.getLocation(node);
                     mContext.report(ISSUE, node, location, message);
-                } else if (s.startsWith("/data/data/")    //$NON-NLS-1$
-                        || s.startsWith("/data/user/")) { //$NON-NLS-1$
+                } else if (s.startsWith("/data/data/")
+                        || s.startsWith("/data/user/")) {
                     String message = "Do not hardcode \"`/data/`\"; " +
                             "use `Context.getFilesDir().getPath()` instead";
                     Location location = mContext.getLocation(node);

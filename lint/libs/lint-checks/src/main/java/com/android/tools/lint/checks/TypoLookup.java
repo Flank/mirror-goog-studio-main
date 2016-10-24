@@ -28,7 +28,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteSink;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -48,10 +47,10 @@ public class TypoLookup {
     private static final TypoLookup NONE = new TypoLookup();
 
     /** String separating misspellings and suggested replacements in the text file */
-    private static final String WORD_SEPARATOR = "->";  //$NON-NLS-1$
+    private static final String WORD_SEPARATOR = "->";
 
     /** Relative path to the typos database file within the Lint installation */
-    private static final String XML_FILE_PATH = "tools/support/typos-%1$s.txt"; //$NON-NLS-1$
+    private static final String XML_FILE_PATH = "tools/support/typos-%1$s.txt";
     private static final String FILE_HEADER = "Typo database used by Android lint\000";
     private static final int BINARY_FORMAT_VERSION = 2;
     private static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
@@ -65,7 +64,7 @@ public class TypoLookup {
     private int mWordCount;
 
     private static final WeakHashMap<String, TypoLookup> sInstanceMap =
-            new WeakHashMap<String, TypoLookup>();
+            new WeakHashMap<>();
 
     /**
      * Returns an instance of the Typo database for the given locale
@@ -105,9 +104,9 @@ public class TypoLookup {
                 File file = client.findResource(path);
                 if (file == null) {
                     // AOSP build environment?
-                    String build = System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+                    String build = System.getenv("ANDROID_BUILD_TOP");
                     if (build != null) {
-                        file = new File(build, ("sdk/files/" //$NON-NLS-1$
+                        file = new File(build, ("sdk/files/"
                                     + path.substring(path.lastIndexOf('/') + 1))
                                       .replace('/', File.separatorChar));
                     }
@@ -164,7 +163,7 @@ public class TypoLookup {
         File binaryData = new File(cacheDir, name
                 // Incorporate version number in the filename to avoid upgrade filename
                 // conflicts on Windows (such as issue #26663)
-                + '-' + BINARY_FORMAT_VERSION + ".bin"); //$NON-NLS-1$
+                + '-' + BINARY_FORMAT_VERSION + ".bin");
 
         if (DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("\nTemporarily regenerating binary data unconditionally \nfrom "
@@ -310,7 +309,7 @@ public class TypoLookup {
          */
 
         // Drop comments etc
-        List<String> words = new ArrayList<String>(lines.size());
+        List<String> words = new ArrayList<>(lines.size());
         for (String line : lines) {
             if (!line.isEmpty() && Character.isLetter(line.charAt(0))) {
                 int end = line.indexOf(WORD_SEPARATOR);
@@ -336,12 +335,7 @@ public class TypoLookup {
         }
         // Sort words, using our own comparator to ensure that it matches the
         // binary search in getTypos()
-        Comparator<byte[]> comparator = new Comparator<byte[]>() {
-            @Override
-            public int compare(byte[] o1, byte[] o2) {
-                return TypoLookup.compare(o1, 0, (byte) 0, o2, 0, o2.length);
-            }
-        };
+        Comparator<byte[]> comparator = (o1, o2) -> compare(o1, 0, (byte) 0, o2, 0, o2.length);
         Arrays.sort(wordArrays, comparator);
 
         byte[] headerBytes = FILE_HEADER.getBytes(Charsets.US_ASCII);
@@ -421,7 +415,7 @@ public class TypoLookup {
             }
             return new String(mData, offset, end - offset, Charsets.UTF_8);
         } else {
-            return "<disabled>"; //$NON-NLS-1$
+            return "<disabled>";
         }
     }
 
@@ -720,7 +714,7 @@ public class TypoLookup {
         String typo = new String(mData, begin, offset - begin, Charsets.UTF_8);
 
         if (glob != null) {
-            typo = typo.replaceAll("\\*", glob); //$NON-NLS-1$
+            typo = typo.replaceAll("\\*", glob);
         }
 
         assert mData[offset] == 0;
@@ -730,7 +724,7 @@ public class TypoLookup {
             replacementEnd++;
         }
         String replacements = new String(mData, offset, replacementEnd - offset, Charsets.UTF_8);
-        List<String> words = new ArrayList<String>();
+        List<String> words = new ArrayList<>();
         words.add(typo);
 
         // The first entry should be the typo itself. We need to pass this back since due
@@ -739,7 +733,7 @@ public class TypoLookup {
         for (String s : Splitter.on(',').omitEmptyStrings().trimResults().split(replacements)) {
             if (glob != null) {
                 // Need to append the glob string to each result
-                words.add(s.replaceAll("\\*", glob)); //$NON-NLS-1$
+                words.add(s.replaceAll("\\*", glob));
             } else {
                 words.add(s);
             }

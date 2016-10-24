@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -45,9 +44,9 @@ import java.util.Set;
  */
 @Beta
 public abstract class IssueRegistry {
-    private static volatile List<Category> sCategories;
-    private static volatile Map<String, Issue> sIdToIssue;
-    private static Map<EnumSet<Scope>, List<Issue>> sScopeIssues = Maps.newHashMap();
+    private static volatile List<Category> categories;
+    private static volatile Map<String, Issue> idToIssue;
+    private static Map<EnumSet<Scope>, List<Issue>> scopeIssues = Maps.newHashMap();
 
     /**
      * Creates a new {@linkplain IssueRegistry}
@@ -63,7 +62,7 @@ public abstract class IssueRegistry {
      */
     @NonNull
     public static final Issue PARSER_ERROR = Issue.create(
-            "ParserError", //$NON-NLS-1$
+            "ParserError",
             "Parser Errors",
             "Lint will ignore any files that contain fatal parsing errors. These may contain " +
             "other errors, or contain code which affects issues in other files.",
@@ -78,7 +77,7 @@ public abstract class IssueRegistry {
      */
     @NonNull
     public static final Issue LINT_ERROR = Issue.create(
-            "LintError", //$NON-NLS-1$
+            "LintError",
             "Lint Failure",
             "This issue type represents a problem running lint itself. Examples include " +
             "failure to find bytecode for source files (which means certain detectors " +
@@ -97,7 +96,7 @@ public abstract class IssueRegistry {
      */
     @NonNull
     public static final Issue CANCELLED = Issue.create(
-            "LintCanceled", //$NON-NLS-1$
+            "LintCanceled",
             "Lint Canceled",
             "Lint canceled by user; the issue report may not be complete.",
 
@@ -112,7 +111,7 @@ public abstract class IssueRegistry {
      */
     @NonNull
     public static final Issue BASELINE = Issue.create(
-            "LintBaseline", //$NON-NLS-1$
+            "LintBaseline",
             "Baseline Issues",
             "Lint can be configured with a \"baseline\"; a set of current issues found in " +
             "a codebase, which future runs of lint will silently ignore. Only new issues " +
@@ -164,13 +163,13 @@ public abstract class IssueRegistry {
      */
     @NonNull
     protected List<Issue> getIssuesForScope(@NonNull EnumSet<Scope> scope) {
-        List<Issue> list = sScopeIssues.get(scope);
+        List<Issue> list = scopeIssues.get(scope);
         if (list == null) {
             List<Issue> issues = getIssues();
             if (scope.equals(Scope.ALL)) {
                 list = issues;
             } else {
-                list = new ArrayList<Issue>(getIssueCapacity(scope));
+                list = new ArrayList<>(getIssueCapacity(scope));
                 for (Issue issue : issues) {
                     // Determine if the scope matches
                     if (issue.getImplementation().isAdequate(scope)) {
@@ -178,7 +177,7 @@ public abstract class IssueRegistry {
                     }
                 }
             }
-            sScopeIssues.put(scope, list);
+            scopeIssues.put(scope, list);
         }
 
         return list;
@@ -210,9 +209,9 @@ public abstract class IssueRegistry {
             return Collections.emptyList();
         }
 
-        Set<Class<? extends Detector>> detectorClasses = new HashSet<Class<? extends Detector>>();
+        Set<Class<? extends Detector>> detectorClasses = new HashSet<>();
         Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
-                new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
+                new HashMap<>();
 
         for (Issue issue : issues) {
             Implementation implementation = issue.getImplementation();
@@ -244,7 +243,7 @@ public abstract class IssueRegistry {
             }
         }
 
-        List<Detector> detectors = new ArrayList<Detector>(detectorClasses.size());
+        List<Detector> detectors = new ArrayList<>(detectorClasses.size());
         for (Class<? extends Detector> clz : detectorClasses) {
             try {
                 Detector detector = clz.newInstance();
@@ -255,7 +254,7 @@ public abstract class IssueRegistry {
                     for (Scope s : union) {
                         List<Detector> list = scopeToDetectors.get(s);
                         if (list == null) {
-                            list = new ArrayList<Detector>();
+                            list = new ArrayList<>();
                             scopeToDetectors.put(s, list);
                         }
                         list.add(detector);
@@ -263,7 +262,7 @@ public abstract class IssueRegistry {
 
                 }
             } catch (Throwable t) {
-                client.log(t, "Can't initialize detector %1$s", clz.getName()); //$NON-NLS-1$
+                client.log(t, "Can't initialize detector %1$s", clz.getName());
             }
         }
 
@@ -304,12 +303,12 @@ public abstract class IssueRegistry {
     @SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
     @NonNull
     public List<Category> getCategories() {
-        List<Category> categories = sCategories;
+        List<Category> categories = IssueRegistry.categories;
         if (categories == null) {
             synchronized (IssueRegistry.class) {
-                categories = sCategories;
+                categories = IssueRegistry.categories;
                 if (categories == null) {
-                    sCategories = categories = Collections.unmodifiableList(createCategoryList());
+                    IssueRegistry.categories = categories = Collections.unmodifiableList(createCategoryList());
                 }
             }
         }
@@ -323,7 +322,7 @@ public abstract class IssueRegistry {
         for (Issue issue : getIssues()) {
             categorySet.add(issue.getCategory());
         }
-        List<Category> sorted = new ArrayList<Category>(categorySet);
+        List<Category> sorted = new ArrayList<>(categorySet);
         Collections.sort(sorted);
         return sorted;
     }
@@ -337,13 +336,13 @@ public abstract class IssueRegistry {
     @SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
     @Nullable
     public final Issue getIssue(@NonNull String id) {
-        Map<String, Issue> map = sIdToIssue;
+        Map<String, Issue> map = idToIssue;
         if (map == null) {
             synchronized (IssueRegistry.class) {
-                map = sIdToIssue;
+                map = idToIssue;
                 if (map == null) {
                     map = createIdToIssueMap();
-                    sIdToIssue = map;
+                    idToIssue = map;
                 }
             }
         }
@@ -369,8 +368,8 @@ public abstract class IssueRegistry {
      * Reset the registry such that it recomputes its available issues.
      */
     protected static void reset() {
-        sIdToIssue = null;
-        sCategories = null;
-        sScopeIssues = Maps.newHashMap();
+        idToIssue = null;
+        categories = null;
+        scopeIssues = Maps.newHashMap();
     }
 }

@@ -63,13 +63,6 @@ import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiTypeElement;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,6 +72,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /** Detector for finding inconsistent usage of views and casts
  * <p>
@@ -96,7 +94,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
     /** Mismatched view types */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "WrongViewCast", //$NON-NLS-1$
+            "WrongViewCast",
             "Mismatched view type",
             "Keeps track of the view types associated with ids and if it finds a usage of " +
             "the id in the Java code it ensures that it is treated as the same type.",
@@ -112,7 +110,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
      * a client supporting project resources */
     private Boolean mIgnore = null;
 
-    private final Map<String, Object> mIdToViewTag = new HashMap<String, Object>(50);
+    private final Map<String, Object> mIdToViewTag = new HashMap<>(50);
 
     @NonNull
     @Override
@@ -153,7 +151,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
                 String existingString = (String) existing;
                 if (!existingString.equals(view)) {
                     // Convert to list
-                    List<String> list = new ArrayList<String>(2);
+                    List<String> list = new ArrayList<>(2);
                     list.add((String) existing);
                     list.add(view);
                     mIdToViewTag.put(id, list);
@@ -172,7 +170,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("findViewById"); //$NON-NLS-1$
+        return Collections.singletonList("findViewById");
     }
 
     @Override

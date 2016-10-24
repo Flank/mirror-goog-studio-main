@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,9 +44,9 @@ public class ApiClass implements Comparable<ApiClass> {
     private final List<Pair<String, Integer>> mSuperClasses = Lists.newArrayList();
     private final List<Pair<String, Integer>> mInterfaces = Lists.newArrayList();
 
-    private final Map<String, Integer> mFields = new HashMap<String, Integer>();
-    private final Map<String, Integer> mMethods = new HashMap<String, Integer>();
-    private final Map<String, Integer> mDeprecatedMembersIn = new HashMap<String, Integer>();
+    private final Map<String, Integer> mFields = new HashMap<>();
+    private final Map<String, Integer> mMethods = new HashMap<>();
+    private final Map<String, Integer> mDeprecatedMembersIn = new HashMap<>();
 
     // Persistence data: Used when writing out binary data in ApiLookup
     List<String> members;
@@ -328,7 +327,7 @@ public class ApiClass implements Comparable<ApiClass> {
      * @return a set containing all the members fields
      */
     Set<String> getAllMethods(Api info) {
-        Set<String> members = new HashSet<String>(100);
+        Set<String> members = new HashSet<>(100);
         addAllMethods(info, members, true /*includeConstructors*/);
 
         return members;
@@ -379,7 +378,7 @@ public class ApiClass implements Comparable<ApiClass> {
      * @return a set containing all the fields
      */
     Set<String> getAllFields(Api info) {
-        Set<String> members = new HashSet<String>(100);
+        Set<String> members = new HashSet<>(100);
         addAllFields(info, members);
 
         return members;

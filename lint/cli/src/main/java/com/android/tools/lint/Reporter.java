@@ -99,16 +99,16 @@ import java.util.Set;
  */
 @Beta
 public abstract class Reporter {
-    protected final LintCliClient mClient;
-    protected final File mOutput;
-    protected String mTitle = "Lint Report";
-    protected boolean mSimpleFormat;
-    protected boolean mBundleResources;
-    protected Map<String, String> mUrlMap;
-    protected File mResources;
-    protected final Map<File, String> mResourceUrl = new HashMap<>();
-    protected final Map<String, File> mNameToFile = new HashMap<>();
-    protected boolean mDisplayEmpty = true;
+    protected final LintCliClient client;
+    protected final File output;
+    protected String title = "Lint Report";
+    protected boolean simpleFormat;
+    protected boolean bundleResources;
+    protected Map<String, String> urlMap;
+    protected File resources;
+    protected final Map<File, String> resourceUrl = new HashMap<>();
+    protected final Map<String, File> nameToFile = new HashMap<>();
+    protected boolean displayEmpty = true;
 
     /**
      * Write the given warnings into the report
@@ -118,8 +118,8 @@ public abstract class Reporter {
     public abstract void write(@NonNull Stats stats, List<Warning> issues) throws IOException;
 
     protected Reporter(@NonNull LintCliClient client, @NonNull File output) {
-        mClient = client;
-        mOutput = output;
+        this.client = client;
+        this.output = output;
     }
 
     /**
@@ -128,12 +128,12 @@ public abstract class Reporter {
      * @param title the title of the report
      */
     public void setTitle(String title) {
-        mTitle = title;
+        this.title = title;
     }
 
     /** @return the title of the report */
     public String getTitle() {
-        return mTitle;
+        return title;
     }
 
     /**
@@ -144,8 +144,8 @@ public abstract class Reporter {
      *            the report
      */
     public void setBundleResources(boolean bundleResources) {
-        mBundleResources = bundleResources;
-        mSimpleFormat = false;
+        this.bundleResources = bundleResources;
+        simpleFormat = false;
     }
 
     /**
@@ -155,7 +155,7 @@ public abstract class Reporter {
      * @param simpleFormat whether the formatting should be simple
      */
     public void setSimpleFormat(boolean simpleFormat) {
-        mSimpleFormat = simpleFormat;
+        this.simpleFormat = simpleFormat;
     }
 
     /**
@@ -165,23 +165,23 @@ public abstract class Reporter {
      * @return whether the report should use simple formatting
      */
     public boolean isSimpleFormat() {
-        return mSimpleFormat;
+        return simpleFormat;
     }
 
 
     String getUrl(File file) {
-        if (mBundleResources && !mSimpleFormat) {
+        if (bundleResources && !simpleFormat) {
             String url = getRelativeResourceUrl(file);
             if (url != null) {
                 return url;
             }
         }
 
-        if (mUrlMap != null) {
+        if (urlMap != null) {
             String path = file.getAbsolutePath();
             // Perform the comparison using URLs such that we properly escape spaces etc.
             String pathUrl = encodeUrl(path);
-            for (Map.Entry<String, String> entry : mUrlMap.entrySet()) {
+            for (Map.Entry<String, String> entry : urlMap.entrySet()) {
                 String prefix = entry.getKey();
                 String prefixUrl = encodeUrl(prefix);
                 if (pathUrl.startsWith(prefixUrl)) {
@@ -192,7 +192,7 @@ public abstract class Reporter {
         }
 
         if (file.isAbsolute()) {
-            String relativePath = getRelativePath(mOutput.getParentFile(), file);
+            String relativePath = getRelativePath(output.getParentFile(), file);
             if (relativePath != null) {
                 relativePath = relativePath.replace(separatorChar, '/');
                 return encodeUrl(relativePath);
@@ -210,7 +210,7 @@ public abstract class Reporter {
     static String encodeUrl(String url) {
         try {
             url = url.replace('\\', '/');
-            return URLEncoder.encode(url, UTF_8).replace("%2F", "/");         //$NON-NLS-1$
+            return URLEncoder.encode(url, UTF_8).replace("%2F", "/");
         } catch (UnsupportedEncodingException e) {
             // This shouldn't happen for UTF-8
             System.err.println("Invalid string " + e.getLocalizedMessage());
@@ -220,30 +220,30 @@ public abstract class Reporter {
 
     /** Set mapping of path prefixes to corresponding URLs in the HTML report */
     public void setUrlMap(@Nullable Map<String, String> urlMap) {
-        mUrlMap = urlMap;
+        this.urlMap = urlMap;
     }
 
     /** Gets a pointer to the local resource directory, if any */
     File getResourceDir() {
-        if (mResources == null && mBundleResources) {
-            mResources = computeResourceDir();
-            if (mResources == null) {
-                mBundleResources = false;
+        if (resources == null && bundleResources) {
+            resources = computeResourceDir();
+            if (resources == null) {
+                bundleResources = false;
             }
         }
 
-        return mResources;
+        return resources;
     }
 
     /** Finds/creates the local resource directory, if possible */
     File computeResourceDir() {
-        String fileName = mOutput.getName();
+        String fileName = output.getName();
         int dot = fileName.indexOf('.');
         if (dot != -1) {
             fileName = fileName.substring(0, dot);
         }
 
-        File resources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
+        File resources = new File(output.getParentFile(), fileName + "_files");
         if (!resources.exists() && !resources.mkdir()) {
             resources = null;
         }
@@ -253,7 +253,7 @@ public abstract class Reporter {
 
     /** Returns a URL to a local copy of the given file, or null */
     protected String getRelativeResourceUrl(File file) {
-        String resource = mResourceUrl.get(file);
+        String resource = resourceUrl.get(file);
         if (resource != null) {
             return resource;
         }
@@ -268,13 +268,13 @@ public abstract class Reporter {
         if (resourceDir != null) {
             String base = file.getName();
 
-            File path = mNameToFile.get(base);
+            File path = nameToFile.get(base);
             if (path != null && !path.equals(file)) {
                 // That filename already exists and is associated with a different path:
                 // make a new unique version
                 for (int i = 0; i < 100; i++) {
                     base = '_' + base;
-                    path = mNameToFile.get(base);
+                    path = nameToFile.get(base);
                     if (path == null || path.equals(file)) {
                         break;
                     }
@@ -300,7 +300,7 @@ public abstract class Reporter {
         if (resourceDir != null) {
             String base = url.getFile();
             base = base.substring(base.lastIndexOf('/') + 1);
-            mNameToFile.put(base, new File(url.toExternalForm()));
+            nameToFile.put(base, new File(url.toExternalForm()));
 
             File target = new File(resourceDir, base);
             Closer closer = Closer.create();
@@ -384,14 +384,14 @@ public abstract class Reporter {
      * Returns whether this report should display info if no issues were found
      */
     public boolean isDisplayEmpty() {
-        return mDisplayEmpty;
+        return displayEmpty;
     }
 
     /**
      * Sets whether this report should display info if no issues were found
      */
     public void setDisplayEmpty(boolean displayEmpty) {
-        mDisplayEmpty = displayEmpty;
+        this.displayEmpty = displayEmpty;
     }
 
     private static Set<Issue> sAdtFixes;

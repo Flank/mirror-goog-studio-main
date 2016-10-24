@@ -21,7 +21,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClassObjectAccessExpression;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiTypeElement;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiClassObjectAccessExpression extends EcjPsiExpression implements

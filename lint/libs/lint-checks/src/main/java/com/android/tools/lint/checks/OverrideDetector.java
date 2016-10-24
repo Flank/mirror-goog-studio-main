@@ -38,15 +38,13 @@ import com.android.tools.lint.detector.api.Speed;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Checks for accidental overrides
@@ -54,7 +52,7 @@ import java.util.Set;
 public class OverrideDetector extends Detector implements ClassScanner {
     /** Accidental overrides */
     public static final Issue ISSUE = Issue.create(
-            "DalvikOverride", //$NON-NLS-1$
+            "DalvikOverride",
             "Method considered overridden by Dalvik",
 
             "The Android virtual machine will treat a package private method in one " +

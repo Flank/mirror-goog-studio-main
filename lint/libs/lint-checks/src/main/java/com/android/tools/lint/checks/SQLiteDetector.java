@@ -34,7 +34,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -47,7 +46,7 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
 
     /** Using STRING instead of TEXT for columns */
     public static final Issue ISSUE = Issue.create(
-            "SQLiteString", //$NON-NLS-1$
+            "SQLiteString",
             "Using STRING instead of TEXT",
 
             "In SQLite, any column can store any data type; the declared type for a column " +
@@ -72,13 +71,13 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
             5,
             Severity.WARNING,
             IMPLEMENTATION)
-            .addMoreInfo("https://www.sqlite.org/datatype3.html"); //$NON-NLS-1$
+            .addMoreInfo("https://www.sqlite.org/datatype3.html");
 
     // ---- Implements Detector.JavaScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("execSQL"); //$NON-NLS-1$
+        return Collections.singletonList("execSQL");
     }
 
     @Override

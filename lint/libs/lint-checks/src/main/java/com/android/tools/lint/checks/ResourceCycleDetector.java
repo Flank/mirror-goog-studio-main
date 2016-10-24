@@ -57,12 +57,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -70,6 +64,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for cycles in resource definitions
@@ -81,7 +79,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
 
     /** Style parent cycles, resource alias cycles, layout include cycles, etc */
     public static final Issue CYCLE = Issue.create(
-            "ResourceCycle", //$NON-NLS-1$
+            "ResourceCycle",
             "Cycle in resource definitions",
             "There should be no cycles in resource definitions as this can lead to runtime " +
             "exceptions.",
@@ -93,7 +91,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
 
     /** Parent cycles */
     public static final Issue CRASH = Issue.create(
-            "AaptCrash", //$NON-NLS-1$
+            "AaptCrash",
             "Potential AAPT crash",
             "Defining a style which sets `android:id` to a dynamically generated id can cause " +
             "many versions of `aapt`, the resource packaging tool, to crash. To work around " +
@@ -102,7 +100,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
             8,
             Severity.FATAL,
             IMPLEMENTATION)
-            .addMoreInfo("https://code.google.com/p/android/issues/detail?id=20479"); //$NON-NLS-1$
+            .addMoreInfo("https://code.google.com/p/android/issues/detail?id=20479");
 
     /**
      * For each resource type, a map from a key (style name, layout name, color name, etc) to
@@ -172,12 +170,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
             // Multimap which preserves insert order (for predictable output order)
             map = Multimaps.newListMultimap(
                     new TreeMap<String, Collection<String>>(),
-                    new Supplier<List<String>>() {
-                        @Override
-                        public List<String> get() {
-                            return Lists.newArrayListWithExpectedSize(6);
-                        }
-                    });
+                    () -> Lists.newArrayListWithExpectedSize(6));
             mReferences.put(type, map);
         }
 

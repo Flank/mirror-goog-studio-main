@@ -24,12 +24,10 @@ import static com.android.tools.lint.checks.ManifestDetector.DUPLICATE_ACTIVITY;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Issue;
-
-import junit.framework.TestCase;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import junit.framework.TestCase;
 
 public class CompositeIssueRegistryTest extends TestCase {
     public void test() {

@@ -38,15 +38,13 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
-
-import org.w3c.dom.Element;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Element;
 
 /**
  * Ensures that PreferenceActivity and its subclasses are never exported.
@@ -54,7 +52,7 @@ import java.util.Map;
 public class PreferenceActivityDetector extends Detector
         implements XmlScanner, JavaPsiScanner {
     public static final Issue ISSUE = Issue.create(
-            "ExportedPreferenceActivity", //$NON-NLS-1$
+            "ExportedPreferenceActivity",
             "PreferenceActivity should not be exported",
             "Fragment injection gives anyone who can send your PreferenceActivity an intent the "
                     + "ability to load any fragment, with any arguments, in your process.",
@@ -66,11 +64,11 @@ public class PreferenceActivityDetector extends Detector
                     EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)))
             .addMoreInfo("http://securityintelligence.com/"
                     + "new-vulnerability-android-framework-fragment-injection");
-    private static final String PREFERENCE_ACTIVITY = "android.preference.PreferenceActivity"; //$NON-NLS-1$
-    private static final String IS_VALID_FRAGMENT = "isValidFragment"; //$NON-NLS-1$
+    private static final String PREFERENCE_ACTIVITY = "android.preference.PreferenceActivity";
+    private static final String IS_VALID_FRAGMENT = "isValidFragment";
 
     private final Map<String, Location.Handle> mExportedActivities =
-            new HashMap<String, Location.Handle>();
+            new HashMap<>();
 
     // ---- Implements XmlScanner ----
 

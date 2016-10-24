@@ -34,12 +34,10 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.w3c.dom.Attr;
 
 /**
  * Checks for the combination of textAllCaps=true and using markup in
@@ -49,7 +47,7 @@ public class AllCapsDetector extends LayoutDetector {
     /** Using all caps with markup */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "AllCaps", //$NON-NLS-1$
+            "AllCaps",
             "Combining textAllCaps and markup",
             "The textAllCaps text transform will end up calling `toString` on the " +
             "`CharSequence`, which has the net effect of removing any markup such as " +

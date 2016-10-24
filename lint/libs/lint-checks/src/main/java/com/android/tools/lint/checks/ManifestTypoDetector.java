@@ -57,13 +57,11 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Element;
 
 /**
  * Checks for typos in manifest files
@@ -71,7 +69,7 @@ import java.util.Set;
 public class ManifestTypoDetector extends Detector implements Detector.XmlScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ManifestTypo", //$NON-NLS-1$
+            "ManifestTypo",
             "Typos in manifest tags",
 
             "This check looks through the manifest, and if it finds any tags " +
@@ -115,10 +113,10 @@ public class ManifestTypoDetector extends Detector implements Detector.XmlScanne
         sValidTags.add(NODE_SUPPORTS_GL_TEXTURE);
 
         // Private tags
-        sValidTags.add("eat-comment");          //$NON-NLS-1$
-        sValidTags.add("original-package");     //$NON-NLS-1$
-        sValidTags.add("protected-broadcast");  //$NON-NLS-1$
-        sValidTags.add("adopt-permissions");    //$NON-NLS-1$
+        sValidTags.add("eat-comment");
+        sValidTags.add("original-package");
+        sValidTags.add("protected-broadcast");
+        sValidTags.add("adopt-permissions");
 
         assert sValidTags.size() <= expectedSize : sValidTags.size();
     }

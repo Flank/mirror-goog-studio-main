@@ -30,13 +30,11 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Collection;
+import java.util.Collections;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Checks for problems with include tags, such as providing layout parameters
@@ -45,7 +43,7 @@ import java.util.Collections;
 public class IncludeDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "IncludeLayoutParam", //$NON-NLS-1$
+            "IncludeLayoutParam",
             "Ignored layout params on include",
 
             "Layout parameters specified on an `<include>` tag will only be used if you " +

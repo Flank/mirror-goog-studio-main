@@ -25,7 +25,6 @@ import com.intellij.psi.PsiImportList;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiImportStatementBase;
 import com.intellij.psi.PsiImportStaticStatement;
-
 import java.util.List;
 
 class EcjPsiImportList extends EcjPsiSourceElement implements PsiImportList {

@@ -32,7 +32,6 @@ import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -47,7 +46,7 @@ public class DateFormatDetector extends Detector implements Detector.JavaPsiScan
 
     /** Constructing SimpleDateFormat without an explicit locale */
     public static final Issue DATE_FORMAT = Issue.create(
-            "SimpleDateFormat", //$NON-NLS-1$
+            "SimpleDateFormat",
             "Implied locale in date format",
 
             "Almost all callers should use `getDateInstance()`, `getDateTimeInstance()`, or " +
@@ -66,10 +65,10 @@ public class DateFormatDetector extends Detector implements Detector.JavaPsiScan
             Severity.WARNING,
             IMPLEMENTATION)
             .addMoreInfo(
-            "http://developer.android.com/reference/java/text/SimpleDateFormat.html");//$NON-NLS-1$
+            "http://developer.android.com/reference/java/text/SimpleDateFormat.html");
 
-    public static final String LOCALE_CLS = "java.util.Locale";                       //$NON-NLS-1$
-    public static final String SIMPLE_DATE_FORMAT_CLS = "java.text.SimpleDateFormat"; //$NON-NLS-1$
+    public static final String LOCALE_CLS = "java.util.Locale";
+    public static final String SIMPLE_DATE_FORMAT_CLS = "java.text.SimpleDateFormat";
 
     /** Constructs a new {@link DateFormatDetector} */
     public DateFormatDetector() {

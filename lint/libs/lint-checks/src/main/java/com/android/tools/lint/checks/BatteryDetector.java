@@ -36,14 +36,12 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Checks looking for issues that negatively affect battery life
@@ -60,7 +58,7 @@ public class BatteryDetector extends ResourceXmlDetector implements
 
     /** Issues that negatively affect battery life */
     public static final Issue ISSUE = Issue.create(
-            "BatteryLife", //$NON-NLS-1$
+            "BatteryLife",
             "Battery Life Issues",
 
             "This issue flags code that either\n" +

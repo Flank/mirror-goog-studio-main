@@ -85,11 +85,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -99,6 +94,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Looks for layout params on views that are "obsolete" - may have made sense
@@ -108,7 +106,7 @@ import java.util.Set;
 public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     /** Usage of deprecated views or attributes */
     public static final Issue ISSUE = Issue.create(
-            "ObsoleteLayoutParam", //$NON-NLS-1$
+            "ObsoleteLayoutParam",
             "Obsolete layout params",
 
             "The given layout_param is not defined for the given layout, meaning it has no " +
@@ -127,7 +125,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * Set of layout parameter names that are considered valid no matter what so
      * no other checking is necessary - such as layout_width and layout_height.
      */
-    private static final Set<String> VALID = new HashSet<String>(10);
+    private static final Set<String> VALID = new HashSet<>(10);
 
     /**
      * Mapping from a layout parameter name (local name only) to the defining
@@ -138,7 +136,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * every single layout attribute pointing to a list, this is just special
      * cased instead.
      */
-    private static final Map<String, String> PARAM_TO_VIEW = new HashMap<String, String>(28);
+    private static final Map<String, String> PARAM_TO_VIEW = new HashMap<>(28);
 
     static {
         // Available (mostly) everywhere: No check
@@ -230,7 +228,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * attribute is referenced in.
      */
     private final List<Pair<String, Location.Handle>> mPending =
-            new ArrayList<Pair<String,Location.Handle>>();
+            new ArrayList<>();
 
     /** Constructs a new {@link ObsoleteLayoutParamsDetector} */
     public ObsoleteLayoutParamsDetector() {
@@ -328,11 +326,11 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     }
 
                     if (mIncludes == null) {
-                        mIncludes = new HashMap<String, List<Pair<File, String>>>();
+                        mIncludes = new HashMap<>();
                     }
                     List<Pair<File, String>> includes = mIncludes.get(layout);
                     if (includes == null) {
-                        includes = new ArrayList<Pair<File, String>>();
+                        includes = new ArrayList<>();
                         mIncludes.put(layout, includes);
                     }
                     includes.add(Pair.of(context.file, tag));
@@ -392,7 +390,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 StringBuilder sb = new StringBuilder(40);
                 for (Pair<File, String> include : includes) {
                     if (sb.length() > 0) {
-                        sb.append(", "); //$NON-NLS-1$
+                        sb.append(", ");
                     }
                     File from = include.getFirst();
                     String parentTag = include.getSecond();

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiFunctionalExpression;
 import com.intellij.psi.PsiType;
-
 import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
 
 abstract class EcjPsiFunctionalExpression extends EcjPsiExpression implements PsiFunctionalExpression {

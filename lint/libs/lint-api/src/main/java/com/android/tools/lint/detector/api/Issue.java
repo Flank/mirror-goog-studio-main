@@ -21,7 +21,6 @@ import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.Configuration;
 import com.google.common.annotations.Beta;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,35 +40,35 @@ import java.util.List;
  */
 @Beta
 public final class Issue implements Comparable<Issue> {
-    private final String mId;
-    private final String mBriefDescription;
-    private final String mExplanation;
-    private final Category mCategory;
-    private final int mPriority;
-    private final Severity mSeverity;
-    private Object mMoreInfoUrls;
-    private boolean mEnabledByDefault = true;
-    private Implementation mImplementation;
+    private final String id;
+    private final String briefDescription;
+    private final String explanation;
+    private final Category category;
+    private final int priority;
+    private final Severity severity;
+    private Object moreInfoUrls;
+    private boolean enabledByDefault = true;
+    private Implementation implementation;
 
     // Use factory methods
     private Issue(
             @NonNull String id,
-            @NonNull String shortDescription,
+            @NonNull String briefDescription,
             @NonNull String explanation,
             @NonNull Category category,
             int priority,
             @NonNull Severity severity,
             @NonNull Implementation implementation) {
-        assert !shortDescription.isEmpty();
+        assert !briefDescription.isEmpty();
         assert !explanation.isEmpty();
 
-        mId = id;
-        mBriefDescription = shortDescription;
-        mExplanation = explanation;
-        mCategory = category;
-        mPriority = priority;
-        mSeverity = severity;
-        mImplementation = implementation;
+        this.id = id;
+        this.briefDescription = briefDescription;
+        this.explanation = explanation;
+        this.category = category;
+        this.priority = priority;
+        this.severity = severity;
+        this.implementation = implementation;
     }
 
     /**
@@ -132,7 +131,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public String getId() {
-        return mId;
+        return id;
     }
 
     /**
@@ -142,7 +141,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public String getBriefDescription(@NonNull TextFormat format) {
-        return RAW.convertTo(mBriefDescription, format);
+        return RAW.convertTo(briefDescription, format);
     }
 
     /**
@@ -156,7 +155,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public String getExplanation(@NonNull TextFormat format) {
-        return RAW.convertTo(mExplanation, format);
+        return RAW.convertTo(explanation, format);
     }
 
     /**
@@ -166,7 +165,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public Category getCategory() {
-        return mCategory;
+        return category;
     }
 
     /**
@@ -176,7 +175,7 @@ public final class Issue implements Comparable<Issue> {
      * @return a priority from 1 to 10
      */
     public int getPriority() {
-        return mPriority;
+        return priority;
     }
 
     /**
@@ -196,7 +195,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public Severity getDefaultSeverity() {
-        return mSeverity;
+        return severity;
     }
 
     /**
@@ -206,14 +205,14 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public List<String> getMoreInfo() {
-        if (mMoreInfoUrls == null) {
+        if (moreInfoUrls == null) {
             return Collections.emptyList();
-        } else if (mMoreInfoUrls instanceof String) {
-            return Collections.singletonList((String) mMoreInfoUrls);
+        } else if (moreInfoUrls instanceof String) {
+            return Collections.singletonList((String) moreInfoUrls);
         } else {
-            assert mMoreInfoUrls instanceof List;
+            assert moreInfoUrls instanceof List;
             //noinspection unchecked
-            return (List<String>) mMoreInfoUrls;
+            return (List<String>) moreInfoUrls;
         }
     }
 
@@ -227,18 +226,18 @@ public final class Issue implements Comparable<Issue> {
     public Issue addMoreInfo(@NonNull String moreInfoUrl) {
         // Nearly all issues supply at most a single URL, so don't bother with
         // lists wrappers for most of these issues
-        if (mMoreInfoUrls == null) {
-            mMoreInfoUrls = moreInfoUrl;
-        } else if (mMoreInfoUrls instanceof String) {
-            String existing = (String) mMoreInfoUrls;
-            List<String> list = new ArrayList<String>(2);
+        if (moreInfoUrls == null) {
+            moreInfoUrls = moreInfoUrl;
+        } else if (moreInfoUrls instanceof String) {
+            String existing = (String) moreInfoUrls;
+            List<String> list = new ArrayList<>(2);
             list.add(existing);
             list.add(moreInfoUrl);
-            mMoreInfoUrls = list;
+            moreInfoUrls = list;
         } else {
-            assert mMoreInfoUrls instanceof List;
+            assert moreInfoUrls instanceof List;
             //noinspection unchecked
-            ((List<String>) mMoreInfoUrls).add(moreInfoUrl);
+            ((List<String>) moreInfoUrls).add(moreInfoUrl);
         }
         return this;
     }
@@ -250,7 +249,7 @@ public final class Issue implements Comparable<Issue> {
      * @return true if this issue should be enabled by default
      */
     public boolean isEnabledByDefault() {
-        return mEnabledByDefault;
+        return enabledByDefault;
     }
 
     /**
@@ -260,7 +259,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public Implementation getImplementation() {
-        return mImplementation;
+        return implementation;
     }
 
     /**
@@ -271,7 +270,7 @@ public final class Issue implements Comparable<Issue> {
      * @param implementation the new implementation to use
      */
     public void setImplementation(@NonNull Implementation implementation) {
-        mImplementation = implementation;
+        this.implementation = implementation;
     }
 
     /**
@@ -296,12 +295,12 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public Issue setEnabledByDefault(boolean enabledByDefault) {
-        mEnabledByDefault = enabledByDefault;
+        this.enabledByDefault = enabledByDefault;
         return this;
     }
 
     @Override
     public String toString() {
-        return mId;
+        return id;
     }
 }

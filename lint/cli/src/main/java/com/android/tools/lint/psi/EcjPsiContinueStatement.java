@@ -23,7 +23,6 @@ import com.intellij.psi.PsiContinueStatement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiContinueStatement extends EcjPsiStatement implements PsiContinueStatement {

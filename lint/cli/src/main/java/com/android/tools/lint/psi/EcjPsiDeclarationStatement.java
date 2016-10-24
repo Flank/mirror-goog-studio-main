@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 
 class EcjPsiDeclarationStatement extends EcjPsiStatement implements PsiDeclarationStatement {

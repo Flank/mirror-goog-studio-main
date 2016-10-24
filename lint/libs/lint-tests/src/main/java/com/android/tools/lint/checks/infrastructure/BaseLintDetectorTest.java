@@ -24,9 +24,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Base test case for lint tests.
@@ -61,16 +59,16 @@ public abstract class BaseLintDetectorTest extends TestCase {
     }
 
     public static int getCaretOffset(String fileContent, String caretLocation) {
-        assertTrue(caretLocation, caretLocation.contains("^")); //$NON-NLS-1$
+        assertTrue(caretLocation, caretLocation.contains("^"));
 
-        int caretDelta = caretLocation.indexOf("^"); //$NON-NLS-1$
+        int caretDelta = caretLocation.indexOf("^");
         assertTrue(caretLocation, caretDelta != -1);
 
         // String around caret/range without the range and caret marker characters
         String caretContext;
-        if (caretLocation.contains("[^")) { //$NON-NLS-1$
+        if (caretLocation.contains("[^")) {
             caretDelta--;
-            assertTrue(caretLocation, caretLocation.startsWith("[^", caretDelta)); //$NON-NLS-1$
+            assertTrue(caretLocation, caretLocation.startsWith("[^", caretDelta));
             int caretRangeEnd = caretLocation.indexOf(']', caretDelta + 2);
             assertTrue(caretLocation, caretRangeEnd != -1);
             caretContext = caretLocation.substring(0, caretDelta)
@@ -136,16 +134,16 @@ public abstract class BaseLintDetectorTest extends TestCase {
 
     public static File getTempDir() {
         if (sTempDir == null) {
-            File base = new File(System.getProperty("java.io.tmpdir"));     //$NON-NLS-1$
+            File base = new File(System.getProperty("java.io.tmpdir"));
             if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-                base = new File("/tmp"); //$NON-NLS-1$
+                base = new File("/tmp");
             }
 
             // On Windows, we don't want to pollute the temp folder (which is generally
             // already incredibly busy). So let's create a temp folder for the results.
 
             Calendar c = Calendar.getInstance();
-            String name = String.format("sdkTests_%1$tF_%1$tT", c).replace(':', '-'); //$NON-NLS-1$
+            String name = String.format("sdkTests_%1$tF_%1$tT", c).replace(':', '-');
             File tmpDir = new File(base, name);
             if (!tmpDir.exists() && tmpDir.mkdir()) {
                 sTempDir = tmpDir;
@@ -163,7 +161,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
     }
 
     protected InputStream getTestResource(String relativePath, boolean expectExists) {
-        String path = "testdata" + File.separator + relativePath; //$NON-NLS-1$
+        String path = "testdata" + File.separator + relativePath;
         InputStream stream = BaseLintDetectorTest.class.getResourceAsStream(path);
         if (!expectExists && stream == null) {
             return null;
@@ -310,7 +308,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
             // will read dir/file.txt from the test data and write it into the target
             // directory as dir2/dir3/file2.java
             String targetPath = relativePath;
-            int replaceIndex = relativePath.indexOf("=>"); //$NON-NLS-1$
+            int replaceIndex = relativePath.indexOf("=>");
             if (replaceIndex != -1) {
                 // foo=>bar
                 targetPath = relativePath.substring(replaceIndex + "=>".length());
@@ -375,7 +373,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
         // directory as dir2/dir3/file2.java
 
         String targetPath = relativePath;
-        int replaceIndex = relativePath.indexOf("=>"); //$NON-NLS-1$
+        int replaceIndex = relativePath.indexOf("=>");
         if (replaceIndex != -1) {
             // foo=>bar
             targetPath = relativePath.substring(replaceIndex + "=>".length());
@@ -406,19 +404,16 @@ public abstract class BaseLintDetectorTest extends TestCase {
     }
 
     protected String cleanup(String result) {
-        List<File> sorted = new ArrayList<File>(sCleanDirs);
+        List<File> sorted = new ArrayList<>(sCleanDirs);
         // Process dirs in order such that we match longest substrings first
-        Collections.sort(sorted, new Comparator<File>() {
-            @Override
-            public int compare(File file1, File file2) {
-                String path1 = file1.getPath();
-                String path2 = file2.getPath();
-                int delta = path2.length() - path1.length();
-                if (delta != 0) {
-                    return delta;
-                } else {
-                    return path1.compareTo(path2);
-                }
+        Collections.sort(sorted, (file1, file2) -> {
+            String path1 = file1.getPath();
+            String path2 = file2.getPath();
+            int delta = path2.length() - path1.length();
+            if (delta != 0) {
+                return delta;
+            } else {
+                return path1.compareTo(path2);
             }
         });
 

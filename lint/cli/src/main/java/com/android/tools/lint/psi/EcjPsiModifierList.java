@@ -23,7 +23,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
-
 import java.lang.reflect.Modifier;
 
 class EcjPsiModifierList extends EcjPsiSourceElement implements PsiModifierList {

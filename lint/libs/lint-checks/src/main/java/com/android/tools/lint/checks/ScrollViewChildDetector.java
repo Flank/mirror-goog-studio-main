@@ -34,13 +34,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Check which looks at the children of ScrollViews and ensures that they fill/match
@@ -49,7 +47,7 @@ import java.util.List;
 public class ScrollViewChildDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ScrollViewSize", //$NON-NLS-1$
+            "ScrollViewSize",
             "ScrollView size validation",
             // TODO add a better explanation here!
             "ScrollView children must set their `layout_width` or `layout_height` attributes " +

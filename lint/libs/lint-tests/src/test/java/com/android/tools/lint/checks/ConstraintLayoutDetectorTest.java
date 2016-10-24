@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;

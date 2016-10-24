@@ -86,7 +86,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Obsolete dependencies */
     public static final Issue DEPENDENCY = Issue.create(
-            "GradleDependency", //$NON-NLS-1$
+            "GradleDependency",
             "Obsolete Gradle Dependency",
             "This detector looks for usages of libraries where the version you are using " +
             "is not the current stable release. Using older versions is fine, and there are " +
@@ -100,7 +100,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Deprecated Gradle constructs */
     public static final Issue DEPRECATED = Issue.create(
-            "GradleDeprecated", //$NON-NLS-1$
+            "GradleDeprecated",
             "Deprecated Gradle Construct",
             "This detector looks for deprecated Gradle constructs which currently work but " +
             "will likely stop working in a future update.",
@@ -111,7 +111,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Incompatible Android Gradle plugin */
     public static final Issue GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
-            "GradlePluginVersion", //$NON-NLS-1$
+            "GradlePluginVersion",
             "Incompatible Android Gradle Plugin",
             "Not all versions of the Android Gradle plugin are compatible with all versions " +
             "of the SDK. If you update your tools, or if you are trying to open a project that " +
@@ -124,7 +124,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Invalid or dangerous paths */
     public static final Issue PATH = Issue.create(
-            "GradlePath", //$NON-NLS-1$
+            "GradlePath",
             "Gradle Path Issues",
             "Gradle build scripts are meant to be cross platform, so file paths use " +
             "Unix-style path separators (a forward slash) rather than Windows path separators " +
@@ -139,7 +139,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Constructs the IDE support struggles with */
     public static final Issue IDE_SUPPORT = Issue.create(
-            "GradleIdeError", //$NON-NLS-1$
+            "GradleIdeError",
             "Gradle IDE Support Issues",
             "Gradle is highly flexible, and there are things you can do in Gradle files which " +
             "can make it hard or impossible for IDEs to properly handle the project. This lint " +
@@ -151,7 +151,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Using + in versions */
     public static final Issue PLUS = Issue.create(
-            "GradleDynamicVersion", //$NON-NLS-1$
+            "GradleDynamicVersion",
             "Gradle Dynamic Version",
             "Using `+` in dependencies lets you automatically pick up the latest available " +
             "version rather than a specific, named version. However, this is not recommended; " +
@@ -165,7 +165,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Accidentally calling a getter instead of your own methods */
     public static final Issue GRADLE_GETTER = Issue.create(
-            "GradleGetter", //$NON-NLS-1$
+            "GradleGetter",
             "Gradle Implicit Getter Call",
             "Gradle will let you replace specific constants in your build scripts with method " +
             "calls, so you can for example dynamically compute a version string based on your " +
@@ -184,7 +184,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Using incompatible versions */
     public static final Issue COMPATIBILITY = Issue.create(
-            "GradleCompatible", //$NON-NLS-1$
+            "GradleCompatible",
             "Incompatible Gradle Versions",
 
             "There are some combinations of libraries, or tools and libraries, that are " +
@@ -199,7 +199,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Using a string where an integer is expected */
     public static final Issue STRING_INTEGER = Issue.create(
-            "StringShouldBeInt", //$NON-NLS-1$
+            "StringShouldBeInt",
             "String should be int",
 
             "The properties `compileSdkVersion`, `minSdkVersion` and `targetSdkVersion` are " +
@@ -216,7 +216,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Attempting to use substitution with single quotes */
     public static final Issue NOT_INTERPOLATED = Issue.create(
-          "NotInterpolated", //$NON-NLS-1$
+          "NotInterpolated",
           "Incorrect Interpolation",
 
           "To insert the value of a variable, you can use `${variable}` inside " +
@@ -230,7 +230,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** A newer version is available on a remote server */
     public static final Issue REMOTE_VERSION = Issue.create(
-            "NewerVersionAvailable", //$NON-NLS-1$
+            "NewerVersionAvailable",
             "Newer Library Versions Available",
             "This detector checks with a central repository to see if there are newer versions " +
             "available for the dependencies used by this project. " +
@@ -245,7 +245,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Accidentally using octal numbers */
     public static final Issue ACCIDENTAL_OCTAL = Issue.create(
-            "AccidentalOctal", //$NON-NLS-1$
+            "AccidentalOctal",
             "Accidental Octal",
 
             "In Groovy, an integer literal that starts with a leading 0 will be interpreted " +
@@ -259,7 +259,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     @SuppressWarnings("SpellCheckingInspection")
     public static final Issue BUNDLED_GMS = Issue.create(
-            "UseOfBundledGooglePlayServices", //$NON-NLS-1$
+            "UseOfBundledGooglePlayServices",
             "Use of bundled version of Google Play services",
 
             "Google Play services SDK's can be selectively included, which enables a smaller APK " +
@@ -278,7 +278,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      * Using a versionCode that is very high
      */
     public static final Issue HIGH_APP_VERSION_CODE = Issue.create(
-            "HighAppVersionCode", //$NON-NLS-1$
+            "HighAppVersionCode",
             "VersionCode too high",
 
             "The declared `versionCode` is an Integer. Ensure that the version number is " +
@@ -1097,9 +1097,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         // Look for version info:  This is just a cheap skim of the above JSON results
         boolean foundPreview = false;
-        int index = response.indexOf("\"response\"");   //$NON-NLS-1$
+        int index = response.indexOf("\"response\"");
         while (index != -1) {
-            index = response.indexOf("\"v\":", index);  //$NON-NLS-1$
+            index = response.indexOf("\"v\":", index);
             if (index != -1) {
                 index += 4;
                 int start = response.indexOf('"', index) + 1;
@@ -1154,8 +1154,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 if (is == null) {
                     return null;
                 }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is, UTF_8));
-                try {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, UTF_8))) {
                     StringBuilder sb = new StringBuilder(500);
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -1164,8 +1163,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     }
 
                     return sb.toString();
-                } finally {
-                    reader.close();
                 }
             } finally {
                 client.closeConnection(connection);

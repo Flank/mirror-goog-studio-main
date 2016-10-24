@@ -55,19 +55,17 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Detects references to resources in the manifest that vary by configuration
@@ -76,7 +74,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     /** Using resources in the manifest that vary by configuration */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "ManifestResource", //$NON-NLS-1$
+            "ManifestResource",
             "Manifest Resource References",
             "Elements in the manifest can reference resources, but those resources cannot " +
             "vary across configurations (except as a special case, by version, and except " +

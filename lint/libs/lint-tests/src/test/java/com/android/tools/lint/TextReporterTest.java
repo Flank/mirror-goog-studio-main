@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -46,10 +45,10 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.mFlags, file, writer, true);
+            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
             Project project = Project.create(client, new File("/foo/bar/Foo"),
                     new File("/foo/bar/Foo"));
-            client.mFlags.setShowEverything(true);
+            client.flags.setShowEverything(true);
 
             Warning warning1 = new Warning(ManifestDetector.USES_SDK,
                     "<uses-sdk> tag should specify a target API level (the highest verified " +
@@ -85,7 +84,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     new DefaultPosition(5, 4, 198), new DefaultPosition(5, 42, 236));
             secondary.setSecondary(tertiary);
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
             Collections.sort(warnings);
@@ -123,11 +122,11 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.mFlags, file, writer, true);
-            client.mFlags.setExplainIssues(true);
+            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
+            client.flags.setExplainIssues(true);
             Project project = Project.create(client, new File("/foo/bar/Foo"),
                     new File("/foo/bar/Foo"));
-            client.mFlags.setShowEverything(true);
+            client.flags.setShowEverything(true);
 
             Warning warning1 = new Warning(ManifestDetector.USES_SDK,
                     "<uses-sdk> tag should specify a target API level (the highest verified " +
@@ -178,7 +177,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warning3.location = Location.create(warning3.file,
                     new DefaultPosition(8, 4, 198), new DefaultPosition(8, 42, 236));
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
             warnings.add(warning3);

@@ -45,13 +45,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Collection;
+import java.util.Collections;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Check which looks for potential errors in declarations of ConstraintLayout, such as
@@ -60,7 +58,7 @@ import java.util.Collections;
 public class ConstraintLayoutDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "MissingConstraints", //$NON-NLS-1$
+            "MissingConstraints",
             "Missing Constraints in ConstraintLayout",
             "The layout editor allows you to place widgets anywhere on the canvas, and it " +
             "records the current position with designtime attributes (such as " +

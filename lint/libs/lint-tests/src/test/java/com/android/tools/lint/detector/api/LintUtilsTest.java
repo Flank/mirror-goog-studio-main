@@ -61,13 +61,7 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth;
 import com.intellij.psi.PsiJavaFile;
-
-import junit.framework.TestCase;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -77,8 +71,9 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import junit.framework.TestCase;
 import lombok.ast.Node;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {

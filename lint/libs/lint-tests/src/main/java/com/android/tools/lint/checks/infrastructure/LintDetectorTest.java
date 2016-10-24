@@ -268,8 +268,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             mOutput.setLength(0);
             lintClient.reset();
             try {
-                //lintClient.mWarnings.clear();
-                Field field = LintCliClient.class.getDeclaredField("mWarnings");
+                //lintClient.warnings.clear();
+                Field field = LintCliClient.class.getDeclaredField("warnings");
                 field.setAccessible(true);
                 List list = (List)field.get(lintClient);
                 list.clear();
@@ -923,10 +923,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             Manifest manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-            JarOutputStream jarOutputStream = new JarOutputStream(
-                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest);
 
-            try {
+            try (JarOutputStream jarOutputStream = new JarOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
                 for (TestFile file : mFiles) {
                     String path = mPath.get(file);
                     if (path == null) {
@@ -934,7 +933,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
                     jarOutputStream.putNextEntry(new ZipEntry(path));
                     if (file instanceof BinaryTestFile) {
-                        byte[] bytes = ((BinaryTestFile)file).getBinaryContents();
+                        byte[] bytes = ((BinaryTestFile) file).getBinaryContents();
                         assertNotNull(file.targetRelativePath, bytes);
                         ByteStreams.copy(new ByteArrayInputStream(bytes), jarOutputStream);
                     } else {
@@ -945,8 +944,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
                     jarOutputStream.closeEntry();
                 }
-            } finally {
-                jarOutputStream.close();
             }
 
             return tempFile;
@@ -1012,7 +1009,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     @Override
     protected InputStream getTestResource(String relativePath, boolean expectExists) {
-        String path = "data" + File.separator + relativePath; //$NON-NLS-1$
+        String path = "data" + File.separator + relativePath;
         InputStream stream = getClass().getResourceAsStream(path);
         if (!expectExists && stream == null) {
             return null;
@@ -1052,12 +1049,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     public class TestLintClient extends LintCliClient {
-        private StringWriter mWriter = new StringWriter();
-        private File mIncrementalCheck;
+        private StringWriter writer = new StringWriter();
+        private File incrementalCheck;
 
         public TestLintClient() {
             super(new LintCliFlags(), "test");
-            mFlags.getReporters().add(new TextReporter(this, mFlags, mWriter, false));
+            flags.getReporters().add(new TextReporter(this, flags, writer, false));
         }
 
         @Override
@@ -1073,28 +1070,28 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public void reset() {
             super.reset();
-            mWriter.getBuffer().setLength(0);
+            writer.getBuffer().setLength(0);
         }
 
         public String analyze(List<File> files) throws Exception {
-            mDriver = new LintDriver(new CustomIssueRegistry(), this);
-            configureDriver(mDriver);
+            driver = new LintDriver(new CustomIssueRegistry(), this);
+            configureDriver(driver);
             LintRequest request = new LintRequest(this, files);
-            if (mIncrementalCheck != null) {
+            if (incrementalCheck != null) {
                 assertEquals(1, files.size());
                 File projectDir = files.get(0);
                 assertTrue(isProjectDirectory(projectDir));
                 Project project = createProject(projectDir, projectDir);
-                project.addFile(mIncrementalCheck);
+                project.addFile(incrementalCheck);
                 List<Project> projects = Collections.singletonList(project);
                 request.setProjects(projects);
             }
 
-            mDriver.analyze(request.setScope(getLintScope(files)));
+            driver.analyze(request.setScope(getLintScope(files)));
 
             // Check compare contract
             Warning prev = null;
-            for (Warning warning : mWarnings) {
+            for (Warning warning : warnings) {
                 if (prev != null) {
                     boolean equals = warning.equals(prev);
                     assertEquals(equals, prev.equals(warning));
@@ -1105,12 +1102,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 prev = warning;
             }
 
-            Collections.sort(mWarnings);
+            Collections.sort(warnings);
 
             // Check compare contract and transitivity
             Warning prev2 = prev;
             prev = null;
-            for (Warning warning : mWarnings) {
+            for (Warning warning : warnings) {
                 if (prev != null && prev2 != null) {
                     assertTrue(warning.compareTo(prev) >= 0);
                     assertTrue(prev.compareTo(prev2) >= 0);
@@ -1124,12 +1121,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 prev = warning;
             }
 
-            Stats stats = new Stats(mErrorCount, mWarningCount);
-            for (Reporter reporter : mFlags.getReporters()) {
-                reporter.write(stats, mWarnings);
+            Stats stats = new Stats(errorCount, warningCount);
+            for (Reporter reporter : flags.getReporters()) {
+                reporter.write(stats, warnings);
             }
 
-            mOutput.append(mWriter.toString());
+            mOutput.append(writer.toString());
 
             if (mOutput.length() == 0) {
                 mOutput.append("No warnings.");
@@ -1146,7 +1143,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         public String getErrors() throws Exception {
-            return mWriter.toString();
+            return writer.toString();
         }
 
         @Override
@@ -1155,9 +1152,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 @Override
                 public void prepareJavaParse(@NonNull List<JavaContext> contexts) {
                     super.prepareJavaParse(contexts);
-                    if (!allowCompilationErrors() && mEcjResult != null) {
+                    if (!allowCompilationErrors() && ecjResult != null) {
                         StringBuilder sb = new StringBuilder();
-                        for (CompilationUnitDeclaration unit : mEcjResult.getCompilationUnits()) {
+                        for (CompilationUnitDeclaration unit : ecjResult.getCompilationUnits()) {
                             // so maybe I don't need my map!!
                             CategorizedProblem[] problems = unit.compilationResult()
                                     .getAllProblems();
@@ -1234,7 +1231,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             // Make sure errors are unique!
             Warning prev = null;
-            for (Warning warning : mWarnings) {
+            for (Warning warning : warnings) {
                 assertNotSame(warning, prev);
                 assert prev == null || !warning.equals(prev) : warning;
                 prev = warning;
@@ -1304,12 +1301,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         public void setIncremental(File currentFile) {
-            mIncrementalCheck = currentFile;
+            incrementalCheck = currentFile;
         }
 
         @Override
         public boolean supportsProjectResources() {
-            return mIncrementalCheck != null;
+            return incrementalCheck != null;
         }
 
 
@@ -1322,7 +1319,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public AbstractResourceRepository getResourceRepository(Project project,
                 boolean includeDependencies, boolean includeLibraries) {
-            if (mIncrementalCheck == null) {
+            if (incrementalCheck == null) {
                 return null;
             }
 

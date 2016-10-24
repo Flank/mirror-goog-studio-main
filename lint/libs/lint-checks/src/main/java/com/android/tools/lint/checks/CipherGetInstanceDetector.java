@@ -34,7 +34,6 @@ import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +43,7 @@ import java.util.Set;
  */
 public class CipherGetInstanceDetector extends Detector implements Detector.JavaPsiScanner {
     public static final Issue ISSUE = Issue.create(
-            "GetInstance", //$NON-NLS-1$
+            "GetInstance",
             "Cipher.getInstance with ECB",
             "`Cipher#getInstance` should not be called with ECB as the cipher mode or without " +
             "setting the cipher mode because the default mode on android is ECB, which " +
@@ -56,11 +55,11 @@ public class CipherGetInstanceDetector extends Detector implements Detector.Java
                     CipherGetInstanceDetector.class,
                     Scope.JAVA_FILE_SCOPE));
 
-    private static final String CIPHER = "javax.crypto.Cipher"; //$NON-NLS-1$
-    private static final String GET_INSTANCE = "getInstance"; //$NON-NLS-1$
+    private static final String CIPHER = "javax.crypto.Cipher";
+    private static final String GET_INSTANCE = "getInstance";
     private static final Set<String> ALGORITHM_ONLY =
-            Sets.newHashSet("AES", "DES", "DESede"); //$NON-NLS-1$
-    private static final String ECB = "ECB"; //$NON-NLS-1$
+            Sets.newHashSet("AES", "DES", "DESede");
+    private static final String ECB = "ECB";
 
     // ---- Implements JavaScanner ----
 

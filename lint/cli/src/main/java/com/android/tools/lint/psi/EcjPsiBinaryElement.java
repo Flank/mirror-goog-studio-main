@@ -24,7 +24,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiInvalidElementAccessException;
-
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 
 abstract class EcjPsiBinaryElement extends EcjPsiElement implements PsiCompiledElement {

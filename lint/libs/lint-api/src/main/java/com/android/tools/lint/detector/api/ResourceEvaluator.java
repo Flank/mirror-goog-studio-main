@@ -49,7 +49,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiStatement;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.EnumSet;
 import java.util.Locale;
 
@@ -72,13 +71,13 @@ public class ResourceEvaluator {
      */
     public static final ResourceType PX_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
 
-    public static final String COLOR_INT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "ColorInt"; //$NON-NLS-1$
-    public static final String PX_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Px"; //$NON-NLS-1$
+    public static final String COLOR_INT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "ColorInt";
+    public static final String PX_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Px";
     public static final String RES_SUFFIX = "Res";
 
-    private final JavaEvaluator mEvaluator;
+    private final JavaEvaluator evaluator;
 
-    private boolean mAllowDereference = true;
+    private boolean allowDereference = true;
 
     /**
      * Creates a new resource evaluator
@@ -86,7 +85,7 @@ public class ResourceEvaluator {
      * @param evaluator the evaluator to use to resolve annotations references, if any
      */
     public ResourceEvaluator(@Nullable JavaEvaluator evaluator) {
-        mEvaluator = evaluator;
+        this.evaluator = evaluator;
     }
 
     /**
@@ -98,7 +97,7 @@ public class ResourceEvaluator {
      * @return this for constructor chaining
      */
     public ResourceEvaluator allowDereference(boolean allow) {
-        mAllowDereference = allow;
+        allowDereference = allow;
         return this;
     }
 
@@ -155,7 +154,7 @@ public class ResourceEvaluator {
         } else if (element instanceof PsiParenthesizedExpression) {
             PsiParenthesizedExpression parenthesizedExpression = (PsiParenthesizedExpression) element;
             return getResource(parenthesizedExpression.getExpression());
-        } else if (element instanceof PsiMethodCallExpression && mAllowDereference) {
+        } else if (element instanceof PsiMethodCallExpression && allowDereference) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
             PsiReferenceExpression expression = call.getMethodExpression();
             PsiMethod method = call.resolveMethod();
@@ -273,7 +272,7 @@ public class ResourceEvaluator {
         } else if (element instanceof PsiParenthesizedExpression) {
             PsiParenthesizedExpression parenthesizedExpression = (PsiParenthesizedExpression) element;
             return getResourceTypes(parenthesizedExpression.getExpression());
-        } else if (element instanceof PsiMethodCallExpression && mAllowDereference) {
+        } else if (element instanceof PsiMethodCallExpression && allowDereference) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
             PsiReferenceExpression expression = call.getMethodExpression();
             PsiMethod method = call.resolveMethod();
@@ -366,10 +365,10 @@ public class ResourceEvaluator {
 
     @Nullable
     private EnumSet<ResourceType> getTypesFromAnnotations(PsiModifierListOwner owner) {
-        if (mEvaluator == null) {
+        if (evaluator == null) {
             return null;
         }
-        for (PsiAnnotation annotation : mEvaluator.getAllAnnotations(owner, true)) {
+        for (PsiAnnotation annotation : evaluator.getAllAnnotations(owner, true)) {
             String signature = annotation.getQualifiedName();
             if (signature == null) {
                 continue;

@@ -24,7 +24,7 @@ import com.google.common.annotations.Beta;
 
 /**
  * Exception thrown when there is a circular dependency, such as a circular dependency
- * of library mProject references
+ * of library project references
  * <p>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
@@ -32,10 +32,10 @@ import com.google.common.annotations.Beta;
 @Beta
 public class CircularDependencyException extends RuntimeException {
     @Nullable
-    private Project mProject;
+    private Project project;
 
     @Nullable
-    private Location mLocation;
+    private Location location;
 
     CircularDependencyException(@NonNull String message) {
         super(message);
@@ -48,7 +48,7 @@ public class CircularDependencyException extends RuntimeException {
      */
     @Nullable
     public Project getProject() {
-        return mProject;
+        return project;
     }
 
     /**
@@ -57,7 +57,7 @@ public class CircularDependencyException extends RuntimeException {
      * @param project the associated project, if any
      */
     public void setProject(@Nullable Project project) {
-        mProject = project;
+        this.project = project;
     }
 
     /**
@@ -67,7 +67,7 @@ public class CircularDependencyException extends RuntimeException {
      */
     @Nullable
     public Location getLocation() {
-        return mLocation;
+        return location;
     }
 
     /**
@@ -76,6 +76,6 @@ public class CircularDependencyException extends RuntimeException {
      * @param location the associated location, if any
      */
     public void setLocation(@Nullable Location location) {
-        mLocation = location;
+        this.location = location;
     }
 }

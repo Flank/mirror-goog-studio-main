@@ -24,7 +24,6 @@ import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 class EcjPsiClassInitializer extends EcjPsiMember implements PsiClassInitializer {

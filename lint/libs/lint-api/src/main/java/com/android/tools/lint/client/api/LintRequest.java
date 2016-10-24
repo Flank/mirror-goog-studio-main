@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -36,19 +35,19 @@ import java.util.List;
 @Beta
 public class LintRequest {
     @NonNull
-    protected final LintClient mClient;
+    protected final LintClient client;
 
     @NonNull
-    protected final List<File> mFiles;
+    protected final List<File> files;
 
     @Nullable
-    protected EnumSet<Scope> mScope;
+    protected EnumSet<Scope> scope;
 
     @Nullable
-    protected Boolean mReleaseMode;
+    protected Boolean releaseMode;
 
     @Nullable
-    protected Collection<Project> mProjects;
+    protected Collection<Project> projects;
 
     /**
      * Creates a new {@linkplain LintRequest}, to be passed to a {@link LintDriver}
@@ -59,8 +58,8 @@ public class LintRequest {
      *          (typically for incremental IDE analysis).
      */
     public LintRequest(@NonNull LintClient client, @NonNull List<File> files) {
-        mClient = client;
-        mFiles = files;
+        this.client = client;
+        this.files = files;
     }
 
     /**
@@ -70,7 +69,7 @@ public class LintRequest {
      */
     @NonNull
     public LintClient getClient() {
-        return mClient;
+        return client;
     }
 
     /**
@@ -82,7 +81,7 @@ public class LintRequest {
      */
     @NonNull
     public List<File> getFiles() {
-        return mFiles;
+        return files;
     }
 
     /**
@@ -93,7 +92,7 @@ public class LintRequest {
      */
     @Nullable
     public EnumSet<Scope> getScope() {
-        return mScope;
+        return scope;
     }
 
     /**
@@ -105,7 +104,7 @@ public class LintRequest {
      */
     @NonNull
     public LintRequest setScope(@Nullable EnumSet<Scope> scope) {
-        mScope = scope;
+        this.scope = scope;
         return this;
     }
 
@@ -118,7 +117,7 @@ public class LintRequest {
      */
     @Nullable
     public Boolean isReleaseMode() {
-        return mReleaseMode;
+        return releaseMode;
     }
 
     /**
@@ -131,7 +130,7 @@ public class LintRequest {
      */
     @NonNull
     public LintRequest setReleaseMode(@Nullable Boolean releaseMode) {
-        mReleaseMode = releaseMode;
+        this.releaseMode = releaseMode;
         return this;
     }
 
@@ -147,7 +146,7 @@ public class LintRequest {
      */
     @Nullable
     public Collection<Project> getProjects() {
-        return mProjects;
+        return projects;
     }
 
     /**
@@ -161,7 +160,7 @@ public class LintRequest {
      * @param projects a collection of projects, or null
      */
     public void setProjects(@Nullable Collection<Project> projects) {
-        mProjects = projects;
+        this.projects = projects;
     }
 
     /**

@@ -31,7 +31,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +39,7 @@ import java.util.List;
  */
 public class SetJavaScriptEnabledDetector extends Detector implements JavaPsiScanner {
     /** Invocations of setJavaScriptEnabled */
-    public static final Issue ISSUE = Issue.create("SetJavaScriptEnabled", //$NON-NLS-1$
+    public static final Issue ISSUE = Issue.create("SetJavaScriptEnabled",
             "Using `setJavaScriptEnabled`",
 
             "Your code should not invoke `setJavaScriptEnabled` if you are not sure that " +
@@ -53,7 +52,7 @@ public class SetJavaScriptEnabledDetector extends Detector implements JavaPsiSca
                     SetJavaScriptEnabledDetector.class,
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo(
-            "http://developer.android.com/guide/practices/security.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/practices/security.html");
 
     /** Constructs a new {@link SetJavaScriptEnabledDetector} check */
     public SetJavaScriptEnabledDetector() {

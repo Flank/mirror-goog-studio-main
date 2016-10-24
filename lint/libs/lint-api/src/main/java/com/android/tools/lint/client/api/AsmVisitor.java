@@ -21,18 +21,16 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.google.common.annotations.Beta;
-
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Specialized visitor for running detectors on a class object model.
@@ -63,21 +61,21 @@ class AsmVisitor {
      * updates.
      */
     private static final int TYPE_COUNT = AbstractInsnNode.LINE + 1;
-    private final Map<String, List<ClassScanner>> mMethodNameToChecks =
-            new HashMap<String, List<ClassScanner>>();
-    private final Map<String, List<ClassScanner>> mMethodOwnerToChecks =
-            new HashMap<String, List<ClassScanner>>();
-    private final List<Detector> mFullClassChecks = new ArrayList<Detector>();
+    private final Map<String, List<ClassScanner>> methodNameToChecks =
+            new HashMap<>();
+    private final Map<String, List<ClassScanner>> methodOwnerToChecks =
+            new HashMap<>();
+    private final List<Detector> fullClassChecks = new ArrayList<>();
 
-    private final List<? extends Detector> mAllDetectors;
-    private List<ClassScanner>[] mNodeTypeDetectors;
+    private final List<? extends Detector> allDetectors;
+    private List<ClassScanner>[] nodeTypeDetectors;
 
     // Really want this:
     //<T extends List<Detector> & Detector.ClassScanner> ClassVisitor(T xmlDetectors) {
     // but it makes client code tricky and ugly.
     @SuppressWarnings("unchecked")
     AsmVisitor(@NonNull LintClient client, @NonNull List<? extends Detector> classDetectors) {
-        mAllDetectors = classDetectors;
+        allDetectors = classDetectors;
 
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
@@ -90,10 +88,10 @@ class AsmVisitor {
             if (names != null) {
                 checkFullClass = false;
                 for (String element : names) {
-                    List<Detector.ClassScanner> list = mMethodNameToChecks.get(element);
+                    List<Detector.ClassScanner> list = methodNameToChecks.get(element);
                     if (list == null) {
-                        list = new ArrayList<Detector.ClassScanner>();
-                        mMethodNameToChecks.put(element, list);
+                        list = new ArrayList<>();
+                        methodNameToChecks.put(element, list);
                     }
                     list.add(scanner);
                 }
@@ -103,10 +101,10 @@ class AsmVisitor {
             if (owners != null) {
                 checkFullClass = false;
                 for (String element : owners) {
-                    List<Detector.ClassScanner> list = mMethodOwnerToChecks.get(element);
+                    List<Detector.ClassScanner> list = methodOwnerToChecks.get(element);
                     if (list == null) {
-                        list = new ArrayList<Detector.ClassScanner>();
-                        mMethodOwnerToChecks.put(element, list);
+                        list = new ArrayList<>();
+                        methodOwnerToChecks.put(element, list);
                     }
                     list.add(scanner);
                 }
@@ -122,20 +120,20 @@ class AsmVisitor {
                                 type, scanner);
                         continue;
                     }
-                    if (mNodeTypeDetectors == null) {
-                        mNodeTypeDetectors = new List[TYPE_COUNT];
+                    if (nodeTypeDetectors == null) {
+                        nodeTypeDetectors = new List[TYPE_COUNT];
                     }
-                    List<ClassScanner> checks = mNodeTypeDetectors[type];
+                    List<ClassScanner> checks = nodeTypeDetectors[type];
                     if (checks == null) {
-                        checks = new ArrayList<ClassScanner>();
-                        mNodeTypeDetectors[type] = checks;
+                        checks = new ArrayList<>();
+                        nodeTypeDetectors[type] = checks;
                     }
                     checks.add(scanner);
                 }
             }
 
             if (checkFullClass) {
-                mFullClassChecks.add(detector);
+                fullClassChecks.add(detector);
             }
         }
     }
@@ -144,18 +142,18 @@ class AsmVisitor {
     void runClassDetectors(ClassContext context) {
         ClassNode classNode = context.getClassNode();
 
-        for (Detector detector : mAllDetectors) {
+        for (Detector detector : allDetectors) {
             detector.beforeCheckFile(context);
         }
 
-        for (Detector detector : mFullClassChecks) {
+        for (Detector detector : fullClassChecks) {
             Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
             scanner.checkClass(context, classNode);
             detector.afterCheckFile(context);
         }
 
-        if (!mMethodNameToChecks.isEmpty() || !mMethodOwnerToChecks.isEmpty() ||
-                mNodeTypeDetectors != null && mNodeTypeDetectors.length > 0) {
+        if (!methodNameToChecks.isEmpty() || !methodOwnerToChecks.isEmpty() ||
+            nodeTypeDetectors != null && nodeTypeDetectors.length > 0) {
             List methodList = classNode.methods;
             for (Object m : methodList) {
                 MethodNode method = (MethodNode) m;
@@ -167,7 +165,7 @@ class AsmVisitor {
                         MethodInsnNode call = (MethodInsnNode) instruction;
 
                         String owner = call.owner;
-                        List<ClassScanner> scanners = mMethodOwnerToChecks.get(owner);
+                        List<ClassScanner> scanners = methodOwnerToChecks.get(owner);
                         if (scanners != null) {
                             for (ClassScanner scanner : scanners) {
                                 scanner.checkCall(context, classNode, method, call);
@@ -175,7 +173,7 @@ class AsmVisitor {
                         }
 
                         String name = call.name;
-                        scanners = mMethodNameToChecks.get(name);
+                        scanners = methodNameToChecks.get(name);
                         if (scanners != null) {
                             for (ClassScanner scanner : scanners) {
                                 scanner.checkCall(context, classNode, method, call);
@@ -183,8 +181,8 @@ class AsmVisitor {
                         }
                     }
 
-                    if (mNodeTypeDetectors != null && type < mNodeTypeDetectors.length) {
-                        List<ClassScanner> scanners = mNodeTypeDetectors[type];
+                    if (nodeTypeDetectors != null && type < nodeTypeDetectors.length) {
+                        List<ClassScanner> scanners = nodeTypeDetectors[type];
                         if (scanners != null) {
                             for (ClassScanner scanner : scanners) {
                                 scanner.checkInstruction(context, classNode, method, instruction);
@@ -195,7 +193,7 @@ class AsmVisitor {
             }
         }
 
-        for (Detector detector : mAllDetectors) {
+        for (Detector detector : allDetectors) {
             detector.afterCheckFile(context);
         }
     }

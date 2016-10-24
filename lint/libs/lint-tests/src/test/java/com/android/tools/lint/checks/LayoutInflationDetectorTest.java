@@ -17,11 +17,9 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.IOException;
 import java.io.StringReader;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class LayoutInflationDetectorTest extends AbstractCheckTest {
     @Override

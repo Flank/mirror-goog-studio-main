@@ -25,10 +25,8 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiReferenceList;
 import com.intellij.psi.PsiType;
-
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-
 import java.util.List;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 
 class EcjPsiReferenceList extends EcjPsiSourceElement implements PsiReferenceList {
 

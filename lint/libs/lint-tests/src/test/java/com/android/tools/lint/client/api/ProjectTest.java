@@ -23,7 +23,6 @@ import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -168,7 +167,7 @@ public class ProjectTest extends AbstractCheckTest {
         }
 
         public void setDirectLibraries(List<Project> libraries) {
-            mDirectLibraries = libraries;
+            directLibraries = libraries;
         }
     }
 

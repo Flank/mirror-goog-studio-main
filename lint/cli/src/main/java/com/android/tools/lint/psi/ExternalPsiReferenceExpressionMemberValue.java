@@ -38,7 +38,6 @@ import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.javadoc.PsiDocComment;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -159,7 +158,7 @@ public class ExternalPsiReferenceExpressionMemberValue extends EcjPsiReferenceEx
     public boolean isDeprecated() {
         return false;
     }
-    
+
     private static class ExternalPsiClass extends EcjPsiBinaryElement implements PsiClass {
 
         private final String mFullyQualifiedName;

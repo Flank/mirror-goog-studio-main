@@ -38,7 +38,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ import java.util.List;
 public class ViewTagDetector extends Detector implements JavaPsiScanner {
     /** Using setTag and leaking memory */
     public static final Issue ISSUE = Issue.create(
-            "ViewTag", //$NON-NLS-1$
+            "ViewTag",
             "Tagged object leaks",
 
             "Prior to Android 4.0, the implementation of `View.setTag(int, Object)` would " +

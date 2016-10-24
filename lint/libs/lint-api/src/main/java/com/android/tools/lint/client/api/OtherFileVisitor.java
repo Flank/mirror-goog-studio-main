@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -45,13 +44,13 @@ import java.util.Map;
  */
 class OtherFileVisitor {
     @NonNull
-    private final List<Detector> mDetectors;
+    private final List<Detector> detectors;
 
     @NonNull
-    private Map<Scope, List<File>> mFiles = new EnumMap<Scope, List<File>>(Scope.class);
+    private Map<Scope, List<File>> files = new EnumMap<>(Scope.class);
 
     OtherFileVisitor(@NonNull List<Detector> detectors) {
-        mDetectors = detectors;
+        this.detectors = detectors;
     }
 
     /** Analyze other files in the given project */
@@ -63,7 +62,7 @@ class OtherFileVisitor {
         File projectFolder = project.getDir();
 
         EnumSet<Scope> scopes = EnumSet.noneOf(Scope.class);
-        for (Detector detector : mDetectors) {
+        for (Detector detector : detectors) {
             OtherFileScanner fileScanner = (OtherFileScanner) detector;
             EnumSet<Scope> applicable = fileScanner.getApplicableFiles();
             if (applicable.contains(Scope.OTHER)) {
@@ -77,7 +76,7 @@ class OtherFileVisitor {
 
         if (scopes.contains(Scope.RESOURCE_FILE)) {
             if (subset != null && !subset.isEmpty()) {
-                List<File> files = new ArrayList<File>(subset.size());
+                List<File> files = new ArrayList<>(subset.size());
                 for (File file : subset) {
                     if (SdkUtils.endsWith(file.getPath(), DOT_XML) &&
                             !file.getName().equals(ANDROID_MANIFEST_XML)) {
@@ -85,7 +84,7 @@ class OtherFileVisitor {
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.RESOURCE_FILE, files);
+                    this.files.put(Scope.RESOURCE_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -97,21 +96,21 @@ class OtherFileVisitor {
                     collectFiles(files, assets);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.RESOURCE_FILE, files);
+                    this.files.put(Scope.RESOURCE_FILE, files);
                 }
             }
         }
 
         if (scopes.contains(Scope.JAVA_FILE)) {
             if (subset != null && !subset.isEmpty()) {
-                List<File> files = new ArrayList<File>(subset.size());
+                List<File> files = new ArrayList<>(subset.size());
                 for (File file : subset) {
                     if (file.getPath().endsWith(DOT_JAVA)) {
                         files.add(file);
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.JAVA_FILE, files);
+                    this.files.put(Scope.JAVA_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -119,21 +118,21 @@ class OtherFileVisitor {
                     collectFiles(files, srcFolder);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.JAVA_FILE, files);
+                    this.files.put(Scope.JAVA_FILE, files);
                 }
             }
         }
 
         if (scopes.contains(Scope.CLASS_FILE)) {
             if (subset != null && !subset.isEmpty()) {
-                List<File> files = new ArrayList<File>(subset.size());
+                List<File> files = new ArrayList<>(subset.size());
                 for (File file : subset) {
                     if (file.getPath().endsWith(DOT_CLASS)) {
                         files.add(file);
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.CLASS_FILE, files);
+                    this.files.put(Scope.CLASS_FILE, files);
                 }
             } else {
                 List<File> files = Lists.newArrayListWithExpectedSize(100);
@@ -141,35 +140,35 @@ class OtherFileVisitor {
                     collectFiles(files, classFolder);
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.CLASS_FILE, files);
+                    this.files.put(Scope.CLASS_FILE, files);
                 }
             }
         }
 
         if (scopes.contains(Scope.MANIFEST)) {
             if (subset != null && !subset.isEmpty()) {
-                List<File> files = new ArrayList<File>(subset.size());
+                List<File> files = new ArrayList<>(subset.size());
                 for (File file : subset) {
                     if (file.getName().equals(ANDROID_MANIFEST_XML)) {
                         files.add(file);
                     }
                 }
                 if (!files.isEmpty()) {
-                    mFiles.put(Scope.MANIFEST, files);
+                    this.files.put(Scope.MANIFEST, files);
                 }
             } else {
                 List<File> manifestFiles = project.getManifestFiles();
                 if (manifestFiles != null) {
-                    mFiles.put(Scope.MANIFEST, manifestFiles);
+                    files.put(Scope.MANIFEST, manifestFiles);
                 }
             }
         }
 
-        for (Map.Entry<Scope, List<File>> entry : mFiles.entrySet()) {
+        for (Map.Entry<Scope, List<File>> entry : files.entrySet()) {
             Scope scope = entry.getKey();
             List<File> files = entry.getValue();
-            List<Detector> applicable = new ArrayList<Detector>(mDetectors.size());
-            for (Detector detector : mDetectors) {
+            List<Detector> applicable = new ArrayList<>(detectors.size());
+            for (Detector detector : detectors) {
                 OtherFileScanner fileScanner = (OtherFileScanner) detector;
                 EnumSet<Scope> appliesTo = fileScanner.getApplicableFiles();
                 if (appliesTo.contains(Scope.OTHER) || appliesTo.contains(scope)) {

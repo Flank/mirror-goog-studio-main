@@ -31,7 +31,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +45,7 @@ public class AlarmDetector extends Detector implements Detector.JavaPsiScanner {
 
     /** Alarm set too soon/frequently  */
     public static final Issue ISSUE = Issue.create(
-            "ShortAlarm", //$NON-NLS-1$
+            "ShortAlarm",
             "Short or Frequent Alarm",
 
             "Frequent alarms are bad for battery life. As of API 22, the `AlarmManager` " +
