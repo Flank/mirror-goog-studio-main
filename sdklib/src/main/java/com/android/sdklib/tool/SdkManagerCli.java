@@ -270,6 +270,8 @@ public class SdkManagerCli {
         if (!unacceptedLicenses.isEmpty()) {
             List<RemotePackage> acceptedPackages = new ArrayList<>(remotes);
             Set<RemotePackage> problemPackages = new HashSet<>(unacceptedLicenses.values());
+            mOut.println("Skipping following packages as the license is not accepted:");
+            problemPackages.forEach(problem -> mOut.println(problem.getDisplayName()));
             acceptedPackages.removeAll(problemPackages);
             Iterator<RemotePackage> acceptedIter = acceptedPackages.iterator();
 
