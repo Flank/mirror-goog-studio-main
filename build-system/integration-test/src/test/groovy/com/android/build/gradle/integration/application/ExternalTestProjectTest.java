@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -122,14 +122,21 @@ public class ExternalTestProjectTest {
 
         // looks like we can't actually test the instance t against GradleException
         // due to it coming through the tooling API from a different class loader.
-        assertEquals("org.gradle.api.GradleException", t.getClass().getCanonicalName());
-        assertEquals("Dependency Error. See console for details.", t.getMessage());
+        assertThat(t.getClass().getCanonicalName())
+                .named("Exception class name")
+                .isSameAs("org.gradle.api.GradleException");
+        assertThat(t.getMessage())
+                .named("Exception message")
+                .isEqualTo("Dependency Error. See console for details.");
 
 
         // check there is a version of the error, after the task name:
-
-        assertTrue("stderr contains error", result.getStderr().contains(
-                "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:"));
+        assertThat(result.getStderr())
+                .named("build stderr")
+                .contains(
+                        "Dependency project:app1:unspecified on project app2 resolves to an APK "
+                                + "archive which is not supported as a compilation dependency. "
+                                + "File:");
 
     }
 
