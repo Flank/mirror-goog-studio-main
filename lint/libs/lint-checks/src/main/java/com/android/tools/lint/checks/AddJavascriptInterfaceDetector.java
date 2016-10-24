@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +41,7 @@ import java.util.List;
  */
 public class AddJavascriptInterfaceDetector extends Detector implements Detector.JavaPsiScanner {
     public static final Issue ISSUE = Issue.create(
-            "AddJavascriptInterface", //$NON-NLS-1$
+            "AddJavascriptInterface",
             "addJavascriptInterface Called",
             "For applications built for API levels below 17, `WebView#addJavascriptInterface` "
                     + "presents a security hazard as JavaScript on the target web page has the "
@@ -57,8 +56,8 @@ public class AddJavascriptInterfaceDetector extends Detector implements Detector
             addMoreInfo(
                     "https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/");
 
-    private static final String WEB_VIEW = "android.webkit.WebView"; //$NON-NLS-1$
-    private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface"; //$NON-NLS-1$
+    private static final String WEB_VIEW = "android.webkit.WebView";
+    private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface";
 
     // ---- Implements JavaScanner ----
 

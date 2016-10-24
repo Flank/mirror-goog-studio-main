@@ -38,14 +38,12 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
-
-import org.w3c.dom.Attr;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.w3c.dom.Attr;
 
 /**
  * Check which looks for usage of showAsAction="always" in menus (or
@@ -58,7 +56,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "AlwaysShowAction", //$NON-NLS-1$
+            "AlwaysShowAction",
             "Usage of `showAsAction=always`",
 
             "Using `showAsAction=\"always\"` in menu XML, or `MenuItem.SHOW_AS_ACTION_ALWAYS` in " +
@@ -81,7 +79,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
                     AlwaysShowActionDetector.class,
                     Scope.JAVA_AND_RESOURCE_FILES,
                     Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://developer.android.com/design/patterns/actionbar.html"); //$NON-NLS-1$
+            .addMoreInfo("http://developer.android.com/design/patterns/actionbar.html");
 
     /** List of showAsAction attributes appearing in the current menu XML file */
     private List<Attr> mFileAttributes;
@@ -120,8 +118,8 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
         if (mFileAttributes != null) {
             assert context instanceof XmlContext; // mFileAttributes is only set in XML files
 
-            List<Attr> always = new ArrayList<Attr>();
-            List<Attr> ifRoom = new ArrayList<Attr>();
+            List<Attr> always = new ArrayList<>();
+            List<Attr> ifRoom = new ArrayList<>();
             for (Attr attribute : mFileAttributes) {
                 String value = attribute.getValue();
                 if (value.equals(VALUE_ALWAYS)) {
@@ -129,7 +127,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
                 } else if (value.equals(VALUE_IF_ROOM)) {
                     ifRoom.add(attribute);
                 } else if (value.indexOf('|') != -1) {
-                    String[] flags = value.split("\\|"); //$NON-NLS-1$
+                    String[] flags = value.split("\\|");
                     for (String flag : flags) {
                         if (flag.equals(VALUE_ALWAYS)) {
                             always.add(attribute);
@@ -185,7 +183,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
         }
 
         if (mFileAttributes == null) {
-            mFileAttributes = new ArrayList<Attr>();
+            mFileAttributes = new ArrayList<>();
         }
         mFileAttributes.add(attribute);
     }
@@ -209,7 +207,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
                     return;
                 }
                 if (mAlwaysFields == null) {
-                    mAlwaysFields = new ArrayList<Location>();
+                    mAlwaysFields = new ArrayList<>();
                 }
                 mAlwaysFields.add(context.getLocation(reference));
             } else {

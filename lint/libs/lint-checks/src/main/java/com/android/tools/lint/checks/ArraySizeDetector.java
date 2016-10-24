@@ -46,11 +46,6 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +56,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Checks for arrays with inconsistent item counts
@@ -69,7 +67,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
     /** Are there differences in how many array elements are declared? */
     public static final Issue INCONSISTENT = Issue.create(
-            "InconsistentArrays", //$NON-NLS-1$
+            "InconsistentArrays",
             "Inconsistencies in array element counts",
             "When an array is translated in a different locale, it should normally have " +
             "the same number of elements as the original array. When adding or removing " +
@@ -133,12 +131,12 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
             // Check that all arrays for the same name have the same number of translations
 
-            Set<String> alreadyReported = new HashSet<String>();
-            Map<String, Integer> countMap = new HashMap<String, Integer>();
-            Map<String, File> fileMap = new HashMap<String, File>();
+            Set<String> alreadyReported = new HashSet<>();
+            Map<String, Integer> countMap = new HashMap<>();
+            Map<String, File> fileMap = new HashMap<>();
 
             // Process the file in sorted file order to ensure stable output
-            List<File> keys = new ArrayList<File>(mFileToArrayCount.keySet());
+            List<File> keys = new ArrayList<>(mFileToArrayCount.keySet());
             Collections.sort(keys);
 
             for (File file : keys) {
@@ -159,8 +157,8 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                         alreadyReported.add(name);
 
                         if (mLocations == null) {
-                            mLocations = new HashMap<String, Location>();
-                            mDescriptions = new HashMap<String, String>();
+                            mLocations = new HashMap<>();
+                            mDescriptions = new HashMap<>();
                         }
                         mLocations.put(name, null);
 
@@ -186,7 +184,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             mFileToArrayCount = null;
         } else {
             if (mLocations != null) {
-                List<String> names = new ArrayList<String>(mLocations.keySet());
+                List<String> names = new ArrayList<>(mLocations.keySet());
                 Collections.sort(names);
                 for (String name : names) {
                     Location location = mLocations.get(name);

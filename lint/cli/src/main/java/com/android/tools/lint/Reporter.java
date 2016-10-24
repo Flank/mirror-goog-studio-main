@@ -210,7 +210,7 @@ public abstract class Reporter {
     static String encodeUrl(String url) {
         try {
             url = url.replace('\\', '/');
-            return URLEncoder.encode(url, UTF_8).replace("%2F", "/");         //$NON-NLS-1$
+            return URLEncoder.encode(url, UTF_8).replace("%2F", "/");
         } catch (UnsupportedEncodingException e) {
             // This shouldn't happen for UTF-8
             System.err.println("Invalid string " + e.getLocalizedMessage());
@@ -243,7 +243,7 @@ public abstract class Reporter {
             fileName = fileName.substring(0, dot);
         }
 
-        File resources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
+        File resources = new File(mOutput.getParentFile(), fileName + "_files");
         if (!resources.exists() && !resources.mkdir()) {
             resources = null;
         }

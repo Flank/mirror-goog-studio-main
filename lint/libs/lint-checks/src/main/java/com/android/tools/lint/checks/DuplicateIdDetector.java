@@ -41,12 +41,6 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -59,6 +53,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for duplicate ids within a layout and within an included layout
@@ -81,7 +79,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue WITHIN_LAYOUT = Issue.create(
-            "DuplicateIds", //$NON-NLS-1$
+            "DuplicateIds",
             "Duplicate ids within a single layout",
             "Within a layout, id's should be unique since otherwise `findViewById()` can " +
             "return an unexpected view.",
@@ -92,7 +90,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue CROSS_LAYOUT = Issue.create(
-            "DuplicateIncludedIds", //$NON-NLS-1$
+            "DuplicateIncludedIds",
             "Duplicate ids across layouts combined with include tags",
             "It's okay for two independent layouts to use the same ids. However, if " +
             "layouts are combined with include tags, then the id's need to be unique " +
@@ -132,7 +130,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     @Override
     public void beforeCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
-            mIds = new HashSet<String>();
+            mIds = new HashSet<>();
         }
     }
 
@@ -149,8 +147,8 @@ public class DuplicateIdDetector extends LayoutDetector {
     @Override
     public void beforeCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
-            mFileToIds = new HashMap<File, Set<String>>();
-            mIncludes = new HashMap<File, List<String>>();
+            mFileToIds = new HashMap<>();
+            mIncludes = new HashMap<>();
         }
     }
 
@@ -186,7 +184,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                         }
                     }
 
-                    List<Occurrence> sorted = new ArrayList<Occurrence>();
+                    List<Occurrence> sorted = new ArrayList<>();
                     Occurrence curr = occurrence.next;
                     while (curr != null) {
                         sorted.add(curr);
@@ -224,7 +222,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
                 List<String> to = mIncludes.get(context.file);
                 if (to == null) {
-                    to = new ArrayList<String>();
+                    to = new ArrayList<>();
                     mIncludes.put(context.file, to);
                 }
                 to.add(layout);
@@ -350,12 +348,12 @@ public class DuplicateIdDetector extends LayoutDetector {
 
         void include(Layout target) {
             if (mIncludes == null) {
-                mIncludes = new ArrayList<Layout>();
+                mIncludes = new ArrayList<>();
             }
             mIncludes.add(target);
 
             if (target.mIncludedBy == null) {
-                target.mIncludedBy = new ArrayList<Layout>();
+                target.mIncludedBy = new ArrayList<>();
             }
             target.mIncludedBy.add(this);
         }
@@ -389,7 +387,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             // includes.
             // Then visit the DAG and whenever you find a duplicate emit a warning about the
             // include path which reached it.
-            mFileToLayout = new HashMap<File, Layout>(2 * mIncludes.size());
+            mFileToLayout = new HashMap<>(2 * mIncludes.size());
             for (File file : mIncludes.keySet()) {
                 if (!mFileToLayout.containsKey(file)) {
                     mFileToLayout.put(file, new Layout(file, mFileToIds.get(file)));
@@ -473,9 +471,9 @@ public class DuplicateIdDetector extends LayoutDetector {
 
         private boolean isPortrait(Iterable<String> qualifiers) {
             for (String qualifier : qualifiers) {
-                if (qualifier.equals("port")) { //$NON-NLS-1$
+                if (qualifier.equals("port")) {
                     return true;
-                } else if (qualifier.equals("land")) { //$NON-NLS-1$
+                } else if (qualifier.equals("land")) {
                     return false;
                 }
             }
@@ -487,8 +485,8 @@ public class DuplicateIdDetector extends LayoutDetector {
             // Visit the DAG, looking for conflicts
             for (Layout layout : mFileToLayout.values()) {
                 if (!layout.isIncluded()) { // Only check from "root" nodes
-                    Deque<Layout> stack = new ArrayDeque<Layout>();
-                    getIds(layout, stack, new HashSet<Layout>());
+                    Deque<Layout> stack = new ArrayDeque<>();
+                    getIds(layout, stack, new HashSet<>());
                 }
             }
         }
@@ -506,7 +504,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             Set<String> layoutIds = layout.getIds();
             List<Layout> includes = layout.getIncludes();
             if (includes != null) {
-                Set<String> ids = new HashSet<String>();
+                Set<String> ids = new HashSet<>();
                 if (layoutIds != null) {
                     ids.addAll(layoutIds);
                 }
@@ -540,21 +538,21 @@ public class DuplicateIdDetector extends LayoutDetector {
 
                                 // Duplicate! Record location request for new phase.
                                 if (mLocations == null) {
-                                    mErrors = new ArrayList<Occurrence>();
+                                    mErrors = new ArrayList<>();
                                     mLocations = ArrayListMultimap.create();
                                     mContext.getDriver().requestRepeat(DuplicateIdDetector.this,
                                             Scope.ALL_RESOURCES_SCOPE);
                                 }
 
                                 Map<Layout, Occurrence> occurrences =
-                                        new HashMap<Layout, Occurrence>();
-                                findId(layout, id, new ArrayDeque<Layout>(), occurrences,
-                                        new HashSet<Layout>());
+                                        new HashMap<>();
+                                findId(layout, id, new ArrayDeque<>(), occurrences,
+                                        new HashSet<>());
                                 assert occurrences.size() >= 2;
 
                                 // Stash a request to find the given include
                                 Collection<Occurrence> values = occurrences.values();
-                                List<Occurrence> sorted = new ArrayList<Occurrence>(values);
+                                List<Occurrence> sorted = new ArrayList<>(values);
                                 Collections.sort(sorted);
                                 String msg = String.format(
                                         "Duplicate id %1$s, defined or included multiple " +

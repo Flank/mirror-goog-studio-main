@@ -69,11 +69,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,6 +82,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * A project contains information about an Android project being scanned for
@@ -265,8 +263,8 @@ public class Project {
                         mProguardPath = proguardPath;
                     }
                     mMergeManifests = VALUE_TRUE.equals(properties.getProperty(
-                            "manifestmerger.enabled")); //$NON-NLS-1$
-                    String target = properties.getProperty("target"); //$NON-NLS-1$
+                            "manifestmerger.enabled"));
+                    String target = properties.getProperty("target");
                     if (target != null) {
                         int index = target.lastIndexOf('-');
                         if (index == -1) {
@@ -294,7 +292,7 @@ public class Project {
                         File libraryDir = new File(mDir, library).getCanonicalFile();
 
                         if (mDirectLibraries == null) {
-                            mDirectLibraries = new ArrayList<Project>();
+                            mDirectLibraries = new ArrayList<>();
                         }
 
                         // Adjust the reference dir to be a proper prefix path of the
@@ -391,7 +389,7 @@ public class Project {
      */
     public void addFile(@NonNull File file) {
         if (mFiles == null) {
-            mFiles = new ArrayList<File>();
+            mFiles = new ArrayList<>();
         }
         mFiles.add(file);
     }
@@ -416,7 +414,7 @@ public class Project {
     public List<File> getJavaSourceFolders() {
         if (mJavaSourceFolders == null) {
             if (isAospFrameworksRelatedProject(mDir)) {
-                return Collections.singletonList(new File(mDir, "java")); //$NON-NLS-1$
+                return Collections.singletonList(new File(mDir, "java"));
             }
             if (isAospBuildEnvironment()) {
                 String top = getAospTop();
@@ -442,7 +440,7 @@ public class Project {
             if (isAospFrameworksProject(mDir)) {
                 String top = getAospTop();
                 if (top != null) {
-                    File out = new File(top, "out"); //$NON-NLS-1$
+                    File out = new File(top, "out");
                     if (out.exists()) {
                         String relative =
                             "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
@@ -815,7 +813,7 @@ public class Project {
                 return mDirectLibraries;
             }
 
-            List<Project> all = new ArrayList<Project>();
+            List<Project> all = new ArrayList<>();
             Set<Project> seen = Sets.newHashSet();
             Set<Project> path = Sets.newHashSet();
             seen.add(this);
@@ -897,11 +895,11 @@ public class Project {
     @NonNull
     public List<File> getProguardFiles() {
         if (mProguardFiles == null) {
-            List<File> files = new ArrayList<File>();
+            List<File> files = new ArrayList<>();
             if (mProguardPath != null) {
-                Splitter splitter = Splitter.on(CharMatcher.anyOf(":;")); //$NON-NLS-1$
+                Splitter splitter = Splitter.on(CharMatcher.anyOf(":;"));
                 for (String path : splitter.split(mProguardPath)) {
-                    if (path.contains("${")) { //$NON-NLS-1$
+                    if (path.contains("${")) {
                         // Don't analyze the global/user proguard files
                         continue;
                     }
@@ -1045,9 +1043,9 @@ public class Project {
      */
     public static boolean isAospFrameworksRelatedProject(@NonNull File dir) {
         if (isAospBuildEnvironment()) {
-            File frameworks = new File(getAospTop(), "frameworks"); //$NON-NLS-1$
+            File frameworks = new File(getAospTop(), "frameworks");
             String frameworksDir = frameworks.getAbsolutePath();
-            String supportDir = new File(frameworks, "support").getAbsolutePath(); //$NON-NLS-1$
+            String supportDir = new File(frameworks, "support").getAbsolutePath();
             if (dir.exists()
                     && !dir.getAbsolutePath().startsWith(supportDir)
                     && dir.getAbsolutePath().startsWith(frameworksDir)
@@ -1066,9 +1064,9 @@ public class Project {
     public static boolean isAospFrameworksProject(@NonNull File dir) {
         String top = getAospTop();
         if (top != null) {
-            File toCompare = new File(top, "frameworks" //$NON-NLS-1$
-                    + File.separator + "base"           //$NON-NLS-1$
-                    + File.separator + "core");         //$NON-NLS-1$
+            File toCompare = new File(top, "frameworks"
+                    + File.separator + "base"
+                    + File.separator + "core");
             try {
                 return dir.getCanonicalFile().equals(toCompare) && dir.exists();
             } catch (IOException e) {
@@ -1081,30 +1079,30 @@ public class Project {
 
     /** Get the root AOSP dir, if any */
     private static String getAospTop() {
-        return System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+        return System.getenv("ANDROID_BUILD_TOP");
     }
 
     /** Get the host out directory in AOSP, if any */
     private static String getAospHostOut() {
-        return System.getenv("ANDROID_HOST_OUT");    //$NON-NLS-1$
+        return System.getenv("ANDROID_HOST_OUT");
     }
 
     /** Get the product out directory in AOSP, if any */
     private static String getAospProductOut() {
-        return System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
+        return System.getenv("ANDROID_PRODUCT_OUT");
     }
 
     private List<File> getAospJavaSourcePath() {
-        List<File> sources = new ArrayList<File>(2);
+        List<File> sources = new ArrayList<>(2);
         // Normal sources
-        File src = new File(mDir, "src"); //$NON-NLS-1$
+        File src = new File(mDir, "src");
         if (src.exists()) {
             sources.add(src);
         }
 
         // Generates sources
         for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "src"); //$NON-NLS-1$
+            File classes = new File(dir, "src");
             if (classes.exists()) {
                 sources.add(classes);
             }
@@ -1120,14 +1118,14 @@ public class Project {
     }
 
     private List<File> getAospJavaClassPath() {
-        List<File> classDirs = new ArrayList<File>(1);
+        List<File> classDirs = new ArrayList<>(1);
 
         for (File dir : getIntermediateDirs()) {
-            File classes = new File(dir, "classes"); //$NON-NLS-1$
+            File classes = new File(dir, "classes");
             if (classes.exists()) {
                 classDirs.add(classes);
             } else {
-                classes = new File(dir, "classes.jar"); //$NON-NLS-1$
+                classes = new File(dir, "classes.jar");
                 if (classes.exists()) {
                     classDirs.add(classes);
                 }
@@ -1145,7 +1143,7 @@ public class Project {
     /** Find the _intermediates directories for a given module name */
     private List<File> getIntermediateDirs() {
         // See build/core/definitions.mk and in particular the "intermediates-dir-for" definition
-        List<File> intermediates = new ArrayList<File>();
+        List<File> intermediates = new ArrayList<>();
 
         // TODO: Look up the module name, e.g. LOCAL_MODULE. However,
         // some Android.mk files do some complicated things with it - and most
@@ -1161,21 +1159,21 @@ public class Project {
 
         String top = getAospTop();
         final String[] outFolders = new String[] {
-            top + "/out/host/common/obj",             //$NON-NLS-1$
-            top + "/out/target/common/obj",           //$NON-NLS-1$
-            getAospHostOut() + "/obj",                //$NON-NLS-1$
-            getAospProductOut() + "/obj"              //$NON-NLS-1$
+            top + "/out/host/common/obj",
+            top + "/out/target/common/obj",
+            getAospHostOut() + "/obj",
+            getAospProductOut() + "/obj"
         };
         final String[] moduleClasses = new String[] {
-                "APPS",                //$NON-NLS-1$
-                "JAVA_LIBRARIES",      //$NON-NLS-1$
+                "APPS",
+                "JAVA_LIBRARIES",
         };
 
         for (String out : outFolders) {
             assert new File(out.replace('/', File.separatorChar)).exists() : out;
             for (String moduleClass : moduleClasses) {
                 String path = out + '/' + moduleClass + '/' + moduleName
-                        + "_intermediates"; //$NON-NLS-1$
+                        + "_intermediates";
                 File file = new File(path.replace('/', File.separatorChar));
                 if (file.exists()) {
                     intermediates.add(file);
@@ -1189,18 +1187,18 @@ public class Project {
     private void extractAospMinSdkVersion() {
         // Is the SDK level specified by a Makefile?
         boolean found = false;
-        File makefile = new File(mDir, "Android.mk"); //$NON-NLS-1$
+        File makefile = new File(mDir, "Android.mk");
         if (makefile.exists()) {
             try {
                 List<String> lines = Files.readLines(makefile, Charsets.UTF_8);
-                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)"); //$NON-NLS-1$
+                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)");
                 for (String line : lines) {
                     line = line.trim();
                     Matcher matcher = p.matcher(line);
                     if (matcher.matches()) {
                         found = true;
                         String version = matcher.group(1);
-                        if (version.equals("current")) { //$NON-NLS-1$
+                        if (version.equals("current")) {
                             mManifestMinSdk = findCurrentAospVersion();
                         } else {
                             mManifestMinSdk = SdkVersionInfo.getVersion(version,
@@ -1225,7 +1223,7 @@ public class Project {
     /** In an AOSP build environment, identify the currently built image version, if available */
     private static AndroidVersion findCurrentAospVersion() {
         if (sCurrentVersion == null) {
-            File versionMk = new File(getAospTop(), "build/core/version_defaults.mk" //$NON-NLS-1$
+            File versionMk = new File(getAospTop(), "build/core/version_defaults.mk"
                     .replace('/', File.separatorChar));
 
             if (!versionMk.exists()) {
@@ -1274,8 +1272,8 @@ public class Project {
             if (mSupportLib == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.equals("android-support-v4.jar")      //$NON-NLS-1$
-                            || name.startsWith("support-v4-")) {   //$NON-NLS-1$
+                    if (name.equals("android-support-v4.jar")
+                            || name.startsWith("support-v4-")) {
                         mSupportLib = true;
                         break;
                     }
@@ -1299,7 +1297,7 @@ public class Project {
             if (mAppCompat == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.startsWith("appcompat-v7-")) { //$NON-NLS-1$
+                    if (name.startsWith("appcompat-v7-")) {
                         mAppCompat = true;
                         break;
                     }

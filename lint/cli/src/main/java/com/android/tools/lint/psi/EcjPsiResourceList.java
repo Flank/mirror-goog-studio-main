@@ -23,7 +23,6 @@ import com.intellij.psi.PsiResourceList;
 import com.intellij.psi.PsiResourceListElement;
 import com.intellij.psi.PsiResourceVariable;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Iterator;
 import java.util.List;
 

@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
@@ -152,7 +151,7 @@ public class TextReporter extends Reporter {
                     while (location != null) {
                         if (location.getMessage() != null
                                 && !location.getMessage().isEmpty()) {
-                            output.append("    "); //$NON-NLS-1$
+                            output.append("    ");
                             String path = mClient.getDisplayPath(warning.project,
                                     location.getFile());
                             output.append(path);
@@ -209,7 +208,7 @@ public class TextReporter extends Reporter {
 
                             location = location.getSecondary();
                         }
-                        String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     "); //$NON-NLS-1$
+                        String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     ");
                         output.append(wrapped);
                     }
                 }

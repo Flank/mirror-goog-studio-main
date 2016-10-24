@@ -33,16 +33,6 @@ import com.android.tools.lint.detector.api.Speed;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
-
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -52,6 +42,14 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Checks to detect vulnerable versions of Apache Cordova.
@@ -77,25 +75,19 @@ public class CordovaVersionDetector extends Detector implements Detector.ClassSc
     /** Version string format in a class file. Note that any qualifiers such as -dev are ignored.*/
     private static final Pattern VERSION_STR = Pattern.compile("(\\d+\\.\\d+\\.\\d+).*");
     /** The class name that declares the cordovaVersion for versions < 3.x.x */
-    private static final String FQN_CORDOVA_DEVICE = "org/apache/cordova/Device"; //$NON-NLS-1$
-    /** Class name that declares CORDOVA_VERSION static field for versions >= 3.x.x */
+    private static final String FQN_CORDOVA_DEVICE = "org/apache/cordova/Device";
     /** The name of the static field if present in the {@code FQN_CORDOVA_DEVICE} */
-    private static final String FIELD_NAME_CORDOVA_VERSION = "cordovaVersion"; //$NON-NLS-1$
+    private static final String FIELD_NAME_CORDOVA_VERSION = "cordovaVersion";
 
     private static final String FQN_CORDOVA_WEBVIEW =
-            "org/apache/cordova/CordovaWebView"; //$NON-NLS-1$
+            "org/apache/cordova/CordovaWebView";
     /** The name of the static final field present in {@code FQN_CORDOVA_WEBVIEW} */
     private static final String FIELD_NAME_CORDOVA_VERSION_WEBVIEW =
-            "CORDOVA_VERSION"; //$NON-NLS-1$
+            "CORDOVA_VERSION";
 
-    private static final String CORDOVA_DOT_JS = "cordova.js"; //$NON-NLS-1$
+    private static final String CORDOVA_DOT_JS = "cordova.js";
 
-    private static final FilenameFilter CORDOVA_JS_FILTER = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String filename) {
-            return filename.startsWith(CORDOVA_DOT_JS) || new File(dir, filename).isDirectory();
-        }
-    };
+    private static final FilenameFilter CORDOVA_JS_FILTER = (dir, filename) -> filename.startsWith(CORDOVA_DOT_JS) || new File(dir, filename).isDirectory();
 
     /** Constructs a new {@link CordovaVersionDetector} check */
     public CordovaVersionDetector() {
@@ -125,7 +117,7 @@ public class CordovaVersionDetector extends Detector implements Detector.ClassSc
         }
         Project project = context.getProject();
         List<File> assetFolders = project.getAssetFolders();
-        Deque<File> files = new ArrayDeque<File>();
+        Deque<File> files = new ArrayDeque<>();
         for (File assetFolder : assetFolders) {
             // The js file could be at an arbitrary level in the directory tree.
             // examples:

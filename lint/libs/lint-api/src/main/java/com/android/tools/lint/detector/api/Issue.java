@@ -21,7 +21,6 @@ import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.Configuration;
 import com.google.common.annotations.Beta;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -231,7 +230,7 @@ public final class Issue implements Comparable<Issue> {
             mMoreInfoUrls = moreInfoUrl;
         } else if (mMoreInfoUrls instanceof String) {
             String existing = (String) mMoreInfoUrls;
-            List<String> list = new ArrayList<String>(2);
+            List<String> list = new ArrayList<>(2);
             list.add(existing);
             list.add(moreInfoUrl);
             mMoreInfoUrls = list;

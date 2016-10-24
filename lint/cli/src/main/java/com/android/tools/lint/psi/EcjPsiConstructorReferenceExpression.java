@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiType;
-
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 
 public class EcjPsiConstructorReferenceExpression extends EcjPsiReferenceExpression {

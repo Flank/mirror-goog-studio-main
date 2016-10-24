@@ -33,13 +33,12 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
 public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
     public static final Issue ISSUE = Issue.create(
-            "PackageManagerGetSignatures", //$NON-NLS-1$
+            "PackageManagerGetSignatures",
             "Potential Multiple Certificate Exploit",
             "Improper validation of app signatures could lead to issues where a malicious app " +
             "submits itself to the Play Store with both its real certificate and a fake " +
@@ -55,9 +54,9 @@ public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/");
 
-    private static final String PACKAGE_MANAGER_CLASS = "android.content.pm.PackageManager"; //$NON-NLS-1$
-    private static final String GET_PACKAGE_INFO = "getPackageInfo"; //$NON-NLS-1$
-    private static final int GET_SIGNATURES_FLAG = 0x00000040; //$NON-NLS-1$
+    private static final String PACKAGE_MANAGER_CLASS = "android.content.pm.PackageManager";
+    private static final String GET_PACKAGE_INFO = "getPackageInfo";
+    private static final int GET_SIGNATURES_FLAG = 0x00000040;
 
     // ---- Implements JavaScanner ----
 

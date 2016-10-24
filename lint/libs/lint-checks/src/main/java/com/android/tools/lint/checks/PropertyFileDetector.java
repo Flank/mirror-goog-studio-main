@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
-
 import java.io.File;
 import java.util.Iterator;
 
@@ -42,7 +41,7 @@ import java.util.Iterator;
 public class PropertyFileDetector extends Detector {
     /** Property file not escaped */
     public static final Issue ESCAPE = Issue.create(
-            "PropertyEscape", //$NON-NLS-1$
+            "PropertyEscape",
             "Incorrect property escapes",
             "All backslashes and colons in .property files must be escaped with " +
             "a backslash (\\). This means that when writing a Windows path, you " +
@@ -58,7 +57,7 @@ public class PropertyFileDetector extends Detector {
 
     /** Using HTTP instead of HTTPS for the wrapper */
     public static final Issue HTTP = Issue.create(
-            "UsingHttp", //$NON-NLS-1$
+            "UsingHttp",
             "Using HTTP instead of HTTPS",
             "The Gradle Wrapper is available both via HTTP and HTTPS. HTTPS is more " +
             "secure since it protects against man-in-the-middle attacks etc. Older " +

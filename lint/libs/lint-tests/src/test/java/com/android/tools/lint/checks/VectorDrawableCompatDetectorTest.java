@@ -29,11 +29,9 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
 import java.util.Collections;
+import org.intellij.lang.annotations.Language;
 
 /**
  * Tests for {@link VectorDrawableCompatDetector}.

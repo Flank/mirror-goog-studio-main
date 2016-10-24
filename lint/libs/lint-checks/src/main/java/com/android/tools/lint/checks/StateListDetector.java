@@ -29,17 +29,15 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 
 /**
  * Checks for unreachable states in an Android state list definition
@@ -47,7 +45,7 @@ import java.util.Set;
 public class StateListDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "StateListReachable", //$NON-NLS-1$
+            "StateListReachable",
             "Unreachable state in a `<selector>`",
             "In a selector, only the last child in the state list should omit a " +
             "state qualifier. If not, all subsequent items in the list will be ignored " +
@@ -59,7 +57,7 @@ public class StateListDetector extends ResourceXmlDetector {
                     StateListDetector.class,
                     Scope.RESOURCE_FILE_SCOPE));
 
-    private static final String STATE_PREFIX = "state_"; //$NON-NLS-1$
+    private static final String STATE_PREFIX = "state_";
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {
@@ -78,14 +76,14 @@ public class StateListDetector extends ResourceXmlDetector {
         // ("...and this message.")
 
         Element root = document.getDocumentElement();
-        if (root != null && root.getTagName().equals("selector")) { //$NON-NLS-1$
+        if (root != null && root.getTagName().equals("selector")) {
             List<Element> children = LintUtils.getChildren(root);
             Map<Element, Set<String>> states =
-                    new HashMap<Element, Set<String>>(children.size());
+                    new HashMap<>(children.size());
 
             for (Element child : children) {
                 NamedNodeMap attributes = child.getAttributes();
-                Set<String> stateNames = new HashSet<String>(attributes.getLength());
+                Set<String> stateNames = new HashSet<>(attributes.getLength());
                 states.put(child, stateNames);
 
                 for (int j = 0; j < attributes.getLength(); j++) {

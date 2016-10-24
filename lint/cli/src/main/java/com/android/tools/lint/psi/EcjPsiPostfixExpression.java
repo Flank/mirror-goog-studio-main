@@ -23,7 +23,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiPostfixExpression;
 import com.intellij.psi.tree.IElementType;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiPostfixExpression extends EcjPsiExpression implements PsiPostfixExpression {

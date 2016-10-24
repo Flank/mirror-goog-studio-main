@@ -30,7 +30,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class FirebaseMessagingDetector extends Detector implements Detector.Java
             Scope.ALL);
 
     public static final Issue MISSING_TOKEN_REFRESH = Issue.create(
-            "MissingFirebaseInstanceTokenRefresh", //$NON-NLS-1$
+            "MissingFirebaseInstanceTokenRefresh",
             "Missing Firebase Instance ID Token Refresh",
             "Apps that check the Firebase Instance ID should usually implement the " +
                     "FirebaseInstanceIdService#onTokenRefresh() callback in order to observe " +

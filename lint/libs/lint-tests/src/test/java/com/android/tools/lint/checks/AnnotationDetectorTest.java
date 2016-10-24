@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

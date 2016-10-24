@@ -24,7 +24,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiLambdaExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
-
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 
 class EcjPsiLambdaExpression extends EcjPsiFunctionalExpression implements

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.AndroidVersion;
-
 import java.util.Collections;
 import java.util.Set;
 

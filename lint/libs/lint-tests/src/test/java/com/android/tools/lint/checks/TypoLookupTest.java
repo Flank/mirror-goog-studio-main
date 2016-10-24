@@ -21,7 +21,6 @@ import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.Files;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -113,7 +112,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     public void test2() {
-        TypoLookup db = TypoLookup.get(createClient(), "nb", null); //$NON-NLS-1$
+        TypoLookup db = TypoLookup.get(createClient(), "nb", null);
         assertNull(db.getTypos("hello", 0, "hello".length()));
         assertNull(db.getTypos("this", 0, "this".length()));
 
@@ -134,7 +133,7 @@ public class TypoLookupTest extends AbstractCheckTest {
         // Some language dictionaries contain multi-word sequences (e.g. where there's a
         // space on the left hand side). This needs some particular care in the lookup
         // which is usually word oriented.
-        TypoLookup db = TypoLookup.get(createClient(), "de", "DE"); //$NON-NLS-1$
+        TypoLookup db = TypoLookup.get(createClient(), "de", "DE");
 
         // all zu->allzu
 
@@ -199,7 +198,7 @@ public class TypoLookupTest extends AbstractCheckTest {
             Set<String> typos = new HashSet<>(2000);
             List<String> lines = Files.readLines(f, Charsets.UTF_8);
             for (String line : lines) {
-                if (line.isEmpty() || line.trim().startsWith("#")) { //$NON-NLS-1$
+                if (line.isEmpty() || line.trim().startsWith("#")) {
                     continue;
                 }
 
@@ -303,7 +302,7 @@ public class TypoLookupTest extends AbstractCheckTest {
         List<String> lines = Files.readLines(f, Charsets.UTF_8);
         for (int i = 0, n = lines.size(); i < n; i++) {
             String line = lines.get(i);
-            if (line.isEmpty() || line.trim().startsWith("#")) { //$NON-NLS-1$
+            if (line.isEmpty() || line.trim().startsWith("#")) {
                 continue;
             }
 
@@ -396,7 +395,7 @@ public class TypoLookupTest extends AbstractCheckTest {
 
         wordLoop:
         for (String line : lines) {
-            if (line.isEmpty() || line.trim().startsWith("#")) { //$NON-NLS-1$
+            if (line.isEmpty() || line.trim().startsWith("#")) {
                 output.add(line);
                 continue;
             }

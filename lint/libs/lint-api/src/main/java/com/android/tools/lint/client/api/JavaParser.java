@@ -34,12 +34,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiType;
-
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
-
 import lombok.ast.Catch;
 import lombok.ast.For;
 import lombok.ast.Identifier;

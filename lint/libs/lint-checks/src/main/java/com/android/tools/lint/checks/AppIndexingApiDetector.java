@@ -66,19 +66,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethodCallExpression;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 
 /**
@@ -97,7 +95,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
                     Scope.JAVA_FILE_SCOPE, Scope.MANIFEST_SCOPE);
 
     public static final Issue ISSUE_URL_ERROR = Issue.create(
-            "GoogleAppIndexingUrlError", //$NON-NLS-1$
+            "GoogleAppIndexingUrlError",
             "URL not supported by app for Firebase App Indexing",
             "Ensure the URL is supported by your app, to get installs and traffic to your"
                     + " app from Google Search.",
@@ -106,7 +104,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
 
     public static final Issue ISSUE_APP_INDEXING =
       Issue.create(
-        "GoogleAppIndexingWarning", //$NON-NLS-1$
+        "GoogleAppIndexingWarning",
         "Missing support for Firebase App Indexing",
         "Adds URLs to get your app into the Google index, to get installs"
           + " and traffic to your app from Google Search.",
@@ -115,7 +113,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
 
     public static final Issue ISSUE_APP_INDEXING_API =
             Issue.create(
-                    "GoogleAppIndexingApiWarning", //$NON-NLS-1$
+                    "GoogleAppIndexingApiWarning",
                     "Missing support for Firebase App Indexing Api",
                     "Adds URLs to get your app into the Google index, to get installs"
                             + " and traffic to your app from Google Search.",
@@ -132,13 +130,13 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
             = "Activity supporting ACTION_VIEW is not set as BROWSABLE";
     private static final String ILLEGAL_NUMBER = "android:port is not a legal number";
 
-    private static final String APP_INDEX_START = "start"; //$NON-NLS-1$
-    private static final String APP_INDEX_END = "end"; //$NON-NLS-1$
-    private static final String APP_INDEX_VIEW = "view"; //$NON-NLS-1$
-    private static final String APP_INDEX_VIEW_END = "viewEnd"; //$NON-NLS-1$
-    private static final String CLIENT_CONNECT = "connect"; //$NON-NLS-1$
-    private static final String CLIENT_DISCONNECT = "disconnect"; //$NON-NLS-1$
-    private static final String ADD_API = "addApi"; //$NON-NLS-1$
+    private static final String APP_INDEX_START = "start";
+    private static final String APP_INDEX_END = "end";
+    private static final String APP_INDEX_VIEW = "view";
+    private static final String APP_INDEX_VIEW_END = "viewEnd";
+    private static final String CLIENT_CONNECT = "connect";
+    private static final String CLIENT_DISCONNECT = "disconnect";
+    private static final String ADD_API = "addApi";
 
     private static final String APP_INDEXING_API_CLASS
             = "com.google.android.gms.appindexing.AppIndexApi";

@@ -29,13 +29,11 @@ import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.PositionXmlParser;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 @SuppressWarnings("javadoc")
 public class XmlReporterTest extends AbstractCheckTest {
@@ -77,7 +75,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warning2.location = Location.create(warning2.file,
                     new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
 
@@ -181,7 +179,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warning2.location = Location.create(warning2.file,
                     new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
 
@@ -273,7 +271,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warning1.location = Location.create(warning1.file,
                     new DefaultPosition(592, 46, -1), null);
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
 
             reporter.write(new Reporter.Stats(0, 2), warnings);

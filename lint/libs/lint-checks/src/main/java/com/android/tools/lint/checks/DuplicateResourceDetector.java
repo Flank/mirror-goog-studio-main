@@ -43,18 +43,16 @@ import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * This detector identifies cases where a resource is defined multiple times in the
@@ -65,7 +63,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "DuplicateDefinition", //$NON-NLS-1$
+            "DuplicateDefinition",
             "Duplicate definitions of resources",
 
             "You can define a resource multiple times in different resource folders; that's how " +
@@ -89,7 +87,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
 
     /** Wrong resource value type */
     public static final Issue TYPE_MISMATCH = Issue.create(
-            "ReferenceType", //$NON-NLS-1$
+            "ReferenceType",
             "Incorrect reference types",
             "When you generate a resource alias, the resource you are pointing to must be " +
                     "of the same type as the alias",
@@ -100,7 +98,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
 
     /** Invalid XML escaping */
     public static final Issue STRING_ESCAPING = Issue.create(
-            "StringEscaping", //$NON-NLS-1$
+            "StringEscaping",
             "Invalid string escapes",
 
             "Apostrophes (') must always be escaped (with a \\), unless they appear " +
@@ -111,7 +109,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             Severity.ERROR,
             IMPLEMENTATION_XML);
 
-    private static final String PRODUCT = "product";   //$NON-NLS-1$
+    private static final String PRODUCT = "product";
     private Map<ResourceType, Set<String>> mTypeMap;
     private Map<ResourceType, List<Pair<String, Location.Handle>>> mLocations;
     private File mParent;

@@ -23,7 +23,6 @@ import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiNameValuePair;
-
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 
 class EcjPsiNameValuePair extends EcjPsiSourceElement implements PsiNameValuePair {

@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +41,7 @@ import java.util.List;
 public class OverrideConcreteDetector extends Detector implements JavaPsiScanner {
     /** Are previously-abstract methods all overridden? */
     public static final Issue ISSUE = Issue.create(
-        "OverrideAbstract", //$NON-NLS-1$
+        "OverrideAbstract",
         "Not overriding abstract methods on older platforms",
 
         "To improve the usability of some APIs, some methods that used to be `abstract` have " +

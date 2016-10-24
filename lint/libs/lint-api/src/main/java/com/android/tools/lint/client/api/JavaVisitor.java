@@ -31,13 +31,11 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import lombok.ast.AlternateConstructorInvocation;
 import lombok.ast.Annotation;
 import lombok.ast.AnnotationDeclaration;
@@ -144,14 +142,14 @@ public class JavaVisitor {
             Maps.newHashMapWithExpectedSize(12);
     private Set<String> mConstructorSimpleNames;
     private final List<VisitingDetector> mResourceFieldDetectors =
-            new ArrayList<VisitingDetector>();
+            new ArrayList<>();
     private final List<VisitingDetector> mAllDetectors;
     private final List<VisitingDetector> mFullTreeDetectors;
     private final Map<Class<? extends Node>, List<VisitingDetector>> mNodeTypeDetectors =
-            new HashMap<Class<? extends Node>, List<VisitingDetector>>(16);
+            new HashMap<>(16);
     private final JavaParser mParser;
     private final Map<String, List<VisitingDetector>> mSuperClassDetectors =
-            new HashMap<String, List<VisitingDetector>>();
+            new HashMap<>();
 
     /**
      * Number of fatal exceptions (internal errors, usually from ECJ) we've
@@ -164,8 +162,8 @@ public class JavaVisitor {
 
     JavaVisitor(@NonNull JavaParser parser, @NonNull List<Detector> detectors) {
         mParser = parser;
-        mAllDetectors = new ArrayList<VisitingDetector>(detectors.size());
-        mFullTreeDetectors = new ArrayList<VisitingDetector>(detectors.size());
+        mAllDetectors = new ArrayList<>(detectors.size());
+        mFullTreeDetectors = new ArrayList<>(detectors.size());
 
         for (Detector detector : detectors) {
             VisitingDetector v = new VisitingDetector(detector, (JavaScanner) detector);
@@ -176,7 +174,7 @@ public class JavaVisitor {
                 for (String fqn : applicableSuperClasses) {
                     List<VisitingDetector> list = mSuperClassDetectors.get(fqn);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mSuperClassDetectors.put(fqn, list);
                     }
                     list.add(v);
@@ -189,7 +187,7 @@ public class JavaVisitor {
                 for (Class<? extends Node> type : nodeTypes) {
                     List<VisitingDetector> list = mNodeTypeDetectors.get(type);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mNodeTypeDetectors.put(type, list);
                     }
                     list.add(v);
@@ -205,7 +203,7 @@ public class JavaVisitor {
                 for (String name : names) {
                     List<VisitingDetector> list = mMethodDetectors.get(name);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mMethodDetectors.put(name, list);
                     }
                     list.add(v);
@@ -223,7 +221,7 @@ public class JavaVisitor {
                 for (String type : types) {
                     List<VisitingDetector> list = mConstructorDetectors.get(type);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mConstructorDetectors.put(type, list);
                         mConstructorSimpleNames.add(type.substring(type.lastIndexOf('.')+1));
                     }

@@ -31,15 +31,13 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Checks if an application wants to use permissions that can only be used by
@@ -48,7 +46,7 @@ import java.util.EnumSet;
 public class SystemPermissionsDetector extends Detector implements Detector.XmlScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ProtectedPermissions", //$NON-NLS-1$
+            "ProtectedPermissions",
             "Using system app permission",
 
             "Permissions with the protection level signature or signatureOrSystem are only " +

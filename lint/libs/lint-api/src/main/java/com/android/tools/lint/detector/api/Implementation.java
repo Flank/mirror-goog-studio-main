@@ -17,7 +17,6 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
-
 import java.util.EnumSet;
 
 /**

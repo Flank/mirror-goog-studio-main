@@ -26,11 +26,9 @@ import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiTryStatement;
 import com.intellij.psi.PsiType;
-
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.Block;
-
-import java.util.List;
 
 class EcjPsiCatchSection extends EcjPsiSourceElement implements PsiCatchSection {
 

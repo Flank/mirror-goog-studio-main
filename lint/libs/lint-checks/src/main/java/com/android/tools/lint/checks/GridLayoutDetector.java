@@ -44,15 +44,13 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Check which looks for potential errors in declarations of GridLayouts, such as specifying
@@ -61,7 +59,7 @@ import java.util.Collection;
 public class GridLayoutDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "GridLayout", //$NON-NLS-1$
+            "GridLayout",
             "GridLayout validation",
             "Declaring a layout_row or layout_column that falls outside the declared size " +
             "of a GridLayout's `rowCount` or `columnCount` is usually an unintentional error.",

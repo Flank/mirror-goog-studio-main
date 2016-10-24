@@ -22,10 +22,9 @@ import static com.android.tools.lint.detector.api.CharSequences.regionMatches;
 import static com.android.tools.lint.detector.api.CharSequences.startsWith;
 import static org.junit.Assert.assertArrayEquals;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.io.Reader;
+import junit.framework.TestCase;
 
 public class CharSequencesTest extends TestCase {
     public void testIndexOf() {

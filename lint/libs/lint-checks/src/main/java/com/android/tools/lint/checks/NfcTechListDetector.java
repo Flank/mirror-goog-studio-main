@@ -26,13 +26,11 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Collection;
+import java.util.Collections;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Check which makes sure NFC tech lists do not include spaces around {@code <tech>} values
@@ -41,7 +39,7 @@ import java.util.Collections;
 public class NfcTechListDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "NfcTechWhitespace", //$NON-NLS-1$
+            "NfcTechWhitespace",
             "Whitespace in NFC tech lists",
 
             "In a <tech-list>, there can be whitespace around the <tech> elements," +
@@ -58,7 +56,7 @@ public class NfcTechListDetector extends ResourceXmlDetector {
                     NfcTechListDetector.class,
                     Scope.RESOURCE_FILE_SCOPE))
             .addMoreInfo(
-            "https://code.google.com/p/android/issues/detail?id=65351"); //$NON-NLS-1$
+            "https://code.google.com/p/android/issues/detail?id=65351");
 
     /** Constructs a new {@link NfcTechListDetector} */
     public NfcTechListDetector() {

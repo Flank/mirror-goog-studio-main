@@ -33,18 +33,16 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.PsiElement;
-
+import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.List;
 
 /**
  * Looks for issues in Java comments
  */
 public class CommentDetector extends ResourceXmlDetector implements JavaPsiScanner {
-    private static final String STOPSHIP_COMMENT = "STOPSHIP"; //$NON-NLS-1$
+    private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             CommentDetector.class,
@@ -54,7 +52,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
 
     /** Looks for hidden code */
     public static final Issue EASTER_EGG = Issue.create(
-            "EasterEgg", //$NON-NLS-1$
+            "EasterEgg",
             "Code contains easter egg",
             "An \"easter egg\" is code deliberately hidden in the code, both from potential " +
             "users and even from other developers. This lint check looks for code which " +
@@ -67,7 +65,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
 
     /** Looks for special comment markers intended to stop shipping the code */
     public static final Issue STOP_SHIP = Issue.create(
-            "StopShip", //$NON-NLS-1$
+            "StopShip",
             "Code contains `STOPSHIP` marker",
 
             "Using the comment `// STOPSHIP` can be used to flag code that is incomplete but " +
@@ -79,7 +77,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
             IMPLEMENTATION)
             .setEnabledByDefault(false);
 
-    private static final String ESCAPE_STRING = "\\u002a\\u002f"; //$NON-NLS-1$
+    private static final String ESCAPE_STRING = "\\u002a\\u002f";
 
 
     /** Constructs a new {@link CommentDetector} check */

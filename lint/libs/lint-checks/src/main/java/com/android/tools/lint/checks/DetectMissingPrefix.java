@@ -55,15 +55,13 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Detects layout attributes on builtin Android widgets that do not specify
@@ -74,7 +72,7 @@ public class DetectMissingPrefix extends LayoutDetector {
     /** Attributes missing the android: prefix */
     @SuppressWarnings("unchecked")
     public static final Issue MISSING_NAMESPACE = Issue.create(
-            "MissingPrefix", //$NON-NLS-1$
+            "MissingPrefix",
             "Missing Android XML namespace",
             "Most Android views have attributes in the Android namespace. When referencing " +
             "these attributes you *must* include the namespace prefix, or your attribute will " +

@@ -19,9 +19,8 @@ package com.android.tools.lint;
 import static com.android.tools.lint.Reporter.encodeUrl;
 import static com.android.tools.lint.Reporter.getRelativePath;
 
-import junit.framework.TestCase;
-
 import java.io.File;
+import junit.framework.TestCase;
 
 public class ReporterTest extends TestCase {
     private static File file(String path) {

@@ -60,16 +60,14 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check for potential item overlaps in a RelativeLayout when left- and
@@ -288,7 +286,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
             if (mToRight != null) {
                 nodes = mToRight.canGrowLeft();
             } else {
-                nodes = new LinkedHashSet<LayoutNode>();
+                nodes = new LinkedHashSet<>();
             }
             if (!fixedWidth()) {
                 nodes.add(this);
@@ -302,7 +300,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
             if (mToLeft != null) {
                 nodes = mToLeft.canGrowRight();
             } else {
-                nodes = new LinkedHashSet<LayoutNode>();
+                nodes = new LinkedHashSet<>();
             }
             if (!fixedWidth()) {
                 nodes.add(this);

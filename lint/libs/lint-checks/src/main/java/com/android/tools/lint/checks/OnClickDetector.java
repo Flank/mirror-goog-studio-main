@@ -36,13 +36,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
-
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +44,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Node;
 
 /**
  * Checks for missing onClick handlers
@@ -58,7 +56,7 @@ import java.util.regex.Pattern;
 public class OnClickDetector extends LayoutDetector implements ClassScanner {
     /** Missing onClick handlers */
     public static final Issue ISSUE = Issue.create(
-            "OnClick", //$NON-NLS-1$
+            "OnClick",
             "`onClick` method does not exist",
 
             "The `onClick` attribute value should be the name of a method in this View's context " +
@@ -91,7 +89,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
     @Override
     public void afterCheckProject(@NonNull Context context) {
         if (mNames != null && !mNames.isEmpty() && mHaveBytecode) {
-            List<String> names = new ArrayList<String>(mNames.keySet());
+            List<String> names = new ArrayList<>(mNames.keySet());
             Collections.sort(names);
             LintDriver driver = context.getDriver();
             for (String name : names) {
@@ -141,15 +139,15 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
             }
 
             if (mNames == null) {
-                mNames = new HashMap<String, Location.Handle>();
+                mNames = new HashMap<>();
             }
             Handle handle = context.createLocationHandle(attribute);
             handle.setClientData(attribute);
 
             // Replace unicode characters with the actual value since that's how they
             // appear in the ASM signatures
-            if (value.contains("\\u")) { //$NON-NLS-1$
-                Pattern pattern = Pattern.compile("\\\\u(\\d\\d\\d\\d)"); //$NON-NLS-1$
+            if (value.contains("\\u")) {
+                Pattern pattern = Pattern.compile("\\\\u(\\d\\d\\d\\d)");
                 Matcher matcher = pattern.matcher(value);
                 StringBuilder sb = new StringBuilder(value.length());
                 int remainder = 0;
@@ -183,7 +181,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
-            boolean rightArguments = method.desc.equals("(Landroid/view/View;)V"); //$NON-NLS-1$
+            boolean rightArguments = method.desc.equals("(Landroid/view/View;)V");
             if (!mNames.containsKey(method.name)) {
                 if (rightArguments) {
                     // See if there's a possible typo instead
@@ -230,11 +228,11 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
 
     private void recordSimilar(String name, ClassNode classNode, MethodNode method) {
         if (mSimilar == null) {
-            mSimilar = new HashMap<String, List<String>>();
+            mSimilar = new HashMap<>();
         }
         List<String> list = mSimilar.get(name);
         if (list == null) {
-            list = new ArrayList<String>();
+            list = new ArrayList<>();
             mSimilar.put(name, list);
         }
 

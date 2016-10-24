@@ -58,11 +58,9 @@ import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.ListIterator;
-
 import lombok.ast.ArrayCreation;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.BinaryExpression;

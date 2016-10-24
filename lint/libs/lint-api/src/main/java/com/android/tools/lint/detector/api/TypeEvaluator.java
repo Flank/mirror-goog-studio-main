@@ -48,9 +48,7 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.ListIterator;
-
 import lombok.ast.BinaryExpression;
 import lombok.ast.BinaryOperator;
 import lombok.ast.BooleanLiteral;

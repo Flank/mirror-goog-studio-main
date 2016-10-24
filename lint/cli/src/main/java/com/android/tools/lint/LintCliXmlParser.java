@@ -26,15 +26,13 @@ import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.PositionXmlParser;
-
+import java.io.File;
+import java.io.UnsupportedEncodingException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
-
-import java.io.File;
-import java.io.UnsupportedEncodingException;
 
 /**
  * A customization of the {@link PositionXmlParser} which creates position

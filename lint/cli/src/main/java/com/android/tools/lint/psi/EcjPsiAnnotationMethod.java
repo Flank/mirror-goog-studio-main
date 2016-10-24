@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationMethod;
 import com.intellij.psi.PsiElementVisitor;
-
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 
 class EcjPsiAnnotationMethod extends EcjPsiMethod implements PsiAnnotationMethod {

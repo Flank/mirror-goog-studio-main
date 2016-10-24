@@ -25,7 +25,6 @@ import com.intellij.psi.PsiEllipsisType;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeElement;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;

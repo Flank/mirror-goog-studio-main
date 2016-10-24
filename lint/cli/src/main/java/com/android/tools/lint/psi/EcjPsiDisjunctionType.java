@@ -19,7 +19,6 @@ package com.android.tools.lint.psi;
 import com.android.annotations.NonNull;
 import com.intellij.psi.PsiDisjunctionType;
 import com.intellij.psi.PsiType;
-
 import java.util.List;
 
 class EcjPsiDisjunctionType extends PsiDisjunctionType {

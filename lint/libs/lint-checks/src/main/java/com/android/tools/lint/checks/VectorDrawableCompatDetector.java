@@ -48,16 +48,14 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Finds all the vector drawables and checks references to them in layouts.
@@ -73,7 +71,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "VectorDrawableCompat", //$NON-NLS-1$
+            "VectorDrawableCompat",
             "Using VectorDrawableCompat",
             "To use VectorDrawableCompat, you need to make two modifications to your project. "
                     + "First, set `android.defaultConfig.vectorDrawables.useSupportLibrary = true` "

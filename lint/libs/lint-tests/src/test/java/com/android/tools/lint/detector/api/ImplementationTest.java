@@ -31,10 +31,8 @@ import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.DuplicateResourceDetector;
 import com.android.tools.lint.checks.RtlDetector;
-
-import junit.framework.TestCase;
-
 import java.util.EnumSet;
+import junit.framework.TestCase;
 
 public class ImplementationTest extends TestCase {
     @SuppressWarnings("unchecked")

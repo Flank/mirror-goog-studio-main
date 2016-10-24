@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;

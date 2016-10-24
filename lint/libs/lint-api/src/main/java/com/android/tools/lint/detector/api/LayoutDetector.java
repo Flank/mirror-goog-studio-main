@@ -30,7 +30,6 @@ import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.google.common.annotations.Beta;
-
 import org.w3c.dom.Element;
 
 /**

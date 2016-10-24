@@ -19,11 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
-
-import junit.framework.TestCase;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -35,6 +30,8 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import junit.framework.TestCase;
+import org.jetbrains.annotations.NotNull;
 
 public class BuiltinIssueRegistryTest extends TestCase {
     public void testNoListResize() {

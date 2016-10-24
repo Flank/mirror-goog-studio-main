@@ -47,17 +47,14 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
-
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
-
 import org.eclipse.jdt.internal.compiler.ast.NameReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.intellij.lang.annotations.Language;
-
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class EcjPsiBuilderTest extends TestCase {
     // This test class attempts to exercise all the various AST constructs relevant
@@ -665,7 +662,7 @@ public class EcjPsiBuilderTest extends TestCase {
             + "    public OtherType() {\n"
             + "    }\n"
             + "}";
-    
+
     private PsiJavaFile mJavaFile;
     {
         JavaContext context = LintUtilsTest.parsePsi(mTestClass);
@@ -718,7 +715,7 @@ public class EcjPsiBuilderTest extends TestCase {
         assertEquals("java.util.List", cls.getQualifiedName());
         assertTrue(cls.isInterface());
     }
-    
+
     public void testPackages() throws Exception {
         assertEquals("test.pkg", mJavaFile.getPackageName());
         PsiPackageStatement packageStatement = mJavaFile.getPackageStatement();
@@ -902,7 +899,7 @@ public class EcjPsiBuilderTest extends TestCase {
 
     @NonNull
     public static PsiElement findElement(@NonNull PsiJavaFile root, @NonNull final String source) {
-        final AtomicReference<PsiElement> result = new AtomicReference<PsiElement>();
+        final AtomicReference<PsiElement> result = new AtomicReference<>();
         root.accept(new JavaRecursiveElementVisitor() {
             @Override
             public void visitElement(PsiElement element) {

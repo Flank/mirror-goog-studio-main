@@ -26,7 +26,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.PsiReference;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 abstract class EcjPsiSourceElement extends EcjPsiElement

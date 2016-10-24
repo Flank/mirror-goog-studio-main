@@ -38,7 +38,6 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ import java.util.List;
 public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
     /** Leaking data via static fields */
     public static final Issue ISSUE = Issue.create(
-            "StaticFieldLeak", //$NON-NLS-1$
+            "StaticFieldLeak",
             "Static Field Leaks",
 
             "A static field will leak contexts.",

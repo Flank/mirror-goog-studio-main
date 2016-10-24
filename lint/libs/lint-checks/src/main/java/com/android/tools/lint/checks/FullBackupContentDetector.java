@@ -31,15 +31,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
+import java.util.Collection;
+import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Check which makes sure that a full-backup-content descriptor file is valid and logical
@@ -49,7 +47,7 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
      * Validation of {@code <full-backup-content>} XML elements
      */
     public static final Issue ISSUE = Issue.create(
-            "FullBackupContent", //$NON-NLS-1$
+            "FullBackupContent",
             "Valid Full Backup Content File",
 
             "Ensures that a `<full-backup-content>` file, which is pointed to by a " +

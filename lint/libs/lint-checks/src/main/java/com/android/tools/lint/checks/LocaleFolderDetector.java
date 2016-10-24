@@ -42,7 +42,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,7 +63,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
      * Using a locale folder that is not consulted
      */
     public static final Issue DEPRECATED_CODE = Issue.create(
-            "LocaleFolder", //$NON-NLS-1$
+            "LocaleFolder",
             "Wrong locale name",
             "From the `java.util.Locale` documentation:\n" +
             "\"Note that Java uses several deprecated two-letter codes. The Hebrew (\"he\") " +
@@ -88,7 +87,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
      * Using a region that might not be a match for the given language
      */
     public static final Issue WRONG_REGION = Issue.create(
-            "WrongRegion", //$NON-NLS-1$
+            "WrongRegion",
             "Suspicious Language/Region Combination",
             "Android uses the letter codes ISO 639-1 for languages, and the letter codes " +
             "ISO 3166-1 for the region codes. In many cases, the language code and the " +
@@ -114,7 +113,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             IMPLEMENTATION);
 
     public static final Issue USE_ALPHA_2 = Issue.create(
-            "UseAlpha2", //$NON-NLS-1$
+            "UseAlpha2",
             "Using 3-letter Codes",
             "For compatibility with earlier devices, you should only use 3-letter language " +
             "and region codes when there is no corresponding 2 letter code.",
@@ -125,7 +124,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             IMPLEMENTATION).addMoreInfo("https://tools.ietf.org/html/bcp47");
 
     public static final Issue INVALID_FOLDER = Issue.create(
-            "InvalidResourceFolder", //$NON-NLS-1$
+            "InvalidResourceFolder",
             "Invalid Resource Folder",
             "This lint check looks for a folder name that is not a valid resource folder " +
             "name; these will be ignored and not packaged by the Android Gradle build plugin.\n" +
@@ -415,19 +414,16 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         List<String> sortedRegions = Lists.newArrayList(regions);
         final String primary = LocaleManager.getLanguageRegion(language);
         final String secondary = LocaleManager.getDefaultLanguageRegion(language);
-        Collections.sort(sortedRegions, new Comparator<String>() {
-            @Override
-            public int compare(@NonNull String r1, @NonNull String r2) {
-                int rank1 = r1.equals(primary) ? 1
-                        : r1.equals(secondary) ? 2 : r1.equalsIgnoreCase(language) ? 3 : 4;
-                int rank2 = r2.equals(primary) ? 1
-                        : r2.equals(secondary) ? 2 : r2.equalsIgnoreCase(language) ? 3 : 4;
-                int delta = rank1 - rank2;
-                if (delta == 0) {
-                    delta = r1.compareTo(r2);
-                }
-                return delta;
+        Collections.sort(sortedRegions, (r1, r2) -> {
+            int rank1 = r1.equals(primary) ? 1
+                    : r1.equals(secondary) ? 2 : r1.equalsIgnoreCase(language) ? 3 : 4;
+            int rank2 = r2.equals(primary) ? 1
+                    : r2.equals(secondary) ? 2 : r2.equalsIgnoreCase(language) ? 3 : 4;
+            int delta = rank1 - rank2;
+            if (delta == 0) {
+                delta = r1.compareTo(r2);
             }
+            return delta;
         });
         return sortedRegions;
     }

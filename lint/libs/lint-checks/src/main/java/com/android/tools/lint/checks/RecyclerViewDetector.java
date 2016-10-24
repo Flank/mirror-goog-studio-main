@@ -48,7 +48,6 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
             Scope.JAVA_FILE_SCOPE);
 
     public static final Issue FIXED_POSITION = Issue.create(
-            "RecyclerView", //$NON-NLS-1$
+            "RecyclerView",
             "RecyclerView Problems",
             "`RecyclerView` will *not* call `onBindViewHolder` again when the position of " +
             "the item changes in the data set unless the item itself is " +
@@ -82,7 +81,7 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
             IMPLEMENTATION);
 
     public static final Issue DATA_BINDER = Issue.create(
-            "PendingBindings", //$NON-NLS-1$
+            "PendingBindings",
             "Missing Pending Bindings",
             "When using a `ViewDataBinding` in a `onBindViewHolder` method, you *must* " +
             "call `executePendingBindings()` before the method exits; otherwise " +
@@ -93,8 +92,8 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
             Severity.ERROR,
             IMPLEMENTATION);
 
-    private static final String VIEW_ADAPTER = "android.support.v7.widget.RecyclerView.Adapter"; //$NON-NLS-1$
-    private static final String ON_BIND_VIEW_HOLDER = "onBindViewHolder"; //$NON-NLS-1$
+    private static final String VIEW_ADAPTER = "android.support.v7.widget.RecyclerView.Adapter";
+    private static final String ON_BIND_VIEW_HOLDER = "onBindViewHolder";
 
     // ---- Implements JavaScanner ----
 

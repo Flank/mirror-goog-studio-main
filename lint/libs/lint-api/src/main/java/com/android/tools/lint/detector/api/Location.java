@@ -28,7 +28,6 @@ import com.android.ide.common.res2.ResourceItem;
 import com.android.tools.lint.client.api.JavaParser;
 import com.google.common.annotations.Beta;
 import com.intellij.psi.PsiElement;
-
 import java.io.File;
 
 /**
@@ -39,7 +38,7 @@ import java.io.File;
  */
 @Beta
 public class Location {
-    private static final String SUPER_KEYWORD = "super"; //$NON-NLS-1$
+    private static final String SUPER_KEYWORD = "super";
 
     private final File mFile;
     private final Position mStart;

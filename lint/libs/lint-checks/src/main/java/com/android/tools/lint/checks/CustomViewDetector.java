@@ -41,7 +41,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -57,7 +56,7 @@ public class CustomViewDetector extends Detector implements Detector.JavaPsiScan
 
     /** Mismatched style and class names */
     public static final Issue ISSUE = Issue.create(
-            "CustomViewStyleable", //$NON-NLS-1$
+            "CustomViewStyleable",
             "Mismatched Styleable/Custom View Name",
 
             "The convention for custom views is to use a `declare-styleable` whose name " +
@@ -72,7 +71,7 @@ public class CustomViewDetector extends Detector implements Detector.JavaPsiScan
             Severity.WARNING,
             IMPLEMENTATION);
 
-    private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes"; //$NON-NLS-1$
+    private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes";
 
     /** Constructs a new {@link CustomViewDetector} check */
     public CustomViewDetector() {

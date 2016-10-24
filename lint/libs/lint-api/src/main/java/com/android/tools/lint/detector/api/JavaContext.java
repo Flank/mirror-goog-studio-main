@@ -46,10 +46,8 @@ import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSwitchStatement;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.io.File;
 import java.util.Iterator;
-
 import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationMethodDeclaration;
 import lombok.ast.ClassDeclaration;
@@ -72,7 +70,7 @@ import lombok.ast.VariableReference;
  * to adjust your code for the next tools release.</b>
  */
 public class JavaContext extends Context {
-    static final String SUPPRESS_COMMENT_PREFIX = "//noinspection "; //$NON-NLS-1$
+    static final String SUPPRESS_COMMENT_PREFIX = "//noinspection ";
 
     /**
      * The parse tree

@@ -34,12 +34,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.ImmutableSet;
-
-import org.w3c.dom.Attr;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.w3c.dom.Attr;
 
 /**
  * Checks if the 'permission' attribute was set on a valid tag. Valid tags in the Manifest are:
@@ -48,7 +46,7 @@ import java.util.Set;
 public class ManifestPermissionAttributeDetector extends Detector implements Detector.XmlScanner {
 
     public static final Issue ISSUE = Issue.create(
-            "InvalidPermission", //$NON-NLS-1$
+            "InvalidPermission",
             "Invalid Permission Attribute",
 
             "Not all elements support the permission attribute. If a permission is set on an " +

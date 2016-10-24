@@ -14,7 +14,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLiteralExpression;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -46,8 +45,8 @@ public class StringAuthLeakDetector extends Detector implements Detector.JavaPsi
     }
 
     private static class AuthLeakChecker extends JavaElementVisitor {
-        private final static String LEGAL_CHARS = "([\\w_.!~*\'()%;&=+$,-]+)";      // From RFC 2396
-        private final static Pattern AUTH_REGEXP =
+        private static final String LEGAL_CHARS = "([\\w_.!~*\'()%;&=+$,-]+)";      // From RFC 2396
+        private static final Pattern AUTH_REGEXP =
                 Pattern.compile("([\\w+.-]+)://" + LEGAL_CHARS + ':' + LEGAL_CHARS + '@' +
                         LEGAL_CHARS);
 

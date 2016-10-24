@@ -21,7 +21,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiMethodCallExpression extends EcjPsiCallExpression implements

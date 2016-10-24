@@ -29,7 +29,6 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -216,7 +215,7 @@ public class Context {
             }
         } else {
             if (mProperties == null) {
-                mProperties = new HashMap<String, Object>();
+                mProperties = new HashMap<>();
             }
             mProperties.put(name, value);
         }

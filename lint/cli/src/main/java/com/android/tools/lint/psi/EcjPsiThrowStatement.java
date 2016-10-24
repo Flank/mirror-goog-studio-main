@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiThrowStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiThrowStatement extends EcjPsiStatement implements PsiThrowStatement {

@@ -52,7 +52,12 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -60,13 +65,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Looks for layout inflation calls passing null as the view root
@@ -81,7 +79,7 @@ public class LayoutInflationDetector extends LayoutDetector implements JavaPsiSc
 
     /** Passing in a null parent to a layout inflater */
     public static final Issue ISSUE = Issue.create(
-            "InflateParams", //$NON-NLS-1$
+            "InflateParams",
             "Layout Inflation without a Parent",
 
             "When inflating a layout, avoid passing in null as the parent view, since " +

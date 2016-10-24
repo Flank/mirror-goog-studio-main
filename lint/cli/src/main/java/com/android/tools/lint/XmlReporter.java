@@ -28,7 +28,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -97,7 +96,7 @@ public class XmlReporter extends Reporter {
                             Integer.toString(issue.getPriority()));
                     // We don't need issue metadata in baselines
                     writeAttribute(mWriter, 2, "summary",
-                            issue.getBriefDescription(RAW));//$NON-NLS-1$
+                            issue.getBriefDescription(RAW));
                     writeAttribute(mWriter, 2, "explanation",
                             issue.getExplanation(RAW));
 
@@ -136,7 +135,7 @@ public class XmlReporter extends Reporter {
                     boolean studio = QuickfixHandler.STUDIO.hasAutoFix(issue);
                     if (adt || studio) {
                         String value = adt && studio ? "studio,adt" : studio ? "studio" : "adt";
-                        writeAttribute(mWriter, 2, "quickfix", value);      //$NON-NLS-2$
+                        writeAttribute(mWriter, 2, "quickfix", value);
                     }
                 }
 

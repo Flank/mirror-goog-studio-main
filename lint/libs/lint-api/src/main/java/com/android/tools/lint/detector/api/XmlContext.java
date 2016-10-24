@@ -22,12 +22,10 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.XmlParser;
 import com.google.common.annotations.Beta;
-
+import java.io.File;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.io.File;
 
 /**
  * A {@link Context} used when checking XML files.
@@ -37,7 +35,7 @@ import java.io.File;
  */
 @Beta
 public class XmlContext extends ResourceContext {
-    static final String SUPPRESS_COMMENT_PREFIX = "<!--suppress "; //$NON-NLS-1$
+    static final String SUPPRESS_COMMENT_PREFIX = "<!--suppress ";
 
     /** The XML parser */
     private final XmlParser mParser;

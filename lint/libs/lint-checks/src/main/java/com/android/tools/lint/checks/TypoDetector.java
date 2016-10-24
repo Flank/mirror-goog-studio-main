@@ -43,16 +43,14 @@ import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Charsets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check which looks for likely typos in Strings.
@@ -95,7 +93,7 @@ public class TypoDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "Typos", //$NON-NLS-1$
+            "Typos",
             "Spelling error",
 
             "This check looks through the string definitions, and if it finds any words " +
@@ -150,7 +148,7 @@ public class TypoDetector extends ResourceXmlDetector {
             }
 
             if (mLanguage == null) {
-                mLanguage = "en"; //$NON-NLS-1$
+                mLanguage = "en";
             }
         }
 
@@ -474,7 +472,7 @@ public class TypoDetector extends ResourceXmlDetector {
 
         // The words are all in quotes; the first word is the misspelling,
         // the other words are the suggested replacements
-        List<String> replacements = new ArrayList<String>();
+        List<String> replacements = new ArrayList<>();
         // Skip the typo
         int index = errorMessage.indexOf('"');
         int originalEndIndex = errorMessage.indexOf('"', index + 1);

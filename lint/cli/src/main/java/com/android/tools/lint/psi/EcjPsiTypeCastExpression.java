@@ -23,7 +23,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiTypeElement;
-
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 
 class EcjPsiTypeCastExpression extends EcjPsiExpression implements PsiTypeCastExpression {

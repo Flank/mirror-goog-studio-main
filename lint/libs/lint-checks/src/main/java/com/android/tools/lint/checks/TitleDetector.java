@@ -32,11 +32,9 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Element;
-
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Element;
 
 /**
  * Check which makes sure menu items specify a title
@@ -44,7 +42,7 @@ import java.util.Collections;
 public class TitleDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "MenuTitle", //$NON-NLS-1$
+            "MenuTitle",
             "Missing menu title",
 
             "From the action bar documentation:\n" +
@@ -67,7 +65,7 @@ public class TitleDetector extends ResourceXmlDetector {
                     TitleDetector.class,
                     Scope.RESOURCE_FILE_SCOPE))
             .addMoreInfo(
-            "http://developer.android.com/guide/topics/ui/actionbar.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/topics/ui/actionbar.html");
 
     /** Constructs a new {@link TitleDetector} */
     public TitleDetector() {

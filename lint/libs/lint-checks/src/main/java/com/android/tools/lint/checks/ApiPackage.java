@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**

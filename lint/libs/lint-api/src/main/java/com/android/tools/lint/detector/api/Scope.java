@@ -29,7 +29,6 @@ import static com.android.SdkConstants.RES_FOLDER;
 
 import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;

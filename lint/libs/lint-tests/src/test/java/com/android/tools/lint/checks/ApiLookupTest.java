@@ -46,13 +46,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -68,6 +61,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 @SuppressWarnings({"javadoc", "ConstantConditions"})
 public class ApiLookupTest extends AbstractCheckTest {
@@ -235,7 +233,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         // Now truncate cache file
         File cacheFile = new File(mCacheDir,
                 ApiLookup.getCacheFileName("api-versions.xml",
-                        ApiLookup.getPlatformVersion(new LookupTestClient()))); //$NON-NLS-1$
+                        ApiLookup.getPlatformVersion(new LookupTestClient())));
         mLogBuffer.setLength(0);
         assertTrue(cacheFile.exists());
         RandomAccessFile raf = new RandomAccessFile(cacheFile, "rw");
@@ -656,15 +654,12 @@ public class ApiLookupTest extends AbstractCheckTest {
     @NonNull
     private static List<MethodNode> sorted(List<MethodNode> methods) {
         List<MethodNode> sorted = Lists.newArrayList(methods);
-        Collections.sort(sorted, new Comparator<MethodNode>() {
-            @Override
-            public int compare(MethodNode node1, MethodNode node2) {
-                int delta = node1.name.compareTo(node2.name);
-                if (delta != 0) {
-                    return delta;
-                }
-                return node1.desc.compareTo(node2.desc);
+        Collections.sort(sorted, (node1, node2) -> {
+            int delta = node1.name.compareTo(node2.name);
+            if (delta != 0) {
+                return delta;
             }
+            return node1.desc.compareTo(node2.desc);
         });
         return sorted;
     }
@@ -672,12 +667,7 @@ public class ApiLookupTest extends AbstractCheckTest {
     @NonNull
     private static List<ClassNode> sorted(Collection<ClassNode> classes) {
         List<ClassNode> sorted = Lists.newArrayList(classes);
-        Collections.sort(sorted, new Comparator<ClassNode>() {
-            @Override
-            public int compare(ClassNode node1, ClassNode node2) {
-                return node1.name.compareTo(node2.name);
-            }
-        });
+        Collections.sort(sorted, (node1, node2) -> node1.name.compareTo(node2.name));
         return sorted;
     }
 

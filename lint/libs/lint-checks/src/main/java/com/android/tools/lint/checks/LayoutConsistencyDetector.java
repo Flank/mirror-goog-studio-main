@@ -44,13 +44,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +54,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for consistency in layouts across different resource folders
@@ -89,7 +87,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
 
     /** Inconsistent widget types */
     public static final Issue INCONSISTENT_IDS = Issue.create(
-            "InconsistentLayout", //$NON-NLS-1$
+            "InconsistentLayout",
             "Inconsistent Layouts",
 
             "This check ensures that a layout resource which is defined in multiple "
@@ -247,7 +245,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
     @NonNull
     private Set<String> stripIrrelevantIds(@NonNull Set<String> ids) {
         if (!mRelevantIds.isEmpty()) {
-            Set<String> stripped = new HashSet<String>(ids);
+            Set<String> stripped = new HashSet<>(ids);
             stripped.retainAll(mRelevantIds);
             return stripped;
         }
@@ -308,9 +306,9 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
             List<String> layouts = presence.get(id);
             Collections.sort(layouts);
 
-            Set<String> missingSet = new HashSet<String>(allLayouts);
+            Set<String> missingSet = new HashSet<>(allLayouts);
             missingSet.removeAll(layouts);
-            List<String> missing = new ArrayList<String>(missingSet);
+            List<String> missing = new ArrayList<>(missingSet);
             Collections.sort(missing);
 
             if (layouts.size() < layoutCount / 2) {
@@ -333,11 +331,11 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
 
     private static Set<String> getInconsistentIds(Map<File, Set<String>> idMap) {
         Set<String> union = getAllIds(idMap);
-        Set<String> inconsistent = new HashSet<String>();
+        Set<String> inconsistent = new HashSet<>();
         for (Map.Entry<File, Set<String>> entry : idMap.entrySet()) {
             Set<String> ids = entry.getValue();
             if (ids.size() < union.size()) {
-                Set<String> missing = new HashSet<String>(union);
+                Set<String> missing = new HashSet<>(union);
                 missing.removeAll(ids);
                 inconsistent.addAll(missing);
             }
@@ -348,7 +346,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
     private static Set<String> getAllIds(Map<File, Set<String>> idMap) {
         Iterator<Set<String>> iterator = idMap.values().iterator();
         assert iterator.hasNext();
-        Set<String> union = new HashSet<String>(iterator.next());
+        Set<String> union = new HashSet<>(iterator.next());
         while (iterator.hasNext()) {
             union.addAll(iterator.next());
         }
@@ -357,7 +355,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
 
     private Map<File, Set<String>> getIdMap(List<Pair<File, Map<String, String>>> files,
             int layoutCount) {
-        Map<File, Set<String>> idMap = new HashMap<File, Set<String>>(layoutCount);
+        Map<File, Set<String>> idMap = new HashMap<>(layoutCount);
         for (Pair<File, Map<String, String>> pair : files) {
             File file = pair.getFirst();
             Map<String, String> typeMap = pair.getSecond();
@@ -368,7 +366,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
     }
 
     private void reportErrors(Context context) {
-        List<String> layouts = new ArrayList<String>(mLocations.keySet());
+        List<String> layouts = new ArrayList<>(mLocations.keySet());
         Collections.sort(layouts);
 
         for (String layout : layouts) {
@@ -377,7 +375,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
             assert locationMap != null;
             assert messageMap != null;
 
-            List<String> ids = new ArrayList<String>(locationMap.keySet());
+            List<String> ids = new ArrayList<>(locationMap.keySet());
             Collections.sort(ids);
             for (String id : ids) {
                 String message = messageMap.get(id);
@@ -397,15 +395,12 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
 
         // Sort locations by the file parent folders
         if (locations.size() > 1) {
-            Collections.sort(locations, new Comparator<Location>() {
-                @Override
-                public int compare(Location location1, Location location2) {
-                    File file1 = location1.getFile();
-                    File file2 = location2.getFile();
-                    String folder1 = file1.getParentFile().getName();
-                    String folder2 = file2.getParentFile().getName();
-                    return folder1.compareTo(folder2);
-                }
+            Collections.sort(locations, (location1, location2) -> {
+                File file1 = location1.getFile();
+                File file2 = location2.getFile();
+                String folder1 = file1.getParentFile().getName();
+                String folder2 = file2.getParentFile().getName();
+                return folder1.compareTo(folder2);
             });
             // Chain locations together
             Iterator<Location> iterator = locations.iterator();

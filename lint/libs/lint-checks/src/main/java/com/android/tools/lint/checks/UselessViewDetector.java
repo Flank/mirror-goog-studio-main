@@ -51,13 +51,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Checks whether the current node can be removed without affecting the layout.
@@ -70,7 +68,7 @@ public class UselessViewDetector extends LayoutDetector {
 
     /** Issue of including a parent that has no value on its own */
     public static final Issue USELESS_PARENT = Issue.create(
-            "UselessParent", //$NON-NLS-1$
+            "UselessParent",
             "Useless parent layout",
             "A layout with children that has no siblings, is not a scrollview or " +
             "a root layout, and does not have a background, can be removed and have " +
@@ -83,7 +81,7 @@ public class UselessViewDetector extends LayoutDetector {
 
     /** Issue of including a leaf that isn't shown */
     public static final Issue USELESS_LEAF = Issue.create(
-            "UselessLeaf", //$NON-NLS-1$
+            "UselessLeaf",
             "Useless leaf layout",
             "A layout that has no children or no background can often be removed (since it " +
             "is invisible) for a flatter and more efficient layout hierarchy.",
@@ -102,26 +100,26 @@ public class UselessViewDetector extends LayoutDetector {
         return Speed.FAST;
     }
 
-    private static final List<String> CONTAINERS = new ArrayList<String>(18);
+    private static final List<String> CONTAINERS = new ArrayList<>(18);
     static {
         CONTAINERS.add(ABSOLUTE_LAYOUT);
         CONTAINERS.add(FRAME_LAYOUT);
         CONTAINERS.add(GRID_LAYOUT);
         CONTAINERS.add(GRID_VIEW);
         CONTAINERS.add(HORIZONTAL_SCROLL_VIEW);
-        CONTAINERS.add("ImageSwitcher");                      //$NON-NLS-1$
+        CONTAINERS.add("ImageSwitcher");
         CONTAINERS.add(LINEAR_LAYOUT);
         CONTAINERS.add(RADIO_GROUP);
         CONTAINERS.add(RELATIVE_LAYOUT);
         CONTAINERS.add(SCROLL_VIEW);
-        CONTAINERS.add("SlidingDrawer");                      //$NON-NLS-1$
-        CONTAINERS.add("StackView");                          //$NON-NLS-1$
+        CONTAINERS.add("SlidingDrawer");
+        CONTAINERS.add("StackView");
         CONTAINERS.add(TABLE_LAYOUT);
         CONTAINERS.add(TABLE_ROW);
-        CONTAINERS.add("TextSwitcher");                       //$NON-NLS-1$
-        CONTAINERS.add("ViewAnimator");                       //$NON-NLS-1$
-        CONTAINERS.add("ViewFlipper");                        //$NON-NLS-1$
-        CONTAINERS.add("ViewSwitcher");                       //$NON-NLS-1$
+        CONTAINERS.add("TextSwitcher");
+        CONTAINERS.add("ViewAnimator");
+        CONTAINERS.add("ViewFlipper");
+        CONTAINERS.add("ViewSwitcher");
         // Available ViewGroups that are not included by this check:
         //  CONTAINERS.add("android.gesture.GestureOverlayView");
         //  CONTAINERS.add("AdapterViewFlipper");

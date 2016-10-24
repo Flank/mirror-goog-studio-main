@@ -32,13 +32,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -50,6 +43,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * Check which makes sure that a network-security-config descriptor file is valid and logical
@@ -64,7 +62,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      * Validate the entire network-security-config descriptor.
      */
     public static final Issue ISSUE = Issue.create(
-            "NetworkSecurityConfig", //$NON-NLS-1$
+            "NetworkSecurityConfig",
             "Valid Network Security Config File",
 
             "Ensures that a `<network-security-config>` file, which is pointed to by an " +
@@ -81,7 +79,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      * near future.
      */
     public static final Issue PIN_SET_EXPIRY = Issue.create(
-            "PinSetExpiry", //$NON-NLS-1$
+            "PinSetExpiry",
             "Validate `<pin-set>` expiration attribute",
 
             "Ensures that the `expiration` attribute of the `<pin-set>` element is valid and has " +
@@ -97,7 +95,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      * No backup pin specified
      */
     public static final Issue MISSING_BACKUP_PIN = Issue.create(
-            "MissingBackupPin", //$NON-NLS-1$
+            "MissingBackupPin",
             "Missing Backup Pin",
 
             "It is highly recommended to declare a backup `<pin>` element. " +
@@ -110,28 +108,28 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             IMPLEMENTATION)
             .addMoreInfo("https://developer.android.com/preview/features/security-config.html");
 
-    public static final String ATTR_DIGEST = "digest"; //$NON-NLS-1$
+    public static final String ATTR_DIGEST = "digest";
 
     private static final String TAG_NETWORK_SECURITY_CONFIG =
-            "network-security-config"; //$NON-NLS-1$
-    private static final String TAG_BASE_CONFIG = "base-config"; //$NON-NLS-1$
-    private static final String TAG_DOMAIN_CONFIG = "domain-config"; //$NON-NLS-1$
-    private static final String TAG_DEBUG_OVERRIDES = "debug-overrides"; //$NON-NLS-1$
-    private static final String TAG_DOMAIN = "domain"; //$NON-NLS-1$
-    private static final String TAG_PIN_SET = "pin-set"; //$NON-NLS-1$
-    private static final String TAG_TRUST_ANCHORS = "trust-anchors"; //$NON-NLS-1$
-    private static final String TAG_CERTIFICATES = "certificates"; //$NON-NLS-1$
-    private static final String TAG_PIN = "pin"; //$NON-NLS-1$
+            "network-security-config";
+    private static final String TAG_BASE_CONFIG = "base-config";
+    private static final String TAG_DOMAIN_CONFIG = "domain-config";
+    private static final String TAG_DEBUG_OVERRIDES = "debug-overrides";
+    private static final String TAG_DOMAIN = "domain";
+    private static final String TAG_PIN_SET = "pin-set";
+    private static final String TAG_TRUST_ANCHORS = "trust-anchors";
+    private static final String TAG_CERTIFICATES = "certificates";
+    private static final String TAG_PIN = "pin";
 
-    private static final String ATTR_SRC = "src"; //$NON-NLS-1$
-    private static final String ATTR_INCLUDE_SUBDOMAINS = "includeSubdomains"; //$NON-NLS-1$
-    private static final String ATTR_EXPIRATION = "expiration"; //$NON-NLS-1$
+    private static final String ATTR_SRC = "src";
+    private static final String ATTR_INCLUDE_SUBDOMAINS = "includeSubdomains";
+    private static final String ATTR_EXPIRATION = "expiration";
     private static final String ATTR_CLEARTEXT_TRAFFIC_PERMITTED =
-            "cleartextTrafficPermitted"; //$NON-NLS-1$
+            "cleartextTrafficPermitted";
 
     private static final String INVALID_DIGEST_ALGORITHM =
             "Invalid digest algorithm. Supported digests: `%1$s`";
-    private static final String PIN_DIGEST_ALGORITHM = "SHA-256"; //$NON-NLS-1$
+    private static final String PIN_DIGEST_ALGORITHM = "SHA-256";
     // SHA 256 bit = 32 bytes
     private static final int PIN_DECODED_DIGEST_LEN_SHA_256 = 32;
     private static final Set<String> VALID_CONFIG_TAGS =

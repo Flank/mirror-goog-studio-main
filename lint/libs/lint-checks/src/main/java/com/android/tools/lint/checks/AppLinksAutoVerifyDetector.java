@@ -47,13 +47,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -68,6 +61,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check if the App Link which needs auto verification is correctly set.
@@ -78,14 +76,14 @@ public class AppLinksAutoVerifyDetector extends Detector implements Detector.Xml
             AppLinksAutoVerifyDetector.class, Scope.MANIFEST_SCOPE);
 
     public static final Issue ISSUE_ERROR = Issue.create(
-            "AppLinksAutoVerifyError", //$NON-NLS-1$
+            "AppLinksAutoVerifyError",
             "App Links Auto Verification Failure",
             "Ensures that app links are correctly set and associated with website.",
             Category.CORRECTNESS, 5, Severity.ERROR, IMPLEMENTATION)
             .addMoreInfo("https://g.co/appindexing/applinks").setEnabledByDefault(false);
 
     public static final Issue ISSUE_WARNING = Issue.create(
-            "AppLinksAutoVerifyWarning", //$NON-NLS-1$
+            "AppLinksAutoVerifyWarning",
             "Potential App Links Auto Verification Failure",
             "Ensures that app links are correctly set and associated with website.",
             Category.CORRECTNESS, 5, Severity.WARNING, IMPLEMENTATION)

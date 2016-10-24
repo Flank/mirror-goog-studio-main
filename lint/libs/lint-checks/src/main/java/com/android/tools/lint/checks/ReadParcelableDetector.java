@@ -36,7 +36,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,7 +46,7 @@ public class ReadParcelableDetector extends Detector implements JavaPsiScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ParcelClassLoader", //$NON-NLS-1$
+            "ParcelClassLoader",
             "Default Parcel Class Loader",
 
             "The documentation for `Parcel#readParcelable(ClassLoader)` (and its variations) " +

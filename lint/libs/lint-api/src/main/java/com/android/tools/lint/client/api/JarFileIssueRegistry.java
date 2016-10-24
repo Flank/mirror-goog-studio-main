@@ -23,7 +23,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -55,8 +54,8 @@ class JarFileIssueRegistry extends IssueRegistry {
      * Manifest constant for declaring an issue provider. Example: Lint-Registry:
      * foo.bar.CustomIssueRegistry
      */
-    private static final String MF_LINT_REGISTRY_OLD = "Lint-Registry"; //$NON-NLS-1$
-    private static final String MF_LINT_REGISTRY = "Lint-Registry-v2"; //$NON-NLS-1$
+    private static final String MF_LINT_REGISTRY_OLD = "Lint-Registry";
+    private static final String MF_LINT_REGISTRY = "Lint-Registry-v2";
 
     private static Map<File, SoftReference<JarFileIssueRegistry>> sCache;
 
@@ -74,7 +73,7 @@ class JarFileIssueRegistry extends IssueRegistry {
             throws IOException, ClassNotFoundException, IllegalAccessException,
             InstantiationException {
         if (sCache == null) {
-           sCache = new HashMap<File, SoftReference<JarFileIssueRegistry>>();
+           sCache = new HashMap<>();
         } else {
             SoftReference<JarFileIssueRegistry> reference = sCache.get(jarFile);
             if (reference != null) {
@@ -89,7 +88,7 @@ class JarFileIssueRegistry extends IssueRegistry {
         IssueRegistry.reset();
 
         JarFileIssueRegistry registry = new JarFileIssueRegistry(client, jarFile);
-        sCache.put(jarFile, new SoftReference<JarFileIssueRegistry>(registry));
+        sCache.put(jarFile, new SoftReference<>(registry));
         return registry;
     }
 
@@ -185,10 +184,8 @@ class JarFileIssueRegistry extends IssueRegistry {
 
             // But first, proactively load all classes:
             try {
-                InputStream inputStream = new FileInputStream(file);
-                try {
-                    JarInputStream jarInputStream = new JarInputStream(inputStream);
-                    try {
+                try (InputStream inputStream = new FileInputStream(file)) {
+                    try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
                         ZipEntry entry = jarInputStream.getNextEntry();
                         while (entry != null) {
                             String name = entry.getName();
@@ -208,11 +205,7 @@ class JarFileIssueRegistry extends IssueRegistry {
                             }
                             entry = jarInputStream.getNextEntry();
                         }
-                    } finally {
-                        jarInputStream.close();
                     }
-                } finally {
-                    inputStream.close();
                 }
             } catch (Throwable ignore) {
             } finally {

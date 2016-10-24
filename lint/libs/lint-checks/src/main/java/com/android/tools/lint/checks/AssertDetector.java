@@ -34,7 +34,6 @@ import com.intellij.psi.PsiBinaryExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiLiteral;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +43,7 @@ import java.util.List;
 public class AssertDetector extends Detector implements JavaPsiScanner {
     /** Using assertions */
     public static final Issue ISSUE = Issue.create(
-            "Assert", //$NON-NLS-1$
+            "Assert",
             "Assertions",
 
             "Assertions are not checked at runtime. There are ways to request that they be used " +
@@ -68,7 +67,7 @@ public class AssertDetector extends Detector implements JavaPsiScanner {
                     AssertDetector.class,
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo(
-            "https://code.google.com/p/android/issues/detail?id=65183"); //$NON-NLS-1$
+            "https://code.google.com/p/android/issues/detail?id=65183");
 
     /** Constructs a new {@link AssertDetector} check */
     public AssertDetector() {

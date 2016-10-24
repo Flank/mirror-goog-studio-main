@@ -34,18 +34,16 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for various typographical issues in string definitions.
@@ -58,7 +56,7 @@ public class TypographyDetector extends ResourceXmlDetector {
 
     /** Replace hyphens with dashes? */
     public static final Issue DASHES = Issue.create(
-            "TypographyDashes", //$NON-NLS-1$
+            "TypographyDashes",
             "Hyphen can be replaced with dash",
             "The \"n dash\" (\u2013, &#8211;) and the \"m dash\" (\u2014, &#8212;) " +
             "characters are used for ranges (n dash) and breaks (m dash). Using these " +
@@ -68,11 +66,11 @@ public class TypographyDetector extends ResourceXmlDetector {
             5,
             Severity.WARNING,
             IMPLEMENTATION).
-            addMoreInfo("http://en.wikipedia.org/wiki/Dash"); //$NON-NLS-1$
+            addMoreInfo("http://en.wikipedia.org/wiki/Dash");
 
     /** Replace dumb quotes with smart quotes? */
     public static final Issue QUOTES = Issue.create(
-            "TypographyQuotes", //$NON-NLS-1$
+            "TypographyQuotes",
             "Straight quotes can be replaced with curvy quotes",
             "Straight single quotes and double quotes, when used as a pair, can be replaced " +
             "by \"curvy quotes\" (or directional quotes). This can make the text more " +
@@ -86,14 +84,14 @@ public class TypographyDetector extends ResourceXmlDetector {
             5,
             Severity.WARNING,
             IMPLEMENTATION).
-            addMoreInfo("http://en.wikipedia.org/wiki/Quotation_mark"). //$NON-NLS-1$
+            addMoreInfo("http://en.wikipedia.org/wiki/Quotation_mark").
             // This feature is apparently controversial: recent apps have started using
             // straight quotes to avoid inconsistencies. Disabled by default for now.
             setEnabledByDefault(false);
 
     /** Replace fraction strings with fraction characters? */
     public static final Issue FRACTIONS = Issue.create(
-            "TypographyFractions", //$NON-NLS-1$
+            "TypographyFractions",
             "Fraction string can be replaced with fraction character",
             "You can replace certain strings, such as 1/2, and 1/4, with dedicated " +
             "characters for these, such as \u00BD (&#189;) and \u00BC (&#188;). " +
@@ -102,11 +100,11 @@ public class TypographyDetector extends ResourceXmlDetector {
             5,
             Severity.WARNING,
             IMPLEMENTATION).
-            addMoreInfo("http://en.wikipedia.org/wiki/Number_Forms"); //$NON-NLS-1$
+            addMoreInfo("http://en.wikipedia.org/wiki/Number_Forms");
 
     /** Replace ... with the ellipsis character? */
     public static final Issue ELLIPSIS = Issue.create(
-            "TypographyEllipsis", //$NON-NLS-1$
+            "TypographyEllipsis",
             "Ellipsis string can be replaced with ellipsis character",
             "You can replace the string \"...\" with a dedicated ellipsis character, " +
             "ellipsis character (\u2026, &#8230;). This can help make the text more readable.",
@@ -114,11 +112,11 @@ public class TypographyDetector extends ResourceXmlDetector {
             5,
             Severity.WARNING,
             IMPLEMENTATION).
-            addMoreInfo("http://en.wikipedia.org/wiki/Ellipsis"); //$NON-NLS-1$
+            addMoreInfo("http://en.wikipedia.org/wiki/Ellipsis");
 
     /** The main issue discovered by this detector */
     public static final Issue OTHER = Issue.create(
-            "TypographyOther", //$NON-NLS-1$
+            "TypographyOther",
             "Other typographical problems",
             "This check looks for miscellaneous typographical problems and offers replacement " +
             "sequences that will make the text easier to read and your application more " +
@@ -151,7 +149,7 @@ public class TypographyDetector extends ResourceXmlDetector {
      */
     @VisibleForTesting
     static final Pattern HYPHEN_RANGE_PATTERN =
-            Pattern.compile(".*(\\d+\\s*)-(\\s*\\d+).*"); //$NON-NLS-1$
+            Pattern.compile(".*(\\d+\\s*)-(\\s*\\d+).*");
 
     /**
      * Pattern used to detect scenarios where a grave accent mark is used
@@ -161,7 +159,7 @@ public class TypographyDetector extends ResourceXmlDetector {
      */
     @VisibleForTesting
     static final Pattern GRAVE_QUOTATION =
-            Pattern.compile("(^[^`]*`[^'`]+'[^']*$)|(^[^`]*``[^'`]+''[^']*$)"); //$NON-NLS-1$
+            Pattern.compile("(^[^`]*`[^'`]+'[^']*$)|(^[^`]*``[^'`]+''[^']*$)");
 
     /**
      * Pattern used to detect common fractions, e.g. 1/2, 1/3, 2/3, 1/4, 3/4 and
@@ -169,7 +167,7 @@ public class TypographyDetector extends ResourceXmlDetector {
      */
     @VisibleForTesting
     static final Pattern FRACTION_PATTERN =
-            Pattern.compile(".*\\b([13])\\s*/\\s*([234])\\b.*"); //$NON-NLS-1$
+            Pattern.compile(".*\\b([13])\\s*/\\s*([234])\\b.*");
 
     /**
      * Pattern used to detect single quote strings, such as 'hello', but
@@ -179,7 +177,7 @@ public class TypographyDetector extends ResourceXmlDetector {
      */
     @VisibleForTesting
     static final Pattern SINGLE_QUOTE =
-            Pattern.compile(".*\\W*'[^']+'(\\W.*)?"); //$NON-NLS-1$
+            Pattern.compile(".*\\W*'[^']+'(\\W.*)?");
 
     private static final String FRACTION_MESSAGE =
             "Use fraction character %1$c (%2$s) instead of %3$s ?";
@@ -265,8 +263,8 @@ public class TypographyDetector extends ResourceXmlDetector {
     private void checkText(XmlContext context, Node element, Node textNode, String text) {
         if (mCheckEllipsis) {
             // Replace ... with ellipsis character?
-            int ellipsis = text.indexOf("..."); //$NON-NLS-1$
-            if (ellipsis != -1 && !text.startsWith(".", ellipsis + 3)) { //$NON-NLS-1$
+            int ellipsis = text.indexOf("...");
+            if (ellipsis != -1 && !text.startsWith(".", ellipsis + 3)) {
                 context.report(ELLIPSIS, element, context.getLocation(textNode),
                         ELLIPSIS_MESSAGE);
             }
@@ -293,10 +291,10 @@ public class TypographyDetector extends ResourceXmlDetector {
                 }
 
                 // m dash
-                int emdash = text.indexOf("--"); //$NON-NLS-1$
+                int emdash = text.indexOf("--");
                 // Don't suggest replacing -- or "--" with an m dash since these are sometimes
                 // used as digit marker strings
-                if (emdash > 1 && !text.startsWith("-", emdash + 2)) {   //$NON-NLS-1$
+                if (emdash > 1 && !text.startsWith("-", emdash + 2)) {
                     context.report(DASHES, element, context.getLocation(textNode),
                             EM_DASH_MESSAGE);
                 }
@@ -359,19 +357,19 @@ public class TypographyDetector extends ResourceXmlDetector {
             if (matcher.matches()) {
                 String top = matcher.group(1);    // Numerator
                 String bottom = matcher.group(2); // Denominator
-                if (top.equals("1") && bottom.equals("2")) { //$NON-NLS-1$ //$NON-NLS-2$
+                if (top.equals("1") && bottom.equals("2")) {
                     context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2"));
-                } else if (top.equals("1") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
+                } else if (top.equals("1") && bottom.equals("4")) {
                     context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4"));
-                } else if (top.equals("3") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
+                } else if (top.equals("3") && bottom.equals("4")) {
                     context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4"));
-                } else if (top.equals("1") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
+                } else if (top.equals("1") && bottom.equals("3")) {
                     context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3"));
-                } else if (top.equals("2") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
+                } else if (top.equals("2") && bottom.equals("3")) {
                     context.report(FRACTIONS, element, context.getLocation(textNode),
                             String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3"));
                 }
@@ -381,7 +379,7 @@ public class TypographyDetector extends ResourceXmlDetector {
         if (mCheckMisc) {
             // Fix copyright symbol?
             if (text.indexOf('(') != -1
-                    && (text.contains("(c)") || text.contains("(C)"))) { //$NON-NLS-1$ //$NON-NLS-2$
+                    && (text.contains("(c)") || text.contains("(C)"))) {
                 // Suggest replacing with copyright symbol?
                 context.report(OTHER, element, context.getLocation(textNode), COPYRIGHT_MESSAGE);
                 // Replace (R) and TM as well? There are unicode characters for these but they
@@ -392,7 +390,7 @@ public class TypographyDetector extends ResourceXmlDetector {
 
     private static boolean isAnalyticsTrackingId(Element element) {
         String name = element.getAttribute(ATTR_NAME);
-        return "ga_trackingId".equals(name); //$NON-NLS-1$
+        return "ga_trackingId".equals(name);
     }
 
     /**
@@ -471,42 +469,42 @@ public class TypographyDetector extends ResourceXmlDetector {
    *         offsets in the edit objects are relative to the text node.
    */
     public static List<ReplaceEdit> getEdits(String issueId, String message, String text) {
-        List<ReplaceEdit> edits = new ArrayList<ReplaceEdit>();
+        List<ReplaceEdit> edits = new ArrayList<>();
         if (message.equals(ELLIPSIS_MESSAGE)) {
-            int offset = text.indexOf("...");                            //$NON-NLS-1$
+            int offset = text.indexOf("...");
             if (offset != -1) {
-                edits.add(new ReplaceEdit(offset, 3, "\u2026"));         //$NON-NLS-1$
+                edits.add(new ReplaceEdit(offset, 3, "\u2026"));
             }
         } else if (message.equals(EN_DASH_MESSAGE)) {
             int offset = text.indexOf('-');
             if (offset != -1) {
-                edits.add(new ReplaceEdit(offset, 1, "\u2013"));         //$NON-NLS-1$
+                edits.add(new ReplaceEdit(offset, 1, "\u2013"));
             }
         } else if (message.equals(EM_DASH_MESSAGE)) {
-            int offset = text.indexOf("--");                             //$NON-NLS-1$
+            int offset = text.indexOf("--");
             if (offset != -1) {
-                edits.add(new ReplaceEdit(offset, 2, "\u2014"));         //$NON-NLS-1$
+                edits.add(new ReplaceEdit(offset, 2, "\u2014"));
             }
         } else if (message.equals(TYPOGRAPHIC_APOSTROPHE_MESSAGE)) {
             int offset = text.indexOf('\'');
             if (offset != -1) {
-                edits.add(new ReplaceEdit(offset, 1, "\u2019"));         //$NON-NLS-1$
+                edits.add(new ReplaceEdit(offset, 1, "\u2019"));
             }
         } else if (message.equals(COPYRIGHT_MESSAGE)) {
-            int offset = text.indexOf("(c)");                            //$NON-NLS-1$
+            int offset = text.indexOf("(c)");
             if (offset == -1) {
-                offset = text.indexOf("(C)");                            //$NON-NLS-1$
+                offset = text.indexOf("(C)");
             }
             if (offset != -1) {
-                edits.add(new ReplaceEdit(offset, 3, "\u00A9"));         //$NON-NLS-1$
+                edits.add(new ReplaceEdit(offset, 3, "\u00A9"));
             }
         } else if (message.equals(SINGLE_QUOTE_MESSAGE)) {
             int offset = text.indexOf('\'');
             if (offset != -1) {
-                int endOffset = text.indexOf('\'', offset + 1);           //$NON-NLS-1$
+                int endOffset = text.indexOf('\'', offset + 1);
                 if (endOffset != -1) {
-                    edits.add(new ReplaceEdit(offset, 1, "\u2018"));     //$NON-NLS-1$
-                    edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));  //$NON-NLS-1$
+                    edits.add(new ReplaceEdit(offset, 1, "\u2018"));
+                    edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));
                 }
             }
         } else if (message.equals(DBL_QUOTES_MESSAGE)) {
@@ -514,8 +512,8 @@ public class TypographyDetector extends ResourceXmlDetector {
             if (offset != -1) {
                 int endOffset = text.indexOf('"', offset + 1);
                 if (endOffset != -1) {
-                    edits.add(new ReplaceEdit(offset, 1, "\u201C"));     //$NON-NLS-1$
-                    edits.add(new ReplaceEdit(endOffset, 1, "\u201D"));  //$NON-NLS-1$
+                    edits.add(new ReplaceEdit(offset, 1, "\u201C"));
+                    edits.add(new ReplaceEdit(endOffset, 1, "\u201D"));
                 }
             }
         } else if (message.equals(GRAVE_QUOTE_MESSAGE)) {
@@ -523,8 +521,8 @@ public class TypographyDetector extends ResourceXmlDetector {
             if (offset != -1) {
                 int endOffset = text.indexOf('\'', offset + 1);
                 if (endOffset != -1) {
-                    edits.add(new ReplaceEdit(offset, 1, "\u2018"));     //$NON-NLS-1$
-                    edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));  //$NON-NLS-1$
+                    edits.add(new ReplaceEdit(offset, 1, "\u2018"));
+                    edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));
                 }
             }
         } else {

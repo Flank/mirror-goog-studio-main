@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -35,7 +34,7 @@ import org.w3c.dom.Element;
 public class WrongLocationDetector extends LayoutDetector {
     /** Main issue investigated by this detector */
     public static final Issue ISSUE = Issue.create(
-            "WrongFolder", //$NON-NLS-1$
+            "WrongFolder",
             "Resource file in the wrong `res` folder",
 
             "Resource files are sometimes placed in the wrong folder, and it can lead to " +

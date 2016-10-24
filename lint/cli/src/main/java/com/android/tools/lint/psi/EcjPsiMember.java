@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMember;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 public abstract class EcjPsiMember extends EcjPsiSourceElement implements PsiMember {

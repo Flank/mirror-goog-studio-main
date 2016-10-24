@@ -142,7 +142,7 @@ public class LintUtils {
 
         for (int i = 0, n = strings.size(); i < n; i++) {
             if (sb.length() > 0) {
-                sb.append(", "); //$NON-NLS-1$
+                sb.append(", ");
             }
             sb.append(strings.get(i));
 
@@ -285,7 +285,7 @@ public class LintUtils {
     @NonNull
     public static List<Element> getChildren(@NonNull Node node) {
         NodeList childNodes = node.getChildNodes();
-        List<Element> children = new ArrayList<Element>(childNodes.getLength());
+        List<Element> children = new ArrayList<>(childNodes.getLength());
         for (int i = 0, n = childNodes.getLength(); i < n; i++) {
             Node child = childNodes.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
@@ -524,7 +524,7 @@ public class LintUtils {
             return Splitter.on(';').omitEmptyStrings().trimResults().split(path);
         }
 
-        List<String> combined = new ArrayList<String>();
+        List<String> combined = new ArrayList<>();
         Iterables.addAll(combined, Splitter.on(':').omitEmptyStrings().trimResults().split(path));
         for (int i = 0, n = combined.size(); i < n; i++) {
             String p = combined.get(i);
@@ -606,8 +606,8 @@ public class LintUtils {
         return null;
     }
 
-    private static final String UTF_16 = "UTF_16";               //$NON-NLS-1$
-    private static final String UTF_16LE = "UTF_16LE";           //$NON-NLS-1$
+    private static final String UTF_16 = "UTF_16";
+    private static final String UTF_16LE = "UTF_16LE";
 
     /**
      * Returns the encoded String for the given file. This is usually the
@@ -673,13 +673,13 @@ public class LintUtils {
             } else if (data[0] == (byte)0x0 && data[1] == (byte)0x0
                     && data[2] == (byte)0xfe && data[3] == (byte)0xff) {
                 // UTF-32, big-endian
-                defaultCharset = charset = "UTF_32";    //$NON-NLS-1$
+                defaultCharset = charset = "UTF_32";
                 offset += 4;
             } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe
                     && data[2] == (byte)0x0 && data[3] == (byte)0x0) {
                 // UTF-32, little-endian. We must check for this *before* looking for
                 // UTF_16LE since UTF_32LE has the same prefix!
-                defaultCharset = charset = "UTF_32LE";  //$NON-NLS-1$
+                defaultCharset = charset = "UTF_32LE";
                 offset += 4;
             } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe) {
                 //  UTF-16, little-endian
@@ -1012,7 +1012,7 @@ public class LintUtils {
 
         List<ResourceValue> result = null;
 
-        Queue<ResourceValue> queue = new ArrayDeque<ResourceValue>();
+        Queue<ResourceValue> queue = new ArrayDeque<>();
         queue.add(new ResourceValue(style.type, style.name, false));
         Set<String> seen = Sets.newHashSet();
         int count = 0;
@@ -1086,7 +1086,7 @@ public class LintUtils {
 
         List<StyleResourceValue> result = null;
 
-        Queue<ResourceValue> queue = new ArrayDeque<ResourceValue>();
+        Queue<ResourceValue> queue = new ArrayDeque<>();
         queue.add(new ResourceValue(style.type, style.name, false));
         Set<String> seen = Sets.newHashSet();
         int count = 0;
@@ -1409,7 +1409,7 @@ public class LintUtils {
         if (locale == null) {
             return assumeForBase;
         } else {
-            return "en".equals(locale.getLanguage());  //$NON-NLS-1$
+            return "en".equals(locale.getLanguage());
         }
     }
 

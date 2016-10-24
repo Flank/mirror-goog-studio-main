@@ -27,18 +27,16 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Attr;
 
 /**
  * Checks if signatureOrSystem level permissions are set.
  */
 public class SignatureOrSystemDetector extends Detector implements Detector.XmlScanner {
     public static final Issue ISSUE = Issue.create(
-            "SignatureOrSystemPermissions", //$NON-NLS-1$
+            "SignatureOrSystemPermissions",
             "signatureOrSystem permissions declared",
             "The `signature` protection level should probably be sufficient for most needs and "
                     + "works regardless of where applications are installed. The "
@@ -53,7 +51,7 @@ public class SignatureOrSystemDetector extends Detector implements Detector.XmlS
                     SignatureOrSystemDetector.class,
                     Scope.MANIFEST_SCOPE
             ));
-    private static final String SIGNATURE_OR_SYSTEM = "signatureOrSystem"; //$NON-NLS-1$
+    private static final String SIGNATURE_OR_SYSTEM = "signatureOrSystem";
 
     // ---- Implements Detector.XmlScanner ----
 

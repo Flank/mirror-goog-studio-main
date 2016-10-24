@@ -19,7 +19,6 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 
 /**

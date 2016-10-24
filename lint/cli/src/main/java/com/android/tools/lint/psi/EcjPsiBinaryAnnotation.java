@@ -28,7 +28,6 @@ import com.intellij.psi.PsiAnnotationParameterList;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.meta.PsiMetaData;
-
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 

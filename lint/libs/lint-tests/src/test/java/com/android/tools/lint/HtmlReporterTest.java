@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,7 +95,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
             warning2.location = Location.create(warning2.file,
                     new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
 

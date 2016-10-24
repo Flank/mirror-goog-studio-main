@@ -24,11 +24,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiType;
-
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-
-import java.util.List;
 
 class EcjPsiBinaryJavaCodeReferenceElement extends EcjPsiBinaryElement implements
         PsiJavaCodeReferenceElement {

@@ -28,11 +28,9 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.w3c.dom.Element;
 
 /**
  * Check which looks for missing wrong case usage for certain layout tags.
@@ -42,7 +40,7 @@ import java.util.Collection;
 public class WrongCaseDetector extends LayoutDetector {
     /** Using the wrong case for layout tags */
     public static final Issue WRONG_CASE = Issue.create(
-            "WrongCase", //$NON-NLS-1$
+            "WrongCase",
             "Wrong case for view tag",
 
             "Most layout tags, such as <Button>, refer to actual view classes and are therefore " +
@@ -55,7 +53,7 @@ public class WrongCaseDetector extends LayoutDetector {
             new Implementation(
                     WrongCaseDetector.class,
                     Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://developer.android.com/guide/components/fragments.html"); //$NON-NLS-1$
+            .addMoreInfo("http://developer.android.com/guide/components/fragments.html");
 
     /** Constructs a new {@link WrongCaseDetector} */
     public WrongCaseDetector() {
@@ -70,9 +68,9 @@ public class WrongCaseDetector extends LayoutDetector {
     @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
-                "Fragment",      //$NON-NLS-1$
-                "RequestFocus",  //$NON-NLS-1$
-                "Include",       //$NON-NLS-1$
+                "Fragment",
+                "RequestFocus",
+                "Include",
                 "Merge"
         );
     }

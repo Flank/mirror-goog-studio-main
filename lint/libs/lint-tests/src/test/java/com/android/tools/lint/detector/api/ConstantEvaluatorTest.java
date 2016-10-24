@@ -20,19 +20,15 @@ import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLocalVariable;
-
-import junit.framework.TestCase;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
-
+import junit.framework.TestCase;
 import lombok.ast.CompilationUnit;
 import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.VariableDefinitionEntry;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ConstantEvaluatorTest extends TestCase {
@@ -44,7 +40,7 @@ public class ConstantEvaluatorTest extends TestCase {
         assertNotNull(javaFile);
 
         // Find the expression
-        final AtomicReference<PsiExpression> reference = new AtomicReference<PsiExpression>();
+        final AtomicReference<PsiExpression> reference = new AtomicReference<>();
         javaFile.accept(new JavaRecursiveElementVisitor() {
             @Override
             public void visitLocalVariable(PsiLocalVariable variable) {
@@ -102,7 +98,7 @@ public class ConstantEvaluatorTest extends TestCase {
         assertNotNull(unit);
 
         // Find the expression
-        final AtomicReference<Expression> reference = new AtomicReference<Expression>();
+        final AtomicReference<Expression> reference = new AtomicReference<>();
         unit.accept(new ForwardingAstVisitor() {
             @Override
             public boolean visitVariableDefinitionEntry(VariableDefinitionEntry node) {

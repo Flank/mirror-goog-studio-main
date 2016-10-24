@@ -48,15 +48,13 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Maps;
 import com.intellij.psi.PsiClass;
-
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Element;
 
 /**
  * Checks for missing manifest registrations for activities, services etc
@@ -65,7 +63,7 @@ import java.util.Map;
 public class RegistrationDetector extends LayoutDetector implements JavaPsiScanner {
     /** Unregistered activities and services */
     public static final Issue ISSUE = Issue.create(
-            "Registered", //$NON-NLS-1$
+            "Registered",
             "Class is not registered in the manifest",
 
             "Activities, services and content providers should be registered in the " +
@@ -81,7 +79,7 @@ public class RegistrationDetector extends LayoutDetector implements JavaPsiScann
                     RegistrationDetector.class,
                     EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)))
             .addMoreInfo(
-            "http://developer.android.com/guide/topics/manifest/manifest-intro.html"); //$NON-NLS-1$
+            "http://developer.android.com/guide/topics/manifest/manifest-intro.html");
 
     protected Map<String, String> mManifestRegistrations;
 
@@ -129,7 +127,7 @@ public class RegistrationDetector extends LayoutDetector implements JavaPsiScann
     @NonNull
     private static String getFqcn(@NonNull XmlContext context, @NonNull Element element) {
         String className = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-        if (className.startsWith(".")) { //$NON-NLS-1$
+        if (className.startsWith(".")) {
             return context.getProject().getPackage() + className;
         } else if (className.indexOf('.') == -1) {
             // According to the <activity> manifest element documentation, this is not

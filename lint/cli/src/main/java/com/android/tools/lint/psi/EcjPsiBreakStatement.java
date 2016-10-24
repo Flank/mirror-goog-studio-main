@@ -32,7 +32,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiSwitchStatement;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiBreakStatement extends EcjPsiStatement implements PsiBreakStatement {

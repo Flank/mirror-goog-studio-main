@@ -18,7 +18,6 @@ package com.android.tools.lint.client.api;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Issue;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**

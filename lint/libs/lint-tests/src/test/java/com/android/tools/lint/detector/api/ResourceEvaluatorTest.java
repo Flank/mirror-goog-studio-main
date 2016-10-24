@@ -22,14 +22,11 @@ import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLocalVariable;
-
-import junit.framework.TestCase;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicReference;
+import junit.framework.TestCase;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ResourceEvaluatorTest extends TestCase {
@@ -64,7 +61,7 @@ public class ResourceEvaluatorTest extends TestCase {
         assertNotNull(javaFile);
 
         // Find the expression
-        final AtomicReference<PsiExpression> reference = new AtomicReference<PsiExpression>();
+        final AtomicReference<PsiExpression> reference = new AtomicReference<>();
         javaFile.accept(new JavaRecursiveElementVisitor() {
             @Override
             public void visitLocalVariable(PsiLocalVariable variable) {

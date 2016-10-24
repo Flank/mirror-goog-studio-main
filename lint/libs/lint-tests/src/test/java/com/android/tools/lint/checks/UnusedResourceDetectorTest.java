@@ -37,13 +37,11 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.ImmutableMap;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class UnusedResourceDetectorTest extends AbstractCheckTest {

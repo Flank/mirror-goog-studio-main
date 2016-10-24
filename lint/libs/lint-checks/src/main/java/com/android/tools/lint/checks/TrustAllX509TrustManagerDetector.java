@@ -35,16 +35,14 @@ import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiStatement;
-
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
-
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
 
 public class TrustAllX509TrustManagerDetector extends Detector implements JavaPsiScanner,
         ClassScanner {

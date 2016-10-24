@@ -53,12 +53,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,6 +62,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check which looks at the order of buttons in dialogs and makes sure that
@@ -95,16 +93,16 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** Layout text attribute reference to {@code @android:string/ok} */
     private static final String ANDROID_OK_RESOURCE =
-            ANDROID_STRING_PREFIX + "ok"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "ok";
     /** Layout text attribute reference to {@code @android:string/cancel} */
     private static final String ANDROID_CANCEL_RESOURCE =
-            ANDROID_STRING_PREFIX + "cancel"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "cancel";
     /** Layout text attribute reference to {@code @android:string/yes} */
     private static final String ANDROID_YES_RESOURCE =
-            ANDROID_STRING_PREFIX + "yes"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "yes";
     /** Layout text attribute reference to {@code @android:string/no} */
     private static final String ANDROID_NO_RESOURCE =
-            ANDROID_STRING_PREFIX + "no"; //$NON-NLS-1$
+            ANDROID_STRING_PREFIX + "no";
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             ButtonDetector.class,
@@ -112,7 +110,7 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ORDER = Issue.create(
-            "ButtonOrder", //$NON-NLS-1$
+            "ButtonOrder",
             "Button order",
 
             "According to the Android Design Guide,\n" +
@@ -132,11 +130,11 @@ public class ButtonDetector extends ResourceXmlDetector {
             Severity.WARNING,
             IMPLEMENTATION)
             .addMoreInfo(
-                    "http://developer.android.com/design/building-blocks/dialogs.html"); //$NON-NLS-1$
+                    "http://developer.android.com/design/building-blocks/dialogs.html");
 
     /** The main issue discovered by this detector */
     public static final Issue STYLE = Issue.create(
-            "ButtonStyle", //$NON-NLS-1$
+            "ButtonStyle",
             "Button should be borderless",
 
             "Button bars typically use a borderless style for the buttons. Set the " +
@@ -149,11 +147,11 @@ public class ButtonDetector extends ResourceXmlDetector {
             Severity.WARNING,
             IMPLEMENTATION)
             .addMoreInfo(
-                    "http://developer.android.com/design/building-blocks/buttons.html"); //$NON-NLS-1$
+                    "http://developer.android.com/design/building-blocks/buttons.html");
 
     /** The main issue discovered by this detector */
     public static final Issue BACK_BUTTON = Issue.create(
-            "BackButton", //$NON-NLS-1$
+            "BackButton",
             "Back button",
             // TODO: Look for ">" as label suffixes as well
 
@@ -174,11 +172,11 @@ public class ButtonDetector extends ResourceXmlDetector {
             IMPLEMENTATION)
             .setEnabledByDefault(false)
             .addMoreInfo(
-                 "http://developer.android.com/design/patterns/pure-android.html"); //$NON-NLS-1$
+                 "http://developer.android.com/design/patterns/pure-android.html");
 
     /** The main issue discovered by this detector */
     public static final Issue CASE = Issue.create(
-            "ButtonCase", //$NON-NLS-1$
+            "ButtonCase",
             "Cancel/OK dialog button capitalization",
 
             "The standard capitalization for OK/Cancel dialogs is \"OK\" and \"Cancel\". " +
@@ -427,7 +425,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
 
         if (mApplicableResources == null) {
-            mApplicableResources = new HashSet<String>();
+            mApplicableResources = new HashSet<>();
         }
 
         mApplicableResources.add(STRING_PREFIX + name);
@@ -439,7 +437,7 @@ public class ButtonDetector extends ResourceXmlDetector {
 
         List<Element> items = LintUtils.getChildren(parentNode);
         if (mKeyToLabel == null) {
-            mKeyToLabel = new HashMap<String, String>(items.size());
+            mKeyToLabel = new HashMap<>(items.size());
         }
         for (Element item : items) {
             String itemName = item.getAttribute(ATTR_NAME);
@@ -492,7 +490,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                     for (File folder : resFolders) {
                         String folderName = folder.getName();
                         if (folderName.startsWith(SdkConstants.FD_RES_LAYOUT)
-                                && folderName.contains("-v14")) { //$NON-NLS-1$
+                                && folderName.contains("-v14")) {
                             File layout = new File(folder, fileName);
                             if (layout.exists()) {
                                 // Yes, a v14 specific layout is available so this pre-ICS
@@ -509,7 +507,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         List<Element> buttons = LintUtils.getChildren(element.getParentNode());
 
         if (mIgnore == null) {
-            mIgnore = new HashSet<Element>();
+            mIgnore = new HashSet<>();
         }
         for (Element button : buttons) {
             // Mark all the siblings in the ignore list to ensure that we don't
@@ -576,7 +574,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         StringBuilder sb = new StringBuilder(80);
         for (String label : labelList) {
             if (sb.length() > 0) {
-                sb.append(" | "); //$NON-NLS-1$
+                sb.append(" | ");
             }
             sb.append(label);
         }
@@ -586,10 +584,10 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** Returns the ordered list of button labels */
     private List<String> getLabelList(List<Element> views) {
-        List<String> labels = new ArrayList<String>();
+        List<String> labels = new ArrayList<>();
 
         if (mIgnore == null) {
-            mIgnore = new HashSet<Element>();
+            mIgnore = new HashSet<>();
         }
 
         for (Element view : views) {
@@ -651,7 +649,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         Element parent = (Element) parentNode;
 
         String style = parent.getAttribute(ATTR_STYLE);
-        if (style != null && style.contains("buttonBarStyle")) { //$NON-NLS-1$
+        if (style != null && style.contains("buttonBarStyle")) {
             return true;
         }
 

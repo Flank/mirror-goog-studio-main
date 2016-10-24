@@ -16,9 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
-import junit.framework.TestCase;
-
 import java.util.EnumSet;
+import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class ScopeTest extends TestCase {

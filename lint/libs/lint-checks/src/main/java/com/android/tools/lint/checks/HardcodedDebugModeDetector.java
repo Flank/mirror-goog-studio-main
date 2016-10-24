@@ -30,12 +30,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Attr;
 
 /**
  * Checks for hardcoded debug mode in manifest files
@@ -44,7 +42,7 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "HardcodedDebugMode", //$NON-NLS-1$
+            "HardcodedDebugMode",
             "Hardcoded value of `android:debuggable` in the manifest",
 
             "It's best to leave out the `android:debuggable` attribute from the manifest. " +

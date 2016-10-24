@@ -26,10 +26,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Element;
-
 import java.util.Collection;
+import org.w3c.dom.Element;
 
 /**
  * Checks whether a view hierarchy has too many views or has a suspiciously deep hierarchy
@@ -42,7 +40,7 @@ public class TooManyViewsDetector extends LayoutDetector {
 
     /** Issue of having too many views in a single layout */
     public static final Issue TOO_MANY = Issue.create(
-            "TooManyViews", //$NON-NLS-1$
+            "TooManyViews",
             "Layout has too many views",
             "Using too many views in a single layout is bad for " +
             "performance. Consider using compound drawables or other tricks for " +
@@ -57,7 +55,7 @@ public class TooManyViewsDetector extends LayoutDetector {
 
     /** Issue of having too deep hierarchies in layouts */
     public static final Issue TOO_DEEP = Issue.create(
-            "TooDeepLayout", //$NON-NLS-1$
+            "TooDeepLayout",
             "Layout hierarchy is too deep",
             "Layouts with too much nesting is bad for performance. " +
             "Consider using a flatter layout (such as `RelativeLayout` or `GridLayout`)." +
@@ -74,7 +72,7 @@ public class TooManyViewsDetector extends LayoutDetector {
         int maxViewCount = 0;
         int maxDepth = 0;
 
-        String countValue = System.getenv("ANDROID_LINT_MAX_VIEW_COUNT"); //$NON-NLS-1$
+        String countValue = System.getenv("ANDROID_LINT_MAX_VIEW_COUNT");
         if (countValue != null) {
             try {
                 maxViewCount = Integer.parseInt(countValue);
@@ -82,7 +80,7 @@ public class TooManyViewsDetector extends LayoutDetector {
                 // pass: set to default below
             }
         }
-        String depthValue = System.getenv("ANDROID_LINT_MAX_DEPTH"); //$NON-NLS-1$
+        String depthValue = System.getenv("ANDROID_LINT_MAX_DEPTH");
         if (depthValue != null) {
             try {
                 maxDepth = Integer.parseInt(depthValue);

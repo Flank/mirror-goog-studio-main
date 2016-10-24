@@ -20,7 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -39,12 +43,6 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicInterpreter;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 //import org.objectweb.asm.util.Printer;
 
@@ -179,9 +177,9 @@ public class ControlFlowGraph {
         /** The instruction */
         public final AbstractInsnNode instruction;
         /** Any normal successors (e.g. following instruction, or goto or conditional flow) */
-        public final List<Node> successors = new ArrayList<Node>(2);
+        public final List<Node> successors = new ArrayList<>(2);
         /** Any abnormal successors (e.g. the handler to go to following an exception) */
-        public final List<Node> exceptions = new ArrayList<Node>(1);
+        public final List<Node> exceptions = new ArrayList<>(1);
 
         /** A tag for use during depth-first-search iteration of the graph etc */
         public int visit;

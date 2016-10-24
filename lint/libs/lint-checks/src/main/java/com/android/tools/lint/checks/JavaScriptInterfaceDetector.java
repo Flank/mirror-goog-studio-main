@@ -37,7 +37,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ import java.util.List;
 public class JavaScriptInterfaceDetector extends Detector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "JavascriptInterface", //$NON-NLS-1$
+            "JavascriptInterface",
             "Missing @JavascriptInterface on methods",
 
             "As of API 17, you must annotate methods in objects registered with the " +
@@ -61,11 +60,11 @@ public class JavaScriptInterfaceDetector extends Detector implements JavaPsiScan
                     JavaScriptInterfaceDetector.class,
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo(
-            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)"); //$NON-NLS-1$
+            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)");
 
-    private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface"; //$NON-NLS-1$
-    private static final String JAVASCRIPT_INTERFACE_CLS = "android.webkit.JavascriptInterface"; //$NON-NLS-1$
-    private static final String WEB_VIEW_CLS = "android.webkit.WebView"; //$NON-NLS-1$
+    private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface";
+    private static final String JAVASCRIPT_INTERFACE_CLS = "android.webkit.JavascriptInterface";
+    private static final String WEB_VIEW_CLS = "android.webkit.WebView";
 
     /** Constructs a new {@link JavaScriptInterfaceDetector} check */
     public JavaScriptInterfaceDetector() {

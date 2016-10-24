@@ -18,9 +18,6 @@ package com.android.tools.lint.checks;
 
 
 import com.android.annotations.NonNull;
-
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,10 +25,10 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.SAXException;
 
 /**
  * Main entry point for API description.
@@ -91,8 +88,8 @@ public class Api {
     private Api(
             @NonNull Map<String, ApiClass> classes,
             @NonNull Map<String, ApiPackage> packages) {
-        mClasses = new HashMap<String, ApiClass>(classes);
-        mPackages = new HashMap<String, ApiPackage>(packages);
+        mClasses = new HashMap<>(classes);
+        mPackages = new HashMap<>(packages);
     }
 
     ApiClass getClass(String fqcn) {

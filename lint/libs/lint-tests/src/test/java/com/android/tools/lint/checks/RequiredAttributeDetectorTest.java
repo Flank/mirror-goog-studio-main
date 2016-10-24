@@ -17,10 +17,8 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
 public class RequiredAttributeDetectorTest extends AbstractCheckTest {

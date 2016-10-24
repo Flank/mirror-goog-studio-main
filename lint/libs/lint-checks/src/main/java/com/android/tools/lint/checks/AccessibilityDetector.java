@@ -34,13 +34,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Check which looks for accessibility problems like missing content descriptions
@@ -52,7 +50,7 @@ import java.util.Collections;
 public class AccessibilityDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ContentDescription", //$NON-NLS-1$
+            "ContentDescription",
             "Image without `contentDescription`",
             "Non-textual widgets like ImageViews and ImageButtons should use the " +
             "`contentDescription` attribute to specify a textual description of " +
@@ -123,7 +121,7 @@ public class AccessibilityDetector extends LayoutDetector {
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
-            if (attribute.isEmpty() || attribute.equals("TODO")) { //$NON-NLS-1$
+            if (attribute.isEmpty() || attribute.equals("TODO")) {
                 context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
                         "[Accessibility] Empty `contentDescription` attribute on image");
             }

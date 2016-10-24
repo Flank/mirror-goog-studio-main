@@ -32,7 +32,9 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -40,15 +42,11 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Checks for pseudo random number generator initialization issues
  */
 public class SecureRandomGeneratorDetector extends Detector implements ClassScanner {
-    private static final String OWNER_SECURE_RANDOM = "java/security/SecureRandom"; //$NON-NLS-1$
+    private static final String OWNER_SECURE_RANDOM = "java/security/SecureRandom";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String BLOG_URL
@@ -56,7 +54,7 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
 
     /** Whether the random number generator is initialized correctly */
     public static final Issue ISSUE = Issue.create(
-            "TrulyRandom", //$NON-NLS-1$
+            "TrulyRandom",
             "Weak RNG",
             "Key generation, signing, encryption, and random number generation may not " +
             "receive cryptographically strong values due to improper initialization of " +
@@ -78,13 +76,13 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
                     Scope.CLASS_FILE_SCOPE))
             .addMoreInfo(BLOG_URL);
 
-    private static final String WRAP = "wrap";                        //$NON-NLS-1$
-    private static final String UNWRAP = "unwrap";                    //$NON-NLS-1$
-    private static final String INIT = "init";                        //$NON-NLS-1$
-    private static final String INIT_SIGN = "initSign";               //$NON-NLS-1$
-    private static final String GET_INSTANCE = "getInstance";         //$NON-NLS-1$
-    private static final String FOR_NAME = "forName";                 //$NON-NLS-1$
-    private static final String JAVA_LANG_CLASS = "java/lang/Class";  //$NON-NLS-1$
+    private static final String WRAP = "wrap";
+    private static final String UNWRAP = "unwrap";
+    private static final String INIT = "init";
+    private static final String INIT_SIGN = "initSign";
+    private static final String GET_INSTANCE = "getInstance";
+    private static final String FOR_NAME = "forName";
+    private static final String JAVA_LANG_CLASS = "java/lang/Class";
     private static final String JAVAX_CRYPTO_KEY_GENERATOR = "javax/crypto/KeyGenerator";
     private static final String JAVAX_CRYPTO_KEY_AGREEMENT = "javax/crypto/KeyAgreement";
     private static final String JAVA_SECURITY_KEY_PAIR_GENERATOR =
