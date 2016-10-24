@@ -156,7 +156,8 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
       name = name + ".map",
       srcs = srcs,
       maps = maps,
-      outs = outs)
+      outs = outs
+    )
 
   native.filegroup(
     name = name,

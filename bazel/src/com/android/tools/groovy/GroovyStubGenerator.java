@@ -16,7 +16,7 @@
 
 package com.android.tools.groovy;
 
-import com.android.tools.utils.JarGenerator;
+import com.android.tools.utils.Zipper;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.tools.javac.JavaStubCompilationUnit;
 
@@ -80,6 +80,6 @@ public class GroovyStubGenerator {
         }
         cu.compile();
 
-        new JarGenerator().directoryToJar(tmp, file);
+        new Zipper().directoryToZip(tmp, file);
     }
 }

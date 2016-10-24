@@ -62,7 +62,7 @@ public abstract class JarOutputCompiler {
         if (!compile(files, classPath, tmp)) {
             return 1;
         }
-        new JarGenerator().directoryToJar(tmp, out);
+        new Zipper().directoryToZip(tmp, out);
         return 0;
     }
 
