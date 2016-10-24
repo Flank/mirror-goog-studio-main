@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
+import java.io.File;
 
 /**
  * Lint configuration for an Android project such as which specific rules to include,
@@ -93,6 +94,14 @@ public abstract class Configuration {
             @NonNull String message);
 
     /**
+     * Marks the given issue and file combination as being ignored.
+     *
+     * @param issue the issue to be ignored in the given file
+     * @param file the file to ignore the issue in
+     */
+    public abstract void ignore(@NonNull Issue issue, @NonNull File file);
+
+    /**
      * Sets the severity to be used for this issue.
      *
      * @param issue the issue to set the severity for
@@ -121,4 +130,27 @@ public abstract class Configuration {
      */
     public void finishBulkEditing() {
     }
+
+    /**
+     * Returns the baseline file to use, if any. The baseline file is
+     * an XML report previously created by lint, and any warnings and
+     * errors listed in that report will be ignored from analysis.
+     * <p>
+     * If you have a project with a large number of existing warnings,
+     * this lets you set a baseline and only see newly introduced warnings
+     * until you get a chance to go back and address the "technical debt"
+     * of the earlier warnings.
+     *
+     * @return the baseline file, if any
+     */
+    @Nullable
+    public abstract File getBaselineFile();
+
+    /**
+     * Sets the baseline file, if any.
+     *
+     * @see #getBaselineFile()
+     * @param baselineFile
+     */
+    public abstract void setBaselineFile(@Nullable File baselineFile);
 }

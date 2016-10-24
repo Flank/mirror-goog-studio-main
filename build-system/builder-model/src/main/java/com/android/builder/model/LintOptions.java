@@ -84,6 +84,8 @@ import java.util.Set;
  *          ignore 'TypographyQuotes'
  *          // Set the severity of the given issues to informational
  *          informational 'StopShip'
+ *          // Use (or create) a baseline file for issues that should not be reported
+ *          baseline file("lint-baseline.xml")
  *     }
  * }
  * </pre>
@@ -189,6 +191,21 @@ public interface LintOptions {
      * If issues with severity "fatal" are found, the release build is aborted.
      */
     boolean isCheckReleaseBuilds();
+
+    /**
+     * Returns the baseline file to use, if any. The baseline file is
+     * an XML report previously created by lint, and any warnings and
+     * errors listed in that report will be ignored from analysis.
+     * <p>
+     * If you have a project with a large number of existing warnings,
+     * this lets you set a baseline and only see newly introduced warnings
+     * until you get a chance to go back and address the "technical debt"
+     * of the earlier warnings.
+     *
+     * @return the baseline file, if any
+     */
+    @Nullable
+    File getBaselineFile();
 
     /**
      * An optional map of severity overrides. The map maps from issue id's to the corresponding

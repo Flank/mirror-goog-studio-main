@@ -23,7 +23,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
@@ -57,6 +56,7 @@ public class LintCliFlags {
     private List<File> mClasses;
     private List<File> mLibraries;
     private List<File> mResources;
+    private File mBaselineFile;
 
     private File mDefaultConfiguration;
     private boolean mShowAll;
@@ -67,6 +67,7 @@ public class LintCliFlags {
     public static final int ERRNO_EXISTS = 3;
     public static final int ERRNO_HELP = 4;
     public static final int ERRNO_INVALID_ARGS = 5;
+    public static final int ERRNO_CREATED_BASELINE = 6;
 
     /**
      * Returns the set of issue id's to suppress. Callers are allowed to modify this collection.
@@ -394,5 +395,32 @@ public class LintCliFlags {
      */
     public void setExplainIssues(boolean explainText) {
         mExplainIssues = explainText;
+    }
+
+    /**
+     * Returns the baseline file to use, if any. The baseline file is
+     * an XML report previously created by lint, and any warnings and
+     * errors listed in that report will be ignored from analysis.
+     * <p>
+     * If you have a project with a large number of existing warnings,
+     * this lets you set a baseline and only see newly introduced warnings
+     * until you get a chance to go back and address the "technical debt"
+     * of the earlier warnings.
+     *
+     * @return the baseline file, if any
+     */
+    @Nullable
+    public File getBaselineFile() {
+        return mBaselineFile;
+    }
+
+    /**
+     * Sets the baseline file, if any.
+     *
+     * @see #getBaselineFile()
+     * @param baselineFile
+     */
+    public void setBaselineFile(@Nullable File baselineFile) {
+        mBaselineFile = baselineFile;
     }
 }

@@ -63,6 +63,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -79,20 +80,6 @@ import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -115,7 +102,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import lombok.ast.Annotation;
 import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationMethodDeclaration;
@@ -131,6 +117,18 @@ import lombok.ast.StringLiteral;
 import lombok.ast.TypeDeclaration;
 import lombok.ast.TypeReference;
 import lombok.ast.VariableDefinition;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Analyzes Android projects and files
@@ -167,6 +165,7 @@ public class LintDriver {
     private Map<Object,Object> mProperties;
     /** Whether we need to look for legacy (old Lombok-based Java API) detectors */
     private boolean mRunCompatChecks = true;
+    private LintBaseline mBaseline;
 
     /**
      * Creates a new {@link LintDriver}
@@ -261,6 +260,15 @@ public class LintDriver {
         }
 
         return null;
+    }
+
+    @Nullable
+    public LintBaseline getBaseline() {
+        return mBaseline;
+    }
+
+    public void setBaseline(@Nullable LintBaseline baseline) {
+        mBaseline = baseline;
     }
 
     /**
@@ -435,6 +443,16 @@ public class LintDriver {
             mScope = Scope.infer(projects);
         }
 
+        // See if the lint.xml file specifies a baseline and we're not in incremental mode
+        if (mBaseline == null && mScope.size() > 2) {
+            Project lastProject = Iterables.getLast(projects);
+            Configuration mainConfiguration = mClient.getConfiguration(lastProject, this);
+            File baselineFile = mainConfiguration.getBaselineFile();
+            if (baselineFile != null) {
+                mBaseline = new LintBaseline(mClient, baselineFile);
+            }
+        }
+
         fireEvent(EventType.STARTING, null);
 
         for (Project project : projects) {
@@ -456,6 +474,37 @@ public class LintDriver {
             }
 
             runExtraPhases(project, main);
+        }
+
+        if (mBaseline != null) {
+            Project lastProject = Iterables.getLast(projects);
+            int baselineErrorCount = mBaseline.getFoundErrorCount();
+            int baselineWarningCount = mBaseline.getFoundWarningCount();
+            int fixedCount = mBaseline.getFixedCount();
+
+            if (baselineErrorCount > 0 || baselineWarningCount > 0) {
+                File baselineFile = mBaseline.getFile();
+                String message = String.format("%1$s were filtered out because "
+                                + "they were listed in the baseline file, %2$s\n",
+                        LintUtils.describeCounts(baselineErrorCount, baselineWarningCount, false),
+                        baselineFile);
+                Project main = mRequest.getMainProject(lastProject);
+                mClient.report(new Context(this, main, main, baselineFile),
+                        IssueRegistry.BASELINE,
+                        mClient.getConfiguration(main, this).getSeverity(IssueRegistry.BASELINE),
+                        Location.create(baselineFile), message, TextFormat.RAW);
+            }
+            if (fixedCount > 0) {
+                File baselineFile = mBaseline.getFile();
+                String message = String.format("%1$d errors/warnings were listed in the "
+                        + "baseline file (%2$s) but not found in the project; perhaps they have "
+                        + "been fixed?\n", fixedCount, baselineFile);
+                Project main = mRequest.getMainProject(lastProject);
+                mClient.report(new Context(this, main, main, baselineFile),
+                        IssueRegistry.BASELINE,
+                        mClient.getConfiguration(main, this).getSeverity(IssueRegistry.BASELINE),
+                        Location.create(baselineFile), message, TextFormat.RAW);
+            }
         }
 
         fireEvent(mCanceled ? EventType.CANCELED : EventType.COMPLETED, null);
@@ -1669,7 +1718,7 @@ public class LintDriver {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(".java")) { //$NON-NLS-1$
+                if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
                     result.add(file);
                 } else if (file.isDirectory()) {
                     gatherJavaFiles(file, result);
@@ -1962,6 +2011,13 @@ public class LintDriver {
 
             if (severity == Severity.IGNORE) {
                 return;
+            }
+
+            if (mBaseline != null) {
+                boolean filtered = mBaseline.findAndMark(issue, location, message, severity);
+                if (filtered) {
+                    return;
+                }
             }
 
             mDelegate.report(context, issue, severity, location, message, format);

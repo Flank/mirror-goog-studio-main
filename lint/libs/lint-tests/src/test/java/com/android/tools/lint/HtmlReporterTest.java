@@ -67,7 +67,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                 }
             };
 
-            HtmlReporter reporter = new HtmlReporter(client, reportFile);
+            HtmlReporter reporter = new HtmlReporter(client, reportFile, new LintCliFlags());
             File res = new File(projectDir, "res");
             File layout = new File(res, "layout");
             File main = new File(layout, "main.xml");
@@ -100,7 +100,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(0, 2, warnings);
+            reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(reportFile, Charsets.UTF_8);
 
@@ -318,7 +318,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                     + "<h1>Lint Report</h1>\n"
                     + "<div class=\"titleSeparator\"></div>\n"
                     + "Check performed at $DATE.<br/>\n"
-                    + "0 errors and 2 warnings found:<br/><br/>\n"
+                    + "2 warnings found:<br/><br/>\n"
                     + "<table class=\"overview\">\n"
                     + "<tr><td></td><td class=\"categoryColumn\"><a href=\"#Correctness\">Correctness</a>\n"
                     + "</td></tr>\n"

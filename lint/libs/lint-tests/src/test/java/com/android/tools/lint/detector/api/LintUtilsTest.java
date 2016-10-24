@@ -43,6 +43,7 @@ import static com.android.tools.lint.detector.api.LintUtils.getPrimitiveType;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 import static com.android.utils.SdkUtils.escapePropertyValue;
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separatorChar;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -60,6 +61,7 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.collect.Iterables;
+import com.google.common.truth.Truth;
 import com.intellij.psi.PsiJavaFile;
 
 import junit.framework.TestCase;
@@ -94,6 +96,20 @@ public class LintUtilsTest extends TestCase {
                         Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1));
         assertEquals("foo, bar, baz",
                 LintUtils.formatList(Arrays.asList("foo", "bar", "baz"), 0));
+    }
+
+    public void testDescribeCounts() throws Exception {
+        assertThat(LintUtils.describeCounts(0, 0, true)).isEqualTo("No errors or warnings");
+        assertThat(LintUtils.describeCounts(0, 1, true)).isEqualTo("1 warning");
+        assertThat(LintUtils.describeCounts(1, 0, true)).isEqualTo("1 error");
+        assertThat(LintUtils.describeCounts(0, 2, true)).isEqualTo("2 warnings");
+        assertThat(LintUtils.describeCounts(2, 0, true)).isEqualTo("2 errors");
+        assertThat(LintUtils.describeCounts(2, 1, false)).isEqualTo("2 errors and 1 warning");
+        assertThat(LintUtils.describeCounts(1, 2, false)).isEqualTo("1 error and 2 warnings");
+        assertThat(LintUtils.describeCounts(5, 4, false)).isEqualTo("5 errors and 4 warnings");
+        assertThat(LintUtils.describeCounts(2, 1, true)).isEqualTo("2 errors, 1 warning");
+        assertThat(LintUtils.describeCounts(1, 2, true)).isEqualTo("1 error, 2 warnings");
+        assertThat(LintUtils.describeCounts(5, 4, true)).isEqualTo("5 errors, 4 warnings");
     }
 
     public void testEndsWith() throws Exception {

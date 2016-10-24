@@ -74,20 +74,18 @@ public class DefaultConfiguration extends Configuration {
     public static final String CONFIG_FILE_NAME = "lint.xml"; //$NON-NLS-1$
 
     // Lint XML File
-    @NonNull
+
+    /** The root tag in a configuration file */
+    public static final String TAG_LINT = "lint"; //$NON-NLS-1$
+
     private static final String TAG_ISSUE = "issue"; //$NON-NLS-1$
-    @NonNull
     private static final String ATTR_ID = "id"; //$NON-NLS-1$
-    @NonNull
     private static final String ATTR_SEVERITY = "severity"; //$NON-NLS-1$
-    @NonNull
     private static final String ATTR_PATH = "path"; //$NON-NLS-1$
-    @NonNull
     private static final String ATTR_REGEXP = "regexp"; //$NON-NLS-1$
-    @NonNull
     private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
-    @NonNull
     private static final String VALUE_ALL = "all"; //$NON-NLS-1$
+    private static final String ATTR_BASELINE = "baseline"; //$NON-NLS-1$
 
     private static final String RES_PATH_START = "res/"; //$NON-NLS-1$
     private static final int RES_PATH_START_LEN = RES_PATH_START.length();
@@ -96,6 +94,7 @@ public class DefaultConfiguration extends Configuration {
     private final Project mProject;
     private final File mConfigFile;
     private boolean mBulkEditing;
+    private File mBaselineFile;
 
     /** Map from id to list of project-relative paths for suppressed warnings */
     private Map<String, List<String>> mSuppressed;
@@ -305,15 +304,23 @@ public class DefaultConfiguration extends Configuration {
     }
 
     private void readConfig() {
-        mSuppressed = new HashMap<String, List<String>>();
-        mSeverity = new HashMap<String, Severity>();
+        mSuppressed = new HashMap<>();
+        mSeverity = new HashMap<>();
 
         if (!mConfigFile.exists()) {
             return;
         }
 
         try {
+            // TODO: Switch to a pull parser!
             Document document = XmlUtils.parseUtfXmlFile(mConfigFile, false);
+            String baseline = document.getDocumentElement().getAttribute(ATTR_BASELINE);
+            if (!baseline.isEmpty()) {
+                mBaselineFile = new File(baseline.replace('/', File.separatorChar));
+                if (!mBaselineFile.isAbsolute()) {
+                    mBaselineFile = new File(mProject.getDir(), mBaselineFile.getPath());
+                }
+            }
             NodeList issues = document.getElementsByTagName(TAG_ISSUE);
             Splitter splitter = Splitter.on(',').trimResults().omitEmptyStrings();
             for (int i = 0, count = issues.getLength(); i < count; i++) {
@@ -379,7 +386,7 @@ public class DefaultConfiguration extends Configuration {
                                     for (String id : ids) {
                                         List<String> paths = mSuppressed.get(id);
                                         if (paths == null) {
-                                            paths = new ArrayList<String>(n / 2 + 1);
+                                            paths = new ArrayList<>(n / 2 + 1);
                                             mSuppressed.put(id, paths);
                                         }
                                         paths.add(path);
@@ -446,13 +453,13 @@ public class DefaultConfiguration extends Configuration {
             @NonNull String regexp, boolean silent) {
         try {
             if (mRegexps == null) {
-                mRegexps = new HashMap<String, List<Pattern>>();
+                mRegexps = new HashMap<>();
             }
             Pattern pattern = Pattern.compile(regexp);
             for (String id : ids) {
                 List<Pattern> paths = mRegexps.get(id);
                 if (paths == null) {
-                    paths = new ArrayList<Pattern>(n / 2 + 1);
+                    paths = new ArrayList<>(n / 2 + 1);
                     mRegexps.put(id, paths);
                 }
                 paths.add(pattern);
@@ -474,22 +481,31 @@ public class DefaultConfiguration extends Configuration {
 
             Writer writer = new BufferedWriter(new FileWriter(file));
             writer.write(
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +     //$NON-NLS-1$
-                    "<lint>\n");                                         //$NON-NLS-1$
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<");
+            writer.write(TAG_LINT);
+
+            if (mBaselineFile != null) {
+                writer.write(" baseline=\"");
+                String path = mProject != null ?
+                        mProject.getRelativePath(mBaselineFile) : mBaselineFile.getPath();
+                writeAttribute(writer, ATTR_BASELINE, path.replace('\\', '/'));
+            }
+            writer.write(">\n");
 
             if (!mSuppressed.isEmpty() || !mSeverity.isEmpty()) {
                 // Process the maps in a stable sorted order such that if the
                 // files are checked into version control with the project,
                 // there are no random diffs just because hashing algorithms
                 // differ:
-                Set<String> idSet = new HashSet<String>();
+                Set<String> idSet = new HashSet<>();
                 for (String id : mSuppressed.keySet()) {
                     idSet.add(id);
                 }
                 for (String id : mSeverity.keySet()) {
                     idSet.add(id);
                 }
-                List<String> ids = new ArrayList<String>(idSet);
+                List<String> ids = new ArrayList<>(idSet);
                 Collections.sort(ids);
 
                 for (String id : ids) {
@@ -581,12 +597,7 @@ public class DefaultConfiguration extends Configuration {
         }
     }
 
-    /**
-     * Marks the given issue and file combination as being ignored.
-     *
-     * @param issue the issue to be ignored in the given file
-     * @param file the file to ignore the issue in
-     */
+    @Override
     public void ignore(@NonNull Issue issue, @NonNull File file) {
         ensureInitialized();
 
@@ -594,7 +605,7 @@ public class DefaultConfiguration extends Configuration {
 
         List<String> paths = mSuppressed.get(issue.getId());
         if (paths == null) {
-            paths = new ArrayList<String>();
+            paths = new ArrayList<>();
             mSuppressed.put(issue.getId(), paths);
         }
         paths.add(path);
@@ -637,5 +648,21 @@ public class DefaultConfiguration extends Configuration {
     @VisibleForTesting
     File getConfigFile() {
         return mConfigFile;
+    }
+
+    @Override
+    @Nullable
+    public File getBaselineFile() {
+        if (mBaselineFile != null) {
+            if (mProject != null && !mBaselineFile.isAbsolute()) {
+                return new File(mProject.getDir(), mBaselineFile.getPath());
+            }
+        }
+        return mBaselineFile;
+    }
+
+    @Override
+    public void setBaselineFile(@Nullable File baselineFile) {
+        mBaselineFile = baselineFile;
     }
 }
