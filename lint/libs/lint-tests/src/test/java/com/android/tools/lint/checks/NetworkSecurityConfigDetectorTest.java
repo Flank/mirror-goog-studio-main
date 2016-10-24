@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 

@@ -22,7 +22,6 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;

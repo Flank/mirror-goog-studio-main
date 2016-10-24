@@ -32,7 +32,6 @@ import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiReferenceList;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 class EcjPsiAnonymousClass extends EcjPsiClass implements PsiAnonymousClass {

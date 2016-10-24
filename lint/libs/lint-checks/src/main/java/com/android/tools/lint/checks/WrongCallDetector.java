@@ -39,7 +39,6 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiSuperExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +48,7 @@ import java.util.List;
 public class WrongCallDetector extends Detector implements JavaPsiScanner {
     /** Calling the wrong method */
     public static final Issue ISSUE = Issue.create(
-            "WrongCall", //$NON-NLS-1$
+            "WrongCall",
             "Using wrong draw/layout method",
 
             "Custom views typically need to call `measure()` on their children, not `onMeasure`. " +

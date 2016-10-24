@@ -24,7 +24,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiLabeledStatement;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
 
 class EcjPsiLabeledStatement extends EcjPsiStatement implements PsiLabeledStatement {

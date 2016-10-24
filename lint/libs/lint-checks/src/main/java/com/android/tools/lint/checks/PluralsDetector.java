@@ -32,14 +32,12 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for issues with quantity strings
@@ -54,7 +52,7 @@ public class PluralsDetector extends ResourceXmlDetector {
 
     /** This locale should define a quantity string for the given quantity */
     public static final Issue MISSING = Issue.create(
-            "MissingQuantity", //$NON-NLS-1$
+            "MissingQuantity",
             "Missing quantity translation",
             "Different languages have different rules for grammatical agreement with " +
             "quantity. In English, for example, the quantity 1 is a special case. " +
@@ -76,7 +74,7 @@ public class PluralsDetector extends ResourceXmlDetector {
 
     /** This translation is not needed in this locale */
     public static final Issue EXTRA = Issue.create(
-            "UnusedQuantity", //$NON-NLS-1$
+            "UnusedQuantity",
             "Unused quantity translations",
             "Android defines a number of different quantity strings, such as `zero`, `one`, " +
             "`few` and `many`. However, many languages do not distinguish grammatically " +
@@ -97,7 +95,7 @@ public class PluralsDetector extends ResourceXmlDetector {
 
     /** This plural does not use the quantity value */
     public static final Issue IMPLIED_QUANTITY = Issue.create(
-            "ImpliedQuantity", //$NON-NLS-1$
+            "ImpliedQuantity",
             "Implied Quantities",
 
             "Plural strings should generally include a `%s` or `%d` formatting argument. " +

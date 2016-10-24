@@ -25,10 +25,8 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiResourceList;
 import com.intellij.psi.PsiTryStatement;
-
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-
 import java.util.ArrayList;
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiTryStatement extends EcjPsiStatement implements PsiTryStatement {
 
@@ -113,7 +111,7 @@ class EcjPsiTryStatement extends EcjPsiStatement implements PsiTryStatement {
         }
         boolean lastIncomplete = catchSections[catchSections.length - 1].getCatchBlock() == null;
         int limit = lastIncomplete ? catchSections.length - 1 : catchSections.length;
-        ArrayList<PsiParameter> parameters = new ArrayList<PsiParameter>();
+        ArrayList<PsiParameter> parameters = new ArrayList<>();
         for (int i = 0; i < limit; i++) {
             PsiParameter parameter = catchSections[i].getParameter();
             if (parameter != null) {

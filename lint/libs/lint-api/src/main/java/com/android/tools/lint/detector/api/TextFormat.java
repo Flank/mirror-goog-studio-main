@@ -265,7 +265,7 @@ public enum TextFormat {
         return s;
     }
 
-    private static final String HTTP_PREFIX = "http://"; //$NON-NLS-1$
+    private static final String HTTP_PREFIX = "http://";
 
     /** Converts to this output format from the given raw-format text */
     @NonNull
@@ -292,7 +292,7 @@ public enum TextFormat {
                             appendEscapedText(sb, text, html, flushIndex, i, escapeUnicode);
                         }
                         if (html) {
-                            String tag = c == '*' ? "b" : "code"; //$NON-NLS-1$ //$NON-NLS-2$
+                            String tag = c == '*' ? "b" : "code";
                             sb.append('<').append(tag).append('>');
                             appendEscapedText(sb, text, html, i + 1, end, escapeUnicode);
                             sb.append('<').append('/').append(tag).append('>');
@@ -324,11 +324,11 @@ public enum TextFormat {
                     }
 
                     String url = text.substring(i, end);
-                    sb.append("<a href=\"");        //$NON-NLS-1$
+                    sb.append("<a href=\"");
                     sb.append(url);
                     sb.append('"').append('>');
                     sb.append(url);
-                    sb.append("</a>");              //$NON-NLS-1$
+                    sb.append("</a>");
 
                     flushIndex = end;
                     i = flushIndex - 1; // -1: account for the i++ in the loop
@@ -378,18 +378,18 @@ public enum TextFormat {
             for (int i = start; i < end; i++) {
                 char c = text.charAt(i);
                 if (c == '<') {
-                    sb.append("&lt;");                                   //$NON-NLS-1$
+                    sb.append("&lt;");
                 } else if (c == '&') {
-                    sb.append("&amp;");                                  //$NON-NLS-1$
+                    sb.append("&amp;");
                 } else if (c == '\n') {
                     sb.append("<br/>\n");
                 } else {
                     if (c > 255 && escapeUnicode) {
-                        sb.append("&#");                                 //$NON-NLS-1$
+                        sb.append("&#");
                         sb.append(Integer.toString(c));
                         sb.append(';');
                     } else if (c == '\u00a0') {
-                        sb.append("&nbsp;");                             //$NON-NLS-1$
+                        sb.append("&nbsp;");
                     } else {
                         sb.append(c);
                     }

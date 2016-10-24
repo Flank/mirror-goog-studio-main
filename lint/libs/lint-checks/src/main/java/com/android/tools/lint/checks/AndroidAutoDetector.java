@@ -45,14 +45,12 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Detector for Android Auto issues.
@@ -70,7 +68,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
 
     /** Invalid attribute for uses tag.*/
     public static final Issue INVALID_USES_TAG_ISSUE = Issue.create(
-            "InvalidUsesTagAttribute", //$NON-NLS-1$
+            "InvalidUsesTagAttribute",
             "Invalid `name` attribute for `uses` element.",
             "The <uses> element in `<automotiveApp>` should contain a " +
             "valid value for the `name` attribute.\n" +
@@ -83,7 +81,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
 
     /** Missing MediaBrowserService action */
     public static final Issue MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE = Issue.create(
-            "MissingMediaBrowserServiceIntentFilter", //$NON-NLS-1$
+            "MissingMediaBrowserServiceIntentFilter",
             "Missing intent-filter with action `android.media.browse.MediaBrowserService`.",
             "An Automotive Media App requires an exported service that extends " +
             "`android.service.media.MediaBrowserService` with an " +
@@ -102,7 +100,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
 
     /** Missing intent-filter for Media Search. */
     public static final Issue MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH = Issue.create(
-            "MissingIntentFilterForMediaSearch", //$NON-NLS-1$
+            "MissingIntentFilterForMediaSearch",
             "Missing intent-filter with action `android.media.action.MEDIA_PLAY_FROM_SEARCH`",
             "To support voice searches on Android Auto, you should also register an " +
             "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`" +
@@ -119,7 +117,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
 
     /** Missing implementation of MediaSession.Callback#onPlayFromSearch*/
     public static final Issue MISSING_ON_PLAY_FROM_SEARCH = Issue.create(
-            "MissingOnPlayFromSearch", //$NON-NLS-1$
+            "MissingOnPlayFromSearch",
             "Missing `onPlayFromSearch`.",
             "To support voice searches on Android Auto, in addition to adding an " +
             "`intent-filter` for the action `onPlayFromSearch`," +
@@ -132,23 +130,23 @@ public class AndroidAutoDetector extends ResourceXmlDetector
             "https://developer.android.com/training/auto/audio/index.html#support_voice");
 
     private static final String CAR_APPLICATION_METADATA_NAME =
-            "com.google.android.gms.car.application"; //$NON-NLS-1$
-    private static final String VAL_NAME_MEDIA = "media"; //$NON-NLS-1$
-    private static final String VAL_NAME_NOTIFICATION = "notification"; //$NON-NLS-1$
-    private static final String TAG_AUTOMOTIVE_APP = "automotiveApp"; //$NON-NLS-1$
-    private static final String ATTR_RESOURCE = "resource"; //$NON-NLS-1$
-    private static final String TAG_USES = "uses"; //$NON-NLS-1$
+            "com.google.android.gms.car.application";
+    private static final String VAL_NAME_MEDIA = "media";
+    private static final String VAL_NAME_NOTIFICATION = "notification";
+    private static final String TAG_AUTOMOTIVE_APP = "automotiveApp";
+    private static final String ATTR_RESOURCE = "resource";
+    private static final String TAG_USES = "uses";
     private static final String ACTION_MEDIA_BROWSER_SERVICE =
-            "android.media.browse.MediaBrowserService"; //$NON-NLS-1$
+            "android.media.browse.MediaBrowserService";
     private static final String ACTION_MEDIA_PLAY_FROM_SEARCH =
-            "android.media.action.MEDIA_PLAY_FROM_SEARCH"; //$NON-NLS-1$
+            "android.media.action.MEDIA_PLAY_FROM_SEARCH";
     private static final String CLASS_MEDIA_SESSION_CALLBACK =
-            "android.media.session.MediaSession.Callback"; //$NON-NLS-1$
+            "android.media.session.MediaSession.Callback";
     private static final String CLASS_V4MEDIA_SESSION_COMPAT_CALLBACK =
-            "android.support.v4.media.session.MediaSessionCompat.Callback"; //$NON-NLS-1$
+            "android.support.v4.media.session.MediaSessionCompat.Callback";
     private static final String METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH =
-            "onPlayFromSearch"; //$NON-NLS-1$
-    private static final String BUNDLE_ARG = "android.os.Bundle"; //$NON-NLS-1$
+            "onPlayFromSearch";
+    private static final String BUNDLE_ARG = "android.os.Bundle";
 
     /**
      * Indicates whether we identified that the current app is an automotive app and
@@ -228,11 +226,11 @@ public class AndroidAutoDetector extends ResourceXmlDetector
         if (CAR_APPLICATION_METADATA_NAME.equals(name)) {
             String autoFileName = element.getAttributeNS(ANDROID_URI, ATTR_RESOURCE);
 
-            if (autoFileName != null && autoFileName.startsWith("@xml/")) { //$NON-NLS-1$
+            if (autoFileName != null && autoFileName.startsWith("@xml/")) {
                 // Store the fact that we need to check all the auto issues.
                 mDoAutomotiveAppCheck = true;
                 mAutomotiveResourceFileName =
-                        autoFileName.substring("@xml/".length()) + DOT_XML; //$NON-NLS-1$
+                        autoFileName.substring("@xml/".length()) + DOT_XML;
             }
         }
     }

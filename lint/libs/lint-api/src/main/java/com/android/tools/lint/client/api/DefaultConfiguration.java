@@ -31,14 +31,6 @@ import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXParseException;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -58,6 +50,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 /**
  * Default implementation of a {@link Configuration} which reads and writes
@@ -71,23 +69,23 @@ public class DefaultConfiguration extends Configuration {
 
     private final LintClient mClient;
     /** Default name of the configuration file */
-    public static final String CONFIG_FILE_NAME = "lint.xml"; //$NON-NLS-1$
+    public static final String CONFIG_FILE_NAME = "lint.xml";
 
     // Lint XML File
 
     /** The root tag in a configuration file */
-    public static final String TAG_LINT = "lint"; //$NON-NLS-1$
+    public static final String TAG_LINT = "lint";
 
-    private static final String TAG_ISSUE = "issue"; //$NON-NLS-1$
-    private static final String ATTR_ID = "id"; //$NON-NLS-1$
-    private static final String ATTR_SEVERITY = "severity"; //$NON-NLS-1$
-    private static final String ATTR_PATH = "path"; //$NON-NLS-1$
-    private static final String ATTR_REGEXP = "regexp"; //$NON-NLS-1$
-    private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
-    private static final String VALUE_ALL = "all"; //$NON-NLS-1$
-    private static final String ATTR_BASELINE = "baseline"; //$NON-NLS-1$
+    private static final String TAG_ISSUE = "issue";
+    private static final String ATTR_ID = "id";
+    private static final String ATTR_SEVERITY = "severity";
+    private static final String ATTR_PATH = "path";
+    private static final String ATTR_REGEXP = "regexp";
+    private static final String TAG_IGNORE = "ignore";
+    private static final String VALUE_ALL = "all";
+    private static final String ATTR_BASELINE = "baseline";
 
-    private static final String RES_PATH_START = "res/"; //$NON-NLS-1$
+    private static final String RES_PATH_START = "res/";
     private static final int RES_PATH_START_LEN = RES_PATH_START.length();
 
     private final Configuration mParent;
@@ -477,7 +475,7 @@ public class DefaultConfiguration extends Configuration {
             // Write the contents to a new file first such that we don't clobber the
             // existing file if some I/O error occurs.
             File file = new File(mConfigFile.getParentFile(),
-                    mConfigFile.getName() + ".new"); //$NON-NLS-1$
+                    mConfigFile.getName() + ".new");
 
             Writer writer = new BufferedWriter(new FileWriter(file));
             writer.write(
@@ -509,7 +507,7 @@ public class DefaultConfiguration extends Configuration {
                 Collections.sort(ids);
 
                 for (String id : ids) {
-                    writer.write("    <");                               //$NON-NLS-1$
+                    writer.write("    <");
                     writer.write(TAG_ISSUE);
                     writeAttribute(writer, ATTR_ID, id);
                     Severity severity = mSeverity.get(id);
@@ -528,37 +526,37 @@ public class DefaultConfiguration extends Configuration {
                         // by ignore(...)
                         if (paths != null) {
                             for (String path : paths) {
-                                writer.write("        <");                   //$NON-NLS-1$
+                                writer.write("        <");
                                 writer.write(TAG_IGNORE);
                                 writeAttribute(writer, ATTR_PATH, path.replace('\\', '/'));
-                                writer.write(" />\n");                       //$NON-NLS-1$
+                                writer.write(" />\n");
                             }
                         }
                         if (regexps != null) {
                             for (Pattern regexp : regexps) {
-                                writer.write("        <");                   //$NON-NLS-1$
+                                writer.write("        <");
                                 writer.write(TAG_IGNORE);
                                 writeAttribute(writer, ATTR_REGEXP, regexp.pattern());
-                                writer.write(" />\n");                       //$NON-NLS-1$
+                                writer.write(" />\n");
                             }
                         }
-                        writer.write("    </");                          //$NON-NLS-1$
+                        writer.write("    </");
                         writer.write(TAG_ISSUE);
                         writer.write('>');
                         writer.write('\n');
                     } else {
-                        writer.write(" />\n");                           //$NON-NLS-1$
+                        writer.write(" />\n");
                     }
                 }
             }
 
-            writer.write("</lint>\n");                                     //$NON-NLS-1$
+            writer.write("</lint>\n");
             writer.close();
 
             // Move file into place: move current version to lint.xml~ (removing the old ~ file
             // if it exists), then move the new version to lint.xml.
             File oldFile = new File(mConfigFile.getParentFile(),
-                    mConfigFile.getName() + '~'); //$NON-NLS-1$
+                    mConfigFile.getName() + '~');
             if (oldFile.exists()) {
                 oldFile.delete();
             }

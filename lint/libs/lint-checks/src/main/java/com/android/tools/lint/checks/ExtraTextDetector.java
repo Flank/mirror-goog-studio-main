@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -44,7 +43,7 @@ public class ExtraTextDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ExtraText", //$NON-NLS-1$
+            "ExtraText",
             "Extraneous text in resource files",
 
             "Layout resource files should only contain elements and attributes. Any XML " +

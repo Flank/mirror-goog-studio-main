@@ -32,10 +32,8 @@ import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiPackageStatement;
-
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-
 import java.io.File;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 
 class EcjPsiJavaFile extends EcjPsiSourceElement implements PsiJavaFile {
 

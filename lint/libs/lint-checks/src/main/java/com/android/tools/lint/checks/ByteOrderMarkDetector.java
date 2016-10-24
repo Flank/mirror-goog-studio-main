@@ -29,11 +29,9 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Attr;
 
 /**
  * Checks that byte order marks do not appear in resource names
@@ -42,7 +40,7 @@ public class ByteOrderMarkDetector extends ResourceXmlDetector {
 
     /** Detects BOM characters in the middle of files */
     public static final Issue BOM = Issue.create(
-            "ByteOrderMark", //$NON-NLS-1$
+            "ByteOrderMark",
             "Byte order mark inside files",
             "Lint will flag any byte-order-mark (BOM) characters it finds in the middle " +
             "of a file. Since we expect files to be encoded with UTF-8 (see the EnforceUTF8 " +

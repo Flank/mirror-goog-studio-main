@@ -17,7 +17,6 @@
 package com.android.tools.lint.client.api;
 
 import com.android.tools.lint.LintCliClient;
-
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")

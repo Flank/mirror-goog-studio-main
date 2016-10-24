@@ -24,13 +24,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +31,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Specialized visitor for running detectors on resources: typically XML documents,
@@ -62,15 +60,15 @@ import java.util.RandomAccess;
 @Beta
 class ResourceVisitor {
     private final Map<String, List<Detector.XmlScanner>> mElementToCheck =
-            new HashMap<String, List<Detector.XmlScanner>>();
+            new HashMap<>();
     private final Map<String, List<Detector.XmlScanner>> mAttributeToCheck =
-            new HashMap<String, List<Detector.XmlScanner>>();
+            new HashMap<>();
     private final List<Detector.XmlScanner> mDocumentDetectors =
-            new ArrayList<Detector.XmlScanner>();
+            new ArrayList<>();
     private final List<Detector.XmlScanner> mAllElementDetectors =
-            new ArrayList<Detector.XmlScanner>();
+            new ArrayList<>();
     private final List<Detector.XmlScanner> mAllAttributeDetectors =
-            new ArrayList<Detector.XmlScanner>();
+            new ArrayList<>();
     private final List<? extends Detector> mAllDetectors;
     private final List<? extends Detector> mBinaryDetectors;
     private final XmlParser mParser;
@@ -98,7 +96,7 @@ class ResourceVisitor {
                 for (String attribute : attributes) {
                     List<Detector.XmlScanner> list = mAttributeToCheck.get(attribute);
                     if (list == null) {
-                        list = new ArrayList<Detector.XmlScanner>();
+                        list = new ArrayList<>();
                         mAttributeToCheck.put(attribute, list);
                     }
                     list.add(xmlDetector);
@@ -111,7 +109,7 @@ class ResourceVisitor {
                 for (String element : elements) {
                     List<Detector.XmlScanner> list = mElementToCheck.get(element);
                     if (list == null) {
-                        list = new ArrayList<Detector.XmlScanner>();
+                        list = new ArrayList<>();
                         mElementToCheck.put(element, list);
                     }
                     list.add(xmlDetector);

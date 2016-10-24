@@ -121,7 +121,6 @@ import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocTagValue;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -158,14 +157,14 @@ public class JavaPsiVisitor {
             Maps.newHashMapWithExpectedSize(10);
     private Set<String> mConstructorSimpleNames;
     private final List<VisitingDetector> mResourceFieldDetectors =
-            new ArrayList<VisitingDetector>();
+            new ArrayList<>();
     private final List<VisitingDetector> mAllDetectors;
     private final List<VisitingDetector> mFullTreeDetectors;
     private final Map<Class<? extends PsiElement>, List<VisitingDetector>> mNodePsiTypeDetectors =
-            new HashMap<Class<? extends PsiElement>, List<VisitingDetector>>(16);
+            new HashMap<>(16);
     private final JavaParser mParser;
     private final Map<String, List<VisitingDetector>> mSuperClassDetectors =
-            new HashMap<String, List<VisitingDetector>>();
+            new HashMap<>();
 
     /**
      * Number of fatal exceptions (internal errors, usually from ECJ) we've
@@ -184,8 +183,8 @@ public class JavaPsiVisitor {
 
     JavaPsiVisitor(@NonNull JavaParser parser, @NonNull List<Detector> detectors) {
         mParser = parser;
-        mAllDetectors = new ArrayList<VisitingDetector>(detectors.size());
-        mFullTreeDetectors = new ArrayList<VisitingDetector>(detectors.size());
+        mAllDetectors = new ArrayList<>(detectors.size());
+        mFullTreeDetectors = new ArrayList<>(detectors.size());
 
         for (Detector detector : detectors) {
             JavaPsiScanner javaPsiScanner = (JavaPsiScanner) detector;
@@ -197,7 +196,7 @@ public class JavaPsiVisitor {
                 for (String fqn : applicableSuperClasses) {
                     List<VisitingDetector> list = mSuperClassDetectors.get(fqn);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mSuperClassDetectors.put(fqn, list);
                     }
                     list.add(v);
@@ -209,7 +208,7 @@ public class JavaPsiVisitor {
                 for (Class<? extends PsiElement> type : nodePsiTypes) {
                     List<VisitingDetector> list = mNodePsiTypeDetectors.get(type);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mNodePsiTypeDetectors.put(type, list);
                     }
                     list.add(v);
@@ -225,7 +224,7 @@ public class JavaPsiVisitor {
                 for (String name : names) {
                     List<VisitingDetector> list = mMethodDetectors.get(name);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mMethodDetectors.put(name, list);
                     }
                     list.add(v);
@@ -243,7 +242,7 @@ public class JavaPsiVisitor {
                 for (String type : types) {
                     List<VisitingDetector> list = mConstructorDetectors.get(type);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mConstructorDetectors.put(type, list);
                         mConstructorSimpleNames.add(type.substring(type.lastIndexOf('.')+1));
                     }
@@ -260,7 +259,7 @@ public class JavaPsiVisitor {
                 for (String name : referenceNames) {
                     List<VisitingDetector> list = mReferenceDetectors.get(name);
                     if (list == null) {
-                        list = new ArrayList<VisitingDetector>(SAME_TYPE_COUNT);
+                        list = new ArrayList<>(SAME_TYPE_COUNT);
                         mReferenceDetectors.put(name, list);
                     }
                     list.add(v);
@@ -294,33 +293,24 @@ public class JavaPsiVisitor {
             try {
                 context.setJavaFile(javaFile);
 
-                mParser.runReadAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (VisitingDetector v : mAllDetectors) {
-                            v.setContext(context);
-                            v.getDetector().beforeCheckFile(context);
-                        }
+                mParser.runReadAction(() -> {
+                    for (VisitingDetector v : mAllDetectors) {
+                        v.setContext(context);
+                        v.getDetector().beforeCheckFile(context);
                     }
                 });
 
                 if (!mSuperClassDetectors.isEmpty()) {
-                    mParser.runReadAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            SuperclassPsiVisitor visitor = new SuperclassPsiVisitor(context);
-                            javaFile.accept(visitor);
-                        }
+                    mParser.runReadAction(() -> {
+                        SuperclassPsiVisitor visitor = new SuperclassPsiVisitor(context);
+                        javaFile.accept(visitor);
                     });
                 }
 
                 for (final VisitingDetector v : mFullTreeDetectors) {
-                    mParser.runReadAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            JavaElementVisitor visitor = v.getVisitor();
-                            javaFile.accept(visitor);
-                        }
+                    mParser.runReadAction(() -> {
+                        JavaElementVisitor visitor = v.getVisitor();
+                        javaFile.accept(visitor);
                     });
                 }
 
@@ -328,35 +318,26 @@ public class JavaPsiVisitor {
                         || !mResourceFieldDetectors.isEmpty()
                         || !mConstructorDetectors.isEmpty()
                         || !mReferenceDetectors.isEmpty()) {
-                    mParser.runReadAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            // TODO: Do we need to break this one up into finer grain
-                            // locking units
-                            JavaElementVisitor visitor = new DelegatingPsiVisitor(context);
-                            javaFile.accept(visitor);
-                        }
+                    mParser.runReadAction(() -> {
+                        // TODO: Do we need to break this one up into finer grain
+                        // locking units
+                        JavaElementVisitor visitor = new DelegatingPsiVisitor(context);
+                        javaFile.accept(visitor);
                     });
                 } else {
                     if (!mNodePsiTypeDetectors.isEmpty()) {
-                        mParser.runReadAction(new Runnable() {
-                            @Override
-                            public void run() {
-                                // TODO: Do we need to break this one up into finer grain
-                                // locking units
-                                JavaElementVisitor visitor = new DispatchPsiVisitor();
-                                javaFile.accept(visitor);
-                            }
+                        mParser.runReadAction(() -> {
+                            // TODO: Do we need to break this one up into finer grain
+                            // locking units
+                            JavaElementVisitor visitor = new DispatchPsiVisitor();
+                            javaFile.accept(visitor);
                         });
                     }
                 }
 
-                mParser.runReadAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (VisitingDetector v : mAllDetectors) {
-                            v.getDetector().afterCheckFile(context);
-                        }
+                mParser.runReadAction(() -> {
+                    for (VisitingDetector v : mAllDetectors) {
+                        v.getDetector().afterCheckFile(context);
                     }
                 });
             } finally {

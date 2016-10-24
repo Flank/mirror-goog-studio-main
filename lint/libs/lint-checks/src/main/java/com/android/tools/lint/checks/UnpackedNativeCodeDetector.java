@@ -40,17 +40,15 @@ import com.android.xml.AndroidManifest;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
 
 /**
  * Checks for extractNativeLibs flag in <code>AndroidManifest.xml</code> when Native code is present.
@@ -62,7 +60,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
         JavaPsiScanner, Detector.ClassScanner {
 
     public static final Issue ISSUE = Issue.create(
-            "UnpackedNativeCode",   //$NON-NLS-1$
+            "UnpackedNativeCode",
 
             "Missing `android:extractNativeLibs=false`",
 
@@ -82,13 +80,13 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
             )
     );
 
-    private static final String SYSTEM_CLASS = "java.lang.System";  //$NON-NLS-1$
-    private static final String RUNTIME_CLASS = "java.lang.Runtime";  //$NON-NLS-1$
+    private static final String SYSTEM_CLASS = "java.lang.System";
+    private static final String RUNTIME_CLASS = "java.lang.Runtime";
 
-    private static final String SYSTEM_CLASS_ALT = "java/lang/System";  //$NON-NLS-1$
-    private static final String RUNTIME_CLASS_ALT = "java/lang/Runtime";  //$NON-NLS-1$
+    private static final String SYSTEM_CLASS_ALT = "java/lang/System";
+    private static final String RUNTIME_CLASS_ALT = "java/lang/Runtime";
 
-    private static final String LOAD_LIBRARY = "loadLibrary";       //$NON-NLS-1$
+    private static final String LOAD_LIBRARY = "loadLibrary";
 
     /**
      * Android Gradle plugin 2.2.0+ supports uncompressed native libs in the APK

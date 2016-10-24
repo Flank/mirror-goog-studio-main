@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiImportStaticStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 class EcjPsiStaticImport extends EcjPsiImport implements PsiImportStaticStatement {

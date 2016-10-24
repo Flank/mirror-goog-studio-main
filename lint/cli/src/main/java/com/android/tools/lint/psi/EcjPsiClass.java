@@ -42,19 +42,17 @@ import com.intellij.psi.PsiSubstitutor;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.javadoc.PsiDocComment;
-
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
 
@@ -653,15 +651,12 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
             return;
         }
         PsiElement[] children = getChildren();
-        Arrays.sort(children, new Comparator<PsiElement>() {
-            @Override
-            public int compare(PsiElement o1, PsiElement o2) {
-                int delta = o1.getTextRange().getStartOffset() - o2.getTextRange().getStartOffset();
-                if (delta == 0) {
-                    delta = o1.getTextRange().getEndOffset() - o2.getTextRange().getEndOffset();
-                }
-                return delta;
+        Arrays.sort(children, (o1, o2) -> {
+            int delta = o1.getTextRange().getStartOffset() - o2.getTextRange().getStartOffset();
+            if (delta == 0) {
+                delta = o1.getTextRange().getEndOffset() - o2.getTextRange().getEndOffset();
             }
+            return delta;
         });
         EcjPsiSourceElement last = null;
         for (PsiElement child : children) {

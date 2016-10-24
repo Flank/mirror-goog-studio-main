@@ -26,7 +26,6 @@ import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiType;
-
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;

@@ -141,7 +141,13 @@ import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -165,14 +171,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * Looks for usages of APIs that are not supported in all the versions targeted
  * by this application (according to its minimum API requirement in the manifest).
@@ -190,15 +188,15 @@ public class ApiDetector extends ResourceXmlDetector
      */
     private static final boolean CHECK_DECLARATIONS = false;
 
-    private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null; //$NON-NLS-1$
+    private static final boolean AOSP_BUILD = System.getenv("ANDROID_BUILD_TOP") != null;
 
-    public static final String REQUIRES_API_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresApi"; //$NON-NLS-1$
-    public static final String SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"; //$NON-NLS-1$
+    public static final String REQUIRES_API_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresApi";
+    public static final String SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress";
 
     /** Accessing an unsupported API */
     @SuppressWarnings("unchecked")
     public static final Issue UNSUPPORTED = Issue.create(
-            "NewApi", //$NON-NLS-1$
+            "NewApi",
             "Calling new methods on older versions",
 
             "This check scans through all the Android API calls in the application and " +
@@ -234,7 +232,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     /** Accessing an inlined API on older platforms */
     public static final Issue INLINED = Issue.create(
-            "InlinedApi", //$NON-NLS-1$
+            "InlinedApi",
             "Using inlined constants on older versions",
 
             "This check scans through all the Android API field references in the application " +
@@ -265,7 +263,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     /** Method conflicts with new inherited method */
     public static final Issue OVERRIDE = Issue.create(
-            "Override", //$NON-NLS-1$
+            "Override",
             "Method conflicts with new inherited method",
 
             "Suppose you are building against Android API 8, and you've subclassed Activity. " +
@@ -293,7 +291,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     /** Attribute unused on older versions */
     public static final Issue UNUSED = Issue.create(
-            "UnusedAttribute", //$NON-NLS-1$
+            "UnusedAttribute",
             "Attribute unused on older versions",
 
             "This check finds attributes set in XML files that were introduced in a version " +
@@ -318,7 +316,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     /** Obsolete SDK_INT version check */
     public static final Issue OBSOLETE_SDK = Issue.create(
-            "ObsoleteSdkInt", //$NON-NLS-1$
+            "ObsoleteSdkInt",
             "Obsolete SDK_INT Version Check",
 
             "This check flags version checks that are not necessary, because the " +
@@ -336,9 +334,9 @@ public class ApiDetector extends ResourceXmlDetector
     private static final String SDK_SUPPRESS_VMSIG = "Landroid/support/test/filters/SdkSuppress;";
     // Just a suffix: we have two versions, both support lib and non-support lib
     private static final String TARGET_API_VMSIG_SUFFIX =  "/TargetApi;";
-    private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";  //$NON-NLS-1$
-    private static final String ORDINAL_METHOD = "ordinal"; //$NON-NLS-1$
-    public static final String ENUM_SWITCH_PREFIX = "$SwitchMap$";  //$NON-NLS-1$
+    private static final String SWITCH_TABLE_PREFIX = "$SWITCH_TABLE$";
+    private static final String ORDINAL_METHOD = "ordinal";
+    public static final String ENUM_SWITCH_PREFIX = "$SwitchMap$";
 
     private static final String TAG_RIPPLE = "ripple";
     private static final String TAG_VECTOR = "vector";
@@ -451,7 +449,7 @@ public class ApiDetector extends ResourceXmlDetector
             String name = attribute.getLocalName();
             if (!(name.equals(ATTR_LAYOUT_WIDTH) && !(name.equals(ATTR_LAYOUT_HEIGHT)) &&
                 !(name.equals(ATTR_ID)))) {
-                String owner = "android/R$attr"; //$NON-NLS-1$
+                String owner = "android/R$attr";
                 attributeApiLevel = mApiDatabase.getFieldVersion(owner, name);
                 int minSdk = getMinSdk(context);
                 if (attributeApiLevel > minSdk && attributeApiLevel > context.getFolderVersion()
@@ -549,12 +547,12 @@ public class ApiDetector extends ResourceXmlDetector
             && TAG_ITEM.equals(attribute.getOwnerElement().getTagName())
             && attribute.getOwnerElement().getParentNode() != null
             && TAG_STYLE.equals(attribute.getOwnerElement().getParentNode().getNodeName())) {
-            owner = "android/R$attr"; //$NON-NLS-1$
+            owner = "android/R$attr";
             name = value.substring(PREFIX_ANDROID.length());
             prefix = null;
         } else if (value.startsWith(PREFIX_ANDROID) && ATTR_PARENT.equals(attribute.getName())
                 && TAG_STYLE.equals(attribute.getOwnerElement().getTagName())) {
-            owner = "android/R$style"; //$NON-NLS-1$
+            owner = "android/R$style";
             name = getResourceFieldName(value.substring(PREFIX_ANDROID.length()));
             prefix = null;
         } else {
@@ -565,11 +563,11 @@ public class ApiDetector extends ResourceXmlDetector
             // Convert @android:type/foo into android/R$type and "foo"
             int index = value.indexOf('/', prefix.length());
             if (index != -1) {
-                owner = "android/R$"    //$NON-NLS-1$
+                owner = "android/R$"
                         + value.substring(prefix.length(), index);
                 name = getResourceFieldName(value.substring(index + 1));
             } else if (value.startsWith(ANDROID_THEME_PREFIX)) {
-                owner = "android/R$attr";  //$NON-NLS-1$
+                owner = "android/R$attr";
                 name = value.substring(ANDROID_THEME_PREFIX.length());
             } else {
                 return;
@@ -747,9 +745,9 @@ public class ApiDetector extends ResourceXmlDetector
                 // Custom views aren't in the index
                 return;
             }
-            String fqn = "android/widget/" + tag;    //$NON-NLS-1$
-            if (tag.equals("TextureView")) {         //$NON-NLS-1$
-                fqn = "android/view/TextureView";    //$NON-NLS-1$
+            String fqn = "android/widget/" + tag;
+            if (tag.equals("TextureView")) {
+                fqn = "android/view/TextureView";
             }
             // TODO: Consider other widgets outside of android.widget.*
             int api = mApiDatabase.getClassVersion(fqn);
@@ -864,7 +862,7 @@ public class ApiDetector extends ResourceXmlDetector
             return;
         }
 
-        if (AOSP_BUILD && classNode.name.startsWith("android/support/")) { //$NON-NLS-1$
+        if (AOSP_BUILD && classNode.name.startsWith("android/support/")) {
             return;
         }
 
@@ -892,10 +890,10 @@ public class ApiDetector extends ResourceXmlDetector
             while (owner != null) {
                 // For virtual dispatch, walk up the inheritance chain checking
                 // each inherited method
-                if ((owner.startsWith("android/")                       //$NON-NLS-1$
-                            && !owner.startsWith("android/support/"))   //$NON-NLS-1$
-                        || owner.startsWith("java/")                    //$NON-NLS-1$
-                        || owner.startsWith("javax/")) {                //$NON-NLS-1$
+                if ((owner.startsWith("android/")
+                            && !owner.startsWith("android/support/"))
+                        || owner.startsWith("java/")
+                        || owner.startsWith("javax/")) {
                     frameworkParent = owner;
                     break;
                 }
@@ -941,7 +939,7 @@ public class ApiDetector extends ResourceXmlDetector
                     String fqcn;
                     String owner = classNode.name;
                     if (CONSTRUCTOR_NAME.equals(name)) {
-                        fqcn = "new " + getFqcn(owner); //$NON-NLS-1$
+                        fqcn = "new " + getFqcn(owner);
                     } else {
                         fqcn = getFqcn(owner) + '#' + name;
                     }
@@ -1071,7 +1069,7 @@ public class ApiDetector extends ResourceXmlDetector
 
                             String fqcn;
                             if (CONSTRUCTOR_NAME.equals(name)) {
-                                fqcn = "new " + getFqcn(owner); //$NON-NLS-1$
+                                fqcn = "new " + getFqcn(owner);
                             } else {
                                 fqcn = getFqcn(owner) + '#' + name;
                             }
@@ -1148,18 +1146,18 @@ public class ApiDetector extends ResourceXmlDetector
 
                         // For virtual dispatch, walk up the inheritance chain checking
                         // each inherited method
-                        if (owner.startsWith("android/")           //$NON-NLS-1$
-                                || owner.startsWith("javax/")) {   //$NON-NLS-1$
+                        if (owner.startsWith("android/")
+                                || owner.startsWith("javax/")) {
                             // The API map has already inlined all inherited methods
                             // so no need to keep checking up the chain
                             // -- unless it's the support library which is also in
                             // the android/ namespace:
-                            if (owner.startsWith("android/support/") && api == -1) { //$NON-NLS-1$
+                            if (owner.startsWith("android/support/") && api == -1) {
                                 owner = context.getDriver().getSuperClass(owner);
                             } else {
                                 owner = null;
                             }
-                        } else if (owner.startsWith("java/")) {    //$NON-NLS-1$
+                        } else if (owner.startsWith("java/")) {
                             if (owner.equals("java/text/SimpleDateFormat")) {
                                 checkSimpleDateFormat(context, method, node, minSdk);
                             }
@@ -1250,10 +1248,10 @@ public class ApiDetector extends ResourceXmlDetector
             // Already OK
             return;
         }
-        if (node.name.equals(CONSTRUCTOR_NAME) && !node.desc.equals("()V")) { //$NON-NLS-1$
+        if (node.name.equals(CONSTRUCTOR_NAME) && !node.desc.equals("()V")) {
             // Check first argument
             AbstractInsnNode prev = LintUtils.getPrevInstruction(node);
-            if (prev != null && !node.desc.equals("(Ljava/lang/String;)V")) { //$NON-NLS-1$
+            if (prev != null && !node.desc.equals("(Ljava/lang/String;)V")) {
                 prev = LintUtils.getPrevInstruction(prev);
             }
             if (prev != null && prev.getOpcode() == Opcodes.LDC) {
@@ -1548,7 +1546,7 @@ public class ApiDetector extends ResourceXmlDetector
                     if (annotation.values != null) {
                         for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                             String key = (String) annotation.values.get(i);
-                            if (key.equals(ATTR_VALUE)) {  //$NON-NLS-1$
+                            if (key.equals(ATTR_VALUE)) {
                                 Object value = annotation.values.get(i + 1);
                                 if (value instanceof Integer) {
                                     return (Integer) value;
@@ -1688,7 +1686,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        List<Class<? extends PsiElement>> types = new ArrayList<Class<? extends PsiElement>>(9);
+        List<Class<? extends PsiElement>> types = new ArrayList<>(9);
         types.add(PsiImportStaticStatement.class);
         types.add(PsiReferenceExpression.class);
         types.add(PsiLocalVariable.class);
@@ -1715,19 +1713,19 @@ public class ApiDetector extends ResourceXmlDetector
             @Nullable PsiElement node,
             @NonNull String name,
             @NonNull String owner) {
-        if (owner.equals("android/os/Build$VERSION_CODES")) {     //$NON-NLS-1$
+        if (owner.equals("android/os/Build$VERSION_CODES")) {
             // These constants are required for compilation, not execution
             // and valid code checks it even on older platforms
             return true;
         }
-        if (owner.equals("android/view/ViewGroup$LayoutParams")   //$NON-NLS-1$
-                && name.equals("MATCH_PARENT")) {                 //$NON-NLS-1$
+        if (owner.equals("android/view/ViewGroup$LayoutParams")
+                && name.equals("MATCH_PARENT")) {
             return true;
         }
-        if (owner.equals("android/widget/AbsListView")            //$NON-NLS-1$
-                && ((name.equals("CHOICE_MODE_NONE")              //$NON-NLS-1$
-                || name.equals("CHOICE_MODE_MULTIPLE")            //$NON-NLS-1$
-                || name.equals("CHOICE_MODE_SINGLE")))) {         //$NON-NLS-1$
+        if (owner.equals("android/widget/AbsListView")
+                && ((name.equals("CHOICE_MODE_NONE")
+                || name.equals("CHOICE_MODE_MULTIPLE")
+                || name.equals("CHOICE_MODE_SINGLE")))) {
             // android.widget.ListView#CHOICE_MODE_MULTIPLE and friends have API=1,
             // but in API 11 it was moved up to the parent class AbsListView.
             // Referencing AbsListView#CHOICE_MODE_MULTIPLE technically requires API 11,
@@ -1739,8 +1737,8 @@ public class ApiDetector extends ResourceXmlDetector
         // Gravity#START and Gravity#END are okay; these were specifically written to
         // be backwards compatible (by using the same lower bits for START as LEFT and
         // for END as RIGHT)
-        if ("android/view/Gravity".equals(owner)                   //$NON-NLS-1$
-                && ("START".equals(name) || "END".equals(name))) { //$NON-NLS-1$ //$NON-NLS-2$
+        if ("android/view/Gravity".equals(owner)
+                && ("START".equals(name) || "END".equals(name))) {
             return true;
         }
 
@@ -2335,7 +2333,7 @@ public class ApiDetector extends ResourceXmlDetector
         errorMessage = format.toText(errorMessage);
 
         if (issue == UNSUPPORTED || issue == INLINED) {
-            Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$
+            Pattern pattern = Pattern.compile("\\s(\\d+)\\s");
             Matcher matcher = pattern.matcher(errorMessage);
             if (matcher.find()) {
                 return Integer.parseInt(matcher.group(1));

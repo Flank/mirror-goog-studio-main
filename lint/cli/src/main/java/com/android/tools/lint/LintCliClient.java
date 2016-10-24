@@ -403,7 +403,7 @@ public class LintCliClient extends LintClient {
         try {
             return LintUtils.getEncodedString(this, file, false);
         } catch (IOException e) {
-            return ""; //$NON-NLS-1$
+            return "";
         }
     }
 
@@ -685,9 +685,9 @@ public class LintCliClient extends LintClient {
         }
         elementLoop:
         for (String element : Splitter.on(File.separatorChar).omitEmptyStrings().split(path)) {
-            if (element.equals(".")) {          //$NON-NLS-1$
+            if (element.equals(".")) {
                 continue;
-            } else if (element.equals("..")) {  //$NON-NLS-1$
+            } else if (element.equals("..")) {
                 if (sb.length() > 0) {
                     for (int i = sb.length() - 1; i >= 0; i--) {
                         char c = sb.charAt(i);
@@ -784,8 +784,8 @@ public class LintCliClient extends LintClient {
 
     @Nullable
     String getRevision() {
-        File file = findResource("tools" + File.separator +     //$NON-NLS-1$
-                "source.properties");          //$NON-NLS-1$
+        File file = findResource("tools" + File.separator +
+                "source.properties");
         if (file != null && file.exists()) {
             FileInputStream input = null;
             try {
@@ -793,7 +793,7 @@ public class LintCliClient extends LintClient {
                 Properties properties = new Properties();
                 properties.load(input);
 
-                String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
+                String revision = properties.getProperty("Pkg.Revision");
                 if (revision != null && !revision.isEmpty()) {
                     return revision;
                 }

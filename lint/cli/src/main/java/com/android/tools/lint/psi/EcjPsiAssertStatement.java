@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAssertStatement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiAssertStatement extends EcjPsiStatement implements PsiAssertStatement {

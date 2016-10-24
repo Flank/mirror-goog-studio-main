@@ -45,7 +45,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
 import com.google.common.annotations.Beta;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -72,38 +71,38 @@ import java.util.regex.Pattern;
 @Beta
 public class Main {
     static final int MAX_LINE_WIDTH = 78;
-    private static final String ARG_ENABLE     = "--enable";       //$NON-NLS-1$
-    private static final String ARG_DISABLE    = "--disable";      //$NON-NLS-1$
-    private static final String ARG_CHECK      = "--check";        //$NON-NLS-1$
-    private static final String ARG_IGNORE     = "--ignore";       //$NON-NLS-1$
-    private static final String ARG_LIST_IDS   = "--list";         //$NON-NLS-1$
-    private static final String ARG_SHOW       = "--show";         //$NON-NLS-1$
-    private static final String ARG_QUIET      = "--quiet";        //$NON-NLS-1$
-    private static final String ARG_FULL_PATH  = "--fullpath";     //$NON-NLS-1$
-    private static final String ARG_SHOW_ALL   = "--showall";      //$NON-NLS-1$
-    private static final String ARG_HELP       = "--help";         //$NON-NLS-1$
-    private static final String ARG_NO_LINES   = "--nolines";      //$NON-NLS-1$
-    private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
-    private static final String ARG_SIMPLE_HTML= "--simplehtml";   //$NON-NLS-1$
-    private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
-    private static final String ARG_TEXT       = "--text";         //$NON-NLS-1$
-    private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
-    private static final String ARG_URL        = "--url";          //$NON-NLS-1$
-    private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
-    private static final String ARG_EXIT_CODE  = "--exitcode";     //$NON-NLS-1$
-    private static final String ARG_CLASSES    = "--classpath";    //$NON-NLS-1$
-    private static final String ARG_SOURCES    = "--sources";      //$NON-NLS-1$
-    private static final String ARG_RESOURCES  = "--resources";    //$NON-NLS-1$
-    private static final String ARG_LIBRARIES  = "--libraries";    //$NON-NLS-1$
-    private static final String ARG_BASELINE   = "--baseline";     //$NON-NLS-1$
+    private static final String ARG_ENABLE     = "--enable";
+    private static final String ARG_DISABLE    = "--disable";
+    private static final String ARG_CHECK      = "--check";
+    private static final String ARG_IGNORE     = "--ignore";
+    private static final String ARG_LIST_IDS   = "--list";
+    private static final String ARG_SHOW       = "--show";
+    private static final String ARG_QUIET      = "--quiet";
+    private static final String ARG_FULL_PATH  = "--fullpath";
+    private static final String ARG_SHOW_ALL   = "--showall";
+    private static final String ARG_HELP       = "--help";
+    private static final String ARG_NO_LINES   = "--nolines";
+    private static final String ARG_HTML       = "--html";
+    private static final String ARG_SIMPLE_HTML= "--simplehtml";
+    private static final String ARG_XML        = "--xml";
+    private static final String ARG_TEXT       = "--text";
+    private static final String ARG_CONFIG     = "--config";
+    private static final String ARG_URL        = "--url";
+    private static final String ARG_VERSION    = "--version";
+    private static final String ARG_EXIT_CODE  = "--exitcode";
+    private static final String ARG_CLASSES    = "--classpath";
+    private static final String ARG_SOURCES    = "--sources";
+    private static final String ARG_RESOURCES  = "--resources";
+    private static final String ARG_LIBRARIES  = "--libraries";
+    private static final String ARG_BASELINE   = "--baseline";
 
-    private static final String ARG_NO_WARN_2  = "--nowarn";       //$NON-NLS-1$
+    private static final String ARG_NO_WARN_2  = "--nowarn";
     // GCC style flag names for options
-    private static final String ARG_NO_WARN_1  = "-w";             //$NON-NLS-1$
-    private static final String ARG_WARN_ALL   = "-Wall";          //$NON-NLS-1$
-    private static final String ARG_ALL_ERROR  = "-Werror";        //$NON-NLS-1$
+    private static final String ARG_NO_WARN_1  = "-w";
+    private static final String ARG_WARN_ALL   = "-Wall";
+    private static final String ARG_ALL_ERROR  = "-Werror";
 
-    private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir"; //$NON-NLS-1$
+    private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir";
     private LintCliFlags mFlags = new LintCliFlags();
     private IssueRegistry mGlobalRegistry;
 
@@ -206,11 +205,11 @@ public class Main {
                         && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
                     if (mAndroidAnnotationPattern == null) {
                         mAndroidAnnotationPattern =
-                                Pattern.compile("android\\.annotation");//$NON-NLS-1$
+                                Pattern.compile("android\\.annotation");
                     }
                     return mAndroidAnnotationPattern
                             .matcher(contents)
-                            .replaceAll("android.support.annotation"); //$NON-NLS-1$
+                            .replaceAll("android.support.annotation");
                 } else {
                     return contents;
                 }
@@ -220,12 +219,12 @@ public class Main {
         // Mapping from file path prefix to URL. Applies only to HTML reports
         String urlMap = null;
 
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         for (int index = 0; index < args.length; index++) {
             String arg = args[index];
 
             if (arg.equals(ARG_HELP)
-                    || arg.equals("-h") || arg.equals("-?")) { //$NON-NLS-1$ //$NON-NLS-2$
+                    || arg.equals("-h") || arg.equals("-?")) {
                 if (index < args.length - 1) {
                     String topic = args[index + 1];
                     if (topic.equals("suppress") || topic.equals("ignore")) {
@@ -241,7 +240,7 @@ public class Main {
             } else if (arg.equals(ARG_LIST_IDS)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Did the user provide a category list?
-                if (index < args.length - 1 && !args[index + 1].startsWith("-")) { //$NON-NLS-1$
+                if (index < args.length - 1 && !args[index + 1].startsWith("-")) {
                     String[] ids = args[++index].split(",");
                     for (String id : ids) {
                         if (registry.isCategoryName(id)) {
@@ -268,7 +267,7 @@ public class Main {
             } else if (arg.equals(ARG_SHOW)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Show specific issues?
-                if (index < args.length - 1 && !args[index + 1].startsWith("-")) { //$NON-NLS-1$
+                if (index < args.length - 1 && !args[index + 1].startsWith("-")) {
                     String[] ids = args[++index].split(",");
                     for (String id : ids) {
                         if (registry.isCategoryName(id)) {
@@ -421,7 +420,7 @@ public class Main {
                 Writer writer = null;
                 boolean closeWriter;
                 String outputName = args[++index];
-                if (outputName.equals("stdout")) { //$NON-NLS-1$
+                if (outputName.equals("stdout")) {
                     //noinspection IOResourceOpenedButNotSafelyClosed
                     writer = new PrintWriter(System.out, true);
                     closeWriter = false;
@@ -512,7 +511,7 @@ public class Main {
                 }
                 Set<String> checkedIds = mFlags.getExactCheckedIds();
                 if (checkedIds == null) {
-                    checkedIds = new HashSet<String>();
+                    checkedIds = new HashSet<>();
                     mFlags.setExactCheckedIds(checkedIds);
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
@@ -557,7 +556,7 @@ public class Main {
                     }
                     List<File> classes = mFlags.getClassesOverride();
                     if (classes == null) {
-                        classes = new ArrayList<File>();
+                        classes = new ArrayList<>();
                         mFlags.setClassesOverride(classes);
                     }
                     classes.add(input);
@@ -576,7 +575,7 @@ public class Main {
                     }
                     List<File> sources = mFlags.getSourcesOverride();
                     if (sources == null) {
-                        sources = new ArrayList<File>();
+                        sources = new ArrayList<>();
                         mFlags.setSourcesOverride(sources);
                     }
                     sources.add(input);
@@ -595,7 +594,7 @@ public class Main {
                     }
                     List<File> resources = mFlags.getResourcesOverride();
                     if (resources == null) {
-                        resources = new ArrayList<File>();
+                        resources = new ArrayList<>();
                         mFlags.setResourcesOverride(resources);
                     }
                     resources.add(input);
@@ -614,7 +613,7 @@ public class Main {
                     }
                     List<File> libraries = mFlags.getLibrariesOverride();
                     if (libraries == null) {
-                        libraries = new ArrayList<File>();
+                        libraries = new ArrayList<>();
                         mFlags.setLibrariesOverride(libraries);
                     }
                     libraries.add(input);
@@ -682,8 +681,8 @@ public class Main {
                 }
 
                 if (!urlMap.equals(VALUE_NONE)) {
-                    Map<String, String> map = new HashMap<String, String>();
-                    String[] replace = urlMap.split(","); //$NON-NLS-1$
+                    Map<String, String> map = new HashMap<>();
+                    String[] replace = urlMap.split(",");
                     for (String s : replace) {
                         // Allow ='s in the suffix part
                         int index = s.indexOf('=');
@@ -909,21 +908,18 @@ public class Main {
 
     private static void showIssues(IssueRegistry registry) {
         List<Issue> issues = registry.getIssues();
-        List<Issue> sorted = new ArrayList<Issue>(issues);
-        Collections.sort(sorted, new Comparator<Issue>() {
-            @Override
-            public int compare(Issue issue1, Issue issue2) {
-                int d = issue1.getCategory().compareTo(issue2.getCategory());
-                if (d != 0) {
-                    return d;
-                }
-                d = issue2.getPriority() - issue1.getPriority();
-                if (d != 0) {
-                    return d;
-                }
-
-                return issue1.getId().compareTo(issue2.getId());
+        List<Issue> sorted = new ArrayList<>(issues);
+        Collections.sort(sorted, (issue1, issue2) -> {
+            int d = issue1.getCategory().compareTo(issue2.getCategory());
+            if (d != 0) {
+                return d;
             }
+            d = issue2.getPriority() - issue1.getPriority();
+            if (d != 0) {
+                return d;
+            }
+
+            return issue1.getId().compareTo(issue2.getId());
         });
 
         System.out.println("Available issues:\n");
@@ -988,7 +984,7 @@ public class Main {
 
     private static void printUsage(PrintStream out) {
         // TODO: Look up launcher script name!
-        String command = "lint"; //$NON-NLS-1$
+        String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
         out.println("Flags:\n");
@@ -1071,7 +1067,7 @@ public class Main {
             sb.append(' ');
         }
         String indent = sb.toString();
-        String formatString = "%1$-" + argWidth + "s%2$s"; //$NON-NLS-1$
+        String formatString = "%1$-" + argWidth + "s%2$s";
 
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];

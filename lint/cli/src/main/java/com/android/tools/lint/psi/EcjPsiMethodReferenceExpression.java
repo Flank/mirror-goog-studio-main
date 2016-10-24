@@ -30,7 +30,6 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeElement;
-
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 
 class EcjPsiMethodReferenceExpression extends EcjPsiFunctionalExpression implements

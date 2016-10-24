@@ -36,17 +36,12 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtilsTest;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-
-import org.intellij.lang.annotations.Language;
-import org.junit.Assert;
-
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import lombok.ast.AnnotationElement;
 import lombok.ast.BinaryExpression;
 import lombok.ast.Block;
@@ -68,6 +63,8 @@ import lombok.ast.VariableReference;
 import lombok.ast.printer.SourceFormatter;
 import lombok.ast.printer.SourcePrinter;
 import lombok.ast.printer.TextFormatter;
+import org.intellij.lang.annotations.Language;
+import org.junit.Assert;
 
 // Disable code warnings that are applied to injected languages in ECJ sample code: these
 // are deliberately doing dodgy things to test parser scenarios
@@ -914,7 +911,7 @@ public class EcjParserTest extends AbstractCheckTest {
         assertNotNull(compilationUnit);
 
         // null means OK
-        final AtomicReference<String> result = new AtomicReference<String>();
+        final AtomicReference<String> result = new AtomicReference<>();
 
         compilationUnit.accept(new ForwardingAstVisitor() {
             @Override

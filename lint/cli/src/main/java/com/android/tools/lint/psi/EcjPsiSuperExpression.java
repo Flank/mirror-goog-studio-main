@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiSuperExpression;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiSuperExpression extends EcjPsiExpression implements PsiSuperExpression {

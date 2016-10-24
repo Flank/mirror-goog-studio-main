@@ -30,7 +30,8 @@ import com.android.tools.lint.detector.api.Location.SearchDirection;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
-
+import java.io.File;
+import java.util.List;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -38,9 +39,6 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * A {@link Context} used when checking .class files.
@@ -674,8 +672,8 @@ public class ClassContext extends Context {
 
     private static String getTypeString(Type type) {
         String s = type.getClassName();
-        if (s.startsWith("java.lang.")) {           //$NON-NLS-1$
-            s = s.substring("java.lang.".length()); //$NON-NLS-1$
+        if (s.startsWith("java.lang.")) {
+            s = s.substring("java.lang.".length());
         }
 
         return s;

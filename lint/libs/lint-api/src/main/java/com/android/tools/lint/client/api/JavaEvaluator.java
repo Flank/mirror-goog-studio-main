@@ -37,7 +37,6 @@ import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
-
 import java.io.File;
 import java.util.Map;
 

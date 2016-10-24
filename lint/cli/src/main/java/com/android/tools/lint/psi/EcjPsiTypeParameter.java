@@ -39,12 +39,10 @@ import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.PsiTypeParameterListOwner;
 import com.intellij.psi.javadoc.PsiDocComment;
-
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-
 import java.util.Collection;
 import java.util.List;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 
 class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParameter {
 

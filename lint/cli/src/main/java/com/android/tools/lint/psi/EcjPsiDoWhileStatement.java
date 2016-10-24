@@ -25,7 +25,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiDoWhileStatement extends EcjPsiStatement implements PsiDoWhileStatement {

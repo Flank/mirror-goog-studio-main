@@ -32,7 +32,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,7 +42,7 @@ import java.util.List;
 public class MathDetector extends Detector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "FloatMath", //$NON-NLS-1$
+            "FloatMath",
             "Using `FloatMath` instead of `Math`",
 
             "In older versions of Android, using `android.util.FloatMath` was recommended " +
@@ -60,7 +59,7 @@ public class MathDetector extends Detector implements JavaPsiScanner {
                     MathDetector.class,
                     Scope.JAVA_FILE_SCOPE))
             .addMoreInfo(
-            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat"); //$NON-NLS-1$
+            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat");
 
     /** Constructs a new {@link MathDetector} check */
     public MathDetector() {
@@ -72,11 +71,11 @@ public class MathDetector extends Detector implements JavaPsiScanner {
     @Override
     public List<String> getApplicableMethodNames() {
         return Arrays.asList(
-                "sin",   //$NON-NLS-1$
-                "cos",   //$NON-NLS-1$
-                "ceil",  //$NON-NLS-1$
-                "sqrt",  //$NON-NLS-1$
-                "floor"  //$NON-NLS-1$
+                "sin",
+                "cos",
+                "ceil",
+                "sqrt",
+                "floor"
         );
     }
 

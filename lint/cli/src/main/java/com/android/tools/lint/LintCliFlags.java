@@ -38,8 +38,8 @@ import java.util.Set;
  */
 @Beta
 public class LintCliFlags {
-    private final Set<String> mSuppress = new HashSet<String>();
-    private final Set<String> mEnabled = new HashSet<String>();
+    private final Set<String> mSuppress = new HashSet<>();
+    private final Set<String> mEnabled = new HashSet<>();
     private Map<String,Severity> mSeverities;
     private Set<String> mCheck = null;
     private boolean mSetExitCode;

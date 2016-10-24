@@ -22,7 +22,6 @@ import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +40,7 @@ public class LintDriverTest extends AbstractCheckTest {
         ClassEntry c5 = new ClassEntry(new File("/a2/Foo$Inner2.class"), null, null, null);
 
         List<ClassEntry> expected = Arrays.asList(c0, c1, c2, c3, c4, c5);
-        List<ClassEntry> list = new ArrayList<ClassEntry>(expected);
+        List<ClassEntry> list = new ArrayList<>(expected);
         Collections.sort(list);
         assertEquals(list, list);
 

@@ -630,11 +630,11 @@ public class LintDriver {
         }
 
         Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
-                new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
+                new HashMap<>();
         Map<Scope, List<Detector>> scopeToDetectors =
-                new EnumMap<Scope, List<Detector>>(Scope.class);
+                new EnumMap<>(Scope.class);
 
-        List<Detector> detectorList = new ArrayList<Detector>();
+        List<Detector> detectorList = new ArrayList<>();
         // Compute the list of detectors (narrowed down from mRepeatingDetectors),
         // and simultaneously build up the detectorToScope map which tracks
         // the scopes each detector is affected by (this is used to populate
@@ -674,7 +674,7 @@ public class LintDriver {
                     for (Scope s : union) {
                         List<Detector> list = scopeToDetectors.get(s);
                         if (list == null) {
-                            list = new ArrayList<Detector>();
+                            list = new ArrayList<>();
                             scopeToDetectors.put(s, list);
                         }
                         list.add(detector);
@@ -697,7 +697,7 @@ public class LintDriver {
         mCurrentVisitor = null;
 
         Configuration configuration = project.getConfiguration(this);
-        mScopeDetectors = new EnumMap<Scope, List<Detector>>(Scope.class);
+        mScopeDetectors = new EnumMap<>(Scope.class);
         mApplicableDetectors = mRegistry.createDetectors(mClient, configuration,
                 mScope, mScopeDetectors);
 
@@ -795,13 +795,13 @@ public class LintDriver {
 
     private Collection<Project> computeProjects(@NonNull List<File> files) {
         // Compute list of projects
-        Map<File, Project> fileToProject = new LinkedHashMap<File, Project>();
+        Map<File, Project> fileToProject = new LinkedHashMap<>();
 
         File sharedRoot = null;
 
         // Ensure that we have absolute paths such that if you lint
         //  "foo bar" in "baz" we can show baz/ as the root
-        List<File> absolute = new ArrayList<File>(files.size());
+        List<File> absolute = new ArrayList<>(files.size());
         for (File file : files) {
             absolute.add(file.getAbsoluteFile());
         }
@@ -899,7 +899,7 @@ public class LintDriver {
         // included by other projects (e.g. because they are library projects)
 
         Collection<Project> allProjects = fileToProject.values();
-        Set<Project> roots = new HashSet<Project>(allProjects);
+        Set<Project> roots = new HashSet<>(allProjects);
         for (Project project : allProjects) {
             roots.removeAll(project.getAllLibraries());
         }
@@ -919,14 +919,14 @@ public class LintDriver {
             // for a library project discovered as a directory as well as one
             // initialized from the library project dependency list
             IdentityHashMap<Project, Project> projects =
-                    new IdentityHashMap<Project, Project>();
+                    new IdentityHashMap<>();
             for (Project project : roots) {
                 projects.put(project, project);
                 for (Project library : project.getAllLibraries()) {
                     projects.put(library, library);
                 }
             }
-            Set<File> dirs = new HashSet<File>();
+            Set<File> dirs = new HashSet<>();
             for (Project project : projects.keySet()) {
                 assert !dirs.contains(project.getDir());
                 dirs.add(project.getDir());
@@ -965,7 +965,7 @@ public class LintDriver {
         fireEvent(EventType.SCANNING_PROJECT, projectContext);
 
         List<Project> allLibraries = project.getAllLibraries();
-        Set<Project> allProjects = new HashSet<Project>(allLibraries.size() + 1);
+        Set<Project> allProjects = new HashSet<>(allLibraries.size() + 1);
         allProjects.add(project);
         allProjects.addAll(allLibraries);
         mCurrentProjects = allProjects.toArray(new Project[allProjects.size()]);
@@ -1081,7 +1081,7 @@ public class LintDriver {
                 boolean haveXmlChecks = checks != null && !checks.isEmpty();
                 List<ResourceXmlDetector> xmlDetectors;
                 if (haveXmlChecks) {
-                    xmlDetectors = new ArrayList<ResourceXmlDetector>(checks.size());
+                    xmlDetectors = new ArrayList<>(checks.size());
                     for (Detector detector : checks) {
                         if (detector instanceof ResourceXmlDetector) {
                             xmlDetectors.add((ResourceXmlDetector) detector);
@@ -1297,11 +1297,11 @@ public class LintDriver {
             // Use set to pick out unique detectors, since it's possible for there to be overlap,
             // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
             // single-file issue, so it shows up on both scope lists:
-            Set<Detector> set = new HashSet<Detector>(list1.size() + list2.size());
+            Set<Detector> set = new HashSet<>(list1.size() + list2.size());
             set.addAll(list1);
             set.addAll(list2);
 
-            return new ArrayList<Detector>(set);
+            return new ArrayList<>(set);
         }
     }
 
@@ -1388,7 +1388,7 @@ public class LintDriver {
 
                 CharSequence sourceContents = null;
                 String sourceName = "";
-                mOuterClasses = new ArrayDeque<ClassNode>();
+                mOuterClasses = new ArrayDeque<>();
                 ClassEntry prev = null;
                 for (ClassEntry entry : entries) {
                     if (prev != null && prev.compareTo(entry) == 0) {
@@ -1571,7 +1571,7 @@ public class LintDriver {
         assert !checks.isEmpty();
 
         // Gather all Java source files in a single pass; more efficient.
-        List<File> sources = new ArrayList<File>(100);
+        List<File> sources = new ArrayList<>(100);
         for (File folder : sourceFolders) {
             gatherJavaFiles(folder, sources);
         }
@@ -1742,7 +1742,7 @@ public class LintDriver {
 
             // Determine which XML resource detectors apply to the given folder type
             List<ResourceXmlDetector> applicableXmlChecks =
-                    new ArrayList<ResourceXmlDetector>(checks.size());
+                    new ArrayList<>(checks.size());
             for (ResourceXmlDetector check : checks) {
                 if (check.appliesTo(type)) {
                     applicableXmlChecks.add(check);
@@ -1750,7 +1750,7 @@ public class LintDriver {
             }
             List<Detector> applicableBinaryChecks = null;
             if (binaryChecks != null) {
-                applicableBinaryChecks = new ArrayList<Detector>(binaryChecks.size());
+                applicableBinaryChecks = new ArrayList<>(binaryChecks.size());
                 for (Detector check : binaryChecks) {
                     if (check.appliesTo(type)) {
                         applicableBinaryChecks.add(check);
@@ -1934,7 +1934,7 @@ public class LintDriver {
      */
     public void addLintListener(@NonNull LintListener listener) {
         if (mListeners == null) {
-            mListeners = new ArrayList<LintListener>(1);
+            mListeners = new ArrayList<>(1);
         }
         mListeners.add(listener);
     }
@@ -2322,7 +2322,7 @@ public class LintDriver {
      */
     public void requestRepeat(@NonNull Detector detector, @Nullable EnumSet<Scope> scope) {
         if (mRepeatingDetectors == null) {
-            mRepeatingDetectors = new ArrayList<Detector>();
+            mRepeatingDetectors = new ArrayList<>();
         }
         mRepeatingDetectors.add(detector);
 
@@ -2523,7 +2523,7 @@ public class LintDriver {
                 if (annotation.values != null) {
                     for (int i = 0, n = annotation.values.size(); i < n; i += 2) {
                         String key = (String) annotation.values.get(i);
-                        if (key.equals("value")) {   //$NON-NLS-1$
+                        if (key.equals("value")) {
                             Object value = annotation.values.get(i + 1);
                             if (value instanceof String) {
                                 String id = (String) value;
@@ -2709,7 +2709,7 @@ public class LintDriver {
             TypeReference t = annotation.astAnnotationTypeReference();
             String typeName = t.getTypeName();
             if (typeName.endsWith(SUPPRESS_LINT)
-                    || typeName.endsWith("SuppressWarnings")) {     //$NON-NLS-1$
+                    || typeName.endsWith("SuppressWarnings")) {
                 StrictListAccessor<AnnotationElement, Annotation> values =
                         annotation.astElements();
                 if (values != null) {
@@ -2858,7 +2858,7 @@ public class LintDriver {
     private File mCachedFolder = null;
     private int mCachedFolderVersion = -1;
     /** Pattern for version qualifiers */
-    private static final Pattern VERSION_PATTERN = Pattern.compile("^v(\\d+)$"); //$NON-NLS-1$
+    private static final Pattern VERSION_PATTERN = Pattern.compile("^v(\\d+)$");
 
     /**
      * Returns the folder version of the given file. For example, for the file values-v14/foo.xml,

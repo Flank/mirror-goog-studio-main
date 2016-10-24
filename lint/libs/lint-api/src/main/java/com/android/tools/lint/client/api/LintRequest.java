@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;

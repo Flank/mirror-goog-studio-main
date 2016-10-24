@@ -39,15 +39,13 @@ import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.javadoc.PsiDocComment;
-
+import java.util.Collection;
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-
-import java.util.Collection;
-import java.util.List;
 
 class EcjPsiBinaryMethod extends EcjPsiBinaryElement implements PsiMethod, PsiParameterList,
         PsiModifierList {

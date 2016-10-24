@@ -34,14 +34,12 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.intellij.lang.annotations.Language;
 
 public class DefaultConfigurationTest extends AbstractCheckTest {
 

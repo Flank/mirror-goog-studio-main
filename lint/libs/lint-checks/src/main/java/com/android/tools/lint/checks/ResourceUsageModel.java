@@ -55,14 +55,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -73,6 +65,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * A model for Android resource declarations and usages
@@ -427,16 +425,12 @@ public class ResourceUsageModel {
 
     public String dumpResourceModel() {
         StringBuilder sb = new StringBuilder(1000);
-        Collections.sort(mResources, new Comparator<Resource>() {
-            @Override
-            public int compare(Resource resource1,
-                    Resource resource2) {
-                int delta = resource1.type.compareTo(resource2.type);
-                if (delta != 0) {
-                    return delta;
-                }
-                return resource1.name.compareTo(resource2.name);
+        Collections.sort(mResources, (resource1, resource2) -> {
+            int delta = resource1.type.compareTo(resource2.type);
+            if (delta != 0) {
+                return delta;
             }
+            return resource1.name.compareTo(resource2.name);
         });
 
         for (Resource resource : mResources) {
@@ -457,7 +451,7 @@ public class ResourceUsageModel {
     public List<Resource> findUnused(List<Resource> resources) {
         List<Resource> roots = findRoots(resources);
 
-        Map<Resource,Boolean> seen = new IdentityHashMap<Resource,Boolean>(resources.size());
+        Map<Resource,Boolean> seen = new IdentityHashMap<>(resources.size());
         for (Resource root : roots) {
             visit(root, seen);
         }
@@ -764,7 +758,7 @@ public class ResourceUsageModel {
         }
     }
 
-    private static final String ANALYTICS_FILE = "analytics.xml"; //$NON-NLS-1$
+    private static final String ANALYTICS_FILE = "analytics.xml";
 
     /**
      * Returns true if this XML file corresponds to an Analytics configuration file;

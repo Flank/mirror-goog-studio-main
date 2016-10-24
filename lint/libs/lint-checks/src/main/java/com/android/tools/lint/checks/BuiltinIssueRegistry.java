@@ -21,7 +21,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;

@@ -46,7 +46,6 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiReferenceExpression;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
 
     /** Log call missing surrounding if */
     public static final Issue CONDITIONAL = Issue.create(
-            "LogConditional", //$NON-NLS-1$
+            "LogConditional",
             "Unconditional Logging Calls",
             "The BuildConfig class (available in Tools 17) provides a constant, \"DEBUG\", " +
             "which indicates whether the code is being built in release mode or in debug " +
@@ -80,7 +79,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
 
     /** Mismatched tags between isLogging and log calls within it */
     public static final Issue WRONG_TAG = Issue.create(
-            "LogTagMismatch", //$NON-NLS-1$
+            "LogTagMismatch",
             "Mismatched Log Tags",
             "When guarding a `Log.v(tag, ...)` call with `Log.isLoggable(tag)`, the " +
             "tag passed to both calls should be the same. Similarly, the level passed " +
@@ -95,7 +94,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
 
     /** Log tag is too long */
     public static final Issue LONG_TAG = Issue.create(
-            "LongLogTag", //$NON-NLS-1$
+            "LongLogTag",
             "Too Long Log Tags",
             "Log tags are only allowed to be at most 23 tag characters long.",
 
@@ -105,20 +104,20 @@ public class LogDetector extends Detector implements JavaPsiScanner {
             IMPLEMENTATION);
 
     @SuppressWarnings("SpellCheckingInspection")
-    private static final String IS_LOGGABLE = "isLoggable";       //$NON-NLS-1$
-    public static final String LOG_CLS = "android.util.Log";     //$NON-NLS-1$
-    private static final String PRINTLN = "println";              //$NON-NLS-1$
+    private static final String IS_LOGGABLE = "isLoggable";
+    public static final String LOG_CLS = "android.util.Log";
+    private static final String PRINTLN = "println";
 
     // ---- Implements Detector.JavaScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
         return Arrays.asList(
-                "d",           //$NON-NLS-1$
-                "e",           //$NON-NLS-1$
-                "i",           //$NON-NLS-1$
-                "v",           //$NON-NLS-1$
-                "w",           //$NON-NLS-1$
+                "d",
+                "e",
+                "i",
+                "v",
+                "w",
                 PRINTLN,
                 IS_LOGGABLE);
     }

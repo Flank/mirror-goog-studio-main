@@ -50,7 +50,6 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +69,7 @@ public class HtmlReporter extends Reporter {
     private static final boolean USE_HOLO_STYLE = true;
     @SuppressWarnings("ConstantConditions")
     private static final String CSS = USE_HOLO_STYLE
-            ? "hololike.css" : "default.css"; //$NON-NLS-1$ //$NON-NLS-2$
+            ? "hololike.css" : "default.css";
 
     /**
      * Maximum number of warnings allowed for a single issue type before we
@@ -110,40 +109,40 @@ public class HtmlReporter extends Reporter {
         Map<Issue, String> missing = computeMissingIssues(issues);
 
         mWriter.write(
-                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" + //$NON-NLS-1$
-                "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +      //$NON-NLS-1$
-                "<head>\n" +                                             //$NON-NLS-1$
-                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />" + //$NON-NLS-1$
-                "<title>" + mTitle + "</title>\n");                      //$NON-NLS-1$//$NON-NLS-2$
+                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
+                "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+                "<head>\n" +
+                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />" +
+                "<title>" + mTitle + "</title>\n");
 
         writeStyleSheet();
 
         if (!mSimpleFormat) {
             // JavaScript for collapsing/expanding long lists
             mWriter.write(
-                "<script language=\"javascript\" type=\"text/javascript\"> \n" + //$NON-NLS-1$
-                "<!--\n" +                                               //$NON-NLS-1$
-                "function reveal(id) {\n" +                              //$NON-NLS-1$
-                "if (document.getElementById) {\n" +                     //$NON-NLS-1$
-                "document.getElementById(id).style.display = 'block';\n" +       //$NON-NLS-1$
-                "document.getElementById(id+'Link').style.display = 'none';\n" + //$NON-NLS-1$
-                "}\n" +                                                  //$NON-NLS-1$
-                "}\n" +                                                  //$NON-NLS-1$
-                "//--> \n" +                                             //$NON-NLS-1$
-                "</script>\n");                                          //$NON-NLS-1$
+                "<script language=\"javascript\" type=\"text/javascript\"> \n" +
+                "<!--\n" +
+                "function reveal(id) {\n" +
+                "if (document.getElementById) {\n" +
+                "document.getElementById(id).style.display = 'block';\n" +
+                "document.getElementById(id+'Link').style.display = 'none';\n" +
+                "}\n" +
+                "}\n" +
+                "//--> \n" +
+                "</script>\n");
         }
 
         mWriter.write(
-                "</head>\n" +                                            //$NON-NLS-1$
-                "<body>\n" +                                             //$NON-NLS-1$
-                "<h1>" +                                                 //$NON-NLS-1$
+                "</head>\n" +
+                "<body>\n" +
+                "<h1>" +
                 mTitle +
-                "</h1>\n" +                                              //$NON-NLS-1$
-                "<div class=\"titleSeparator\"></div>\n");               //$NON-NLS-1$
+                "</h1>\n" +
+                "<div class=\"titleSeparator\"></div>\n");
 
         mWriter.write(String.format("Check performed at %1$s.",
                 new Date().toString()));
-        mWriter.write("<br/>\n");                                        //$NON-NLS-1$
+        mWriter.write("<br/>\n");
         mWriter.write(String.format("%1$s found",
                 describeCounts(stats.errorCount, stats.warningCount, false)));
         if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
@@ -179,44 +178,44 @@ public class HtmlReporter extends Reporter {
 
                 if (issue.getCategory() != previousCategory) {
                     previousCategory = issue.getCategory();
-                    mWriter.write("\n<a name=\"");                       //$NON-NLS-1$
+                    mWriter.write("\n<a name=\"");
                     mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("\"></a>\n");                          //$NON-NLS-1$
-                    mWriter.write("<div class=\"category\"><a href=\"#\" title=\"Return to top\">");           //$NON-NLS-1$
+                    mWriter.write("\"></a>\n");
+                    mWriter.write("<div class=\"category\"><a href=\"#\" title=\"Return to top\">");
                     mWriter.write(issue.getCategory().getFullName());
-                    mWriter.write("</a><div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
-                    mWriter.write("</div>\n");                           //$NON-NLS-1$
+                    mWriter.write("</a><div class=\"categorySeparator\"></div>\n");
+                    mWriter.write("</div>\n");
                 }
 
-                mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n"); //$NON-NLS-1$ //$NON-NLS-2$
-                mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
+                mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n");
+                mWriter.write("<div class=\"issue\">\n");
 
                 // Explain this issue
-                mWriter.write("<div class=\"id\"><a href=\"#\" title=\"Return to top\">");                     //$NON-NLS-1$
+                mWriter.write("<div class=\"id\"><a href=\"#\" title=\"Return to top\">");
                 mWriter.write(issue.getId());
-                mWriter.write(": ");                                     //$NON-NLS-1$
+                mWriter.write(": ");
                 mWriter.write(issue.getBriefDescription(HTML));
-                mWriter.write("</a><div class=\"issueSeparator\"></div>\n"); //$NON-NLS-1$
-                mWriter.write("</div>\n");                               //$NON-NLS-1$
+                mWriter.write("</a><div class=\"issueSeparator\"></div>\n");
+                mWriter.write("</div>\n");
 
-                mWriter.write("<div class=\"warningslist\">\n");         //$NON-NLS-1$
+                mWriter.write("<div class=\"warningslist\">\n");
                 boolean partialHide = !mSimpleFormat && warnings.size() > SPLIT_LIMIT;
 
                 int count = 0;
                 for (Warning warning : warnings) {
                     if (partialHide && count == SHOWN_COUNT) {
-                        String id = warning.issue.getId() + "Div";       //$NON-NLS-1$
-                        mWriter.write("<button id=\"");                  //$NON-NLS-1$
+                        String id = warning.issue.getId() + "Div";
+                        mWriter.write("<button id=\"");
                         mWriter.write(id);
-                        mWriter.write("Link\" onclick=\"reveal('");      //$NON-NLS-1$
+                        mWriter.write("Link\" onclick=\"reveal('");
                         mWriter.write(id);
-                        mWriter.write("');\" />");                       //$NON-NLS-1$
+                        mWriter.write("');\" />");
                         mWriter.write(String.format("+ %1$d More Occurrences...",
                                 warnings.size() - SHOWN_COUNT));
-                        mWriter.write("</button>\n");                    //$NON-NLS-1$
-                        mWriter.write("<div id=\"");                     //$NON-NLS-1$
+                        mWriter.write("</button>\n");
+                        mWriter.write("<div id=\"");
                         mWriter.write(id);
-                        mWriter.write("\" style=\"display: none\">\n");  //$NON-NLS-1$
+                        mWriter.write("\" style=\"display: none\">\n");
                     }
                     count++;
                     String url = null;
@@ -234,20 +233,20 @@ public class HtmlReporter extends Reporter {
                             && warning.location.getSecondary() == null) {
                         addedImage = addImage(url, warning.location);
                     }
-                    mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
+                    mWriter.write("<span class=\"message\">");
                     mWriter.append(RAW.convertTo(warning.message, HTML));
-                    mWriter.write("</span>");                            //$NON-NLS-1$
+                    mWriter.write("</span>");
                     if (addedImage) {
-                        mWriter.write("<br clear=\"right\"/>");          //$NON-NLS-1$
+                        mWriter.write("<br clear=\"right\"/>");
                     } else {
-                        mWriter.write("<br />");                         //$NON-NLS-1$
+                        mWriter.write("<br />");
                     }
 
                     // Insert surrounding code block window
                     if (warning.line >= 0 && warning.fileContents != null) {
-                        mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
+                        mWriter.write("<pre class=\"errorlines\">\n");
                         appendCodeBlock(warning.fileContents, warning.line, warning.offset);
-                        mWriter.write("\n</pre>");                       //$NON-NLS-1$
+                        mWriter.write("\n</pre>");
                     }
                     mWriter.write('\n');
                     if (warning.location != null && warning.location.getSecondary() != null) {
@@ -263,19 +262,19 @@ public class HtmlReporter extends Reporter {
                                 writeLocation(l.getFile(), path, line);
                                 mWriter.write(':');
                                 mWriter.write(' ');
-                                mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
+                                mWriter.write("<span class=\"message\">");
                                 mWriter.append(RAW.convertTo(message, HTML));
-                                mWriter.write("</span>");                            //$NON-NLS-1$
-                                mWriter.write("<br />");                         //$NON-NLS-1$
+                                mWriter.write("</span>");
+                                mWriter.write("<br />");
 
                                 String name = l.getFile().getName();
                                 if (!(endsWith(name, DOT_PNG) || endsWith(name, DOT_JPG))) {
                                     CharSequence s = mClient.readFile(l.getFile());
                                     if (s.length() > 0) {
-                                        mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
+                                        mWriter.write("<pre class=\"errorlines\">\n");
                                         int offset = start != null ? start.getOffset() : -1;
                                         appendCodeBlock(s, line, offset);
-                                        mWriter.write("\n</pre>");                       //$NON-NLS-1$
+                                        mWriter.write("\n</pre>");
                                     }
                                 }
                             } else {
@@ -286,34 +285,34 @@ public class HtmlReporter extends Reporter {
                         }
                         mWriter.write("</ul>");
                         if (otherLocations > 0) {
-                            String id = "Location" + count + "Div";          //$NON-NLS-1$
-                            mWriter.write("<button id=\"");                  //$NON-NLS-1$
+                            String id = "Location" + count + "Div";
+                            mWriter.write("<button id=\"");
                             mWriter.write(id);
-                            mWriter.write("Link\" onclick=\"reveal('");      //$NON-NLS-1$
+                            mWriter.write("Link\" onclick=\"reveal('");
                             mWriter.write(id);
-                            mWriter.write("');\" />"); //$NON-NLS-1$
+                            mWriter.write("');\" />");
                             mWriter.write(String.format("+ %1$d Additional Locations...",
                                     otherLocations));
-                            mWriter.write("</button>\n");                    //$NON-NLS-1$
-                            mWriter.write("<div id=\"");                     //$NON-NLS-1$
+                            mWriter.write("</button>\n");
+                            mWriter.write("<div id=\"");
                             mWriter.write(id);
-                            mWriter.write("\" style=\"display: none\">\n");  //$NON-NLS-1$
+                            mWriter.write("\" style=\"display: none\">\n");
 
                             mWriter.write("Additional locations: ");
-                            mWriter.write("<ul>\n"); //$NON-NLS-1$
+                            mWriter.write("<ul>\n");
                             l = warning.location.getSecondary();
                             while (l != null) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
-                                mWriter.write("<li> "); //$NON-NLS-1$
+                                mWriter.write("<li> ");
                                 writeLocation(l.getFile(), path, line);
-                                mWriter.write("\n");  //$NON-NLS-1$
+                                mWriter.write("\n");
                                 l = l.getSecondary();
                             }
-                            mWriter.write("</ul>\n"); //$NON-NLS-1$
+                            mWriter.write("</ul>\n");
 
-                            mWriter.write("</div><br/><br/>\n"); //$NON-NLS-1$
+                            mWriter.write("</div><br/><br/>\n");
                         }
                     }
 
@@ -334,13 +333,13 @@ public class HtmlReporter extends Reporter {
                     }
                 }
                 if (partialHide) { // Close up the extra div
-                    mWriter.write("</div>\n");                           //$NON-NLS-1$
+                    mWriter.write("</div>\n");
                 }
 
-                mWriter.write("</div>\n");                               //$NON-NLS-1$
+                mWriter.write("</div>\n");
                 writeIssueMetadata(issue, first.severity, null);
 
-                mWriter.write("</div>\n");                               //$NON-NLS-1$
+                mWriter.write("</div>\n");
             }
 
             if (!mClient.isCheckingSpecificIssues()) {
@@ -351,7 +350,7 @@ public class HtmlReporter extends Reporter {
         } else {
             mWriter.write("Congratulations!");
         }
-        mWriter.write("\n</body>\n</html>");                             //$NON-NLS-1$
+        mWriter.write("\n</body>\n</html>");
         mWriter.close();
 
         if (!mClient.getFlags().isQuiet()
@@ -363,7 +362,7 @@ public class HtmlReporter extends Reporter {
 
     private void writeIssueMetadata(Issue issue, Severity severity, String disabledBy)
             throws IOException {
-        mWriter.write("<div class=\"metadata\">");               //$NON-NLS-1$
+        mWriter.write("<div class=\"metadata\">");
 
         if (mClient.getRegistry() instanceof BuiltinIssueRegistry) {
             boolean adtHasFix = QuickfixHandler.ADT.hasAutoFix(issue);
@@ -377,9 +376,9 @@ public class HtmlReporter extends Reporter {
                 if (!INLINE_RESOURCES) {
                     mWriter.write(getFixIcon());
                 } else if (mFixUrl != null) {
-                    mWriter.write("&nbsp;<img alt=\"Fix\" border=\"0\" align=\"top\" src=\""); //$NON-NLS-1$
+                    mWriter.write("&nbsp;<img alt=\"Fix\" border=\"0\" align=\"top\" src=\"");
                     mWriter.write(mFixUrl);
-                    mWriter.write("\" />\n");                            //$NON-NLS-1$
+                    mWriter.write("\" />\n");
                 }
 
                 mWriter.write("<br>\n");
@@ -392,23 +391,23 @@ public class HtmlReporter extends Reporter {
 
         mWriter.write("Priority: ");
         mWriter.write(String.format("%1$d / 10", issue.getPriority()));
-        mWriter.write("<br/>\n");                                //$NON-NLS-1$
+        mWriter.write("<br/>\n");
         mWriter.write("Category: ");
         mWriter.write(issue.getCategory().getFullName());
-        mWriter.write("</div>\n");                               //$NON-NLS-1$
+        mWriter.write("</div>\n");
 
         mWriter.write("Severity: ");
         if (severity == Severity.ERROR || severity == Severity.FATAL) {
-            mWriter.write("<span class=\"error\">");             //$NON-NLS-1$
+            mWriter.write("<span class=\"error\">");
         } else if (severity == Severity.WARNING) {
-            mWriter.write("<span class=\"warning\">");           //$NON-NLS-1$
+            mWriter.write("<span class=\"warning\">");
         } else {
-            mWriter.write("<span>");                             //$NON-NLS-1$
+            mWriter.write("<span>");
         }
         appendEscapedText(severity.getDescription());
-        mWriter.write("</span>");                                //$NON-NLS-1$
+        mWriter.write("</span>");
 
-        mWriter.write("<div class=\"summary\">\n");              //$NON-NLS-1$
+        mWriter.write("<div class=\"summary\">\n");
         mWriter.write("Explanation: ");
         String description = issue.getBriefDescription(HTML);
         mWriter.write(description);
@@ -416,50 +415,50 @@ public class HtmlReporter extends Reporter {
                 && Character.isLetter(description.charAt(description.length() - 1))) {
             mWriter.write('.');
         }
-        mWriter.write("</div>\n");                               //$NON-NLS-1$
-        mWriter.write("<div class=\"explanation\">\n");          //$NON-NLS-1$
+        mWriter.write("</div>\n");
+        mWriter.write("<div class=\"explanation\">\n");
         String explanationHtml = issue.getExplanation(HTML);
         mWriter.write(explanationHtml);
-        mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
+        mWriter.write("\n</div>\n");
         List<String> moreInfo = issue.getMoreInfo();
-        mWriter.write("<br/>");                                  //$NON-NLS-1$
-        mWriter.write("<div class=\"moreinfo\">");               //$NON-NLS-1$
+        mWriter.write("<br/>");
+        mWriter.write("<div class=\"moreinfo\">");
         mWriter.write("More info: ");
         int count = moreInfo.size();
         if (count > 1) {
-            mWriter.write("<ul>");                               //$NON-NLS-1$
+            mWriter.write("<ul>");
         }
         for (String uri : moreInfo) {
             if (count > 1) {
-                mWriter.write("<li>");                           //$NON-NLS-1$
+                mWriter.write("<li>");
             }
-            mWriter.write("<a href=\"");                         //$NON-NLS-1$
+            mWriter.write("<a href=\"");
             mWriter.write(uri);
-            mWriter.write("\">"    );                            //$NON-NLS-1$
+            mWriter.write("\">"    );
             mWriter.write(uri);
-            mWriter.write("</a>\n");                             //$NON-NLS-1$
+            mWriter.write("</a>\n");
         }
         if (count > 1) {
-            mWriter.write("</ul>");                              //$NON-NLS-1$
+            mWriter.write("</ul>");
         }
-        mWriter.write("</div>");                                 //$NON-NLS-1$
+        mWriter.write("</div>");
 
-        mWriter.write("<br/>");                                  //$NON-NLS-1$
+        mWriter.write("<br/>");
         mWriter.write(String.format(
                 "To suppress this error, use the issue id \"%1$s\" as explained in the " +
                 "%2$sSuppressing Warnings and Errors%3$s section.",
                 issue.getId(),
-                "<a href=\"#SuppressInfo\">", "</a>"));          //$NON-NLS-1$ //$NON-NLS-2$
+                "<a href=\"#SuppressInfo\">", "</a>"));
         mWriter.write("<br/>\n");
     }
 
     private void writeSuppressInfo() throws IOException {
         //getSuppressHelp
-        mWriter.write("\n<a name=\"SuppressInfo\"></a>\n");      //$NON-NLS-1$
-        mWriter.write("<div class=\"category\">");               //$NON-NLS-1$
+        mWriter.write("\n<a name=\"SuppressInfo\"></a>\n");
+        mWriter.write("<div class=\"category\">");
         mWriter.write("Suppressing Warnings and Errors");
-        mWriter.write("<div class=\"categorySeparator\"></div>\n");//$NON-NLS-1$
-        mWriter.write("</div>\n");                               //$NON-NLS-1$
+        mWriter.write("<div class=\"categorySeparator\"></div>\n");
+        mWriter.write("</div>\n");
         mWriter.write(TextFormat.RAW.convertTo(Main.getSuppressHelp(), TextFormat.HTML));
         mWriter.write('\n');
     }
@@ -504,49 +503,49 @@ public class HtmlReporter extends Reporter {
     }
 
     private void writeMissingIssues(Map<Issue, String> missing) throws IOException {
-        mWriter.write("\n<a name=\"MissingIssues\"></a>\n");        //$NON-NLS-1$
-        mWriter.write("<div class=\"category\">");                  //$NON-NLS-1$
+        mWriter.write("\n<a name=\"MissingIssues\"></a>\n");
+        mWriter.write("<div class=\"category\">");
         mWriter.write("Disabled Checks");
-        mWriter.write("<div class=\"categorySeparator\"></div>\n"); //$NON-NLS-1$
-        mWriter.write("</div>\n");                                  //$NON-NLS-1$
+        mWriter.write("<div class=\"categorySeparator\"></div>\n");
+        mWriter.write("</div>\n");
 
         mWriter.write(
                 "The following issues were not run by lint, either " +
                 "because the check is not enabled by default, or because " +
                 "it was disabled with a command line flag or via one or " +
                 "more lint.xml configuration files in the project directories.");
-        mWriter.write("\n<br/><br/>\n"); //$NON-NLS-1$
+        mWriter.write("\n<br/><br/>\n");
 
         List<Issue> list = new ArrayList<>(missing.keySet());
         Collections.sort(list);
 
 
         for (Issue issue : list) {
-            mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n"); //$NON-NLS-1$ //$NON-NLS-2$
-            mWriter.write("<div class=\"issue\">\n");                  //$NON-NLS-1$
+            mWriter.write("<a name=\"" + issue.getId() + "\"></a>\n");
+            mWriter.write("<div class=\"issue\">\n");
 
             // Explain this issue
-            mWriter.write("<div class=\"id\">");                       //$NON-NLS-1$
+            mWriter.write("<div class=\"id\">");
             mWriter.write(issue.getId());
-            mWriter.write("<div class=\"issueSeparator\"></div>\n");   //$NON-NLS-1$
-            mWriter.write("</div>\n");                                 //$NON-NLS-1$
+            mWriter.write("<div class=\"issueSeparator\"></div>\n");
+            mWriter.write("</div>\n");
             String disabledBy = missing.get(issue);
             writeIssueMetadata(issue, issue.getDefaultSeverity(), disabledBy);
-            mWriter.write("</div>\n");                                 //$NON-NLS-1$
+            mWriter.write("</div>\n");
         }
     }
 
     protected void writeStyleSheet() throws IOException {
         if (USE_HOLO_STYLE) {
             mWriter.write(
-                "<link rel=\"stylesheet\" type=\"text/css\" " +          //$NON-NLS-1$
-                "href=\"http://fonts.googleapis.com/css?family=Roboto\" />\n" );//$NON-NLS-1$
+                "<link rel=\"stylesheet\" type=\"text/css\" " +
+                "href=\"http://fonts.googleapis.com/css?family=Roboto\" />\n" );
         }
 
         URL cssUrl = HtmlReporter.class.getResource(CSS);
         if (mSimpleFormat || INLINE_RESOURCES) {
             // Inline the CSS
-            mWriter.write("<style>\n");                                   //$NON-NLS-1$
+            mWriter.write("<style>\n");
             InputStream input = cssUrl.openStream();
             byte[] bytes = ByteStreams.toByteArray(input);
             try {
@@ -556,13 +555,13 @@ public class HtmlReporter extends Reporter {
             }
             String css = new String(bytes, Charsets.UTF_8);
             mWriter.write(css);
-            mWriter.write("</style>\n");                                  //$NON-NLS-1$
+            mWriter.write("</style>\n");
         } else {
             String ref = addLocalResources(cssUrl);
             if (ref != null) {
                 mWriter.write(
-                "<link rel=\"stylesheet\" type=\"text/css\" href=\""     //$NON-NLS-1$
-                            + ref + "\" />\n");                          //$NON-NLS-1$
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\""
+                            + ref + "\" />\n");
             }
         }
     }
@@ -570,14 +569,14 @@ public class HtmlReporter extends Reporter {
     private void writeOverview(List<List<Warning>> related, int missingCount)
             throws IOException {
         // Write issue id summary
-        mWriter.write("<table class=\"overview\">\n");                          //$NON-NLS-1$
+        mWriter.write("<table class=\"overview\">\n");
 
         String errorUrl = null;
         String warningUrl = null;
         if (!INLINE_RESOURCES && !mSimpleFormat) {
             errorUrl = addLocalResources(getErrorIconUrl());
             warningUrl = addLocalResources(getWarningIconUrl());
-            mFixUrl = addLocalResources(HtmlReporter.class.getResource("lint-run.png")); //$NON-NLS-1$)
+            mFixUrl = addLocalResources(HtmlReporter.class.getResource("lint-run.png"));
         }
 
         Category previousCategory = null;
@@ -596,22 +595,22 @@ public class HtmlReporter extends Reporter {
                 mWriter.write("<tr><td></td><td class=\"categoryColumn\">");
                 previousCategory = issue.getCategory();
                 String categoryName = issue.getCategory().getFullName();
-                mWriter.write("<a href=\"#");                        //$NON-NLS-1$
+                mWriter.write("<a href=\"#");
                 mWriter.write(categoryName);
-                mWriter.write("\">");                                //$NON-NLS-1$
+                mWriter.write("\">");
                 mWriter.write(categoryName);
-                mWriter.write("</a>\n");                             //$NON-NLS-1$
-                mWriter.write("</td></tr>");                         //$NON-NLS-1$
-                mWriter.write("\n");                                 //$NON-NLS-1$
+                mWriter.write("</a>\n");
+                mWriter.write("</td></tr>");
+                mWriter.write("\n");
             }
-            mWriter.write("<tr>\n");                                 //$NON-NLS-1$
+            mWriter.write("<tr>\n");
 
             // Count column
-            mWriter.write("<td class=\"countColumn\">");             //$NON-NLS-1$
+            mWriter.write("<td class=\"countColumn\">");
             mWriter.write(Integer.toString(warnings.size()));
-            mWriter.write("</td>");                                  //$NON-NLS-1$
+            mWriter.write("</td>");
 
-            mWriter.write("<td class=\"issueColumn\">");             //$NON-NLS-1$
+            mWriter.write("<td class=\"issueColumn\">");
 
             if (INLINE_RESOURCES) {
                 String markup = isError ? getErrorIcon() : getWarningIcon();
@@ -620,49 +619,49 @@ public class HtmlReporter extends Reporter {
             } else {
                 String imageUrl = isError ? errorUrl : warningUrl;
                 if (imageUrl != null) {
-                    mWriter.write("<img border=\"0\" align=\"top\" src=\""); //$NON-NLS-1$
+                    mWriter.write("<img border=\"0\" align=\"top\" src=\"");
                     mWriter.write(imageUrl);
                     mWriter.write("\" alt=\"");
                     mWriter.write(isError ? "Error" : "Warning");
-                    mWriter.write("\" />\n");                            //$NON-NLS-1$
+                    mWriter.write("\" />\n");
                 }
             }
 
-            mWriter.write("<a href=\"#");                            //$NON-NLS-1$
+            mWriter.write("<a href=\"#");
             mWriter.write(issue.getId());
-            mWriter.write("\">");                                    //$NON-NLS-1$
+            mWriter.write("\">");
             mWriter.write(issue.getId());
-            mWriter.write(": ");                                     //$NON-NLS-1$
+            mWriter.write(": ");
             mWriter.write(issue.getBriefDescription(HTML));
-            mWriter.write("</a>\n");                                 //$NON-NLS-1$
+            mWriter.write("</a>\n");
 
             mWriter.write("</td></tr>\n");
         }
 
         if (missingCount > 0 && !mClient.isCheckingSpecificIssues()) {
-            mWriter.write("<tr><td></td>");                          //$NON-NLS-1$
-            mWriter.write("<td class=\"categoryColumn\">");          //$NON-NLS-1$
-            mWriter.write("<a href=\"#MissingIssues\">");            //$NON-NLS-1$
+            mWriter.write("<tr><td></td>");
+            mWriter.write("<td class=\"categoryColumn\">");
+            mWriter.write("<a href=\"#MissingIssues\">");
             mWriter.write(String.format("Disabled Checks (%1$d)",
                     missingCount));
 
-            mWriter.write("</a>\n");                                 //$NON-NLS-1$
-            mWriter.write("</td></tr>");                             //$NON-NLS-1$
+            mWriter.write("</a>\n");
+            mWriter.write("</td></tr>");
         }
 
-        mWriter.write("</table>\n");                                 //$NON-NLS-1$
-        mWriter.write("<br/>");                                      //$NON-NLS-1$
+        mWriter.write("</table>\n");
+        mWriter.write("<br/>");
     }
 
     private String writeLocation(File file, String path, int line) throws IOException {
         String url;
-        mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
+        mWriter.write("<span class=\"location\">");
 
         url = getUrl(file);
         if (url != null) {
-            mWriter.write("<a href=\"");                 //$NON-NLS-1$
+            mWriter.write("<a href=\"");
             mWriter.write(url);
-            mWriter.write("\">");                        //$NON-NLS-1$
+            mWriter.write("\">");
         }
 
         String displayPath = stripPath(path);
@@ -672,14 +671,14 @@ public class HtmlReporter extends Reporter {
         mWriter.write(displayPath);
         //noinspection VariableNotUsedInsideIf
         if (url != null) {
-            mWriter.write("</a>");                       //$NON-NLS-1$
+            mWriter.write("</a>");
         }
         if (line >= 0) {
             // 0-based line numbers, but display 1-based
             mWriter.write(':');
             mWriter.write(Integer.toString(line + 1));
         }
-        mWriter.write("</span>");                        //$NON-NLS-1$
+        mWriter.write("</span>");
         return url;
     }
 
@@ -699,49 +698,44 @@ public class HtmlReporter extends Reporter {
                 }
                 if (!urls.isEmpty()) {
                     // Sort in order
-                    Collections.sort(urls, new Comparator<String>() {
-                        @Override
-                        public int compare(String s1, String s2) {
-                            return getDpiRank(s1) - getDpiRank(s2);
-                        }
-                    });
-                    mWriter.write("<table>");                            //$NON-NLS-1$
-                    mWriter.write("<tr>");                               //$NON-NLS-1$
+                    Collections.sort(urls, (s1, s2) -> getDpiRank(s1) - getDpiRank(s2));
+                    mWriter.write("<table>");
+                    mWriter.write("<tr>");
                     for (String linkedUrl : urls) {
                         // Image series: align top
-                        mWriter.write("<td>");                           //$NON-NLS-1$
-                        mWriter.write("<a href=\"");                     //$NON-NLS-1$
+                        mWriter.write("<td>");
+                        mWriter.write("<a href=\"");
                         mWriter.write(linkedUrl);
-                        mWriter.write("\">");                            //$NON-NLS-1$
-                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
+                        mWriter.write("\">");
+                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");
                         mWriter.write(linkedUrl);
-                        mWriter.write("\" /></a>\n");                    //$NON-NLS-1$
-                        mWriter.write("</td>");                          //$NON-NLS-1$
+                        mWriter.write("\" /></a>\n");
+                        mWriter.write("</td>");
                     }
-                    mWriter.write("</tr>");                              //$NON-NLS-1$
+                    mWriter.write("</tr>");
 
-                    mWriter.write("<tr>");                               //$NON-NLS-1$
+                    mWriter.write("<tr>");
                     for (String linkedUrl : urls) {
-                        mWriter.write("<th>");                           //$NON-NLS-1$
-                        int index = linkedUrl.lastIndexOf("drawable-");  //$NON-NLS-1$
+                        mWriter.write("<th>");
+                        int index = linkedUrl.lastIndexOf("drawable-");
                         if (index != -1) {
-                            index += "drawable-".length();               //$NON-NLS-1$
+                            index += "drawable-".length();
                             int end = linkedUrl.indexOf('/', index);
                             if (end != -1) {
                                 mWriter.write(linkedUrl.substring(index, end));
                             }
                         }
-                        mWriter.write("</th>");                          //$NON-NLS-1$
+                        mWriter.write("</th>");
                     }
-                    mWriter.write("</tr>\n");                            //$NON-NLS-1$
+                    mWriter.write("</tr>\n");
 
-                    mWriter.write("</table>\n");                         //$NON-NLS-1$
+                    mWriter.write("</table>\n");
                 }
             } else {
                 // Just this image: float to the right
-                mWriter.write("<img class=\"embedimage\" align=\"right\" src=\""); //$NON-NLS-1$
+                mWriter.write("<img class=\"embedimage\" align=\"right\" src=\"");
                 mWriter.write(url);
-                mWriter.write("\" />");                                  //$NON-NLS-1$
+                mWriter.write("\" />");
             }
 
             return true;
@@ -752,13 +746,13 @@ public class HtmlReporter extends Reporter {
 
     /** Provide a sorting rank for a url */
     private static int getDpiRank(String url) {
-        if (url.contains("-xhdpi")) {                                   //$NON-NLS-1$
+        if (url.contains("-xhdpi")) {
             return 0;
-        } else if (url.contains("-hdpi")) {                             //$NON-NLS-1$
+        } else if (url.contains("-hdpi")) {
             return 1;
-        } else if (url.contains("-mdpi")) {                             //$NON-NLS-1$
+        } else if (url.contains("-mdpi")) {
             return 2;
-        } else if (url.contains("-ldpi")) {                             //$NON-NLS-1$
+        } else if (url.contains("-ldpi")) {
             return 3;
         } else {
             return 4;
@@ -776,7 +770,7 @@ public class HtmlReporter extends Reporter {
                     break;
                 }
 
-                mWriter.write(String.format("<span class=\"lineno\">%1$4d</span> ", (l + 1))); //$NON-NLS-1$
+                mWriter.write(String.format("<span class=\"lineno\">%1$4d</span> ", (l + 1)));
 
                 String line = LintCliClient.getLineOfOffset(contents, lineOffset);
                 if (offset != -1 && lineOffset <= offset && lineOffset+line.length() >= offset) {
@@ -787,18 +781,18 @@ public class HtmlReporter extends Reporter {
                     // First print everything before
                     int delta = offset - lineOffset;
                     appendEscapedText(line.substring(0, delta));
-                    mWriter.write("<span class=\"errorspan\">");         //$NON-NLS-1$
+                    mWriter.write("<span class=\"errorspan\">");
                     appendEscapedText(line.substring(delta));
-                    mWriter.write("</span>");                            //$NON-NLS-1$
+                    mWriter.write("</span>");
                 } else if (offset == -1 && l == lineno) {
-                    mWriter.write("<span class=\"errorline\">");         //$NON-NLS-1$
+                    mWriter.write("<span class=\"errorline\">");
                     appendEscapedText(line);
-                    mWriter.write("</span>");                            //$NON-NLS-1$
+                    mWriter.write("</span>");
                 } else {
                     appendEscapedText(line);
                 }
                 if (l < max - 1) {
-                    mWriter.write("\n");                                 //$NON-NLS-1$
+                    mWriter.write("\n");
                 }
             }
         }
@@ -808,14 +802,14 @@ public class HtmlReporter extends Reporter {
         for (int i = 0, n = textValue.length(); i < n; i++) {
             char c = textValue.charAt(i);
             if (c == '<') {
-                mWriter.write("&lt;");                                   //$NON-NLS-1$
+                mWriter.write("&lt;");
             } else if (c == '&') {
-                mWriter.write("&amp;");                                  //$NON-NLS-1$
+                mWriter.write("&amp;");
             } else if (c == '\n') {
                 mWriter.write("<br/>\n");
             } else {
                 if (c > 255) {
-                    mWriter.write("&#");                                 //$NON-NLS-1$
+                    mWriter.write("&#");
                     mWriter.write(Integer.toString(c));
                     mWriter.write(';');
                 } else {
@@ -844,11 +838,11 @@ public class HtmlReporter extends Reporter {
     }
 
     static URL getWarningIconUrl() {
-        return HtmlReporter.class.getResource("lint-warning.png");   //$NON-NLS-1$
+        return HtmlReporter.class.getResource("lint-warning.png");
     }
 
     static URL getErrorIconUrl() {
-        return HtmlReporter.class.getResource("lint-error.png");     //$NON-NLS-1$
+        return HtmlReporter.class.getResource("lint-error.png");
     }
 
     static String getErrorIcon() {

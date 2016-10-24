@@ -23,7 +23,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiInstanceOfExpression;
 import com.intellij.psi.PsiTypeElement;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiInstanceOfExpression extends EcjPsiExpression implements

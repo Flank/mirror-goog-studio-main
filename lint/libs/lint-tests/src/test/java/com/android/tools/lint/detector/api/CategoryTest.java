@@ -18,13 +18,11 @@ package com.android.tools.lint.detector.api;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-
-import junit.framework.TestCase;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
+import junit.framework.TestCase;
 
 public class CategoryTest extends TestCase {
     public void testCompare() throws Exception {

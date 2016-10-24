@@ -21,18 +21,16 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.google.common.annotations.Beta;
-
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Specialized visitor for running detectors on a class object model.
@@ -64,10 +62,10 @@ class AsmVisitor {
      */
     private static final int TYPE_COUNT = AbstractInsnNode.LINE + 1;
     private final Map<String, List<ClassScanner>> mMethodNameToChecks =
-            new HashMap<String, List<ClassScanner>>();
+            new HashMap<>();
     private final Map<String, List<ClassScanner>> mMethodOwnerToChecks =
-            new HashMap<String, List<ClassScanner>>();
-    private final List<Detector> mFullClassChecks = new ArrayList<Detector>();
+            new HashMap<>();
+    private final List<Detector> mFullClassChecks = new ArrayList<>();
 
     private final List<? extends Detector> mAllDetectors;
     private List<ClassScanner>[] mNodeTypeDetectors;
@@ -92,7 +90,7 @@ class AsmVisitor {
                 for (String element : names) {
                     List<Detector.ClassScanner> list = mMethodNameToChecks.get(element);
                     if (list == null) {
-                        list = new ArrayList<Detector.ClassScanner>();
+                        list = new ArrayList<>();
                         mMethodNameToChecks.put(element, list);
                     }
                     list.add(scanner);
@@ -105,7 +103,7 @@ class AsmVisitor {
                 for (String element : owners) {
                     List<Detector.ClassScanner> list = mMethodOwnerToChecks.get(element);
                     if (list == null) {
-                        list = new ArrayList<Detector.ClassScanner>();
+                        list = new ArrayList<>();
                         mMethodOwnerToChecks.put(element, list);
                     }
                     list.add(scanner);
@@ -127,7 +125,7 @@ class AsmVisitor {
                     }
                     List<ClassScanner> checks = mNodeTypeDetectors[type];
                     if (checks == null) {
-                        checks = new ArrayList<ClassScanner>();
+                        checks = new ArrayList<>();
                         mNodeTypeDetectors[type] = checks;
                     }
                     checks.add(scanner);

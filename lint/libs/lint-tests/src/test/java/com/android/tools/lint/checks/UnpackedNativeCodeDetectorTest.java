@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
-
 import java.io.File;
 
 /**

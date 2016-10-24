@@ -41,12 +41,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * Check which looks for usage of deprecated tags, attributes, etc.
@@ -55,7 +53,7 @@ public class DeprecationDetector extends LayoutDetector {
     /** Usage of deprecated views or attributes */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(
-            "Deprecated", //$NON-NLS-1$
+            "Deprecated",
             "Using deprecated resources",
             "Deprecated views, attributes and so on are deprecated because there " +
             "is a better way to do something. Do it that new way. You've been warned.",

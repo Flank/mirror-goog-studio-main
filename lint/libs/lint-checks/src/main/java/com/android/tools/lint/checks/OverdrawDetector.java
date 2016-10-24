@@ -63,12 +63,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,17 +72,21 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Check which looks for overdraw problems where view areas are painted and then
  * painted over, meaning that the bottom paint operation is a waste of time.
  */
 public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
-    private static final String SET_THEME = "setTheme";         //$NON-NLS-1$
+    private static final String SET_THEME = "setTheme";
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "Overdraw", //$NON-NLS-1$
+            "Overdraw",
             "Overdraw: Painting regions more than once",
 
             "If you set a background drawable on a root view, then you should use a " +
@@ -157,19 +155,19 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
 
     /** Is the given theme a "blank" theme (one not painting its background) */
     private boolean isBlankTheme(String name) {
-        if (name.startsWith("@android:style/Theme_")) {               //$NON-NLS-1$
-            if (name.contains("NoFrame")                              //$NON-NLS-1$
-                    || name.contains("Theme_Wallpaper")               //$NON-NLS-1$
-                    || name.contains("Theme_Holo_Wallpaper")          //$NON-NLS-1$
-                    || name.contains("Theme_Translucent")             //$NON-NLS-1$
-                    || name.contains("Theme_Dialog_NoFrame")          //$NON-NLS-1$
-                    || name.contains("Theme_Holo_Dialog_Alert")       //$NON-NLS-1$
-                    || name.contains("Theme_Holo_Light_Dialog_Alert") //$NON-NLS-1$
-                    || name.contains("Theme_Dialog_Alert")            //$NON-NLS-1$
-                    || name.contains("Theme_Panel")                   //$NON-NLS-1$
-                    || name.contains("Theme_Light_Panel")             //$NON-NLS-1$
-                    || name.contains("Theme_Holo_Panel")              //$NON-NLS-1$
-                    || name.contains("Theme_Holo_Light_Panel")) {     //$NON-NLS-1$
+        if (name.startsWith("@android:style/Theme_")) {
+            if (name.contains("NoFrame")
+                    || name.contains("Theme_Wallpaper")
+                    || name.contains("Theme_Holo_Wallpaper")
+                    || name.contains("Theme_Translucent")
+                    || name.contains("Theme_Dialog_NoFrame")
+                    || name.contains("Theme_Holo_Dialog_Alert")
+                    || name.contains("Theme_Holo_Light_Dialog_Alert")
+                    || name.contains("Theme_Dialog_Alert")
+                    || name.contains("Theme_Panel")
+                    || name.contains("Theme_Light_Panel")
+                    || name.contains("Theme_Holo_Panel")
+                    || name.contains("Theme_Holo_Light_Panel")) {
                 return true;
             }
         }
@@ -235,9 +233,9 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
         }
 
         if (apiLevel >= 11) {
-            return "@android:style/Theme.Holo"; //$NON-NLS-1$
+            return "@android:style/Theme.Holo";
         } else {
-            return "@android:style/Theme"; //$NON-NLS-1$
+            return "@android:style/Theme";
         }
     }
 
@@ -265,7 +263,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
                 return;
             }
 
-            if (background.startsWith("@android:drawable/")) { //$NON-NLS-1$
+            if (background.startsWith("@android:drawable/")) {
                 // We haven't had a chance to study the builtin drawables the way we
                 // check the project local ones in scanBitmap() and beforeCheckFile(),
                 // but many of these are not bitmaps, so ignore these
@@ -273,7 +271,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
             }
 
             String name = context.file.getName();
-            if (name.contains("list_") || name.contains("_item")) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (name.contains("list_") || name.contains("_item")) {
                 // Canonical list_item layout name: don't warn about these, it's
                 // pretty common to want to paint custom list item backgrounds
                 return;
@@ -287,13 +285,13 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
             Location location = context.getLocation(attribute);
             location.setClientData(attribute);
             if (mRootAttributes == null) {
-                mRootAttributes = new ArrayList<Pair<Location,String>>();
+                mRootAttributes = new ArrayList<>();
             }
             mRootAttributes.add(Pair.of(location, attribute.getValue()));
 
             String activity = documentElement.getAttributeNS(TOOLS_URI, ATTR_CONTEXT);
             if (activity != null && !activity.isEmpty()) {
-                if (activity.startsWith(".")) { //$NON-NLS-1$
+                if (activity.startsWith(".")) {
                     activity = context.getProject().getPackage() + activity;
                 }
                 registerLayoutActivity(LintUtils.getLayoutName(context.file), activity);
@@ -334,7 +332,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
             ResourceFolderType type = ResourceFolderType.getFolderType(parent.getName());
             if (type == ResourceFolderType.DRAWABLE) {
                 if (mValidDrawables == null) {
-                    mValidDrawables = new ArrayList<String>();
+                    mValidDrawables = new ArrayList<>();
                 }
                 String resource = getDrawableResource(context.file);
                 mValidDrawables.add(resource);
@@ -381,7 +379,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
         if (name.indexOf('$') != -1) {
             name = name.replace('$', '.');
         }
-        if (name.startsWith(".")) {  //$NON-NLS-1$
+        if (name.startsWith(".")) {
             String pkg = context.getProject().getPackage();
             if (pkg != null && !pkg.isEmpty()) {
                 name = pkg + name;
@@ -391,7 +389,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
         String theme = element.getAttributeNS(ANDROID_URI, ATTR_THEME);
         if (theme != null && !theme.isEmpty()) {
             if (mActivityToTheme == null) {
-                mActivityToTheme = new HashMap<String, String>();
+                mActivityToTheme = new HashMap<>();
             }
             mActivityToTheme.put(name, getResourceFieldName(theme));
         }
@@ -421,7 +419,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
             if (items.item(i).getNodeType() == Node.ELEMENT_NODE) {
                 Element item = (Element) items.item(i);
                 String name = item.getAttribute(ATTR_NAME);
-                if (name.equals("android:windowBackground")) {      //$NON-NLS-1$
+                if (name.equals("android:windowBackground")) {
                     NodeList textNodes = item.getChildNodes();
                     for (int j = 0, m = textNodes.getLength(); j < m; j++) {
                         Node textNode = textNodes.item(j);
@@ -434,7 +432,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
                                         || mValidDrawables != null
                                             && mValidDrawables.contains(trim)) {
                                     if (mBlankThemes == null) {
-                                        mBlankThemes = new ArrayList<String>();
+                                        mBlankThemes = new ArrayList<>();
                                     }
                                     mBlankThemes.add(resource);
                                 }
@@ -449,7 +447,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
 
         if (isBlankTheme(parent)) {
             if (mBlankThemes == null) {
-                mBlankThemes = new ArrayList<String>();
+                mBlankThemes = new ArrayList<>();
             }
             mBlankThemes.add(resource);
         }
@@ -457,11 +455,11 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
 
     private void registerLayoutActivity(String layout, String classFqn) {
         if (mLayoutToActivity == null) {
-            mLayoutToActivity = new HashMap<String, List<String>>();
+            mLayoutToActivity = new HashMap<>();
         }
         List<String> list = mLayoutToActivity.get(layout);
         if (list == null) {
-            list = new ArrayList<String>();
+            list = new ArrayList<>();
             mLayoutToActivity.put(layout, list);
         }
         list.add(classFqn);
@@ -554,7 +552,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
                                         String style = resource.getReferenceName();
                                         if (style != null) {
                                             if (mActivityToTheme == null) {
-                                                mActivityToTheme = new HashMap<String, String>();
+                                                mActivityToTheme = new HashMap<>();
                                             }
                                             mActivityToTheme.put(mName, STYLE_RESOURCE_PREFIX +
                                                     style);

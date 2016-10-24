@@ -36,15 +36,13 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Maps;
-
+import java.util.List;
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Check which makes sure that an application restrictions file is correct.
@@ -61,7 +59,7 @@ public class RestrictionsDetector extends ResourceXmlDetector {
      * Validation of {@code <restrictions>} XML elements
      */
     public static final Issue ISSUE = Issue.create(
-            "ValidRestrictions", //$NON-NLS-1$
+            "ValidRestrictions",
             "Invalid Restrictions Descriptor",
 
             "Ensures that an applications restrictions XML file is properly formed",

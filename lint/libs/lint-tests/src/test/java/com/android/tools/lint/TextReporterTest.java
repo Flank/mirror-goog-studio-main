@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -85,7 +84,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     new DefaultPosition(5, 4, 198), new DefaultPosition(5, 42, 236));
             secondary.setSecondary(tertiary);
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
             Collections.sort(warnings);
@@ -178,7 +177,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warning3.location = Location.create(warning3.file,
                     new DefaultPosition(8, 4, 198), new DefaultPosition(8, 42, 236));
 
-            List<Warning> warnings = new ArrayList<Warning>();
+            List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
             warnings.add(warning3);

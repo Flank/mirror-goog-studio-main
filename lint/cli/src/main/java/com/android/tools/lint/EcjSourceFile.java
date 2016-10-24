@@ -20,10 +20,8 @@ import static com.android.SdkConstants.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.CharSequences;
-
-import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-
 import java.io.File;
+import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 
 /**
  * Source file for ECJ. Subclassed to let us hold on to the String contents (ECJ operates

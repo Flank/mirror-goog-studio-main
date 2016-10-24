@@ -31,7 +31,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +38,7 @@ import java.util.List;
 public class NonInternationalizedSmsDetector extends Detector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "UnlocalizedSms", //$NON-NLS-1$
+            "UnlocalizedSms",
             "SMS phone number missing country code",
 
             "SMS destination numbers must start with a country code or the application code " +
@@ -62,9 +61,9 @@ public class NonInternationalizedSmsDetector extends Detector implements JavaPsi
 
     @Override
     public List<String> getApplicableMethodNames() {
-      List<String> methodNames = new ArrayList<String>(2);
-      methodNames.add("sendTextMessage");  //$NON-NLS-1$
-      methodNames.add("sendMultipartTextMessage");  //$NON-NLS-1$
+      List<String> methodNames = new ArrayList<>(2);
+      methodNames.add("sendTextMessage");
+      methodNames.add("sendMultipartTextMessage");
       return methodNames;
     }
 
@@ -89,7 +88,7 @@ public class NonInternationalizedSmsDetector extends Detector implements JavaPsi
             return;
         }
         String number = (String) literal;
-        if (number.startsWith("+")) {  //$NON-NLS-1$
+        if (number.startsWith("+")) {
             return;
         }
         context.report(ISSUE, call, context.getLocation(destinationAddress),

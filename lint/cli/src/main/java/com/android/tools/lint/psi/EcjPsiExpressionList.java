@@ -23,7 +23,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiType;
-
 import java.util.List;
 
 class EcjPsiExpressionList extends EcjPsiSourceElement implements PsiExpressionList {

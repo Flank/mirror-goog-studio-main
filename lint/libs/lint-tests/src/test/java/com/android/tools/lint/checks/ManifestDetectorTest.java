@@ -42,15 +42,13 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-
-import org.mockito.stubbing.Answer;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.mockito.stubbing.Answer;
 
 @SuppressWarnings("javadoc")
 public class ManifestDetectorTest extends AbstractCheckTest {

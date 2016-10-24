@@ -24,7 +24,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiForStatement;
 import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.ForStatement;
 
 class EcjPsiForStatement extends EcjPsiStatement implements PsiForStatement {

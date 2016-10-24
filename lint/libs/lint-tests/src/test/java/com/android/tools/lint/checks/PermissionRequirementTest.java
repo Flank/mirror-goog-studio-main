@@ -42,14 +42,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationParameterList;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiNameValuePair;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,6 +49,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import junit.framework.TestCase;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class PermissionRequirementTest extends TestCase {
     private static PsiAnnotation createAnnotation(
@@ -270,7 +267,7 @@ public class PermissionRequirementTest extends TestCase {
     @Nullable
     private static List<String> getDangerousPermissions() throws IOException {
         Pattern pattern = Pattern.compile("dangerous");
-        String top = System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+        String top = System.getenv("ANDROID_BUILD_TOP");
 
         // Alternatively, you can look up the version for the release branch on ag via
         // something like

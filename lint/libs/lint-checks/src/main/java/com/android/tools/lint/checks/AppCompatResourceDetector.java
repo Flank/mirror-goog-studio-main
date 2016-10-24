@@ -30,11 +30,9 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-
 import java.util.Collection;
 import java.util.Collections;
+import org.w3c.dom.Attr;
 
 /**
  * Check that the right namespace is used for app compat menu items
@@ -45,7 +43,7 @@ import java.util.Collections;
 public class AppCompatResourceDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "AppCompatResource", //$NON-NLS-1$
+            "AppCompatResource",
             "Menu namespace",
 
             "When using the appcompat library, menu resources should refer to the " +

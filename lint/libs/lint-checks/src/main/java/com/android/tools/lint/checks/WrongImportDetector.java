@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiImportStatement;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ import java.util.List;
 public class WrongImportDetector extends Detector implements JavaPsiScanner {
     /** Is android.R being imported? */
     public static final Issue ISSUE = Issue.create(
-            "SuspiciousImport", //$NON-NLS-1$
+            "SuspiciousImport",
             "'`import android.R`' statement",
             "Importing `android.R` is usually not intentional; it sometimes happens when " +
             "you use an IDE and ask it to automatically add imports at a time when your " +

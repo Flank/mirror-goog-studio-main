@@ -59,13 +59,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Checks for cases where a TextView should probably be an EditText instead
@@ -78,7 +76,7 @@ public class TextViewDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "TextViewEdits", //$NON-NLS-1$
+            "TextViewEdits",
             "TextView should probably be an EditText instead",
 
             "Using a `<TextView>` to input text is generally an error, you should be " +
@@ -99,7 +97,7 @@ public class TextViewDetector extends LayoutDetector {
 
     /** Text could be selectable */
     public static final Issue SELECTABLE = Issue.create(
-            "SelectableText", //$NON-NLS-1$
+            "SelectableText",
             "Dynamic text should probably be selectable",
 
             "If a `<TextView>` is used to display data, the user might want to copy that " +

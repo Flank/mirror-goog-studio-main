@@ -37,7 +37,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +51,7 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
 
     /** Calling risky convenience methods */
     public static final Issue STRING_LOCALE = Issue.create(
-            "DefaultLocale", //$NON-NLS-1$
+            "DefaultLocale",
             "Implied default locale in case conversion",
 
             "Calling `String#toLowerCase()` or `#toUpperCase()` *without specifying an " +
@@ -71,7 +70,7 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
             Severity.WARNING,
             IMPLEMENTATION)
             .addMoreInfo(
-            "http://developer.android.com/reference/java/util/Locale.html#default_locale"); //$NON-NLS-1$
+            "http://developer.android.com/reference/java/util/Locale.html#default_locale");
 
     /** Constructs a new {@link LocaleDetector} */
     public LocaleDetector() {
@@ -89,8 +88,8 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
         } else {
             return Arrays.asList(
                     // Only when not running in the IDE
-                    "toLowerCase", //$NON-NLS-1$
-                    "toUpperCase", //$NON-NLS-1$
+                    "toLowerCase",
+                    "toUpperCase",
                     FORMAT_METHOD
             );
         }

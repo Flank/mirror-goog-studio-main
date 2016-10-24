@@ -61,7 +61,6 @@ import com.intellij.psi.PsiThisExpression;
 import com.intellij.psi.PsiThrowStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -79,7 +78,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
 
     /** Allocating objects during a paint method */
     public static final Issue PAINT_ALLOC = Issue.create(
-            "DrawAllocation", //$NON-NLS-1$
+            "DrawAllocation",
             "Memory allocations within drawing code",
 
             "You should avoid allocating objects during a drawing or layout operation. These " +
@@ -99,7 +98,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
 
     /** Using HashMaps where SparseArray would be better */
     public static final Issue USE_SPARSE_ARRAY = Issue.create(
-            "UseSparseArrays", //$NON-NLS-1$
+            "UseSparseArrays",
             "HashMap can be replaced with SparseArray",
 
             "For maps where the keys are of type integer, it's typically more efficient to " +
@@ -121,7 +120,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
 
     /** Using {@code new Integer()} instead of the more efficient {@code Integer.valueOf} */
     public static final Issue USE_VALUE_OF = Issue.create(
-            "UseValueOf", //$NON-NLS-1$
+            "UseValueOf",
             "Should use `valueOf` instead of `new`",
 
             "You should not call the constructor for wrapper classes directly, such as" +
@@ -150,7 +149,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        List<Class<? extends PsiElement>> types = new ArrayList<Class<? extends PsiElement>>(3);
+        List<Class<? extends PsiElement>> types = new ArrayList<>(3);
         types.add(PsiNewExpression.class);
         types.add(PsiMethod.class);
         types.add(PsiMethodCallExpression.class);
@@ -257,21 +256,21 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
                 return;
             }
             // Look for forbidden methods
-            if (methodName.equals("createBitmap")                              //$NON-NLS-1$
-                    || methodName.equals("createScaledBitmap")) {              //$NON-NLS-1$
+            if (methodName.equals("createBitmap")
+                    || methodName.equals("createScaledBitmap")) {
                 PsiMethod method = node.resolveMethod();
                 if (method != null && mContext.getEvaluator().isMemberInClass(method,
                         "android.graphics.Bitmap") && !isLazilyInitialized(node)) {
                     reportAllocation(node);
                 }
-            } else if (methodName.startsWith("decode")) {                      //$NON-NLS-1$
+            } else if (methodName.startsWith("decode")) {
                 // decodeFile, decodeByteArray, ...
                 PsiMethod method = node.resolveMethod();
                 if (method != null && mContext.getEvaluator().isMemberInClass(method,
                         "android.graphics.BitmapFactory") && !isLazilyInitialized(node)) {
                     reportAllocation(node);
                 }
-            } else if (methodName.equals("getClipBounds")) {                   //$NON-NLS-1$
+            } else if (methodName.equals("getClipBounds")) {
                 if (node.getArgumentList().getExpressions().length == 0) {
                     mContext.report(PAINT_ALLOC, node, mContext.getLocation(node),
                             "Avoid object allocations during draw operations: Use " +
@@ -315,18 +314,18 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
                     // and if there is an overlap, we'll consider the whole if block
                     // guarded (so lazily initialized and an allocation we won't complain
                     // about.)
-                    List<String> assignments = new ArrayList<String>();
+                    List<String> assignments = new ArrayList<>();
                     AssignmentTracker visitor = new AssignmentTracker(assignments);
                     if (ifNode.getThenBranch() != null) {
                         ifNode.getThenBranch().accept(visitor);
                     }
                     if (!assignments.isEmpty()) {
-                        List<String> references = new ArrayList<String>();
+                        List<String> references = new ArrayList<>();
                         addReferencedVariables(references, ifNode.getCondition());
                         if (!references.isEmpty()) {
                             SetView<String> intersection = Sets.intersection(
-                                    new HashSet<String>(assignments),
-                                    new HashSet<String>(references));
+                                    new HashSet<>(assignments),
+                                    new HashSet<>(references));
                             return !intersection.isEmpty();
                         }
                     }

@@ -34,7 +34,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.tree.IElementType;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,8 +44,8 @@ import java.util.Set;
  * caller must satisfy for a given Android API.
  */
 public abstract class PermissionRequirement {
-    public static final String ATTR_PROTECTION_LEVEL = "protectionLevel"; //$NON-NLS-1$
-    public static final String VALUE_DANGEROUS = "dangerous"; //$NON-NLS-1$
+    public static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
+    public static final String VALUE_DANGEROUS = "dangerous";
 
     protected final PsiAnnotation annotation;
     private int firstApi;
@@ -266,14 +265,6 @@ public abstract class PermissionRequirement {
         return null;
     }
 
-    /**
-     * Returns false if this permission does not apply given the specified minimum and
-     * target sdk versions
-     *
-     * @param minSdkVersion the minimum SDK version
-     * @param targetSdkVersion the target SDK version
-     * @return true if this permission requirement applies for the given versions
-     */
     /**
      * Returns false if this permission does not apply given the specified minimum and target
      * sdk versions

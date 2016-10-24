@@ -22,7 +22,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiBlockStatement;
 import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiElementVisitor;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiBlockStatement extends EcjPsiStatement implements PsiBlockStatement {

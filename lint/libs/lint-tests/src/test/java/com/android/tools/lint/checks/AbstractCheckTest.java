@@ -21,7 +21,6 @@ import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,7 +48,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
 
     @Override
     protected InputStream getTestResource(String relativePath, boolean expectExists) {
-        String path = "data" + File.separator + relativePath; //$NON-NLS-1$
+        String path = "data" + File.separator + relativePath;
         InputStream stream = AbstractCheckTest.class.getResourceAsStream(path);
         if (stream == null) {
             File root = TestUtils.getWorkspaceRoot();

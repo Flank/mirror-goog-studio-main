@@ -35,16 +35,14 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Checks for various issues related to XML namespaces
@@ -59,7 +57,7 @@ public class NamespaceDetector extends LayoutDetector {
 
     /** Typos in the namespace */
     public static final Issue TYPO = Issue.create(
-            "NamespaceTypo", //$NON-NLS-1$
+            "NamespaceTypo",
             "Misspelled namespace declaration",
 
             "Accidental misspellings in namespace declarations can lead to some very " +
@@ -72,7 +70,7 @@ public class NamespaceDetector extends LayoutDetector {
 
     /** Unused namespace declarations */
     public static final Issue UNUSED = Issue.create(
-            "UnusedNamespace", //$NON-NLS-1$
+            "UnusedNamespace",
             "Unused namespace",
 
             "Unused namespace declarations take up space and require processing that is not " +
@@ -85,7 +83,7 @@ public class NamespaceDetector extends LayoutDetector {
 
     /** Using custom namespace attributes in a library project */
     public static final Issue CUSTOM_VIEW = Issue.create(
-            "LibraryCustomView", //$NON-NLS-1$
+            "LibraryCustomView",
             "Custom views in libraries should use res-auto-namespace",
 
             "When using a custom view with custom attributes in a library project, the layout " +
@@ -100,7 +98,7 @@ public class NamespaceDetector extends LayoutDetector {
 
     /** Unused namespace declarations */
     public static final Issue RES_AUTO = Issue.create(
-            "ResAuto", //$NON-NLS-1$
+            "ResAuto",
             "Hardcoded Package in Namespace",
 
             "In Gradle projects, the actual package used in the final APK can vary; for example," +
@@ -116,8 +114,8 @@ public class NamespaceDetector extends LayoutDetector {
             IMPLEMENTATION);
 
     /** Prefix relevant for custom namespaces */
-    private static final String XMLNS_ANDROID = "xmlns:android";                    //$NON-NLS-1$
-    private static final String XMLNS_A = "xmlns:a";                                //$NON-NLS-1$
+    private static final String XMLNS_ANDROID = "xmlns:android";
+    private static final String XMLNS_A = "xmlns:a";
 
     private Map<String, Attr> mUnusedNamespaces;
     private boolean mCheckUnused;
@@ -149,21 +147,21 @@ public class NamespaceDetector extends LayoutDetector {
                     if (value.startsWith(URI_PREFIX)) {
                         haveCustomNamespace = true;
                         if (mUnusedNamespaces == null) {
-                            mUnusedNamespaces = new HashMap<String, Attr>();
+                            mUnusedNamespaces = new HashMap<>();
                         }
                         mUnusedNamespaces.put(prefix.substring(XMLNS_PREFIX.length()),
                                 attribute);
-                    } else if (value.startsWith("urn:")) { //$NON-NLS-1$
+                    } else if (value.startsWith("urn:")) {
                         continue;
-                    } else if (!value.startsWith("http://")) { //$NON-NLS-1$
+                    } else if (!value.startsWith("http://")) {
                         if (context.isEnabled(TYPO)) {
                             context.report(TYPO, attribute, context.getValueLocation(attribute),
                                     "Suspicious namespace: should start with `http://`");
                         }
 
                         continue;
-                    } else if (!value.equals(AUTO_URI) && value.contains("auto") && //$NON-NLS-1$
-                            value.startsWith("http://schemas.android.com/")) { //$NON-NLS-1$
+                    } else if (!value.equals(AUTO_URI) && value.contains("auto") &&
+                            value.startsWith("http://schemas.android.com/")) {
                         context.report(RES_AUTO, attribute, context.getValueLocation(attribute),
                                 "Suspicious namespace: Did you mean `" + AUTO_URI + "`?");
                     } else if (value.equals(TOOLS_URI) && (prefix.equals(XMLNS_ANDROID) ||
@@ -180,7 +178,7 @@ public class NamespaceDetector extends LayoutDetector {
                     String name = attribute.getName();
                     if (!name.equals(XMLNS_ANDROID) && !name.equals(XMLNS_A)) {
                         // See if it looks like a typo
-                        int resIndex = value.indexOf("/res/"); //$NON-NLS-1$
+                        int resIndex = value.indexOf("/res/");
                         if (resIndex != -1 && value.length() + 5 > URI_PREFIX.length()) {
                             String urlPrefix = value.substring(0, resIndex + 5);
                             if (!urlPrefix.equals(URI_PREFIX) &&

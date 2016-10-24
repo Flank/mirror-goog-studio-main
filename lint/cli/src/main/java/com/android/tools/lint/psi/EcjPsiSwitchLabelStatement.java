@@ -23,7 +23,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiSwitchLabelStatement;
 import com.intellij.psi.PsiSwitchStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 class EcjPsiSwitchLabelStatement extends EcjPsiStatement implements PsiSwitchLabelStatement {

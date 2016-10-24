@@ -38,7 +38,7 @@ public abstract class SdkInfo {
      *         the parent view
      */
     public boolean isSubViewOf(@NonNull String parentViewFqcn, @NonNull String childViewFqcn) {
-        while (!childViewFqcn.equals("android.view.View")) { //$NON-NLS-1$
+        while (!childViewFqcn.equals("android.view.View")) {
             if (parentViewFqcn.equals(childViewFqcn)) {
                 return true;
             }
@@ -83,7 +83,7 @@ public abstract class SdkInfo {
      * @return true if the given tag corresponds to a layout
      */
     public boolean isLayout(@NonNull String tag) {
-        return tag.endsWith("Layout"); //$NON-NLS-1$
+        return tag.endsWith("Layout");
     }
 
     // TODO: Add access to resource resolution here.

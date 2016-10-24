@@ -29,18 +29,16 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "StatementWithEmptyBody",
         "MethodMayBeStatic"})
@@ -284,7 +282,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
 
     @Nullable
     private static List<String> getProtectedBroadcasts() throws IOException {
-        String top = System.getenv("ANDROID_BUILD_TOP");   //$NON-NLS-1$
+        String top = System.getenv("ANDROID_BUILD_TOP");
 
         // TODO: We should ship this file with the SDK!
         File file = new File(top, "frameworks/base/core/res/AndroidManifest.xml");

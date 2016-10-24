@@ -46,17 +46,15 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Checks whether a layout_weight is declared inefficiently.
@@ -69,7 +67,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     /** Can a weight be replaced with 0dp instead for better performance? */
     public static final Issue INEFFICIENT_WEIGHT = Issue.create(
-            "InefficientWeight", //$NON-NLS-1$
+            "InefficientWeight",
             "Inefficient layout weight",
             "When only a single widget in a LinearLayout defines a weight, it is more " +
             "efficient to assign a width/height of `0dp` to it since it will absorb all " +
@@ -82,7 +80,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     /** Are weights nested? */
     public static final Issue NESTED_WEIGHTS = Issue.create(
-            "NestedWeights", //$NON-NLS-1$
+            "NestedWeights",
             "Nested layout weights",
             "Layout weights require a widget to be measured twice. When a LinearLayout with " +
             "non-zero weights is nested inside another LinearLayout with non-zero weights, " +
@@ -94,7 +92,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     /** Should a LinearLayout set android:baselineAligned? */
     public static final Issue BASELINE_WEIGHTS = Issue.create(
-            "DisableBaselineAlignment", //$NON-NLS-1$
+            "DisableBaselineAlignment",
             "Missing `baselineAligned` attribute",
             "When a LinearLayout is used to distribute the space proportionally between " +
             "nested layouts, the baseline alignment property should be turned off to " +
@@ -106,7 +104,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     /** Using 0dp on the wrong dimension */
     public static final Issue WRONG_0DP = Issue.create(
-            "Suspicious0dp", //$NON-NLS-1$
+            "Suspicious0dp",
             "Suspicious 0dp dimension",
 
             "Using 0dp as the width in a horizontal LinearLayout with weights is a useful " +
@@ -123,7 +121,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     /** Missing explicit orientation */
     public static final Issue ORIENTATION = Issue.create(
-            "Orientation", //$NON-NLS-1$
+            "Orientation",
             "Missing explicit orientation",
 
             "The default orientation of a LinearLayout is horizontal. It's pretty easy to "
@@ -146,7 +144,7 @@ public class InefficientWeightDetector extends LayoutDetector {
      * Map from element to whether that element has a non-zero linear layout
      * weight or has an ancestor which does
      */
-    private final Map<Node, Boolean> mInsideWeight = new IdentityHashMap<Node, Boolean>();
+    private final Map<Node, Boolean> mInsideWeight = new IdentityHashMap<>();
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {
@@ -303,7 +301,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                     }
                 }
             }
-            if (!size.startsWith("0")) { //$NON-NLS-1$
+            if (!size.startsWith("0")) {
                 String msg = String.format(
                         "Use a `%1$s` of `0dp` instead of `%2$s` for better performance",
                         dimension, size);
@@ -346,10 +344,10 @@ public class InefficientWeightDetector extends LayoutDetector {
 
             boolean noWidth = false;
             boolean noHeight = false;
-            if (widthNode != null && widthNode.getValue().startsWith("0")) { //$NON-NLS-1$
+            if (widthNode != null && widthNode.getValue().startsWith("0")) {
                 noWidth = true;
             }
-            if (heightNode != null && heightNode.getValue().startsWith("0")) { //$NON-NLS-1$
+            if (heightNode != null && heightNode.getValue().startsWith("0")) {
                 noHeight = true;
             } else if (!noWidth) {
                 return;

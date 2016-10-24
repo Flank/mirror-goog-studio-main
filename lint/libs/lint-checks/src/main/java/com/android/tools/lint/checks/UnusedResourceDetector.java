@@ -69,12 +69,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiImportStaticStatement;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -85,6 +79,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * Finds unused resources.
@@ -99,7 +97,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
 
     /** Unused resources (other than ids). */
     public static final Issue ISSUE = Issue.create(
-            "UnusedResources", //$NON-NLS-1$
+            "UnusedResources",
             "Unused resources",
             "Unused resources make applications larger and slow down builds.",
             Category.PERFORMANCE,
@@ -109,7 +107,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
 
     /** Unused id's */
     public static final Issue ISSUE_IDS = Issue.create(
-            "UnusedIds", //$NON-NLS-1$
+            "UnusedIds",
             "Unused id",
             "This resource id definition appears not to be needed since it is not referenced " +
             "from anywhere. Having id definitions, even if unused, is not necessarily a bad " +
@@ -269,12 +267,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
                             // Process folders in alphabetical order such that we process
                             // based folders first: we want the locations in base folder
                             // order
-                            Collections.sort(folders, new Comparator<File>() {
-                                @Override
-                                public int compare(File file1, File file2) {
-                                    return file1.getName().compareTo(file2.getName());
-                                }
-                            });
+                            Collections.sort(folders,
+                                    (file1, file2) -> file1.getName().compareTo(file2.getName()));
                             for (File folder : folders) {
                                 if (folder.getName().startsWith(type.getName())) {
                                     File[] files = folder.listFiles();
@@ -283,7 +277,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
                                         for (File file : files) {
                                             String fileName = file.getName();
                                             if (fileName.startsWith(name)
-                                                    && fileName.startsWith(".", //$NON-NLS-1$
+                                                    && fileName.startsWith(".",
                                                             name.length())) {
                                                 resource.recordLocation(Location.create(file));
                                             }

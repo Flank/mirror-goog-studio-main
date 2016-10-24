@@ -24,7 +24,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaToken;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.tree.IElementType;
-
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 
 class EcjPsiPrefixExpression extends EcjPsiExpression implements PsiPrefixExpression {

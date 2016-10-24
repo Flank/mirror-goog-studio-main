@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiParameter;
-
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 

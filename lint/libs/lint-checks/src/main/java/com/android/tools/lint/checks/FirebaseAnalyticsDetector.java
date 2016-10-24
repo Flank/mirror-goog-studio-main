@@ -42,14 +42,12 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 public class FirebaseAnalyticsDetector extends Detector implements Detector.JavaPsiScanner {
 
@@ -77,7 +75,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             "user_engagement");
 
     public static final Issue INVALID_NAME = Issue.create(
-            "InvalidAnalyticsName", //$NON-NLS-1$
+            "InvalidAnalyticsName",
             "Invalid Analytics Name",
             "Event names and parameters must follow the naming conventions defined in the" +
                     "`FirebaseAnalytics#logEvent()` documentation.",

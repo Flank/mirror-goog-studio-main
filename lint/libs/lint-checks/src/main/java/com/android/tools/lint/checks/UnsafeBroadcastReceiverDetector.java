@@ -50,15 +50,13 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Element;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Element;
 
 public class UnsafeBroadcastReceiverDetector extends Detector
         implements JavaPsiScanner, XmlScanner {

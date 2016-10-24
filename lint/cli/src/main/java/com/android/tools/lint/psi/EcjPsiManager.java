@@ -40,7 +40,9 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
-
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
@@ -88,10 +90,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
-
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A manager for the ECJ-based PSI elements, which handles PSI node registration,

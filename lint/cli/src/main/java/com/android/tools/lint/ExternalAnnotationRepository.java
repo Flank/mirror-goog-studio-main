@@ -67,16 +67,6 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -92,6 +82,14 @@ import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Handler for IntelliJ database files for external annotations.
@@ -101,8 +99,8 @@ import java.util.zip.ZipEntry;
  * including its parameters.
  */
 public class ExternalAnnotationRepository {
-    public static final String SDK_ANNOTATIONS_PATH = "platform-tools/api/annotations.zip"; //$NON-NLS-1$
-    public static final String FN_ANNOTATIONS_XML = "annotations.xml"; //$NON-NLS-1$
+    public static final String SDK_ANNOTATIONS_PATH = "platform-tools/api/annotations.zip";
+    public static final String FN_ANNOTATIONS_XML = "annotations.xml";
 
     private static final boolean DEBUG = false;
 
@@ -1510,7 +1508,7 @@ public class ExternalAnnotationRepository {
         if (length == 0) {
             return Collections.emptyList();
         }
-        List<Element> result = new ArrayList<Element>(Math.max(5, length / 2 + 1));
+        List<Element> result = new ArrayList<>(Math.max(5, length / 2 + 1));
         for (int i = 0; i < length; i++) {
             Node node = itemList.item(i);
             if (node.getNodeType() != Node.ELEMENT_NODE) {

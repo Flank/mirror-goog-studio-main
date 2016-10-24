@@ -19,7 +19,6 @@ package com.android.tools.lint.psi;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiStatement;
-
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 
 public abstract class EcjPsiStatement extends EcjPsiSourceElement implements PsiStatement {

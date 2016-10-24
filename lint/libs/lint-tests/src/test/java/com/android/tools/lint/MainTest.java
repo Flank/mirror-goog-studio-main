@@ -24,14 +24,12 @@ import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-
-import org.intellij.lang.annotations.Language;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.security.Permission;
 import java.util.List;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
 public class MainTest extends AbstractCheckTest {

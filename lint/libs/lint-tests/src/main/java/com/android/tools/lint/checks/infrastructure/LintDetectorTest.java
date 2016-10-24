@@ -923,10 +923,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             Manifest manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-            JarOutputStream jarOutputStream = new JarOutputStream(
-                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest);
 
-            try {
+            try (JarOutputStream jarOutputStream = new JarOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
                 for (TestFile file : mFiles) {
                     String path = mPath.get(file);
                     if (path == null) {
@@ -934,7 +933,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
                     jarOutputStream.putNextEntry(new ZipEntry(path));
                     if (file instanceof BinaryTestFile) {
-                        byte[] bytes = ((BinaryTestFile)file).getBinaryContents();
+                        byte[] bytes = ((BinaryTestFile) file).getBinaryContents();
                         assertNotNull(file.targetRelativePath, bytes);
                         ByteStreams.copy(new ByteArrayInputStream(bytes), jarOutputStream);
                     } else {
@@ -945,8 +944,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
                     jarOutputStream.closeEntry();
                 }
-            } finally {
-                jarOutputStream.close();
             }
 
             return tempFile;
@@ -1012,7 +1009,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     @Override
     protected InputStream getTestResource(String relativePath, boolean expectExists) {
-        String path = "data" + File.separator + relativePath; //$NON-NLS-1$
+        String path = "data" + File.separator + relativePath;
         InputStream stream = getClass().getResourceAsStream(path);
         if (!expectExists && stream == null) {
             return null;

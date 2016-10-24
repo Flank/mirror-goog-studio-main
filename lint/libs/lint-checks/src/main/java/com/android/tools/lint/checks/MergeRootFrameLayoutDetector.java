@@ -47,10 +47,6 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +55,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Checks whether a root FrameLayout can be replaced with a {@code <merge>} tag.
@@ -82,7 +80,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Java
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "MergeRootFrame", //$NON-NLS-1$
+            "MergeRootFrame",
             "FrameLayout can be replaced with `<merge>` tag",
 
             "If a `<FrameLayout>` is the root of a layout and does not provide background " +
@@ -96,7 +94,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Java
                     MergeRootFrameLayoutDetector.class,
                     EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.JAVA_FILE)))
             .addMoreInfo(
-            "http://android-developers.blogspot.com/2009/03/android-layout-tricks-3-optimize-by.html"); //$NON-NLS-1$
+            "http://android-developers.blogspot.com/2009/03/android-layout-tricks-3-optimize-by.html");
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {
@@ -162,7 +160,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Java
                 }
 
                 if (mPending == null) {
-                    mPending = new ArrayList<Pair<String,Handle>>();
+                    mPending = new ArrayList<>();
                 }
                 mPending.add(Pair.of(layout, handle));
             }
@@ -171,7 +169,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Java
 
     private void whiteListLayout(String layout) {
         if (mWhitelistedLayouts == null) {
-            mWhitelistedLayouts = new HashSet<String>();
+            mWhitelistedLayouts = new HashSet<>();
         }
         mWhitelistedLayouts.add(layout);
     }
@@ -180,7 +178,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Java
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("setContentView"); //$NON-NLS-1$
+        return Collections.singletonList("setContentView");
     }
 
     @Override

@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
 import com.android.tools.lint.detector.api.Detector;
-
 import java.util.Arrays;
 
 @SuppressWarnings("javadoc")

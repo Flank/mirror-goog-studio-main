@@ -55,11 +55,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -73,6 +68,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * Information about the tool embedding the lint analyzer. IDEs and other tools
@@ -84,7 +82,7 @@ import java.util.Set;
  */
 @Beta
 public abstract class LintClient {
-    private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";  //$NON-NLS-1$
+    private static final String PROP_BIN_DIR  = "com.android.tools.lint.bindir";
 
     protected LintClient(@NonNull String clientName) {
         //noinspection AssignmentToStaticFieldFromInstanceMethod
@@ -344,7 +342,7 @@ public abstract class LintClient {
         }
 
         String home = System.getProperty("user.home");
-        String relative = ".android" + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$
+        String relative = ".android" + File.separator + "cache";
         File dir = new File(home, relative);
         if (create && !dir.exists()) {
             if (!dir.mkdirs()) {
@@ -397,7 +395,7 @@ public abstract class LintClient {
             }
         }
 
-        String home = System.getenv("ANDROID_HOME"); //$NON-NLS-1$
+        String home = System.getenv("ANDROID_HOME");
         if (home != null) {
             return new File(home);
         }
@@ -524,33 +522,33 @@ public abstract class LintClient {
         }
 
         if (info == null) {
-            List<File> sources = new ArrayList<File>(2);
-            List<File> classes = new ArrayList<File>(1);
-            List<File> libraries = new ArrayList<File>();
+            List<File> sources = new ArrayList<>(2);
+            List<File> classes = new ArrayList<>(1);
+            List<File> libraries = new ArrayList<>();
             // No test folders in Eclipse:
             // https://bugs.eclipse.org/bugs/show_bug.cgi?id=224708
             List<File> tests = Collections.emptyList();
 
             File projectDir = project.getDir();
-            File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
+            File classpathFile = new File(projectDir, ".classpath");
             if (classpathFile.exists()) {
                 CharSequence classpathXml = readFile(classpathFile);
                 Document document = CharSequences.parseDocumentSilently(classpathXml, false);
                 if (document != null) {
-                    NodeList tags = document.getElementsByTagName("classpathentry"); //$NON-NLS-1$
+                    NodeList tags = document.getElementsByTagName("classpathentry");
                     for (int i = 0, n = tags.getLength(); i < n; i++) {
                         Element element = (Element) tags.item(i);
-                        String kind = element.getAttribute("kind"); //$NON-NLS-1$
+                        String kind = element.getAttribute("kind");
                         List<File> addTo = null;
-                        if (kind.equals("src")) {            //$NON-NLS-1$
+                        if (kind.equals("src")) {
                             addTo = sources;
-                        } else if (kind.equals("output")) {  //$NON-NLS-1$
+                        } else if (kind.equals("output")) {
                             addTo = classes;
-                        } else if (kind.equals("lib")) {     //$NON-NLS-1$
+                        } else if (kind.equals("lib")) {
                             addTo = libraries;
                         }
                         if (addTo != null) {
-                            String path = element.getAttribute("path"); //$NON-NLS-1$
+                            String path = element.getAttribute("path");
                             File folder = new File(projectDir, path);
                             if (folder.exists()) {
                                 addTo.add(folder);
@@ -581,7 +579,7 @@ public abstract class LintClient {
                 } else {
                     // Maven checks
                     folder = new File(projectDir,
-                            "target" + File.separator + "classes"); //$NON-NLS-1$ //$NON-NLS-2$
+                            "target" + File.separator + "classes");
                     if (folder.exists()) {
                         classes.add(folder);
 
@@ -589,9 +587,9 @@ public abstract class LintClient {
                         // it's in a more specific subfolder
                         if (sources.isEmpty()) {
                             File src = new File(projectDir,
-                                    "src" + File.separator     //$NON-NLS-1$
-                                    + "main" + File.separator  //$NON-NLS-1$
-                                    + "java");                 //$NON-NLS-1$
+                                    "src" + File.separator
+                                    + "main" + File.separator
+                                    + "java");
                             if (src.exists()) {
                                 sources.add(src);
                             } else {
@@ -602,9 +600,9 @@ public abstract class LintClient {
                             }
 
                             File gen = new File(projectDir,
-                                    "target" + File.separator                  //$NON-NLS-1$
-                                    + "generated-sources" + File.separator     //$NON-NLS-1$
-                                    + "r");                                    //$NON-NLS-1$
+                                    "target" + File.separator
+                                    + "generated-sources" + File.separator
+                                    + "r");
                             if (gen.exists()) {
                                 sources.add(gen);
                             }
@@ -650,7 +648,7 @@ public abstract class LintClient {
     @NonNull
     public Project getProject(@NonNull File dir, @NonNull File referenceDir) {
         if (mDirToProject == null) {
-            mDirToProject = new HashMap<File, Project>();
+            mDirToProject = new HashMap<>();
         }
 
         File canonicalDir = dir;
@@ -707,7 +705,7 @@ public abstract class LintClient {
 
 
         if (mDirToProject == null) {
-            mDirToProject = new HashMap<File, Project>();
+            mDirToProject = new HashMap<>();
         } else {
             assert !mDirToProject.containsKey(dir) : dir;
         }
@@ -873,7 +871,7 @@ public abstract class LintClient {
     public String getSuperClass(@NonNull Project project, @NonNull String name) {
         assert name.indexOf('.') == -1 : "Use VM signatures, e.g. java/lang/Integer";
 
-        if ("java/lang/Object".equals(name)) {  //$NON-NLS-1$
+        if ("java/lang/Object".equals(name)) {
             return null;
         }
 
@@ -954,14 +952,14 @@ public abstract class LintClient {
         List<File> files = null;
         try {
             String androidHome = AndroidLocation.getFolder();
-            File lint = new File(androidHome + File.separator + "lint"); //$NON-NLS-1$
+            File lint = new File(androidHome + File.separator + "lint");
             if (lint.exists()) {
                 File[] list = lint.listFiles();
                 if (list != null) {
                     for (File jarFile : list) {
                         if (endsWith(jarFile.getName(), DOT_JAR)) {
                             if (files == null) {
-                                files = new ArrayList<File>();
+                                files = new ArrayList<>();
                             }
                             files.add(jarFile);
                         }
@@ -972,14 +970,14 @@ public abstract class LintClient {
             // Ignore -- no android dir, so no rules to load.
         }
 
-        String lintClassPath = System.getenv("ANDROID_LINT_JARS"); //$NON-NLS-1$
+        String lintClassPath = System.getenv("ANDROID_LINT_JARS");
         if (lintClassPath != null && !lintClassPath.isEmpty()) {
             String[] paths = lintClassPath.split(File.pathSeparator);
             for (String path : paths) {
                 File jarFile = new File(path);
                 if (jarFile.exists()) {
                     if (files == null) {
-                        files = new ArrayList<File>();
+                        files = new ArrayList<>();
                     } else if (files.contains(jarFile)) {
                         continue;
                     }
@@ -1032,7 +1030,7 @@ public abstract class LintClient {
                     }
                 }
             } else if (project.getDir().getPath().endsWith(DOT_AAR)) {
-                File lintJar = new File(project.getDir(), "lint.jar"); //$NON-NLS-1$
+                File lintJar = new File(project.getDir(), "lint.jar");
                 if (lintJar.exists()) {
                     return Collections.singletonList(lintJar);
                 }

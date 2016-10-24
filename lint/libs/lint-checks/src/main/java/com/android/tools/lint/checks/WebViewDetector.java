@@ -31,13 +31,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Collection;
+import java.util.Collections;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import java.util.Collection;
-import java.util.Collections;
 
 public class WebViewDetector extends LayoutDetector {
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -46,7 +44,7 @@ public class WebViewDetector extends LayoutDetector {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "WebViewLayout", //$NON-NLS-1$
+            "WebViewLayout",
             "WebViews in wrap_content parents",
 
             "The WebView implementation has certain performance optimizations which will not " +

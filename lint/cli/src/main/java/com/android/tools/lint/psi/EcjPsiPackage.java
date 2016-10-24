@@ -28,14 +28,12 @@ import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiQualifiedNamedElement;
-
+import java.util.Collection;
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-
-import java.util.Collection;
-import java.util.List;
 
 class EcjPsiPackage extends EcjPsiBinaryElement implements PsiPackage, PsiModifierList {
 

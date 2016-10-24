@@ -106,7 +106,6 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -126,7 +125,7 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
     /** Placing SuppressLint on a local variable doesn't work for class-file based checks */
     public static final Issue INSIDE_METHOD = Issue.create(
-            "LocalSuppress", //$NON-NLS-1$
+            "LocalSuppress",
             "@SuppressLint on invalid element",
 
             "The `@SuppressAnnotation` is used to suppress Lint warnings in Java files. However, " +
@@ -145,7 +144,7 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
     /** Incorrectly using a support annotation */
     @SuppressWarnings("WeakerAccess")
     public static final Issue ANNOTATION_USAGE = Issue.create(
-            "SupportAnnotationUsage", //$NON-NLS-1$
+            "SupportAnnotationUsage",
             "Incorrect support annotation usage",
 
             "This lint check makes sure that the support annotations (such as " +
@@ -160,7 +159,7 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
     /** IntDef annotations should be unique */
     public static final Issue UNIQUE = Issue.create(
-            "UniqueConstants", //$NON-NLS-1$
+            "UniqueConstants",
             "Overlapping Enumeration Constants",
 
             "The `@IntDef` annotation allows you to " +
@@ -181,7 +180,7 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
     /** Flags should typically be specified as bit shifts */
     public static final Issue FLAG_STYLE = Issue.create(
-            "ShiftFlags", //$NON-NLS-1$
+            "ShiftFlags",
             "Dangerous Flag Constant Declaration",
 
             "When defining multiple constants for use in flags, the recommended style is " +
@@ -195,7 +194,7 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
     /** All IntDef constants should be included in switch */
     public static final Issue SWITCH_TYPE_DEF = Issue.create(
-            "SwitchIntDef", //$NON-NLS-1$
+            "SwitchIntDef",
             "Missing @IntDef in Switch",
 
             "This check warns if a `switch` statement does not explicitly include all " +

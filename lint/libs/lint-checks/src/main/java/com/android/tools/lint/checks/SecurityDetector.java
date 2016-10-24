@@ -55,15 +55,13 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiReferenceExpression;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Checks that exported services request a permission.
@@ -80,7 +78,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Exported services */
     public static final Issue EXPORTED_SERVICE = Issue.create(
-            "ExportedService", //$NON-NLS-1$
+            "ExportedService",
             "Exported service does not require permission",
             "Exported services (services which either set `exported=true` or contain " +
             "an intent-filter and do not specify `exported=false`) should define a " +
@@ -93,7 +91,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Exported content providers */
     public static final Issue EXPORTED_PROVIDER = Issue.create(
-            "ExportedContentProvider", //$NON-NLS-1$
+            "ExportedContentProvider",
             "Content provider does not require permission",
             "Content providers are exported by default and any application on the " +
             "system can potentially use them to read and write data. If the content " +
@@ -107,7 +105,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Exported receivers */
     public static final Issue EXPORTED_RECEIVER = Issue.create(
-            "ExportedReceiver", //$NON-NLS-1$
+            "ExportedReceiver",
             "Receiver does not require permission",
             "Exported receivers (receivers which either set `exported=true` or contain " +
             "an intent-filter and do not specify `exported=false`) should define a " +
@@ -120,7 +118,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Content provides which grant all URIs access */
     public static final Issue OPEN_PROVIDER = Issue.create(
-            "GrantAllUris", //$NON-NLS-1$
+            "GrantAllUris",
             "Content provider shares everything",
             "The `<grant-uri-permission>` element allows specific paths to be shared. " +
             "This detector checks for a path URL of just '/' (everything), which is " +
@@ -158,7 +156,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Using the world-writable flag */
     public static final Issue WORLD_WRITEABLE = Issue.create(
-            "WorldWriteableFiles", //$NON-NLS-1$
+            "WorldWriteableFiles",
             "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
             "There are cases where it is appropriate for an application to write " +
             "world writeable files, but these should be reviewed carefully to " +
@@ -173,7 +171,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     /** Using the world-readable flag */
     public static final Issue WORLD_READABLE = Issue.create(
-            "WorldReadableFiles", //$NON-NLS-1$
+            "WorldReadableFiles",
             "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
             "There are cases where it is appropriate for an application to write " +
             "world readable files, but these should be reviewed carefully to " +
@@ -184,7 +182,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
             Severity.WARNING,
             IMPLEMENTATION_JAVA);
 
-    private static final String FILE_CLASS = "java.io.File"; //$NON-NLS-1$
+    private static final String FILE_CLASS = "java.io.File";
 
     /** Constructs a new {@link SecurityDetector} check */
     public SecurityDetector() {
@@ -282,7 +280,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
                 for (Element innerChild : LintUtils.getChildren(child)) {
                     if (innerChild.getTagName().equals(NODE_ACTION)) {
                         String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                        return categoryString.startsWith("android."); //$NON-NLS-1$
+                        return categoryString.startsWith("android.");
                     }
                 }
             }
@@ -315,13 +313,13 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
         Attr pattern = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PATTERN);
 
         String msg = "Content provider shares everything; this is potentially dangerous.";
-        if (path != null && path.getValue().equals("/")) { //$NON-NLS-1$
+        if (path != null && path.getValue().equals("/")) {
             context.report(OPEN_PROVIDER, path, context.getLocation(path), msg);
         }
-        if (prefix != null && prefix.getValue().equals("/")) { //$NON-NLS-1$
+        if (prefix != null && prefix.getValue().equals("/")) {
             context.report(OPEN_PROVIDER, prefix, context.getLocation(prefix), msg);
         }
-        if (pattern != null && (pattern.getValue().equals("/")  //$NON-NLS-1$
+        if (pattern != null && (pattern.getValue().equals("/")
                /* || pattern.getValue().equals(".*")*/)) {
             context.report(OPEN_PROVIDER, pattern, context.getLocation(pattern), msg);
         }
@@ -376,13 +374,13 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
     public List<String> getApplicableMethodNames() {
         // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
         // argument.
-        List<String> values = new ArrayList<String>(3);
-        values.add("openFileOutput"); //$NON-NLS-1$
-        values.add("getSharedPreferences"); //$NON-NLS-1$
-        values.add("getDir"); //$NON-NLS-1$
+        List<String> values = new ArrayList<>(3);
+        values.add("openFileOutput");
+        values.add("getSharedPreferences");
+        values.add("getDir");
         // These API calls can be used to set files world-readable or world-writable
-        values.add("setReadable"); //$NON-NLS-1$
-        values.add("setWritable"); //$NON-NLS-1$
+        values.add("setReadable");
+        values.add("setWritable");
         return values;
     }
 
@@ -440,12 +438,12 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
             super.visitReferenceExpression(node);
 
             String name = node.getReferenceName();
-            if ("MODE_WORLD_WRITEABLE".equals(name)) { //$NON-NLS-1$
+            if ("MODE_WORLD_WRITEABLE".equals(name)) {
                 Location location = mContext.getLocation(node);
                 mContext.report(WORLD_WRITEABLE, node, location,
                         "Using `MODE_WORLD_WRITEABLE` when creating files can be " +
                                 "risky, review carefully");
-            } else if ("MODE_WORLD_READABLE".equals(name)) { //$NON-NLS-1$
+            } else if ("MODE_WORLD_READABLE".equals(name)) {
                 Location location = mContext.getLocation(node);
                 mContext.report(WORLD_READABLE, node, location,
                         "Using `MODE_WORLD_READABLE` when creating files can be " +

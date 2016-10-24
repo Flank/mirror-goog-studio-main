@@ -35,13 +35,11 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import org.mockito.stubbing.OngoingStubbing;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.mockito.stubbing.OngoingStubbing;
 
 @SuppressWarnings("javadoc")
 public class PrivateResourceDetectorTest extends AbstractCheckTest {

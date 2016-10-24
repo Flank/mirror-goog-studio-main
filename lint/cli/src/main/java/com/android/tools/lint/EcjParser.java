@@ -42,7 +42,27 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiJavaFile;
-
+import java.io.File;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import lombok.ast.Catch;
+import lombok.ast.Identifier;
+import lombok.ast.MethodDeclaration;
+import lombok.ast.Node;
+import lombok.ast.Position;
+import lombok.ast.StrictListAccessor;
+import lombok.ast.Try;
+import lombok.ast.VariableDeclaration;
+import lombok.ast.VariableDefinition;
+import lombok.ast.VariableDefinitionEntry;
+import lombok.ast.ecj.EcjTreeConverter;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -120,29 +140,6 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-
-import java.io.File;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import lombok.ast.Catch;
-import lombok.ast.Identifier;
-import lombok.ast.MethodDeclaration;
-import lombok.ast.Node;
-import lombok.ast.Position;
-import lombok.ast.StrictListAccessor;
-import lombok.ast.Try;
-import lombok.ast.VariableDeclaration;
-import lombok.ast.VariableDefinition;
-import lombok.ast.VariableDefinitionEntry;
-import lombok.ast.ecj.EcjTreeConverter;
 
 /**
  * Java parser which uses ECJ for parsing and type attribution
@@ -468,13 +465,10 @@ public class EcjParser extends JavaParser {
                 options.defaultEncoding);
         IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
         IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
-        ICompilerRequestor requestor = new ICompilerRequestor() {
-            @Override
-            public void acceptResult(CompilationResult result) {
-                // Not used; we need the corresponding CompilationUnitDeclaration for the source
-                // units (the AST parsed from source) which we don't get access to here, so we
-                // instead subclass AST to get our hands on them.
-            }
+        ICompilerRequestor requestor = result -> {
+            // Not used; we need the corresponding CompilationUnitDeclaration for the source
+            // units (the AST parsed from source) which we don't get access to here, so we
+            // instead subclass AST to get our hands on them.
         };
 
         NonGeneratingCompiler compiler = new NonGeneratingCompiler(environment, policy, options,

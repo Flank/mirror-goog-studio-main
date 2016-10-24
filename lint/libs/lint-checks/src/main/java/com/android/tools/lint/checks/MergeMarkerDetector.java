@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-
 import java.util.EnumSet;
 
 /**
@@ -38,7 +37,7 @@ import java.util.EnumSet;
 public class MergeMarkerDetector extends Detector implements Detector.OtherFileScanner {
     /** Packaged private key files */
     public static final Issue ISSUE = Issue.create(
-            "MergeMarker", //$NON-NLS-1$
+            "MergeMarker",
             "Code contains merge marker",
 
             "Many version control systems leave unmerged files with markers such as <<< in "

@@ -43,7 +43,6 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +58,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
 
     /** Hardware Id Usages  */
     public static final Issue ISSUE = Issue.create(
-            "HardwareIds", //$NON-NLS-1$
+            "HardwareIds",
             "Hardware Id Usage",
 
             "Using these device identifiers is not recommended " +
@@ -72,23 +71,23 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
             IMPLEMENTATION).addMoreInfo(
             "https://developer.android.com/training/articles/user-data-ids.html");
 
-    private static final String BLUETOOTH_ADAPTER_GET_ADDRESS = "getAddress"; //$NON-NLS-1$
-    private static final String WIFI_INFO_GET_MAC_ADDRESS = "getMacAddress"; //$NON-NLS-1$
-    private static final String TELEPHONY_MANAGER_GET_DEVICE_ID = "getDeviceId"; //$NON-NLS-1$
+    private static final String BLUETOOTH_ADAPTER_GET_ADDRESS = "getAddress";
+    private static final String WIFI_INFO_GET_MAC_ADDRESS = "getMacAddress";
+    private static final String TELEPHONY_MANAGER_GET_DEVICE_ID = "getDeviceId";
     private static final String TELEPHONY_MANAGER_GET_LINE_1_NUMBER =
-            "getLine1Number"; //$NON-NLS-1$
+            "getLine1Number";
     private static final String TELEPHONY_MANAGER_GET_SIM_SERIAL_NUMBER =
-            "getSimSerialNumber"; //$NON-NLS-1$
+            "getSimSerialNumber";
     private static final String TELEPHONY_MANAGER_GET_SUBSCRIBER_ID =
-            "getSubscriberId"; //$NON-NLS-1$
-    private static final String SETTINGS_SECURE_GET_STRING = "getString"; //$NON-NLS-1$
+            "getSubscriberId";
+    private static final String SETTINGS_SECURE_GET_STRING = "getString";
     private static final String PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION =
-            "com.google.android.gms.common.GooglePlayServicesNotAvailableException"; //$NON-NLS-1$
+            "com.google.android.gms.common.GooglePlayServicesNotAvailableException";
     private static final String MESSAGE_DEVICE_IDENTIFIERS =
       "Using `%1$s` to get device identifiers is not recommended.";
-    private static final String RO_SERIALNO = "ro.serialno"; //$NON-NLS-1$
-    private static final String CLASS_FOR_NAME = "forName"; //$NON-NLS-1$
-    private static final String CLASSLOADER_LOAD_CLASS = "loadClass"; //$NON-NLS-1$
+    private static final String RO_SERIALNO = "ro.serialno";
+    private static final String CLASS_FOR_NAME = "forName";
+    private static final String CLASSLOADER_LOAD_CLASS = "loadClass";
 
 
     /**
@@ -120,25 +119,25 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
         String methodName = method.getName();
         switch (methodName) {
             case BLUETOOTH_ADAPTER_GET_ADDRESS:
-                className = "android.bluetooth.BluetoothAdapter"; //$NON-NLS-1$
+                className = "android.bluetooth.BluetoothAdapter";
                 break;
             case WIFI_INFO_GET_MAC_ADDRESS:
-                className = "android.net.wifi.WifiInfo"; //$NON-NLS-1$
+                className = "android.net.wifi.WifiInfo";
                 break;
             case TELEPHONY_MANAGER_GET_DEVICE_ID:
             case TELEPHONY_MANAGER_GET_LINE_1_NUMBER:
             case TELEPHONY_MANAGER_GET_SIM_SERIAL_NUMBER:
             case TELEPHONY_MANAGER_GET_SUBSCRIBER_ID:
-                className = "android.telephony.TelephonyManager"; //$NON-NLS-1$
+                className = "android.telephony.TelephonyManager";
                 break;
             case SETTINGS_SECURE_GET_STRING:
-                className = "android.provider.Settings.Secure"; //$NON-NLS-1$
+                className = "android.provider.Settings.Secure";
                 break;
             case CLASS_FOR_NAME:
-                className = "java.lang.Class"; //$NON-NLS-1$
+                className = "java.lang.Class";
                 break;
             case CLASSLOADER_LOAD_CLASS:
-                className = "java.lang.ClassLoader"; //$NON-NLS-1$
+                className = "java.lang.ClassLoader";
                 break;
             default:
                 assert false;
@@ -157,7 +156,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
             String value = ConstantEvaluator.evaluateString(
                     context, node.getArgumentList().getExpressions()[1], false);
             // Check if the value matches Settings.Secure.ANDROID_ID
-            if (!"android_id".equals(value)) { //$NON-NLS-1$
+            if (!"android_id".equals(value)) {
                 return;
             }
             // The 2nd parameter resolved to the constant value Settings.Secure.ANDROID_ID
@@ -205,9 +204,9 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
         JavaEvaluator evaluator = context.getEvaluator();
         if (resolved instanceof PsiField
                 && evaluator.isMemberInSubClassOf((PsiField)resolved,
-                "android.os.Build", false)) { //$NON-NLS-1$
+                "android.os.Build", false)) {
             String message =
-                    String.format(MESSAGE_DEVICE_IDENTIFIERS, "SERIAL"); //$NON-NLS-1$
+                    String.format(MESSAGE_DEVICE_IDENTIFIERS, "SERIAL");
             context.report(ISSUE, reference, context.getNameLocation(reference), message);
         }
     }
@@ -248,7 +247,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
             return;
         }
         String value = ConstantEvaluator.evaluateString(context, methodArgs[0], false);
-        if (!"android.os.SystemProperties".equals(value)) { //$NON-NLS-1$
+        if (!"android.os.SystemProperties".equals(value)) {
             return;
         }
         PsiMethod surroundingMethod =
@@ -321,17 +320,17 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
                 mLoadVariable = variable == null ? null : variable.getName();
             } else if (mLoadVariable != null
                     && isDesiredMethodCall(expression, mLoadVariable,
-                    "java.lang.Class", "getMethod", 0)) {  //$NON-NLS-1$
+                    "java.lang.Class", "getMethod", 0)) {
                 // clazz.getMethod("get", ..)
                 PsiExpression arg = methodParameterAt(expression, 0 /* param index */);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);
-                if ("get".equals(value)) {  //$NON-NLS-1$
+                if ("get".equals(value)) {
                     PsiVariable variable = CleanupDetector.getVariableElement(expression);
                     mMethodVariable = variable == null ? null : variable.getName();
                 }
             } else if (mMethodVariable != null
                     && isDesiredMethodCall(expression, mMethodVariable,
-                    "java.lang.reflect.Method", "invoke", 1 /* param index */)) {  //$NON-NLS-1$
+                    "java.lang.reflect.Method", "invoke", 1 /* param index */)) {
                 // method.invoke(instance, "ro.serialno")
                 PsiExpression arg = methodParameterAt(expression, 1);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);

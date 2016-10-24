@@ -25,7 +25,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.collect.Maps;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -161,7 +160,7 @@ public class PluralsDatabase {
         }
 
         public static String formatSet(@NonNull EnumSet<Quantity> set) {
-            List<String> list = new ArrayList<String>(set.size());
+            List<String> list = new ArrayList<>(set.size());
             for (Quantity quantity : set) {
                 list.add('`' + quantity.name() + '`');
             }

@@ -34,13 +34,11 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.javadoc.PsiDocComment;
-
+import java.util.Collection;
+import java.util.List;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-
-import java.util.Collection;
-import java.util.List;
 
 class EcjPsiBinaryField extends EcjPsiBinaryElement implements PsiField, PsiModifierList {
 

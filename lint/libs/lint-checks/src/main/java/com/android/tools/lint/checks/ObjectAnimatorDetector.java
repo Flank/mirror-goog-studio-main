@@ -55,7 +55,6 @@ import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -72,7 +71,7 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
 
     /** Missing @Keep */
     public static final Issue MISSING_KEEP = Issue.create(
-            "AnimatorKeep", //$NON-NLS-1$
+            "AnimatorKeep",
             "Missing @Keep for Animated Properties",
 
             "When you use property animators, properties can be accessed via reflection. "
@@ -91,7 +90,7 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
 
     /** Incorrect ObjectAnimator binding */
     public static final Issue BROKEN_PROPERTY = Issue.create(
-            "ObjectAnimatorBinding", //$NON-NLS-1$
+            "ObjectAnimatorBinding",
             "Incorrect ObjectAnimator Property",
 
             "This check cross references properties referenced by String from `ObjectAnimator` "

@@ -67,7 +67,6 @@ import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -221,23 +220,23 @@ class DefaultSdkInfo extends SdkInfo {
         PARENTS.put(MULTI_AUTO_COMPLETE_TEXT_VIEW, AUTO_COMPLETE_TEXT_VIEW);
         PARENTS.put(CHECKED_TEXT_VIEW, TEXT_VIEW);
 
-        PARENTS.put("MediaController", FRAME_LAYOUT);     //$NON-NLS-1$
-        PARENTS.put("SlidingDrawer", VIEW_GROUP);         //$NON-NLS-1$
-        PARENTS.put("DialerFilter", RELATIVE_LAYOUT);     //$NON-NLS-1$
-        PARENTS.put("DigitalClock", TEXT_VIEW);           //$NON-NLS-1$
-        PARENTS.put("Chronometer", TEXT_VIEW);            //$NON-NLS-1$
-        PARENTS.put("ImageSwitcher", VIEW_SWITCHER);      //$NON-NLS-1$
-        PARENTS.put("TextSwitcher", VIEW_SWITCHER);       //$NON-NLS-1$
-        PARENTS.put("AnalogClock", VIEW);                 //$NON-NLS-1$
-        PARENTS.put("TwoLineListItem", RELATIVE_LAYOUT);  //$NON-NLS-1$
-        PARENTS.put("ZoomControls", LINEAR_LAYOUT);       //$NON-NLS-1$
-        PARENTS.put("DatePicker", FRAME_LAYOUT);          //$NON-NLS-1$
-        PARENTS.put("TimePicker", FRAME_LAYOUT);          //$NON-NLS-1$
-        PARENTS.put("VideoView", SURFACE_VIEW);           //$NON-NLS-1$
-        PARENTS.put("ZoomButton", IMAGE_BUTTON);          //$NON-NLS-1$
-        PARENTS.put("RatingBar", ABS_SEEK_BAR);           //$NON-NLS-1$
-        PARENTS.put("ViewFlipper", VIEW_ANIMATOR);        //$NON-NLS-1$
-        PARENTS.put("NumberPicker", LINEAR_LAYOUT);       //$NON-NLS-1$
+        PARENTS.put("MediaController", FRAME_LAYOUT);
+        PARENTS.put("SlidingDrawer", VIEW_GROUP);
+        PARENTS.put("DialerFilter", RELATIVE_LAYOUT);
+        PARENTS.put("DigitalClock", TEXT_VIEW);
+        PARENTS.put("Chronometer", TEXT_VIEW);
+        PARENTS.put("ImageSwitcher", VIEW_SWITCHER);
+        PARENTS.put("TextSwitcher", VIEW_SWITCHER);
+        PARENTS.put("AnalogClock", VIEW);
+        PARENTS.put("TwoLineListItem", RELATIVE_LAYOUT);
+        PARENTS.put("ZoomControls", LINEAR_LAYOUT);
+        PARENTS.put("DatePicker", FRAME_LAYOUT);
+        PARENTS.put("TimePicker", FRAME_LAYOUT);
+        PARENTS.put("VideoView", SURFACE_VIEW);
+        PARENTS.put("ZoomButton", IMAGE_BUTTON);
+        PARENTS.put("RatingBar", ABS_SEEK_BAR);
+        PARENTS.put("ViewFlipper", VIEW_ANIMATOR);
+        PARENTS.put("NumberPicker", LINEAR_LAYOUT);
 
         assert PARENTS.size() <= CLASS_COUNT : PARENTS.size();
 
@@ -265,22 +264,22 @@ class DefaultSdkInfo extends SdkInfo {
         LAYOUTS.add(RADIO_GROUP);
         LAYOUTS.add(LIST_VIEW);
         LAYOUTS.add(EXPANDABLE_LIST_VIEW);
-        LAYOUTS.add("MediaController");        //$NON-NLS-1$
-        LAYOUTS.add("DialerFilter");           //$NON-NLS-1$
-        LAYOUTS.add("ViewFlipper");            //$NON-NLS-1$
-        LAYOUTS.add("SlidingDrawer");          //$NON-NLS-1$
-        LAYOUTS.add("StackView");              //$NON-NLS-1$
-        LAYOUTS.add("SearchView");             //$NON-NLS-1$
-        LAYOUTS.add("TextSwitcher");           //$NON-NLS-1$
-        LAYOUTS.add("AdapterViewFlipper");     //$NON-NLS-1$
-        LAYOUTS.add("ImageSwitcher");          //$NON-NLS-1$
+        LAYOUTS.add("MediaController");
+        LAYOUTS.add("DialerFilter");
+        LAYOUTS.add("ViewFlipper");
+        LAYOUTS.add("SlidingDrawer");
+        LAYOUTS.add("StackView");
+        LAYOUTS.add("SearchView");
+        LAYOUTS.add("TextSwitcher");
+        LAYOUTS.add("AdapterViewFlipper");
+        LAYOUTS.add("ImageSwitcher");
         assert LAYOUTS.size() <= LAYOUT_COUNT : LAYOUTS.size();
     }
 
     // Currently using a map; this should really be a list, but using a map until we actually
     // start adding more than one item
     @NonNull
-    private static final Map<String, String> INTERFACES = new HashMap<String, String>(2);
+    private static final Map<String, String> INTERFACES = new HashMap<>(2);
     static {
         INTERFACES.put(CHECKED_TEXT_VIEW, CHECKABLE);
         INTERFACES.put(COMPOUND_BUTTON, CHECKABLE);

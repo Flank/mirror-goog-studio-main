@@ -70,10 +70,6 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,6 +77,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Ensures that layout width and height attributes are specified
@@ -88,7 +86,7 @@ import java.util.Set;
 public class RequiredAttributeDetector extends LayoutDetector implements JavaPsiScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "RequiredSize", //$NON-NLS-1$
+            "RequiredSize",
             "Missing `layout_width` or `layout_height` attributes",
 
             "All views must specify an explicit `layout_width` and `layout_height` attribute. " +
@@ -188,14 +186,14 @@ public class RequiredAttributeDetector extends LayoutDetector implements JavaPsi
         // Widget.Holo.TextView.ListSeparator, Widget.Holo.Light.TextView.ListSeparator, etc)
         // define layout_width and layout_height.
         // These are exposed through the listSeparatorTextViewStyle style.
-        if (style.equals("?android:attr/listSeparatorTextViewStyle")      //$NON-NLS-1$
-                || style.equals("?android/listSeparatorTextViewStyle")) { //$NON-NLS-1$
+        if (style.equals("?android:attr/listSeparatorTextViewStyle")
+                || style.equals("?android/listSeparatorTextViewStyle")) {
             return true;
         }
 
         // It's also set on Widget.QuickContactBadge and Widget.QuickContactBadgeSmall
         // These are exposed via a handful of attributes with a common prefix
-        if (style.startsWith("?android:attr/quickContactBadgeStyle")) { //$NON-NLS-1$
+        if (style.startsWith("?android:attr/quickContactBadgeStyle")) {
             return true;
         }
 
@@ -272,7 +270,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements JavaPsi
             return known;
         }
 
-        if (style.contains("Theme")) { //$NON-NLS-1$
+        if (style.contains("Theme")) {
             isTheme.put(style, true);
             return true;
         }
@@ -569,7 +567,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements JavaPsi
     @Override
     @Nullable
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("inflate"); //$NON-NLS-1$
+        return Collections.singletonList("inflate");
     }
 
     @Override

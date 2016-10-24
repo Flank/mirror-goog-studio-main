@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-
 import java.io.File;
 
 /**
@@ -42,7 +41,7 @@ public class ProguardDetector extends Detector {
 
     /** The main issue discovered by this detector */
     public static final Issue WRONG_KEEP = Issue.create(
-            "Proguard", //$NON-NLS-1$
+            "Proguard",
             "Using obsolete ProGuard configuration",
             "Using `-keepclasseswithmembernames` in a proguard config file is not " +
             "correct; it can cause some symbols to be renamed which should not be.\n" +
@@ -56,12 +55,12 @@ public class ProguardDetector extends Detector {
             Severity.FATAL,
             IMPLEMENTATION)
             .addMoreInfo(
-                    "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$
+                    "http://http://code.google.com/p/android/issues/detail?id=16384");
 
     /** Finds ProGuard files that contain non-project specific configuration
      * locally and suggests replacing it with an include path */
     public static final Issue SPLIT_CONFIG = Issue.create(
-            "ProguardSplit", //$NON-NLS-1$
+            "ProguardSplit",
             "Proguard.cfg file contains generic Android rules",
 
             "Earlier versions of the Android tools bundled a single `proguard.cfg` file " +
@@ -100,8 +99,8 @@ public class ProguardDetector extends Detector {
             if (context.isEnabled(WRONG_KEEP)) {
                 int index = indexOf(contents,
                         // Old pattern:
-                        "-keepclasseswithmembernames class * {\n" + //$NON-NLS-1$
-                        "    public <init>(android.");              //$NON-NLS-1$
+                        "-keepclasseswithmembernames class * {\n" +
+                        "    public <init>(android.");
                 if (index != -1) {
                     context.report(WRONG_KEEP,
                             Location.create(context.file, contents, index, index),
