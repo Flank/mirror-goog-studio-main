@@ -156,6 +156,91 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                             + "}\n")));
     }
 
+    public void testForeignSuperAnnotations() throws Exception {
+        //noinspection all // Sample code
+        assertEquals(""
+                    + "src/test/pkg/OverrideTest.java:9: Error: Overriding method should call super.test [MissingSuperCall]\n"
+                    + "        protected void test() { // ERROR\n"
+                    + "                       ~~~~\n"
+                    + "src/test/pkg/OverrideTest.java:21: Error: Overriding method should call super.test [MissingSuperCall]\n"
+                    + "        protected void test() { // ERROR\n"
+                    + "                       ~~~~\n"
+                    + "2 errors, 0 warnings\n",
+
+                lintProject(
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import javax.annotation.OverridingMethodsMustInvokeSuper;\n"
+                                + "import edu.umd.cs.findbugs.annotations.OverrideMustInvoke;\n"
+                                + "\n"
+                                + "@SuppressWarnings(\"UnusedDeclaration\")\n"
+                                + "public class OverrideTest {\n"
+                                + "    private static class Child1 extends Parent1 {\n"
+                                + "        protected void test() { // ERROR\n"
+                                + "        }\n"
+                                + "\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private static class Parent1 {\n"
+                                + "        @OverrideMustInvoke\n"
+                                + "        protected void test() {\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private static class Child2 extends Parent2 {\n"
+                                + "        protected void test() { // ERROR\n"
+                                + "        }\n"
+                                + "\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    private static class Parent2 {\n"
+                                + "        @OverridingMethodsMustInvokeSuper\n"
+                                + "        protected void test() {\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"),
+                        java(""
+                                // This is not the source code for
+                                //    edu.umd.cs.findbugs.annotations.OverrideMustInvoke
+                                // It's the @CallSuper annotation with the package and
+                                // class name replaced; lint doesn't care about the annotation
+                                // content
+                                + "package edu.umd.cs.findbugs.annotations;\n"
+                                + "\n"
+                                + "import java.lang.annotation.Retention;\n"
+                                + "import java.lang.annotation.Target;\n"
+                                + "\n"
+                                + "import static java.lang.annotation.ElementType.CONSTRUCTOR;\n"
+                                + "import static java.lang.annotation.ElementType.METHOD;\n"
+                                + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
+                                + "\n"
+                                + "@Retention(CLASS)\n"
+                                + "@Target({METHOD,CONSTRUCTOR})\n"
+                                + "public @interface OverrideMustInvoke {\n"
+                                + "}\n"),
+                        java(""
+                                // This is not the source code for
+                                //    javax.annotation.OverridingMethodsMustInvokeSuper
+                                // It's the @CallSuper annotation with the package and
+                                // class name replaced; lint doesn't care about the annotation
+                                // content
+                                + "package javax.annotation;\n"
+                                + "\n"
+                                + "import java.lang.annotation.Retention;\n"
+                                + "import java.lang.annotation.Target;\n"
+                                + "\n"
+                                + "import static java.lang.annotation.ElementType.CONSTRUCTOR;\n"
+                                + "import static java.lang.annotation.ElementType.METHOD;\n"
+                                + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
+                                + "\n"
+                                + "@Retention(CLASS)\n"
+                                + "@Target({METHOD,CONSTRUCTOR})\n"
+                                + "public @interface OverridingMethodsMustInvokeSuper {\n"
+                                + "}\n")
+                ));
+    }
+
     @SuppressWarnings("ClassNameDiffersFromFileName")
     public void testCallSuperIndirect() throws Exception {
         // Ensure that when the @CallSuper is on an indirect super method,
