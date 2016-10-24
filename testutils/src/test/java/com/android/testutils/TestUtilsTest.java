@@ -16,9 +16,11 @@
 
 package com.android.testutils;
 
-import org.junit.Test;
-
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
 
 @SuppressWarnings("javadoc")
 public class TestUtilsTest {
@@ -160,5 +162,16 @@ public class TestUtilsTest {
                 "        android:text=\"Button\" />\n" +
                 "\n" +
                 "</RelativeLayout>"));
+    }
+
+    @Test
+    public void testGetPlatformFile_exception() throws Exception {
+        try {
+            TestUtils.getPlatformFile("foo.jar");
+            fail("Should have thrown.");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).contains("foo.jar");
+            assertThat(e.getMessage()).contains(TestUtils.getLatestAndroidPlatform());
+        }
     }
 }

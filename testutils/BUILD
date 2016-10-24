@@ -4,6 +4,7 @@ iml_module(
     name = "studio.testutils",
     srcs = ["src/main/java"],
     tags = ["managed"],
+    test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.common"],
@@ -34,6 +35,7 @@ java_library(
 java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
+    data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
