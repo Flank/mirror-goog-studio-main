@@ -19,8 +19,6 @@ package com.android.tools.maven;
 import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.collect.Lists;
 
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
@@ -63,16 +61,15 @@ public class AddDependency {
         new AddDependency(repoDirectory).run(args);
     }
 
-    private final RepositorySystem mRepositorySystem;
-    private final RepositorySystemSession mRepositorySystemSession;
+    private final MavenRepository mRepo;
 
     private AddDependency(Path localRepo) {
-        mRepositorySystem = AetherUtils.getRepositorySystem();
-        mRepositorySystemSession =
-                AetherUtils.getRepositorySystemSession(mRepositorySystem, localRepo);
+        mRepo = new MavenRepository(localRepo);
     }
 
     private void run(List<String> coordinates) throws DependencyResolutionException, IOException {
+        JavaImportGenerator imports = new JavaImportGenerator(mRepo);
+
         CollectRequest request = new CollectRequest();
         request.setDependencies(
                 coordinates
@@ -80,15 +77,12 @@ public class AddDependency {
                         .map(DefaultArtifact::new)
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
                         .collect(Collectors.toList()));
-
         request.setRepositories(AetherUtils.REPOSITORIES);
 
-        DependencyResult result =
-                mRepositorySystem.resolveDependencies(
-                        mRepositorySystemSession, new DependencyRequest(request, null));
+        DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));
 
         for (ArtifactResult artifactResult : result.getArtifactResults()) {
-            JavaImportGenerator.generateJavaImportRule(artifactResult.getArtifact());
+            imports.generateImportRules(artifactResult.getArtifact());
         }
     }
 

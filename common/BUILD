@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.common",
@@ -20,14 +21,22 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.common",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/third_party:com.google.guava_guava",
     ],
+    pom = ":pom",
+)
+
+maven_pom(
+    name = "pom",
+    group = "com.android.tools",
+    artifact = "common",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(
