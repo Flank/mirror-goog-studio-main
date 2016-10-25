@@ -153,6 +153,10 @@ public class SimpleTestCallable implements Callable<Boolean> {
                 runner.addInstrumentationArg("coverageFile", coverageFile);
             }
 
+            if (testData.getAnimationsDisabled()) {
+                runner.setRunOptions("--no_window_animation");
+            }
+
             runner.setRunName(deviceName);
             runner.setMaxtimeToOutputResponse(timeoutInMs);
 
