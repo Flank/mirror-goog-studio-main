@@ -25,7 +25,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @NonNull final List<String> arguments = Lists.newArrayList();
 
-    @NonNull final Path benchmarksDirectory;
+    @NonNull final Path profilesDirectory;
 
     @Nullable Logging.BenchmarkMode benchmarkMode;
 
@@ -57,16 +56,17 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
-            @NonNull File buildDotGradleFile,
+            @NonNull Path buildDotGradleFile,
             @Nullable BenchmarkRecorder benchmarkRecorder,
+            @NonNull Path profilesDirectory,
             @Nullable String heapSize) {
         this.benchmarkRecorder = benchmarkRecorder;
         this.enableInfoLogging = benchmarkRecorder == null;
         this.projectConnection = projectConnection;
-        if (!buildDotGradleFile.getName().equals("build.gradle")) {
-            arguments.add("--build-file=" + buildDotGradleFile.getPath());
+        if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
+            arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
-        benchmarksDirectory = buildDotGradleFile.toPath().getParent().resolve("profiles");
+        this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
     }
 

@@ -18,18 +18,19 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Collects build profiles from gradle builds.
@@ -48,59 +49,28 @@ import java.util.List;
  */
 public class ProfileCapturer implements Closeable {
 
-    @NonNull private Path benchmarkDirectory;
-    @Nullable private BenchmarkRecorder benchmarkRecorder;
+    @NonNull private final Path profileDirectory;
+    @Nullable private final BenchmarkRecorder benchmarkRecorder;
     @Nullable private final Logging.BenchmarkMode benchmarkMode;
-
-    private Path temporaryFile;
+    @NonNull private final ImmutableSet<Path> existingProfiles;
 
     public ProfileCapturer(
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @Nullable Logging.BenchmarkMode benchmarkMode,
-            @NonNull Path benchmarkDirectory) {
+            @NonNull Path profileDirectory)
+            throws IOException {
         this.benchmarkRecorder = benchmarkRecorder;
         this.benchmarkMode = benchmarkMode;
-        this.benchmarkDirectory = benchmarkDirectory;
+        this.profileDirectory = profileDirectory;
         if (benchmarkMode != null && benchmarkRecorder == null) {
             throw new IllegalStateException("Need to set a profile manager to record profiles");
         }
-    }
-
-    /**
-     * Inject the arguments to output the profile.
-     *
-     * @param args the original arguments.
-     * @return the arguments with the benchmark argument added if applicable.
-     */
-    public List<String> appendArg(@NonNull List<String> args) {
-        if (benchmarkMode == null) {
-            return args;
-        }
-        try {
-            Files.createDirectories(benchmarkDirectory);
-            temporaryFile =
-                    Files.createTempDirectory(benchmarkDirectory, "benchmark")
-                            .resolve("benchmark.rawproto");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        if (!Files.isDirectory(temporaryFile.getParent())) {
-            throw new RuntimeException(
-                    "Profile directory " + temporaryFile.getParent() + "should have been created.");
-        }
-        if (Files.exists(temporaryFile)) {
-            throw new RuntimeException(
-                    "Profile file " + temporaryFile + " should not have been created.");
+        if (benchmarkMode != null) {
+            this.existingProfiles = getProfiles();
+        } else {
+            this.existingProfiles = ImmutableSet.of();
         }
 
-        return ImmutableList.<String>builder()
-                .addAll(args)
-                .add(
-                        "-P"
-                                + AndroidGradleOptions.PROPERTY_BENCHMARK_PROFILE_FILE
-                                + "="
-                                + temporaryFile.toString())
-                .build();
     }
 
     @Override
@@ -109,19 +79,17 @@ public class ProfileCapturer implements Closeable {
             return;
         }
         Preconditions.checkNotNull(benchmarkRecorder);
-        if (temporaryFile == null) {
-            throw new IllegalStateException("appendArg must be called");
-        }
-        if (!Files.isRegularFile(temporaryFile)) {
-            throw new RuntimeException(
-                    "Profile infrastructure failure: "
-                            + "Profile "
-                            + temporaryFile
-                            + " should have been written.");
+
+        Set<Path> newProfiles = Sets.difference(getProfiles(), existingProfiles);
+
+        if (newProfiles.size() != 1) {
+            throw new IllegalStateException(
+                    "Expected a profile to be written to " + profileDirectory);
         }
 
         GradleBuildProfile profile =
-                GradleBuildProfile.parseFrom(Files.readAllBytes(temporaryFile));
+                GradleBuildProfile.parseFrom(
+                        Files.readAllBytes(Iterables.getOnlyElement(newProfiles)));
 
         Logging.GradleBenchmarkResult.Builder benchmarkResult =
                 Logging.GradleBenchmarkResult.newBuilder()
@@ -129,5 +97,16 @@ public class ProfileCapturer implements Closeable {
                         .setBenchmarkMode(benchmarkMode);
 
         benchmarkRecorder.recordBenchmarkResult(benchmarkResult);
+    }
+
+
+    private ImmutableSet<Path> getProfiles() throws IOException {
+        if (!Files.exists(profileDirectory)) {
+            return ImmutableSet.of();
+        }
+        return ImmutableSet.copyOf(
+                Files.walk(profileDirectory)
+                        .filter(Files::isRegularFile)
+                        .collect(Collectors.toSet()));
     }
 }

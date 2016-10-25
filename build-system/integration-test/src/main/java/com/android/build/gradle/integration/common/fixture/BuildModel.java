@@ -27,19 +27,19 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.gradle.tooling.BuildAction;
-import org.gradle.tooling.BuildActionExecuter;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.model.GradleProject;
-import org.gradle.tooling.model.GradleTask;
-
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.gradle.tooling.BuildAction;
+import org.gradle.tooling.BuildActionExecuter;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleProject;
+import org.gradle.tooling.model.GradleTask;
 
 /**
  * Builder for actions that get the gradle model from a {@link GradleTestProject}.
@@ -57,8 +57,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
-                project.getBuildFile(),
+                project.getBuildFile().toPath(),
                 project.getBenchmarkRecorder(),
+                project.getProfileDirectory(),
                 project.getHeapSize());
     }
 
@@ -190,12 +191,13 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         executor.setStandardOutput(System.out);
         executor.setStandardError(System.err);
 
-        try (ProfileCapturer capturer =
-                new ProfileCapturer(benchmarkRecorder, benchmarkMode, benchmarksDirectory)) {
-            executor.withArguments(Iterables.toArray(capturer.appendArg(arguments), String.class));
+        // See ProfileCapturer javadoc for explanation.
+        try (Closeable ignored =
+                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
+            executor.withArguments(Iterables.toArray(arguments, String.class));
             return executor.run();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 

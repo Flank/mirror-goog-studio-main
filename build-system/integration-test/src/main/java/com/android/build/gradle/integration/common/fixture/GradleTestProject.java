@@ -42,7 +42,16 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -50,16 +59,6 @@ import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * JUnit4 test rule for integration test.
@@ -163,6 +162,7 @@ public final class GradleTestProject implements TestRule {
     private final String buildToolsVersion;
 
     @Nullable private final BenchmarkRecorder benchmarkRecorder;
+    @NonNull private final Path relativeProfileDirectory;
 
     @Nullable private String heapSize;
 
@@ -182,11 +182,12 @@ public final class GradleTestProject implements TestRule {
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
-            @Nullable BenchmarkRecorder benchmarkRecorder) {
+            @Nullable BenchmarkRecorder benchmarkRecorder,
+            @NonNull Path relativeProfileDirectory) {
         String buildDir = System.getenv("PROJECT_BUILD_DIR");
-        outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
-        testDir = null;
-        buildFile = sourceDir = null;
+        this.outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
+        this.testDir = null;
+        this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.minifyEnabled = minifyEnabled;
         this.useJack = useJack;
@@ -198,8 +199,9 @@ public final class GradleTestProject implements TestRule {
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
         this.benchmarkRecorder = benchmarkRecorder;
-        openConnections = Lists.newArrayList();
-        rootProject = this;
+        this.openConnections = Lists.newArrayList();
+        this.rootProject = this;
+        this.relativeProfileDirectory = relativeProfileDirectory;
     }
 
     /**
@@ -229,6 +231,7 @@ public final class GradleTestProject implements TestRule {
         buildToolsVersion = null;
         benchmarkRecorder = rootProject.benchmarkRecorder;
         this.rootProject = rootProject;
+        this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
     }
 
     private String getTargetGradleVersion() {
@@ -451,6 +454,12 @@ public final class GradleTestProject implements TestRule {
      */
     public File getOutputFile(String path) {
         return new File(getOutputDir(), path);
+    }
+
+    /** Returns the directory to look for profiles in. Defaults to build/profile/ */
+    @NonNull
+    public Path getProfileDirectory() {
+        return testDir.toPath().resolve(relativeProfileDirectory);
     }
 
     /**

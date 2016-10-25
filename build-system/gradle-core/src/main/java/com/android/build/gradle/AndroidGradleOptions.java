@@ -61,8 +61,6 @@ public class AndroidGradleOptions {
     private static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
             "android.disableResourceValidation";
 
-    public static final String PROPERTY_BENCHMARK_PROFILE_FILE = "android.benchmark.profile.file";
-
     public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
             "android.incrementalJavaCompile";
 
@@ -131,12 +129,6 @@ public class AndroidGradleOptions {
     @Nullable
     public static Integer getInstrumentationShardCount(@NonNull Project project) {
         return getInteger(project, PROPERTY_SHARD_COUNT);
-    }
-
-    @Nullable
-    public static File getBenchmarkProfileFile(@NonNull Project project) {
-        String path = getString(project, PROPERTY_BENCHMARK_PROFILE_FILE);
-        return path != null ? new File(path) : null;
     }
 
     public static boolean invokedFromIde(@NonNull Project project) {
