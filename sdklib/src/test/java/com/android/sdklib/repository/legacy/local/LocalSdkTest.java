@@ -78,7 +78,7 @@ public class LocalSdkTest extends TestCase {
                 "Pkg.LicenseRef=android-sdk-license\n" +
                 "Archive.Arch=ANY\n" +
                 "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
-        mFOp.recordExistingFile("/sdk/tools/" + SdkConstants.androidCmdName(), "placeholder");
+        mFOp.recordExistingFile("/sdk/tools/" + LocalSdk.androidCmdName(), "placeholder");
         mFOp.recordExistingFile("/sdk/tools/" + SdkConstants.FN_EMULATOR, "placeholder");
 
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_TOOLS);

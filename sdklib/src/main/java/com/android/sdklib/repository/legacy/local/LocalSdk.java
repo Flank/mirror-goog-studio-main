@@ -719,9 +719,11 @@ public class LocalSdk {
 
         // We're not going to check that all tools are present. At the very least
         // we should expect to find android and an emulator adapted to the current OS.
+        // Note that since we're looking for old-style SDK components here we expect only the
+        // old-style "tools" that contains "android".
         boolean hasEmulator = false;
         boolean hasAndroid = false;
-        String android1 = SdkConstants.androidCmdName().replace(".bat", ".exe");
+        String android1 = androidCmdName().replace(".bat", ".exe");
         String android2 = android1.indexOf('.') == -1 ? null : android1.replace(".exe", ".bat");
         File[] files = mFileOp.listFiles(toolFolder);
         for (File file : files) {
@@ -734,13 +736,27 @@ public class LocalSdk {
             }
         }
         if (!hasAndroid) {
-            info.appendLoadError("Missing %1$s", SdkConstants.androidCmdName());
+            info.appendLoadError("Missing %1$s", androidCmdName());
         }
         if (!hasEmulator) {
             info.appendLoadError("Missing %1$s", SdkConstants.FN_EMULATOR);
         }
 
         return info;
+    }
+
+    /**
+     * Returns the appropriate name for the 'android' command, which is 'android.bat' for
+     * Windows and 'android' for all other platforms.
+     */
+    @VisibleForTesting
+    public static String androidCmdName() {
+        String os = System.getProperty("os.name");
+        String cmd = "android";
+        if (os.startsWith("Windows")) {
+            cmd += ".bat";
+        }
+        return cmd;
     }
 
     /**
