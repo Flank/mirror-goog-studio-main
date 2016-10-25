@@ -682,17 +682,6 @@ public final class SdkConstants {
     /** Latest known version of the ConstraintLayout library (as a string) */
     public static final String LATEST_CONSTRAINT_LAYOUT_VERSION = "1.0.0-alpha9";
 
-    /** Returns the appropriate name for the 'android' command, which is 'android.exe' for
-     * Windows and 'android' for all other platforms. */
-    public static String androidCmdName() {
-        String os = System.getProperty("os.name");          //$NON-NLS-1$
-        String cmd = "android";                             //$NON-NLS-1$
-        if (os.startsWith("Windows")) {                     //$NON-NLS-1$
-            cmd += ".bat";                                  //$NON-NLS-1$
-        }
-        return cmd;
-    }
-
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.

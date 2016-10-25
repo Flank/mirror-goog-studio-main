@@ -30,6 +30,7 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.legacy.local.LocalSdk;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +61,7 @@ public class LegacyLocalRepoTest extends TestCase {
                         "Pkg.LicenseRef=android-sdk-license\n" +
                         "Archive.Arch=ANY\n" +
                         "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
-        mockFop.recordExistingFile("/sdk/tools/" + SdkConstants.androidCmdName(), "placeholder");
+        mockFop.recordExistingFile("/sdk/tools/" + LocalSdk.androidCmdName(), "placeholder");
         mockFop.recordExistingFile("/sdk/tools/" + SdkConstants.FN_EMULATOR, "placeholder");
 
         File root = new File("/sdk");
