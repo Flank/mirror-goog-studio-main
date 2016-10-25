@@ -63,8 +63,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
-                new Object[][] { // TODO: do we want to include legacy multidex?
-                    {ProjectScenario.NATIVE_MULTIDEX}, // {ProjectScenario.LEGACY_MULTIDEX},
+                new Object[][] {
+                    {ProjectScenario.LEGACY_MULTIDEX}, {ProjectScenario.NATIVE_MULTIDEX},
                 });
     }
 
@@ -73,6 +73,10 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
         switch (projectScenario) {
             case NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("WordPress/build.gradle"),
+                        "minSdkVersion( )* \\d+",
+                        "minSdkVersion 21");
                 break;
             case LEGACY_MULTIDEX:
                 break;
