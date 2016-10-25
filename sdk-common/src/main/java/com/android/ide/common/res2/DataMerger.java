@@ -199,8 +199,10 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
                         // look for the resource key in the set
                         ListMultimap<String, I> itemMap = dataSet.getDataMap();
 
-                        List<I> setItems = itemMap.get(dataItemKey);
-                        items.addAll(setItems);
+                        if (itemMap.containsKey(dataItemKey)) {
+                            List<I> setItems = itemMap.get(dataItemKey);
+                            items.addAll(setItems);
+                        }
                     }
 
                     mergeItems(dataItemKey, items, consumer);
@@ -225,6 +227,9 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
                     // look for the resource key in the set
                     ListMultimap<String, I> itemMap = dataSet.getDataMap();
 
+                    if (!itemMap.containsKey(dataItemKey)) {
+                        continue;
+                    }
                     List<I> items = itemMap.get(dataItemKey);
                     if (items.isEmpty()) {
                         continue;
