@@ -167,7 +167,7 @@ public final class AaptV2CommandBuilder {
             generateFinalIds = false;
         }
         if (!generateFinalIds) {
-            builder.add("--static-lib");        // --non-constant-id
+            builder.add("--non-final-ids");
         }
 
         // AAPT options
