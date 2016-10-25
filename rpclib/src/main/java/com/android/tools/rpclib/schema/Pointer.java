@@ -40,7 +40,6 @@ public final class Pointer extends Type {
 
     @Override
     public void encodeValue(@NotNull Encoder e, Object value) throws IOException {
-        assert (value instanceof BinaryObject);
         e.object((BinaryObject) value);
     }
 

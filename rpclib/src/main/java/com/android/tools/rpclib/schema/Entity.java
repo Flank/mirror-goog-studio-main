@@ -91,9 +91,11 @@ public final class Entity {
             e.nonCompactString(field.mDeclared);
         }
         if (e.getMode() != EncodingControl.Compact) {
-            e.uint32(mMetadata.length);
-            for (BinaryObject meta : mMetadata) {
-                e.object(meta);
+            e.uint32(mMetadata == null ? 0 : mMetadata.length);
+            if (mMetadata != null) {
+                for (BinaryObject meta : mMetadata) {
+                    e.object(meta);
+                }
             }
         }
     }
