@@ -16,32 +16,27 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_MIN_SDK;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
-import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for flattened java lib dependency in the module.
@@ -64,12 +59,16 @@ public class FlatJavaLibTest {
         /*
          * These two dependencies will transitively bring in 9 counts of support-annotations.
          */
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile 'com.android.support:appcompat-v7:24.0.0'\n" +
-                "    compile 'com.android.support:design:24.0.0'\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "android.defaultConfig.minSdkVersion " + SUPPORT_LIB_MIN_SDK + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    compile 'com.android.support:design:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
         models = project.model().level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
     }
 
@@ -89,6 +88,6 @@ public class FlatJavaLibTest {
         Collection<JavaLibrary> javaLibraries = deps.getJavaLibraries();
         assertThat(javaLibraries).hasSize(1);
         assertThat(Iterables.getOnlyElement(javaLibraries).getResolvedCoordinates())
-                .isEqualTo("com.android.support", "support-annotations","24.0.0");
+                .isEqualTo("com.android.support", "support-annotations", SUPPORT_LIB_VERSION);
     }
 }

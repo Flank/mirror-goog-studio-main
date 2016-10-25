@@ -40,7 +40,7 @@ class MinifyLibProvidedDepTest {
     static void setUp() {
         project.buildFile << """
 dependencies {
-    provided 'com.android.support:appcompat-v7:23.0.1'
+    provided 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
 }
 """
 

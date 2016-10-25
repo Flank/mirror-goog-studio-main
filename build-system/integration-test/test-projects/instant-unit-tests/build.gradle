@@ -18,15 +18,6 @@ apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
 apply from: "../commonLocalRepo.gradle"
 
-def env = new Object() {
-    String baseVersion
-    String buildVersion
-    String experimentalVersion
-    String experimentalGradleVersion
-}
-apply from: "../commonGradlePluginVersion.gradle", to: env
-
-
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
@@ -73,12 +64,12 @@ if (!instantRunServer.exists()) {
 }
 
 dependencies {
-    compile 'com.android.tools:annotations:' + env.baseVersion
+    compile 'com.android.tools:annotations:' + rootProject.baseVersion
     compile 'com.google.guava:guava:17.0'
     compile files(instantRunServer)
     compile files("build/incremental-test-classes-jar/instrumentedBaseClasses.jar")
 
-    compile 'com.android.support:support-v4:23.0.1'
+    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
     //provided gradleApi() // TODO: remove
     //androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'com.google.code.findbugs:jsr305:1.3.9'

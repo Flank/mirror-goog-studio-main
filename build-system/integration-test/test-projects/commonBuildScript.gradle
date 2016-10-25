@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-def env = new Object() {
-    String baseVersion
-    String buildVersion
-    String experimentalVersion
-    String experimentalGradleVersion
-}
-
 def commonScriptFolder = buildscript.sourceFile.parent
-apply from: "$commonScriptFolder/commonGradlePluginVersion.gradle", to: env
+apply from: "$commonScriptFolder/commonVersions.gradle", to: rootProject.ext
 
 project.buildscript { buildscript ->
     apply from: "$commonScriptFolder/commonLocalRepo.gradle", to:buildscript
     dependencies {
-        classpath "com.android.tools.build:gradle:$env.buildVersion"
-        classpath "com.android.tools.build:gradle-experimental:$env.experimentalVersion"
+        classpath "com.android.tools.build:gradle:$rootProject.buildVersion"
+        classpath "com.android.tools.build:gradle-experimental:$rootProject.experimentalVersion"
         classpath 'com.android.tools.internal.build.test:devicepool:0.1'
     }
 }

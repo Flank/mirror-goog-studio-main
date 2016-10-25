@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -30,20 +30,12 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.google.common.collect.Lists;
-import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Test to ensure that "auto" resConfig setting only package application's languages.
@@ -82,8 +74,10 @@ public class AutoResConfig {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:21.0.3'\n"
-                        + "    compile 'com.android.support:support-v4:21.0.3'\n"
+                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "'\n"
                         + "}\n");
         model = project.executeAndReturnModel("clean", "assembleDebug");
     }

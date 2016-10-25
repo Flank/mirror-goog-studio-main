@@ -16,18 +16,18 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_MIN_SDK;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * test dependency on a remote library that brings in a transitive
@@ -49,16 +49,25 @@ public class TestWithRemoteAndroidLibDepTest {
 "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
 "}\n");
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.android.support:support-v4:24.0.0'\n" +
-"    androidTestCompile 'com.android.support:appcompat-v7:24.0.0'\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "android.defaultConfig.minSdkVersion " + SUPPORT_LIB_MIN_SDK + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    androidTestCompile 'com.android.support:appcompat-v7:"
+                        + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
-        appendToFile(project.getSubproject("library").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.android.support:support-v4:24.0.0'\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
     }
 
