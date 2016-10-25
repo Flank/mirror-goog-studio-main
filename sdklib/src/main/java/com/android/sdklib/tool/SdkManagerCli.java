@@ -466,6 +466,9 @@ public class SdkManagerCli {
                     }
                 } else if (arg.startsWith(SDK_ROOT_ARG)) {
                     result.mLocalPath = fileSystem.getPath(arg.substring(SDK_ROOT_ARG.length()));
+                } else if (arg.startsWith("--")) {
+                    progress.logError(String.format("Unknown argument %s", arg));
+                    return null;
                 } else {
                     result.mPackages.add(arg);
                 }
