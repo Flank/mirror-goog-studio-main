@@ -110,6 +110,7 @@ task initSdkForTests(type: JavaExec) {
             }
             args = ['--sdk_root=' + sdk_home,
                     '--channel=3',
+                    '--verbose',
                     'tools',
                     'platform-tools',
                     'build-tools;25.0.0',
