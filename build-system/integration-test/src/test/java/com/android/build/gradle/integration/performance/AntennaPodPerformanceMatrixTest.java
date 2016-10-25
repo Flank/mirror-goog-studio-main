@@ -181,7 +181,7 @@ public class AntennaPodPerformanceMatrixTest {
                     break;
                 case GENERATE_SOURCES:
                     project.executor().withEnableInfoLogging(false).run("clean");
-                    tasks = ModelHelper.getGenerateSourcesCommands(model);
+                    tasks = ModelHelper.getDebugGenerateSourcesCommands(model);
                     break;
                 case NO_OP:
                     // Do an initial build for NO_OP.
