@@ -332,10 +332,10 @@ public class SdkManagerCli {
 
     private static void usage(@NonNull PrintStream out) {
         out.println("Usage: ");
-        out.println("  sdk-downloader [--uninstall] [<common args>] \\");
+        out.println("  sdkmanager [--uninstall] [<common args>] \\");
         out.println("    [--package_file <package-file>] [<packages>...]");
-        out.println("  sdk-downloader --update [<common args>]");
-        out.println("  sdk-downloader --list [<common args>]");
+        out.println("  sdkmanager --update [<common args>]");
+        out.println("  sdkmanager --list [<common args>]");
         out.println();
         out.println("In its first form, installs, or uninstalls, or updates packages.");
         out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or \n"
