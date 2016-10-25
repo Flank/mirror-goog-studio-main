@@ -37,11 +37,12 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Utility helper to help read/test the AndroidProject Model.
@@ -312,11 +313,22 @@ public class ModelHelper {
      * </ul>
      */
     @NonNull
-    public static List<String> getGenerateSourcesCommands(
+    public static List<String> getDebugGenerateSourcesCommands(
             @NonNull Map<String, AndroidProject> model) {
-        List<String> commands = Lists.newArrayList();
+        return getGenerateSourcesCommands(model, project -> "debug");
+    }
+
+    @NonNull
+    public static List<String> getGenerateSourcesCommands(
+            @NonNull Map<String, AndroidProject> model,
+            @NonNull Function<String, String> projectToVariantName) {
+
+        ImmutableList.Builder<String> commands = ImmutableList.builder();
         for (Map.Entry<String, AndroidProject> entry : model.entrySet()) {
-            Variant debug = ModelHelper.getDebugVariant(entry.getValue());
+            Variant debug =
+                    ModelHelper.getVariant(
+                            entry.getValue().getVariants(),
+                            projectToVariantName.apply(entry.getKey()));
             commands.add(entry.getKey() + ":" + debug.getMainArtifact().getSourceGenTaskName());
             for (AndroidArtifact artifact : debug.getExtraAndroidArtifacts()) {
                 commands.add(entry.getKey() + ":" + artifact.getSourceGenTaskName());
@@ -327,6 +339,6 @@ public class ModelHelper {
                 }
             }
         }
-        return commands;
+        return commands.build();
     }
 }

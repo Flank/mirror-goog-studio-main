@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -177,19 +178,37 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @Test
     public void runBenchmarks() throws Exception {
+        // Warm up
         project.model().getMulti();
-
         project.executor().run("assemble");
         project.executor().run("clean");
+
+        project.executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
 
         Map<String, AndroidProject> model =
                 project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
         assertThat(model.keySet()).contains(":WordPress");
+
+
+        project.executor()
+                .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
+                .run(ModelHelper.getGenerateSourcesCommands(
+                        model,
+                        project -> project.equals(":WordPress") ? "vanillaDebug" : "debug"));
 
         project.executor()
                 .recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN)
                 .run("assembleVanillaDebug");
 
         project.executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
+
+
+        project.executor().run("clean");
+
+        project.executor()
+                .recordBenchmark(BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN)
+                .run("assembleVanillaDebugAndroidTest");
+
+
     }
 }
