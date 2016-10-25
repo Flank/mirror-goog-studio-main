@@ -69,6 +69,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

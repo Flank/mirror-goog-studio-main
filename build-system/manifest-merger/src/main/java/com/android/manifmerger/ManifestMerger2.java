@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.model.AndroidBundle;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Optional;
@@ -889,21 +890,57 @@ public class ManifestMerger2 {
          */
         @NonNull
         public Invoker addLibraryManifest(@NonNull File file) {
-            if (mMergeType == MergeType.LIBRARY) {
-                throw new IllegalStateException(
-                        "Cannot add library dependencies manifests when creating a library");
-            }
-            mLibraryFilesBuilder.add(Pair.of(file.getName(), file));
+            addLibraryManifest(file.getName(), file);
             return thisAsT();
         }
 
+        /**
+         * Add one library file manifest, will be added last in the list of library files which will
+         * make the parameter the lowest priority library manifest file.
+         * @param file the library manifest file to add.
+         * @param name the library name.
+         * @return itself.
+         */
         @NonNull
+        public Invoker addLibraryManifest(@NonNull String name, @NonNull File file) {
+            if (mMergeType == MergeType.LIBRARY) {
+                throw new IllegalStateException(
+                  "Cannot add library dependencies manifests when creating a library");
+            }
+            mLibraryFilesBuilder.add(Pair.of(name, file));
+            return thisAsT();
+        }
+
+        /**
+         * Sets library dependencies for this merging activity.
+         * @param namesAndFiles the list of library dependencies.
+         * @return itself.
+         *
+         * @deprecated use addLibraryManifest or addAndroidBundleManifests
+         */
+        @NonNull
+        @Deprecated
         public Invoker addBundleManifests(@NonNull List<Pair<String, File>> namesAndFiles) {
             if (mMergeType == MergeType.LIBRARY && !namesAndFiles.isEmpty()) {
                 throw new IllegalStateException(
                         "Cannot add library dependencies manifests when creating a library");
             }
             mLibraryFilesBuilder.addAll(namesAndFiles);
+            return thisAsT();
+        }
+
+        /**
+         * Sets library dependencies for this merging activity.
+         * @param libraries the list of library dependencies.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker addAndroidBundleManifests(@NonNull Iterable<? extends AndroidBundle> libraries) {
+            for (AndroidBundle library : libraries) {
+                if (!library.isProvided()) {
+                    mLibraryFilesBuilder.add(Pair.of(library.getName(), library.getManifest()));
+                }
+            }
             return thisAsT();
         }
 
