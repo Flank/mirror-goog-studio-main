@@ -424,18 +424,24 @@ public class IncrementalVisitor extends ClassVisitor {
                 parentNodes.add(parentNode);
                 currentParentName = parentNode.superName;
             } else {
-                // May need method information from outside of the current project. Thread local class reader
-                // should be the one
-                try {
-                    ClassReader parentClassReader = new ClassReader(
-                            Thread.currentThread().getContextClassLoader().getResourceAsStream(
-                                    currentParentName + ".class"));
+                // May need method information from outside of the current project. The thread's
+                // context class loader is configured by the caller (InstantRunTransform) to contain
+                // all app's dependencies.
+                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+                try (InputStream parentByteCode =
+                             contextClassLoader.getResourceAsStream(currentParentName + ".class")) {
+                    if (parentByteCode == null) {
+                        throw new IOException("Failed to find byte code for " + currentParentName);
+                    }
+
+                    ClassReader parentClassReader = new ClassReader(parentByteCode);
                     ClassNode parentNode = new ClassNode();
                     parentClassReader.accept(parentNode, ClassReader.EXPAND_FRAMES);
                     parentNodes.add(parentNode);
                     currentParentName = parentNode.superName;
                 } catch (IOException e) {
                     // Could not locate parent class. This is as far as we can go locating parents.
+                    LOG.warning(e.getMessage());
                     LOG.warning("IncrementalVisitor parseParents could not locate %1$s "
                             + "which is an ancestor of project class %2$s.\n"
                             + "%2$s is not eligible for hot swap.",
