@@ -3,9 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.dvlib",
     # do not sort: must match IML order
-    srcs = [
-        "dvlib/src/main/java",
-    ],
+    srcs = ["dvlib/src/main/java"],
     resources = ["dvlib/src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
