@@ -182,12 +182,16 @@ public class InstantRunTransform extends Transform {
                 FileUtils.cleanOutputDir(classesThreeOutput);
             }
 
+            final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
             for (TransformInput input : invocation.getInputs()) {
               input.getDirectoryInputs().parallelStream().forEach(directoryInput -> {
+                  ClassLoader currentThreadClassLoader = Thread.currentThread().getContextClassLoader();
                   try {
+                      Thread.currentThread().setContextClassLoader(contextClassLoader);
                       File inputDir = directoryInput.getFile();
                       if (invocation.isIncremental()) {
-                          for (Map.Entry<File, Status> fileEntry : directoryInput.getChangedFiles()
+                          for (Map.Entry<File, Status> fileEntry : directoryInput
+                                  .getChangedFiles()
                                   .entrySet()) {
 
                               File inputFile = fileEntry.getKey();
@@ -204,7 +208,8 @@ public class InstantRunTransform extends Transform {
                                       break;
                                   case REMOVED:
                                       // remove the classes.2 and classes.3 files.
-                                      deleteOutputFile(IncrementalSupportVisitor.VISITOR_BUILDER,
+                                      deleteOutputFile(
+                                              IncrementalSupportVisitor.VISITOR_BUILDER,
                                               inputDir, inputFile, classesTwoOutput);
                                       deleteOutputFile(IncrementalChangeVisitor.VISITOR_BUILDER,
                                               inputDir, inputFile, classesThreeOutput);
@@ -233,7 +238,8 @@ public class InstantRunTransform extends Transform {
                       } else {
                           // non incremental mode, we need to traverse the TransformInput#getFiles()
                           // folder
-                          for (File file : Files.fileTreeTraverser().breadthFirstTraversal(inputDir)) {
+                          for (File file : Files.fileTreeTraverser()
+                                  .breadthFirstTraversal(inputDir)) {
                               if (file.isDirectory()) {
                                   continue;
                               }
@@ -251,9 +257,12 @@ public class InstantRunTransform extends Transform {
                           }
                       }
                   } catch (IOException x) {
-                    throw new RuntimeException(x);  // Lambdas don't like checked exceptions.
+                      throw new RuntimeException(x);  // Lambdas don't like checked exceptions.
+                  } finally {
+                      Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
                   }
               });
+
             }
 
             wrapUpOutputs(classesTwoOutput, classesThreeOutput);
