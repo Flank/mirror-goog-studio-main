@@ -18,6 +18,7 @@ package com.android.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -71,6 +72,21 @@ public class FileUtilsTest {
         f2.mkdir();
 
         assertEquals("bar" + File.separator, FileUtils.relativePath(f2, d1));
+    }
+
+    @Test
+    public void testIsFileInDirectory() throws IOException {
+        assertTrue(
+                FileUtils.isFileInDirectory(
+                        new File(FileUtils.join("foo", "bar", "baz")), new File("foo")));
+        assertTrue(
+                FileUtils.isFileInDirectory(
+                        new File(FileUtils.join("foo", "bar")), new File("foo")));
+        assertFalse(FileUtils.isFileInDirectory(new File("foo"), new File("foo")));
+        assertFalse(FileUtils.isFileInDirectory(new File("bar"), new File("foo")));
+        assertFalse(
+                FileUtils.isFileInDirectory(
+                        new File("foo"), new File(FileUtils.join("foo", "bar"))));
     }
 
     @Test

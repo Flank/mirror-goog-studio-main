@@ -489,6 +489,24 @@ public final class FileUtils {
     }
 
     /**
+     * Returns {@code true} if a file/directory is in a given directory or in a subdirectory of the
+     * given directory, and {@code false} otherwise.
+     */
+    public static boolean isFileInDirectory(File file, File directory) throws IOException {
+        File canonicalFile = file.getCanonicalFile();
+        File canonicalDirectory = directory.getCanonicalFile();
+
+        canonicalFile = canonicalFile.getParentFile();
+        while (canonicalFile != null) {
+            if (canonicalFile.equals(canonicalDirectory)) {
+                return true;
+            }
+            canonicalFile = canonicalFile.getParentFile();
+        }
+        return false;
+    }
+
+    /**
      * Returns the modified canonical path of a file with consideration of the case sensitivity of
      * the underlying file system.
      *

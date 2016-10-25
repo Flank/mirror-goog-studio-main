@@ -62,17 +62,17 @@ public class BuildCacheTest {
 
         File preDexDir = FileUtils.join(project.getIntermediatesDir(), "pre-dexed", "debug");
         List<File> dexFiles = Arrays.asList(preDexDir.listFiles());
-        List<File> cachedFileContainers = Arrays.asList(buildCacheDir.listFiles());
+        List<File> cachedEntryDirs = Arrays.asList(buildCacheDir.listFiles());
 
         assertThat(dexFiles).hasSize(2);
-        assertThat(cachedFileContainers).hasSize(1);
+        assertThat(cachedEntryDirs).hasSize(1);
 
         // Assert that the pre-dexed file of the guava library is stored in the cache. Depending on
         // the cache implementation, either the output file is created first and copied to the
         // cache, or the cached file is created first and copied to the output file. In either way,
         // we check their timestamps to make sure we actually copied one to the other and did not
         // accidentally run pre-dexing twice to create the two files.
-        File cachedGuavaDexFile = new File(cachedFileContainers.get(0), "output");
+        File cachedGuavaDexFile = new File(cachedEntryDirs.get(0), "output");
         File guavaDexFile;
         File projectDexFile;
         if (dexFiles.get(0).getName().contains("guava")) {
