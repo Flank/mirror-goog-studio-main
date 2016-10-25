@@ -16,10 +16,15 @@
 
 package com.android.builder.internal.utils;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.function.Consumer;
 
-/** Consumer that can throw an {@link IOException}. */
+/**
+ * Consumer that can throw an {@link IOException}.
+ */
 @FunctionalInterface
 public interface IOExceptionConsumer<T> {
 
@@ -29,4 +34,20 @@ public interface IOExceptionConsumer<T> {
      * @param input the input
      */
     void accept(@Nullable T input) throws IOException;
+
+    /**
+     * Wraps a consumer that may throw an IO Exception throwing an {@code UncheckedIOException}.
+     *
+     * @param c the consumer
+     */
+    @NonNull
+    static <T> Consumer<T> asConsumer(@NonNull IOExceptionConsumer<T> c)  {
+        return i -> {
+            try {
+                c.accept(i);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
 }

@@ -16,11 +16,14 @@
 
 package com.android.builder.internal.utils;
 
+import com.android.annotations.NonNull;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 /**
  * Runnable that can throw I/O exceptions.
  */
+@FunctionalInterface
 public interface IOExceptionRunnable {
 
     /**
@@ -28,4 +31,20 @@ public interface IOExceptionRunnable {
      * @throws IOException failed to run
      */
     void run() throws IOException;
+
+    /**
+     * Wraps a runnable that may throw an IO Exception throwing an {@code UncheckedIOException}.
+     *
+     * @param r the runnable
+     */
+    @NonNull
+    public static Runnable asRunnable(@NonNull IOExceptionRunnable r) {
+        return () -> {
+            try {
+                r.run();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
 }
