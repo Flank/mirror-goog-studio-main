@@ -16,13 +16,17 @@
 
 package com.android.builder.internal.utils;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.function.Function;
 
 /**
  * Function that can throw an I/O Exception
  */
+@FunctionalInterface
 public interface IOExceptionFunction<F, T> {
 
     /**
@@ -31,4 +35,20 @@ public interface IOExceptionFunction<F, T> {
      * @return the function result
      */
     @Nullable T apply(@Nullable F input) throws IOException;
+
+    /**
+     * Wraps a function that may throw an IO Exception throwing an {@code UncheckedIOException}.
+     *
+     * @param f the function
+     */
+    @NonNull
+    static <F, T> Function<F, T> asFunction(@NonNull IOExceptionFunction<F, T> f)  {
+        return i -> {
+            try {
+                return f.apply(i);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
 }
