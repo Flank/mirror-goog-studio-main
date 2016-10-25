@@ -56,6 +56,8 @@ public interface TestData {
     @NonNull
     Map<String, String> getInstrumentationRunnerArguments();
 
+    boolean getAnimationsDisabled();
+
     /**
      * Returns whether the tested app is enabled for code coverage
      */

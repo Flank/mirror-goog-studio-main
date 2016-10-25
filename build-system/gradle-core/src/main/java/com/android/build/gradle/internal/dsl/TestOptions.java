@@ -37,6 +37,8 @@ public class TestOptions {
     @Nullable
     private String reportDir;
 
+    private boolean animationsDisabled;
+
     /**
      * Options for controlling unit tests execution.
      *
@@ -82,6 +84,13 @@ public class TestOptions {
 
     public void setReportDir(@Nullable String reportDir) {
         this.reportDir = reportDir;
+    }
+
+    /** Disables animations during instrumented tests. */
+    public boolean getAnimationsDisabled() { return animationsDisabled; }
+
+    public void setAnimationsDisabled(boolean animationsDisabled) {
+        this.animationsDisabled = animationsDisabled;
     }
 
     /**
