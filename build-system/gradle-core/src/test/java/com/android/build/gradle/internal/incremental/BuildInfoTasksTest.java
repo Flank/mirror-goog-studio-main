@@ -70,8 +70,7 @@ public class BuildInfoTasksTest {
         context.setApiLevel(23, ColdswapMode.MULTIDEX.toString(), null);
         runLoaderTask(project, context);
 
-        context.addChangedFile(InstantRunBuildContext.FileType.RESOURCES,
-                new File("resources-debug.ap_"));
+        context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
         context.setBuildHasFailed();
 
         runWriterTask(createProject(), context);
@@ -84,20 +83,14 @@ public class BuildInfoTasksTest {
 
         runLoaderTask(project, context);
 
-        context.addChangedFile(InstantRunBuildContext.FileType.RELOAD_DEX,
-                new File("reload dex.dex"));
+        context.addChangedFile(FileType.RELOAD_DEX, new File("reload dex.dex"));
 
         runWriterTask(createProject(), context);
 
+        assertThat(context.getLastBuild()).isNotNull();
         assertThat(context.getLastBuild().getArtifacts()).hasSize(2);
-        assertThat(
-                context.getLastBuild()
-                        .getArtifactForType(InstantRunBuildContext.FileType.RELOAD_DEX))
-                .isNotNull();
-        assertThat(
-                context.getLastBuild()
-                        .getArtifactForType(InstantRunBuildContext.FileType.RESOURCES))
-                .isNotNull();
+        assertThat(context.getLastBuild().getArtifactForType(FileType.RELOAD_DEX)).isNotNull();
+        assertThat(context.getLastBuild().getArtifactForType(FileType.RESOURCES)).isNotNull();
     }
 
     private void runLoaderTask(

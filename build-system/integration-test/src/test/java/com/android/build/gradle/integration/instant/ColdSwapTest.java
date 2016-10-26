@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.DexBackedDexFileSubject;
 import com.android.build.gradle.integration.common.utils.DexUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
@@ -146,7 +147,7 @@ public class ColdSwapTest {
                 assertThat(artifacts).hasSize(1);
                 InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
 
-                expect.that(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.DEX);
+                expect.that(artifact.getType()).isEqualTo(FileType.DEX);
 
                 checkUpdatedClassPresence(DexUtils.loadDex(artifact.getLocation()));
             }
@@ -172,15 +173,11 @@ public class ColdSwapTest {
 
             @Override
             public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
-                assertThat(artifacts).hasSize(2);
+                assertThat(artifacts).hasSize(1);
                 for (InstantRunBuildContext.Artifact artifact : artifacts) {
-                    expect.that(artifact.getType()).isAnyOf(
-                            InstantRunBuildContext.FileType.SPLIT,
-                            InstantRunBuildContext.FileType.SPLIT_MAIN);
-                    if (artifact.getType().equals(InstantRunBuildContext.FileType.SPLIT)) {
-                        checkUpdatedClassPresence(DexUtils.loadDex(
-                                ZipHelper.extractEntry(artifact.getLocation(), "classes.dex")));
-                    }
+                    expect.that(artifact.getType()).isEqualTo(FileType.SPLIT);
+                    checkUpdatedClassPresence(DexUtils.loadDex(
+                            ZipHelper.extractEntry(artifact.getLocation(), "classes.dex")));
                 }
             }
         });

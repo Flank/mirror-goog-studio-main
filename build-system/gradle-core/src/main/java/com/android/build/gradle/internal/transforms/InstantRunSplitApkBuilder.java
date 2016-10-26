@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext.FileType;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -307,7 +307,8 @@ public class InstantRunSplitApkBuilder extends BaseTask {
                 return new File(path1);
             });
 
-            ConventionMappingHelper.map(task, "dexFolders", packagingScope::getDexFolders);
+            ConventionMappingHelper.map(task, "dexFolders",
+                    () -> packagingScope.getDexFolders(FileType.SPLIT));
             ConventionMappingHelper.map(task, "aaptOptions", packagingScope::getAaptOptions);
         }
     }
