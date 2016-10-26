@@ -73,9 +73,9 @@ public class ProcessRecorderTest {
     @Test
     public void testRecordsOrder() throws Exception {
         ThreadRecorder.get().record(
-                ExecutionType.SOME_RANDOM_PROCESSING, "projectName", null, () ->
+                ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", null, () ->
                         ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
-                                "projectName", null, () -> 10));
+                                ":projectName", null, () -> 10));
         ProcessRecorderFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(2);

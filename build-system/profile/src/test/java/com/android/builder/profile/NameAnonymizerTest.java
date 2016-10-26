@@ -28,19 +28,25 @@ public class NameAnonymizerTest {
     public void anonymizeProjectName() {
         NameAnonymizer nameAnonymizer = new NameAnonymizer();
 
-        assertEquals(nameAnonymizer.anonymizeProjectName(":a"),
-                nameAnonymizer.anonymizeProjectName(":a"));
-        assertEquals(nameAnonymizer.anonymizeProjectName(":b"),
-                nameAnonymizer.anonymizeProjectName(":b"));
-        assertEquals(nameAnonymizer.anonymizeProjectName(":c"),
-                nameAnonymizer.anonymizeProjectName(":c"));
+        assertEquals(
+                nameAnonymizer.anonymizeProjectPath(":a"),
+                nameAnonymizer.anonymizeProjectPath(":a"));
+        assertEquals(
+                nameAnonymizer.anonymizeProjectPath(":b"),
+                nameAnonymizer.anonymizeProjectPath(":b"));
+        assertEquals(
+                nameAnonymizer.anonymizeProjectPath(":c"),
+                nameAnonymizer.anonymizeProjectPath(":c"));
 
-        assertNotEquals(nameAnonymizer.anonymizeProjectName(":a"),
-                nameAnonymizer.anonymizeProjectName(":b"));
-        assertNotEquals(nameAnonymizer.anonymizeProjectName(":a"),
-                nameAnonymizer.anonymizeProjectName(":c"));
-        assertNotEquals(nameAnonymizer.anonymizeProjectName(":b"),
-                nameAnonymizer.anonymizeProjectName(":c"));
+        assertNotEquals(
+                nameAnonymizer.anonymizeProjectPath(":a"),
+                nameAnonymizer.anonymizeProjectPath(":b"));
+        assertNotEquals(
+                nameAnonymizer.anonymizeProjectPath(":a"),
+                nameAnonymizer.anonymizeProjectPath(":c"));
+        assertNotEquals(
+                nameAnonymizer.anonymizeProjectPath(":b"),
+                nameAnonymizer.anonymizeProjectPath(":c"));
     }
 
     @Test
