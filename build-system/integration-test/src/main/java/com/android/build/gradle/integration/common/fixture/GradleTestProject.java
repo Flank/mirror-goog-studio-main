@@ -459,7 +459,7 @@ public final class GradleTestProject implements TestRule {
     /** Returns the directory to look for profiles in. Defaults to build/profile/ */
     @NonNull
     public Path getProfileDirectory() {
-        return testDir.toPath().resolve(relativeProfileDirectory);
+        return rootProject.testDir.toPath().resolve(relativeProfileDirectory);
     }
 
     /**

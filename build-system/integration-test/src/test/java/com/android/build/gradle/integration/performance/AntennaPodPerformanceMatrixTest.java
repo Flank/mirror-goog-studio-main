@@ -58,7 +58,7 @@ public class AntennaPodPerformanceMatrixTest {
                         .fromExternalProject("AntennaPod")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(Logging.Benchmark.ANTENNA_POD, scenario))
-                        .withRelativeProfileDirectory(Paths.get("AntennaPod", "build", "profile"))
+                        .withRelativeProfileDirectory(Paths.get("AntennaPod", "build", "android-profile"))
                         .create();
     }
 
