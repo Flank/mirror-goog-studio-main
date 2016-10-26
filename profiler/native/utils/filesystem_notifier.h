@@ -36,7 +36,7 @@ class FileSystemNotifier {
   // for the file being monitored.
   bool IsReadyToNotify();
 
-  // Wait until one of the events specified in |event_mark| (via constructor)
+  // Wait until one of the events specified in |event_mask| (via constructor)
   // occurs OR at least |timeout_ms| has elapsed. Returns false if timeout or
   // if poll failed.
   bool WaitUntilEventOccurs(int64_t timeout_ms = 5000);
