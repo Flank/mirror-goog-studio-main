@@ -128,7 +128,7 @@ public class RecordingBuildListenerTest {
         when(mSecondTask.getName())
                 .thenThrow(new AssertionError("Nothing should be using task name"));
         when(mSecondTask.getProject()).thenReturn(mProject);
-        mProfileProtoFile = Jimfs.newFileSystem().getPath("profile_proto");
+        mProfileProtoFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto.rawproto");
         ProcessRecorderFactory.initializeForTests(mProfileProtoFile);
     }
 

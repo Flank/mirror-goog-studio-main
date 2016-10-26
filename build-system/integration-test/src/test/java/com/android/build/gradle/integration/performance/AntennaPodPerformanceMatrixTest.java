@@ -32,6 +32,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -57,6 +58,7 @@ public class AntennaPodPerformanceMatrixTest {
                         .fromExternalProject("AntennaPod")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(Logging.Benchmark.ANTENNA_POD, scenario))
+                        .withRelativeProfileDirectory(Paths.get("AntennaPod", "build", "profile"))
                         .create();
     }
 

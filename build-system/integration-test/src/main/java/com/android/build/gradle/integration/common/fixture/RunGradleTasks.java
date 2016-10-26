@@ -34,16 +34,15 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
 
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
@@ -61,8 +60,9 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
-                gradleTestProject.getBuildFile(),
+                gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
+                gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
         isMinifyEnabled = gradleTestProject.isMinifyEnabled();
@@ -178,9 +178,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         GradleConnectionException failure;
 
-        try (ProfileCapturer capturer =
-                new ProfileCapturer(benchmarkRecorder, benchmarkMode, benchmarksDirectory)) {
-            launcher.withArguments(Iterables.toArray(capturer.appendArg(args), String.class));
+        // See ProfileCapturer javadoc for explanation.
+        try (Closeable ignored =
+                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
+            launcher.withArguments(Iterables.toArray(args, String.class));
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();

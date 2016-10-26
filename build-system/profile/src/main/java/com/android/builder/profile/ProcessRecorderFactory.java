@@ -24,11 +24,14 @@ import com.android.tools.analytics.Anonymizer;
 import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +46,9 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class ProcessRecorderFactory {
+
+    private static final DateTimeFormatter PROFILE_FILE_NAME =
+            DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
 
     public static void shutdown() throws InterruptedException {
         synchronized (LOCK) {
@@ -63,22 +69,23 @@ public class ProcessRecorderFactory {
     @Nullable
     private ILogger mLogger = null;
 
-    /**
-     * Set up the the ProcessRecorder. Idempotent for multi-project builds.
-     *
-     */
+    /** Set up the the ProcessRecorder. Idempotent for multi-project builds. */
     public static void initialize(
             @NonNull File projectPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            @Nullable File out) {
+            @NonNull File profileOutputDirectory) {
 
         synchronized (LOCK) {
             if (sINSTANCE.isInitialized()) {
                 return;
             }
             sINSTANCE.setLogger(logger);
-            sINSTANCE.setProfileOutputFile(out != null ? out.toPath() : null);
+
+            sINSTANCE.setProfileOutputFile(
+                    profileOutputDirectory
+                            .toPath()
+                            .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
 
             ProcessRecorder recorder = sINSTANCE.get(); // Initialize the ProcessRecorder instance
 
@@ -163,6 +170,8 @@ public class ProcessRecorderFactory {
 
     synchronized ProcessRecorder get() {
         if (processRecorder == null) {
+            Preconditions.checkState(
+                    profileOutputFile != null, "call setProfileOutputFile() first");
             if (mLogger == null) {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
@@ -172,5 +181,4 @@ public class ProcessRecorderFactory {
 
         return processRecorder;
     }
-
 }
