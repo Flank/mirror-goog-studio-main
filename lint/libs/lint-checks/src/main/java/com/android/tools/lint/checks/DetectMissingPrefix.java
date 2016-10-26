@@ -153,6 +153,11 @@ public class DetectMissingPrefix extends LayoutDetector {
                 return;
             }
 
+            if (element.getNamespaceURI() != null) {
+                // For example, <aapt:attr name="android:drawable">
+                return;
+            }
+
             context.report(MISSING_NAMESPACE, attribute,
                     context.getLocation(attribute),
                     "Attribute is missing the Android namespace prefix");
