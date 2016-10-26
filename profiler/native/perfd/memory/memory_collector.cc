@@ -19,10 +19,11 @@
 #include <sstream>
 
 #include "utils/activity_manager.h"
-#include "utils/trace.h"
+#include "utils/filesystem_notifier.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
+#include "utils/trace.h"
 
 namespace profiler {
 
@@ -106,6 +107,15 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   ActivityManager* am = ActivityManager::Instance();
 
   bool result = am->TriggerHeapDump(pid_, file_path, &unusedOutput);
+
+  // Monitoring the file_path to catch file close event when
+  // the heap dump is complete
+  FileSystemNotifier notifier(file_path, FileSystemNotifier::CLOSE);
+  if (!notifier.IsReadyToNotify() || !notifier.WaitUntilEventOccurs()) {
+    Log::V("Unable to monitor heap dump file for completion");
+    result = false;
+  }
+
   if (!memory_cache_.EndHeapDumpSample(clock_.GetCurrentTime(), result)) {
     Log::V("EndHeapDumpSample failed.");
   }
