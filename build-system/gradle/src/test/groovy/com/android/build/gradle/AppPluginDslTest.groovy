@@ -25,7 +25,6 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.tasks.MockableAndroidJarTask
 import com.android.build.gradle.internal.test.BaseTest
 import com.android.utils.StringHelper
 import org.gradle.api.JavaVersion
@@ -477,51 +476,6 @@ public class AppPluginDslTest extends BaseTest {
         }
     }
 
-    public void testSettingLanguageLevelFromCompileSdk() {
-        def testLanguageLevel = { version, expectedLanguageLevel, useJack ->
-            Project project = ProjectBuilder.builder().withProjectDir(
-                    new File(testDir, "${FOLDER_TEST_PROJECTS}/basic")).build()
-
-            project.apply plugin: 'com.android.application'
-            project.android {
-                compileSdkVersion version
-                buildToolsVersion BUILD_TOOL_VERSION
-            }
-
-            AppPlugin plugin = project.plugins.getPlugin(AppPlugin)
-            plugin.createAndroidTasks(false)
-
-            assertEquals(
-                    "target compatibility for ${version}",
-                    expectedLanguageLevel.toString(),
-                    project.compileReleaseJavaWithJavac.targetCompatibility)
-            assertEquals(
-                    "source compatibility for ${version}",
-                    expectedLanguageLevel.toString(),
-                    project.compileReleaseJavaWithJavac.sourceCompatibility)
-        }
-
-        for (useJack in [true, false]) {
-            def propName = 'java.specification.version'
-            String originalVersion = System.getProperty(propName)
-            try{
-                System.setProperty(propName, '1.7')
-                testLanguageLevel('android-15', JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_7, useJack)
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_7, useJack)
-                testLanguageLevel('Google Inc.:Google APIs:22', JavaVersion.VERSION_1_7, useJack)
-
-                System.setProperty(propName, '1.6')
-                testLanguageLevel(15, JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel(21, JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel('android-21', JavaVersion.VERSION_1_6, useJack)
-                testLanguageLevel('Google Inc.:Google APIs:22', JavaVersion.VERSION_1_6, useJack)
-            } finally {
-                System.setProperty(propName, originalVersion)
-            }
-        }
-    }
-
     public void testSettingLanguageLevelFromCompileSdk_dontOverride() {
         Project project = ProjectBuilder.builder().withProjectDir(
                 new File(testDir, "${FOLDER_TEST_PROJECTS}/basic")).build()
@@ -561,12 +515,12 @@ public class AppPluginDslTest extends BaseTest {
         AppPlugin plugin = project.plugins.getPlugin(AppPlugin)
         plugin.createAndroidTasks(false)
 
-        def mockableJarFile = ((MockableAndroidJarTask) project.tasks.mockableAndroidJar).outputFile
+        def mockableJarFile = project.tasks.mockableAndroidJar.outputFile
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
             // windows path contain : to identify drives.
             assertFalse(mockableJarFile.absolutePath.contains(":"))
         }
-        assertEquals("mockable-Google-Inc.-Google-APIs-21.jar", mockableJarFile.name)
+        assertEquals("mockable-Google-Inc.-Google-APIs-24.jar", mockableJarFile.name)
     }
 
     public void testEncoding() {
