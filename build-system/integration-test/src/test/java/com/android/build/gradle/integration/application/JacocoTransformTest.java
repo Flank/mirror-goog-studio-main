@@ -20,21 +20,18 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.IOException;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
 
 public class JacocoTransformTest {
 
@@ -42,12 +39,15 @@ public class JacocoTransformTest {
     private static final String CLASS_FULL_TYPE = "L" + CLASS_NAME + ";";
     private static final String CLASS_SRC_LOCATION = "src/main/java/" + CLASS_NAME + ".java";
 
-    private static final String CLASS_CONTENT =  "\n"
-            + "package com.example;\n"
-            + "public class B { }";
+    private static final String CLASS_CONTENT =
+            "package com.example;\n"
+                    + "public class B { }";
 
     private static final AndroidTestApp TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
+
+    @Rule
+    public Adb adb = new Adb();
 
     @Rule
     public final GradleTestProject mProject =
@@ -55,14 +55,9 @@ public class JacocoTransformTest {
 
     @Before
     public void enableCodeCoverage() throws IOException {
-        Files.append("\nandroid.buildTypes.debug.testCoverageEnabled true\n",
+        Files.append(
+                "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
                 mProject.getBuildFile(), Charsets.UTF_8);
-
-        if (GradleTestProject.USE_JACK) {
-            Files.append("\nandroid.buildToolsVersion \"" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION + "\"\n",
-                    mProject.getBuildFile(), Charsets.UTF_8);
-
-        }
     }
 
     @Test
@@ -72,14 +67,10 @@ public class JacocoTransformTest {
         assertThatApk(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
 
         TemporaryProjectModification.doTest(mProject,
-                new TemporaryProjectModification.ModifiedProjectTest() {
-                    @Override
-                    public void runTest(TemporaryProjectModification modifiedProject)
-                            throws Exception {
-                        modifiedProject.addFile(CLASS_SRC_LOCATION, CLASS_CONTENT);
-                        mProject.execute("assembleDebug");
-                        assertThatApk(mProject.getApk("debug")).containsClass(CLASS_FULL_TYPE);
-                    }
+                modifiedProject -> {
+                    modifiedProject.addFile(CLASS_SRC_LOCATION, CLASS_CONTENT);
+                    mProject.execute("assembleDebug");
+                    assertThatApk(mProject.getApk("debug")).containsClass(CLASS_FULL_TYPE);
                 });
         mProject.execute("assembleDebug");
         assertThatApk(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
@@ -87,8 +78,36 @@ public class JacocoTransformTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
-        mProject.executeConnectedCheck();
-        assertThat(mProject.file("build/reports/androidTests/device/devicePool/index.html")).exists();
+    public void connectedCheck() throws IOException {
+        adb.exclusiveAccess();
+        mProject.executor().run("connectedCheck");
+        assertThat(mProject.file("build/reports/coverage/debug/index.html"))
+                .exists();
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    public void connectedCheckWithJackInProcess() throws IOException {
+        adb.exclusiveAccess();
+        Files.append(
+                "\nandroid.defaultConfig.jackOptions.enabled = true",
+                mProject.getBuildFile(),
+                Charsets.UTF_8);
+        mProject.executor().run("connectedCheck");
+        assertThat(mProject.file("build/reports/coverage/debug/index.html")).exists();
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    public void connectedCheckWithJackOutOfProcess() throws IOException {
+        adb.exclusiveAccess();
+        Files.append(
+                "\n"
+                        + "android.defaultConfig.jackOptions.enabled = true\n"
+                        + "android.defaultConfig.jackOptions.jackInProcess = false",
+                mProject.getBuildFile(),
+                Charsets.UTF_8);
+        mProject.executor().run("connectedCheck");
+        assertThat(mProject.file("build/reports/coverage/debug/index.html")).exists();
     }
 }

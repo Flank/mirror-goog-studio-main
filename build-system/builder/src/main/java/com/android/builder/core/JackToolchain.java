@@ -395,6 +395,7 @@ public class JackToolchain {
                     config.setProperty(
                             "jack.coverage.metadata.file",
                             options.getCoverageMetadataFile().getAbsolutePath());
+                    config.setProperty("jack.coverage", "true");
                 }
             }
         }
