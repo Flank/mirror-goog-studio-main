@@ -26,18 +26,16 @@ import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
 public class LargeGradleProjectPerformanceMatrixTest {
@@ -60,8 +58,8 @@ public class LargeGradleProjectPerformanceMatrixTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
-                new Object[][] {// TODO: do we want to include legacy multidex?
-                    {ProjectScenario.NATIVE_MULTIDEX},// {ProjectScenario.LEGACY_MULTIDEX},
+                new Object[][] {
+                    {ProjectScenario.NATIVE_MULTIDEX}, {ProjectScenario.LEGACY_MULTIDEX},
                 });
     }
 
