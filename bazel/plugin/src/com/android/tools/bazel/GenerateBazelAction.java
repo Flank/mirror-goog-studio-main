@@ -18,6 +18,8 @@ package com.android.tools.bazel;
 
 import com.android.tools.bazel.model.*;
 import com.android.tools.bazel.model.Package;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.intellij.compiler.CompilerConfiguration;
 import com.intellij.compiler.CompilerConfigurationImpl;
@@ -83,10 +85,10 @@ public class GenerateBazelAction extends AnAction {
 
         Map<String, JavaImport> imports = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
-        Map<Module, BazelModule> inverse = Maps.newHashMap();
 
         progress.append("Processing modules...").append("\n");
-        List<BazelModule> modules = getModules(project, inverse);
+        ImmutableMap<Module, BazelModule> imlToBazel = createBazelModules(project);
+        ImmutableSet<BazelModule> modules = ImmutableSet.copyOf(imlToBazel.values());
 
         // 1st pass: Creation.
         for (BazelModule bazelModule : modules) {
@@ -230,7 +232,7 @@ public class GenerateBazelAction extends AnAction {
                     // A dependency to another module
                     ModuleOrderEntry entry = (ModuleOrderEntry) orderEntry;
                     Module dep = entry.getModule();
-                    BazelModule bazelModuleDep = inverse.get(dep);
+                    BazelModule bazelModuleDep = imlToBazel.get(dep);
                     List<String> scopes = new LinkedList<>();
                     scopes.add("module");
                     // TODO: Figure out how to add test if we depend on a multi-module rule
@@ -278,21 +280,20 @@ public class GenerateBazelAction extends AnAction {
     }
 
     @NotNull
-    private List<BazelModule> getModules(Project project, Map<Module, BazelModule> inverse) {
+    private ImmutableMap<Module, BazelModule> createBazelModules(Project project) {
         List<Module> all = Arrays.asList(ModuleManager.getInstance(project).getModules());
         List<Chunk<Module>> chunks = ModuleCompilerUtil.getSortedModuleChunks(project, all);
 
-        List<BazelModule> modules = new LinkedList<>();
+        ImmutableMap.Builder<Module, BazelModule> mapBuilder = ImmutableMap.builder();
         for (Chunk<Module> chunk : chunks) {
 
             BazelModule simple = new BazelModule();
             for (Module module : chunk.getNodes()) {
                 simple.add(module);
-                inverse.put(module, simple);
+                mapBuilder.put(module, simple);
             }
-            modules.add(simple);
         }
-        return modules;
+        return mapBuilder.build();
     }
 
     private class Label {
