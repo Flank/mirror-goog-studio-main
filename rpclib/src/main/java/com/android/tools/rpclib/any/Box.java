@@ -49,8 +49,14 @@ public abstract class Box implements BinaryObject {
     if (value instanceof String) {
       return new StringBox().setValue((String)value);
     }
+    if (value instanceof byte[]) {
+      return new Uint8Slice().setValue((byte[])value);
+    }
+    if (value instanceof float[]) {
+      return new Float32Slice().setValue((float[])value);
+    }
     // TODO: slice types
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("todo " + value.getClass());
   }
 
   @Override
