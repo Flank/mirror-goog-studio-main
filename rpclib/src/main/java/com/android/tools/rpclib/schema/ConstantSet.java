@@ -115,6 +115,7 @@ public final class ConstantSet {
   }
   public void encode(@NotNull Encoder e) throws IOException {
     mType.encode(e);
+    e.uint32(mEntries.length);
     for (Constant mEntry : mEntries) {
       e.string(mEntry.mName);
       mType.encodeValue(e, mEntry.mValue);
