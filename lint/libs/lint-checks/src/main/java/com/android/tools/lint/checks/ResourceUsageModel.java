@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.AAPT_URI;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_DISCARD;
@@ -59,7 +60,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +86,11 @@ public class ResourceUsageModel {
     /** Map from R field value to corresponding resource */
     private final Map<Integer, Resource> mValueToResource =
             Maps.newHashMapWithExpectedSize(TYPICAL_RESOURCE_COUNT);
+    /**
+     * Next id suffix to be appended for the {@code <aapt:attr>} inlined resources created by
+     * aapt
+     */
+    private int nextInlinedResourceSuffix;
 
     public static String getFieldName(Element element) {
         return LintUtils.getFieldName(element.getAttribute(ATTR_NAME));
@@ -749,6 +754,8 @@ public class ResourceUsageModel {
             return;
         }
 
+        nextInlinedResourceSuffix = 1;
+
         // For value files, and drawables and colors etc also pull in resource
         // references inside the context.file
         recordResourceReferences(folderType, document.getDocumentElement(), from);
@@ -785,6 +792,25 @@ public class ResourceUsageModel {
         short nodeType = node.getNodeType();
         if (nodeType == Node.ELEMENT_NODE) {
             Element element = (Element) node;
+
+            String tag = element.getLocalName();
+            if ("attr".equals(tag) &&
+                    AAPT_URI.equals(element.getNamespaceURI()) &&
+                    from != null) {
+                // AAPT inlined resource.
+                Node child = element.getFirstChild();
+
+                String base = from.name;
+                while (child != null) {
+                    if (child.getNodeType() == Node.ELEMENT_NODE) {
+                        String name = base + '_' + Integer.toString(nextInlinedResourceSuffix++);
+                        Resource inlined = addResource(from.type, name, null);
+                        from.addReference(inlined);
+                    }
+                    child = child.getNextSibling();
+                }
+            }
+
             if (from != null) {
                 NamedNodeMap attributes = element.getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {
