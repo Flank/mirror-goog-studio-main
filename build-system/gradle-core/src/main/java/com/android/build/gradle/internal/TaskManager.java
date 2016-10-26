@@ -85,6 +85,7 @@ import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
+import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
@@ -156,6 +157,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -167,7 +169,6 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.BuildToolInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -319,6 +320,10 @@ public abstract class TaskManager {
         return dataBindingBuilder;
     }
 
+    public DependencyManager getDependencyManager() {
+        return dependencyManager;
+    }
+
     /**
      * Creates the tasks for a given BaseVariantData.
      */
@@ -368,7 +373,9 @@ public abstract class TaskManager {
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
-        dependencyManager.resolveDependencies(variantDeps, testedProjectPath);
+        Set<LibraryDependency> libsToExplode =
+                dependencyManager.resolveDependencies(variantDeps, testedProjectPath);
+        dependencyManager.processLibraries(libsToExplode);
     }
 
     /**
@@ -448,7 +455,10 @@ public abstract class TaskManager {
                 incrementalMode == IncrementalMode.LOCAL_RES_ONLY;
         ImmutableList<Object> dependencies = skipDependency ?
                 ImmutableList.of() :
-                ImmutableList.of(variantScope.getPrepareDependenciesTask().getName(),
+                ImmutableList.of(
+                        variantScope.getResolveDependenciesTask() != null
+                                ? variantScope.getResolveDependenciesTask().getName()
+                                : variantScope.getPrepareDependenciesTask().getName(),
                         variantData.getVariantDependency().getPackageConfiguration()
                                 .getBuildDependencies());
 
@@ -2864,12 +2874,23 @@ public abstract class TaskManager {
     public void createReportTasks(
             TaskFactory tasks,
             final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList) {
-        androidTasks.create(tasks, "androidDependencies", DependencyReportTask.class,
+        AndroidTask<DependencyReportTask> dependencyReportTask = androidTasks.create(
+                tasks,
+                "androidDependencies",
+                DependencyReportTask.class,
                 task -> {
                     task.setDescription("Displays the Android dependencies of the project.");
                     task.setVariants(variantDataList);
                     task.setGroup(ANDROID_GROUP);
                 });
+
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
+                dependencyReportTask.dependsOn(
+                        tasks,
+                        variantData.getScope().getResolveDependenciesTask());
+            }
+        }
 
         androidTasks.create(tasks, "signingReport", SigningReportTask.class,
                 task -> {
@@ -2946,7 +2967,31 @@ public abstract class TaskManager {
         prepareDependenciesTask.dependsOn(tasks, variantDependencies.getCompileConfiguration());
         prepareDependenciesTask.dependsOn(tasks, variantDependencies.getPackageConfiguration());
 
-        dependencyManager.addDependenciesToPrepareTask(tasks, variantData, prepareDependenciesTask);
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            AndroidTask<ResolveDependenciesTask> resolveDependenciesTask =
+                    androidTasks.create(
+                            tasks,
+                            new ResolveDependenciesTask.ConfigAction(scope, dependencyManager));
+            scope.setResolveDependenciesTask(resolveDependenciesTask);
+            scope.getPreBuildTask().dependsOn(tasks, resolveDependenciesTask);
+            resolveDependenciesTask.dependsOn(
+                    tasks,
+                    variantDependencies.getCompileConfiguration(),
+                    variantDependencies.getPackageConfiguration());
+
+            // Dependency of the tested variant must be resolved before test variant.
+            if (variantData instanceof TestVariantData) {
+                BaseVariantData testedVariantData =
+                        (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
+                VariantScope testedScope = testedVariantData.getScope();
+                resolveDependenciesTask.dependsOn(tasks, testedScope.getResolveDependenciesTask());
+            }
+        } else {
+            dependencyManager.addDependenciesToPrepareTask(
+                    tasks,
+                    variantData,
+                    prepareDependenciesTask);
+        }
     }
 
     private void createCompileAnchorTask(@NonNull TaskFactory tasks, @NonNull final VariantScope scope) {

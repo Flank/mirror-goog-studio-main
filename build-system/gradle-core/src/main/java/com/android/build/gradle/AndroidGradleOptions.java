@@ -88,6 +88,12 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
 
+    /**
+     * Set to true to delay dependency resolution to task execution.
+     */
+    private static final String PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION =
+            "android.enableImprovedDependenciesResolution";
+
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "android.overrideVersionCheck";
 
@@ -338,6 +344,10 @@ public class AndroidGradleOptions {
         }
 
         return InstantRunApiLevelMode.COMPILE_SDK;
+    }
+
+    public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
+        return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION);
     }
 
     @Nullable
