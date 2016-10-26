@@ -27,8 +27,8 @@ import java.security.CodeSource
  */
 public abstract class BaseTest extends TestCase {
 
-    protected final static int COMPILE_SDK_VERSION = 21;
-    protected static final String BUILD_TOOL_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV;
+    protected final static int COMPILE_SDK_VERSION = 24
+    protected static final String BUILD_TOOL_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV
 
     public static final String FOLDER_TEST_PROJECTS = "test-projects";
 

@@ -141,6 +141,7 @@ task initSdkForTests(type: JavaExec) {
                     'add-ons;addon-google_apis-google-21',
                     'add-ons;addon-google_apis-google-22',
                     'add-ons;addon-google_apis-google-23',
+                    'add-ons;addon-google_apis-google-24',
                     'extras;android;support',
                     'extras;google;m2repository',
                     'extras;android;m2repository',
@@ -150,7 +151,10 @@ task initSdkForTests(type: JavaExec) {
                     'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta1',
                     "system-images;android-19;default;x86",
                     "system-images;android-23;default;x86",
-                    "extras;android;gapid;3"]
+                    "extras;android;gapid;3",
+            ]
+
+            println "Running SdkManagerCli with args " + args
         }
     }
 }
