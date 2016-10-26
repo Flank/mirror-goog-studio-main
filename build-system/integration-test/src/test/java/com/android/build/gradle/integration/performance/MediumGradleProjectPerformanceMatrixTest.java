@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.AndroidBuilder;
@@ -34,8 +35,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,16 +50,16 @@ import org.junit.runners.Parameterized;
 public class MediumGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
-    @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final Set<ProjectScenario> projectScenarios;
 
-    public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
-        this.projectScenario = projectScenario;
+    public MediumGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
+        this.projectScenarios = projectScenarios;
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("gradle-perf-android-medium")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenario))
+                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenarios))
                         .withHeap("20G")
                         .create();
     }
@@ -65,24 +68,32 @@ public class MediumGradleProjectPerformanceMatrixTest {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
                 new Object[][] {
-                    {ProjectScenario.LEGACY_MULTIDEX}, {ProjectScenario.NATIVE_MULTIDEX},
+                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
+                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)},
+                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
+                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
                 });
     }
 
     @Before
     public void initializeProject() throws IOException {
-
-        switch (projectScenario) {
-            case NATIVE_MULTIDEX:
-                TestFileUtils.searchAndReplace(
-                        project.file("WordPress/build.gradle"),
-                        "minSdkVersion( )* \\d+",
-                        "minSdkVersion 21");
-                break;
-            case LEGACY_MULTIDEX:
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
+        for (ProjectScenario projectScenario : projectScenarios) {
+            switch (projectScenario) {
+                case NATIVE_MULTIDEX:
+                    TestFileUtils.searchAndReplace(
+                            project.file("WordPress/build.gradle"),
+                            "minSdkVersion( )* \\d+",
+                            "minSdkVersion 21");
+                    break;
+                case LEGACY_MULTIDEX:
+                    break;
+                case JACK_ON:
+                    JackHelper.enableJack(project.file("WordPress/build.gradle"));
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Unknown project scenario" + projectScenario);
+            }
         }
 
         Files.copy(

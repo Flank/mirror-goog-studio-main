@@ -19,11 +19,19 @@ package com.android.build.gradle.integration.performance;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
 import java.util.function.Consumer;
 
+/**
+ * Project scenarios for performance tests set-up.
+ */
 public enum ProjectScenario {
     NORMAL(flags -> {}),
     DEX_OUT_OF_PROCESS(flags -> flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS)),
     NATIVE_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.NATIVE)),
     LEGACY_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.LEGACY)),
+    JACK_ON(flags -> flags.setCompiler(Flags.Compiler.JACK)),
+    JACK_OUT_OF_PROCESS(flags -> {
+        flags.setCompiler(Flags.Compiler.JACK);
+        // Flag will be renamed to "InProcess" once data is migrated.
+        flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS);})
     ;
 
     private final Flags flags;
@@ -31,6 +39,11 @@ public enum ProjectScenario {
     ProjectScenario(Consumer<Flags.Builder> flagsAction) {
         Flags.Builder builder = Flags.newBuilder();
         // Default configuration goes here.
+        // Note: Because of conflict in renaming fields in the logging.proto (old name in old data,
+        // new name in new data), Dremel cannot read renamed fields. "DexInProcess" flag will be
+        // changed to "InProcess" and the old data will be migrated to match the new schema, but it
+        // will have to be done in a later CL.
+        // Both Jack and Dex run in process by default, if they have enough memory available.
         builder.setDexInProcess(Flags.DexInProcess.DEX_IN_PROCESS);
         flagsAction.accept(builder);
         this.flags = builder.build();
