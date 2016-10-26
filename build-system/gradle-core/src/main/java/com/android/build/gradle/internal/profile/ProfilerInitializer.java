@@ -18,15 +18,12 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.profile.AsyncRecorder;
 import com.android.builder.profile.ProcessRecorderFactory;
-
+import java.io.File;
 import org.gradle.api.Project;
 import org.gradle.initialization.BuildCompletionListener;
-
-import java.io.File;
 
 /**
  * Initialize the {@link ProcessRecorderFactory} using a given project.
@@ -56,12 +53,11 @@ public final class ProfilerInitializer {
             if (sRecordingBuildListener != null) {
                 return;
             }
-            File benchmarkProfile = AndroidGradleOptions.getBenchmarkProfileFile(project);
             ProcessRecorderFactory.initialize(
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
-                    benchmarkProfile);
+                    new File(project.getRootProject().getBuildDir(), "android-profile"));
             sRecordingBuildListener = new RecordingBuildListener(AsyncRecorder.get());
             project.getGradle().addListener(sRecordingBuildListener);
         }

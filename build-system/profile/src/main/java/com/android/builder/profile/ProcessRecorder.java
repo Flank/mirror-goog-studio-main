@@ -53,8 +53,7 @@ public class ProcessRecorder {
 
     private final LoadingCache<String, Project> mProjects;
 
-    @Nullable
-    private final Path mBenchmarkProfileOutputFile;
+    @NonNull private final Path mBenchmarkProfileOutputFile;
 
     private static final AtomicLong lastRecordId = new AtomicLong(1);
 
@@ -73,7 +72,7 @@ public class ProcessRecorder {
     }
 
 
-    ProcessRecorder(@Nullable Path benchmarkProfileOutputFile) {
+    ProcessRecorder(@NonNull Path benchmarkProfileOutputFile) {
         mBenchmarkProfileOutputFile = benchmarkProfileOutputFile;
         mNameAnonymizer = new NameAnonymizer();
         mBuild = GradleBuildProfile.newBuilder();
@@ -114,27 +113,29 @@ public class ProcessRecorder {
             }
         }
 
-        if (mBenchmarkProfileOutputFile != null) {
-            // Internal benchmark. This code path is only invoked in tests.
+        // Write benchmark file into build directory.
+        try {
+            Files.createDirectories(mBenchmarkProfileOutputFile.getParent());
             try (BufferedOutputStream outputStream =
-                         new BufferedOutputStream(
-                                 Files.newOutputStream(
-                                         mBenchmarkProfileOutputFile,
-                                         StandardOpenOption.CREATE_NEW))) {
+                    new BufferedOutputStream(
+                            Files.newOutputStream(
+                                    mBenchmarkProfileOutputFile, StandardOpenOption.CREATE_NEW))) {
                 mBuild.build().writeTo(outputStream);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
-
-        } else {
-            // Public build profile.
-            UsageTracker.getInstance().log(AndroidStudioEvent.newBuilder()
-                    .setCategory(AndroidStudioEvent.EventCategory.GRADLE)
-                    .setKind(AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE)
-                    .setGradleBuildProfile(mBuild.build())
-                    .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
-                    .setJvmDetails(CommonMetricsData.getJvmDetails()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
+
+        // Public build profile.
+        UsageTracker.getInstance()
+                .log(
+                        AndroidStudioEvent.newBuilder()
+                                .setCategory(AndroidStudioEvent.EventCategory.GRADLE)
+                                .setKind(AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE)
+                                .setGradleBuildProfile(mBuild.build())
+                                .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
+                                .setJvmDetails(CommonMetricsData.getJvmDetails()));
+
     }
 
     /** Properties and statistics global to this build invocation. */

@@ -43,7 +43,7 @@ public class ProcessRecorderTest {
     @Before
     public void setUp() throws IOException {
         // reset for each test.
-        outputFile = Jimfs.newFileSystem().getPath("profile_proto");
+        outputFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto");
         ProcessRecorderFactory.initializeForTests(outputFile);
     }
 

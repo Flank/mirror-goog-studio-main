@@ -30,6 +30,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public final class GradleTestProjectBuilder {
@@ -45,6 +47,7 @@ public final class GradleTestProjectBuilder {
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
+    @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
 
     /** Create a GradleTestProject. */
     public GradleTestProject create() {
@@ -62,7 +65,8 @@ public final class GradleTestProjectBuilder {
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
-                benchmarkRecorder);
+                benchmarkRecorder,
+                relativeProfileDirectory);
     }
 
     /**
@@ -178,6 +182,17 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder forBenchmarkRecording(BenchmarkRecorder benchmarkRecorder) {
         this.benchmarkRecorder = benchmarkRecorder;
+        return this;
+    }
+
+    /**
+     * Sets the location to look for profiles. Defaults to build/android-profile
+     *
+     * <p>This is useful for projects where the root directory is not the root gradle project.
+     */
+    public GradleTestProjectBuilder withRelativeProfileDirectory(
+            @NonNull Path relativeProfileDirectory) {
+        this.relativeProfileDirectory = relativeProfileDirectory;
         return this;
     }
 
