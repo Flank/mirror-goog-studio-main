@@ -136,6 +136,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 // Disable response files so we can parse the command line.
                 .addArgs("APP_SHORT_COMMANDS=false")
                 .addArgs("LOCAL_SHORT_COMMANDS=false")
+                .addArgs("-B") // Build as if clean
                 .addArgs("-n");
         return builder;
     }
@@ -208,9 +209,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         result.add("NDK_ALL_ABIS=" + abi);
 
         if (isDebuggable()) {
-            result.add("NDEBUG=1");
+            result.add("NDK_DEBUG=1");
         } else {
-            result.add("NDEBUG=0");
+            result.add("NDK_DEBUG=0");
         }
 
         result.add("APP_PLATFORM=android-" + abiPlatformVersion);
