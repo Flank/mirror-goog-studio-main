@@ -515,26 +515,36 @@ public class EcjPsiBuilder {
     private EcjPsiModifierList toModifierList(@NonNull EcjPsiSourceElement parent,
             int modifiers, Annotation[] annotations) {
         int flags = 0;
-        if ((modifiers & ClassFileConstants.AccStatic) != 0) {
-            flags |= Modifier.STATIC;
-        }
-        if ((modifiers & ClassFileConstants.AccFinal) != 0) {
-            flags |= Modifier.FINAL;
-        }
-        if ((modifiers & ClassFileConstants.AccAbstract) != 0) {
-            flags |= Modifier.ABSTRACT;
-        }
-        if ((modifiers & ClassFileConstants.AccPrivate) != 0) {
-            flags |= Modifier.PRIVATE;
+
+        if ((modifiers & ClassFileConstants.AccPublic) != 0) {
+            flags |= Modifier.PUBLIC;
         }
         if ((modifiers & ClassFileConstants.AccProtected) != 0) {
             flags |= Modifier.PROTECTED;
         }
-        if ((modifiers & ClassFileConstants.AccPublic) != 0) {
-            flags |= Modifier.PUBLIC;
+        if ((modifiers & ClassFileConstants.AccPrivate) != 0) {
+            flags |= Modifier.PRIVATE;
+        }
+        if ((modifiers & ClassFileConstants.AccStatic) != 0) {
+            flags |= Modifier.STATIC;
+        }
+        if ((modifiers & ClassFileConstants.AccAbstract) != 0) {
+            flags |= Modifier.ABSTRACT;
+        }
+        if ((modifiers & ClassFileConstants.AccFinal) != 0) {
+            flags |= Modifier.FINAL;
+        }
+        if ((modifiers & ClassFileConstants.AccNative) != 0) {
+            flags |= Modifier.NATIVE;
         }
         if ((modifiers & ClassFileConstants.AccSynchronized) != 0) {
             flags |= Modifier.SYNCHRONIZED;
+        }
+        if ((modifiers & ClassFileConstants.AccStrictfp) != 0) {
+            flags |= Modifier.STRICT;
+        }
+        if ((modifiers & ClassFileConstants.AccTransient) != 0) {
+            flags |= Modifier.TRANSIENT;
         }
         if ((modifiers & ClassFileConstants.AccVolatile) != 0) {
             flags |= Modifier.VOLATILE;
@@ -917,8 +927,14 @@ public class EcjPsiBuilder {
                 //noinspection CastConflictsWithInstanceof
                 AnnotationMethodDeclaration amd = (AnnotationMethodDeclaration) method;
                 if (amd.defaultValue != null) {
-                    PsiExpression defaultValue = toExpression(psiMethod, amd.defaultValue);
-                    ((EcjPsiAnnotationMethod) psiMethod).setValue(defaultValue);
+                    if (amd.defaultValue instanceof Annotation) {
+                        EcjPsiAnnotation annotation = toAnnotation(psiMethod,
+                                (Annotation) amd.defaultValue);
+                        ((EcjPsiAnnotationMethod) psiMethod).setValue(annotation);
+                    } else {
+                        PsiExpression defaultValue = toExpression(psiMethod, amd.defaultValue);
+                        ((EcjPsiAnnotationMethod) psiMethod).setValue(defaultValue);
+                    }
                 }
             }
         } else {
