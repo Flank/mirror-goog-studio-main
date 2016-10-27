@@ -100,6 +100,11 @@ platform_filegroup(
     ],
 )
 
+# This will be needed by the "gradle" module.
+platform_filegroup(
+    name = "platforms/android-24",
+)
+
 filegroup(
     name = "add-ons/addon-google_apis-google-24",
     srcs = glob(["*/add-ons/addon-google_apis-google-24/**"]),
