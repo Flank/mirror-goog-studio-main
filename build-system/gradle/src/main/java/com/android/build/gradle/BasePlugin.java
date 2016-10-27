@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
+import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
@@ -82,27 +83,13 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.jar.Manifest;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -127,10 +114,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     @VisibleForTesting
     public static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("2.14.1");
-
-    /** default retirement age in days since its inception date for RC or beta versions. */
-    private static final int DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS = 40;
-
 
     private BaseExtension extension;
 
@@ -168,96 +151,11 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         this.instantiator = instantiator;
         this.registry = registry;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
-        verifyRetirementAge();
+        NonFinalPluginExpiry.verifyRetirementAge();
 
         ModelBuilder.clearCaches();
     }
 
-    /**
-     * Verify that this plugin execution is within its public time range.
-     */
-    private void verifyRetirementAge() {
-
-        Manifest manifest;
-        URLClassLoader cl = (URLClassLoader) getClass().getClassLoader();
-        try {
-            URL url = cl.findResource("META-INF/MANIFEST.MF");
-            manifest = new Manifest(url.openStream());
-        } catch (IOException ignore) {
-            return;
-        }
-
-        int retirementAgeInDays =
-                getRetirementAgeInDays(manifest.getMainAttributes().getValue("Plugin-Version"));
-
-        // if this plugin version will never be outdated, return.
-        if (retirementAgeInDays == -1) {
-            return;
-        }
-
-        String inceptionDateAttr = manifest.getMainAttributes().getValue("Inception-Date");
-        // when running in unit tests, etc... the manifest entries are absent.
-        if (inceptionDateAttr == null) {
-            return;
-        }
-        List<String> items = ImmutableList.copyOf(Splitter.on(':').split(inceptionDateAttr));
-        GregorianCalendar inceptionDate = new GregorianCalendar(Integer.parseInt(items.get(0)),
-                Integer.parseInt(items.get(1)), Integer.parseInt(items.get(2)));
-
-
-        Calendar now = GregorianCalendar.getInstance();
-        long nowTimestamp = now.getTimeInMillis();
-        long inceptionTimestamp = inceptionDate.getTimeInMillis();
-        long days = TimeUnit.DAYS.convert(nowTimestamp - inceptionTimestamp, TimeUnit.MILLISECONDS);
-        if (days > retirementAgeInDays) {
-            // this plugin is too old.
-            String dailyOverride = System.getenv("ANDROID_DAILY_OVERRIDE");
-            final MessageDigest crypt;
-            try {
-                crypt = MessageDigest.getInstance("SHA-1");
-            } catch (NoSuchAlgorithmException e) {
-                return;
-            }
-            crypt.reset();
-            // encode the day, not the current time.
-            try {
-                crypt.update(String.format("%1$s:%2$s:%3$s",
-                        now.get(Calendar.YEAR),
-                        now.get(Calendar.MONTH),
-                        now.get(Calendar.DATE)).getBytes("utf8"));
-            } catch (UnsupportedEncodingException e) {
-                return;
-            }
-            String overrideValue = new BigInteger(1, crypt.digest()).toString(16);
-            if (dailyOverride == null) {
-                String message = "Plugin is too old, please update to a more recent version, or " +
-                        "set ANDROID_DAILY_OVERRIDE environment variable to \"" + overrideValue + '"';
-                System.err.println(message);
-                throw new RuntimeException(message);
-            } else {
-                if (!dailyOverride.equals(overrideValue)) {
-                    String message = "Plugin is too old and ANDROID_DAILY_OVERRIDE value is " +
-                            "also outdated, please use new value :\"" + overrideValue + '"';
-                    System.err.println(message);
-                    throw new RuntimeException(message);
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the retirement age for this plugin depending on its version string, or -1 if this
-     * plugin version will never become obsolete
-     * @param version the plugin full version, like 1.3.4-preview5 or 1.0.2 or 1.2.3-beta4
-     * @return the retirement age in days or -1 if no retirement
-     */
-    private static int getRetirementAgeInDays(@Nullable String version) {
-        if (version == null || version.contains("rc") || version.contains("beta")
-                || version.contains("alpha") || version.contains("preview")) {
-            return DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS;
-        }
-        return -1;
-    }
 
     @NonNull
     protected abstract BaseExtension createExtension(
