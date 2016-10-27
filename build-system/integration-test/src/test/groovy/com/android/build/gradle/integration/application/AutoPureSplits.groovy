@@ -67,8 +67,8 @@ class AutoPureSplits {
               }
               dependencies {
 
-                compile 'com.android.support:appcompat-v7:21.0.3'
-                compile 'com.android.support:support-v4:21.0.3'
+                compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
+                compile 'com.android.support:support-v4:$GradleTestProject.SUPPORT_LIB_VERSION'
               }
         }"""
         model = project.executeAndReturnModel("clean", "assembleDebug")

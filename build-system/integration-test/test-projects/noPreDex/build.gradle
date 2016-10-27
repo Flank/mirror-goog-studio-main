@@ -4,12 +4,16 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile 'com.android.support:support-v4:13.0.0'
+    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
 }
 
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+    }
 
     dexOptions.preDexLibraries = false
 }

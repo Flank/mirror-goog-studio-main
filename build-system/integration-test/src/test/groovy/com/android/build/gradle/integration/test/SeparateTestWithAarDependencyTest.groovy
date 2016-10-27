@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.test
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidLibrary
@@ -61,11 +60,11 @@ android {
     publishNonDefault true
 
     defaultConfig {
-        minSdkVersion 8
+        minSdkVersion $GradleTestProject.SUPPORT_LIB_MIN_SDK
     }
 }
 dependencies {
-    compile 'com.android.support:appcompat-v7:22.1.0'
+    compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
 }
         """
 
@@ -124,7 +123,7 @@ dependencies {
         assertThat(androidLibraries).hasSize(1);
         AndroidLibrary androidLibrary = Iterables.getOnlyElement(androidLibraries);
         assertThat(androidLibrary.getResolvedCoordinates()).isEqualTo(
-                "com.android.support", "appcompat-v7", "22.1.0");
+                "com.android.support", "appcompat-v7", GradleTestProject.SUPPORT_LIB_VERSION);
     }
 
     @Test
@@ -151,7 +150,7 @@ dependencies {
         assertThat(androidLibraries).hasSize(1);
         AndroidLibrary androidLibrary = Iterables.getOnlyElement(androidLibraries);
         assertThat(androidLibrary.getResolvedCoordinates()).isEqualTo(
-                "com.android.support", "appcompat-v7", "22.1.0");
+                "com.android.support", "appcompat-v7", GradleTestProject.SUPPORT_LIB_VERSION);
         assertThat(androidLibrary.isSkipped()).isTrue()
     }
 

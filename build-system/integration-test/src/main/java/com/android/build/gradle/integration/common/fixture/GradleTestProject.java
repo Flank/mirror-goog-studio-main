@@ -133,10 +133,14 @@ public final class GradleTestProject implements TestRule {
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
     }
 
+    public static final String PLAY_SERVICES_VERSION = "9.6.1";
+    public static final String SUPPORT_LIB_VERSION = "24.2.1";
+    public static final int SUPPORT_LIB_MIN_SDK = 9;
+
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
     private static final String COMMON_BUILD_SCRIPT = "commonBuildScript.gradle";
-    private static final String COMMON_GRADLE_PLUGIN_VERSION = "commonGradlePluginVersion.gradle";
+    private static final String COMMON_VERSIONS = "commonVersions.gradle";
     private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     private final String name;
@@ -332,7 +336,7 @@ public final class GradleTestProject implements TestRule {
 
         Files.write(
                 generateVersions(),
-                new File(testDir.getParent(), COMMON_GRADLE_PLUGIN_VERSION),
+                new File(testDir.getParent(), COMMON_VERSIONS),
                 StandardCharsets.UTF_8);
         Files.copy(
                 new File(TEST_PROJECT_DIR, COMMON_HEADER),
@@ -365,11 +369,17 @@ public final class GradleTestProject implements TestRule {
                         + "buildVersion = '%s'%n"
                         + "experimentalVersion = '%s'%n"
                         + "baseVersion = '%s'%n"
-                        + "experimentalGradleVersion = '%s'%n",
+                        + "experimentalGradleVersion = '%s'%n"
+                        + "supportLibVersion = '%s'%n"
+                        + "playServicesVersion = '%s'%n"
+                        + "supportLibMinSdk = %d%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
-                GRADLE_EXP_TEST_VERSION);
+                GRADLE_EXP_TEST_VERSION,
+                SUPPORT_LIB_VERSION,
+                PLAY_SERVICES_VERSION,
+                SUPPORT_LIB_MIN_SDK);
     }
 
     /**

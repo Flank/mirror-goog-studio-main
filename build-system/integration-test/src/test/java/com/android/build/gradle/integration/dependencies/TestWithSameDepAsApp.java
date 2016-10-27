@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -27,17 +27,15 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Tests the handling of test dependency.
@@ -80,22 +78,30 @@ public class TestWithSameDepAsApp {
                     "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");").toArray());
 
             // Check two AARs.
-            parameters.add(Lists.newArrayList(
-                    plugin,
-                    "com.android.support:support-v4:23.0.1",
-                    "com.android.support:support-v4:23.0.1",
-                    "Landroid/support/v4/widget/Space;",
-                    "new android.support.v4.widget.Space(this);",
-                    "new android.support.v4.widget.Space(getActivity());").toArray());
+            parameters.add(
+                    Lists.newArrayList(
+                                    plugin,
+                                    "com.android.support:support-v4:"
+                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                    "com.android.support:support-v4:"
+                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                    "Landroid/support/v4/widget/Space;",
+                                    "new android.support.v4.widget.Space(this);",
+                                    "new android.support.v4.widget.Space(getActivity());")
+                            .toArray());
 
             // Check two AARs, indirect conflict.
-            parameters.add(Lists.newArrayList(
-                    plugin,
-                    "com.android.support:support-v4:23.0.1",
-                    "com.android.support:recyclerview-v7:23.0.1",
-                    "Landroid/support/v4/widget/Space;",
-                    "new android.support.v4.widget.Space(this);",
-                    "new android.support.v4.widget.Space(getActivity());").toArray());
+            parameters.add(
+                    Lists.newArrayList(
+                                    plugin,
+                                    "com.android.support:support-v4:"
+                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                    "com.android.support:recyclerview-v7:"
+                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                    "Landroid/support/v4/widget/Space;",
+                                    "new android.support.v4.widget.Space(this);",
+                                    "new android.support.v4.widget.Space(getActivity());")
+                            .toArray());
         }
 
         return parameters;

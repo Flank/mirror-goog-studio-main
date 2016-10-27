@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.test
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -48,7 +47,7 @@ android {
     }
 }
 dependencies {
-    compile 'com.google.android.gms:play-services-base:7.5.0'
+    compile 'com.google.android.gms:play-services-base:$GradleTestProject.PLAY_SERVICES_VERSION'
 }
         """
 

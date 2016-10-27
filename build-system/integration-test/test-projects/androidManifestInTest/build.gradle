@@ -6,10 +6,10 @@ apply plugin: 'com.android.application'
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    compile 'com.android.support:support-v4:13.0.0'
-    debugCompile 'com.android.support:support-v13:13.0.0'
+    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
+    debugCompile "com.android.support:support-v13:${rootProject.supportLibVersion}"
 
-    compile 'com.google.android.gms:play-services:3.1.36'
+    compile "com.google.android.gms:play-services-base:${rootProject.playServicesVersion}"
 }
 
 android {

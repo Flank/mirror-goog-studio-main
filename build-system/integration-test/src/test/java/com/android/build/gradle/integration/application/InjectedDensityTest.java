@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
@@ -25,14 +27,12 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * Check that the built apk contains the correct resources.
@@ -52,18 +52,21 @@ public class InjectedDensityTest {
     @BeforeClass
     public static void setup() throws IOException {
 
-        String buildScript = GradleTestProject.getGradleBuildscript() + "\n"
-                + "apply plugin: 'com.android.application'\n"
-                + "android {\n"
-                + "    compileSdkVersion rootProject.latestCompileSdk\n"
-                + "    buildToolsVersion = rootProject.buildToolsVersion\n"
-                + "    defaultConfig {\n"
-                + "        minSdkVersion 15"
-                + "    }\n"
-                + "    dependencies {\n"
-                + "        compile 'com.android.support:appcompat-v7:21.0.3'\n"
-                + "    }"
-                + "}";
+        String buildScript =
+                GradleTestProject.getGradleBuildscript()
+                        + "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15"
+                        + "    }\n"
+                        + "    dependencies {\n"
+                        + "        compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    }"
+                        + "}";
 
         Files.write(buildScript, sProject.getBuildFile(), Charsets.UTF_8);
 
@@ -84,11 +87,11 @@ public class InjectedDensityTest {
     private void checkFullBuild() throws IOException, ProcessException {
         sProject.execute("assembleDebug");
         ApkSubject debug = expect.about(ApkSubject.FACTORY).that(sProject.getApk("debug"));
-        debug.containsResource("drawable-xxxhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.containsResource("drawable-xxhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.containsResource("drawable-xhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.containsResource("drawable-hdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.containsResource("drawable-mdpi-v4/abc_ic_clear_mtrl_alpha.png");
+        debug.containsResource("drawable-xxxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.containsResource("drawable-xxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.containsResource("drawable-xhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.containsResource("drawable-hdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.containsResource("drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
     }
 
     private void checkFilteredBuild() throws IOException, ProcessException {
@@ -96,10 +99,10 @@ public class InjectedDensityTest {
                 ImmutableList.of("-P" + AndroidProject.PROPERTY_BUILD_DENSITY + "=xxhdpi"),
                 "assembleDebug");
         ApkSubject debug = expect.about(ApkSubject.FACTORY).that(sProject.getApk("debug"));
-        debug.doesNotContainResource("drawable-xxxhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.containsResource("drawable-xxhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.doesNotContainResource("drawable-xhdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.doesNotContainResource("drawable-hdpi-v4/abc_ic_clear_mtrl_alpha.png");
-        debug.doesNotContainResource("drawable-mdpi-v4/abc_ic_clear_mtrl_alpha.png");
+        debug.doesNotContainResource("drawable-xxxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.containsResource("drawable-xxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.doesNotContainResource("drawable-xhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.doesNotContainResource("drawable-hdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
+        debug.doesNotContainResource("drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
     }
 }

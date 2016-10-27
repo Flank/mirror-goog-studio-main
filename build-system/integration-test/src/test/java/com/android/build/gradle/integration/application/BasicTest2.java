@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.PLAY_SERVICES_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -42,19 +45,17 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Assemble tests for basic that loads the model but doesn't build.
@@ -134,33 +135,28 @@ public class BasicTest2 {
         assertNotNull(debugDependencies);
         Collection<AndroidLibrary> debugLibraries = debugDependencies.getLibraries();
         assertNotNull(debugLibraries);
-        assertEquals(1, debugLibraries.size());
-
-        AndroidLibrary androidLibrary = debugLibraries.iterator().next();
-        assertNotNull(androidLibrary);
-        assertNotNull(androidLibrary.getBundle());
-        assertNotNull(androidLibrary.getFolder());
-        MavenCoordinates coord = androidLibrary.getResolvedCoordinates();
-        assertNotNull(coord);
-        assertEquals("com.google.android.gms:play-services:3.1.36",
-                coord.getGroupId() + ":" + coord.getArtifactId() + ":" + coord.getVersion());
+        assertEquals(3, debugLibraries.size());
 
         Collection<JavaLibrary> javaLibraries = debugDependencies.getJavaLibraries();
         assertNotNull(javaLibraries);
-        assertEquals(2, javaLibraries.size());
+        assertEquals(0, javaLibraries.size());
 
-        Set<String> javaLibs = Sets.newHashSet(
-                "com.android.support:support-v13:13.0.0",
-                "com.android.support:support-v4:13.0.0"
-        );
+        Set<String> androidLibs =
+                Sets.newHashSet(
+                        "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION,
+                        "com.android.support:support-v13:" + SUPPORT_LIB_VERSION,
+                        "com.android.support:support-v4:" + SUPPORT_LIB_VERSION);
 
-        for (JavaLibrary javaLib : javaLibraries) {
-            coord = javaLib.getResolvedCoordinates();
+        for (AndroidLibrary androidLibrary : debugLibraries) {
+            assertNotNull(androidLibrary);
+            assertNotNull(androidLibrary.getBundle());
+            assertNotNull(androidLibrary.getFolder());
+            MavenCoordinates coord = androidLibrary.getResolvedCoordinates();
             assertNotNull(coord);
-            String lib = coord.getGroupId() + ":" + coord.getArtifactId() + ":" + coord
-                    .getVersion();
-            assertTrue(javaLibs.contains(lib));
-            javaLibs.remove(lib);
+            String coordinates =
+                    coord.getGroupId() + ":" + coord.getArtifactId() + ":" + coord.getVersion();
+            TruthHelper.assertThat(coordinates).isIn(androidLibs);
+            androidLibs.remove(coordinates);
         }
 
         // this variant is tested.
@@ -280,13 +276,13 @@ public class BasicTest2 {
 
         // map for each aar we expect to find and how many local jars they each have.
         Map<String, Integer> aarLibs = Maps.newHashMapWithExpectedSize(3);
-        aarLibs.put("com.android.support:support-v13:21.0.0", 1);
-        aarLibs.put("com.android.support:support-v4:21.0.0", 1);
-        aarLibs.put("com.google.android.gms:play-services:3.1.36", 0);
+        aarLibs.put("com.android.support:support-v13:" + SUPPORT_LIB_VERSION, 1);
+        aarLibs.put("com.android.support:support-v4:" + SUPPORT_LIB_VERSION, 0);
+        aarLibs.put("com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION, 0);
         for (AndroidLibrary androidLib : releaseLibraries) {
             assertNotNull(androidLib.getBundle());
             assertNotNull(androidLib.getFolder());
-            coord = androidLib.getResolvedCoordinates();
+            MavenCoordinates coord = androidLib.getResolvedCoordinates();
             assertNotNull(coord);
             String lib =
                 coord.getGroupId() + ":" + coord.getArtifactId() + ":" + coord.getVersion();
