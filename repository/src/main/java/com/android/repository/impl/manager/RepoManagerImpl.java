@@ -510,7 +510,7 @@ public class RepoManagerImpl extends RepoManager {
             try {
                 LocalRepoLoader local = mLocalRepoLoaderFactory.createLocalRepoLoader();
                 if (local != null &&
-                        (mLastLocalRefreshMs + mCacheExpirationMs < System.currentTimeMillis() ||
+                        (mLastLocalRefreshMs + mCacheExpirationMs <= System.currentTimeMillis() ||
                                 local.needsUpdate(mLastLocalRefreshMs, false))) {
                     if (mFallbackLocalRepoLoader != null) {
                         mFallbackLocalRepoLoader.refresh();
@@ -545,7 +545,7 @@ public class RepoManagerImpl extends RepoManager {
                 indicator.setSecondaryText("");
 
                 if (!mSourceProviders.isEmpty() && mDownloader != null &&
-                        mLastRemoteRefreshMs + mCacheExpirationMs < System.currentTimeMillis()) {
+                        mLastRemoteRefreshMs + mCacheExpirationMs <= System.currentTimeMillis()) {
                     RemoteRepoLoader remoteLoader = mRemoteRepoLoaderFactory
                             .createRemoteRepoLoader(indicator);
                     Map<String, RemotePackage> remotes = remoteLoader
