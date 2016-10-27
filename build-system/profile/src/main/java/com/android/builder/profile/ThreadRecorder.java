@@ -45,7 +45,7 @@ public class ThreadRecorder implements Recorder {
                 @Override
                 public <T> T record(
                         @NonNull ExecutionType executionType,
-                        @NonNull String project,
+                        @NonNull String projectPath,
                         @Nullable String variant,
                         @NonNull Block<T> block) {
                     try {
@@ -61,10 +61,10 @@ public class ThreadRecorder implements Recorder {
                 public <T> T record(
                         @NonNull ExecutionType executionType,
                         @Nullable GradleTransformExecution transform,
-                        @NonNull String project,
+                        @NonNull String projectPath,
                         @Nullable String variant,
                         @NonNull Block<T> block) {
-                    return record(executionType, project, variant, block);
+                    return record(executionType, projectPath, variant, block);
                 }
 
                 @Override
@@ -122,8 +122,10 @@ public class ThreadRecorder implements Recorder {
     @Override
     public <T> T record(
             @NonNull ExecutionType executionType,
-            @NonNull String project, @Nullable String variant, @NonNull Block<T> block) {
-        return record(executionType, null, project, variant, block);
+            @NonNull String projectPath,
+            @Nullable String variant,
+            @NonNull Block<T> block) {
+        return record(executionType, null, projectPath, variant, block);
     }
 
     @Nullable
@@ -131,7 +133,7 @@ public class ThreadRecorder implements Recorder {
     public <T> T record(
             @NonNull ExecutionType executionType,
             @Nullable GradleTransformExecution transform,
-            @NonNull String project,
+            @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block) {
 
@@ -169,7 +171,7 @@ public class ThreadRecorder implements Recorder {
             }
             currentRecord.setDurationInMs(
                     System.currentTimeMillis() - currentRecord.getStartTimeInMs());
-            ProcessRecorder.get().writeRecord(project, variant, currentRecord);
+            ProcessRecorder.get().writeRecord(projectPath, variant, currentRecord);
         }
         // we always return null when an exception occurred and was not rethrown.
         return null;

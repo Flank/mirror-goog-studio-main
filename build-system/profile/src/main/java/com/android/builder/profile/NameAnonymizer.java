@@ -19,12 +19,11 @@ package com.android.builder.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -45,13 +44,14 @@ public class NameAnonymizer {
 
 
     /**
-     * Retrieve the ID for a project name.
+     * Retrieve the ID for an absolute project path.
      *
-     * Maps unknown to 0.
+     * <p>Maps unknown to 0.
      */
-    public long anonymizeProjectName(@NonNull String projectName) {
+    public long anonymizeProjectPath(@NonNull String projectPath) {
+        Preconditions.checkArgument(projectPath.startsWith(":"), "Project path should be absolute");
         try {
-            return mProjects.get(projectName).mId;
+            return mProjects.get(projectPath).mId;
         } catch (ExecutionException e) {
             return 0;
         }

@@ -79,8 +79,11 @@ public class RecordingBuildListenerTest {
         final List<GradleBuildProfileSpan> records = new CopyOnWriteArrayList<>();
 
         @Override
-        public <T> T record(@NonNull ExecutionType executionType, @NonNull String project,
-                String variant, @NonNull Block<T> block) {
+        public <T> T record(
+                @NonNull ExecutionType executionType,
+                @NonNull String projectPath,
+                String variant,
+                @NonNull Block<T> block) {
             throw new UnsupportedOperationException("record method was not supposed to be called.");
         }
 
@@ -89,7 +92,7 @@ public class RecordingBuildListenerTest {
         public <T> T record(
                 @NonNull ExecutionType executionType,
                 @Nullable GradleTransformExecution transform,
-                @NonNull String project,
+                @NonNull String projectPath,
                 @Nullable String variant,
                 @NonNull Block<T> block) {
             throw new UnsupportedOperationException("record method was not supposed to be called");

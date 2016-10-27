@@ -61,7 +61,7 @@ public interface Recorder {
      *
      * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param project the project that contains this span.
+     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
      * @param variant the variant that contains this span.
      * @param block the block of code to execution and measure.
      * @return the value returned from the block (including null) or null if the block execution
@@ -71,7 +71,7 @@ public interface Recorder {
     @Nullable
     <T> T record(
             @NonNull ExecutionType executionType,
-            @NonNull String project,
+            @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block);
 
@@ -81,7 +81,7 @@ public interface Recorder {
      *
      * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param project the project that contains this span.
+     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
      * @param variant the variant that contains this span.
      * @param block the block of code to execution and measure.
      * @return the value returned from the block (including null) or null if the block execution
@@ -92,7 +92,7 @@ public interface Recorder {
     <T> T record(
             @NonNull ExecutionType executionType,
             @Nullable GradleTransformExecution transform,
-            @NonNull String project,
+            @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block);
 
