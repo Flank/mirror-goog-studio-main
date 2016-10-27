@@ -2143,11 +2143,6 @@ public class EcjParser extends JavaParser {
         return name;
     }
 
-    // "package-info" as a char
-    private static final char[] PACKAGE_INFO_CHARS = new char[] {
-            'p', 'a', 'c', 'k', 'a', 'g', 'e', '-', 'i', 'n', 'f', 'o'
-    };
-
     private class EcjResolvedPackage extends ResolvedPackage {
         private final PackageBinding mBinding;
 
@@ -2174,7 +2169,7 @@ public class EcjParser extends JavaParser {
             AnnotationBinding[] annotations = mBinding.getAnnotations();
             int count = annotations.length;
             if (count == 0) {
-                Binding pkgInfo = mBinding.getTypeOrPackage(PACKAGE_INFO_CHARS);
+                Binding pkgInfo = mBinding.getTypeOrPackage(TypeConstants.PACKAGE_INFO_NAME);
                 if (pkgInfo != null) {
                     annotations = pkgInfo.getAnnotations();
                 }

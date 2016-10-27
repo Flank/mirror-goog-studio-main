@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.filterRelevantAnnotations;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 
 import com.android.annotations.NonNull;

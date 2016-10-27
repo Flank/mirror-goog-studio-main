@@ -390,6 +390,8 @@ public class JavaPsiVisitor {
                     break;
                 }
             }
+            sb.append(':').append(e.getMessage());
+
             Throwable throwable = null; // NOT e: this makes for very noisy logs
             //noinspection ConstantConditions
             context.log(throwable, sb.toString());
