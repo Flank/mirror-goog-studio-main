@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 group = 'com.android.tools.external.intellij'
 archivesBaseName = 'uast'
-version = '145.597.3'
+version = '162.2228.14'
 
 jar {
     from zipTree("../../../../../prebuilts/tools/common/uast/uast-" + version + ".jar")

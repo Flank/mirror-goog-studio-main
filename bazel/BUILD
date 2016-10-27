@@ -144,7 +144,6 @@ java_binary(
 java_binary(
     name = "third_party_build_generator",
     args = [
-        "com.android.tools.external.com-intellij:uast:145.597.3",
         "com.android.tools.external.lombok:lombok-ast:0.2.3",
         "com.google.code.findbugs:jsr305:1.3.9",
         "com.google.code.gson:gson:2.2.4",

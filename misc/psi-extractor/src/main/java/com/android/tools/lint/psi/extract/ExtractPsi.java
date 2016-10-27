@@ -24,11 +24,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import org.intellij.lang.annotations.Language;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -63,11 +61,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -80,14 +76,13 @@ import java.util.zip.ZipEntry;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.google.common.base.Charsets.UTF_8;
-import static java.io.File.separator;
 import static java.io.File.separatorChar;
 import static org.objectweb.asm.Opcodes.ASM5;
 
 // TODO: Attempt to load all classes!
 // Clean up method body rewriting!
+@SuppressWarnings({"WeakerAccess", "SpellCheckingInspection"})
 public class ExtractPsi {
-    public static final String GROUP_ID = "com.android.tools.external.com-intellij";
     public static final String ARTIFACT_ID = "uast";
 
     /*
@@ -200,7 +195,10 @@ public class ExtractPsi {
         WIPED_METHOD_BODIES.put("visitLambdaExpressionType", "com/intellij/psi/PsiTypeVisitor(Lcom/intellij/psi/PsiLambdaExpressionType;)Ljava/lang/Object;");
         WIPED_METHOD_BODIES.put("visitMethodReferenceType", "com/intellij/psi/PsiTypeVisitor(Lcom/intellij/psi/PsiMethodReferenceType;)Ljava/lang/Object;");
         WIPED_METHOD_BODIES.put("<init>", "com/intellij/psi/PsiInvalidElementAccessException(Lcom/intellij/psi/PsiElement;)V");
+        WIPED_METHOD_BODIES.put("<init>", "com/intellij/psi/PsiInvalidElementAccessException(Lcom/intellij/psi/PsiElement;Ljava/lang/String;)V");
+        WIPED_METHOD_BODIES.put("<init>", "com/intellij/psi/PsiInvalidElementAccessException(Lcom/intellij/psi/PsiElement;Ljava/lang/Throwable;)V");
         WIPED_METHOD_BODIES.put("<init>", "com/intellij/psi/PsiInvalidElementAccessException(Lcom/intellij/psi/PsiElement;Ljava/lang/String;Ljava/lang/Throwable;)V");
+        WIPED_METHOD_BODIES.put("<init>", "com/intellij/psi/PsiInvalidElementAccessException(Lcom/intellij/lang/ASTNode;Ljava/lang/String;)V");
         WIPED_METHOD_BODIES.put("getValueIcon", "com/intellij/openapi/ui/TreeComboBox$TreeListCellRenderer(Ljava/lang/Object;I)Ljavax/swing/Icon;");
 
         WIPED_METHOD_BODIES.put("getLeastUpperBound", "com/intellij/psi/PsiDisjunctionType()Lcom/intellij/psi/PsiType;");
@@ -288,6 +286,9 @@ public class ExtractPsi {
         SKIPPED_METHODS.put("calculateDefaultRangeInElement", "com/intellij/psi/PsiReferenceBase()Lcom/intellij/openapi/util/TextRange;");
         SKIPPED_METHODS.put("getRangeInElement", "com/intellij/psi/PsiReferenceBase()Lcom/intellij/openapi/util/TextRange;");
         SKIPPED_METHODS.put("getValue", "com/intellij/psi/PsiReferenceBase()Ljava/lang/String;");
+        SKIPPED_METHODS.put("hasDiamond", "(Lcom/intellij/psi/PsiNewExpression;)Z");
+        SKIPPED_METHODS.put("getDiamondType", "(Lcom/intellij/psi/PsiNewExpression;)Lcom/intellij/psi/PsiDiamondType;");
+        // Reachable code com/intellij/psi/PsiDiamondType#getDiamondType(Lcom/intellij/psi/PsiNewExpression;)Lcom/intellij/psi/PsiDiamondType; points to blacklisted code com/intellij/psi/util/PsiUtil#isLanguageLevel7OrHigher(Lcom/intellij/psi/PsiElement;)Z
         // Some additional methods with potentially generic sounding names, such as
         // getManager(), are specially filtered in isSkippedPsiMethod by also checking
         // the return type etc
@@ -358,7 +359,6 @@ public class ExtractPsi {
             }
 
             String version = findVersionTag(lib);
-
             ExtractPsi extractor = new ExtractPsi(studioDir, sourceDir, version);
             extractor.perform();
         } catch (Throwable t) {
@@ -372,6 +372,7 @@ public class ExtractPsi {
     //   and then reading in component/build:apiVersion and stripping the AI- prefix
     //
     // This currently computes to "143.1821.5".
+    @NonNull
     private static String findVersionTag(File lib) {
         File resources = new File(lib, "resources.jar");
         if (!resources.isFile()) {
@@ -402,6 +403,7 @@ public class ExtractPsi {
         }
 
         System.err.println("Failed to find IDEA version number to use");
+        System.exit(-1);
         return null;
     }
 
@@ -433,7 +435,8 @@ public class ExtractPsi {
 
         try {
             writeSignatureFile();
-            writeMavenArtifact();
+            File jarFile = writeJar();
+            testJar(jarFile);
         } catch (IOException ioe) {
             System.err.println("Couldn't write artifact: " + ioe.getMessage());
             System.exit(-1);
@@ -454,95 +457,23 @@ public class ExtractPsi {
         }
     }
 
-    private static void writeCheckSumFiles(@NonNull File file) throws IOException {
-        byte[] bytes = Files.toByteArray(file);
-        Files.write(Hashing.md5().hashBytes(bytes).toString(),
-                new File(file.getPath() + ".md5"), UTF_8);
-        Files.write(Hashing.sha1().hashBytes(bytes).toString(),
-                new File(file.getPath() + ".sha1"), UTF_8);
-    }
-
-    private void writeMavenArtifact() throws IOException {
+    private File writeJar() throws IOException {
         // Write artifact
-        File maven = new File(mSourceDir, "prebuilts/tools/common/m2/repository".replace('/', separatorChar));
-        File artifactDir = new File(maven, GROUP_ID.replace('.', separatorChar) +
-                separator + ARTIFACT_ID + separator + mVersion);
+        File artifactDir = new File(mSourceDir, "prebuilts/tools/common/uast".replace('/', separatorChar));
         if (!artifactDir.exists()) {
             boolean ok = artifactDir.mkdirs();
             if (!ok) {
-                System.err.println("Couldn't create artifact directory " + artifactDir);
-                System.exit(-1);
-            }
-        }
-        File metadaDir = artifactDir.getParentFile();
-
-        // Write NOTICE file
-        File license = new File(mSourceDir, "tools/idea/LICENSE.txt".replace('/', separatorChar));
-        if (license.exists()) {
-            try {
-                Files.copy(license, new File(artifactDir, "NOTICE"));
-            } catch (IOException e) {
-                System.err.println("Couldn't copy license file " + license);
+                System.err.println("Couldn't create directory " + artifactDir);
                 System.exit(-1);
             }
         }
 
-        String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        @Language("XML")
-        String mavenMetadata = ""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<metadata>\n"
-                + "  <groupId>" + GROUP_ID + "</groupId>\n"
-                + "  <artifactId>" + ARTIFACT_ID + "</artifactId>\n"
-                + "  <versioning>\n"
-                + "    <latest>" + mVersion + "</latest>\n"
-                + "    <release>" + mVersion + "</release>\n"
-                + "    <versions>\n"
-                + "      <version>" + mVersion + "</version>\n"
-                + "    </versions>\n"
-                + "    <lastUpdated>" + currentTime + "</lastUpdated>\n"
-                + "  </versioning>\n"
-                + "</metadata>";
-        File mavenMetadataFile = new File(metadaDir, "maven-metadata.xml");
-        Files.write(mavenMetadata, mavenMetadataFile, UTF_8);
-        writeCheckSumFiles(mavenMetadataFile);
-
-        String baseName = ARTIFACT_ID + "-" + mVersion;
-
-        @Language("XML")
-        String pom = ""
-                + "<project xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\" xmlns:xsi=\"http\\\n"
-                + "://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://maven.apache.org/POM/4.0.0\">\n"
-                + "    <modelVersion>4.0.0</modelVersion>\n"
-                + "    <groupId>" + GROUP_ID + "</groupId>\n"
-                + "    <artifactId>" + ARTIFACT_ID + "</artifactId>\n"
-                + "    <version>" + mVersion + "</version>\n"
-                + "    <packaging>jar</packaging>\n"
-                + "    <name>" + ARTIFACT_ID + "</name>\n"
-                + "    <url>http://www.jetbrains.com/idea</url>\n"
-                + "    <description>A subset of IntelliJ IDEA's AST APIs and implementation,\n"
-                + "    focusing on the read-only aspects, intended for use by Android Lint\n"
-                + "    when running outside of the IDE (typically from Gradle.)\n"
-                + "    </description>\n"
-                + "    <licenses>\n"
-                + "      <license>\n"
-                + "        <name>Apache License, Version 2.0</name>\n"
-                + "        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>\n"
-                + "      </license>\n"
-                + "    </licenses>\n"
-                + "</project>";
-        File pomFile = new File(artifactDir, baseName + ".pom");
-        Files.write(pom, pomFile, UTF_8);
-        writeCheckSumFiles(pomFile);
-
-        File jarFile = new File(artifactDir, baseName + DOT_JAR);
+        File jarFile = new File(artifactDir, ARTIFACT_ID + "-" + mVersion + DOT_JAR);
         writeJar(jarFile);
-        writeCheckSumFiles(jarFile);
 
-        testJar(jarFile);
+        System.out.println("Wrote library " + jarFile);
 
-        System.out.println("Wrote artifact " + GROUP_ID + ":" + ARTIFACT_ID + ":" + mVersion + " to \n" +
-                artifactDir);
+        return jarFile;
     }
 
     private void readClasses(@NonNull List<File> jars) throws IOException {
@@ -588,6 +519,7 @@ public class ExtractPsi {
     @NonNull
     private List<File> findJars() {
         List<File> jars = Lists.newArrayList();
+        //noinspection UnnecessaryLocalVariable
         File root = mInstalledIde;
         File libs = new File(root, "lib");
         jars.add(new File(libs, "openapi.jar"));
@@ -810,6 +742,10 @@ public class ExtractPsi {
                     //noinspection CaughtExceptionImmediatelyRethrown
                     try {
                         String name = clazz.getName();
+                        if (name.equals("com/intellij/psi/PsiInvalidElementAccessException")) {
+                            System.out.println("Skipping com/intellij/psi/PsiInvalidElementAccessException: Known problem");
+                            continue;
+                        }
                         name = name.replace('/', '.');
                         Class<?> aClass = loader.loadClass(name);
                         aClass.getMethods();
@@ -829,7 +765,7 @@ public class ExtractPsi {
         }
     }
 
-    public byte[] computeClass(final CgClass clazz) throws IOException {
+    public byte[] computeClass(final CgClass clazz) {
         assert clazz.isReachable();
         ClassWriter classWriter = new ClassWriter(ASM5);
         ClassVisitor classVisitor = new ClassVisitor(ASM5, classWriter) {
@@ -842,6 +778,7 @@ public class ExtractPsi {
                 }
             }
 
+            @SuppressWarnings("EmptyMethod") // Here to facilitate breakpoints and comment on interface filtering
             @Override
             public void visit(int version, int access, String name, String signature,
                               String superName,
@@ -871,7 +808,7 @@ public class ExtractPsi {
                         desc = "(Ljava/util/List;)V";
                         signature = "(Ljava/util/List<Lcom/intellij/psi/PsiType;>;)V";
                         method.mMethodNode.invisibleParameterAnnotations = null;
-                        ArrayList<Object> parameters = new ArrayList<Object>();
+                        ArrayList<Object> parameters = new ArrayList<>();
                         parameters.add(method.mMethodNode.localVariables.get(0));
                         parameters.add(method.mMethodNode.localVariables.get(1));
                         method.mMethodNode.localVariables = parameters;
@@ -995,6 +932,34 @@ public class ExtractPsi {
             if (method != null) {
                 return method;
             }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private CgMethod findUniqueMethod(@NonNull String owner, @NonNull String name, @NonNull String desc) {
+        CgClass clazz = mClassMap.get(owner);
+        if (clazz != null) {
+            CgMethod result = null;
+            for (CgMethod method : clazz.mMethods.values()) {
+                if (method.mMethodNode.name.equals(name)) {
+                    if (result != null) {
+                        int argumentCount = Type.getMethodType(desc).getArgumentTypes().length;
+                        for (CgMethod m : clazz.mMethods.values()) {
+                            if (m.mMethodNode.name.equals(name)) {
+                                int count = Type.getMethodType(m.mMethodNode.desc).getArgumentTypes().length;
+                                if (count == argumentCount) {
+                                    return result;
+                                }
+                            }
+                        }
+                    } else {
+                        result = method;
+                    }
+                }
+            }
+            return result;
         }
 
         return null;
@@ -1461,7 +1426,7 @@ public class ExtractPsi {
         }
 
         public List<CgMethod> getSubMethods() {
-            return mSubMethods == null ? Collections.<CgMethod>emptyList() : mSubMethods;
+            return mSubMethods == null ? Collections.emptyList() : mSubMethods;
         }
 
         @Override
@@ -1644,13 +1609,15 @@ public class ExtractPsi {
             addTypeDependency(Type.getReturnType(desc));
 
             if (isWipedMethod()) {
-
                 // TODO: Move this to the WIPED_METHODs list: put replacement code
                 // there!
                 if (mMethodNode.name.equals("<init>") &&
                         mContainingClass.getName().equals("com/intellij/psi/PsiInvalidElementAccessException")) {
                     mMethodNode.instructions.clear();
                     mMethodNode.tryCatchBlocks = null;
+                    mMethodNode.invisibleParameterAnnotations = null;
+                    mMethodNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    mMethodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "()V", false));
                     mMethodNode.instructions.add(new InsnNode(Opcodes.RETURN));
                 } else if (mMethodNode.name.equals("<init>") &&
                         mContainingClass.getName().equals("com/intellij/psi/PsiDisjunctionType")) {
@@ -1680,7 +1647,26 @@ public class ExtractPsi {
                 for (int i = 0, n = nodes.size(); i < n; i++) {
                     AbstractInsnNode instruction = nodes.get(i);
                     if (instruction instanceof InvokeDynamicInsnNode) {
-                        System.out.println("Warning: Ignoring invokeDynamic");
+                        InvokeDynamicInsnNode node = (InvokeDynamicInsnNode) instruction;
+                        String target = node.desc;
+                        int index = target.indexOf(')');
+                        if (index != -1) {
+                            index++;
+                            String args = target.substring(0, index);
+                            String sam = target.substring(index);
+                            if (sam.startsWith("L") && sam.endsWith(";")) {
+                                sam = Type.getType(sam).getInternalName();
+                            }
+                            CgMethod method = findUniqueMethod(sam, node.name, args);
+                            if (method != null) {
+                                addDependency(method);
+                            } else {
+                                if (!sam.startsWith("java")) {
+                                    System.out.println("No lambda target found for " + node.name + ", " + node.desc
+                                            + " in " + this);
+                                }
+                            }
+                        }
                     } else if (instruction instanceof MethodInsnNode) {
                         MethodInsnNode node = (MethodInsnNode) instruction;
                         CgMethod method = findMethod(node.owner, node.name, node.desc);
@@ -1760,7 +1746,11 @@ public class ExtractPsi {
                                 || containingClass.equals("com/intellij/codeInspection/ui/SingleIntegerFieldOptionsPanel")
                                 || containingClass.startsWith("com/intellij/openapi/extensions/")
                                 || containingClass.startsWith("com/intellij/util/containers/Concurrent")
-                                || containingClass.equals("com/intellij/util/ReflectionUtil"))) {
+                                || containingClass.equals("com/intellij/util/ReflectionUtil")
+                                || containingClass.equals("com/intellij/psi/codeStyle/extractor/values/ClassSerializer")
+                                || containingClass.equals("com/intellij/util/io/PagedFileStorage")
+                                || containingClass.equals("com/intellij/codeInsight/daemon/JavaExpectedHighlightingData")
+                                || containingClass.equals("com/intellij/Patches"))) {
                                 ok = true;
                             }
 
