@@ -67,9 +67,11 @@ public class ToolchainConfiguration {
                     // Configure each platform.
                     for (final Abi abi : ndkHandler.getSupportedAbis()) {
                         toolchain.target(abi.getName(), targetPlatform -> {
-                            // Disable usage of response file as clang do not handle file
-                            // with \r\n properly.
-                            if (OperatingSystem.current().isWindows()
+                            // In NDK r12 or below, disable usage of response file as clang do not
+                            // handle file with \r\n properly.
+                            if ((ndkHandler.getRevision() == null
+                                    || ndkHandler.getRevision().getMajor() <= 12)
+                                    && OperatingSystem.current().isWindows()
                                     && toolchainName.equals("clang")) {
                                 ((DefaultGccPlatformToolChain) targetPlatform)
                                         .setCanUseCommandFile(false);
