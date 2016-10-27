@@ -18,6 +18,8 @@ package com.android.tools.lint.psi;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.ExternalAnnotationRepository;
+import com.google.common.collect.Lists;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiIdentifier;
@@ -26,6 +28,10 @@ import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeElement;
+import java.util.Collection;
+import java.util.List;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
@@ -130,15 +136,57 @@ public class EcjPsiBinaryParameter extends EcjPsiBinaryElement implements PsiPar
     @NonNull
     @Override
     public PsiAnnotation[] getAnnotations() {
-        // TODO: Merge in modifiers from external sources and here
-        //return new PsiAnnotation[0];
-        throw new UnimplementedLintPsiApiException();
+        return getApplicableAnnotations();
     }
 
     @NonNull
     @Override
     public PsiAnnotation[] getApplicableAnnotations() {
-        return getAnnotations();
+        return findAnnotations(false);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private PsiAnnotation[] findAnnotations(boolean includeSuper) {
+        List<PsiAnnotation> all = Lists.newArrayListWithExpectedSize(4);
+        ExternalAnnotationRepository manager = mManager.getAnnotationRepository();
+
+        MethodBinding binding = mMethod.getBinding();
+        while (binding != null) {
+            //noinspection VariableNotUsedInsideIf
+            if (binding.declaringClass != null) { // prevent NPE in binding.getParameterAnnotations()
+                AnnotationBinding[][] parameterAnnotations = binding.getParameterAnnotations();
+                if (parameterAnnotations != null && mIndex < parameterAnnotations.length) {
+                    AnnotationBinding[] annotations = parameterAnnotations[mIndex];
+                    if (annotations != null && annotations.length > 0) {
+                        for (AnnotationBinding annotation : annotations) {
+                            if (annotation != null) {
+                                all.add(new EcjPsiBinaryAnnotation(mManager, this, annotation));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Look for external annotations
+            if (manager != null) {
+                Collection<PsiAnnotation> external = manager.getParameterAnnotations(binding,
+                        mIndex);
+                if (external != null) {
+                    all.addAll(external);
+                }
+            }
+
+            if (!includeSuper) {
+                break;
+            }
+
+            binding = EcjPsiManager.findSuperMethodBinding(binding, false, false);
+            if (binding != null && binding.isPrivate()) {
+                break;
+            }
+        }
+
+        return EcjPsiManager.ensureUnique(all);
     }
 
     @Nullable

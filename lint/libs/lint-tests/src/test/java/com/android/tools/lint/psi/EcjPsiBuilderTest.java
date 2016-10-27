@@ -16,10 +16,14 @@
 
 package com.android.tools.lint.psi;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtilsTest;
 import com.intellij.psi.JavaRecursiveElementVisitor;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiAnnotationMethod;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
@@ -39,6 +43,7 @@ import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiMethodReferenceExpression;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiPackageStatement;
 import com.intellij.psi.PsiParameter;
@@ -47,6 +52,7 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
@@ -119,7 +125,7 @@ public class EcjPsiBuilderTest extends TestCase {
             + "\n"
             + "    private static double ourStatic;\n"
             + "    private static final int ourStatic2 = (int)(long)new Long(System.currentTimeMillis());\n"
-            + "    private int myField;\n"
+            + "    private transient int myField;\n"
             + "    private final int myField2 = 52;\n"
             + "    @MyAnnotation1\n"
             + "    private int myField3;\n"
@@ -714,6 +720,141 @@ public class EcjPsiBuilderTest extends TestCase {
         PsiClass cls = (PsiClass)resolved;
         assertEquals("java.util.List", cls.getQualifiedName());
         assertTrue(cls.isInterface());
+    }
+
+    public void testTransient() throws Exception {
+        JavaContext context = LintUtilsTest.parsePsi(""
+                + "public abstract class Foo {\n"
+                + "    public transient volatile int field1;\n"
+                + "    public strictfp float field2;\n"
+                + "    private static native void method1();"
+                + "    private abstract synchronized void method2();"
+                + "    public final void method3() {}"
+                + "}");
+
+        PsiClass cls = context.getJavaFile().getClasses()[0];
+        PsiField field1 = cls.findFieldByName("field1", false);
+        PsiField field2 = cls.findFieldByName("field2", false);
+        PsiMethod method1 = cls.findMethodsByName("method1", false)[0];
+        PsiMethod method2 = cls.findMethodsByName("method2", false)[0];
+        PsiMethod method3 = cls.findMethodsByName("method3", false)[0];
+        assertThat(field1.getModifierList().hasExplicitModifier(PsiModifier.TRANSIENT)).isTrue();
+        assertThat(field1.getModifierList().hasExplicitModifier(PsiModifier.VOLATILE)).isTrue();
+        assertThat(field2.getModifierList().hasExplicitModifier(PsiModifier.STRICTFP)).isTrue();
+        assertThat(method1.getModifierList().hasExplicitModifier(PsiModifier.STATIC)).isTrue();
+        assertThat(method1.getModifierList().hasExplicitModifier(PsiModifier.NATIVE)).isTrue();
+        assertThat(method2.getModifierList().hasExplicitModifier(PsiModifier.ABSTRACT)).isTrue();
+        assertThat(method2.getModifierList().hasExplicitModifier(PsiModifier.SYNCHRONIZED)).isTrue();
+        assertThat(method3.getModifierList().hasExplicitModifier(PsiModifier.FINAL)).isTrue();
+        assertThat(field1.getModifierList().toString()).isEqualTo(
+                "EcjPsiModifierList(32,32):\"\":193:public:transient:volatile");
+        assertThat(field2.getModifierList().toString()).isEqualTo(
+                "EcjPsiModifierList(74,74):\"\":2049:public:strictfp");
+        assertThat(method1.getModifierList().toString()).isEqualTo(
+                "EcjPsiModifierList(108,108):\"\":266:private:static:native");
+        assertThat(method2.getModifierList().toString()).isEqualTo(
+                "EcjPsiModifierList(149,149):\"\":1058:private:abstract:synchronized");
+        assertThat(method3.getModifierList().toString()).isEqualTo(
+                "EcjPsiModifierList(198,198):\"\":17:public:final");
+    }
+
+    public void testGetSuperClass() throws Exception {
+        @SuppressWarnings("all") // testcase code intentionally not following recommended practices :-)
+        JavaContext context = LintUtilsTest.parsePsi(""
+                + "public class ImplicitSuperClassTest {\n"
+                + "    public @interface MyAnnotation {\n"
+                + "    }\n"
+                + "\n"
+                + "    public interface MyInterface {\n"
+                + "    }\n"
+                + "\n"
+                + "    public enum MyEnum {\n"
+                + "        FOO, BAR;\n"
+                + "    }\n"
+                + "    \n"
+                + "    public class Plain {\n"
+                + "    }\n"
+                + "    \n"
+                + "    public class MyFile extends java.io.File {\n"
+                + "        public MyFile(String pathname) { super(pathname); }\n"
+                + "    }\n"
+                + "}\n");
+
+        PsiClass outer = context.getJavaFile().getClasses()[0];
+        PsiClass annotationCls = outer.findInnerClassByName("MyAnnotation", false);
+        PsiClass interfaceCls = outer.findInnerClassByName("MyInterface", false);
+        PsiClass enumCls = outer.findInnerClassByName("MyEnum", false);
+        PsiClass plainCls = outer.findInnerClassByName("Plain", false);
+        PsiClass fileCls = outer.findInnerClassByName("MyFile", false);
+        assertThat(annotationCls.getSuperClass().getQualifiedName()).isEqualTo("java.lang.annotation.Annotation");
+        assertThat(interfaceCls.getSuperClass()).isNull();
+        assertThat(enumCls.getSuperClass().getQualifiedName()).isEqualTo("java.lang.Enum");
+        assertThat(plainCls.getSuperClass().getQualifiedName()).isEqualTo("java.lang.Object");
+        assertThat(fileCls.getSuperClass().getQualifiedName()).isEqualTo("java.io.File");
+    }
+
+    public void testGetBinaryParameterAnnotations1() throws Exception {
+        @SuppressWarnings("all") // testcase code intentionally not following recommended practices :-)
+        JavaContext context = LintUtilsTest.parsePsi(""
+                + "public class Foo {\n"
+                + "}\n");
+
+        PsiClass cls = context.getJavaFile().getClasses()[0];
+        PsiClass superClass = cls.getSuperClass();
+        PsiMethod[] method = superClass.findMethodsByName("equals", false);
+        PsiParameter[] parameters = method[0].getParameterList().getParameters();
+        PsiParameter parameter = parameters[0];
+        PsiAnnotation[] annotations = parameter.getModifierList().getAnnotations();
+        assertThat(annotations.length).isEqualTo(0);
+    }
+
+    public void testGetBinaryParameterAnnotations2() throws Exception {
+        @SuppressWarnings("all") // testcase code intentionally not following recommended practices :-)
+        JavaContext context = LintUtilsTest.parsePsi(""
+                + "    public class MyView extends android.view.View {\n"
+                + "        public MyView(android.content.Context context) {\n"
+                + "            super(context);\n"
+                + "        }\n"
+                + "    }\n");
+
+        PsiClass cls = context.getJavaFile().getClasses()[0];
+        PsiClass superClass = cls.getSuperClass();
+        PsiMethod[] method = superClass.findMethodsByName("getFocusables", false);
+        PsiParameter[] parameters = method[0].getParameterList().getParameters();
+        PsiParameter parameter = parameters[0];
+        PsiAnnotation[] annotations = parameter.getModifierList().getAnnotations();
+        assertThat(annotations.length).isEqualTo(1);
+        assertThat(annotations[0].getQualifiedName()).isEqualTo("android.support.annotation.IntDef");
+    }
+
+    public void testAnnotationExpressions() throws Exception {
+        @SuppressWarnings("all") // testcase code intentionally not following recommended practices :-)
+        JavaContext context = LintUtilsTest.parsePsi(""
+                + "package test.pkg;\n"
+                + "import android.support.annotation.NonNull;\n"
+                + "\n"
+                + "import java.lang.annotation.ElementType;\n"
+                + "import java.lang.annotation.Retention;\n"
+                + "import java.lang.annotation.RetentionPolicy;\n"
+                + "import java.lang.annotation.Target;\n"
+                + "\n"
+                + "@Retention(RetentionPolicy.SOURCE)\n"
+                + "@Target(ElementType.TYPE)\n"
+                + "public @interface TableDef {\n"
+                + "    @NonNull PrimaryKey primaryKey() default @PrimaryKey(columns = {});\n"
+                + "\n"
+                + "    @Retention(RetentionPolicy.SOURCE)\n"
+                + "    @Target(ElementType.ANNOTATION_TYPE)\n"
+                + "    @interface PrimaryKey {\n"
+                + "        @NonNull String[] columns();\n"
+                + "    }\n"
+                + "}",
+                new File("src/test/pkg/TableDef.java"));
+        assertThat(context).isNotNull();
+        PsiMethod psiMethod = context.getJavaFile().getClasses()[0].getMethods()[0];
+        assertThat(psiMethod).isInstanceOf(PsiAnnotationMethod.class);
+        assertThat(((PsiAnnotationMethod)psiMethod).getDefaultValue()).isInstanceOf(
+                PsiAnnotation.class);
     }
 
     public void testPackages() throws Exception {

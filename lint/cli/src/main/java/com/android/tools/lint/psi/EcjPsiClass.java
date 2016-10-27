@@ -45,7 +45,6 @@ import com.intellij.psi.javadoc.PsiDocComment;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -53,6 +52,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
 
@@ -143,6 +143,10 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     @Override
     public String getQualifiedName() {
         return mQualifiedName;
+    }
+
+    private boolean isPlainClass() {
+        return TypeDeclaration.kind(mEcjModifiers) == TypeDeclaration.CLASS_DECL;
     }
 
     @Override
@@ -239,8 +243,18 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     @Nullable
     @Override
     public PsiClass getSuperClass() {
-        if (mSuperClass == null && mSuperClassReference != null) {
-            mSuperClass = mManager.findClass(mSuperClassReference);
+        if (mSuperClass == null) {
+            if (mSuperClassReference != null) {
+                mSuperClass = mManager.findClass(mSuperClassReference);
+            } else if (isPlainClass()) {
+                mSuperClass = mManager.findClass(TypeConstants.JAVA_LANG_OBJECT);
+            } else if (isInterface()) {
+                mSuperClass = null;
+            } else if (isEnum()) {
+                mSuperClass = mManager.findClass(TypeConstants.JAVA_LANG_ENUM);
+            } else if (isAnnotationType()) {
+                mSuperClass = mManager.findClass(TypeConstants.JAVA_LANG_ANNOTATION_ANNOTATION);
+            }
         }
         return mSuperClass;
     }

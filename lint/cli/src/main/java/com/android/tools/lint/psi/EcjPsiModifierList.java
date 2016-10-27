@@ -79,6 +79,16 @@ class EcjPsiModifierList extends EcjPsiSourceElement implements PsiModifierList 
         if ((mModifiers & Modifier.STRICT) != 0) {
             sb.append(':').append(PsiModifier.STRICTFP);
         }
+        if ((mModifiers & Modifier.TRANSIENT) != 0) {
+            sb.append(':').append(PsiModifier.TRANSIENT);
+        }
+        if ((mModifiers & Modifier.VOLATILE) != 0) {
+            sb.append(':').append(PsiModifier.VOLATILE);
+        }
+        if ((mModifiers & DEFAULT_MASK) != 0) {
+            sb.append(':').append(PsiModifier.DEFAULT);
+        }
+
         return sb.toString();
     }
 
