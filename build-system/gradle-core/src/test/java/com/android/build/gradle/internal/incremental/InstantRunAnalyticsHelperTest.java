@@ -50,9 +50,9 @@ public class InstantRunAnalyticsHelperTest {
         when(mInstantRunBuildContext.getVerifierResult())
                 .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
         when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
-                new InstantRunBuildContext.Artifact(InstantRunBuildContext.FileType.RESOURCES,
+                new InstantRunBuildContext.Artifact(FileType.RESOURCES,
                         new File("resources.ap_")),
-                new InstantRunBuildContext.Artifact(InstantRunBuildContext.FileType.RELOAD_DEX,
+                new InstantRunBuildContext.Artifact(FileType.RELOAD_DEX,
                         new File("reload.dex"))
         ));
 

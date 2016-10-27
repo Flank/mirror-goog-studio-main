@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
@@ -166,7 +167,7 @@ public class ExternalBuildPluginTest {
         assertThat(fullBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
         assertThat(fullBuild.getArtifacts()).hasSize(1);
         InstantRunBuildContext.Artifact artifact = fullBuild.getArtifacts().get(0);
-        assertThat(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.MAIN);
+        assertThat(artifact.getType()).isEqualTo(FileType.MAIN);
         assertThat(artifact.getLocation().exists()).isTrue();
 
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(artifact.getLocation());
@@ -220,7 +221,7 @@ public class ExternalBuildPluginTest {
         assertThat(lastBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.COMPATIBLE);
         assertThat(lastBuild.getArtifacts()).hasSize(1);
         artifact = lastBuild.getArtifacts().get(0);
-        assertThat(artifact.getType()).isEqualTo(InstantRunBuildContext.FileType.RELOAD_DEX);
+        assertThat(artifact.getType()).isEqualTo(FileType.RELOAD_DEX);
         assertThatDex(artifact.getLocation())
                 .containsClasses(
                         "Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;",

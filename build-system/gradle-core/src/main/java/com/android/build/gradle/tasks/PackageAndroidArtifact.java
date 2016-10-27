@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
@@ -210,8 +211,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     protected AaptOptions aaptOptions;
 
-    protected InstantRunBuildContext.FileType instantRunFileType =
-            InstantRunBuildContext.FileType.MAIN;
+    protected FileType instantRunFileType;
 
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
@@ -1141,6 +1141,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
         @Override
         public void execute(@NonNull final T packageAndroidArtifact) {
+            packageAndroidArtifact.instantRunFileType = FileType.MAIN;
             packageAndroidArtifact.setAndroidBuilder(packagingScope.getAndroidBuilder());
             packageAndroidArtifact.setVariantName(packagingScope.getFullVariantName());
             packageAndroidArtifact.setMinSdkVersion(packagingScope.getMinSdkVersion());
@@ -1164,7 +1165,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                     packageAndroidArtifact, "resourceFile", packagingScope::getFinalResourcesFile);
 
             ConventionMappingHelper.map(
-                    packageAndroidArtifact, "dexFolders", packagingScope::getDexFolders);
+                    packageAndroidArtifact, "dexFolders",
+                    () -> packagingScope.getDexFolders(
+                            dexPackagingPolicy == DexPackagingPolicy.INSTANT_RUN_MULTI_APK
+                                ? FileType.SPLIT_MAIN
+                                : FileType.MAIN));
 
             ConventionMappingHelper.map(
                     packageAndroidArtifact,

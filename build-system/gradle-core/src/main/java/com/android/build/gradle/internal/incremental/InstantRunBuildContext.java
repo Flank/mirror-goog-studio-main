@@ -95,42 +95,6 @@ public class InstantRunBuildContext {
     }
 
     /**
-     * Enumeration of the possible file types produced by an instant run enabled build.
-     */
-    public enum FileType {
-        /**
-         * Main APK file for 19, and 21 platforms when using the {@link ColdswapMode#MULTIDEX} mode.
-         */
-        MAIN,
-        /**
-         * Main APK file when application is using the {@link ColdswapMode#MULTIAPK} mode.
-         */
-        SPLIT_MAIN,
-        /**
-         * Reload dex file that can be used to patch application live.
-         */
-        RELOAD_DEX,
-        /**
-         * Restart.dex file that can be used for Dalvik to restart applications with minimum set of
-         * changes delivered.
-         */
-        @Deprecated
-        RESTART_DEX,
-        /**
-         * Shard dex file that can be used to replace originally installed multi-dex shard.
-         */
-        DEX,
-        /**
-         * Pure split (code only) that can be installed individually on M+ devices.
-         */
-        SPLIT,
-        /**
-         * Resources: res.ap_ file
-         */
-        RESOURCES,
-    }
-
-    /**
      * A Build represents the result of an InstantRun enabled build invocation.
      * It will contain all the artifacts it produced as well as the unique timestamp for the build
      * and the result of the InstantRun verification process.
