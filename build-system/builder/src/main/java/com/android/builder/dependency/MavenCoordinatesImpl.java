@@ -144,6 +144,8 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
     /**
      * Returns this coordinates Id without the version attribute.
      */
+    @NonNull
+    @Override
     public String getVersionLessId() {
         return versionLessId;
     }
