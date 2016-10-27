@@ -50,6 +50,8 @@ public class NdkHandler {
     private final File ndkDirectory;
     @Nullable
     private final NdkInfo ndkInfo;
+    @Nullable
+    private final Revision revision;
 
     private static final int LATEST_SUPPORTED_VERSION = 13;
     public static final String NDK_BUNDLE_SUBPATH = "ndk-bundle";
@@ -66,8 +68,9 @@ public class NdkHandler {
 
         if (ndkDirectory == null || !ndkDirectory.exists()) {
             ndkInfo = null;
+            revision = null;
         } else {
-            Revision revision = findRevision(ndkDirectory);
+            revision = findRevision(ndkDirectory);
             if (revision == null) {
                 ndkInfo = new DefaultNdkInfo(ndkDirectory);
             } else if (revision.getMajor() > LATEST_SUPPORTED_VERSION) {
@@ -126,6 +129,12 @@ public class NdkHandler {
                 return null;
             }
         }
+    }
+
+
+    @Nullable
+    public Revision getRevision() {
+        return revision;
     }
 
     @Nullable
