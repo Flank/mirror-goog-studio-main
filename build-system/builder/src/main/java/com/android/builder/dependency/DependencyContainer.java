@@ -93,4 +93,10 @@ public interface DependencyContainer {
     DependencyContainer flatten(
             @Nullable AndroidLibrary testedLibrary,
             @Nullable DependencyContainer testedDependencyContainer);
+
+    /**
+     * Returns the container for all mutable data related to dependencies in this container context.
+     * @return the dependencies mutable data.
+     */
+    DependenciesMutableData getDependenciesMutableData();
 }

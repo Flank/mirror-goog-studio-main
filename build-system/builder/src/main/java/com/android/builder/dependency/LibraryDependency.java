@@ -32,11 +32,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
-import com.android.sdklib.repository.meta.Library;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.hash.Hashing;
 
 import java.io.File;
 import java.util.Collection;
@@ -48,10 +46,12 @@ import java.util.Objects;
  */
 public final class LibraryDependency extends AbstractBundleDependency implements AndroidLibrary, SkippableLibrary {
 
-    private boolean mSkipped = false;
     private final boolean mIsProvided;
     @NonNull
     private final File mJarsRootFolder;
+
+    private final int hashCode;
+
     /**
      * Whether the library is an android Lib sub-module. This is different from testing
      * {@link #getProject()} as a module could wrap a local aar, which is not the same as a
@@ -121,7 +121,8 @@ public final class LibraryDependency extends AbstractBundleDependency implements
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             boolean isProvided) {
-        return new LibraryDependency(bundle,
+        return new LibraryDependency(
+                bundle,
                 explodedBundle,
                 androidDependencies,
                 jarDependencies,
@@ -160,6 +161,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
         mJarsRootFolder = jarsRootFolder;
         mIsProvided = isProvided;
         mIsSubModule = isSubModule;
+        hashCode = computeHashCode();
     }
 
     /**
@@ -254,12 +256,7 @@ public final class LibraryDependency extends AbstractBundleDependency implements
 
     @Override
     public boolean isSkipped() {
-        return mSkipped;
-    }
-
-    @Override
-    public void skip() {
-        mSkipped = true;
+        throw new IllegalAccessError("Call isSkipped on DependenciesMutableData");
     }
 
     @Override
@@ -280,23 +277,28 @@ public final class LibraryDependency extends AbstractBundleDependency implements
             return false;
         }
         LibraryDependency that = (LibraryDependency) o;
-        return mSkipped == that.mSkipped &&
-                mIsProvided == that.mIsProvided &&
+        return mIsProvided == that.mIsProvided &&
                 mIsSubModule == that.mIsSubModule &&
                 Objects.equals(mJarsRootFolder, that.mJarsRootFolder);
     }
 
+    private int computeHashCode() {
+        return HashCodeUtils.hashCode(
+                super.hashCode(),
+                mIsProvided,
+                mIsSubModule,
+                mJarsRootFolder);
+    }
+
     @Override
     public int hashCode() {
-        return HashCodeUtils.hashCode(
-                super.hashCode(), mSkipped, mIsProvided, mIsSubModule, mJarsRootFolder);
+        return hashCode;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("super", super.toString())
-                .add("mSkipped", mSkipped)
                 .add("mIsProvided", mIsProvided)
                 .add("mIsSubModule", mIsSubModule)
                 .add("mJarsRootFolder", mJarsRootFolder)
