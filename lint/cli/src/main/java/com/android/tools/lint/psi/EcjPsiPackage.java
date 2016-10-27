@@ -27,7 +27,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiPackage;
-import com.intellij.psi.PsiQualifiedNamedElement;
 import java.util.Collection;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
@@ -74,12 +73,6 @@ class EcjPsiPackage extends EcjPsiBinaryElement implements PsiPackage, PsiModifi
     public PsiPackage getParentPackage() {
         // TODO: mPackageBinding.fParent isn't exposed.
         // Have to look it up from the lookup map.
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public PsiQualifiedNamedElement getContainer() {
         return null;
     }
 
