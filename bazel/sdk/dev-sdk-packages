@@ -12,6 +12,9 @@ build-tools;22.0.1
 build-tools;21.0.0
 build-tools;20.0.0
 platforms;android-25
+
+# There's no Google APIs for 25.
+platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
 # Needed for typo checking
