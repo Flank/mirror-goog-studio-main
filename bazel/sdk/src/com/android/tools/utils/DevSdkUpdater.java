@@ -18,7 +18,6 @@ package com.android.tools.utils;
 
 import com.android.repository.impl.meta.Archive;
 import com.android.sdklib.tool.SdkManagerCli;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -121,77 +120,109 @@ public final class DevSdkUpdater {
         List<String> packageLines = new ArrayList<>();
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
-            if (arg.equals("--help")) {
-                usage();
-                return Status.SUCCESS;
-            } else if (arg.equals("--package-file")) {
-                ++i;
-                try {
+            ++i;
+            switch (arg) {
+                case "--package-file":
                     try {
-                        // Keep only non-empty lines (after # comments are removed)
-                        packageLines.addAll(
-                                Files.lines(Paths.get(args[i]))
-                                        .map(line -> line.replaceAll("#.*", ""))
-                                        .map(String::trim)
-                                        .filter(line -> !line.isEmpty())
-                                        .collect(Collectors.toList()));
-                    } catch (Exception e) {
-                        usage("Could not successfully read package-file: " + args[i] +
-                                "\n\nException: " + e);
-                        return Status.ERROR;
-                    }
-                } catch (ArrayIndexOutOfBoundsException ignored) {
-                    usage("Package file not set");
-                    return Status.ERROR;
-                }
-            } else if (arg.equals("--package")) {
-                ++i;
-                try {
-                    packageLines.add(args[i]);
-                } catch (ArrayIndexOutOfBoundsException ignored) {
-                    usage("Package not set");
-                    return Status.ERROR;
-                }
-            } else if (arg.equals("--platform")) {
-                ++i;
-                platform = args[i];
-            } else if (arg.equals("--dest")) {
-                ++i;
-                try {
-                    sdkDest = new File(args[i]);
-                    for (OsEntry osEntry : OS_ENTRIES) {
-                        File f = new File(sdkDest, osEntry.mFolder);
-                        if (!f.exists()) {
-                            usage("Invalid SDK path \"" + args[i]
-                                    + "\" doesn't contain expected subdir: " + osEntry.mFolder);
+                        if (!processPackageFile(Paths.get(args[i]), packageLines)) {
                             return Status.ERROR;
                         }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                        usage("Package file not set");
+                        return Status.ERROR;
                     }
-                } catch (ArrayIndexOutOfBoundsException ignored) {
-                    usage("Dest path not set");
+                    break;
+                case "--package":
+                    try {
+                        packageLines.add(args[i]);
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                        usage("Package not set");
+                        return Status.ERROR;
+                    }
+                    break;
+                case "--platform":
+                    platform = args[i];
+                    break;
+                case "--dest":
+                    try {
+                        sdkDest = new File(args[i]);
+                        if (!checkSdkDest(sdkDest)) {
+                            return Status.ERROR;
+                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                        usage("Dest path not set");
+                        return Status.ERROR;
+                    }
+                    break;
+                case "--help":
+                    usage();
+                    return Status.SUCCESS;
+                default:
+                    usage("Unknown option: " + arg);
                     return Status.ERROR;
-                }
-            } else {
-                usage("Unknown option: " + arg);
+            }
+        }
+
+        // If the paths were not provided, use the default repo layout.
+        if (sdkDest == null) {
+            sdkDest = WorkspaceUtils.findPrebuiltsSdks().toFile();
+            if (!checkSdkDest(sdkDest)) {
                 return Status.ERROR;
             }
         }
 
-        if (sdkDest == null) {
-            usage("SDK destination directory was not set");
-            return Status.ERROR;
-        }
-
         if (packageLines.isEmpty()) {
-            usage("No packages were specified by --package or --package-file");
-            return Status.ERROR;
+            if (!processPackageFile(WorkspaceUtils.findSdkPackagesFile(), packageLines)) {
+                return Status.ERROR;
+            }
         }
 
-        System.out.println("Downloading SDKs...");
+        System.out.println("Downloading SDKs into " + sdkDest.getAbsolutePath());
         downloadSdkPackages(sdkDest, packageLines, platform);
         System.out.println("done!");
 
         return Status.SUCCESS;
+    }
+
+    private static boolean checkSdkDest(File sdkDest) {
+        for (OsEntry osEntry : OS_ENTRIES) {
+            File f = new File(sdkDest, osEntry.mFolder);
+            if (!f.exists()) {
+                usage(
+                        "Invalid SDK path \""
+                                + sdkDest.getPath()
+                                + "\" doesn't contain expected subdir: "
+                                + osEntry.mFolder);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Reads the package file contents into the given list, skipping comments.
+     *
+     * @return true on success, false if the file could not be read.
+     */
+    private static boolean processPackageFile(Path packageFile, List<String> packageLines) {
+        try {
+            // Keep only non-empty lines (after # comments are removed)
+            packageLines.addAll(
+                    Files.lines(packageFile)
+                            .map(line -> line.replaceAll("#.*", ""))
+                            .map(String::trim)
+                            .filter(line -> !line.isEmpty())
+                            .collect(Collectors.toList()));
+        } catch (Exception e) {
+            usage(
+                    "Could not successfully read package-file: "
+                            + packageFile
+                            + "\n\nException: "
+                            + e);
+            return false;
+        }
+
+        return true;
     }
 
     /**
