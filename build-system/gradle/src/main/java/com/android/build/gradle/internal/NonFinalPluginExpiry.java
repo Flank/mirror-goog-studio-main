@@ -16,28 +16,31 @@
 
 package com.android.build.gradle.internal;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
+import com.android.annotations.VisibleForTesting;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.jar.Manifest;
 
 public final class NonFinalPluginExpiry {
 
-    /** default retirement age in days since its inception date for RC or beta versions. */
-    private static final int DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS = 40;
+    /**
+     * default retirement age in days since its inception date for RC or beta versions.
+     */
+    @VisibleForTesting static final Period DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE =
+            Period.ofDays(40);
 
-    private NonFinalPluginExpiry() {}
+    private NonFinalPluginExpiry() {
+    }
 
     /**
      * Verify that this plugin execution is within its public time range.
@@ -45,21 +48,25 @@ public final class NonFinalPluginExpiry {
      * @throws RuntimeException if the plugin is a non final plugin older than 40 days.
      */
     public static void verifyRetirementAge() {
-
-        Manifest manifest;
         URLClassLoader cl = (URLClassLoader) NonFinalPluginExpiry.class.getClassLoader();
-        try {
-            URL url = cl.findResource("META-INF/MANIFEST.MF");
-            manifest = new Manifest(url.openStream());
-        } catch (IOException ignore) {
-            return;
-        }
+        try (InputStream inputStream = cl.findResource("META-INF/MANIFEST.MF").openStream()) {
+            verifyRetirementAge(
+                    LocalDate.now(),
+                    new Manifest(inputStream),
+                    System.getenv("ANDROID_DAILY_OVERRIDE"));
+        } catch (IOException ignore) {}
+    }
 
-        int retirementAgeInDays =
-                getRetirementAgeInDays(manifest.getMainAttributes().getValue("Plugin-Version"));
+    @VisibleForTesting
+    static void verifyRetirementAge(
+            @NonNull LocalDate now,
+            @NonNull Manifest manifest,
+            @Nullable String dailyOverride) {
 
+        String version = manifest.getMainAttributes().getValue("Plugin-Version");
+        Period retirementAge = getRetirementAge(version);
         // if this plugin version will never be outdated, return.
-        if (retirementAgeInDays == -1) {
+        if (retirementAge == null) {
             return;
         }
 
@@ -68,20 +75,13 @@ public final class NonFinalPluginExpiry {
         if (inceptionDateAttr == null) {
             return;
         }
-        List<String> items = ImmutableList.copyOf(Splitter.on(':').split(inceptionDateAttr));
-        GregorianCalendar inceptionDate =
-                new GregorianCalendar(
-                        Integer.parseInt(items.get(0)),
-                        Integer.parseInt(items.get(1)),
-                        Integer.parseInt(items.get(2)));
+        LocalDate inceptionDate =
+                LocalDate.parse(inceptionDateAttr, DateTimeFormatter.ISO_LOCAL_DATE);
 
-        Calendar now = GregorianCalendar.getInstance();
-        long nowTimestamp = now.getTimeInMillis();
-        long inceptionTimestamp = inceptionDate.getTimeInMillis();
-        long days = TimeUnit.DAYS.convert(nowTimestamp - inceptionTimestamp, TimeUnit.MILLISECONDS);
-        if (days > retirementAgeInDays) {
+        LocalDate expiryDate = inceptionDate.plus(retirementAge);
+
+        if (now.compareTo(expiryDate) > 0) {
             // this plugin is too old.
-            String dailyOverride = System.getenv("ANDROID_DAILY_OVERRIDE");
             final MessageDigest crypt;
             try {
                 crypt = MessageDigest.getInstance("SHA-1");
@@ -93,10 +93,10 @@ public final class NonFinalPluginExpiry {
             try {
                 crypt.update(
                         String.format(
-                                        "%1$s:%2$s:%3$s",
-                                        now.get(Calendar.YEAR),
-                                        now.get(Calendar.MONTH),
-                                        now.get(Calendar.DATE))
+                                "%1$s:%2$s:%3$s",
+                                now.getYear(),
+                                now.getMonthValue() -1,
+                                now.getDayOfMonth())
                                 .getBytes("utf8"));
             } catch (UnsupportedEncodingException e) {
                 return;
@@ -104,41 +104,57 @@ public final class NonFinalPluginExpiry {
             String overrideValue = new BigInteger(1, crypt.digest()).toString(16);
             if (dailyOverride == null) {
                 String message =
-                        "Plugin is too old, please update to a more recent version, or "
-                                + "set ANDROID_DAILY_OVERRIDE environment variable to \""
-                                + overrideValue
-                                + '"';
+                        String.format(
+                                "The android gradle plugin version %1$s is too old, "
+                                        + "please update to the latest version.\n"
+                                        + "\n"
+                                        + "To override this check from the command line please "
+                                        + "set the ANDROID_DAILY_OVERRIDE environment variable to "
+                                        + "\"%2$s\"",
+                                version,
+                                overrideValue);
                 System.err.println(message);
-                throw new RuntimeException(message);
+                throw new AndroidGradlePluginTooOldException(message);
             } else {
                 if (!dailyOverride.equals(overrideValue)) {
                     String message =
-                            "Plugin is too old and ANDROID_DAILY_OVERRIDE value is "
-                                    + "also outdated, please use new value :\""
-                                    + overrideValue
-                                    + '"';
+                            String.format(
+                                    "The android gradle plugin version %1$s is too old,"
+                                            + "please update to the latest version.\n"
+                                            + "\n"
+                                            + "The ANDROID_DAILY_OVERRIDE value is outdated. "
+                                            + "Please set the ANDROID_DAILY_OVERRIDE environment "
+                                            + "variable to \"%2$s\"",
+                                    version,
+                                    overrideValue);
                     System.err.println(message);
-                    throw new RuntimeException(message);
+                    throw new AndroidGradlePluginTooOldException(message);
                 }
             }
         }
     }
 
     /**
-     * Returns the retirement age for this plugin depending on its version string, or -1 if this
+     * Returns the retirement age for this plugin depending on its version string, or null if this
      * plugin version will never become obsolete
      *
      * @param version the plugin full version, like 1.3.4-preview5 or 1.0.2 or 1.2.3-beta4
-     * @return the retirement age in days or -1 if no retirement
      */
-    private static int getRetirementAgeInDays(@Nullable String version) {
+    @Nullable
+    private static Period getRetirementAge(@Nullable String version) {
         if (version == null
                 || version.contains("rc")
                 || version.contains("beta")
                 || version.contains("alpha")
                 || version.contains("preview")) {
-            return DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE_IN_DAYS;
+            return DEFAULT_RETIREMENT_AGE_FOR_NON_RELEASE;
         }
-        return -1;
+        return null;
+    }
+
+    public static final class AndroidGradlePluginTooOldException extends RuntimeException {
+        public AndroidGradlePluginTooOldException(@NonNull String message) {
+            super(message);
+        }
     }
 }
