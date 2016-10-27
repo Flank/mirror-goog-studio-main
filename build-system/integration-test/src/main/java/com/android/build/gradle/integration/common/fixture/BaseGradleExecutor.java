@@ -86,6 +86,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         // impact.
         withProperty(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false");
 
+        // Explicitly specify the aapt1, until we start recording both.
+        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false");
+
         return (T) this;
     }
 
