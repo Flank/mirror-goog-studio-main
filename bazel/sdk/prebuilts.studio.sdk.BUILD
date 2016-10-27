@@ -100,9 +100,12 @@ platform_filegroup(
     ],
 )
 
-# This will be needed by the "gradle" module.
+# This will be needed by the "gradle" module, together with the google_apis add-on.
 platform_filegroup(
     name = "platforms/android-24",
+    visibility = [
+        "//tools/data-binding:__pkg__",
+    ],
 )
 
 filegroup(
