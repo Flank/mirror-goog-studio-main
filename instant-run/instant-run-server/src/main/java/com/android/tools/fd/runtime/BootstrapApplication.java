@@ -229,18 +229,27 @@ public class BootstrapApplication extends Application {
         // As of Marshmallow, we use APK splits and don't need to rely on
         // reflection to inject classes and resources for coldswap
         //noinspection PointlessBooleanExpression
+        String apkFile = context.getApplicationInfo().sourceDir;
+        long apkModified = apkFile != null ? new File(apkFile).lastModified() : 0L;
         if (!AppInfo.usingApkSplits) {
-            String apkFile = context.getApplicationInfo().sourceDir;
-            long apkModified = apkFile != null ? new File(apkFile).lastModified() : 0L;
             createResources(apkModified);
-            setupClassLoaders(context, context.getCacheDir().getPath(), apkModified);
+            // Passing null is a mostly-undocumented feature of ART to force
+            // interpreting the code.  It winds up passing the parameter through
+            // to dalvik.system.DexFile#loadDex, which is the lowest-level hook
+            // into the class loading system.  To force dex2oat to run (which
+            // adversely impacts startup time with IR enabled), you can pass
+            // context.getCacheDir().getPath() here instead of null.
+            setupClassLoaders(context, null, apkModified);
+        } else {
+          setupClassLoaders(context, null, apkModified);
         }
 
         createRealApplication();
 
-        // This is called from ActivityThread#handleBindApplication() -> LoadedApk#makeApplication().
-        // Application#mApplication is changed right after this call, so we cannot do the monkey
-        // patching here. So just forward this method to the real Application instance.
+        // This is called from ActivityThread#handleBindApplication() ->
+        // LoadedApk#makeApplication().  Application#mApplication is changed
+        // right after this call, so we cannot do the monkey patching here. So
+        // just forward this method to the real Application instance.
         super.attachBaseContext(context);
 
         if (realApplication != null) {
