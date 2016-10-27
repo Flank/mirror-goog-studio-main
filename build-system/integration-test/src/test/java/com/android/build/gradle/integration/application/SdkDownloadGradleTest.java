@@ -35,13 +35,6 @@ import com.android.repository.io.FileOpUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +42,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for automatic SDK download from Gradle.
@@ -344,7 +342,9 @@ public class SdkDownloadGradleTest {
                         + OLD_BUILD_TOOLS
                         + "\""
                         + System.lineSeparator()
-                        + "dependencies { compile 'com.android.support:support-v4:23.0.0' }");
+                        + "dependencies { compile 'com.android.support:support-v4:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "' }");
 
         project.executor().run("assembleDebug");
 
@@ -367,12 +367,17 @@ public class SdkDownloadGradleTest {
                         + OLD_BUILD_TOOLS
                         + "\""
                         + System.lineSeparator()
-                        + "dependencies { compile 'com.google.android.gms:play-services:8.1.0' }");
+                        + "dependencies { compile 'com.google.android.gms:play-services:"
+                        + GradleTestProject.PLAY_SERVICES_VERSION
+                        + "' }");
 
         project.executor().run("assembleDebug");
 
         checkForLibrary(
-                SdkMavenRepository.GOOGLE, "com.google.android.gms", "play-services", "8.1.0");
+                SdkMavenRepository.GOOGLE,
+                "com.google.android.gms",
+                "play-services",
+                GradleTestProject.PLAY_SERVICES_VERSION);
     }
 
     @Test

@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -26,16 +29,13 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
-import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * test for the path of the local jars in aars before and after exploding them.
@@ -49,22 +49,24 @@ public class LocalJarInAarInModelTest {
 
     @Before
     public void setUp() throws IOException {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "  compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "  buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "\n" +
-                "  defaultConfig {\n" +
-                "    minSdkVersion 4\n" +
-                "  }\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "  compile \"com.android.support:support-v4:22.1.1\"\n" +
-                "}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "  compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "  buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "\n"
+                        + "  defaultConfig {\n"
+                        + "    minSdkVersion 4\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "  compile \"com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "\"\n"
+                        + "}\n");
     }
 
     @After

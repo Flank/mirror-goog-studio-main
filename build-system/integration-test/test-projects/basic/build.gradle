@@ -6,11 +6,11 @@ apply plugin: 'com.android.application'
 
 
 dependencies {
-    compile 'com.android.support:support-v4:13.0.0'
-    compile 'com.google.android.gms:play-services:3.1.36'
+    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
+    compile "com.google.android.gms:play-services-base:${rootProject.playServicesVersion}"
 
-    debugCompile 'com.android.support:support-v13:13.0.0'
-    releaseCompile 'com.android.support:support-v13:21.0.0'
+    debugCompile "com.android.support:support-v13:${rootProject.supportLibVersion}"
+    releaseCompile "com.android.support:support-v13:${rootProject.supportLibVersion}"
 
     // hamcrest-library depends on hamcrest-core, both provide a /LICENSE.txt file
     // which used to cause packaging conflict. We added a special case for license files.

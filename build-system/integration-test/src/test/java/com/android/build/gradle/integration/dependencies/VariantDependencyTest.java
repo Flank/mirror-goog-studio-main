@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 import static org.junit.Assert.assertTrue;
@@ -42,16 +44,14 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Sets;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 public class VariantDependencyTest {
     @ClassRule
@@ -64,42 +64,47 @@ public class VariantDependencyTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-        TestFileUtils.appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "configurations {\n" +
-                "    freeLollipopDebugCompile\n" +
-                "    paidIcsCompile\n" +
-                "}\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "\n" +
-                "    flavorDimensions \"model\", \"api\"\n" +
-                "    productFlavors {\n" +
-                "        Lollipop {\n" +
-                "            dimension \"api\"\n" +
-                "            minSdkVersion 21\n" +
-                "        }\n" +
-                "        ics {\n" +
-                "            dimension \"api\"\n" +
-                "            minSdkVersion 15\n" +
-                "        }\n" +
-                "        free {\n" +
-                "            dimension \"model\"\n" +
-                "        }\n" +
-                "        paid {\n" +
-                "            dimension \"model\"\n" +
-                "        }\n" +
-                "    }\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    freeLollipopDebugCompile \"com.android.support:leanback-v17:21.0.0\"\n" +
-                "    paidIcsCompile \"com.android.support:appcompat-v7:21.0.0\"\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "configurations {\n"
+                        + "    freeLollipopDebugCompile\n"
+                        + "    paidIcsCompile\n"
+                        + "}\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "    buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "\n"
+                        + "    flavorDimensions \"model\", \"api\"\n"
+                        + "    productFlavors {\n"
+                        + "        Lollipop {\n"
+                        + "            dimension \"api\"\n"
+                        + "            minSdkVersion 21\n"
+                        + "        }\n"
+                        + "        ics {\n"
+                        + "            dimension \"api\"\n"
+                        + "            minSdkVersion 15\n"
+                        + "        }\n"
+                        + "        free {\n"
+                        + "            dimension \"model\"\n"
+                        + "        }\n"
+                        + "        paid {\n"
+                        + "            dimension \"model\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    freeLollipopDebugCompile \"com.android.support:leanback-v17:"
+                        + SUPPORT_LIB_VERSION
+                        + "\"\n"
+                        + "    paidIcsCompile \"com.android.support:appcompat-v7:"
+                        + SUPPORT_LIB_VERSION
+                        + "\"\n"
+                        + "}\n");
 
         project.execute("clean", "assemble");
         model = project.model().getSingle();
@@ -167,15 +172,24 @@ public class VariantDependencyTest {
     public void modelVariantSpecificDependency() {
         Collection<Variant> variants = model.getVariants();
         String variantName = "freeLollipopDebug";
-        checkVariant(variants, variantName, "com.android.support:leanback-v17:aar:21.0.0");
+        checkVariant(
+                variants,
+                variantName,
+                "com.android.support:leanback-v17:aar:" + SUPPORT_LIB_VERSION);
     }
 
     @Test
     public void modelMultiFlavorDependency() {
         Collection<Variant> variants = model.getVariants();
 
-        checkVariant(variants, "paidIcsDebug", "com.android.support:appcompat-v7:aar:21.0.0");
-        checkVariant(variants, "paidIcsRelease", "com.android.support:appcompat-v7:aar:21.0.0");
+        checkVariant(
+                variants,
+                "paidIcsDebug",
+                "com.android.support:appcompat-v7:aar:" + SUPPORT_LIB_VERSION);
+        checkVariant(
+                variants,
+                "paidIcsRelease",
+                "com.android.support:appcompat-v7:aar:" + SUPPORT_LIB_VERSION);
     }
 
     @Test
