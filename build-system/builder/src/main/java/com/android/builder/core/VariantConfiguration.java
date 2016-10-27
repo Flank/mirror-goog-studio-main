@@ -596,28 +596,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public VariantConfiguration setDependencies(
             @NonNull DependencyContainer compileDependencies,
-            @NonNull DependencyContainer packageDependencies) {
-        // Output of mTestedConfig will not be initialized until the tasks for the tested config are
-        // created.  If library output has never been added to mDirectLibraries, checked the output
-        // of the mTestedConfig to see if the tasks are now created.
-        AndroidLibrary testedLib = null;
-        if (mTestedConfig != null &&
-                mTestedConfig.mType == VariantType.LIBRARY &&
-                mTestedConfig.mOutput != null) {
-            testedLib = mTestedConfig.mOutput;
-        }
-
+            @NonNull DependencyContainer flattenedCompileDependencies,
+            @NonNull DependencyContainer packageDependencies,
+            @NonNull DependencyContainer flattenedPackageDependencies) {
         mCompileDependencies = compileDependencies;
-        //noinspection VariableNotUsedInsideIf
-        mFlatCompileDependencies = compileDependencies.flatten(
-                testedLib,
-                testedLib != null ? mTestedConfig.getCompileDependencies() : null);
-
+        mFlatCompileDependencies = flattenedCompileDependencies;
         mPackageDependencies = packageDependencies;
-        //noinspection VariableNotUsedInsideIf
-        mFlatPackageDependencies = packageDependencies.flatten(
-                testedLib,
-                testedLib != null ? mTestedConfig.getPackageDependencies() : null);
+        mFlatPackageDependencies = flattenedPackageDependencies;
 
         return this;
     }

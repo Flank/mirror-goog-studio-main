@@ -19,13 +19,17 @@ package com.android.build.gradle.internal.dependency;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.DependencyContainer;
+import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -74,12 +78,19 @@ public class VariantDependencies {
     private final Configuration classesConfiguration;
     @Nullable
     private final Configuration metadataConfiguration;
+    @Nullable
+    private final VariantDependencies testedVariantDependencies;
+    @Nullable
+    private final AndroidLibrary testedVariantOutput;
 
     @Nullable
     private Configuration manifestConfiguration;
 
     private DependencyContainer compileDependencies;
+    private DependencyContainer flattenedCompileDependencies;
     private DependencyContainer packageDependencies;
+    private DependencyContainer flattenedPackageDependencies;
+
 
     /**
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
@@ -90,21 +101,67 @@ public class VariantDependencies {
     @NonNull
     private DependencyChecker checker;
 
-    public static VariantDependencies compute(
+    public static final class Builder {
+        @NonNull
+        private final Project project;
+        @NonNull
+        private final ErrorReporter errorReporter;
+        @NonNull
+        private final String variantName;
+        @NonNull
+        private final VariantType variantType;
+        private boolean publishVariant = false;
+        private VariantType testedVariantType = null;
+        private VariantDependencies testedVariantDependencies = null;
+        private AndroidLibrary testedVariantOutput = null;
+
+        // default size should be enough. It's going to be rare for a variant to include
+        // more than a few configurations (main, build-type, flavors...)
+        // At most it's going to be flavor dimension count + 5:
+        // variant-specific, build type, multi-flavor, flavor1, ..., flavorN, defaultConfig, test.
+        // Default hashmap size of 16 (w/ load factor of .75) should be enough.
+        private final Set<Configuration> compileConfigs = Sets.newHashSet();
+        private final Set<Configuration> apkConfigs = Sets.newHashSet();
+        private final Set<Configuration> annotationConfigs = Sets.newHashSet();
+        private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
+
+        protected Builder(
             @NonNull Project project,
             @NonNull ErrorReporter errorReporter,
             @NonNull String variantName,
-            boolean publishVariant,
-            @NonNull VariantType variantType,
-            @Nullable VariantType testedVariantType,
-            @Nullable VariantDependencies parentVariant,
-            @NonNull ConfigurationProvider... providers) {
-        Set<Configuration> compileConfigs = Sets.newHashSetWithExpectedSize(providers.length * 2);
-        Set<Configuration> apkConfigs = Sets.newHashSetWithExpectedSize(providers.length);
-        Set<Configuration> annotationConfigs = Sets.newHashSetWithExpectedSize(providers.length);
-        Set<Configuration> jackPluginConfigs = Sets.newHashSetWithExpectedSize(providers.length);
+            @NonNull VariantType variantType) {
 
-        for (ConfigurationProvider provider : providers) {
+            this.project = project;
+            this.errorReporter = errorReporter;
+            this.variantName = variantName;
+            this.variantType = variantType;
+        }
+
+        public Builder setPublishVariant(boolean publishVariant) {
+            this.publishVariant = publishVariant;
+            return this;
+        }
+
+        public Builder setTestedVariantType(@NonNull VariantType testedVariantType) {
+            this.testedVariantType = testedVariantType;
+            return this;
+        }
+
+        public Builder addProviders(@NonNull ConfigurationProvider... providers) {
+            for (ConfigurationProvider provider : providers) {
+                addProvider(provider);
+            }
+            return this;
+        }
+
+        public Builder addProviders(@NonNull Collection<ConfigurationProvider> providers) {
+            for (ConfigurationProvider provider : providers) {
+                addProvider(provider);
+            }
+            return this;
+        }
+
+        public Builder addProvider(@Nullable ConfigurationProvider provider) {
             if (provider != null) {
                 compileConfigs.add(provider.getCompileConfiguration());
                 if (provider.getProvidedConfiguration() != null) {
@@ -116,97 +173,142 @@ public class VariantDependencies {
                 annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
                 jackPluginConfigs.add(provider.getJackPluginConfiguration());
             }
+
+            return this;
         }
 
-        if (parentVariant != null) {
-            compileConfigs.add(parentVariant.getCompileConfiguration());
-            apkConfigs.add(parentVariant.getPackageConfiguration());
-            annotationConfigs.add(parentVariant.getAnnotationProcessorConfiguration());
-            jackPluginConfigs.add(parentVariant.getJackPluginConfiguration());
-        }
+        /**
+         * Add a tested provider.
+         *
+         * In the case for tests of a library modules where the test must include the full
+         * graph of the test + the library since there is a single apk that packages both.
+         *
+         * For app tests, we don't want to include the dependencies directly as there is two
+         * apks and we need to make sure their graph are identical. Therefore we resolve them
+         * independently and compare after.
+         *
+         * @param testedConfig the tested variant configuration
+         * @param testedVariant the tested variant
+         */
+        public Builder addTestedVariant(
+                @NonNull GradleVariantConfiguration testedConfig,
+                @NonNull VariantDependencies testedVariant) {
+            Preconditions.checkNotNull(testedVariantType,
+                    "cannot call addTestedVariant before setTestedVariantType");
 
-        Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
-        compile.setVisible(false);
-        compile.setDescription("## Internal use, do not manually configure ##");
-        compile.setExtendsFrom(compileConfigs);
+            // if the tested variant is a library, then we include its configurations to the
+            // variant config
+            if (testedVariantType == VariantType.LIBRARY) {
+                compileConfigs.add(testedVariant.getCompileConfiguration());
+                apkConfigs.add(testedVariant.getPackageConfiguration());
+                annotationConfigs.add(testedVariant.getAnnotationProcessorConfiguration());
+                jackPluginConfigs.add(testedVariant.getJackPluginConfiguration());
 
-        Configuration annotationProcessor =
-                project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
-        annotationProcessor.setVisible(false);
-        annotationProcessor.setDescription("## Internal use, do not manually configure ##");
-        annotationProcessor.setExtendsFrom(annotationConfigs);
-
-        Configuration jackPlugin =
-                project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");
-        jackPlugin.setVisible(false);
-        jackPlugin.setDescription("## Internal use, do not manually configure ##");
-        jackPlugin.setExtendsFrom(jackPluginConfigs);
-
-        Configuration apk =
-                project.getConfigurations()
-                        .maybeCreate(
-                                variantType == VariantType.LIBRARY
-                                        ? "_" + variantName + "Publish"
-                                        : "_" + variantName + "Apk");
-
-        apk.setVisible(false);
-        apk.setDescription("## Internal use, do not manually configure ##");
-        apk.setExtendsFrom(apkConfigs);
-
-        Configuration publish = null;
-        Configuration mapping = null;
-        Configuration classes = null;
-        Configuration metadata = null;
-        Configuration manifest = null;
-        if (publishVariant) {
-            publish = project.getConfigurations().maybeCreate(variantName);
-            publish.setDescription("Published Configuration for Variant " + variantName);
-            // if the variant is not a library, then the publishing configuration should
-            // not extend from the apkConfigs. It's mostly there to access the artifact from
-            // another project but it shouldn't bring any dependencies with it.
-            if (variantType == VariantType.LIBRARY) {
-                publish.setExtendsFrom(apkConfigs);
+                // also record this so that we can resolve local jar conflict during flattening
+                testedVariantOutput = testedConfig.getOutput();
             }
 
-            // create configuration for -metadata.
-            metadata = project.getConfigurations().create(variantName + CONFIGURATION_METADATA);
-            metadata.setDescription("Published APKs metadata for Variant " + variantName);
+            // record this no matter what.
+            testedVariantDependencies = testedVariant;
 
-            // create configuration for -mapping and -classes.
-            mapping = project.getConfigurations().maybeCreate(variantName + CONFIGURATION_MAPPING);
-            mapping.setDescription("Published mapping configuration for Variant " + variantName);
-
-            classes = project.getConfigurations().maybeCreate(variantName + CONFIGURATION_CLASSES);
-            classes.setDescription("Published classes configuration for Variant " + variantName);
-
-            // create configuration for -manifest
-            manifest =
-                    project.getConfigurations().maybeCreate(variantName + CONFIGURATION_MANIFEST);
-            manifest.setDescription("Published manifest configuration for Variant " + variantName);
-
-            // because we need the transitive dependencies for the classes, extend the compile config.
-            classes.setExtendsFrom(compileConfigs);
+            return this;
         }
 
-        DependencyChecker checker = new DependencyChecker(
-                project.getName(),
-                variantName,
-                errorReporter,
-                variantType,
-                testedVariantType);
+        public VariantDependencies build() {
+            Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
+            compile.setVisible(false);
+            compile.setDescription("## Internal use, do not manually configure ##");
+            compile.setExtendsFrom(compileConfigs);
 
-        return new VariantDependencies(
-                variantName,
-                checker,
-                compile,
-                apk,
-                publish,
-                annotationProcessor,
-                jackPlugin,
-                mapping,
-                classes,
-                metadata,
-                manifest);
+            Configuration annotationProcessor =
+                    project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
+            annotationProcessor.setVisible(false);
+            annotationProcessor.setDescription("## Internal use, do not manually configure ##");
+            annotationProcessor.setExtendsFrom(annotationConfigs);
+
+            Configuration jackPlugin =
+                    project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");
+            jackPlugin.setVisible(false);
+            jackPlugin.setDescription("## Internal use, do not manually configure ##");
+            jackPlugin.setExtendsFrom(jackPluginConfigs);
+
+            Configuration apk =
+                    project.getConfigurations()
+                            .maybeCreate(
+                                    variantType == VariantType.LIBRARY
+                                            ? "_" + variantName + "Publish"
+                                            : "_" + variantName + "Apk");
+
+            apk.setVisible(false);
+            apk.setDescription("## Internal use, do not manually configure ##");
+            apk.setExtendsFrom(apkConfigs);
+
+            Configuration publish = null;
+            Configuration mapping = null;
+            Configuration classes = null;
+            Configuration metadata = null;
+            Configuration manifest = null;
+
+            if (publishVariant) {
+                publish = project.getConfigurations().maybeCreate(variantName);
+                publish.setDescription("Published Configuration for Variant " + variantName);
+                // if the variant is not a library, then the publishing configuration should
+                // not extend from the apkConfigs. It's mostly there to access the artifact from
+                // another project but it shouldn't bring any dependencies with it.
+                if (variantType == VariantType.LIBRARY) {
+                    publish.setExtendsFrom(apkConfigs);
+                }
+
+                // create configuration for -metadata.
+                metadata = project.getConfigurations().create(variantName + CONFIGURATION_METADATA);
+                metadata.setDescription("Published APKs metadata for Variant " + variantName);
+
+                // create configuration for -mapping and -classes.
+                mapping = project.getConfigurations().maybeCreate(variantName + CONFIGURATION_MAPPING);
+                mapping.setDescription("Published mapping configuration for Variant " + variantName);
+
+                classes = project.getConfigurations().maybeCreate(variantName + CONFIGURATION_CLASSES);
+                classes.setDescription("Published classes configuration for Variant " + variantName);
+
+                // create configuration for -manifest
+                manifest =
+                        project.getConfigurations().maybeCreate(variantName + CONFIGURATION_MANIFEST);
+                manifest.setDescription("Published manifest configuration for Variant " + variantName);
+
+                // because we need the transitive dependencies for the classes, extend the compile config.
+                classes.setExtendsFrom(compileConfigs);
+            }
+
+            DependencyChecker checker = new DependencyChecker(
+                    project.getName(),
+                    variantName,
+                    errorReporter,
+                    variantType,
+                    testedVariantType);
+
+            return new VariantDependencies(
+                    variantName,
+                    checker,
+                    compile,
+                    apk,
+                    publish,
+                    annotationProcessor,
+                    jackPlugin,
+                    mapping,
+                    classes,
+                    metadata,
+                    manifest,
+                    testedVariantDependencies,
+                    testedVariantOutput);
+        }
+    }
+
+    public static Builder builder(
+            @NonNull Project project,
+            @NonNull ErrorReporter errorReporter,
+            @NonNull String variantName,
+            @NonNull VariantType variantType) {
+        return new Builder(project, errorReporter, variantName, variantType);
     }
 
     private VariantDependencies(
@@ -220,8 +322,11 @@ public class VariantDependencies {
             @Nullable Configuration mappingConfiguration,
             @Nullable Configuration classesConfiguration,
             @Nullable Configuration metadataConfiguration,
-            @Nullable Configuration manifestConfiguration) {
+            @Nullable Configuration manifestConfiguration,
+            @Nullable VariantDependencies testedVariantDependencies,
+            @Nullable AndroidLibrary testedVariantOutput) {
         this.variantName = variantName;
+        this.checker = dependencyChecker;
         this.compileConfiguration = compileConfiguration;
         this.packageConfiguration = packageConfiguration;
         this.publishConfiguration = publishConfiguration;
@@ -231,7 +336,8 @@ public class VariantDependencies {
         this.classesConfiguration = classesConfiguration;
         this.metadataConfiguration = metadataConfiguration;
         this.manifestConfiguration = manifestConfiguration;
-        this.checker = dependencyChecker;
+        this.testedVariantDependencies = testedVariantDependencies;
+        this.testedVariantOutput = testedVariantOutput;
     }
 
     public String getName() {
@@ -283,9 +389,20 @@ public class VariantDependencies {
         return manifestConfiguration;
     }
 
-    public void setDependencies(@NonNull DependencyContainer compileDependencies, @NonNull DependencyContainer packageDependencies) {
+    public void setDependencies(
+            @NonNull DependencyContainer compileDependencies,
+            @NonNull DependencyContainer packageDependencies) {
         this.compileDependencies = compileDependencies;
         this.packageDependencies = packageDependencies;
+
+        flattenedCompileDependencies = compileDependencies.flatten(
+                testedVariantOutput,
+                testedVariantDependencies != null
+                        ? testedVariantDependencies.getCompileDependencies() : null);
+        flattenedPackageDependencies = packageDependencies.flatten(
+                testedVariantOutput,
+                testedVariantDependencies != null
+                        ? testedVariantDependencies.getPackageDependencies() : null);
     }
 
     public DependencyContainer getCompileDependencies() {
@@ -294,6 +411,14 @@ public class VariantDependencies {
 
     public DependencyContainer getPackageDependencies() {
         return packageDependencies;
+    }
+
+    public DependencyContainer getFlattenedCompileDependencies() {
+        return flattenedCompileDependencies;
+    }
+
+    public DependencyContainer getFlattenedPackageDependencies() {
+        return flattenedPackageDependencies;
     }
 
     @NonNull
@@ -352,6 +477,22 @@ public class VariantDependencies {
     @NonNull
     public DependencyChecker getChecker() {
         return checker;
+    }
+
+    public void validate() {
+        if (testedVariantOutput != null) {
+            // in this case (test of a library module), we don't want to compare to the tested
+            // variant. it's guaranteed that the current and tested graphs have common dependencies
+            // because the former extends the latter. We don't want to start removing (skipping)
+            // items because they are not going to be installed via the 1st of 2 apk (there is
+            // only one apk for the test + aar)
+            checker.validate(this, null);
+        } else {
+            checker.validate(this, testedVariantDependencies);
+        }
+
+        flattenedCompileDependencies = flattenedCompileDependencies.filterSkippedLibraries();
+        flattenedPackageDependencies = flattenedPackageDependencies.filterSkippedLibraries();
     }
 
     public void setAnnotationsPresent(boolean annotationsPresent) {

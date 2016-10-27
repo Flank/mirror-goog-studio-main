@@ -158,15 +158,19 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
             segments.add(classifier);
         }
         segments.add(version);
-        return Joiner.on(':').join(segments);
+        return Joiner.on(':').join(segments).intern();
     }
 
     private String computeVersionLessId() {
-        StringBuilder sb = new StringBuilder(groupId);
-        sb.append(':').append(artifactId);
+        StringBuilder sb = new StringBuilder(
+                groupId.length()
+                        + artifactId.length()
+                        + 1
+                        + (classifier != null ? classifier.length() + 1 : 0));
+        sb.append(groupId).append(':').append(artifactId);
         if (classifier != null) {
             sb.append(':').append(classifier);
         }
-        return sb.toString();
+        return sb.toString().intern();
     }
 }
