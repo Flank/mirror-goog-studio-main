@@ -53,7 +53,7 @@ public class SpanRecorders {
         ThreadRecorder.get()
                 .record(
                         executionType,
-                        project.getName(),
+                        project.getPath(),
                         variant,
                         () -> {
                             block.call();

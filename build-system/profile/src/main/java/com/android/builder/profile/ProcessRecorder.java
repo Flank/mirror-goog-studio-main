@@ -85,7 +85,7 @@ public class ProcessRecorder {
             @Nullable String variant,
             @NonNull final GradleBuildProfileSpan.Builder executionRecord) {
 
-        executionRecord.setProject(mNameAnonymizer.anonymizeProjectName(project));
+        executionRecord.setProject(mNameAnonymizer.anonymizeProjectPath(project));
         executionRecord.setVariant(mNameAnonymizer.anonymizeVariant(project, variant));
 
         mBuild.addSpan(executionRecord.build());
@@ -193,7 +193,7 @@ public class ProcessRecorder {
 
         @Override
         public Project load(@NonNull String name) throws Exception {
-            return new Project(mNameAnonymizer.anonymizeProjectName(name));
+            return new Project(mNameAnonymizer.anonymizeProjectPath(name));
         }
     }
 
