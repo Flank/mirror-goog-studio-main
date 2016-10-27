@@ -26,24 +26,48 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.truth.Expect;
-
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import org.gradle.api.logging.Logging;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Optional;
-
-@Ignore("Temporarily disabled until new coverage.ec is generated.")
+/**
+ * Processes the coverage metadata file and makes sure that we display the information
+ * correctly.
+ *
+ * <p>Whenever we update the Jacoco version, we need to regenerate the coverage file used in
+ * this test. In order to do that, please create a small test project containing
+ * the MainActivity.java
+ * (in resources/jacocoReport/com/android/tools/build/tests/myapplication/MainActivity.java)
+ * and the following test under androidTest:
+ * <pre>
+ * package com.android.tools.build.tests.myapplication;
+ *
+ * import android.support.test.runner.AndroidJUnit4;
+ * import com.android.tools.build.tests.myapplication.MainActivity;
+ * import org.junit.Test;
+ * import org.junit.runner.RunWith;
+ *
+ * &#064;RunWith(AndroidJUnit4.class)
+ * public class ExampleInstrumentedTest {
+ *     &#064;Test
+ *     public void useAppContext() throws Exception {
+ *         MainActivity.doA();
+ *     }
+ * }
+ * </pre>
+ * <p>Add the com.android.support.design library and execute the connectedCheck task with at
+ * least one connected device. This will generate the necessary coverage.ec file that you can
+ * copy to the resources/jacocoReport/com/android/tools/build/tests/myapplication/ directory.
+ */
 public class JacocoReportTaskTest {
 
     @Rule
@@ -75,7 +99,7 @@ public class JacocoReportTaskTest {
         Document document = Jsoup.parse(indexHtml, Charsets.UTF_8.name(),
                 indexHtml.getParentFile().toURI().toString());
 
-        Elements totals = document.select("td:contains(142 of 147)");
+        Elements totals = document.select("td:contains(48 of 53)");
         expect.that(totals).named("Total coverage table cell").hasSize(1);
 
         document = navigateTo(
@@ -104,7 +128,8 @@ public class JacocoReportTaskTest {
     private static Document navigateTo(@NonNull Element link)
             throws IOException, URISyntaxException {
         File target = new File(new URI(link.attr("abs:href")).toURL().getFile());
-        return Jsoup.parse(target, Charsets.UTF_8.name(), target.getParentFile().toURI().toString());
+        return Jsoup.parse(
+                target, Charsets.UTF_8.name(), target.getParentFile().toURI().toString());
     }
 
     private static File copyResourceToFolder(
