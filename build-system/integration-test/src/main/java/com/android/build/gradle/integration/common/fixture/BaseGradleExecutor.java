@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.google.common.base.Preconditions;
@@ -80,6 +81,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 "BenchmarkRecorder must be set for this GradleTestProject when it is created in "
                         + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
+
+        // Disable the build cache for all benchmarks, until we figure out how to measure its
+        // impact.
+        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false");
+
         return (T) this;
     }
 

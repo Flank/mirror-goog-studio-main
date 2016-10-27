@@ -27,9 +27,6 @@ import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -37,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import org.gradle.api.Project;
 
 /**
  * Determines if various options, triggered from the command line or environment, are set.
@@ -50,15 +48,15 @@ public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_BUILD_CACHE = false;
 
-    private static final String PROPERTY_TEST_RUNNER_ARGS =
+    public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private static final String PROPERTY_THREAD_POOL_SIZE = "android.threadPoolSize";
-    private static final String PROPERTY_THREAD_POOL_SIZE_OLD = "com.android.build.threadPoolSize";
+    public static final String PROPERTY_THREAD_POOL_SIZE = "android.threadPoolSize";
+    public static final String PROPERTY_THREAD_POOL_SIZE_OLD = "com.android.build.threadPoolSize";
 
     public static final String USE_DEPRECATED_NDK = "android.useDeprecatedNdk";
 
-    private static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
+    public static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
             "android.disableResourceValidation";
 
     public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
@@ -66,11 +64,11 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_USE_OLD_PACKAGING = "android.useOldPackaging";
 
-    private static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
+    public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
 
-    private static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
+    public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
-    private static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
+    public static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
@@ -79,29 +77,29 @@ public class AndroidGradleOptions {
      */
     public static final String PROPERTY_BUILD_ONLY_TARGET_ABI = "android.buildOnlyTargetAbi";
 
-    private static final String PROPERTY_SHARD_TESTS_BETWEEN_DEVICES =
+    public static final String PROPERTY_SHARD_TESTS_BETWEEN_DEVICES =
             "android.androidTest.shardBetweenDevices";
-    private static final String PROPERTY_SHARD_COUNT =
+    public static final String PROPERTY_SHARD_COUNT =
             "android.androidTest.numShards";
     public static  final String PROPERTY_USE_SDK_DOWNLOAD =
             "android.builder.sdkDownload";
 
-    private static final String PROPERTY_ENABLE_BUILD_CACHE = "android.enableBuildCache";
+    public static final String PROPERTY_ENABLE_BUILD_CACHE = "android.enableBuildCache";
 
-    private static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
+    public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
 
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "android.overrideVersionCheck";
 
-    private static final String OLD_GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
+    public static final String OLD_GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck";
 
     public static final String OVERRIDE_PATH_CHECK_PROPERTY = "android.overridePathCheck";
 
-    private static final String OLD_OVERRIDE_PATH_CHECK_PROPERTY =
+    public static final String OLD_OVERRIDE_PATH_CHECK_PROPERTY =
             "com.android.build.gradle.overridePathCheck";
 
-    private static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
+    public static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
