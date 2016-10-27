@@ -31,6 +31,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.DuplicateFileException;
 import com.android.builder.packaging.PackagerException;
@@ -72,6 +73,7 @@ public class InstantRunSplitApkBuilder extends BaseTask {
     private int versionCode;
     private String versionName;
     private Aapt aapt;
+    private ApiVersion minSdkVersion;
 
     @Input
     public String getApplicationId() {
@@ -108,6 +110,15 @@ public class InstantRunSplitApkBuilder extends BaseTask {
     @Input
     public File getZipAlignExe() {
         return null;
+    }
+
+    @Input
+    public int getMinSdkVersion() {
+        return this.minSdkVersion.getApiLevel();
+    }
+
+    public void setMinSdkVersion(ApiVersion version) {
+        this.minSdkVersion = version;
     }
 
     @TaskAction
@@ -283,6 +294,7 @@ public class InstantRunSplitApkBuilder extends BaseTask {
             task.incrementalDir = packagingScope.getIncrementalDir(task.getName());
             task.versionCode = packagingScope.getVersionCode();
             task.versionName = packagingScope.getVersionName();
+            task.setMinSdkVersion(packagingScope.getMinSdkVersion());
 
             task.aapt =
                     AaptGradleFactory.make(
