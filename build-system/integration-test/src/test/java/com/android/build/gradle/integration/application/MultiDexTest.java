@@ -86,7 +86,7 @@ public class MultiDexTest {
 
     @Test
     public void checkBuildWithoutKeepRuntimeAnnotatedClasses() throws Exception {
-        checkNormalBuild(true);
+        checkNormalBuild(false);
     }
 
     private void checkNormalBuild(boolean keepRuntimeAnnotatedClasses) throws Exception {
