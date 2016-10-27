@@ -361,7 +361,7 @@ java_library(
 java_library(
     name = "org.eclipse.jdt.core.compiler_ecj",
     visibility = ["//visibility:public"],
-    exports = ["//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.5.1:jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.6.1:jar"],
 )
 
 java_library(

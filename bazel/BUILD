@@ -167,7 +167,7 @@ java_binary(
         "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
         "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
         "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
-        "org.eclipse.jdt.core.compiler:ecj:4.5.1",
+        "org.eclipse.jdt.core.compiler:ecj:4.6.1",
         "org.ow2.asm:asm-analysis:5.0.4",
         "org.ow2.asm:asm-tree:5.0.4",
         "org.ow2.asm:asm:5.0.4",
