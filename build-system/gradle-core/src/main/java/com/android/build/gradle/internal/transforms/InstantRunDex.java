@@ -26,6 +26,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
@@ -36,7 +37,6 @@ import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -160,7 +160,7 @@ public class InstantRunDex extends Transform {
                     InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
             convertByteCode(inputFiles.build(), outputFolder);
             variantScope.getInstantRunBuildContext().addChangedFile(
-                    InstantRunBuildContext.FileType.RELOAD_DEX,
+                    FileType.RELOAD_DEX,
                     new File(outputFolder, "classes.dex"));
         } catch (ProcessException e) {
             throw new TransformException(e);

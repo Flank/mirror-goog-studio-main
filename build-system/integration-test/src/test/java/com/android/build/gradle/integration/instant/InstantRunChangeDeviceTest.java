@@ -174,7 +174,7 @@ public class InstantRunChangeDeviceTest {
 
         apkSubject.doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
         apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
+                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
     }
 
     private void checkMultidexApk(@NonNull File apk) throws Exception {

@@ -32,6 +32,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.dsl.DexOptions;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
@@ -178,7 +179,7 @@ public class InstantRunDexTest {
 
         assertThat(variantScope.getReloadDexOutputFolder().listFiles()).isNotEmpty();
         verify(instantRunBuildContext).addChangedFile(
-                eq(InstantRunBuildContext.FileType.RELOAD_DEX),
+                eq(FileType.RELOAD_DEX),
                 any(File.class));
     }
 

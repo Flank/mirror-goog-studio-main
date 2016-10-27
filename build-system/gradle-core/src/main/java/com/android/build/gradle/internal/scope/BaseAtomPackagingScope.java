@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.builder.model.AndroidAtom;
 import com.google.common.collect.ImmutableSet;
 
@@ -41,7 +42,7 @@ public class BaseAtomPackagingScope extends AtomPackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders() {
+    public Set<File> getDexFolders(@NonNull FileType fileType) {
         return ImmutableSet.<File>builder().add(androidAtom.getDexFolder()).build();
     }
 

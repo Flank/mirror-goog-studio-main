@@ -90,7 +90,7 @@ public class InstantRunAnalyticsHelper {
 
     @VisibleForTesting
     @NonNull
-    static InstantRunArtifact.Type convert(@NonNull InstantRunBuildContext.FileType type) {
+    static InstantRunArtifact.Type convert(@NonNull FileType type) {
         switch (type) {
             case MAIN:
                 return InstantRunArtifact.Type.MAIN;

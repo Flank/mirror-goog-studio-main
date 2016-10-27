@@ -21,7 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -330,9 +330,8 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.inOldMode =
                     AndroidGradleOptions.useOldPackaging(packagingScope.getProject());
 
-            packageApplication.instantRunFileType = InstantRunBuildContext.FileType.RESOURCES;
-
             super.execute(packageApplication);
+            packageApplication.instantRunFileType = FileType.RESOURCES;
 
             // Don't try to add any special dex files to this zip.
             packageApplication.dexPackagingPolicy = DexPackagingPolicy.STANDARD;

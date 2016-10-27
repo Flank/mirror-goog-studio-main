@@ -251,9 +251,7 @@ public class InstantRunSlicer extends Transform {
                     // this gets packaged in the main slice.
                     File mainSliceOutput = getMainSliceOutputFolder(outputProvider, null);
                     Files.copy(jarFile, mainSliceOutput);
-                } else if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
-                                != InstantRunPatchingPolicy.MULTI_APK
-                        && jarFile.getAbsolutePath().contains("incremental-classes")) {
+                } else if (jarFile.getAbsolutePath().contains("incremental-classes")) {
                     File mainSliceOutput = getMainSliceOutputFolder(outputProvider, "b");
                     Files.copy(jarFile, mainSliceOutput);
                 } else {

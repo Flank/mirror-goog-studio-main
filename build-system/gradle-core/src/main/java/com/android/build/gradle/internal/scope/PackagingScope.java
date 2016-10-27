@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
@@ -78,7 +79,7 @@ public interface PackagingScope {
     File getIncrementalDir(@NonNull String name);
 
     @NonNull
-    Set<File> getDexFolders();
+    Set<File> getDexFolders(@NonNull FileType fileType);
 
     @NonNull
     Set<File> getJavaResources();
