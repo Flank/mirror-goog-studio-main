@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.SyncIssueHandler;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.DependenciesMutableData;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.SkippableLibrary;
@@ -116,6 +117,7 @@ public class DependencyChecker implements SyncIssueHandler {
         compareAndroidDependencies(
                 compileDependencies.getAndroidDependencies(),
                 packagedDependencies.getAndroidDependencies(),
+                packagedDependencies.getDependenciesMutableData(),
                 testedMap);
 
         compareJavaDependencies(
@@ -123,6 +125,7 @@ public class DependencyChecker implements SyncIssueHandler {
                 packagedDependencies.getJarDependencies(),
                 compileDependencies.getAndroidDependencies(),
                 packagedDependencies.getAndroidDependencies(),
+                packagedDependencies.getDependenciesMutableData(),
                 testedMap);
     }
 
@@ -205,6 +208,7 @@ public class DependencyChecker implements SyncIssueHandler {
     private void compareAndroidDependencies(
             @NonNull List<AndroidLibrary> compileLibs,
             @NonNull List<AndroidLibrary> packageLibs,
+            @NonNull DependenciesMutableData packageLibsMutableData,
             @NonNull Map<String, String> testedMap) {
         // For Libraries:
         // Only library projects can support provided aar.
@@ -228,7 +232,7 @@ public class DependencyChecker implements SyncIssueHandler {
 
             if (packageMatch != null) {
                 // found a match. Compare to tested, and skip if needed.
-                skipTestDependency(packageMatch, testedMap);
+                skipTestDependency(packageLibsMutableData, packageMatch, testedMap);
 
                 // remove it from the list of package dependencies
                 packageMap.remove(coordinateKey);
@@ -254,7 +258,7 @@ public class DependencyChecker implements SyncIssueHandler {
                 // possibly if the variant is a library or an atom.
                 // However we also mark as skipped dependency coming from app module that are
                 // tested with a separate module. So if the library is skipped, just ignore it.
-                if (!compileLib.isSkipped() &&
+                if (!packageLibsMutableData.isSkipped(compileLib) &&
                         (variantType != VariantType.LIBRARY && variantType != VariantType.ATOM &&
                                 (testedVariantType != VariantType.LIBRARY
                                         || !variantType.isForTesting()))) {
@@ -289,6 +293,7 @@ public class DependencyChecker implements SyncIssueHandler {
             @NonNull List<JavaLibrary> packageJars,
             @NonNull List<AndroidLibrary> compileLibs,
             @NonNull List<AndroidLibrary> packageLibs,
+            @NonNull DependenciesMutableData packageDependenciesMutableData,
             @NonNull Map<String, String> testedMap) {
         Map<String, SkippableLibrary> compileMap = computeJavaDependencyMap(compileJars, compileLibs);
         Map<String, SkippableLibrary> packageMap = computeJavaDependencyMap(packageJars, packageLibs);
@@ -301,7 +306,7 @@ public class DependencyChecker implements SyncIssueHandler {
 
             if (packageMatch != null) {
                 // found a match. Compare to tested, and skip if needed.
-                skipTestDependency(packageMatch, testedMap);
+                skipTestDependency(packageDependenciesMutableData, packageMatch, testedMap);
 
                 // remove it from the list of package dependencies
                 packageMap.remove(coordinateKey);
@@ -310,6 +315,7 @@ public class DependencyChecker implements SyncIssueHandler {
     }
 
     private void skipTestDependency(
+            @NonNull DependenciesMutableData dependenciesMutableData,
             @NonNull SkippableLibrary library,
             @NonNull Map<String, String> testedMap) {
         if (testedMap.isEmpty()) {
@@ -326,7 +332,7 @@ public class DependencyChecker implements SyncIssueHandler {
 
         // same artifact, skip packaging of the dependency in the test app
         // whether the version is a match or not.
-        library.skip();
+        dependenciesMutableData.skip(library);
 
         // if the dependency is present in both tested and test artifact,
         // verify that they are the same version

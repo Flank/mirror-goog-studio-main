@@ -49,7 +49,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
     @NonNull
     private final MavenCoordinates mResolvedCoordinates;
 
-    private boolean mSkipped = false;
+    private final int hashcode;
 
     public JarDependency(
             @NonNull File jarFile,
@@ -63,6 +63,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
         mDependencies = ImmutableList.copyOf(dependencies);
         mResolvedCoordinates = resolvedCoordinates;
         mProjectPath = projectPath;
+        hashcode = computeHashCode();
     }
 
     /**
@@ -70,8 +71,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
      * @param jarFile the jar file location
      */
     public JarDependency(@NonNull File jarFile) {
-        this(
-                jarFile,
+        this(jarFile,
                 ImmutableList.<JarDependency>of(),
                 getCoordForLocalJar(jarFile),
                 null /*projectPath*/,
@@ -103,12 +103,7 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
 
     @Override
     public boolean isSkipped() {
-        return mSkipped;
-    }
-
-    @Override
-    public void skip() {
-        mSkipped = true;
+        throw new IllegalAccessError("Call isSkipped on DependenciesMutableData");
     }
 
     @Override
@@ -147,19 +142,21 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
                 Objects.equal(mJarFile, that.mJarFile) &&
                 Objects.equal(mProjectPath, that.mProjectPath) &&
                 Objects.equal(mDependencies, that.mDependencies) &&
-                Objects.equal(mResolvedCoordinates, that.mResolvedCoordinates) &&
-                Objects.equal(mSkipped, that.mSkipped);
+                Objects.equal(mResolvedCoordinates, that.mResolvedCoordinates);
     }
 
-    @Override
-    public int hashCode() {
+    private int computeHashCode() {
         return HashCodeUtils.hashCode(
                 mJarFile,
                 mIsProvided,
                 mProjectPath,
                 mDependencies,
-                mResolvedCoordinates,
-                mSkipped);
+                mResolvedCoordinates);
+    }
+
+    @Override
+    public int hashCode() {
+        return hashcode;
     }
 
     @Override
@@ -170,7 +167,6 @@ public final class JarDependency implements JavaLibrary, SkippableLibrary {
                 .add("mProjectPath", mProjectPath)
                 .add("mDependencies", mDependencies)
                 .add("mResolvedCoordinates", mResolvedCoordinates)
-                .add("mSkipped", mSkipped)
                 .toString();
     }
 }

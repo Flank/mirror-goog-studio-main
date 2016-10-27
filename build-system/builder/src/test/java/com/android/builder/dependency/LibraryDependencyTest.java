@@ -31,8 +31,19 @@ public class LibraryDependencyTest {
                 .withPrefabValues(LibraryDependency.class, getRedAarValue(), getBlackAarValue())
                 .withPrefabValues(JarDependency.class, getRedJarValue(), getBlackJarValue())
                 .withRedefinedSuperclass()
-                .suppress(Warning.NONFINAL_FIELDS)
+                .withCachedHashCode("hashCode", "computeHashCode", LibraryDependency.createExplodedAarLibrary(
+                        new File("red"),
+                        new File(""),
+                        ImmutableList.of(),
+                        ImmutableList.of(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        new MavenCoordinatesImpl("","",""),
+                        false))
                 .withIgnoredFields("mManifestFile") // pre-computed fields.
+                .suppress(Warning.NULL_FIELDS)
                 .verify();
     }
 

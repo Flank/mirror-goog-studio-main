@@ -66,6 +66,7 @@ public class DependencyContainerImplTest {
                 ":library");
 
         DependencyContainerImpl container = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(libraryModule),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -130,12 +131,14 @@ public class DependencyContainerImplTest {
         // when the graph is resolved, the dependencies of the lib show up directly in the tested
         // graph, but not the lib.
         DependencyContainerImpl container = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(libraryModule),
                 ImmutableList.of(),
                 ImmutableList.of(randomLib),
                 ImmutableList.of());
 
         DependencyContainerImpl testedContainer = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(randomLib),
@@ -178,12 +181,14 @@ public class DependencyContainerImplTest {
 
         // create both container both of them contains the local jar
         DependencyContainerImpl container = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(localJar));
 
         DependencyContainerImpl testedContainer = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -238,6 +243,7 @@ public class DependencyContainerImplTest {
                 ":library2");
 
         DependencyContainerImpl container = new DependencyContainerImpl(
+                DependenciesMutableData.EMPTY,
                 ImmutableList.of(libraryModule, libraryModule2),
                 ImmutableList.of(),
                 ImmutableList.of(),

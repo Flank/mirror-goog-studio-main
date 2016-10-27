@@ -76,10 +76,11 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
     AndroidLibraryImpl(
             @NonNull AndroidLibrary clonedLibrary,
+            boolean isSkipped,
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
             @NonNull Collection<File> localJavaLibraries) {
-        super(clonedLibrary);
+        super(clonedLibrary, isSkipped);
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);

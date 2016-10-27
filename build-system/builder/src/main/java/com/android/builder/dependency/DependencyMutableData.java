@@ -16,15 +16,26 @@
 
 package com.android.builder.dependency;
 
-import com.android.builder.model.Library;
+import com.google.common.base.MoreObjects;
 
 /**
- * Marker interface for a library that can be skipped.
- *
- * This can happen in testing artifacts when the same dependency is present in
- * both the tested artifact and the test artifact.
- *
- * @see Library#isSkipped()
+ * Mutable data for an Android dependency.
  */
-public interface SkippableLibrary extends Library {
+public class DependencyMutableData {
+    private boolean isSkipped = false;
+
+    public boolean isSkipped() {
+        return isSkipped;
+    }
+
+    public void skip() {
+        isSkipped = true;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("isSkipped", isSkipped)
+                .toString();
+    }
 }
