@@ -36,6 +36,7 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.AppState;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
@@ -48,7 +49,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -106,26 +106,31 @@ public final class InstantRunTestUtils {
             @NonNull IDevice device,
             @NonNull List<InstantRunArtifact> artifacts) throws DeviceException,
             InstallException {
+        if (artifacts.size()==1 && artifacts.get(0).type == InstantRunArtifactType.MAIN) {
+            device.installPackage(artifacts.get(0).file.getAbsolutePath(), true /*reinstall*/);
+            return;
+        }
+
+        assertThat(device.getVersion()).isAtLeast(AndroidVersion.ART_RUNTIME);
         List<File> apkFiles = Lists.newArrayList();
         for (InstantRunArtifact artifact : artifacts) {
-            if (artifact.type == InstantRunArtifactType.SPLIT) {
-                apkFiles.add(artifact.file);
-            }
-            if (artifact.type == InstantRunArtifactType.MAIN ||
-                    artifact.type == InstantRunArtifactType.SPLIT_MAIN ) {
-                apkFiles.add(0, artifact.file);
+            switch (artifact.type) {
+                case SPLIT_MAIN:
+                    apkFiles.add(0, artifact.file);
+                    break;
+                case SPLIT:
+                    apkFiles.add(artifact.file);
+                    break;
+                default:
+                    throw new AssertionError("Unexpected artifact to install: " + artifact);
             }
         }
-
-        if (device.getVersion().isGreaterOrEqualThan(21)) {
-            device.installPackages(apkFiles, true /*reinstall*/, ImmutableList.<String>of(),
-                    DEFAULT_ADB_TIMEOUT_MSEC, MILLISECONDS);
-
-        } else {
-            assertThat(apkFiles).hasSize(1);
-            device.installPackage(
-                    Iterables.getOnlyElement(apkFiles).getAbsolutePath(), true /*reinstall*/);
-        }
+        device.installPackages(
+                apkFiles,
+                true /*reinstall*/,
+                ImmutableList.<String>of(),
+                DEFAULT_ADB_TIMEOUT_MSEC,
+                MILLISECONDS);
     }
 
     static void runApp(IDevice device, String target) throws Exception {
