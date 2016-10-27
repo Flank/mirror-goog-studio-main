@@ -3,7 +3,7 @@
 
 <#if activityClass?? && packageName??>
 extern "C"
-jstring
+JNIEXPORT jstring JNICALL
 Java_${packageName?replace('_','_1','i')?replace('.','_','i')}_${activityClass}_stringFromJNI(
         JNIEnv* env,
         jobject /* this */) {
