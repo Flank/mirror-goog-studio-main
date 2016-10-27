@@ -56,6 +56,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -125,36 +126,39 @@ public class DependencyManager {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask) {
         VariantDependencies variantDeps = variantData.getVariantDependency();
-        for (AndroidLibrary androidLibrary : variantDeps.getCompileDependencies().getAndroidDependencies()) {
-            addDependencyToPrepareTask(tasks, androidLibrary, prepareDependenciesTask,
-                    variantData.getScope().getPreBuildTask());
+
+        final AndroidTask<DefaultTask> preBuildTask = variantData.getScope().getPreBuildTask();
+
+        final ImmutableList<AndroidLibrary> compileLibraries = variantDeps
+                .getFlattenedCompileDependencies().getAndroidDependencies();
+        final ImmutableList<AndroidLibrary> packageLibraries = variantDeps
+                .getFlattenedPackageDependencies().getAndroidDependencies();
+
+
+        // gather all the libraries first, then make the task depend on the list in a single
+        // pass.
+        List<PrepareLibraryTask> prepareLibraryTasks = Lists
+                .newArrayListWithCapacity(compileLibraries.size() + packageLibraries.size());
+
+        for (AndroidLibrary androidLibrary : Iterables.concat(compileLibraries, packageLibraries)) {
+            // skip sub-module since we don't extract them anymore.
+            if (androidLibrary.getProject() == null) {
+                PrepareLibraryTask prepareLibTask = prepareLibTaskMap
+                        .get(androidLibrary.getResolvedCoordinates().toString());
+                if (prepareLibTask != null) {
+                    prepareLibraryTasks.add(prepareLibTask);
+                    prepareLibTask.dependsOn(preBuildTask.getName());
+                }
+            }
         }
 
-        for (AndroidLibrary androidLibrary : variantDeps.getPackageDependencies().getAndroidDependencies()) {
-            addDependencyToPrepareTask(tasks, androidLibrary, prepareDependenciesTask,
-                    variantData.getScope().getPreBuildTask());
-        }
-    }
-
-    private void addDependencyToPrepareTask(
-            @NonNull TaskFactory tasks,
-            @NonNull AndroidLibrary lib,
-            @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask,
-            @NonNull AndroidTask<DefaultTask> preBuildTask) {
-        PrepareLibraryTask prepareLibTask = prepareLibTaskMap.get(lib.getResolvedCoordinates().toString());
-        if (prepareLibTask != null) {
-            prepareDependenciesTask.dependsOn(tasks, prepareLibTask);
-            prepareLibTask.dependsOn(preBuildTask.getName());
-        }
-
-        for (AndroidLibrary childLib : lib.getLibraryDependencies()) {
-            addDependencyToPrepareTask(tasks, childLib, prepareDependenciesTask, preBuildTask);
+        if (!prepareLibraryTasks.isEmpty()) {
+            prepareDependenciesTask.dependsOn(tasks, prepareLibraryTasks.toArray());
         }
     }
 
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
-            @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
         // are now used through their staging folders rather than their bundled AARs.
@@ -166,7 +170,6 @@ public class DependencyManager {
 
         resolveDependencyForConfig(
                 variantDeps,
-                testedVariantDeps,
                 testedProjectPath,
                 libsToExplode);
 
@@ -225,7 +228,6 @@ public class DependencyManager {
 
     private void resolveDependencyForConfig(
             @NonNull final VariantDependencies variantDeps,
-            @Nullable VariantDependencies testedVariantDeps,
             @Nullable String testedProjectPath,
             @NonNull Set<LibraryDependency> libsToExplodeOut) {
         boolean needPackageScope = true;
@@ -298,10 +300,11 @@ public class DependencyManager {
             }
         }
 
+        variantDeps.setDependencies(compileDependencies, packagedDependencies);
+
         // validate the dependencies.
         if (needPackageScope) {
-            variantDeps.getChecker()
-                    .validate(compileDependencies, packagedDependencies, testedVariantDeps);
+            variantDeps.validate();
         }
 
         if (DEBUG_DEPENDENCY) {
@@ -329,13 +332,7 @@ public class DependencyManager {
                 System.out.println("LOCAL-JAR: " + jar);
             }
             System.out.println("***");
-        }
 
-        variantDeps.setDependencies(compileDependencies, packagedDependencies);
-
-        configureBuild(variantDeps);
-
-        if (DEBUG_DEPENDENCY) {
             System.out.println(project.getName() + ":" + compileClasspath.getName() + "/" +packageClasspath.getName());
             System.out.println("<<<<<<<<<<");
         }
@@ -1067,7 +1064,11 @@ public class DependencyManager {
     private String computeArtifactPath(
             @NonNull ModuleVersionIdentifier moduleVersion,
             @NonNull ResolvedArtifact artifact) {
-        StringBuilder pathBuilder = new StringBuilder();
+        StringBuilder pathBuilder = new StringBuilder(
+                moduleVersion.getGroup().length()
+                        + moduleVersion.getName().length()
+                        + moduleVersion.getVersion().length()
+                        + 10); // in case of classifier which is rare.
 
         pathBuilder.append(normalize(logger, moduleVersion, moduleVersion.getGroup()))
                 .append('/')
@@ -1088,7 +1089,11 @@ public class DependencyManager {
     private static String computeArtifactName(
             @NonNull ModuleVersionIdentifier moduleVersion,
             @NonNull ResolvedArtifact artifact) {
-        StringBuilder nameBuilder = new StringBuilder();
+        StringBuilder nameBuilder = new StringBuilder(
+                moduleVersion.getGroup().length()
+                        + moduleVersion.getName().length()
+                        + moduleVersion.getVersion().length()
+                        + 10); // in case of classifier which is rare.
 
         nameBuilder.append(moduleVersion.getGroup())
                 .append(':')
@@ -1150,37 +1155,6 @@ public class DependencyManager {
                     id.getGroup(), id.getName(), id.getVersion(), path));
             return path;
         }
-    }
-
-    private void configureBuild(VariantDependencies configurationDependencies) {
-        addDependsOnTaskInOtherProjects(
-                project.getTasks().getByName(JavaBasePlugin.BUILD_NEEDED_TASK_NAME), true,
-                JavaBasePlugin.BUILD_NEEDED_TASK_NAME, "compile");
-        addDependsOnTaskInOtherProjects(
-                project.getTasks().getByName(JavaBasePlugin.BUILD_DEPENDENTS_TASK_NAME), false,
-                JavaBasePlugin.BUILD_DEPENDENTS_TASK_NAME, "compile");
-    }
-
-    /**
-     * Adds a dependency on tasks with the specified name in other projects.  The other projects
-     * are determined from project lib dependencies using the specified configuration name.
-     * These may be projects this project depends on or projects that depend on this project
-     * based on the useDependOn argument.
-     *
-     * @param task Task to add dependencies to
-     * @param useDependedOn if true, add tasks from projects this project depends on, otherwise
-     * use projects that depend on this one.
-     * @param otherProjectTaskName name of task in other projects
-     * @param configurationName name of configuration to use to find the other projects
-     */
-    private static void addDependsOnTaskInOtherProjects(final Task task, boolean useDependedOn,
-            String otherProjectTaskName,
-            String configurationName) {
-        Project project = task.getProject();
-        final Configuration configuration = project.getConfigurations().getByName(
-                configurationName);
-        task.dependsOn(configuration.getTaskDependencyFromProjectDependency(
-                useDependedOn, otherProjectTaskName));
     }
 
     public void setSdkLibData(@NonNull SdkLibData sdkLibData) {

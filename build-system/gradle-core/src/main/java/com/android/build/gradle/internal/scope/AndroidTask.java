@@ -103,6 +103,61 @@ public class AndroidTask<T extends Task> {
      * This method adds dependencies on any objects accepted by {@link Task#dependsOn} and is
      * needed for compatibility until all tasks are trasitioned to AndroidTask.
      * @param taskFactory TaskFactory used to configure the task for dependencies.
+     * @param dependency Object accepted by {@link Task#dependsOn}.
+     */
+    public void dependsOn(final TaskFactory taskFactory, final Object dependency) {
+        Preconditions.checkNotNull(dependency);
+        taskFactory.named(name, new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                if (dependency instanceof AndroidTask) {
+                    task.dependsOn(((AndroidTask) dependency).getName());
+                } else {
+                    task.dependsOn(dependency);
+                }
+            }
+        });
+    }
+
+    /**
+     * Add dependency on objects.
+     * This method adds dependencies on any objects accepted by {@link Task#dependsOn} and is
+     * needed for compatibility until all tasks are trasitioned to AndroidTask.
+     * @param taskFactory TaskFactory used to configure the task for dependencies.
+     * @param dependency1 Object accepted by {@link Task#dependsOn}.
+     * @param dependency2 Object accepted by {@link Task#dependsOn}.
+     */
+    public void dependsOn(
+            final TaskFactory taskFactory,
+            final Object dependency1,
+            final Object dependency2) {
+        Preconditions.checkNotNull(dependency1);
+        Preconditions.checkNotNull(dependency2);
+
+        taskFactory.named(name, new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                if (dependency1 instanceof AndroidTask) {
+                    task.dependsOn(((AndroidTask) dependency1).getName());
+                } else {
+                    task.dependsOn(dependency1);
+                }
+
+                if (dependency2 instanceof AndroidTask) {
+                    task.dependsOn(((AndroidTask) dependency2).getName());
+                } else {
+                    task.dependsOn(dependency2);
+                }
+
+            }
+        });
+    }
+
+    /**
+     * Add dependency on objects.
+     * This method adds dependencies on any objects accepted by {@link Task#dependsOn} and is
+     * needed for compatibility until all tasks are trasitioned to AndroidTask.
+     * @param taskFactory TaskFactory used to configure the task for dependencies.
      * @param dependencies Objects accepted by {@link Task#dependsOn}.
      */
     public void dependsOn(final TaskFactory taskFactory, final Object... dependencies) {

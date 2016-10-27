@@ -25,12 +25,15 @@ import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.SkippableLibrary;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.tools.ant.taskdefs.Java;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 
 import java.util.Collection;
@@ -103,29 +106,30 @@ public class DependencyChecker implements SyncIssueHandler {
      * tested variant.
      *
      *
-     * @param compileDependencies the compile dependency graph
-     * @param packagedDependencies the packaged dependency graph
+     * @param variantDependencies the variant dependencies
      * @param testedVariantDeps an optional tested dependencies.
      */
     public void validate(
-            @NonNull DependencyContainer compileDependencies,
-            @NonNull DependencyContainer packagedDependencies,
+            @NonNull VariantDependencies variantDependencies,
             @Nullable VariantDependencies testedVariantDeps) {
         // tested map if applicable.
-        Map<String, String> testedMap = computeTestedDependencyMap(testedVariantDeps);
+        Map<String, String> testedMap = collectTestedDependencyMap(testedVariantDeps);
+
+        final DependencyContainer flattenedCompileDependencies = variantDependencies
+                .getFlattenedCompileDependencies();
+        final DependencyContainer flattenedPackageDependencies = variantDependencies
+                .getFlattenedPackageDependencies();
 
         compareAndroidDependencies(
-                compileDependencies.getAndroidDependencies(),
-                packagedDependencies.getAndroidDependencies(),
-                packagedDependencies.getDependenciesMutableData(),
+                flattenedCompileDependencies.getAndroidDependencies(),
+                flattenedPackageDependencies.getAndroidDependencies(),
+                flattenedPackageDependencies.getDependenciesMutableData(),
                 testedMap);
 
         compareJavaDependencies(
-                compileDependencies.getJarDependencies(),
-                packagedDependencies.getJarDependencies(),
-                compileDependencies.getAndroidDependencies(),
-                packagedDependencies.getAndroidDependencies(),
-                packagedDependencies.getDependenciesMutableData(),
+                flattenedCompileDependencies.getJarDependencies(),
+                flattenedPackageDependencies.getJarDependencies(),
+                flattenedPackageDependencies.getDependenciesMutableData(),
                 testedMap);
     }
 
@@ -218,27 +222,25 @@ public class DependencyChecker implements SyncIssueHandler {
         // For Applications (and testing variants
         // All Android libraries must be in both lists.
 
-        Map<String, SkippableLibrary> compileMap = computeAndroidDependencyMap(compileLibs);
-        Map<String, SkippableLibrary> packageMap = computeAndroidDependencyMap(packageLibs);
+        Map<String, AndroidLibrary> compileMap = collectSkippableLibraryMap(compileLibs);
+        Map<String, AndroidLibrary> packageMap = collectSkippableLibraryMap(packageLibs);
 
         // go through the list of keys on the compile map, comparing to the package and the tested
         // one.
 
         for (String coordinateKey : compileMap.keySet()) {
-            SkippableLibrary compileLib = compileMap.get(coordinateKey);
-            SkippableLibrary packageMatch = packageMap.get(coordinateKey);
-
-            MavenCoordinates resolvedCoordinates = compileLib.getResolvedCoordinates();
+            AndroidLibrary compileLib = compileMap.get(coordinateKey);
+            AndroidLibrary packageMatch = packageMap.get(coordinateKey);
 
             if (packageMatch != null) {
                 // found a match. Compare to tested, and skip if needed.
-                skipTestDependency(packageLibsMutableData, packageMatch, testedMap);
+                skipTestDependency(packageLibsMutableData, (SkippableLibrary) packageMatch, testedMap);
 
                 // remove it from the list of package dependencies
                 packageMap.remove(coordinateKey);
 
                 // compare versions.
-                if (!resolvedCoordinates.getVersion()
+                if (!compileLib.getResolvedCoordinates().getVersion()
                         .equals(packageMatch.getResolvedCoordinates().getVersion())) {
                     // wrong version, handle the error.
                     handleIssue(
@@ -250,18 +252,21 @@ public class DependencyChecker implements SyncIssueHandler {
                                             + " compilation (%s) and packaging (%s) differ. This can "
                                             + "generate runtime errors due to mismatched resources.",
                                     coordinateKey,
-                                    resolvedCoordinates.getVersion(),
+                                    compileLib.getResolvedCoordinates().getVersion(),
                                     packageMatch.getResolvedCoordinates().getVersion()));
                 }
+
             } else {
-                // no match, means this is a provided only dependency, which is only
+                // provided only dependency, which is only
                 // possibly if the variant is a library or an atom.
-                // However we also mark as skipped dependency coming from app module that are
-                // tested with a separate module. So if the library is skipped, just ignore it.
-                if (!packageLibsMutableData.isSkipped(compileLib) &&
-                        (variantType != VariantType.LIBRARY && variantType != VariantType.ATOM &&
-                                (testedVariantType != VariantType.LIBRARY
-                                        || !variantType.isForTesting()))) {
+                // However we also mark as provided dependency coming from app module that are
+                // tested with a separate module. The way to differentiate this case is that
+                // there is actually a matching library in the package list.
+                MavenCoordinates resolvedCoordinates = compileLib.getResolvedCoordinates();
+
+                if (variantType != VariantType.LIBRARY
+                        && variantType != VariantType.ATOM
+                        && (testedVariantType != VariantType.LIBRARY || !variantType.isForTesting())) {
                     handleIssue(
                             resolvedCoordinates.toString(),
                             SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,
@@ -271,12 +276,13 @@ public class DependencyChecker implements SyncIssueHandler {
                                     projectName,
                                     resolvedCoordinates.toString()));
                 }
+
             }
         }
 
         // at this time, packageMap will only contain package-only dependencies.
         // which is not possible here, so flag them.
-        for (SkippableLibrary packageOnlyLib : packageMap.values()) {
+        for (AndroidLibrary packageOnlyLib : packageMap.values()) {
             MavenCoordinates packagedCoords = packageOnlyLib.getResolvedCoordinates();
             handleIssue(
                     packagedCoords.toString(),
@@ -291,22 +297,20 @@ public class DependencyChecker implements SyncIssueHandler {
     private void compareJavaDependencies(
             @NonNull List<JavaLibrary> compileJars,
             @NonNull List<JavaLibrary> packageJars,
-            @NonNull List<AndroidLibrary> compileLibs,
-            @NonNull List<AndroidLibrary> packageLibs,
             @NonNull DependenciesMutableData packageDependenciesMutableData,
             @NonNull Map<String, String> testedMap) {
-        Map<String, SkippableLibrary> compileMap = computeJavaDependencyMap(compileJars, compileLibs);
-        Map<String, SkippableLibrary> packageMap = computeJavaDependencyMap(packageJars, packageLibs);
+        Map<String, JavaLibrary> compileMap = collectSkippableLibraryMap(compileJars);
+        Map<String, JavaLibrary> packageMap = collectSkippableLibraryMap(packageJars);
 
         // go through the list of keys on the compile map, comparing to the package and the tested
         // one.
 
         for (String coordinateKey : compileMap.keySet()) {
-            SkippableLibrary packageMatch = packageMap.get(coordinateKey);
+            JavaLibrary packageMatch = packageMap.get(coordinateKey);
 
             if (packageMatch != null) {
                 // found a match. Compare to tested, and skip if needed.
-                skipTestDependency(packageDependenciesMutableData, packageMatch, testedMap);
+                skipTestDependency(packageDependenciesMutableData, (SkippableLibrary) packageMatch, testedMap);
 
                 // remove it from the list of package dependencies
                 packageMap.remove(coordinateKey);
@@ -352,6 +356,7 @@ public class DependencyChecker implements SyncIssueHandler {
                             coordinates.getVersion()));
         }
     }
+
     /**
      * Returns a map representing the tested dependencies. This represents only the packaged
      * ones as they are the one that matters when figuring out what to skip in the test
@@ -364,13 +369,13 @@ public class DependencyChecker implements SyncIssueHandler {
      *
      * @see #computeVersionLessCoordinateKey(MavenCoordinates)
      */
-    private static Map<String, String> computeTestedDependencyMap(
+    private static Map<String, String> collectTestedDependencyMap(
             @Nullable VariantDependencies testedVariantDeps) {
         if (testedVariantDeps == null) {
             return ImmutableMap.of();
         }
 
-        DependencyContainer packageDependencies = testedVariantDeps.getPackageDependencies();
+        DependencyContainer packageDependencies = testedVariantDeps.getFlattenedPackageDependencies();
 
         List<JavaLibrary> testedJars = packageDependencies.getJarDependencies();
         List<AndroidLibrary> testedLibs = packageDependencies.getAndroidDependencies();
@@ -378,140 +383,56 @@ public class DependencyChecker implements SyncIssueHandler {
         Map<String, String> map = Maps.newHashMapWithExpectedSize(
                 testedJars.size() + testedLibs.size());
 
-        fillTestedDependencyMapWithJars(testedJars, map);
-        fillTestedDependencyMapWithAars(testedLibs, map);
+        fillTestedDependencyMap(testedJars, map);
+        fillTestedDependencyMap(testedLibs, map);
 
         return map;
     }
 
-    private static void fillTestedDependencyMapWithJars(
-            @NonNull Collection<? extends JavaLibrary> dependencies,
+    private static void fillTestedDependencyMap(
+            @NonNull Collection<? extends Library> dependencies,
             @NonNull Map<String, String> map) {
-        for (JavaLibrary javaLibrary : dependencies) {
-            if (javaLibrary.getProject() == null) {
-                MavenCoordinates coordinates = javaLibrary.getResolvedCoordinates();
+        // the list is the flattened list already so no need to recursively go through
+        for (Library library : dependencies) {
+            // ignore sub-modules
+            if (library.getProject() == null) {
+                MavenCoordinates coordinates = library.getResolvedCoordinates();
                 map.put(
                         computeVersionLessCoordinateKey(coordinates),
                         coordinates.getVersion());
             }
-
-            // then the transitive dependencies.
-            fillTestedDependencyMapWithJars(javaLibrary.getDependencies(), map);
-        }
-    }
-
-    private static void fillTestedDependencyMapWithAars(
-            @NonNull List<? extends AndroidLibrary> dependencies,
-            @NonNull Map<String, String> map) {
-        for (AndroidLibrary androidLibrary : dependencies) {
-            if (androidLibrary.getProject() == null) {
-                MavenCoordinates coordinates = androidLibrary.getResolvedCoordinates();
-
-                map.put(
-                        computeVersionLessCoordinateKey(coordinates),
-                        coordinates.getVersion());
-            }
-
-            // then the transitive dependencies
-            fillTestedDependencyMapWithAars(androidLibrary.getLibraryDependencies(), map);
-            fillTestedDependencyMapWithJars(androidLibrary.getJavaDependencies(), map);
         }
     }
 
     /**
-     * Computes a map of (key, library) for all android libraries (direct and transitives).
+     * collect a map of (key, library) for all  libraries.
      *
      * The key is either the gradle project path or the maven coordinates. The format of each
      * makes it impossible to have collisions.
      *
-     * @param androidDependencies the dependencies
+     * This only goes through the list and not the children of the library in it, so this expects
+     * the dependency graph to have been flattened already.
+     *
+     * @param dependencies the dependencies
      * @return the map.
      */
-    private static Map<String, SkippableLibrary> computeAndroidDependencyMap(
-            @NonNull List<AndroidLibrary> androidDependencies) {
+    private static <T extends Library> Map<String, T> collectSkippableLibraryMap(
+            @NonNull Collection<T> dependencies) {
 
-        Map<String, SkippableLibrary> map = Maps.newHashMapWithExpectedSize(
-                androidDependencies.size());
+        Map<String, T> map = Maps.newHashMapWithExpectedSize(
+                dependencies.size());
 
-        fillDependencyMapWithAars(androidDependencies, map, true, false);
-
-        return map;
-    }
-
-    /**
-     * Computes a map of (key, library) for all java libraries (direct and transitives).
-     *
-     * The key is either the gradle project path or the maven coordinates. The format of each
-     * makes it impossible to have collisions.
-     *
-     * This receives both Java dependencies and Android dependencies since the latter can
-     * have transitive java dependencies.
-     *
-     * @param javaDependencies the java dependencies
-     * @param androidDependencies the android dependencies
-     * @return the map.
-     */
-    private static Map<String, SkippableLibrary> computeJavaDependencyMap(
-            @NonNull List<JavaLibrary> javaDependencies,
-            @NonNull List<AndroidLibrary> androidDependencies) {
-
-        Map<String, SkippableLibrary> map = Maps.newHashMapWithExpectedSize(
-                javaDependencies.size() + androidDependencies.size());
-
-        fillDependencyMapWithJars(javaDependencies, map);
-        fillDependencyMapWithAars(androidDependencies, map, false, true);
-
-        return map;
-    }
-
-    private static void fillDependencyMapWithJars(
-            @NonNull Collection<? extends JavaLibrary> dependencies,
-            @NonNull Map<String, SkippableLibrary> map) {
-        for (JavaLibrary javaLibrary : dependencies) {
-            if (javaLibrary.getProject() != null) {
-                map.put(javaLibrary.getProject(), (SkippableLibrary) javaLibrary);
+        for (T library : dependencies) {
+            if (library.getProject() != null) {
+                map.put(library.getProject(), library);
             } else {
-                MavenCoordinates coordinates = javaLibrary.getResolvedCoordinates();
-                map.put(
-                        computeVersionLessCoordinateKey(coordinates),
-                        (SkippableLibrary) javaLibrary);
-
+                MavenCoordinates coordinates = library.getResolvedCoordinates();
+                map.put(computeVersionLessCoordinateKey(coordinates), library);
             }
-
-            // then the transitive dependencies.
-            fillDependencyMapWithJars(javaLibrary.getDependencies(), map);
         }
+
+        return map;
     }
-
-    private static void fillDependencyMapWithAars(
-            @NonNull List<? extends AndroidLibrary> dependencies,
-            @NonNull Map<String, SkippableLibrary> map,
-            boolean includeAars,
-            boolean includeJars) {
-        for (AndroidLibrary androidLibrary : dependencies) {
-            if (includeAars) {
-                if (androidLibrary.getProject() != null) {
-                    map.put(androidLibrary.getProject(), (SkippableLibrary) androidLibrary);
-                } else {
-                    MavenCoordinates coordinates = androidLibrary.getResolvedCoordinates();
-                    map.put(
-                            computeVersionLessCoordinateKey(coordinates),
-                            (SkippableLibrary) androidLibrary);
-                }
-            }
-
-            // then the transitive dependencies.
-            if (includeAars) {
-                fillDependencyMapWithAars(androidLibrary.getLibraryDependencies(), map,
-                        true, includeJars);
-            }
-            if (includeJars) {
-                fillDependencyMapWithJars(androidLibrary.getJavaDependencies(), map);
-            }
-
-        }
-    }
-
 
     /**
      * Compute a version-less key representing the given coordinates.
