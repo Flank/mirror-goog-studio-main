@@ -1,8 +1,7 @@
 # Line format: <sdk package>[:include-glob[:exclude-glob]
 
-# match both adb and adb.exe
-# other files used by lint tests
-platform-tools:{adb*,api/*,package.xml}
+# Match both adb and adb.exe.
+platform-tools:{adb*,api/*,package.xml,*.dll}
 
 build-tools;25.0.0
 build-tools;24.0.3
