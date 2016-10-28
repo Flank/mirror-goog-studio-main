@@ -308,6 +308,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.wearable";
     private static final String WEARABLE_ARTIFACT_ID = "wearable";
 
+    @SuppressWarnings("ConstantConditions")
+    @NonNull
     private static final GradleCoordinate PLAY_SERVICES_V650 = GradleCoordinate
             .parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
     /**
@@ -561,6 +563,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     project.getGradleModelVersion());
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 MavenCoordinates mc = library.getResolvedCoordinates();
+                // Even though the method is annotated as non-null, this code can run
+                // after a failed sync and there are observed scenarios where it returns
+                // null in that ase
+                //noinspection ConstantConditions
                 if (mc != null
                         && mc.getGroupId().equals(gc.getGroupId())
                         && mc.getArtifactId().equals(gc.getArtifactId())) {
@@ -925,11 +931,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 String version = "6.1.11";
                 // Try to find a more recent available version, if one is available
                 File sdkHome = context.getClient().getSdkHome();
-                File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true);
+                File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true,
+                        FileOpUtils.create());
                 if (repository != null) {
                     GradleCoordinate max = MavenRepositories.getHighestInstalledVersion(
                             dependency.getGroupId(), dependency.getArtifactId(), repository,
-                            null, false);
+                            null, false, FileOpUtils.create());
                     if (max != null) {
                         if (COMPARE_PLUS_HIGHER.compare(dependency, max) < 0) {
                             version = max.getRevision();
@@ -1222,7 +1229,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         // Check to make sure you have the Android support repository installed
         File sdkHome = context.getClient().getSdkHome();
-        File repository = SdkMavenRepository.ANDROID.getRepositoryLocation(sdkHome, true);
+        File repository = SdkMavenRepository.ANDROID.getRepositoryLocation(sdkHome, true,
+                FileOpUtils.create());
         if (repository == null) {
             report(context, cookie, DEPENDENCY,
                     "Dependency on a support library, but the SDK installation does not "
@@ -1269,7 +1277,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         assert groupId != null && artifactId != null;
 
         File sdkHome = context.getClient().getSdkHome();
-        File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true);
+        File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true,
+                FileOpUtils.create());
         if (repository == null) {
             report(context, cookie, DEPENDENCY,
                     "Dependency on Play Services, but the SDK installation does not "
@@ -1328,14 +1337,20 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Set<String> wearableVersions = Sets.newHashSet();
         for (AndroidLibrary library : getAndroidLibraries(project)) {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
-            if (WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
+            // Claims to be non-null but may not be after a failed gradle sync
+            //noinspection ConstantConditions
+            if (coordinates != null &&
+                WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
                     GOOGLE_SUPPORT_GROUP_ID.equals(coordinates.getGroupId())) {
                 supportVersions.add(coordinates.getVersion());
             }
         }
         for (JavaLibrary library : getJavaLibraries(project)) {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
-            if (WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
+            // Claims to be non-null but may not be after a failed gradle sync
+            //noinspection ConstantConditions
+            if (coordinates != null &&
+                WEARABLE_ARTIFACT_ID.equals(coordinates.getArtifactId()) &&
                     ANDROID_WEAR_GROUP_ID.equals(coordinates.getGroupId())) {
                 if (!library.isProvided()) {
                     if (cookie != null) {
@@ -1410,7 +1425,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Multimap<String, MavenCoordinates> versionToCoordinate = ArrayListMultimap.create();
         for (AndroidLibrary library : getAndroidLibraries(project)) {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
-            if (coordinates.getGroupId().equals(groupId)
+            // Claims to be non-null but may not be after a failed gradle sync
+            //noinspection ConstantConditions
+            if (coordinates != null && coordinates.getGroupId().equals(groupId)
                     // Historically the multidex library ended up in the support package but
                     // decided to do its own numbering (and isn't tied to the rest in terms
                     // of implementation dependencies)
@@ -1421,7 +1438,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         for (JavaLibrary library : getJavaLibraries(project)) {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
-            if (coordinates.getGroupId().equals(groupId)
+            // Claims to be non-null but may not be after a failed gradle sync
+            //noinspection ConstantConditions
+            if (coordinates != null && coordinates.getGroupId().equals(groupId)
                     // The Android annotations library is decoupled from the rest and doesn't
                     // need to be matched to the other exact support library versions
                     && !coordinates.getArtifactId().equals("support-annotations")) {
