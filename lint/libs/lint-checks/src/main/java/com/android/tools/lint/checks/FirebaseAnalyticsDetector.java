@@ -134,7 +134,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             if (error != null) {
                 Location location = context.getLocation(call);
                 location.withSecondary(context.getLocation(bundleModification.mLocation), error);
-                context.report(INVALID_NAME, location,
+                context.report(INVALID_NAME, call, location,
                         "Bundle with invalid Analytics event parameters passed to logEvent.");
             }
         }

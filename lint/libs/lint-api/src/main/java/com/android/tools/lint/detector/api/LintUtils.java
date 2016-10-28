@@ -53,6 +53,7 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
@@ -83,10 +84,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.CommonClassNames;
+import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiWhiteSpace;
@@ -126,6 +130,45 @@ import org.w3c.dom.NodeList;
 public class LintUtils {
     // Utility class, do not instantiate
     private LintUtils() {
+    }
+
+    /** Returns the internal method name */
+    @NonNull
+    public static String getInternalMethodName(@NonNull PsiMethod method) {
+        if (method.isConstructor()) {
+            return SdkConstants.CONSTRUCTOR_NAME;
+        }
+        else {
+            return method.getName();
+        }
+    }
+
+    @Nullable
+    public static PsiElement getCallName(@NonNull PsiCallExpression expression) {
+        PsiElement firstChild = expression.getFirstChild();
+        while (firstChild != null) {
+            if (firstChild instanceof PsiWhiteSpace) {
+                firstChild = firstChild.getNextSibling();
+            } else if (firstChild instanceof PsiParenthesizedExpression) {
+                firstChild = ((PsiParenthesizedExpression)firstChild).getExpression();
+            } else {
+                break;
+            }
+        }
+        if (firstChild != null) {
+            PsiElement lastChild = firstChild.getLastChild();
+            while (lastChild != null) {
+                if (lastChild instanceof PsiWhiteSpace) {
+                    lastChild = lastChild.getPrevSibling();
+                } else if (lastChild instanceof PsiParenthesizedExpression) {
+                    lastChild = ((PsiParenthesizedExpression)lastChild).getExpression();
+                } else {
+                    break;
+                }
+            }
+            return lastChild;
+        }
+        return null;
     }
 
     /**

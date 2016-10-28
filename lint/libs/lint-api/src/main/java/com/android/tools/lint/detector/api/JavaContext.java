@@ -163,6 +163,23 @@ public class JavaContext extends Context {
     }
 
     /**
+     * Returns a location for the given node range (from the starting offset of the first node to
+     * the ending offset of the second node).
+     *
+     * @param from      the AST node to get a starting location from
+     * @param fromDelta Offset delta to apply to the starting offset
+     * @param length    The number of characters to add from the delta
+     * @return a location for the given node
+     */
+    @NonNull
+    public Location getRangeLocation(
+            @NonNull PsiElement from,
+            int fromDelta,
+            int length) {
+        return parser.getRangeLocation(this, from, fromDelta, fromDelta + length);
+    }
+
+    /**
      * Returns a {@link Location} for the given node. This attempts to pick a shorter
      * location range than the entire node; for a class or method for example, it picks
      * the name node (if found). For statement constructs such as a {@code switch} statement
