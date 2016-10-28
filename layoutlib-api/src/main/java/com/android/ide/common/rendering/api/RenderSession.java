@@ -155,6 +155,36 @@ public class RenderSession {
     }
 
     /**
+     * Does a measure pass and returns the result.
+     * <p>
+     * This is equivalent to calling <code>measure(RenderParams.DEFAULT_TIMEOUT)</code>
+     * <p>
+     * The {@link Bridge} is only able to inflate or render one layout at a time. There
+     * is an internal lock object whenever such an action occurs. The timeout parameter is used
+     * when attempting to acquire the lock. If the timeout expires, the method will return
+     * {@link Status#ERROR_TIMEOUT}.
+     * @param timeout timeout for the measure call, in milliseconds.
+     * @return a {@link Result} indicating the status of the action.
+     */
+    public Result measure() {
+        return measure(RenderParams.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * Does a measure pass and returns the result.
+     * <p>
+     * The {@link Bridge} is only able to inflate or render one layout at a time. There
+     * is an internal lock object whenever such an action occurs. The timeout parameter is used
+     * when attempting to acquire the lock. If the timeout expires, the method will return
+     * {@link Status#ERROR_TIMEOUT}.
+     * @param timeout timeout for the measure call, in milliseconds.
+     * @return a {@link Result} indicating the status of the action.
+     */
+    public Result measure(long timeout) {
+        return NOT_IMPLEMENTED.createResult();
+    }
+
+    /**
      * Re-renders the layout as-is, with a given timeout in case other renderings are being done.
      * In case of success, this should be followed by calls to {@link #getRootViews()} and
      * {@link #getImage()} to access the result of the rendering.

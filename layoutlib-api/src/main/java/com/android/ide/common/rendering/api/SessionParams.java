@@ -134,6 +134,9 @@ public class SessionParams extends RenderParams {
         return mRenderingMode;
     }
 
+    /**
+     * @deprecated Use {@link RenderSession#measure()} instead
+     */
     public void setLayoutOnly() {
         mLayoutOnly = true;
     }
