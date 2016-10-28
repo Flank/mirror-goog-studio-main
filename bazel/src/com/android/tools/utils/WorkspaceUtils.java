@@ -67,4 +67,14 @@ public class WorkspaceUtils {
         Path workspace = findWorkspace();
         return workspace.resolve("prebuilts/tools/common/m2/repository");
     }
+
+    public static Path findPrebuiltsSdks() throws IOException {
+        Path workspace = findWorkspace();
+        return workspace.resolve("prebuilts/studio/sdk");
+    }
+
+    public static Path findSdkPackagesFile() throws IOException {
+        Path workspace = findWorkspace();
+        return workspace.resolve("tools/base/bazel/sdk/dev-sdk-packages");
+    }
 }
