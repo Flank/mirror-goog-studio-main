@@ -24,7 +24,17 @@ FileSystemNotifier::FileSystemNotifier(const std::string &path, uint32_t event_m
 FileSystemNotifier::~FileSystemNotifier() {
 }
 
-// On Mac OS X, this always succeed and never waits.
+// On Mac OS X, this always succeeds.
+// TODO: Implement this with FSEvents from File System Events API.
+bool FileSystemNotifier::IsReadyToNotify() {
+  // The following uses are fake to silence 'unused-private-field' warnings.
+  event_mask_ = 0;
+  file_descriptor_ = 0;
+  watch_descriptor_ = 0;
+  return true;
+}
+
+// On Mac OS X, this always succeeds and never waits.
 // TODO: Implement this with FSEvents from File System Events API.
 bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
   return true;
