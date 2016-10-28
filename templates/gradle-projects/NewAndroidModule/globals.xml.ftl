@@ -15,4 +15,6 @@
     <global id="whSupportLibRewriteAttrs" value="${whSdkPath!""}/rewriteAttrs" />
     <global id="whSupportLibApk" value="${whSdkPath!""}/com.android.support/com.android.support_support-shared-lib_23.1.1.apk" />
     <global id="whSupportLibJars" value="${whSdkPath!""}/com.android.support/support-lib-jars" />
+    <global id="bitmapFolder" type="boolean" value="<#if minApiLevel?number gte 18>root/res/webp<#else>root/res</#if>" />
+    <global id="bitmapExtension" type="boolean" value="<#if minApiLevel?number gte 18>webp<#else>png</#if>" />
 </globals>
