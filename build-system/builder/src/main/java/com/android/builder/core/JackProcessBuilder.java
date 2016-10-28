@@ -216,6 +216,7 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
                         "-D",
                         "jack.coverage.metadata.file="
                                 + options.getCoverageMetadataFile().getAbsolutePath());
+                builder.addArgs("-D", "jack.coverage=true");
             }
         }
 
