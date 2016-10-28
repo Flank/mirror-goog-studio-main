@@ -18,11 +18,14 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,10 +58,11 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
-        project.executor()
-                .withProperty("android.enableBuildCache", "true")
-                .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath())
-                .run("clean", "assembleDebug");
+        RunGradleTasks executor =
+                project.executor()
+                        .withProperty("android.enableBuildCache", "true")
+                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+        executor.run("clean", "assembleDebug");
 
         File preDexDir = FileUtils.join(project.getIntermediatesDir(), "pre-dexed", "debug");
         List<File> dexFiles = Arrays.asList(preDexDir.listFiles());
@@ -67,11 +71,9 @@ public class BuildCacheTest {
         assertThat(dexFiles).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
 
-        // Assert that the pre-dexed file of the guava library is stored in the cache. Depending on
-        // the cache implementation, either the output file is created first and copied to the
-        // cache, or the cached file is created first and copied to the output file. In either way,
-        // we check their timestamps to make sure we actually copied one to the other and did not
-        // accidentally run pre-dexing twice to create the two files.
+        // Check the timestamps of the guava library's pre-dexed file and the cached file to make
+        // sure we actually copied one to the other and did not run pre-dexing twice to create the
+        // two files
         File cachedGuavaDexFile = new File(cachedEntryDirs.get(0), "output");
         File guavaDexFile;
         File projectDexFile;
@@ -87,19 +89,19 @@ public class BuildCacheTest {
 
         assertThat(guavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
 
-        project.executor()
-                .withProperty("android.enableBuildCache", "true")
-                .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath())
-                .run("clean", "assembleDebug");
+        executor.run("clean", "assembleDebug");
 
         assertThat(preDexDir.list()).hasLength(2);
         assertThat(buildCacheDir.list()).hasLength(1);
 
-        // Assert that the cached file is unchanged and the pre-dexed file of the guava library is
-        // copied from the cache
+        // Assert that the cached file is unchanged and the guava library's pre-dexed file is copied
+        // from the cache
         assertThat(cachedGuavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
         assertThat(guavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
         assertThat(projectDexFile).isNewerThan(projectTimestamp);
+
+        executor.run("cleanBuildCache");
+        assertThat(buildCacheDir).doesNotExist();
     }
 
     @Test
@@ -107,10 +109,15 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
-        project.executor()
-                .withProperty("android.enableBuildCache", "false")
-                .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath())
-                .run("clean", "assembleDebug");
+        RunGradleTasks executor =
+                project.executor()
+                        .withProperty("android.enableBuildCache", "false")
+                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+        executor.run("clean", "assembleDebug");
         assertThat(buildCacheDir).doesNotExist();
+
+        GradleBuildResult result = executor.expectFailure().run("cleanBuildCache");
+        assertThat(Throwables.getRootCause(result.getException()).getMessage())
+                .contains("Task 'cleanBuildCache' not found in root project");
     }
 }
