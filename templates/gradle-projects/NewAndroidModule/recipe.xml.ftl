@@ -28,27 +28,27 @@
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
     <#if copyIcons && !isLibraryProject>
         <#if buildApi gte 25 && targetApi gte 25>
-            <copy from="root/res/mipmap-hdpi/"
+            <copy from="${bitmapFolder}/mipmap-hdpi/"
                     to="${escapeXmlAttribute(resOut)}/mipmap-hdpi/" />
-            <copy from="root/res/mipmap-mdpi"
+            <copy from="${bitmapFolder}/mipmap-mdpi"
                     to="${escapeXmlAttribute(resOut)}/mipmap-mdpi/" />
-            <copy from="root/res/mipmap-xhdpi"
+            <copy from="${bitmapFolder}/mipmap-xhdpi"
                     to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi/" />
-            <copy from="root/res/mipmap-xxhdpi"
+            <copy from="${bitmapFolder}/mipmap-xxhdpi"
                     to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi/" />
-            <copy from="root/res/mipmap-xxxhdpi"
+            <copy from="${bitmapFolder}/mipmap-xxxhdpi"
                     to="${escapeXmlAttribute(resOut)}/mipmap-xxxhdpi/" />
         <#else>
-            <copy from="root/res/mipmap-hdpi/ic_launcher.png"
-                    to="${escapeXmlAttribute(resOut)}/mipmap-hdpi/ic_launcher.png" />
-            <copy from="root/res/mipmap-mdpi/ic_launcher.png"
-                    to="${escapeXmlAttribute(resOut)}/mipmap-mdpi/ic_launcher.png" />
-            <copy from="root/res/mipmap-xhdpi/ic_launcher.png"
-                    to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi/ic_launcher.png" />
-            <copy from="root/res/mipmap-xxhdpi/ic_launcher.png"
-                    to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi/ic_launcher.png" />
-            <copy from="root/res/mipmap-xxxhdpi/ic_launcher.png"
-                    to="${escapeXmlAttribute(resOut)}/mipmap-xxxhdpi/ic_launcher.png" />
+            <copy from="${bitmapFolder}/mipmap-hdpi/ic_launcher.${bitmapExtension}"
+                    to="${escapeXmlAttribute(resOut)}/mipmap-hdpi/ic_launcher.${bitmapExtension}" />
+            <copy from="${bitmapFolder}/mipmap-mdpi/ic_launcher.${bitmapExtension}"
+                    to="${escapeXmlAttribute(resOut)}/mipmap-mdpi/ic_launcher.${bitmapExtension}" />
+            <copy from="${bitmapFolder}/mipmap-xhdpi/ic_launcher.${bitmapExtension}"
+                    to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi/ic_launcher.${bitmapExtension}" />
+            <copy from="${bitmapFolder}/mipmap-xxhdpi/ic_launcher.${bitmapExtension}"
+                    to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi/ic_launcher.${bitmapExtension}" />
+            <copy from="${bitmapFolder}/mipmap-xxxhdpi/ic_launcher.${bitmapExtension}"
+                    to="${escapeXmlAttribute(resOut)}/mipmap-xxxhdpi/ic_launcher.${bitmapExtension}" />
         </#if>
     </#if>
 </#if>
