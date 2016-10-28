@@ -67,17 +67,6 @@ final class DependenciesImpl implements Dependencies, Serializable {
         }
     }
 
-    /**
-     * An item that wraps a [Java|Android]Library and its mutable states.
-     *
-     * This includes all the data that really goes into the IDE model implementations of
-     * [Java|Android]Library.
-     *
-     * This is used as the cache key of the CreatingCache that allow de-duplication of similar
-     * instances.
-     *
-     * @param <T>
-     */
     private static class DependencyItem<T extends Library> {
         private final T library;
         private final DependencyItemFactory factory;
@@ -91,28 +80,8 @@ final class DependenciesImpl implements Dependencies, Serializable {
             return factory.dependenciesMutableData.isSkipped(library);
         }
 
-
-        /**
-         * Returns a new wrapper item using the same factory.
-         */
         <U extends Library> DependencyItem<U> create(U dependency) {
             return factory.create(dependency);
-        }
-
-        @Override public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            DependencyItem<T> that = (DependencyItem<T>) o;
-            return Objects.equals(library, that.library)
-                    && Objects.equals(isSkipped(), that.isSkipped());
-        }
-
-        @Override public int hashCode() {
-            return Objects.hash(library, isSkipped());
         }
     }
     private static final long serialVersionUID = 1L;
@@ -453,7 +422,6 @@ final class DependenciesImpl implements Dependencies, Serializable {
         boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
 
         if (fullCopy) {
-            if (true) throw new RuntimeException("foo");
             // in a full copy case, we let the cache create the serializable instance
             // and the original instance can be the key
             return dependencyItem.library;
@@ -471,7 +439,6 @@ final class DependenciesImpl implements Dependencies, Serializable {
         boolean fullCopy = sModelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
 
         if (fullCopy) {
-            if (true) throw new RuntimeException("foo2");
             // in a full copy case, the value is the serializable copy of the key.
             return createSerializableAndroidLibrary(androidLibraryData);
         }
