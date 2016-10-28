@@ -1,6 +1,7 @@
 java_library(
     name = "utils",
     srcs = glob(["src/**/utils/*.java"]),
+    visibility = ["//tools/base/bazel/sdk:__pkg__"],
 )
 
 # Part of the standalone-jps-builder artifact from IDEA

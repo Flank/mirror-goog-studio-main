@@ -163,9 +163,7 @@ Next, we'll need to run SDK tools to fetch the new data.
 ```
 $ cd /path/to/studio-master-dev/
 
-$ bazel run -- //tools/base/bazel/sdk:dev-sdk-updater
-  --package-file `pwd`/tools/base/bazel/sdk/dev-sdk-packages \
-  --dest `pwd`/prebuilts/studio/sdk
+$ bazel run //tools/base/bazel/sdk:dev-sdk-updater
 ```
 
 ### Add a new filegroup rule
