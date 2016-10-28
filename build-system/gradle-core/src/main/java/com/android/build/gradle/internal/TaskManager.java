@@ -116,6 +116,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -414,6 +415,10 @@ public abstract class TaskManager {
         tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
 
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
+
+        if (AndroidGradleOptions.isBuildCacheEnabled(project)) {
+            androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
+        }
     }
 
     public void createMockableJarTask(TaskFactory tasks) {
