@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.ide;
 
+import com.android.builder.dependency.DependenciesMutableData;
+import com.android.builder.model.Library;
+import java.util.HashMap;
+import java.util.Map;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 
@@ -23,6 +27,26 @@ public class DependenciesImplTest {
 
     @Test
     public void equals() throws Exception {
-        EqualsVerifier.forClass(DependenciesImpl.class).verify();
+        EqualsVerifier.forClass(DependenciesImpl.class)
+                .withPrefabValues(DependenciesMutableData.class, new DependenciesMutableData() {
+
+                    @Override public void skip(Library library) {
+
+                    }
+
+                    @Override public boolean isSkipped(Library library) {
+                        return false;
+                    }
+                }, new DependenciesMutableData() {
+                    Map<Library, Boolean> values  = new HashMap<>();
+                    @Override public void skip(Library library) {
+                        values.put(library, Boolean.TRUE);
+                    }
+
+                    @Override public boolean isSkipped(Library library) {
+                        return values.getOrDefault(library, Boolean.FALSE);
+                    }
+                })
+                .verify();
     }
 }
