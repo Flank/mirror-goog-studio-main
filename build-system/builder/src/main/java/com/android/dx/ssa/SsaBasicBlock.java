@@ -116,12 +116,13 @@ public final class SsaBasicBlock {
      * @param basicBlockIndex index this block will have
      * @param ropLabel original rop-form label
      * @param parent method of this block
+     * @param insnsSize expected insns size.
      */
     public SsaBasicBlock(final int basicBlockIndex, final int ropLabel,
-            final SsaMethod parent) {
+            final SsaMethod parent, final int insnsSize) {
         this.parent = parent;
         this.index = basicBlockIndex;
-        this.insns = new ArrayList<SsaInsn>();
+        this.insns = new ArrayList<SsaInsn>(insnsSize);
         this.ropLabel = ropLabel;
 
         this.predecessors = new BitSet(parent.getBlocks().size());
@@ -144,11 +145,9 @@ public final class SsaBasicBlock {
             int basicBlockIndex, final SsaMethod parent) {
         BasicBlockList ropBlocks = rmeth.getBlocks();
         BasicBlock bb = ropBlocks.get(basicBlockIndex);
-        SsaBasicBlock result =
-            new SsaBasicBlock(basicBlockIndex, bb.getLabel(), parent);
         InsnList ropInsns = bb.getInsns();
-
-        result.insns.ensureCapacity(ropInsns.size());
+        SsaBasicBlock result =
+            new SsaBasicBlock(basicBlockIndex, bb.getLabel(), parent, ropInsns.size());
 
         for (int i = 0, sz = ropInsns.size() ; i < sz ; i++) {
             result.insns.add(new NormalSsaInsn (ropInsns.get(i), result));

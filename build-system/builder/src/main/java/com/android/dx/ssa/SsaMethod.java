@@ -198,7 +198,7 @@ public final class SsaMethod {
 
         exitBlockIndex = blocks.size();
         SsaBasicBlock exitBlock
-                = new SsaBasicBlock(exitBlockIndex, maxLabel++, this);
+                = new SsaBasicBlock(exitBlockIndex, maxLabel++, this, 0);
 
         blocks.add(exitBlock);
 
@@ -236,7 +236,7 @@ public final class SsaMethod {
      */
     public SsaBasicBlock makeNewGotoBlock() {
         int newIndex = blocks.size();
-        SsaBasicBlock newBlock = new SsaBasicBlock(newIndex, maxLabel++, this);
+        SsaBasicBlock newBlock = new SsaBasicBlock(newIndex, maxLabel++, this, 1);
 
         newBlock.getInsns().add(getGoto(newBlock));
         blocks.add(newBlock);
