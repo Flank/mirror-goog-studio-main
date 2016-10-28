@@ -64,6 +64,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -945,6 +947,22 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                 + "}\n")));
     }
 
+    public void testWearableConsistency4() throws Exception {
+        // Regression test for 226240; gracefully handle null resolved coordinates.
+        // Requires custom model mocks.
+        mEnabled = Collections.singleton(COMPATIBILITY);
+        assertEquals("No warnings.",
+
+                lintProjectIncrementally("build.gradle",
+                        source("build.gradle", ""
+                                + "apply plugin: 'android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                                + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
+                                + "}\n")));
+    }
+
     public void testSupportLibraryConsistencyNonIncremental() throws Exception {
         // Requires custom model mocks
         mEnabled = Collections.singleton(COMPATIBILITY);
@@ -1336,6 +1354,16 @@ public class GradleDetectorTest extends AbstractCheckTest {
                                         createMockJavaLibrary(
                                                 "com.google.android.wearable:wearable:2.0.0-alpha3", false)
                                 );
+                            } else if ("testWearableConsistency4".equals(GradleDetectorTest.this.getName())) {
+                                // Null resolved coordinates
+                                AndroidLibrary mockLibrary1 = createMockLibrary(
+                                        "com.google.android.support:wearable:2.0.0-alpha3");
+                                JavaLibrary mockLibrary2 = createMockJavaLibrary(
+                                        "com.google.android.wearable:wearable:2.0.0-alpha3", false);
+                                when(mockLibrary1.getResolvedCoordinates()).thenReturn(null);
+                                when(mockLibrary2.getResolvedCoordinates()).thenReturn(null);
+                                androidLibraries = Collections.singletonList(mockLibrary1);
+                                javaLibraries = Collections.singletonList(mockLibrary2);
                             } else {
                                 fail("Unexpected test " + getName());
                                 return null;
@@ -1473,7 +1501,9 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 // handle. This happens for example when running lint in build-system/tests/api/.
                 // This is a lint limitation rather than a user error, so don't complain
                 // about these. Consider reporting a Issue#LINT_ERROR.
-                fail(t.toString());
+                StringWriter writer = new StringWriter();
+                t.printStackTrace(new PrintWriter(writer));
+                fail(writer.toString());
             }
         }
 

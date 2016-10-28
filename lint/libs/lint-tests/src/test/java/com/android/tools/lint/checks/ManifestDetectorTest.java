@@ -560,7 +560,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                             + "    <application\n"
                             + "        android:icon=\"@drawable/ic_launcher\"\n"
                             + "        android:label=\"@string/app_name\"\n"
-                            + "        tools:ignore=\"AllowBackup\"\n"
+                            + "        tools:ignore=\"AllowBackup\"\n>"
                             + "        <activity\n"
                             + "            android:label=\"@string/app_name\"\n"
                             + "            android:name=\".Foo2Activity\" >\n"
