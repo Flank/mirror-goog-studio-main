@@ -153,7 +153,8 @@ public class DetectMissingPrefix extends LayoutDetector {
                 return;
             }
 
-            if (element.getNamespaceURI() != null) {
+            String elementNamespace = element.getNamespaceURI();
+            if (elementNamespace != null && !elementNamespace.isEmpty()) {
                 // For example, <aapt:attr name="android:drawable">
                 return;
             }
