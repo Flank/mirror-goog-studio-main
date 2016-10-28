@@ -379,6 +379,23 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                                 + "</resources>\n")));
     }
 
+    public void testAaptBundleFormat() throws Exception {
+        assertEquals("No warnings.",
+                lintProject(
+                        xml("res/drawable/my_drawable.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<inset xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                                + "    android:inset=\"100dp\">\n"
+                                + "\n"
+                                + "    <aapt:attr name=\"android:drawable\">\n"
+                                + "        <color android:color=\"@color/colorAccent\" />\n"
+                                + "    </aapt:attr>\n"
+                                + "</inset>")
+                )
+        );
+    }
+
     @Override
     protected TestLintClient createClient() {
         if (getName().equals("testAppCompatOther")) {
