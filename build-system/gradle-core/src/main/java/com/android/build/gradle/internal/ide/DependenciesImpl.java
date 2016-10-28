@@ -67,7 +67,18 @@ final class DependenciesImpl implements Dependencies, Serializable {
         }
     }
 
-    private static class DependencyItem<T extends Library> {
+    /**
+     * An item that wraps a [Java|Android]Library and its mutable states.
+     *
+     * This includes all the data that really goes into the IDE model implementations of
+     * [Java|Android]Library.
+     *
+     * This is used as the cache key of the CreatingCache that allow de-duplication of similar
+     * instances.
+     *
+     * @param <T>
+     */
+    private static final class DependencyItem<T extends Library> {
         private final T library;
         private final DependencyItemFactory factory;
 
@@ -80,8 +91,28 @@ final class DependenciesImpl implements Dependencies, Serializable {
             return factory.dependenciesMutableData.isSkipped(library);
         }
 
+
+        /**
+         * Returns a new wrapper item using the same factory.
+         */
         <U extends Library> DependencyItem<U> create(U dependency) {
             return factory.create(dependency);
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            DependencyItem<T> that = (DependencyItem<T>) o;
+            return Objects.equals(library, that.library)
+                    && Objects.equals(isSkipped(), that.isSkipped());
+        }
+
+        @Override public int hashCode() {
+            return Objects.hash(library, isSkipped());
         }
     }
     private static final long serialVersionUID = 1L;
