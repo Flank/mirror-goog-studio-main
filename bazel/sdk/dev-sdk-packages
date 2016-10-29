@@ -24,7 +24,7 @@ docs:reference/android/{*,content/*}
 
 # Extra components picked to pass various AndroidGradleTestCase tests
 # TemplateTest uses a lot of them
-extras;android;m2repository:com/android/{databinding/*/1.3/**,support/animated-vector-drawable/24.2.1/**,support/appcompat-v7/24.2.1/**,support/constraint/**,support/design/24.2.1/**,support/gridlayout-v7/24.2.1/**,support/recyclerview-v7/24.2.1/**,support/support-annotations/24.2.1/**,support/support-compat/24.2.1/**,support/support-core-ui/24.2.1/**,support/support-core-utils/24.2.1/**,support/support-fragment/24.2.1/**,support/support-media-compat/24.2.1/**,support/support-v4/24.2.1/**,support/support-vector-drawable/24.2.1/**}
-extras;google;m2repository:com/google/android/gms/**/9.6.1/**
+extras;android;m2repository:**{package.xml,/databinding/*/1.3/**,/animated-vector-drawable/24.2.1/**,/appcompat-v7/24.2.1/**,/constraint/**,/design/24.2.1/**,/gridlayout-v7/24.2.1/**,/recyclerview-v7/24.2.1/**,/support-annotations/24.2.1/**,/support-compat/24.2.1/**,/support-core-ui/24.2.1/**,/support-core-utils/24.2.1/**,/support-fragment/24.2.1/**,/support-media-compat/24.2.1/**,/support-v4/24.2.1/**,/support-vector-drawable/24.2.1/**}
+extras;google;m2repository:**{package.xml,/gms/**/9.6.1/**}
 extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-beta1
 extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta1
