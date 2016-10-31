@@ -29,6 +29,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -91,9 +92,21 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
         // Fix project compilation.
         TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "okio( )+: 'com.squareup.okio:okio:[^']+',",
+                "okio: 'com.squareup.okio:okio:1.8.0',");
+
+        TestFileUtils.searchAndReplace(
                 project.file("outissue/cyclus/build.gradle"),
-                "dependencies \\{",
-                "dependencies {\n    compile deps.support.appCompat");
+                "dependencies \\{\n",
+                "dependencies {\n"
+                        + "compile deps.support.appCompat\n"
+                        + "compile deps.external.rxjava\n");
+
+        TestFileUtils.searchAndReplace(
+                project.file("outissue/embrace/build.gradle"),
+                "dependencies \\{\n",
+                "dependencies { compile deps.external.rxjava\n");
 
         switch (projectScenario) {
             case NATIVE_MULTIDEX:
@@ -113,17 +126,14 @@ public class LargeGradleProjectPerformanceMatrixTest {
     public void runBenchmarks() throws Exception {
         Map<String, AndroidProject> model = project.model().ignoreSyncIssues().getMulti();
 
-        model.forEach(
-                (path, project) ->
-                        Truth.assertThat(
-                                        project.getSyncIssues()
-                                                .stream()
-                                                .filter(
-                                                        issue ->
-                                                                issue.getSeverity()
-                                                                        == SyncIssue.SEVERITY_ERROR)
-                                                .collect(Collectors.toList()))
-                                .isEmpty());
+        for (AndroidProject project : model.values()) {
+            List<SyncIssue> severeIssues =
+                    project.getSyncIssues()
+                            .stream()
+                            .filter(issue -> issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                            .collect(Collectors.toList());
+            Truth.assertThat(severeIssues).isEmpty();
+        }
 
         // TODO: warm up (This is really slow already)
 
@@ -136,6 +146,5 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .recordBenchmark(BenchmarkMode.NO_OP)
                 .run("assembleDebug");
-
     }
 }
