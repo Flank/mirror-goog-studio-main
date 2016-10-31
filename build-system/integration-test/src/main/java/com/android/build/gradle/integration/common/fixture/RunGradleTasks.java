@@ -162,6 +162,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             mPackaging.mFlagValue));
         }
 
+        args.add(
+                String.format(
+                        "-P%s=%s",
+                        AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD,
+                        "false"));
+
         args.addAll(arguments);
 
         System.out.println("[GradleTestProject] Executing tasks: gradle "
