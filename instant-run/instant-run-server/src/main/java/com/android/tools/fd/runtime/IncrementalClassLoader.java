@@ -108,7 +108,8 @@ public class IncrementalClassLoader extends ClassLoader {
             String nativeLibraryPath, String codeCacheDir, List<String> dexes,
             ClassLoader original) {
         String pathBuilder = createDexPath(dexes);
-        return new DelegateClassLoader(pathBuilder, new File(codeCacheDir),
+        return new DelegateClassLoader(pathBuilder,
+                codeCacheDir != null? new File(codeCacheDir) : null,
                 nativeLibraryPath, original);
     }
 
