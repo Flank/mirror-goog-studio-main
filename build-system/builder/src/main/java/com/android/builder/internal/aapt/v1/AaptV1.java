@@ -68,7 +68,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     /**
      * How much time to wait for {@code aapt} to flush the files.
      */
-    private static final Duration MAX_WAIT_FOR_AAPT_FLUSH = Duration.ofSeconds(1);
+    private static final Duration MAX_WAIT_FOR_AAPT_FLUSH = Duration.ofSeconds(10);
 
     /**
      * How much time to wait between retries while waiting for {@code aapt} to flush the files.
