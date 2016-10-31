@@ -13,26 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string>
+#include "perfd/cpu/procfs_files.h"
 
-#include "test/utils.h"
+#include <sstream>  // for std::ostringstream
+
+using std::string;
+
+namespace {
+
+// Absolute path of system stat file.
+const char* const kProcStatFilename = "/proc/stat";
+
+}  // namespace
 
 namespace profiler {
 
-std::string TestUtils::getCpuTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/cpu/" + path;
-}
+string ProcfsFiles::GetSystemStatFilePath() const { return kProcStatFilename; }
 
-std::string TestUtils::getUtilsTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/utils/" + path;
-}
-
-std::string TestUtils::getNetworkTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/network/" + path;
-}
-
-std::string TestUtils::getMemoryTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/memory/" + path;
+string ProcfsFiles::GetProcessStatFilePath(int32_t pid) const {
+  // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
+  std::ostringstream os;
+  os << "/proc/" << pid << "/stat";
+  return os.str();
 }
 
 }  // namespace profiler

@@ -23,7 +23,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <mutex>
-#include <sstream>  // for std::ostringstream
 #include <string>
 #include <vector>
 
@@ -44,9 +43,6 @@ using std::vector;
 
 namespace {
 
-// Absolute path of system stat file.
-const char* const kProcStatFilename = "/proc/stat";
-
 // Returns how many milliseconds is a time unit used in /proc/* files.
 // This function is designed to be called by TimeUnitInMilliseconds() only.
 // This function is almost always less efficient than TimeUnitInMilliseconds().
@@ -66,12 +62,6 @@ int64_t GetTimeUnitInMilliseconds() {
 int64_t TimeUnitInMilliseconds() {
   static const int64_t kTimeUnitInMilliseconds = GetTimeUnitInMilliseconds();
   return kTimeUnitInMilliseconds;
-}
-
-// Reads /proc/stat file. Returns true on success.
-// TODO: Mock this file on non-Linux platforms.
-bool ReadProcStat(string* content) {
-  return FileReader::Read(kProcStatFilename, content);
 }
 
 // Parses /proc/stat content in |content| and calculates
@@ -103,21 +93,12 @@ bool ParseProcStatForUsageData(const string& content, CpuUsageData* data) {
 }
 
 // Collects system-wide data by reading /proc/stat. Returns true on success.
-bool CollectSystemUsageData(CpuUsageData* data) {
+bool CollectSystemUsageData(const string& usage_file, CpuUsageData* data) {
   string buffer;
-  if (ReadProcStat(&buffer)) {
+  if (FileReader::Read(usage_file, &buffer)) {
     return ParseProcStatForUsageData(buffer, data);
   }
   return false;
-}
-
-// Reads /proc/[pid]/stat file. Returns true on success.
-// TODO: Mock this file on non-Linux platforms.
-bool ReadProcPidStat(int32_t pid, std::string* content) {
-  // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
-  std::ostringstream os;
-  os << "/proc/" << pid << "/stat";
-  return FileReader::Read(os.str(), content);
 }
 
 // Parses a process's stat file (proc/[pid]/stat) to collect info. Returns
@@ -175,7 +156,6 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
   return false;
 }
 
-// TODO:
 // Parses a thread's stat file (proc/[pid]/task/[tid]/stat) to collect info.
 // Returns true on success.
 // For a thread, the following fields are read (the first field is numbered as
@@ -183,10 +163,10 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
 //    (1) id  %d                      => For sanity checking.
 //    (2) comm  %s (in parentheses)   => Output |name|.
 //    (3) state  %c                   => Output |state|.
-
-bool CollectProcessUsageData(int32_t pid, CpuUsageData* data) {
+bool CollectProcessUsageData(int32_t pid, const string& usage_file,
+                             CpuUsageData* data) {
   string buffer;
-  if (ReadProcPidStat(pid, &buffer)) {
+  if (FileReader::Read(usage_file, &buffer)) {
     return ParseProcPidStatForUsageData(pid, buffer, data);
   }
   return false;
@@ -231,12 +211,16 @@ bool CpuUsageSampler::Sample() {
 // the up-to-date system-wide data each time.
 bool CpuUsageSampler::SampleAProcess(int32_t pid) {
   CpuProfilerData data;
-  if (!CollectSystemUsageData(data.mutable_cpu_usage())) return false;
-  if (!CollectProcessUsageData(pid, data.mutable_cpu_usage())) return false;
-  data.mutable_basic_info()->set_app_id(pid);
-  data.mutable_basic_info()->set_end_timestamp(clock_.GetCurrentTime());
-  cache_.Add(data);
-  return true;
+  if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(),
+                             data.mutable_cpu_usage()) &&
+      CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
+                              data.mutable_cpu_usage())) {
+    data.mutable_basic_info()->set_app_id(pid);
+    data.mutable_basic_info()->set_end_timestamp(clock_.GetCurrentTime());
+    cache_.Add(data);
+    return true;
+  }
+  return false;
 }
 
 }  // namespace profiler
