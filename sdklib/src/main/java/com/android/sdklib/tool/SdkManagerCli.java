@@ -56,6 +56,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -73,7 +74,7 @@ import java.util.stream.Collectors;
  */
 public class SdkManagerCli {
 
-    private final static String TOOLSDIR = "com.android.sdklib.toolsdir";
+    private static final String TOOLSDIR = "com.android.sdklib.toolsdir";
 
     private final Settings mSettings;
     private final AndroidSdkHandler mHandler;
@@ -84,11 +85,20 @@ public class SdkManagerCli {
     private final ProgressIndicator mProgress;
 
     public static void main(@NonNull String args[]) {
+        try {
+            main(Arrays.asList(args));
+        } catch (CommandFailedException | UncheckedCommandFailedException e) {
+            System.exit(1);
+        }
+    }
+
+    private static void main(@NonNull List<String> args) throws CommandFailedException {
         FileSystemFileOp fop = (FileSystemFileOp)FileOpUtils.create();
         Settings settings = Settings.createSettings(args, fop.getFileSystem());
+
         if (settings == null) {
             usage(System.err);
-            System.exit(1);
+            throw new CommandFailedException();
         }
         Path localPath = settings.getLocalPath();
         if (!Files.exists(localPath)) {
@@ -97,7 +107,7 @@ public class SdkManagerCli {
             } catch (IOException e) {
                 System.err.println("Failed to create SDK root dir: " + localPath);
                 System.err.println(e.getMessage());
-                System.exit(1);
+                throw new CommandFailedException();
             }
         }
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath.toFile());
@@ -120,9 +130,9 @@ public class SdkManagerCli {
         mRepoManager = mHandler.getSdkManager(mProgress);
     }
 
-    void run() {
+    void run() throws CommandFailedException {
         if (mSettings == null) {
-            return;
+            throw new CommandFailedException();
         }
         if (mSettings.isList()) {
             listPackages();
@@ -201,15 +211,15 @@ public class SdkManagerCli {
         }
     }
 
-    private void installPackages() {
+    private void installPackages() throws CommandFailedException {
         mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
 
         List<RemotePackage> remotes = new ArrayList<>();
         for (String path : mSettings.getPaths(mRepoManager)) {
             RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
             if (p == null) {
-                mProgress.logError("Failed to find package " + path);
-                return;
+                mProgress.logWarning("Failed to find package " + path);
+                throw new CommandFailedException();
             }
             remotes.add(p);
         }
@@ -226,7 +236,7 @@ public class SdkManagerCli {
                 if (!acceptedRemotes.isEmpty()) {
                     mOut.print("Continue installing the remaining packages? (y/N): ");
                     if (!askYesNo()) {
-                        return;
+                        throw new CommandFailedException();
                     }
                 }
                 remotes = acceptedRemotes;
@@ -236,11 +246,12 @@ public class SdkManagerCli {
                         .createInstaller(p, mRepoManager, mDownloader, mHandler.getFileOp());
                 if (!applyPackageOperation(installer)) {
                     // there was an error, abort.
-                    return;
+                    throw new CommandFailedException();
                 }
             }
         } else {
-            mProgress.logError("Unable to compute a complete list of dependencies.");
+            mProgress.logWarning("Unable to compute a complete list of dependencies.");
+            throw new CommandFailedException();
         }
     }
 
@@ -309,7 +320,7 @@ public class SdkManagerCli {
         }
     }
 
-    private void uninstallPackages() {
+    private void uninstallPackages() throws CommandFailedException {
         mRepoManager.loadSynchronously(0, mProgress, null, mSettings);
 
         for (String path : mSettings.getPaths(mRepoManager)) {
@@ -321,7 +332,7 @@ public class SdkManagerCli {
                         .createUninstaller(p, mRepoManager, mHandler.getFileOp());
                 if (!applyPackageOperation(uninstaller)) {
                     // there was an error, abort.
-                    return;
+                    throw new CommandFailedException();
                 }
             }
         }
@@ -401,8 +412,8 @@ public class SdkManagerCli {
         private SocketAddress mProxyHost;
 
         @Nullable
-        public static Settings createSettings(@NonNull String[] args,
-                @NonNull FileSystem fileSystem) {
+        public static Settings createSettings(
+                @NonNull List<String> args, @NonNull FileSystem fileSystem) {
             ProgressIndicator progress = new ConsoleProgressIndicator();
             Settings result = new Settings();
             String proxyHost = null;
@@ -434,7 +445,7 @@ public class SdkManagerCli {
                     try {
                         proxyPort = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
-                        progress.logError(String.format("Invalid port \"%s\"", value));
+                        progress.logWarning(String.format("Invalid port \"%s\"", value));
                         return null;
                     }
                 } else if (arg.startsWith(PROXY_TYPE_ARG)) {
@@ -444,7 +455,7 @@ public class SdkManagerCli {
                     } else if (type.equals("http")) {
                         result.mProxyType = Proxy.Type.HTTP;
                     } else {
-                        progress.logError("Valid proxy types are \"socks\" and \"http\".");
+                        progress.logWarning("Valid proxy types are \"socks\" and \"http\".");
                         return null;
                     }
                 } else if (arg.startsWith(CHANNEL_ARG)) {
@@ -452,7 +463,7 @@ public class SdkManagerCli {
                     try {
                         result.mChannel = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
-                        progress.logError(String.format("Invalid channel id \"%s\"", value));
+                        progress.logWarning(String.format("Invalid channel id \"%s\"", value));
                         return null;
                     }
                 } else if (arg.startsWith(PKG_FILE_ARG)) {
@@ -461,7 +472,7 @@ public class SdkManagerCli {
                         result.mPackages.addAll(
                                 Files.readAllLines(fileSystem.getPath(packageFile)));
                     } catch (IOException e) {
-                        progress.logError(
+                        progress.logWarning(
                                 String.format("Invalid package file \"%s\" threw exception:%n%s%n",
                                         packageFile, e));
                         return null;
@@ -469,7 +480,7 @@ public class SdkManagerCli {
                 } else if (arg.startsWith(SDK_ROOT_ARG)) {
                     result.mLocalPath = fileSystem.getPath(arg.substring(SDK_ROOT_ARG.length()));
                 } else if (arg.startsWith("--")) {
-                    progress.logError(String.format("Unknown argument %s", arg));
+                    progress.logWarning(String.format("Unknown argument %s", arg));
                     return null;
                 } else {
                     result.mPackages.add(arg);
@@ -482,7 +493,7 @@ public class SdkManagerCli {
             }
             if (proxyHost == null ^ result.mProxyType == null ||
                     proxyPort == -1 ^ result.mProxyType == null) {
-                progress.logError(
+                progress.logWarning(
                         String.format("All of %1$s, %2$s, and %3$s must be specified if any are.",
                                 PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG));
                 return null;
@@ -501,7 +512,7 @@ public class SdkManagerCli {
                 InetAddress address = InetAddress.getByName(host);
                 return new InetSocketAddress(address, port);
             } catch (UnknownHostException e) {
-                new ConsoleProgressIndicator().logError("Failed to parse host " + host);
+                new ConsoleProgressIndicator().logWarning("Failed to parse host " + host);
                 return null;
             }
         }
@@ -567,11 +578,11 @@ public class SdkManagerCli {
                 @Override
                 public void logError(@NonNull String s, @Nullable Throwable e) {
                     if (mVerbose) {
-                        super.logError(s, e);
+                        super.logWarning(s, e);
                     } else {
-                        super.logError(s, null);
+                        super.logWarning(s, null);
                     }
-                    System.exit(1);
+                    throw new UncheckedCommandFailedException();
                 }
 
                 @Override
@@ -596,4 +607,7 @@ public class SdkManagerCli {
             return mProxyType == null ? Proxy.NO_PROXY : new Proxy(mProxyType, mProxyHost);
         }
     }
+
+    public static final class CommandFailedException extends Exception {}
+    public static final class UncheckedCommandFailedException extends RuntimeException {}
 }
