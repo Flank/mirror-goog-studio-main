@@ -18,7 +18,6 @@ package com.android.tools.maven;
 
 import org.apache.maven.model.Model;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MavenCoordinates {
@@ -33,19 +32,8 @@ public class MavenCoordinates {
     public final String version;
 
     public MavenCoordinates(Model model) {
-        groupId = model.getGroupId();
         artifactId = model.getArtifactId();
-        version = model.getVersion();
-    }
-
-    public MavenCoordinates(String coordinates) {
-        Matcher matcher = MavenCoordinates.MAVEN_COORDINATES.matcher(coordinates);
-        if (matcher.matches()) {
-            groupId = matcher.group(1);
-            artifactId = matcher.group(2);
-            version = matcher.group(3);
-        } else {
-            throw new IllegalArgumentException("Invalid maven coordinated: " + coordinates);
-        }
+        groupId = model.getGroupId() == null ? model.getParent().getGroupId() : model.getGroupId();
+        version = model.getVersion() == null ? model.getParent().getVersion() : model.getVersion();
     }
 }
