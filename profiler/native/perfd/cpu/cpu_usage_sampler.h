@@ -17,9 +17,11 @@
 #define PERFD_CPU_CPU_USAGE_SAMPLER_H_
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <unordered_set>
 
+#include "perfd/cpu/procfs_files.h"
 #include "perfd/daemon.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
@@ -32,7 +34,9 @@ class CpuUsageSampler {
  public:
   // Creates a CPU usage data collector that saves data to |cpu_cache|.
   CpuUsageSampler(const Daemon& daemon, CpuCache* cpu_cache)
-      : clock_(daemon.clock()), cache_(*cpu_cache) {}
+      : clock_(daemon.clock()),
+        cache_(*cpu_cache),
+        usage_files_(new ProcfsFiles()) {}
 
   // Starts collecting usage data for process with ID of |pid|, if not already.
   profiler::proto::CpuStartResponse::Status AddProcess(int32_t pid);
@@ -44,6 +48,14 @@ class CpuUsageSampler {
   // Samples CPU data of all processes that need monitoring. Saves the data to
   // |cache_|. Returns true if successfully sampling all processes.
   bool Sample();
+
+ protected:
+  // Resets where to look for (non-default) usage files.
+  // This method is protected because it is supposed to be used for testing
+  // only, by inheriting this class.
+  void ResetUsageFiles(std::unique_ptr<ProcfsFiles> usage_files) {
+    usage_files_ = std::move(usage_files);
+  }
 
  private:
   // Samples the CPU data of a process, including the system-wide usage as a
@@ -58,6 +70,8 @@ class CpuUsageSampler {
   const Clock& clock_;
   // Cache where collected data will be saved.
   CpuCache& cache_;
+  // Files that are used to sample CPU usage. Configurable for testing.
+  std::unique_ptr<const ProcfsFiles> usage_files_;
 };
 
 }  // namespace profiler

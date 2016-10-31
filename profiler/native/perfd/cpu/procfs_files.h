@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string>
+#ifndef PERFD_CPU_PROCFS_FILES_H_
+#define PERFD_CPU_PROCFS_FILES_H_
 
-#include "test/utils.h"
+#include <string>
 
 namespace profiler {
 
-std::string TestUtils::getCpuTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/cpu/" + path;
-}
+// A class that provide paths of files that are usually found in /proc file
+// system for CPU profiling. Designed to be mockable for easy testing.
+class ProcfsFiles {
+ public:
+  virtual ~ProcfsFiles() = default;
 
-std::string TestUtils::getUtilsTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/utils/" + path;
-}
-
-std::string TestUtils::getNetworkTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/network/" + path;
-}
-
-std::string TestUtils::getMemoryTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/perfd/memory/" + path;
-}
+  virtual std::string GetSystemStatFilePath() const;
+  virtual std::string GetProcessStatFilePath(int32_t pid) const;
+};
 
 }  // namespace profiler
+
+#endif  // PERFD_CPU_PROCFS_FILES_H_

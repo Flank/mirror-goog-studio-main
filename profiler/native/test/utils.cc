@@ -19,6 +19,10 @@
 
 namespace profiler {
 
+std::string TestUtils::getCpuTestData(const std::string &path) {
+  return path;
+}
+
 std::string TestUtils::getUtilsTestData(const std::string &path) {
   return path;
 }
