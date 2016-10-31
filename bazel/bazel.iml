@@ -84,5 +84,6 @@
     <orderEntry type="library" name="aether" level="project" />
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="library" name="antlr3" level="project" />
   </component>
 </module>

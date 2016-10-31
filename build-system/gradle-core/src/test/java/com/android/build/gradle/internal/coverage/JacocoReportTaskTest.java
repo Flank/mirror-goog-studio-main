@@ -133,10 +133,13 @@ public class JacocoReportTaskTest {
     }
 
     private static File copyResourceToFolder(
-            @NonNull String resourceName,
+            @NonNull String fileName,
             @NonNull File folder) throws IOException {
+        // Bazel cannot handle $ in filenames. Our test-scanning code doesn't like classes which are
+        // resources.
+        String resourceName = fileName.replace('$', '_').replace(".class", ".klass");
         ByteSource resource = Resources.asByteSource(Resources.getResource(resourceName));
-        File file = new File(folder, resourceName);
+        File file = new File(folder, fileName);
         FileUtils.mkdirs(file.getParentFile());
         resource.copyTo(Files.asByteSink(file));
         return file;

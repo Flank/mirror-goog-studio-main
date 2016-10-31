@@ -34,6 +34,7 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.FilterSpecification;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -197,11 +198,7 @@ public abstract class AbstractShrinkerTest {
 
     @NonNull
     protected static Set<File> getPlatformJars() {
-        String androidHomePath = System.getenv(SdkConstants.ANDROID_HOME_ENV);
-
-        assertThat(androidHomePath).named("$ANDROID_HOME env variable").isNotNull();
-
-        File androidHome = new File(androidHomePath);
+        File androidHome = TestUtils.getSdk();
         File androidJar = FileUtils.join(
                 androidHome,
                 SdkConstants.FD_PLATFORMS,

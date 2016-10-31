@@ -138,7 +138,9 @@ java_binary(
     name = "java_import_generator",
     main_class = "com.android.tools.maven.JavaImportGenerator",
     visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
+    runtime_deps = [
+        ":maven",
+    ],
 )
 
 # See README.md
@@ -150,14 +152,18 @@ java_binary(
         "com.google.code.gson:gson:2.2.4",
         "com.google.guava:guava:19.0",
         "com.google.jimfs:jimfs:1.1",
-        "com.google.protobuf:protobuf-java:2.5.0",
+        "com.google.protobuf:protobuf-java:3.0.0",
         "com.googlecode.juniversalchardet:juniversalchardet:1.0.3",
         "com.intellij:annotations:12.0",
         "com.squareup:javawriter:2.5.0",
+        "commons-io:commons-io:2.4",
+        "net.sf.jopt-simple:jopt-simple:4.9",
         "net.sf.kxml:kxml2:2.3.0",
+        "net.sf.proguard:proguard-gradle:5.3.1",
+        "org.antlr:antlr-runtime:3.5.2",
+        "org.antlr:antlr:3.5.2",
         "org.antlr:antlr4:4.5.3",
         "org.apache.commons:commons-compress:1.8.1",
-        "commons-io:commons-io:2.4",
         "org.apache.httpcomponents:httpclient:4.1.1",
         "org.apache.httpcomponents:httpmime:4.1",
         "org.apache.maven:maven-aether-provider:3.3.9",
@@ -168,6 +174,8 @@ java_binary(
         "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
         "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
         "org.eclipse.jdt.core.compiler:ecj:4.6.1",
+        "org.jacoco:org.jacoco.core:0.7.5.201505241946",  # When updating this version, also
+        "org.jacoco:org.jacoco.report:0.7.5.201505241946",  # update JacocoPlugin.
         "org.ow2.asm:asm-analysis:5.0.4",
         "org.ow2.asm:asm-tree:5.0.4",
         "org.ow2.asm:asm:5.0.4",
@@ -177,6 +185,7 @@ java_binary(
         "junit:junit:4.12",
         "nl.jqno.equalsverifier:equalsverifier:2.1.5",
         "org.easymock:easymock:3.3",
+        "org.jsoup:jsoup:1.6.3",
         "org.mockito:mockito-all:1.9.5",
     ],
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
@@ -189,7 +198,9 @@ java_binary(
     name = "add_dependency",
     main_class = "com.android.tools.maven.AddDependency",
     visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
+    runtime_deps = [
+        ":maven",
+    ],
 )
 
 java_binary(
@@ -203,6 +214,18 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.7:jar",
+    ],
+)
+
+java_binary(
+    name = "antlr",
+    srcs = glob(["src/**/antlr/**"]),
+    main_class = "com.android.tools.utils.antlr.AntlrCompiler",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":utils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.antlr_antlr",
     ],
 )
 

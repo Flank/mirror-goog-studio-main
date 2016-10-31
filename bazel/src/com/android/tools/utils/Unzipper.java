@@ -49,12 +49,19 @@ public class Unzipper {
 
     private int run(List<String> args) throws IOException {
         File zip = null;
+        File destDir = new File(".");
         Map<String, String> files = new HashMap<>();
 
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
             String arg = it.next();
-            if (zip == null) {
+            if (arg.startsWith("--dest_dir=")) {
+                String[] split = arg.split("=");
+                if (split.length != 2) {
+                    usage("Invalid argument: " + arg);
+                }
+                destDir = new File(split[1]);
+            } else if (zip == null) {
                 zip = new File(arg);
             } else {
                 String[] split = arg.split(":");
@@ -72,10 +79,11 @@ public class Unzipper {
             usage("No output files specified.");
             System.exit(1);
         }
-        return unzip(zip, files);
+
+        return unzip(zip, destDir, files);
     }
 
-    private int unzip(File zipFile, Map<String, String> files) throws IOException {
+    private int unzip(File zipFile, File destDir, Map<String, String> files) throws IOException {
 
         try (ZipFile zip = new ZipFile(zipFile)) {
             for (Map.Entry<String, String> file : files.entrySet()) {
@@ -85,7 +93,7 @@ public class Unzipper {
                     System.err.println("Entry " + name + " not found.");
                     return 1;
                 }
-                File outFile = new File(file.getValue());
+                File outFile = new File(destDir, file.getValue());
                 File dirname = outFile.getParentFile();
                 if (!dirname.exists() && !dirname.mkdirs()) {
                     System.err.println("Cannot create directory for " + outFile.getAbsolutePath());
