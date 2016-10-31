@@ -239,7 +239,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
 
         AndroidArtifact artifact = mock(AndroidArtifact.class);
         when(artifact.getDependencies()).thenReturn(dependencies);
-        when(artifact.getCompileDependencies()).thenReturn(dependencies);
 
         return artifact;
     }

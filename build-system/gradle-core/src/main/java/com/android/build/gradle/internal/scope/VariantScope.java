@@ -41,6 +41,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
@@ -103,7 +104,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getDexOutputFolder();
 
     @NonNull
-    File getDexOutputFolder(@NonNull AndroidAtom androidAtom);
+    File getDexOutputFolder(@NonNull AtomDependency androidAtom);
 
     @Nullable
     BaseVariantData getTestedVariantData();
@@ -118,7 +119,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaOutputDir();
 
     @NonNull
-    File getJavaOutputDir(@NonNull AndroidAtom androidAtom);
+    File getJavaOutputDir(@NonNull AtomDependency androidAtom);
 
     @NonNull
     Iterable<File> getJavaOutputs();
@@ -170,7 +171,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
-    File getResourceBlameLogDir(@NonNull AndroidAtom androidAtom);
+    File getResourceBlameLogDir(@NonNull AtomDependency androidAtom);
 
     @NonNull
     File getMergeAssetsOutputDir();
@@ -209,7 +210,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getRClassSourceOutputDir();
 
     @NonNull
-    File getRClassSourceOutputDir(@NonNull AndroidAtom androidAtom);
+    File getRClassSourceOutputDir(@NonNull AtomDependency atomDependency);
 
     @NonNull
     File getAidlSourceOutputDir();
@@ -286,7 +287,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getPackageSplitAbiOutputFiles();
 
     @NonNull
-    File getPackageAtom(@NonNull AndroidAtom androidAtom);
+    File getPackageAtom(@NonNull AtomDependency androidAtom);
 
     @NonNull
     File getAaptFriendlyManifestOutputFile();

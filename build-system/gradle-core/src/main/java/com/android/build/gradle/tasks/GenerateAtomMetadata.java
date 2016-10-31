@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.variant.AtomVariantOutputData;
-import com.android.builder.dependency.DependencyContainer;
-import com.android.builder.model.AndroidAtom;
+import com.android.builder.dependency.level2.AtomDependency;
+import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.utils.FileUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -147,10 +147,12 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
             AtomVariantOutputData variantOutputData = (AtomVariantOutputData) scope
                     .getVariantOutputData();
 
+            // only care about first level direct atoms?
             DependencyContainer dependencyContainer =
                     scope.getVariantScope().getVariantConfiguration().getPackageDependencies();
+
             ImmutableSet.Builder<File> atomMetadataBuilder = ImmutableSet.builder();
-            for (AndroidAtom atom : dependencyContainer.getAtomDependencies()) {
+            for (AtomDependency atom : dependencyContainer.getDirectAtomDependencies()) {
                 atomMetadataBuilder.add(atom.getAtomMetadataFile());
             }
             generateAtomMetadata.setAtomMetadataDependency(atomMetadataBuilder.build());

@@ -329,6 +329,8 @@ public final class SdkConstants {
     public static final String FD_PROGUARD = "proguard";                //$NON-NLS-1$
     /** aidl output folder for copied aidl files */
     public static final String FD_AIDL = "aidl";                        //$NON-NLS-1$
+    /** aar libs folder */
+    public static final String FD_AAR_LIBS = "libs";
 
     /** rs Libs output folder for support mode */
     public static final String FD_RS_LIBS = "rsLibs";                   //$NON-NLS-1$

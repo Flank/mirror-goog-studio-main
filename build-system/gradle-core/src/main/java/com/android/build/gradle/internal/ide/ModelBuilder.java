@@ -28,6 +28,7 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -132,7 +133,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     public static void clearCaches() {
-        DependenciesImpl.clearCaches();
+        DependenciesConverter.clearCaches();
     }
 
     @Override
@@ -162,7 +163,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
         }
-        DependenciesImpl.setModelLevel(modelLevel);
+        //DependenciesImpl.setModelLevel(modelLevel);
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
@@ -356,11 +357,10 @@ public class ModelBuilder implements ToolingModelBuilder {
         VariantDependencies variantDependency = variantData.getVariantDependency();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
 
-        DependenciesImpl compileDependencies = DependenciesImpl.cloneDependencies(
-                variantDependency.getCompileDependencies(), variantConfiguration, androidBuilder);
-
-        DependenciesImpl packageDependencies = DependenciesImpl.cloneDependencies(
-                variantDependency.getPackageDependencies(), variantConfiguration, androidBuilder);
+        DependenciesImpl compileDependencies = new DependenciesConverter().cloneDependencies(
+                variantDependency.getCompileDependencies(),
+                variantConfiguration,
+                androidBuilder);
 
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
         return new JavaArtifactImpl(
@@ -376,7 +376,12 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantData.getJavaResourcesForUnitTesting(),
                 taskManager.getGlobalScope().getMockableAndroidJarFile(),
                 compileDependencies,
-                packageDependencies,
+                (modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH ?
+                        new DependenciesConverter().cloneDependencies(
+                                variantDependency.getPackageDependencies(),
+                                variantConfiguration,
+                                androidBuilder) :
+                        DependenciesConverter.getEmpty()),
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider);
     }
@@ -479,6 +484,17 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getInstantRunSupportStatus());
 
         VariantDependencies variantDependency = variantData.getVariantDependency();
+
+        DependenciesImpl compileDep = new DependenciesConverter().cloneDependencies(
+                variantDependency.getCompileDependencies(),
+                variantConfiguration, androidBuilder);
+
+        DependenciesImpl packageDep = modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH ?
+                new DependenciesConverter().cloneDependencies(
+                        variantDependency.getPackageDependencies(),
+                        variantConfiguration, androidBuilder) :
+                DependenciesConverter.getEmpty();
+
         return new AndroidArtifactImpl(
                 name,
                 outputs,
@@ -496,12 +512,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                         variantData.javacTask.getDestinationDir() :
                         scope.getJavaOutputDir(),
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
-                DependenciesImpl.cloneDependencies(variantDependency.getCompileDependencies(),
-                        variantConfiguration, androidBuilder),
-                (modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH ?
-                        DependenciesImpl.cloneDependencies(variantDependency.getPackageDependencies(),
-                        variantConfiguration, androidBuilder) :
-                        DependenciesImpl.getEmpty()),
+                compileDep,
+                packageDep,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),

@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.ide;
 
+import com.android.builder.dependency.level2.AndroidDependency;
+import com.google.common.collect.ImmutableList;
+import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 
@@ -23,6 +26,22 @@ public class AndroidLibraryImplTest {
 
     @Test
     public void equals() throws Exception {
-        EqualsVerifier.forClass(AndroidLibraryImpl.class).withRedefinedSuperclass().verify();
+        EqualsVerifier.forClass(AndroidLibraryImpl.class)
+                .withRedefinedSuperclass()
+                .withCachedHashCode("hashcode", "computeHashCode",
+                        new AndroidLibraryImpl(
+                                AndroidDependency.createLocalTestedAarLibrary(
+                                new File("red"),
+                                    "",
+                                    "",
+                                new File("")),
+                                false /*provided*/,
+                                false /*skipped*/,
+                                ImmutableList.of(),
+                                ImmutableList.of(),
+                                ImmutableList.of())
+
+                        )
+                .verify();
     }
 }

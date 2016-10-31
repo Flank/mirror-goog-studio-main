@@ -57,14 +57,14 @@ import java.util.stream.Collectors;
 public class DependencyGraph {
 
     @NonNull
-    private final ImmutableMap<MavenCoordinates, Dependency> dependencyMap;
+    private final ImmutableMap<Object, Dependency> dependencyMap;
     @NonNull
     private final ImmutableList<DependencyNode> dependencies;
     @NonNull
     private final MutableDependencyDataMap mutableDependencyDataMap;
 
     public DependencyGraph(
-            @NonNull Map<MavenCoordinates, Dependency> dependencyMap,
+            @NonNull Map<Object, Dependency> dependencyMap,
             @NonNull List<DependencyNode> dependencies,
             @NonNull MutableDependencyDataMap mutableDependencyDataMap) {
         this.dependencyMap = ImmutableMap.copyOf(dependencyMap);
@@ -81,7 +81,7 @@ public class DependencyGraph {
     }
 
     @NonNull
-    public ImmutableMap<MavenCoordinates, Dependency> getDependencyMap() {
+    public ImmutableMap<Object, Dependency> getDependencyMap() {
         return dependencyMap;
     }
 

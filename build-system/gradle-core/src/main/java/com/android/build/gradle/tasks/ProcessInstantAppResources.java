@@ -27,9 +27,9 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.model.AndroidAtom;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -236,7 +236,7 @@ public class ProcessInstantAppResources extends IncrementalTask {
             processInstantAppResources.setOutputResourcePackage(
                     scope.getProcessResourcePackageOutputFile());
 
-            AndroidAtom baseAtom = config.getPackageDependencies().getBaseAtom();
+            AtomDependency baseAtom = config.getPackageDependencies().getBaseAtom();
 
             // This will happen for the first sync. Just ignore and exit early.
             if (baseAtom == null) {
@@ -244,9 +244,9 @@ public class ProcessInstantAppResources extends IncrementalTask {
             }
             processInstantAppResources.setBaseAtomResourcePackage(baseAtom.getResourcePackage());
 
-            List<AndroidAtom> androidAtoms = config.getFlatAndroidAtomsDependencies();
+            List<AtomDependency> androidAtoms = config.getFlatAndroidAtomsDependencies();
             ImmutableSet.Builder<File> builder = ImmutableSet.builder();
-            for (AndroidAtom atom : androidAtoms) {
+            for (AtomDependency atom : androidAtoms) {
                 if (atom != baseAtom)
                     builder.add(scope.getProcessResourcePackageOutputFile(atom));
             }

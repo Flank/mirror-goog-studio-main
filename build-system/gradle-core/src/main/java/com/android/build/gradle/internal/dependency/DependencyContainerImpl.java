@@ -77,6 +77,18 @@ public class DependencyContainerImpl implements DependencyContainer {
         this.baseAtom = baseAtom;
     }
 
+    private static final DependencyContainerImpl EMPTY = new DependencyContainerImpl(
+            ImmutableMap.of(),
+            ImmutableList.of(),
+            MutableDependencyDataMap.EMPTY,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            null);
+
+    public static DependencyContainer empty() {
+        return EMPTY;
+    }
+
     @NonNull
     @Override
     public ImmutableMap<Object, Dependency> getDependencyMap() {

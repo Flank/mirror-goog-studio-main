@@ -14,7 +14,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.model.AndroidLibrary;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -113,7 +113,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                             && testedVariantData.getType().equals(LIBRARY)) {
                         // The bundled classes.jar may exist, but it's probably old. Don't
                         // use it, we already have the *.class files in the classpath.
-                        AndroidLibrary testedLibrary =
+                        AndroidDependency testedLibrary =
                                 testedVariantData.getVariantConfiguration().getOutput();
                         if (testedLibrary != null) {
                             File jarFile = testedLibrary.getJarFile();

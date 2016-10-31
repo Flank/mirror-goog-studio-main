@@ -70,6 +70,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
@@ -364,7 +365,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getDexOutputFolder(@NonNull AndroidAtom androidAtom) {
+    public File getDexOutputFolder(@NonNull AtomDependency androidAtom) {
         return FileUtils.join(globalScope.getIntermediatesDir(),
                 FD_DEX,
                 androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
@@ -413,7 +414,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getJavaOutputDir(@NonNull AndroidAtom androidAtom) {
+    public File getJavaOutputDir(@NonNull AtomDependency androidAtom) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 FD_CLASSES_OUTPUT,
@@ -597,7 +598,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getResourceBlameLogDir(@NonNull AndroidAtom androidAtom) {
+    public File getResourceBlameLogDir(@NonNull AtomDependency androidAtom) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 StringHelper.toStrings(
@@ -719,12 +720,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRClassSourceOutputDir(@NonNull AndroidAtom androidAtom) {
+    public File getRClassSourceOutputDir(@NonNull AtomDependency atomDependency) {
         return FileUtils.join(
                 globalScope.getGeneratedDir(),
                 FD_SOURCE_GEN,
                 FD_RES_CLASS,
-                androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
+                atomDependency.getAtomName() + "-" + getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -894,7 +895,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getPackageAtom(@NonNull AndroidAtom androidAtom) {
+    public File getPackageAtom(@NonNull AtomDependency androidAtom) {
         return new File(getMergeAssetsOutputDir(),
                 androidAtom.getAtomName() + DOT_ATOM);
     }

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
@@ -71,18 +72,19 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
     @NonNull
     private final Collection<JavaLibrary> javaLibraries;
 
-    AndroidAtomImpl(
-            @NonNull AndroidAtom clonedAtom,
-            @NonNull List<AndroidAtom> androidAtoms,
-            @NonNull List<AndroidLibrary> androidLibraries,
-            @NonNull Collection<JavaLibrary> javaLibraries) {
-        super(clonedAtom, false /* isSkipped */);
-        this.androidAtoms = ImmutableList.copyOf(androidAtoms);
-        this.androidLibraries = ImmutableList.copyOf(androidLibraries);
-        this.javaLibraries = ImmutableList.copyOf(javaLibraries);
-        variant = clonedAtom.getProjectVariant();
-        bundle = clonedAtom.getBundle();
-        folder = clonedAtom.getFolder();
+    AndroidAtomImpl(@NonNull AtomDependency clonedAtom) {
+        super(
+                clonedAtom.getProjectPath(),
+                null,
+                clonedAtom.getCoordinates(),
+                false /* isSkipped */,
+                false /*isProvided*/);
+        this.androidAtoms = ImmutableList.of();
+        this.androidLibraries = ImmutableList.of();
+        this.javaLibraries = ImmutableList.of();
+        variant = clonedAtom.getVariant();
+        bundle = clonedAtom.getArtifactFile();
+        folder = clonedAtom.getExtractedFolder();
         manifest = clonedAtom.getManifest();
         jarFile = clonedAtom.getJarFile();
         resFolder = clonedAtom.getResFolder();
