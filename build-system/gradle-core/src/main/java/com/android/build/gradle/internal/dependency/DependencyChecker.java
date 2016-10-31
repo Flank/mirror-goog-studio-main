@@ -29,16 +29,12 @@ import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.tools.ant.taskdefs.Java;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 
 /**
  * Checks for dependencies to ensure Android compatibility
@@ -87,11 +83,6 @@ public class DependencyChecker implements SyncIssueHandler {
     @NonNull
     public List<SyncIssue> getSyncIssues() {
         return syncIssues;
-    }
-
-    @NonNull
-    public String getProjectName() {
-        return projectName;
     }
 
     @NonNull
@@ -248,10 +239,12 @@ public class DependencyChecker implements SyncIssueHandler {
                             SyncIssue.TYPE_MISMATCH_DEP,
                             SyncIssue.SEVERITY_ERROR,
                             String.format(
-                                    "Conflict with dependency '%s'. Resolved versions for"
-                                            + " compilation (%s) and packaging (%s) differ. This can "
-                                            + "generate runtime errors due to mismatched resources.",
+                                    "Conflict with dependency '%s' in project '%s'."
+                                            + " Resolved versions for compilation (%s) and"
+                                            + " packaging (%s) differ. This can generate runtime"
+                                            + " errors due to mismatched resources.",
                                     coordinateKey,
+                                    this.projectName,
                                     compileLib.getResolvedCoordinates().getVersion(),
                                     packageMatch.getResolvedCoordinates().getVersion()));
                 }
@@ -347,11 +340,12 @@ public class DependencyChecker implements SyncIssueHandler {
                     SyncIssue.TYPE_MISMATCH_DEP,
                     SyncIssue.SEVERITY_ERROR,
                     String.format(
-                            "Conflict with dependency '%s'. Resolved versions for"
+                            "Conflict with dependency '%s' in project '%s'. Resolved versions for"
                                     + " app (%s) and test app (%s) differ. See"
                                     + " http://g.co/androidstudio/app-test-app-conflict"
                                     + " for details.",
                             artifactInfo,
+                            this.projectName,
                             testedVersion,
                             coordinates.getVersion()));
         }
