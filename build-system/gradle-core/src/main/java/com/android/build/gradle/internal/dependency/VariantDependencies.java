@@ -280,7 +280,7 @@ public class VariantDependencies {
             }
 
             DependencyChecker checker = new DependencyChecker(
-                    project.getName(),
+                    project.getPath().equals(":") ? project.getName() : project.getPath(),
                     variantName,
                     errorReporter,
                     variantType,

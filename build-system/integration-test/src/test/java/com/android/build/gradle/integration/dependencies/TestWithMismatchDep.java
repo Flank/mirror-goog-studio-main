@@ -16,20 +16,17 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assert.fail;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 /**
  * Tests the handling of test dependencies.
  */
@@ -49,9 +46,11 @@ public class TestWithMismatchDep {
                 "}\n");
     }
 
-    private static final String ERROR_MSG = "Conflict with dependency \'com.google.guava:guava\'." +
-            " Resolved versions for app (17.0) and test app (15.0) differ." +
-            " See http://g.co/androidstudio/app-test-app-conflict for details.";
+    private static final String ERROR_MSG =
+            "Conflict with dependency \'com.google.guava:guava\' in"
+                    + " project 'testDependency'."
+                    + " Resolved versions for app (17.0) and test app (15.0) differ."
+                    + " See http://g.co/androidstudio/app-test-app-conflict for details.";
 
     @Test
     public void testMismatchDependencyErrorIsInTheModel() {
