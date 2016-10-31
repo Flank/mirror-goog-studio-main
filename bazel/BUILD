@@ -1,5 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
-
 java_library(
     name = "utils",
     srcs = glob(["src/**/utils/*.java"]),
@@ -122,8 +120,8 @@ java_library(
 )
 
 java_binary(
-    name = "pom_generator",
-    main_class = "com.android.tools.maven.PomGenerator",
+    name = "pom_modifier",
+    main_class = "com.android.tools.maven.PomModifier",
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
 )
@@ -237,12 +235,4 @@ config_setting(
         "cpu": "darwin",
     },
     visibility = ["//visibility:public"],
-)
-
-# TODO: Temporary test rule for repo generation
-maven_repo(
-  name = "offline_repo",
-  artifacts = [
-      "//tools/base/common:tools.common",
-  ],
 )

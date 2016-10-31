@@ -1,115 +1,48 @@
 def _maven_artifact_impl(ctx):
-  jars = set()
+  direct_deps = set()
+  transitive = set([ctx.outputs.pom])
+  jars = set([jar.class_jar for jar in ctx.attr.artifact.java.outputs.jars])
+  packages = {ctx.outputs.pom : jars}
 
-  if ctx.attr.library:
-    jars = set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
+  for label in ctx.attr.deps:
+    direct_deps = direct_deps | [label.maven.pom]
+    transitive = transitive | label.maven.transitive_deps
+    jars = jars | label.maven.transitive_jars
+    packages += label.maven.packages
 
-
-  parent_poms = set([], order="compile")
-  parent_jars = {}
-
-  deps_poms = set([], order="compile")
-  deps_jars = {}
-
-  # Transitive deps through the parent attribute
-  if ctx.attr.parent:
-    parent_poms = parent_poms | ctx.attr.parent.maven.parent.poms
-    parent_poms = parent_poms | ctx.attr.parent.maven.deps.poms
-    parent_poms = parent_poms | [ctx.file.parent]
-    parent_jars += ctx.attr.parent.maven.parent.jars
-    parent_jars += ctx.attr.parent.maven.deps.jars
-    parent_jars += {ctx.file.parent: ctx.attr.parent.maven.jars}
-  else:
-    if hasattr(ctx.attr.source, "maven"):
-      parent_poms = ctx.attr.source.maven.parent.poms
-      parent_jars = ctx.attr.source.maven.parent.jars
-
-  # Transitive deps through deps
-  if ctx.attr.deps:
-    for label in ctx.attr.deps:
-      deps_poms = deps_poms | label.maven.parent.poms
-      deps_poms = deps_poms | label.maven.deps.poms
-      deps_poms = deps_poms | [label.maven.pom]
-      deps_jars += label.maven.parent.jars
-      deps_jars += label.maven.deps.jars
-      deps_jars += {label.maven.pom: label.maven.jars}
-  else:
-    if hasattr(ctx.attr.source, "maven"):
-      deps_poms = ctx.attr.source.maven.deps.poms
-      deps_jars = ctx.attr.source.maven.deps.jars
-
-  inputs = [];
-  args = []
-
-  # Input file to take as base
-  if ctx.file.source:
-    args += ["-i", ctx.file.source.path]
-    inputs += [ctx.file.source]
-
-  # Output file
-  args += ["-o", ctx.outputs.pom.path]
-
-  # Overrides
-  if ctx.attr.group:
-    args += ["--group", ctx.attr.group]
-  if ctx.attr.artifact:
-    args += ["--artifact", ctx.attr.artifact]
-  if ctx.attr.version:
-    args += ["--version", ctx.attr.version]
-
-  args += ["--deps", ":".join([dep.path for dep in ctx.files.deps])]
-  inputs += ctx.files.deps
 
   ctx.action(
       mnemonic = "GenPom",
-      inputs = inputs,
+      inputs = list(direct_deps),
       outputs = [ctx.outputs.pom],
-      arguments = args,
+      arguments = [ctx.outputs.pom.path, ctx.attr.info] + [dep.path for dep in list(direct_deps)],
       executable = ctx.executable._pom,
   )
-
   return struct(maven = struct(
-    parent = struct(
-      poms = parent_poms,
-      jars = parent_jars,
-    ),
-    deps = struct(
-      poms = deps_poms,
-      jars = deps_jars,
-    ),
     pom = ctx.outputs.pom,
-    jars = jars,
+    transitive_deps = transitive,
+    transitive_jars = jars,
+    packages = packages,
   ))
 
 
-maven_pom = rule(
-  implementation = _maven_artifact_impl,
-  attrs = {
-    "deps": attr.label_list(),
-    "library": attr.label(
-        allow_files = True
-    ),
-    "group" : attr.string(),
-    "version" : attr.string(),
-    "artifact" : attr.string(),
-    "source" : attr.label(
-        allow_files = True,
-        single_file = True,
-    ),
-    "parent" : attr.label(
-        allow_files = True,
-        single_file = True,
-    ),
-    "_pom": attr.label(
-        executable = True,
-        cfg = "host",
-        default = Label("//tools/base/bazel:pom_generator"),
-        allow_files = True
-    ),
-    },
-    outputs = {
-      "pom": "%{name}.pom",
-    },
+maven_artifact = rule(
+   implementation = _maven_artifact_impl,
+   attrs = {
+     "deps": attr.label_list(),
+     "artifact": attr.label(
+          allow_files = True
+      ),
+     "info" : attr.string(),
+     "_pom": attr.label(
+         executable = True,
+         cfg = "host",
+         default = Label("//tools/base/bazel:pom_modifier"),
+         allow_files = True),
+   },
+   outputs = {
+     "pom": "%{name}.pom",
+   },
 )
 
 # A java library that can be used in a maven_repo rule.
@@ -121,60 +54,24 @@ maven_pom = rule(
 #     # all java_library attriutes
 #     info = A maven coordinate for this artifact as a string
 # )
-def maven_java_library(name, deps=None, export_artifact=None, srcs=None, exports=None, pom=None, visibility=None, **kwargs):
-
-  if srcs and export_artifact:
-    fail("Ony one of [srcs, export_artifact] can be used at a time")
-
-  if export_artifact and pom:
-    fail("If export_artifact is specified, the maven information cannot be changed.")
-
-  java_exports = exports + [export_artifact] if export_artifact else exports
+def maven_java_library(name, deps=[], maven_info=None, **kwargs):
   native.java_library(
     name = name,
     deps = deps,
-    srcs = srcs,
-    exports = java_exports,
-    visibility = visibility,
     **kwargs
   )
 
-  maven_deps = exports if not deps else deps if not exports else deps + exports
-  maven_pom(
+  maven_artifact(
     name = name + "_maven",
-    deps = [dep + "_maven" for dep in maven_deps] if maven_deps and not export_artifact else None,
-    library = export_artifact if export_artifact else name,
-    visibility = visibility,
-    source = export_artifact + "_maven" if export_artifact else pom,
-  )
-
-# A java_import rule extended with pom and parent attributes for maven libraries.
-def maven_java_import(name, pom=None, visibility=None, parent=None, **kwargs):
-  native.java_import(
-    name = name,
-    visibility = visibility,
-    **kwargs
-  )
-  if not pom:
-    fail("maven_java_import must specify a pom file.")
-
-  maven_pom(
-    name = name + "_maven",
-    library = name,
-    visibility = visibility,
-    source = pom,
-    parent = parent,
+    deps = [dep + "_maven" for dep in deps],
+    artifact = name,
+    info = maven_info,
   )
 
 def _maven_repo_impl(ctx):
   inputs = []
   for artifact in ctx.attr.artifacts:
-    inputs += [artifact.maven.pom] + list(artifact.maven.jars)
-    for pom in artifact.maven.parent.poms:
-      jars = artifact.maven.parent.jars[pom]
-      inputs += [pom] + list(jars)
-    for pom in artifact.maven.deps.poms:
-      jars = artifact.maven.deps.jars[pom]
+    for pom, jars in artifact.maven.packages.items():
       inputs += [pom] + list(jars)
 
   # Execute the command
