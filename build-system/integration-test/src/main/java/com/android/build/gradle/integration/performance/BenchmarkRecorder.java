@@ -53,24 +53,24 @@ public final class BenchmarkRecorder {
 
     @NonNull private final Logging.Benchmark benchmark;
 
-    @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final Set<ProjectScenario> projectScenarios;
 
     @NonNull private final ProfileUploader uploader;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     public BenchmarkRecorder(
-            @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
-        this(benchmark, projectScenario, GoogleStorageProfileUploader.INSTANCE);
+            @NonNull Logging.Benchmark benchmark, @NonNull Set<ProjectScenario> projectScenarios) {
+        this(benchmark, projectScenarios, GoogleStorageProfileUploader.INSTANCE);
     }
 
     @VisibleForTesting
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark,
-            @NonNull ProjectScenario projectScenario,
+            @NonNull Set<ProjectScenario> projectScenarios,
             @NonNull ProfileUploader uploader) {
         this.benchmark = benchmark;
-        this.projectScenario = projectScenario;
+        this.projectScenarios = projectScenarios;
         this.uploader = uploader;
     }
 
@@ -107,7 +107,11 @@ public final class BenchmarkRecorder {
             benchmarkResult.setExperiment(experiment);
         }
 
-        GradleBenchmarkResult.Flags.Builder flags = projectScenario.getFlags().toBuilder();
+        GradleBenchmarkResult.Flags.Builder flags = GradleBenchmarkResult.Flags.newBuilder();
+        for (ProjectScenario scenario : projectScenarios) {
+            flags.mergeFrom(scenario.getFlags());
+        }
+
         GradleBuildProfile profile = benchmarkResult.getProfile();
 
         if (profile.hasGradleVersion()) {

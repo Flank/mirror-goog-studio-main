@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.integration.performance.ProjectScenario;
 import com.android.ide.common.util.ReferenceHolder;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -54,7 +55,7 @@ public class PerformanceInfrastructureTest {
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.ANTENNA_POD,
-                                        ProjectScenario.DEX_OUT_OF_PROCESS,
+                                        ImmutableSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
                                         benchmarkResults::addAll))
                         .create();
 

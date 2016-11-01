@@ -57,7 +57,10 @@ message GradleBenchmarkResult {
     ApiJar api_jar = 7;
     GradleVersion gradle_version = 8;
     Branch branch = 9;
+    Compiler compiler = 10;
 
+    // Tells whether Jack or Dex are run in process. Will be renamed to
+    // "CompilerInProcess" once we're ready to migrate the old data.
     enum DexInProcess {
       DEX_OUT_OF_PROCESS = 0;
       DEX_IN_PROCESS = 1;
@@ -104,6 +107,11 @@ message GradleBenchmarkResult {
     enum Branch {
       STUDIO_MASTER_DEV = 0;
       STUDIO_UPCOMING_GRADLE_BRANCH = 1;
+    }
+
+    enum Compiler {
+      DEX = 0;
+      JACK = 1;
     }
   }
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.performance;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -29,8 +30,10 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,16 +45,16 @@ import org.junit.runners.Parameterized;
 public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
-    @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final Set<ProjectScenario> projectScenarios;
 
-    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
-        this.projectScenario = projectScenario;
+    public LargeGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
+        this.projectScenarios = projectScenarios;
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("android-studio-gradle-test")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_LARGE, projectScenario))
+                                        Logging.Benchmark.PERF_ANDROID_LARGE, projectScenarios))
                         .withHeap("20G")
                         .create();
     }
@@ -60,7 +63,10 @@ public class LargeGradleProjectPerformanceMatrixTest {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
                 new Object[][] {
-                    {ProjectScenario.NATIVE_MULTIDEX}, {ProjectScenario.LEGACY_MULTIDEX},
+                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
+                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
+                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
+                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)}
                 });
     }
 
@@ -108,17 +114,23 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 "dependencies \\{\n",
                 "dependencies { compile deps.external.rxjava\n");
 
-        switch (projectScenario) {
-            case NATIVE_MULTIDEX:
-                TestFileUtils.searchAndReplace(
-                        project.file("dependencies.gradle"),
-                        "minSdkVersion( )*: \\d+,",
-                        "minSdkVersion : 21,");
-                break;
-            case LEGACY_MULTIDEX:
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
+        for (ProjectScenario projectScenario : projectScenarios) {
+            switch (projectScenario) {
+                case NATIVE_MULTIDEX:
+                    TestFileUtils.searchAndReplace(
+                            project.file("dependencies.gradle"),
+                            "minSdkVersion( )*: \\d+,",
+                            "minSdkVersion : 21,");
+                    break;
+                case LEGACY_MULTIDEX:
+                    break;
+                case JACK_ON:
+                    JackHelper.enableJack(project.getBuildFile());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Unknown project scenario" + projectScenario);
+            }
         }
     }
 

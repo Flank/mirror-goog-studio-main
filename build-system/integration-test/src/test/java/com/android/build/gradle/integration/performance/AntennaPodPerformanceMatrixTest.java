@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
+import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
@@ -35,8 +36,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,17 +51,19 @@ public class AntennaPodPerformanceMatrixTest {
 
     private int nonce = 0;
     @Rule public final GradleTestProject mainProject;
-    @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final Set<ProjectScenario> projectScenarios;
     private GradleTestProject project;
 
-    public AntennaPodPerformanceMatrixTest(@NonNull ProjectScenario scenario) {
-        this.projectScenario = scenario;
+    public AntennaPodPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
+        this.projectScenarios = projectScenarios;
         mainProject =
                 GradleTestProject.builder()
                         .fromExternalProject("AntennaPod")
                         .forBenchmarkRecording(
-                                new BenchmarkRecorder(Logging.Benchmark.ANTENNA_POD, scenario))
-                        .withRelativeProfileDirectory(Paths.get("AntennaPod", "build", "android-profile"))
+                                new BenchmarkRecorder(
+                                        Logging.Benchmark.ANTENNA_POD, projectScenarios))
+                        .withRelativeProfileDirectory(
+                                Paths.get("AntennaPod", "build", "android-profile"))
                         .create();
     }
 
@@ -66,7 +71,10 @@ public class AntennaPodPerformanceMatrixTest {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
                 new Object[][] {
-                    {ProjectScenario.NORMAL}, {ProjectScenario.DEX_OUT_OF_PROCESS},
+                    {EnumSet.of(ProjectScenario.NORMAL)},
+                    {EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
+                    {EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS)},
+                    {EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
                 });
     }
 
@@ -92,14 +100,24 @@ public class AntennaPodPerformanceMatrixTest {
                         + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
                         + "'} \n"
                         + "        jcenter()");
-        switch (projectScenario) {
-            case NORMAL:
-                break;
-            case DEX_OUT_OF_PROCESS:
-                DexInProcessHelper.disableDexInProcess(project.file("app/build.gradle"));
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
+
+        for (ProjectScenario projectScenario : projectScenarios) {
+            switch (projectScenario) {
+                case NORMAL:
+                    break;
+                case DEX_OUT_OF_PROCESS:
+                    DexInProcessHelper.disableDexInProcess(project.file("app/build.gradle"));
+                    break;
+                case JACK_ON:
+                    JackHelper.enableJack(project.file("app/build.gradle"));
+                    break;
+                case JACK_OUT_OF_PROCESS:
+                    // automatically enables Jack as well
+                    JackHelper.disableJackInProcess(project.file("app/build.gradle"));
+                default:
+                    throw new IllegalArgumentException(
+                            "Unknown project scenario" + projectScenario);
+            }
         }
     }
 
