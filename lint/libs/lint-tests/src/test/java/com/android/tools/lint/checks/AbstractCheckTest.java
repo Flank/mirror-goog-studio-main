@@ -31,6 +31,11 @@ import java.util.List;
 
 public abstract class AbstractCheckTest extends LintDetectorTest {
     @Override
+    protected boolean allowAndroidBuildEnvironment() {
+        return false;
+    }
+
+    @Override
     protected List<Issue> getIssues() {
         List<Issue> issues = new ArrayList<>();
         Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
