@@ -9,7 +9,11 @@
 
 # Specifies the JVM arguments used for the daemon process.
 # The setting is particularly useful for tweaking memory settings.
+<#if isLowMemory!false>
+org.gradle.jvmargs=-Xmx1024m
+<#else>
 org.gradle.jvmargs=-Xmx1536m
+</#if>
 
 # When configured, Gradle will run in incubating parallel mode.
 # This option should only be used with decoupled projects. More details, visit
