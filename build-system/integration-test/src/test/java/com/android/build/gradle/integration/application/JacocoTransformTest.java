@@ -29,6 +29,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,6 +86,7 @@ public class JacocoTransformTest {
                 .exists();
     }
 
+    @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
     @Test
     @Category(DeviceTests.class)
     public void connectedCheckWithJackInProcess() throws IOException {
@@ -97,6 +99,7 @@ public class JacocoTransformTest {
         assertThat(mProject.file("build/reports/coverage/debug/index.html")).exists();
     }
 
+    @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
     @Test
     @Category(DeviceTests.class)
     public void connectedCheckWithJackOutOfProcess() throws IOException {
