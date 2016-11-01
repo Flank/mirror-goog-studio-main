@@ -140,6 +140,7 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 
 /**
  * Java parser which uses ECJ for parsing and type attribution
@@ -150,7 +151,7 @@ public class EcjParser extends JavaParser {
     private static final boolean DEBUG_DUMP_PARSE_ERRORS = false;
 
     /**
-     * Whether we're going to keep the ECJ compiler mLookupEnvironment around between
+     * Whether we're going to keep the ECJ compiler lookupEnvironment around between
      * the parse phase and disposal. The lookup environment is important for type attribution.
      * We should be able to inline this field to true, but making it optional now to allow
      * people to revert this behavior in the field immediately if there's an unexpected
@@ -243,9 +244,9 @@ public class EcjParser extends JavaParser {
     }
 
     @Override
-    public void prepareJavaParse(@NonNull final List<JavaContext> contexts) {
+    public boolean prepareJavaParse(@NonNull final List<JavaContext> contexts) {
         if (project == null || contexts.isEmpty()) {
-            return;
+            return true;
         }
 
         List<EcjSourceFile> sources = Lists.newArrayListWithExpectedSize(contexts.size());
@@ -263,7 +264,7 @@ public class EcjParser extends JavaParser {
         List<String> classPath = computeClassPath(contexts);
         try {
             ecjResult = parse(createCompilerOptions(), sources, classPath, client);
-            resolver = new EcjPsiJavaEvaluator(ecjResult.mPsiManager);
+            resolver = new EcjPsiJavaEvaluator(ecjResult.psiManager);
 
             if (DEBUG_DUMP_PARSE_ERRORS) {
                 for (CompilationUnitDeclaration unit : ecjResult.getCompilationUnits()) {
@@ -283,54 +284,60 @@ public class EcjParser extends JavaParser {
                     }
                 }
             }
+
+            return !ecjResult.hasErrors();
         } catch (Throwable t) {
             client.log(t, "ECJ compiler crashed");
+            return false;
         }
     }
 
     /**
-     * A result from an ECJ compilation. In addition to the {@link #mSourceToUnit} it also
-     * returns the {@link #mNameEnvironment} and {@link #mLookupEnvironment} which are sometimes
+     * A result from an ECJ compilation. In addition to the {@link #sourceToUnit} it also
+     * returns the {@link #nameEnvironment} and {@link #lookupEnvironment} which are sometimes
      * needed after parsing to perform for example type attribution. <b>NOTE</b>: Clients are
-     * expected to dispose of the {@link #mNameEnvironment} when done with the compilation units!
+     * expected to dispose of the {@link #nameEnvironment} when done with the compilation units!
      */
     public static class EcjResult {
-        @Nullable private final INameEnvironment mNameEnvironment;
-        @Nullable private final LookupEnvironment mLookupEnvironment;
-        @NonNull  private final Map<EcjSourceFile, CompilationUnitDeclaration> mSourceToUnit;
-        @Nullable private Map<ICompilationUnit, PsiJavaFile> mPsiMap;
-        @Nullable private Map<CompilationUnitDeclaration, EcjSourceFile> mUnitToSource;
+        @Nullable private final INameEnvironment nameEnvironment;
+        @Nullable private final LookupEnvironment lookupEnvironment;
+        @NonNull  private final Map<EcjSourceFile, CompilationUnitDeclaration> sourceToUnit;
+        @Nullable private Map<ICompilationUnit, PsiJavaFile> psiMap;
+        @Nullable private Map<CompilationUnitDeclaration, EcjSourceFile> unitToSource;
         @Nullable Map<Binding, CompilationUnitDeclaration> mBindingToUnit;
-        private EcjPsiManager mPsiManager;
+        private EcjPsiManager psiManager;
+        private boolean hasErrors;
 
         public EcjResult(@Nullable INameEnvironment nameEnvironment,
                 @Nullable LookupEnvironment lookupEnvironment,
-                @NonNull Map<EcjSourceFile, CompilationUnitDeclaration> compilationUnits) {
-            mNameEnvironment = nameEnvironment;
-            mLookupEnvironment = lookupEnvironment;
-            mSourceToUnit = compilationUnits;
+                @NonNull Map<EcjSourceFile, CompilationUnitDeclaration> sourceToUnit,
+                boolean hasErrors) {
+            this.nameEnvironment = nameEnvironment;
+            this.lookupEnvironment = lookupEnvironment;
+            this.sourceToUnit = sourceToUnit;
+            this.hasErrors = hasErrors;
         }
 
         @Nullable
         public LookupEnvironment getLookupEnvironment() {
-            return mLookupEnvironment;
+            return lookupEnvironment;
         }
 
         public void setPsiManager(@NonNull EcjPsiManager psiManager) {
-            mPsiManager = psiManager;
+            this.psiManager = psiManager;
         }
 
         @Nullable
         public PsiJavaFile findFile(@NonNull EcjSourceFile sourceUnit) {
-            if (mPsiMap != null) {
-                PsiJavaFile file = mPsiMap.get(sourceUnit);
+            if (psiMap != null) {
+                PsiJavaFile file = psiMap.get(sourceUnit);
                 if (file != null) {
                     return file;
                 }
             } else {
                 // Using weak values to allow map to occasionally refresh
-                mPsiMap = new MapMaker()
-                        .initialCapacity(mSourceToUnit.size())
+                psiMap = new MapMaker()
+                        .initialCapacity(sourceToUnit.size())
                         .weakValues()
                         .concurrencyLevel(1)
                         .makeMap();
@@ -339,9 +346,9 @@ public class EcjParser extends JavaParser {
 
             CompilationUnitDeclaration unit = getCompilationUnit(sourceUnit);
             if (unit != null) {
-                PsiJavaFile file = EcjPsiBuilder.create(mPsiManager, unit, sourceUnit);
-                assert mPsiMap != null;
-                mPsiMap.put(sourceUnit, file);
+                PsiJavaFile file = EcjPsiBuilder.create(psiManager, unit, sourceUnit);
+                assert psiMap != null;
+                psiMap.put(sourceUnit, file);
                 return file;
             }
 
@@ -350,16 +357,16 @@ public class EcjParser extends JavaParser {
 
         @Nullable
         public PsiJavaFile findFileContaining(@Nullable ReferenceBinding declaringClass) {
-            if (mUnitToSource == null) {
-                int size = mSourceToUnit.size();
-                mUnitToSource = Maps.newHashMapWithExpectedSize(size);
+            if (unitToSource == null) {
+                int size = sourceToUnit.size();
+                unitToSource = Maps.newHashMapWithExpectedSize(size);
                 mBindingToUnit = Maps.newHashMapWithExpectedSize(size);
                 for (Map.Entry<EcjSourceFile, CompilationUnitDeclaration> entry
-                        : mSourceToUnit.entrySet()) {
+                        : sourceToUnit.entrySet()) {
                     CompilationUnitDeclaration unit = entry.getValue();
                     EcjSourceFile sourceUnit = entry.getKey();
                     //noinspection ConstantConditions
-                    mUnitToSource.put(unit, sourceUnit);
+                    unitToSource.put(unit, sourceUnit);
 
                     if (unit.types == null) {
                         // Usually not the case, but for really misconfigured projects with broken
@@ -378,7 +385,7 @@ public class EcjParser extends JavaParser {
             while (declaringClass != null) {
                 CompilationUnitDeclaration unit = mBindingToUnit.get(declaringClass);
                 if (unit != null) {
-                    EcjSourceFile sourceUnit = mUnitToSource.get(unit);
+                    EcjSourceFile sourceUnit = unitToSource.get(unit);
                     if (sourceUnit != null) {
                         return findFile(sourceUnit);
                     }
@@ -408,7 +415,7 @@ public class EcjParser extends JavaParser {
          */
         @NonNull
         public Collection<CompilationUnitDeclaration> getCompilationUnits() {
-            return mSourceToUnit.values();
+            return sourceToUnit.values();
         }
 
         /**
@@ -420,7 +427,7 @@ public class EcjParser extends JavaParser {
         @Nullable
         public CompilationUnitDeclaration getCompilationUnit(
                 @NonNull EcjSourceFile sourceUnit) {
-            return mSourceToUnit.get(sourceUnit);
+            return sourceToUnit.get(sourceUnit);
         }
 
         /**
@@ -430,7 +437,7 @@ public class EcjParser extends JavaParser {
          * @param sourceUnit the source unit
          */
         void removeCompilationUnit(@NonNull EcjSourceFile sourceUnit) {
-            mSourceToUnit.remove(sourceUnit);
+            sourceToUnit.remove(sourceUnit);
         }
 
         /**
@@ -438,15 +445,19 @@ public class EcjParser extends JavaParser {
          * the parser instance hangs around.
          */
         public void dispose() {
-            if (mNameEnvironment != null) {
-                mNameEnvironment.cleanup();
+            if (nameEnvironment != null) {
+                nameEnvironment.cleanup();
             }
 
-            if (mLookupEnvironment != null) {
-                mLookupEnvironment.reset();
+            if (lookupEnvironment != null) {
+                lookupEnvironment.reset();
             }
 
-            mSourceToUnit.clear();
+            sourceToUnit.clear();
+        }
+
+        public boolean hasErrors() {
+            return hasErrors;
         }
     }
 
@@ -464,7 +475,7 @@ public class EcjParser extends JavaParser {
                 classPath.toArray(new String[classPath.size()]), new String[0],
                 options.defaultEncoding);
         IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
-        IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
+        EcjProblemFactory problemFactory = new EcjProblemFactory();
         ICompilerRequestor requestor = result -> {
             // Not used; we need the corresponding CompilationUnitDeclaration for the source
             // units (the AST parsed from source) which we don't get access to here, so we
@@ -520,7 +531,8 @@ public class EcjParser extends JavaParser {
         }
 
         LookupEnvironment lookupEnvironment = compiler != null ? compiler.lookupEnvironment : null;
-        EcjResult ecjResult = new EcjResult(environment, lookupEnvironment, outputMap);
+        EcjResult ecjResult = new EcjResult(environment, lookupEnvironment, outputMap,
+                problemFactory.hasErrors());
         EcjPsiManager psiManager = new EcjPsiManager(client, ecjResult, options.sourceLevel);
         ecjResult.setPsiManager(psiManager);
         return ecjResult;
@@ -829,11 +841,11 @@ public class EcjParser extends JavaParser {
     @SuppressWarnings("unused") // Called via reflection from LintDriver
     public void disposePsi() {
         if (ecjResult != null) {
-            EcjPsiManager psiManager = ecjResult.mPsiManager;
+            EcjPsiManager psiManager = ecjResult.psiManager;
             if (psiManager != null) {
                 psiManager.clear();
             }
-            ecjResult.mPsiMap = null;
+            ecjResult.psiMap = null;
         }
     }
 
@@ -1145,7 +1157,7 @@ public class EcjParser extends JavaParser {
             compoundName[i] = arrays.get(i);
         }
 
-        LookupEnvironment lookup = ecjResult.mLookupEnvironment;
+        LookupEnvironment lookup = ecjResult.lookupEnvironment;
         if (lookup != null) {
             ReferenceBinding type = lookup.getType(compoundName);
             if (type != null && !(type instanceof ProblemReferenceBinding)) {
@@ -1311,7 +1323,7 @@ public class EcjParser extends JavaParser {
 
         @Nullable
         CompilationUnitDeclaration getCurrentUnit() {
-            // Can't use mLookupEnvironment.unitBeingCompleted directly; it gets nulled out
+            // Can't use lookupEnvironment.unitBeingCompleted directly; it gets nulled out
             // as part of the exception catch handling in the compiler before this method
             // is called from lint -- therefore we stash a copy in our own mCurrentUnit field
             return mCurrentUnit;
@@ -1353,7 +1365,7 @@ public class EcjParser extends JavaParser {
         public void reset() {
             if (KEEP_LOOKUP_ENVIRONMENT) {
                 // Same as super.reset() in ECJ 4.4.2, but omits the following statement:
-                //  this.mLookupEnvironment.reset();
+                //  this.lookupEnvironment.reset();
                 // because we need the lookup environment to stick around even after the
                 // parse phase is done: at that point we're going to use the parse trees
                 // from java detectors which may need to resolve types
@@ -1365,6 +1377,40 @@ public class EcjParser extends JavaParser {
             } else {
                 super.reset();
             }
+        }
+    }
+
+    private static class EcjProblemFactory extends DefaultProblemFactory {
+        private boolean hasErrors;
+
+        public EcjProblemFactory() {
+            super(Locale.getDefault());
+        }
+
+        @Override
+        public CategorizedProblem createProblem(char[] originatingFileName, int problemId,
+                String[] problemArguments, String[] messageArguments, int severity,
+                int startPosition,
+                int endPosition, int lineNumber, int columnNumber) {
+            hasErrors |= (severity & ProblemSeverities.Error) != 0;
+            return super.createProblem(originatingFileName, problemId, problemArguments,
+                    messageArguments, severity, startPosition, endPosition, lineNumber,
+                    columnNumber);
+        }
+
+        @Override
+        public CategorizedProblem createProblem(char[] originatingFileName, int problemId,
+                String[] problemArguments, int elaborationId, String[] messageArguments,
+                int severity,
+                int startPosition, int endPosition, int lineNumber, int columnNumber) {
+            hasErrors |= (severity & ProblemSeverities.Error) != 0;
+            return super.createProblem(originatingFileName, problemId, problemArguments,
+                    elaborationId, messageArguments, severity, startPosition, endPosition,
+                    lineNumber, columnNumber);
+        }
+
+        public boolean hasErrors() {
+            return hasErrors;
         }
     }
 

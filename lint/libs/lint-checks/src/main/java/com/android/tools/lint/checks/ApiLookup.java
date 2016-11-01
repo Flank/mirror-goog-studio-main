@@ -878,6 +878,17 @@ public class ApiLookup {
         return -1;
     }
 
+    /** Returns true if the given internal class name is part of the database. */
+    public boolean containsClass(@NonNull String owner) {
+        if (mData != null) {
+            return findClass(owner) != -1;
+        }  else if (mInfo != null) {
+            return mInfo.getClass(owner) != null;
+        }
+
+        return false;
+    }
+
     /**
      * Returns the API version required by the given method call. The method is
      * referred to by its {@code owner}, {@code name} and {@code desc} fields.

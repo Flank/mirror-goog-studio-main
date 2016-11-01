@@ -416,8 +416,8 @@ public class JavaPsiVisitor {
         sExceptionCount = 0;
     }
 
-    public void prepare(@NonNull List<JavaContext> contexts) {
-        parser.prepareJavaParse(contexts);
+    public boolean prepare(@NonNull List<JavaContext> contexts) {
+        return parser.prepareJavaParse(contexts);
     }
 
     public void dispose() {

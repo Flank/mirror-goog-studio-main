@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -88,6 +89,18 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     private PsiReferenceList mImplementsList;
 
     EcjPsiClass(@NonNull EcjPsiManager manager, @NonNull TypeDeclaration declaration,
+            @Nullable String name) {
+        super(manager, declaration);
+        mEcjModifiers = declaration.modifiers;
+        mName = name;
+        if (declaration.binding != null && declaration.binding.compoundName != null) {
+            mQualifiedName = getTypeName(declaration.binding);
+        }
+
+        mManager.registerElement(declaration.binding, this);
+    }
+
+    EcjPsiClass(@NonNull EcjPsiManager manager, @NonNull TypeParameter declaration,
             @Nullable String name) {
         super(manager, declaration);
         mEcjModifiers = declaration.modifiers;
@@ -286,11 +299,11 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
         PsiClass[] interfaces = getInterfaces();
         if (superClass == null) {
             return interfaces;
-        } else if (interfaces == null) {
+        } else if (interfaces == null || interfaces.length == 0) {
             return new PsiClass[] { superClass };
         } else {
             PsiClass[] result = new PsiClass[interfaces.length+1];
-            System.arraycopy(interfaces, 1, result, 0, interfaces.length);
+            System.arraycopy(interfaces, 0, result, 1, interfaces.length);
             result[0] = superClass;
             return result;
         }

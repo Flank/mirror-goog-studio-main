@@ -16,15 +16,19 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.google.common.collect.Maps;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
+import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiEllipsisType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
@@ -35,10 +39,14 @@ import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
+import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.PsiTypeVisitor;
+import com.intellij.psi.PsiWildcardType;
 import java.io.File;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
 public abstract class JavaEvaluator {
@@ -224,7 +232,7 @@ public abstract class JavaEvaluator {
         return null;
     }
 
-    @NonNull
+    @Nullable
     public String getInternalName(@NonNull PsiClass psiClass) {
         String qualifiedName = psiClass.getQualifiedName();
         if (qualifiedName == null) {
@@ -238,9 +246,203 @@ public abstract class JavaEvaluator {
         return ClassContext.getInternalName(qualifiedName);
     }
 
-    @NonNull
+    @Nullable
     public String getInternalName(@NonNull PsiClassType psiClassType) {
         return ClassContext.getInternalName(psiClassType.getCanonicalText());
+    }
+
+    /**
+     * Computes the internal JVM description of the given method. This is in the same
+     * format as the ASM desc fields for methods; meaning that a method named foo which for example takes an
+     * int and a String and returns a void will have description {@code foo(ILjava/lang/String;):V}.
+     *
+     * @param method the method to look up the description for
+     * @param includeName whether the name should be included
+     * @param includeReturn whether the return type should be included
+     * @return the internal JVM description for this method
+     */
+    @Nullable
+    public String getInternalDescription(@NonNull PsiMethod method, boolean includeName,
+            boolean includeReturn) {
+        assert !includeName; // not yet tested
+        assert !includeReturn; // not yet tested
+
+        StringBuilder signature = new StringBuilder();
+
+        if (includeName) {
+            if (method.isConstructor()) {
+                final PsiClass declaringClass = method.getContainingClass();
+                if (declaringClass != null) {
+                    final PsiClass outerClass = declaringClass.getContainingClass();
+                    if (outerClass != null) {
+                        // declaring class is an inner class
+                        if (!declaringClass.hasModifierProperty(PsiModifier.STATIC)) {
+                            if (!appendJvmTypeName(signature, outerClass)) {
+                                return null;
+                            }
+                        }
+                    }
+                }
+                signature.append(CONSTRUCTOR_NAME);
+            } else {
+                signature.append(method.getName());
+            }
+        }
+
+        signature.append('(');
+
+        for (PsiParameter psiParameter : method.getParameterList().getParameters()) {
+            if (!appendJvmSignature(signature, psiParameter.getType())) {
+                return null;
+            }
+        }
+        signature.append(')');
+        if (includeReturn) {
+            if (!method.isConstructor()) {
+                if (!appendJvmSignature(signature, method.getReturnType())) {
+                    return null;
+                }
+            }
+            else {
+                signature.append('V');
+            }
+        }
+        return signature.toString();
+    }
+
+    private boolean appendJvmTypeName(@NonNull StringBuilder signature, @NonNull PsiClass outerClass) {
+        String className = getInternalName(outerClass);
+        if (className == null) {
+            return false;
+        }
+        signature.append('L').append(className.replace('.', '/')).append(';');
+        return true;
+    }
+
+    private boolean appendJvmSignature(@NonNull StringBuilder buffer, @Nullable PsiType type) {
+        if (type == null) {
+            return false;
+        }
+        final PsiType psiType = erasure(type);
+        if (psiType instanceof PsiArrayType) {
+            buffer.append('[');
+            appendJvmSignature(buffer, ((PsiArrayType)psiType).getComponentType());
+        }
+        else if (psiType instanceof PsiClassType) {
+            PsiClass resolved = ((PsiClassType)psiType).resolve();
+            if (resolved == null) {
+                return false;
+            }
+            if (!appendJvmTypeName(buffer, resolved)) {
+                return false;
+            }
+        }
+        else if (psiType instanceof PsiPrimitiveType) {
+            buffer.append(getPrimitiveSignature(psiType.getCanonicalText()));
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean areSignaturesEqual(@NotNull PsiMethod method1, @NotNull PsiMethod method2) {
+        PsiParameterList parameterList1 = method1.getParameterList();
+        PsiParameterList parameterList2 = method2.getParameterList();
+        if (parameterList1.getParametersCount() != parameterList2.getParametersCount()) {
+            return false;
+        }
+
+        PsiParameter[] parameters1 = parameterList1.getParameters();
+        PsiParameter[] parameters2 = parameterList2.getParameters();
+
+        for (int i = 0, n = parameters1.length; i < n; i++) {
+            PsiParameter parameter1 = parameters1[i];
+            PsiParameter parameter2 = parameters2[i];
+            PsiType type1 = parameter1.getType();
+            PsiType type2 = parameter2.getType();
+            if (!type1.equals(type2)) {
+                type1 = erasure(parameter1.getType());
+                type2 = erasure(parameter2.getType());
+                if (!type1.equals(type2)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Nullable
+    public static PsiType erasure(@Nullable final PsiType type) {
+        if (type == null) {
+            return null;
+        }
+        return type.accept(new PsiTypeVisitor<PsiType>() {
+            @Nullable
+            @Override
+            public PsiType visitType(PsiType type) {
+                return type;
+            }
+
+            @Override
+            public PsiType visitClassType(PsiClassType classType) {
+                return classType.rawType();
+            }
+
+            @Override
+            public PsiType visitWildcardType(PsiWildcardType wildcardType) {
+                return wildcardType;
+            }
+
+            @Override
+            public PsiType visitPrimitiveType(PsiPrimitiveType primitiveType) {
+                return primitiveType;
+            }
+
+            @Override
+            public PsiType visitEllipsisType(PsiEllipsisType ellipsisType) {
+                final PsiType componentType = ellipsisType.getComponentType();
+                final PsiType newComponentType = componentType.accept(this);
+                if (newComponentType == componentType) return ellipsisType;
+                return newComponentType != null ? newComponentType.createArrayType() : null;
+            }
+
+            @Override
+            public PsiType visitArrayType(PsiArrayType arrayType) {
+                final PsiType componentType = arrayType.getComponentType();
+                final PsiType newComponentType = componentType.accept(this);
+                if (newComponentType == componentType) return arrayType;
+                return newComponentType != null ? newComponentType.createArrayType() : null;
+            }
+        });
+    }
+
+    @Nullable
+    @SuppressWarnings({"HardCodedStringLiteral"})
+    public static String getPrimitiveSignature(String typeName) {
+        switch (typeName) {
+            case "boolean":
+                return "Z";
+            case "byte":
+                return "B";
+            case "char":
+                return "C";
+            case "short":
+                return "S";
+            case "int":
+                return "I";
+            case "long":
+                return "J";
+            case "float":
+                return "F";
+            case "double":
+                return "D";
+            case "void":
+                return "V";
+            default:
+                return null;
+        }
     }
 
     @Nullable

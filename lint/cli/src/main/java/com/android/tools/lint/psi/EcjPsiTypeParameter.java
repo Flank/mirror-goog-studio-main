@@ -40,11 +40,12 @@ import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.PsiTypeParameterListOwner;
 import com.intellij.psi.javadoc.PsiDocComment;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 
-class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParameter {
+class EcjPsiTypeParameter extends EcjPsiClass implements PsiTypeParameter {
 
     private final TypeParameter mDeclaration;
 
@@ -52,7 +53,7 @@ class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParamete
 
     EcjPsiTypeParameter(@NonNull EcjPsiManager manager,
             @NonNull TypeParameter declaration) {
-        super(manager, declaration);
+        super(manager, declaration, null);
         mDeclaration = declaration;
     }
 
@@ -140,14 +141,6 @@ class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParamete
     }
 
     @Override
-    public PsiReferenceList getImplementsList() {
-        // Can't generate lazily: won't work with visitors etc
-        //return new EcjPsiReferenceList(mManager, TypeReference.NO_TYPE_ARGUMENTS,
-        //        PsiReferenceList.Role.IMPLEMENTS_LIST);
-        throw new UnimplementedLintPsiApiException();
-    }
-
-    @Override
     @NonNull
     public PsiClassType[] getImplementsListTypes() {
         return PsiClassType.EMPTY_ARRAY;
@@ -196,16 +189,6 @@ class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParamete
     @Override
     public PsiElement getScope() {
         return getParent().getParent();
-    }
-
-    @Override
-    public boolean isInheritorDeep(PsiClass baseClass, PsiClass classToByPass) {
-        throw new UnimplementedLintPsiApiException();
-    }
-
-    @Override
-    public boolean isInheritor(@NonNull PsiClass baseClass, boolean checkDeep) {
-        throw new UnimplementedLintPsiApiException();
     }
 
     @Override
@@ -290,12 +273,6 @@ class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParamete
     }
 
     @Override
-    @NonNull
-    public PsiClassType[] getSuperTypes() {
-        throw new UnimplementedLintPsiApiException();
-    }
-
-    @Override
     public PsiClass getContainingClass() {
         return null;
     }
@@ -323,45 +300,45 @@ class EcjPsiTypeParameter extends EcjPsiSourceElement implements PsiTypeParamete
     @Override
     @NonNull
     public Collection<HierarchicalMethodSignature> getVisibleSignatures() {
-        throw new UnimplementedLintPsiApiException();
+        return Collections.emptyList();
     }
 
     @Override
     public PsiMethod findMethodBySignature(PsiMethod patternMethod, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     @NonNull
     public PsiMethod[] findMethodsBySignature(PsiMethod patternMethod, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return PsiMethod.EMPTY_ARRAY;
     }
 
     @Override
     public PsiField findFieldByName(String name, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     @NonNull
     public PsiMethod[] findMethodsByName(String name, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return PsiMethod.EMPTY_ARRAY;
     }
 
     @Override
     @NonNull
     public List<Pair<PsiMethod, PsiSubstitutor>> findMethodsAndTheirSubstitutorsByName(String name, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return Collections.emptyList();
     }
 
     @Override
     @NonNull
     public List<Pair<PsiMethod, PsiSubstitutor>> getAllMethodsAndTheirSubstitutors() {
-        throw new UnimplementedLintPsiApiException();
+        return Collections.emptyList();
     }
 
     @Override
     public PsiClass findInnerClassByName(String name, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 }
