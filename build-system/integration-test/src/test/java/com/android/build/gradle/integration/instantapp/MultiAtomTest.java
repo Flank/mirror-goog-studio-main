@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -36,6 +37,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Map;
@@ -89,10 +91,10 @@ public class MultiAtomTest {
         // Tests that the BuildConfig and R class are generated in the proper package.
         AtomBundleSubject baseAtomBundle =
                 assertThat(sProject.getSubproject("base").getAtomBundle("release"));
-        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/BuildConfig;");
-        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/R;");
-        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
-        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/R;");
+        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/BuildConfig;");
+        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/R;");
+        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/base/BuildConfig;");
+        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/base/R;");
 
         // Tests that the BuildConfig and R class are not packaged twice.
         AtomBundleSubject atomABundle =
@@ -137,20 +139,16 @@ public class MultiAtomTest {
                         "                android:value=\"42\" />",
                         "        </activity>");
 
-        //Check that libC manifest is included in the instantApp manifest.
-        File instantAppManifest =
-                sProject.getSubproject("instantApp")
-                        .getIntermediateFile(
-                                FileUtils.join(
-                                        "manifests", "full", "release", "AndroidManifest.xml"));
-        assertThat(instantAppManifest)
-                .named("instantApp manifest")
-                .containsAllOf(
-                        "        <activity android:name=\"com.android.tests.multiatom.libc.LibCActivity\" >",
-                        "            <meta-data",
-                        "                android:name=\"test\"",
-                        "                android:value=\"42\" />",
-                        "        </activity>");
+        // Check that the output bundle file contains all the atoms.
+        ZipFileSubject outputPackage =
+                assertThatZip(sProject.getSubproject("instantApp").getInstantAppBundle("release"));
+        outputPackage.contains("base.apk");
+        outputPackage.contains("atoma.apk");
+        outputPackage.contains("atomb.apk");
+        outputPackage.contains("atomc.apk");
+        outputPackage.contains("atomd.apk");
+        outputPackage.contains("atome.apk");
+        outputPackage.contains("atomf.apk");
     }
 
     @Test

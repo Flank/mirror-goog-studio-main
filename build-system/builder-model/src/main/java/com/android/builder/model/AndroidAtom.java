@@ -17,14 +17,12 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-
 import java.io.File;
 import java.util.List;
 
 /**
- * Represents an Android Atombundle dependency, its content and its own dependencies.
- * The atombundle file contains the atom, the atom metadata and other files necessary to build the
- * iapk and the atoms that depend on it.
+ * Represents an Android Atombundle dependency, its content and its own dependencies. The atombundle
+ * file contains the dex, resources, manifest and other files necessary to build the final atom.
  */
 public interface AndroidAtom extends AndroidBundle {
 
@@ -46,12 +44,6 @@ public interface AndroidAtom extends AndroidBundle {
      */
     @NonNull
     File getDexFolder();
-
-    /**
-     * Returns the atom metadata file.
-     */
-    @NonNull
-    File getAtomMetadataFile();
 
     /**
      * Returns the native library folder. The file may not point to an existing folder.

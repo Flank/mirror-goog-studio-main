@@ -225,12 +225,6 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
     }
 
-    @Nullable
-    @Override
-    public File getAtomMetadataBaseFolder() {
-        return null;
-    }
-
     @NonNull
     @Override
     public String getApplicationId() {

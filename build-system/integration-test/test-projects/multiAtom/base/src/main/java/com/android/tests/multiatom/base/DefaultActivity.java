@@ -2,6 +2,7 @@ package com.android.tests.multiatom.base;
 
 import android.app.Activity;
 import android.os.Bundle;
+import com.android.tests.multiatom.R;
 import java.util.logging.Logger;
 
 

@@ -204,12 +204,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
     }
 
-    @Nullable
-    @Override
-    public File getAtomMetadataBaseFolder() {
-        return mVariantOutputScope.getAtomMetadataBaseFolder();
-    }
-
     @NonNull
     @Override
     public String getApplicationId() {

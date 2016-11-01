@@ -411,10 +411,11 @@ public class ProcessAtomsResources extends IncrementalTask {
                     "packagesForR",
                     () -> {
                         Map<String, String> outPackages = Maps.newHashMap();
-                        String applicationId = config.getOriginalApplicationId();
                         for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            String splitName =
-                                    new DefaultManifestParser(atom.getManifest()).getSplit();
+                            DefaultManifestParser manifestParser =
+                                    new DefaultManifestParser(atom.getManifest());
+                            String splitName = manifestParser.getSplit();
+                            String applicationId = manifestParser.getPackage();
                             outPackages.put(atom.getAtomName(), applicationId + "." + splitName);
                         }
                         return outPackages;

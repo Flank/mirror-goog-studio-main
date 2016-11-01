@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal;
 
+
+
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
@@ -23,25 +25,23 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BundleInstantAppConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
-import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
 import com.android.build.gradle.tasks.JavaCompileAtomResClass;
 import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.PackageAtom;
-import com.android.build.gradle.tasks.PackageInstantApp;
 import com.android.build.gradle.tasks.ProcessAtomsResources;
-import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -92,13 +92,6 @@ public class InstantAppTaskManager extends TaskManager {
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
 
-        // Add a task to process the manifests.
-        recorder.record(
-                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                projectPath,
-                variantName,
-                () -> createMergeAppManifestsTask(tasks, variantScope));
-
         // Add tasks to package the atoms.
         AndroidTask<PackageAtom> packageAtoms =
                 recorder.record(
@@ -110,22 +103,12 @@ public class InstantAppTaskManager extends TaskManager {
         // Sanity check.
         assert packageAtoms != null;
 
-        // Add a task to process the resources and generate the instantApp manifest.
-        recorder.record(
-                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    createInstantAppProcessResTask(tasks, variantScope, packageAtoms);
-                    return null;
-                });
-
         recorder.record(
                 ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
                 projectPath,
                 variantName,
                 () -> {
-                    createInstantAppPackagingTasks(tasks, variantScope);
+                    createInstantAppPackagingTasks(tasks, variantScope, packageAtoms);
                     return null;
                 });
     }
@@ -165,49 +148,19 @@ public class InstantAppTaskManager extends TaskManager {
         return packageAtoms;
     }
 
-    private void createInstantAppProcessResTask(
+    private void createInstantAppPackagingTasks(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope,
+            @NonNull final VariantScope variantScope,
             @NonNull AndroidTask<PackageAtom> packageAtoms) {
         // Get the single output.
         final VariantOutputScope variantOutputScope =
                 variantScope.getVariantData().getOutputs().get(0).getScope();
 
-        AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask =
-                getAndroidTasks().create(tasks,
-                        new ProcessInstantAppResources.ConfigAction(variantOutputScope));
-        variantOutputScope.setProcessInstantAppResourcesTask(processInstantAppResourcesTask);
-        processInstantAppResourcesTask.dependsOn(tasks, packageAtoms);
-        processInstantAppResourcesTask.dependsOn(tasks, variantOutputScope.getManifestProcessorTask());
-    }
-
-    private void createInstantAppPackagingTasks(
-            @NonNull TaskFactory tasks,
-            @NonNull final VariantScope variantScope) {
-        // Get the single output.
-        final BaseVariantOutputData variantOutputData =
-                variantScope.getVariantData().getOutputs().get(0);
-        final VariantOutputScope variantOutputScope = variantOutputData.getScope();
-
-        AndroidTask<GenerateInstantAppMetadata> generateInstantAppMetadataTask =
-                getAndroidTasks().create(tasks,
-                        new GenerateInstantAppMetadata.ConfigAction(variantOutputScope));
-        generateInstantAppMetadataTask.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
-
-        DefaultGradlePackagingScope packagingScope =
-                new DefaultGradlePackagingScope(variantOutputScope);
-        AndroidTask<PackageInstantApp> packageInstantApp =
-                getAndroidTasks().create(tasks,
-                        new PackageInstantApp.ConfigAction(packagingScope));
-
-        packageInstantApp.configure(
-                tasks,
-                task -> variantOutputData.packageAndroidArtifactTask = task);
-
-        packageInstantApp.dependsOn(tasks,
-                generateInstantAppMetadataTask,
-                variantOutputScope.getProcessInstantAppResourcesTask());
-        variantScope.getAssembleTask().dependsOn(tasks, packageInstantApp);
+        AndroidTask<Zip> bundle =
+                getAndroidTasks()
+                        .create(tasks, new BundleInstantAppConfigAction(variantOutputScope));
+        bundle.dependsOn(tasks, packageAtoms);
+        variantScope.getAssembleTask().dependsOn(tasks, bundle);
     }
 
     @NonNull

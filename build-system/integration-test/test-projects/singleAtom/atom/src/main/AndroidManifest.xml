@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:instant="http://schemas.android.com/instantapps"
-    package="com.android.tests.singleatom"
-    split="atom">
+    package="com.android.tests.singleatom">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -10,8 +9,7 @@
 
         <activity
                 android:name="com.android.tests.singleatom.atom.MainActivity"
-                android:label="@string/atom_name"
-                instant:atom="atom">
+                android:label="@string/atom_name">
 
             <intent-filter instant:order="1">
                 <action android:name="android.intent.action.VIEW" />

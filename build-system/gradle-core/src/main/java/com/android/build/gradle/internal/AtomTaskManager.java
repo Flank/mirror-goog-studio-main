@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
-import com.android.build.gradle.tasks.GenerateAtomMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SyncIssue;
@@ -305,18 +304,12 @@ public class AtomTaskManager extends TaskManager {
         final VariantOutputScope variantOutputScope = variantData.getOutputs().get(0).getScope();
         variantOutputScope.setAssembleTask(variantScope.getAssembleTask());
 
-        // Create the task to generate the atom metadata.
-        AndroidTask<GenerateAtomMetadata> generateAtomMetadata =
-                getAndroidTasks().create(tasks,
-                        new GenerateAtomMetadata.ConfigAction(variantOutputScope));
-
         // Create the bundle task.
         AndroidTask<BundleAtom> bundleAtom =
                 getAndroidTasks().create(tasks,
                         new BundleAtom.ConfigAction(variantScope));
         variantOutputScope.getVariantOutputData().bundleAtomTask = bundleAtom.get(tasks);
 
-        bundleAtom.dependsOn(tasks, generateAtomMetadata);
         bundleAtom.dependsOn(tasks, variantScope.getMergeAssetsTask());
         bundleAtom.dependsOn(tasks, variantOutputScope.getProcessResourcesTask());
         bundleAtom.dependsOn(tasks, variantData.binaryFileProviderTask);

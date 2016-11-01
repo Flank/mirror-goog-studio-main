@@ -50,11 +50,9 @@ import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -66,7 +64,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -138,8 +135,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     private File assets;
 
-    private File atomMetadataFolder;
-
     @InputFiles
     @Optional
     public FileCollection getDexFolders() {
@@ -153,12 +148,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     public void setAssets(File assets) {
         this.assets = assets;
-    }
-
-    @InputDirectory
-    @Optional
-    public File getAtomMetadataFolder() {
-        return atomMetadataFolder;
     }
 
     /** list of folders and/or jars that contain the merged java resources. */
@@ -305,21 +294,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
         ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
-        ImmutableMap<RelativeFile, FileStatus> updatedAtomMetadata;
-        if (getAtomMetadataFolder() == null) {
-            updatedAtomMetadata = ImmutableMap.of();
-        } else {
-            updatedAtomMetadata =
-                    IncrementalRelativeFileSets.fromDirectory(getAtomMetadataFolder());
-        }
 
         doTask(
                 updatedDex,
                 updatedJavaResources,
                 updatedAssets,
                 updatedAndroidResources,
-                updatedJniResources,
-                updatedAtomMetadata);
+                updatedJniResources);
 
         /*
          * Update the known files.
@@ -330,21 +311,18 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
         saveData.setInputSet(updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
         saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-        saveData.setInputSet(updatedAtomMetadata.keySet(), InputSet.ATOM_METADATA);
         saveData.saveCurrentData();
     }
 
     /**
      * Packages the application incrementally. In case of instant run packaging, this is not a
-     * perfectly incremental task as some files are always rewritten even if no change has
-     * occurred.
+     * perfectly incremental task as some files are always rewritten even if no change has occurred.
      *
      * @param changedDex incremental dex packaging data
      * @param changedJavaResources incremental java resources
      * @param changedAssets incremental assets
      * @param changedAndroidResources incremental Android resource
      * @param changedNLibs incremental native libraries changed
-     * @param changedAtomMetadata incremental atom metadata changed
      * @throws IOException failed to package the APK
      */
     private void doTask(
@@ -352,8 +330,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAndroidResources,
-            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs,
-            @NonNull ImmutableMap<RelativeFile, FileStatus> changedAtomMetadata)
+            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs)
             throws IOException {
 
         ImmutableMap.Builder<RelativeFile, FileStatus> javaResourcesForApk =
@@ -390,7 +367,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
             packager.updateAssets(changedAssets);
             packager.updateAndroidResources(changedAndroidResources);
             packager.updateNativeLibraries(changedNLibs);
-            packager.updateAtomMetadata(changedAtomMetadata);
         }
 
         /*
@@ -486,27 +462,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         cacheByPath,
                         cacheUpdates);
 
-        ImmutableMap<RelativeFile, FileStatus> changedAtomMetadata;
-        if (getAtomMetadataFolder() == null) {
-            changedAtomMetadata = ImmutableMap.of();
-        } else {
-            changedAtomMetadata =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.ATOM_METADATA,
-                            ImmutableList.of(getAtomMetadataFolder()),
-                            cacheByPath,
-                            cacheUpdates);
-        }
-
         doTask(
                 changedDexFiles,
                 changedJavaResources,
                 changedAssets,
                 changedAndroidResources,
-                changedNLibs,
-                changedAtomMetadata);
+                changedNLibs);
 
         /*
          * Update the cache
@@ -524,19 +485,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
         ImmutableMap<RelativeFile, FileStatus> allJniResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
-        ImmutableMap<RelativeFile, FileStatus> allAtomMetadataFiles;
-        if (getAtomMetadataFolder() == null) {
-            allAtomMetadataFiles = ImmutableMap.of();
-        } else {
-            allAtomMetadataFiles =
-                    IncrementalRelativeFileSets.fromDirectory(getAtomMetadataFolder());
-        }
 
         saveData.setInputSet(allDex.keySet(), InputSet.DEX);
         saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
         saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
         saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-        saveData.setInputSet(allAtomMetadataFiles.keySet(), InputSet.ATOM_METADATA);
         saveData.saveCurrentData();
     }
 

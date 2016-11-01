@@ -62,6 +62,11 @@ public class MoreTruth {
     }
 
     @NonNull
+    public static ZipFileSubject assertThatZip(@Nullable Zip zip) throws IOException {
+        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+    }
+
+    @NonNull
     public static DexSubject assertThatDex(@Nullable File dex) {
         return assertThat(dex != null ? new Dex(dex.toPath()) : null);
     }

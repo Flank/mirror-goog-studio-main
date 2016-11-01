@@ -117,9 +117,6 @@ public class PackageAtom extends IncrementalTask {
             ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                     IncrementalRelativeFileSets.fromZipsAndDirectories(
                             Collections.singleton(getJniFolders().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> updatedAtomMetadata =
-                    IncrementalRelativeFileSets.fromDirectory(
-                            getAtomMetadataFolders().get(atomName));
 
             doTask(
                     atomName,
@@ -127,8 +124,7 @@ public class PackageAtom extends IncrementalTask {
                     updatedJavaResources,
                     updatedAssets,
                     updatedAndroidResources,
-                    updatedJniResources,
-                    updatedAtomMetadata);
+                    updatedJniResources);
 
             // Update the known files.
             KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalFolder);
@@ -137,7 +133,6 @@ public class PackageAtom extends IncrementalTask {
             saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
             saveData.setInputSet(updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
             saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-            saveData.setInputSet(updatedAtomMetadata.keySet(), InputSet.ATOM_METADATA);
             saveData.saveCurrentData();
         }
     }
@@ -196,23 +191,13 @@ public class PackageAtom extends IncrementalTask {
                             cacheByPath,
                             cacheUpdates);
 
-            ImmutableMap<RelativeFile, FileStatus> changedAtomMetadata =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.ATOM_METADATA,
-                            Collections.singleton(getAtomMetadataFolders().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
-
             doTask(
                     atomName,
                     changedDexFiles,
                     changedJavaResources,
                     changedAssets,
                     changedAndroidResources,
-                    changedNLibs,
-                    changedAtomMetadata);
+                    changedNLibs);
 
             // Update the cache
             cacheUpdates.forEach(Runnable::run);
@@ -230,15 +215,11 @@ public class PackageAtom extends IncrementalTask {
             ImmutableMap<RelativeFile, FileStatus> allJniResources =
                     IncrementalRelativeFileSets.fromZipsAndDirectories(
                             Collections.singleton(getJniFolders().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> allAtomMetadataFiles =
-                    IncrementalRelativeFileSets.fromDirectory(
-                            getAtomMetadataFolders().get(atomName));
 
             saveData.setInputSet(allDex.keySet(), InputSet.DEX);
             saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
             saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
             saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-            saveData.setInputSet(allAtomMetadataFiles.keySet(), InputSet.ATOM_METADATA);
             saveData.saveCurrentData();
         }
     }
@@ -252,7 +233,6 @@ public class PackageAtom extends IncrementalTask {
      * @param changedAssets incremental assets
      * @param changedAndroidResources incremental Android resource
      * @param changedNLibs incremental native libraries changed
-     * @param changedAtomMetadata incremental atom metadata changed
      * @throws IOException failed to package the APK
      */
     private void doTask(
@@ -261,8 +241,7 @@ public class PackageAtom extends IncrementalTask {
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAndroidResources,
-            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs,
-            @NonNull ImmutableMap<RelativeFile, FileStatus> changedAtomMetadata)
+            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs)
             throws IOException {
         ImmutableMap.Builder<RelativeFile, FileStatus> javaResourcesForApk = ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
@@ -332,7 +311,6 @@ public class PackageAtom extends IncrementalTask {
                 packager.updateAssets(changedAssets);
                 packager.updateAndroidResources(changedAndroidResources);
                 packager.updateNativeLibraries(changedNLibs);
-                packager.updateAtomMetadata(changedAtomMetadata);
             }
         } catch (PackagerException | KeytoolException e) {
             throw new RuntimeException(e);
@@ -473,23 +451,6 @@ public class PackageAtom extends IncrementalTask {
         this.assetFolders = assetFolders;
     }
 
-    @SuppressWarnings("unused")
-    @InputFiles
-    @NonNull
-    public Collection<File> getAtomMetadataFolderCollection() {
-        return getAtomMetadataFolders().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getAtomMetadataFolders() {
-        return atomMetadataFolders;
-    }
-
-    public void setAtomMetadataFolders(@NonNull Map<String, File> atomMetadataFolders) {
-        this.atomMetadataFolders = atomMetadataFolders;
-    }
-
     @Input
     @NonNull
     public Map<String, File> getManifestFiles() {
@@ -589,7 +550,6 @@ public class PackageAtom extends IncrementalTask {
     private Map<String, File> jniFolders;
     private Map<String, File> dexFolders;
     private Map<String, File> assetFolders;
-    private Map<String, File> atomMetadataFolders;
     private Map<String, File> manifestFiles;
     private boolean debugBuild;
     private boolean jniDebugBuild;
@@ -697,17 +657,6 @@ public class PackageAtom extends IncrementalTask {
                             assetFolders.put(atom.getAtomName(), atom.getAssetsFolder());
                         }
                         return assetFolders;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "atomMetadataFolders",
-                    () -> {
-                        Map<String, File> atomMetadataFolders = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            atomMetadataFolders.put(
-                                    atom.getAtomName(), atom.getAtomMetadataFile().getParentFile());
-                        }
-                        return atomMetadataFolders;
                     });
             ConventionMappingHelper.map(
                     packageAtom,

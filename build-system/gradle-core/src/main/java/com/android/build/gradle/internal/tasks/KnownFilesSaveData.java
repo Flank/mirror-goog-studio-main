@@ -440,9 +440,6 @@ public class KnownFilesSaveData {
         ANDROID_RESOURCE,
 
         /** File belongs to the assets file set. */
-        ASSET,
-
-        /** File is the atom metadata. */
-        ATOM_METADATA
+        ASSET
     }
 }

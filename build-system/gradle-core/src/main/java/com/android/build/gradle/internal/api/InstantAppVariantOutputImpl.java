@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.InstantAppVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantOutputData;
-import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Implementation of variant output for iapk-generating variants.
@@ -41,8 +41,8 @@ public class InstantAppVariantOutputImpl extends BaseVariantOutputImpl implement
 
     @Nullable
     @Override
-    public PackageAndroidArtifact getPackageInstantApp() {
-        return variantOutputData.packageAndroidArtifactTask;
+    public Zip getPackageInstantApp() {
+        return variantOutputData.packageInstantAppTask;
     }
 
     @NonNull
