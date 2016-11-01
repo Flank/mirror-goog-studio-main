@@ -151,7 +151,10 @@ public class XmlReporter extends Reporter {
                     while (location != null) {
                         indent(writer, 2);
                         writer.write("<location");
-                        String path = client.getDisplayPath(warning.project, location.getFile());
+                        String path = LintCliClient.getDisplayPath(warning.project,
+                                location.getFile(),
+                                // Don't use absolute paths in baseline files
+                                client.flags.isFullPath() && !intendedForBaseline);
                         writeAttribute(writer, 3, "file", path);
                         Position start = location.getStart();
                         if (start != null) {
