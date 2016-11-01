@@ -135,6 +135,23 @@ public class XmlDocument {
     public Optional<XmlDocument> merge(
             @NonNull XmlDocument lowerPriorityDocument,
             @NonNull MergingReport.Builder mergingReportBuilder) {
+        return merge(lowerPriorityDocument, mergingReportBuilder,
+                true /* addImplicitPermissions */);
+    }
+
+    /**
+     * merge this higher priority document with a higher priority document.
+     * @param lowerPriorityDocument the lower priority document to merge in.
+     * @param mergingReportBuilder the merging report to record errors and actions.
+     * @param addImplicitPermissions whether to perform implicit permission addition.
+     * @return a new merged {@link com.android.manifmerger.XmlDocument} or
+     * {@link Optional#absent()} if there were errors during the merging activities.
+     */
+    @NonNull
+    public Optional<XmlDocument> merge(
+            @NonNull XmlDocument lowerPriorityDocument,
+            @NonNull MergingReport.Builder mergingReportBuilder,
+            boolean addImplicitPermissions) {
 
         if (getFileType() == Type.MAIN) {
             mergingReportBuilder.getActionRecorder().recordDefaultNodeAction(getRootNode());
@@ -143,7 +160,7 @@ public class XmlDocument {
         getRootNode().mergeWithLowerPriorityNode(
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
-        addImplicitElements(lowerPriorityDocument, mergingReportBuilder);
+        addImplicitElements(lowerPriorityDocument, mergingReportBuilder, addImplicitPermissions);
 
         // force re-parsing as new nodes may have appeared.
         return mergingReportBuilder.hasErrors()
@@ -365,7 +382,8 @@ public class XmlDocument {
      */
     @SuppressWarnings("unchecked") // compiler confused about varargs and generics.
     private void addImplicitElements(@NonNull XmlDocument lowerPriorityDocument,
-            @NonNull MergingReport.Builder mergingReport) {
+                                     @NonNull MergingReport.Builder mergingReport,
+                                     boolean addImplicitPermissions) {
 
         // if this document is an overlay, tolerate the absence of uses-sdk and do not
         // assume implicit minimum versions.
@@ -464,6 +482,10 @@ public class XmlDocument {
 
         // There is no need to add any implied permissions when targeting an old runtime.
         if (thisTargetSdk < 4) {
+            return;
+        }
+
+        if (!addImplicitPermissions) {
             return;
         }
 

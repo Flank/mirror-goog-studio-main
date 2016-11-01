@@ -619,7 +619,8 @@ public class ManifestMerger2 {
         Optional<XmlDocument> result;
         if (xmlDocument.isPresent()) {
             result = xmlDocument.get().merge(
-                    lowerPriorityDocument.getXmlDocument(), mergingReportBuilder);
+                    lowerPriorityDocument.getXmlDocument(), mergingReportBuilder,
+                    !mOptionalFeatures.contains(Invoker.Feature.NO_IMPLICIT_PERMISSION_ADDITION));
         } else {
             mergingReportBuilder.getActionRecorder().recordDefaultNodeAction(
                     lowerPriorityDocument.getXmlDocument().getRootNode());
@@ -919,6 +920,11 @@ public class ManifestMerger2 {
              * store.
              */
             TEST_ONLY,
+
+            /**
+             * Do not perform implicit permission addition.
+             */
+            NO_IMPLICIT_PERMISSION_ADDITION,
         }
 
         /**
