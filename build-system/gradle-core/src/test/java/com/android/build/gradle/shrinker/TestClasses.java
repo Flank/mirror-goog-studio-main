@@ -3461,6 +3461,41 @@ class TestClasses implements Opcodes {
         }
     }
 
+    static class Modifiers {
+        static byte[] main() {
+            ClassWriter cw = new ClassWriter(0);
+            FieldVisitor fv;
+            MethodVisitor mv;
+            AnnotationVisitor av0;
+
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
+
+            cw.visitSource("Main.java", null);
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+                mv.visitCode();
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            {
+                mv = cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE, "bridgeMethod", "()V", null, null);
+                mv.visitCode();
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(0, 1);
+                mv.visitEnd();
+            }
+            {
+                fv = cw.visitField(ACC_PUBLIC + ACC_VOLATILE, "volatileField", "I", null, null);
+                fv.visitEnd();
+            }
+            cw.visitEnd();
+            return cw.toByteArray();
+        }
+    }
+
     static byte[] emptyClass(String name) throws Exception {
 
         ClassWriter cw = new ClassWriter(0);

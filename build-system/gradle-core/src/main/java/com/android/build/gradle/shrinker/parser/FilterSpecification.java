@@ -18,43 +18,24 @@ package com.android.build.gradle.shrinker.parser;
 
 import com.android.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
+/** Represents a ProGuard filter specification. */
+public class FilterSpecification extends MatcherWithNegator<String> {
 
-/**
- * Represents a ProGuard filter specification.
- */
-public class FilterSpecification implements Matcher<String> {
+    @NonNull private final NameSpecification name;
 
-    private static class FilterElement extends MatcherWithNegator<String> {
-        @NonNull
-        private final NameSpecification name;
-
-        public FilterElement(@NonNull NameSpecification name, boolean negator) {
-            this.name = name;
-            setNegator(negator);
-        }
-
-        @Override
-        protected boolean matchesWithoutNegator(@NonNull String t) {
-            return name.matches(t);
-        }
-    }
-
-    @NonNull
-    private final List<FilterElement> elements = new ArrayList<>();
-
-    public void addElement(@NonNull NameSpecification name, boolean negator) {
-        elements.add(new FilterElement(name, negator));
+    public FilterSpecification(@NonNull NameSpecification name, boolean negator) {
+        this.name = name;
+        setNegator(negator);
     }
 
     @Override
-    public boolean matches(@NonNull String t) {
-        for (FilterElement element : elements) {
-            if (element.matches(t)) {
-                return true;
-            }
-        }
-        return false;
+    protected boolean matchesWithoutNegator(@NonNull String t) {
+        return name.matches(t);
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return super.toString() + name.toString();
     }
 }
