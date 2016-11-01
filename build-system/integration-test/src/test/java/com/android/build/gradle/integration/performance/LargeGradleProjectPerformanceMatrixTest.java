@@ -64,9 +64,10 @@ public class LargeGradleProjectPerformanceMatrixTest {
         return Arrays.asList(
                 new Object[][] {
                     {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
+                    // TODO: re-enable Jack scenarios
+                    //{EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
                     {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)}
+                    //{EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)}
                 });
     }
 

@@ -72,9 +72,10 @@ public class AntennaPodPerformanceMatrixTest {
         return Arrays.asList(
                 new Object[][] {
                     {EnumSet.of(ProjectScenario.NORMAL)},
-                    {EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
+                    //TODO: re-enable Jack scenarios
+                    //{EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
                     {EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS)},
-                    {EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
+                    //{EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
                 });
     }
 
@@ -114,6 +115,7 @@ public class AntennaPodPerformanceMatrixTest {
                 case JACK_OUT_OF_PROCESS:
                     // automatically enables Jack as well
                     JackHelper.disableJackInProcess(project.file("app/build.gradle"));
+                    break;
                 default:
                     throw new IllegalArgumentException(
                             "Unknown project scenario" + projectScenario);
