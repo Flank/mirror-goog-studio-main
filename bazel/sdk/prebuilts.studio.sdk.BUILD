@@ -86,6 +86,35 @@ filegroup(
 )
 
 filegroup(
+    name = "constraint-layout_latest",
+    srcs = [":constraint-layout_1.0.0-beta1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "constraint-layout_1.0.0-beta1",
+    srcs = glob(
+        include = [
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0-beta1/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta1/**"
+        ],
+    ),
+)
+
+filegroup(
+    name = "support_latest",
+    srcs = [":support_24.2.1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "support_24.2.1",
+    srcs = glob(
+        include = ["*/extras/android/m2repository/com/android/support/*/24.2.1/**"],
+    ),
+)
+
+filegroup(
     name = "platforms/latest",
     srcs = [":platforms/android-25"],
     visibility = ["//visibility:public"],
