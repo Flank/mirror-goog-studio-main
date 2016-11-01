@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -158,5 +159,20 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .recordBenchmark(BenchmarkMode.NO_OP)
                 .run("assembleDebug");
+
+        project.executor().run("clean");
+
+        project.model()
+                .ignoreSyncIssues()
+                .recordBenchmark(BenchmarkMode.SYNC)
+                .getMulti();
+
+        project.executor()
+                .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
+                .run(ModelHelper.getDebugGenerateSourcesCommands(model));
+
+        project.executor()
+                .recordBenchmark(BenchmarkMode.EVALUATION)
+                .run("tasks");
     }
 }
