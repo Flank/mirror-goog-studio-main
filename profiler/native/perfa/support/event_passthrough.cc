@@ -86,19 +86,21 @@ extern "C" {
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(
-    JNIEnv* env, jobject thiz, jint jstate) {
+    JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
   SystemEventData event;
   event.set_type(SystemEventData::TOUCH);
   event.set_action_id(jstate);
+  event.set_action_downtime(jdownTime);
   SendSystemEvent(event);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendKeyEvent(
-    JNIEnv* env, jobject thiz, jint jstate) {
+    JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
   SystemEventData event;
   event.set_type(SystemEventData::KEY);
   event.set_action_id(jstate);
+  event.set_action_downtime(jdownTime);
   SendSystemEvent(event);
 }
 

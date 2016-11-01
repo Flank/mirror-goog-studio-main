@@ -54,6 +54,7 @@ message SystemEventData {
   // defined in MotionEvent.java.
   // https://developer.android.com/reference/android/view/MotionEvent.html
   int32 action_id = 2;
+  int64 action_downtime = 3;
 }
 
 message ActivityEventData {
