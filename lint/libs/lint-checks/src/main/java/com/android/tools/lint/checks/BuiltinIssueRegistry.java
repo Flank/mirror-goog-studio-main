@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 311;
+    static final int INITIAL_CAPACITY = 312;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -211,6 +211,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MathDetector.ISSUE);
         issues.add(MergeMarkerDetector.ISSUE);
         issues.add(MergeRootFrameLayoutDetector.ISSUE);
+        issues.add(MediaBrowserServiceCompatVersionDetector.ISSUE);
         issues.add(MissingClassDetector.INNERCLASS);
         issues.add(MissingClassDetector.INSTANTIATABLE);
         issues.add(MissingClassDetector.MISSING);
@@ -375,7 +376,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 100;
+                initialSize += 101;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
