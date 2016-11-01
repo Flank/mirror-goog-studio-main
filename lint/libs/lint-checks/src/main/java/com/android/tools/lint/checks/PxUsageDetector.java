@@ -47,7 +47,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import java.util.Collections;
@@ -144,12 +143,6 @@ public class PxUsageDetector extends LayoutDetector {
 
     /** Constructs a new {@link PxUsageDetector} */
     public PxUsageDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

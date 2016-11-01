@@ -773,18 +773,6 @@ public class ApiLookup {
         return -1;
     }
 
-    /**
-     * Returns true if the given owner class is known in the API database.
-     *
-     * @param className the internal name of the class, e.g. its fully qualified name (as returned
-     *                  by Class.getName(), but with '.' replaced by '/' (and '$' for inner
-     *                  classes)
-     * @return true if this is a class found in the API database
-     */
-    public boolean isKnownClass(@NonNull String className) {
-        return findClass(className) != -1;
-    }
-
     private int getClassVersion(int classNumber) {
         if (classNumber != -1) {
             int offset = seekClassData(classNumber, CLASS_HEADER_API);
@@ -878,12 +866,19 @@ public class ApiLookup {
         return -1;
     }
 
-    /** Returns true if the given internal class name is part of the database. */
-    public boolean containsClass(@NonNull String owner) {
+    /**
+     * Returns true if the given owner class is known in the API database.
+     *
+     * @param className the internal name of the class, e.g. its fully qualified name (as returned
+     *                  by Class.getName(), but with '.' replaced by '/' (and '$' for inner
+     *                  classes)
+     * @return true if this is a class found in the API database
+     */
+    public boolean containsClass(@NonNull String className) {
         if (mData != null) {
-            return findClass(owner) != -1;
+            return findClass(className) != -1;
         }  else if (mInfo != null) {
-            return mInfo.getClass(owner) != null;
+            return mInfo.getClass(className) != null;
         }
 
         return false;

@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
@@ -78,12 +77,6 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
 
     /** Constructs a new {@link OnClickDetector} */
     public OnClickDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

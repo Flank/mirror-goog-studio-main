@@ -45,7 +45,6 @@ import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -111,12 +110,6 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
     private Boolean mIgnore = null;
 
     private final Map<String, Object> mIdToViewTag = new HashMap<>(50);
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.SLOW;
-    }
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {

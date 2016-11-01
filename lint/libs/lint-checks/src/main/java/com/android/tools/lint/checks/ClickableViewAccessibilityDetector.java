@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import java.util.List;
 import java.util.ListIterator;
 import org.objectweb.asm.Opcodes;
@@ -72,12 +71,6 @@ public class ClickableViewAccessibilityDetector extends Detector implements Dete
 
     /** Constructs a new {@link ClickableViewAccessibilityDetector} */
     public ClickableViewAccessibilityDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     // ---- Implements ClassScanner ----

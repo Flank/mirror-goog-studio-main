@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.psi;
 
+import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.tools.lint.psi.EcjPsiManager.getTypeName;
 
 import com.android.annotations.NonNull;
@@ -113,7 +114,11 @@ class EcjPsiAnnotation extends EcjPsiSourceElement implements PsiAnnotation {
             return null;
         }
         for (PsiNameValuePair pair : mParameterList.getAttributes()) {
-            if (Objects.equal(pair.getName(), s)) {
+            String name = pair.getName();
+            if (name == null) {
+                name = ATTR_VALUE;
+            }
+            if (name.equals(s)) {
                 return pair.getValue();
             }
         }

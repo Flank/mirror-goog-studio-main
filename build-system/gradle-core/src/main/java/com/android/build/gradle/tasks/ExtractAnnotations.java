@@ -246,15 +246,18 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                 for (CompilationUnitDeclaration unit : parsedUnits) {
                     // so maybe I don't need my map!!
                     CategorizedProblem[] problems = unit.compilationResult().getAllProblems();
-                    for (IProblem problem : problems) {
-                        if (problem.isError()) {
-                            getLogger().warn("Not extracting annotations (compilation problems "
-                                    + "encountered)\n"
-                                    + "Error: " + new String(problem.getOriginatingFileName()) +
-                                    ":" +
-                                    problem.getSourceLineNumber() + ": " + problem.getMessage());
-                            // TODO: Consider whether we abort the build at this point!
-                            return;
+                    if (problems != null) {
+                        for (IProblem problem : problems) {
+                            if (problem != null && problem.isError()) {
+                                getLogger().warn("Not extracting annotations (compilation problems "
+                                        + "encountered)\n"
+                                        + "Error: " + new String(problem.getOriginatingFileName()) +
+                                        ":" +
+                                        problem.getSourceLineNumber() + ": " + problem
+                                        .getMessage());
+                                // TODO: Consider whether we abort the build at this point!
+                                return;
+                            }
                         }
                     }
                 }

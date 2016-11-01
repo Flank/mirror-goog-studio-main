@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,12 +75,6 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
 
     /** Constructs a new {@link FieldGetterDetector} check */
     public FieldGetterDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     // ---- Implements ClassScanner ----

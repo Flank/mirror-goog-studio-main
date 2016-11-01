@@ -46,7 +46,6 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -474,12 +473,14 @@ class EcjPsiBinaryClass extends EcjPsiBinaryElement implements PsiClass, PsiModi
     }
 
     @Override
-    public boolean isInheritor(@NonNull PsiClass psiClass, boolean b) {
-        throw new UnimplementedLintPsiApiException();
+    public boolean isInheritor(@NonNull PsiClass baseClass, boolean checkDeep) {
+        String qualifiedName = baseClass.getQualifiedName();
+        return qualifiedName != null && new EcjPsiJavaEvaluator(mManager)
+                .inheritsFrom(this, qualifiedName, false);
     }
 
     @Override
-    public boolean isInheritorDeep(PsiClass psiClass, PsiClass psiClass1) {
+    public boolean isInheritorDeep(PsiClass baseClass, @Nullable PsiClass classToByPass) {
         throw new UnimplementedLintPsiApiException();
     }
 
@@ -640,14 +641,11 @@ class EcjPsiBinaryClass extends EcjPsiBinaryElement implements PsiClass, PsiModi
         ReferenceBinding binding = mTypeBinding;
         TypeBinding otherBinding;
         if (o instanceof EcjPsiClass) {
-            TypeDeclaration otherTypeDeclaration =
-                    (TypeDeclaration) (((EcjPsiClass) o).getNativeNode());
-            assert otherTypeDeclaration != null;
-            otherBinding = otherTypeDeclaration.binding;
+            otherBinding = ((EcjPsiClass) o).getBinding();
             return binding != null && otherBinding != null && binding.equals(otherBinding);
         } else if (o instanceof EcjPsiBinaryClass) {
-            otherBinding = ((EcjPsiBinaryClass) o).mTypeBinding;
-            return binding != null && otherBinding != null && binding.equals(otherBinding);
+            otherBinding = ((EcjPsiBinaryClass) o).getTypeBinding();
+            return binding != null && binding.equals(otherBinding);
         }
 
         return false;

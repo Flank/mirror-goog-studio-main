@@ -1900,7 +1900,6 @@ public class VersionChecksTest extends AbstractCheckTest {
                                 + "JlGcMvVLRP1pinGqk0ODYqgEUs+QMrl7KPID5Mjj2CkWkgmkQl5Sjxjh6d/x"
                                 + "/F94ahKXkAm3Z7AUOjO6P4vII/4Jinenz1gCAAA=")),
                 mSupportJar
-                //classpath(SUPPORT_JAR_PATH, "libs/build-compat.jar")
         );
     }
 
@@ -2017,6 +2016,107 @@ public class VersionChecksTest extends AbstractCheckTest {
                         + "            textView.setLetterSpacing(1f); // OK\n"
                         + "        }\n"
                         + "        textView.setLetterSpacing(1f); // ERROR\n"
+                        + "    }\n"
+                        + "}\n")
+        );
+    }
+
+    public void testVersionCheckMethodsInBinaryOperator() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=199572
+        //noinspection all // Sample code
+        checkApiCheck(
+                "No warnings.",
+                null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.hardware.camera2.CameraAccessException;\n"
+                        + "import android.hardware.camera2.CameraManager;\n"
+                        + "import android.os.Build;\n"
+                        + "\n"
+                        + "public class VersionConditionals8 extends Activity {\n"
+                        + "    private boolean mDebug;\n"
+                        + "    \n"
+                        + "    public void testCamera() {\n"
+                        + "        if (isLollipop() && mDebug) {\n"
+                        + "            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);\n"
+                        + "            try {\n"
+                        + "                int length = manager.getCameraIdList().length;\n"
+                        + "            } catch (Throwable ignore) {\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private boolean isLollipop() {\n"
+                        + "        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;\n"
+                        + "    }\n"
+                        + "}\n")
+        );
+    }
+
+    public void testTernaryOperator() throws Exception {
+        //noinspection all // Sample code
+        checkApiCheck(
+                "No warnings.",
+                null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.os.Build;\n"
+                        + "import android.view.View;\n"
+                        + "import android.widget.GridLayout;\n"
+                        + "\n"
+                        + "public class TestTernaryOperator {\n"
+                        + "    public View getLayout1() {\n"
+                        + "        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH \n"
+                        + "                ? new GridLayout(null) : null;\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public View getLayout2() {\n"
+                        + "        return Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH\n"
+                        + "                ? null : new GridLayout(null);\n"
+                        + "    }\n"
+                        + "    \n"
+                        + "     \n"
+                        + "}\n")
+        );
+    }
+
+    public void testNegative() throws Exception {
+        //noinspection all // Sample code
+        checkApiCheck(
+                "No warnings.",
+                null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.hardware.camera2.CameraAccessException;\n"
+                        + "import android.hardware.camera2.CameraManager;\n"
+                        + "import android.os.Build;\n"
+                        + "\n"
+                        + "public class Negative extends Activity {\n"
+                        + "    public void testNegative1() throws CameraAccessException {\n"
+                        + "        if (!isLollipop()) {\n"
+                        + "        } else {\n"
+                        + "            ((CameraManager) getSystemService(Context.CAMERA_SERVICE)).getCameraIdList();\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void testReversedOperator() throws CameraAccessException {\n"
+                        + "        if (Build.VERSION_CODES.LOLLIPOP <= Build.VERSION.SDK_INT) {\n"
+                        + "            ((CameraManager) getSystemService(Context.CAMERA_SERVICE)).getCameraIdList();\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private boolean isLollipop() {\n"
+                        + "        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;\n"
                         + "    }\n"
                         + "}\n")
         );

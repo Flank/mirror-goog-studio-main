@@ -242,7 +242,7 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
                 @NonNull PsiClass bindClass,
                 @NonNull PsiParameter variable) {
             mContext = context;
-            mVariables = Lists.<PsiVariable>newArrayList(variable);
+            mVariables = Lists.newArrayList(variable);
             mBindClass = bindClass;
         }
 

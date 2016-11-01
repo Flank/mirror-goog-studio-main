@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.collect.Maps;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
@@ -54,7 +53,6 @@ import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Detector looking for casts on th result of context.getSystemService which are suspect
@@ -343,77 +341,69 @@ public class ServiceCastDetector extends Detector implements JavaPsiScanner {
 
     @Nullable
     private static String getExpectedType(@Nullable String value) {
-        return value != null ? getServiceMap().get(value) : null;
-    }
-
-    @NonNull
-    private static Map<String, String> getServiceMap() {
-        if (sServiceMap == null) {
-            final int EXPECTED_SIZE = 56;
-            sServiceMap = Maps.newHashMapWithExpectedSize(EXPECTED_SIZE);
-            sServiceMap.put("ACCESSIBILITY_SERVICE", "android.view.accessibility.AccessibilityManager");
-            sServiceMap.put("ACCOUNT_SERVICE", "android.accounts.AccountManager");
-            sServiceMap.put("ACTIVITY_SERVICE", "android.app.ActivityManager");
-            sServiceMap.put("ALARM_SERVICE", "android.app.AlarmManager");
-            sServiceMap.put("APPWIDGET_SERVICE", "android.appwidget.AppWidgetManager");
-            sServiceMap.put("APP_OPS_SERVICE", "android.app.AppOpsManager");
-            sServiceMap.put("AUDIO_SERVICE", "android.media.AudioManager");
-            sServiceMap.put("BATTERY_SERVICE", "android.os.BatteryManager");
-            sServiceMap.put("BLUETOOTH_SERVICE", "android.bluetooth.BluetoothManager");
-            sServiceMap.put("CAMERA_SERVICE", "android.hardware.camera2.CameraManager");
-            sServiceMap.put("CAPTIONING_SERVICE", "android.view.accessibility.CaptioningManager");
-            sServiceMap.put("CARRIER_CONFIG_SERVICE", "android.telephony.CarrierConfigManager");
-            sServiceMap.put("CLIPBOARD_SERVICE", "android.text.ClipboardManager"); // also allow @Deprecated android.content.ClipboardManager
-            sServiceMap.put("CONNECTIVITY_SERVICE", "android.net.ConnectivityManager");
-            sServiceMap.put("CONSUMER_IR_SERVICE", "android.hardware.ConsumerIrManager");
-            sServiceMap.put("DEVICE_POLICY_SERVICE", "android.app.admin.DevicePolicyManager");
-            sServiceMap.put("DISPLAY_SERVICE", "android.hardware.display.DisplayManager");
-            sServiceMap.put("DOWNLOAD_SERVICE", "android.app.DownloadManager");
-            sServiceMap.put("DROPBOX_SERVICE", "android.os.DropBoxManager");
-            sServiceMap.put("FINGERPRINT_SERVICE", "android.hardware.fingerprint.FingerprintManager");
-            sServiceMap.put("HARDWARE_PROPERTIES_SERVICE", "android.os.HardwarePropertiesManager");
-            sServiceMap.put("INPUT_METHOD_SERVICE", "android.view.inputmethod.InputMethodManager");
-            sServiceMap.put("INPUT_SERVICE", "android.hardware.input.InputManager");
-            sServiceMap.put("JOB_SCHEDULER_SERVICE", "android.app.job.JobScheduler");
-            sServiceMap.put("KEYGUARD_SERVICE", "android.app.KeyguardManager");
-            sServiceMap.put("LAUNCHER_APPS_SERVICE", "android.content.pm.LauncherApps");
-            sServiceMap.put("LAYOUT_INFLATER_SERVICE", "android.view.LayoutInflater");
-            sServiceMap.put("LOCATION_SERVICE", "android.location.LocationManager");
-            sServiceMap.put("MEDIA_PROJECTION_SERVICE", "android.media.projection.MediaProjectionManager");
-            sServiceMap.put("MEDIA_ROUTER_SERVICE", "android.media.MediaRouter");
-            sServiceMap.put("MEDIA_SESSION_SERVICE", "android.media.session.MediaSessionManager");
-            sServiceMap.put("MIDI_SERVICE", "android.media.midi.MidiManager");
-            sServiceMap.put("NETWORK_STATS_SERVICE", "android.app.usage.NetworkStatsManager");
-            sServiceMap.put("NFC_SERVICE", "android.nfc.NfcManager");
-            sServiceMap.put("NOTIFICATION_SERVICE", "android.app.NotificationManager");
-            sServiceMap.put("NSD_SERVICE", "android.net.nsd.NsdManager");
-            sServiceMap.put("POWER_SERVICE", "android.os.PowerManager");
-            sServiceMap.put("PRINT_SERVICE", "android.print.PrintManager");
-            sServiceMap.put("RESTRICTIONS_SERVICE", "android.content.RestrictionsManager");
-            sServiceMap.put("SEARCH_SERVICE", "android.app.SearchManager");
-            sServiceMap.put("SENSOR_SERVICE", "android.hardware.SensorManager");
-            sServiceMap.put("STORAGE_SERVICE", "android.os.storage.StorageManager");
-            sServiceMap.put("STORAGE_SERVICE", "android.os.storage.StorageManager");
-            sServiceMap.put("SYSTEM_HEALTH_SERVICE", "android.os.health.SystemHealthManager");
-            sServiceMap.put("TELEPHONY_SERVICE", "android.telephony.TelephonyManager");
-            sServiceMap.put("TELEPHONY_SUBSCRIPTION_SERVICE", "android.telephony.SubscriptionManager");
-            sServiceMap.put("TEXT_SERVICES_MANAGER_SERVICE", "android.view.textservice.TextServicesManager");
-            sServiceMap.put("TV_INPUT_SERVICE", "android.media.tv.TvInputManager");
-            sServiceMap.put("UI_MODE_SERVICE", "android.app.UiModeManager");
-            sServiceMap.put("USAGE_STATS_SERVICE", "android.app.usage.UsageStatsManager");
-            sServiceMap.put("USB_SERVICE", "android.hardware.usb.UsbManager");
-            sServiceMap.put("USER_SERVICE", "android.os.UserManager");
-            sServiceMap.put("VIBRATOR_SERVICE", "android.os.Vibrator");
-            sServiceMap.put("WALLPAPER_SERVICE", "android.service.wallpaper.WallpaperService");
-            sServiceMap.put("WIFI_P2P_SERVICE", "android.net.wifi.p2p.WifiP2pManager");
-            sServiceMap.put("WIFI_SERVICE", "android.net.wifi.WifiManager");
-            sServiceMap.put("WINDOW_SERVICE", "android.view.WindowManager");
-
-            assert sServiceMap.size() == EXPECTED_SIZE : sServiceMap.size();
+        if (value == null) {
+            return null;
         }
-
-        return sServiceMap;
+        switch (value) {
+            case "ACCESSIBILITY_SERVICE": return "android.view.accessibility.AccessibilityManager";
+            case "ACCOUNT_SERVICE": return "android.accounts.AccountManager";
+            case "ACTIVITY_SERVICE": return "android.app.ActivityManager";
+            case "ALARM_SERVICE": return "android.app.AlarmManager";
+            case "APPWIDGET_SERVICE": return "android.appwidget.AppWidgetManager";
+            case "APP_OPS_SERVICE": return "android.app.AppOpsManager";
+            case "AUDIO_SERVICE": return "android.media.AudioManager";
+            case "BATTERY_SERVICE": return "android.os.BatteryManager";
+            case "BLUETOOTH_SERVICE": return "android.bluetooth.BluetoothManager";
+            case "CAMERA_SERVICE": return "android.hardware.camera2.CameraManager";
+            case "CAPTIONING_SERVICE": return "android.view.accessibility.CaptioningManager";
+            case "CARRIER_CONFIG_SERVICE": return "android.telephony.CarrierConfigManager";
+            // also allow @Deprecated android.content.ClipboardManager, see isClipboard
+            case "CLIPBOARD_SERVICE": return "android.text.ClipboardManager";
+            case "CONNECTIVITY_SERVICE": return "android.net.ConnectivityManager";
+            case "CONSUMER_IR_SERVICE": return "android.hardware.ConsumerIrManager";
+            case "DEVICE_POLICY_SERVICE": return "android.app.admin.DevicePolicyManager";
+            case "DISPLAY_SERVICE": return "android.hardware.display.DisplayManager";
+            case "DOWNLOAD_SERVICE": return "android.app.DownloadManager";
+            case "DROPBOX_SERVICE": return "android.os.DropBoxManager";
+            case "FINGERPRINT_SERVICE": return "android.hardware.fingerprint.FingerprintManager";
+            case "HARDWARE_PROPERTIES_SERVICE": return "android.os.HardwarePropertiesManager";
+            case "INPUT_METHOD_SERVICE": return "android.view.inputmethod.InputMethodManager";
+            case "INPUT_SERVICE": return "android.hardware.input.InputManager";
+            case "JOB_SCHEDULER_SERVICE": return "android.app.job.JobScheduler";
+            case "KEYGUARD_SERVICE": return "android.app.KeyguardManager";
+            case "LAUNCHER_APPS_SERVICE": return "android.content.pm.LauncherApps";
+            case "LAYOUT_INFLATER_SERVICE": return "android.view.LayoutInflater";
+            case "LOCATION_SERVICE": return "android.location.LocationManager";
+            case "MEDIA_PROJECTION_SERVICE": return "android.media.projection.MediaProjectionManager";
+            case "MEDIA_ROUTER_SERVICE": return "android.media.MediaRouter";
+            case "MEDIA_SESSION_SERVICE": return "android.media.session.MediaSessionManager";
+            case "MIDI_SERVICE": return "android.media.midi.MidiManager";
+            case "NETWORK_STATS_SERVICE": return "android.app.usage.NetworkStatsManager";
+            case "NFC_SERVICE": return "android.nfc.NfcManager";
+            case "NOTIFICATION_SERVICE": return "android.app.NotificationManager";
+            case "NSD_SERVICE": return "android.net.nsd.NsdManager";
+            case "POWER_SERVICE": return "android.os.PowerManager";
+            case "PRINT_SERVICE": return "android.print.PrintManager";
+            case "RESTRICTIONS_SERVICE": return "android.content.RestrictionsManager";
+            case "SEARCH_SERVICE": return "android.app.SearchManager";
+            case "SENSOR_SERVICE": return "android.hardware.SensorManager";
+            case "STORAGE_SERVICE": return "android.os.storage.StorageManager";
+            case "SYSTEM_HEALTH_SERVICE": return "android.os.health.SystemHealthManager";
+            case "TELEPHONY_SERVICE": return "android.telephony.TelephonyManager";
+            case "TELEPHONY_SUBSCRIPTION_SERVICE": return "android.telephony.SubscriptionManager";
+            case "TEXT_SERVICES_MANAGER_SERVICE": return "android.view.textservice.TextServicesManager";
+            case "TV_INPUT_SERVICE": return "android.media.tv.TvInputManager";
+            case "UI_MODE_SERVICE": return "android.app.UiModeManager";
+            case "USAGE_STATS_SERVICE": return "android.app.usage.UsageStatsManager";
+            case "USB_SERVICE": return "android.hardware.usb.UsbManager";
+            case "USER_SERVICE": return "android.os.UserManager";
+            case "VIBRATOR_SERVICE": return "android.os.Vibrator";
+            case "WALLPAPER_SERVICE": return "android.service.wallpaper.WallpaperService";
+            case "WIFI_P2P_SERVICE": return "android.net.wifi.p2p.WifiP2pManager";
+            case "WIFI_SERVICE": return "android.net.wifi.WifiManager";
+            case "WINDOW_SERVICE": return "android.view.WindowManager";
+            case "SHORTCUT_SERVICE": return "android.content.pm.ShortcutManager";
+            default: return null;
+        }
     }
-
-    private static Map<String, String> sServiceMap;
 }

@@ -476,7 +476,7 @@ public class OverdrawDetector extends LayoutDetector implements JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiClass.class);
+        return Collections.singletonList(PsiClass.class);
     }
 
     @Override

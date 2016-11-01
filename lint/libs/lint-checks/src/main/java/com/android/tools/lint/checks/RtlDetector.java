@@ -548,7 +548,7 @@ public class RtlDetector extends LayoutDetector implements JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiReferenceExpression.class);
+        return Collections.singletonList(PsiReferenceExpression.class);
     }
 
     @Nullable

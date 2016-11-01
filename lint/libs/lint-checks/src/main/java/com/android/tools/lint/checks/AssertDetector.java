@@ -78,7 +78,7 @@ public class AssertDetector extends Detector implements JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiAssertStatement.class);
+        return Collections.singletonList(PsiAssertStatement.class);
     }
 
     @Nullable

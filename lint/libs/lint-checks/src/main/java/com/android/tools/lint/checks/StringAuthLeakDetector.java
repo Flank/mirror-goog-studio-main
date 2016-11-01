@@ -35,7 +35,7 @@ public class StringAuthLeakDetector extends Detector implements Detector.JavaPsi
     @Nullable
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiLiteralExpression.class);
+        return Collections.singletonList(PsiLiteralExpression.class);
     }
 
     @Nullable

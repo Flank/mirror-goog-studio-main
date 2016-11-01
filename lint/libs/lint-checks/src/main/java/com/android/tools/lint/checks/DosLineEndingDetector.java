@@ -24,7 +24,6 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import org.w3c.dom.Document;
 
@@ -56,12 +55,6 @@ public class DosLineEndingDetector extends LayoutDetector {
 
      /** Constructs a new {@link DosLineEndingDetector} */
     public DosLineEndingDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
     }
 
     @Override

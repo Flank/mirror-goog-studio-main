@@ -130,12 +130,26 @@ class EcjPsiAnonymousClass extends EcjPsiClass implements PsiAnonymousClass {
         return mBaseClassReference;
     }
 
+    @Override
+    public boolean isInheritor(@NonNull PsiClass baseClass, boolean checkDeep) {
+        String qualifiedName = baseClass.getQualifiedName();
+        return qualifiedName != null && new EcjPsiJavaEvaluator(mManager)
+                .inheritsFrom(this, qualifiedName, false);
+    }
+
+    @Override
+    public boolean isInheritorDeep(PsiClass baseClass, @Nullable PsiClass classToByPass) {
+        throw new UnimplementedLintPsiApiException();
+    }
+
     @NonNull
     @Override
     public PsiClassType getBaseClassType() {
         PsiElement resolved = mBaseClassReference.resolve();
         if (resolved instanceof PsiClass) {
-            mManager.getClassType((PsiClass) resolved);
+            // This shouldn't happen; PSI requires this to be non null
+            //noinspection ConstantConditions
+            return mManager.getClassType((PsiClass) resolved);
         }
         // This shouldn't happen; PSI requires this to be non null
         //noinspection ConstantConditions

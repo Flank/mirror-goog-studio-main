@@ -127,6 +127,7 @@ public class Project {
     protected List<File> nonProvidedJavaLibraries;
     protected List<File> javaLibraries;
     protected List<File> testSourceFolders;
+    protected List<File> testLibraries;
     protected List<File> resourceFolders;
     protected List<File> assetFolders;
     protected List<Project> directLibraries;
@@ -521,6 +522,20 @@ public class Project {
     }
 
     /**
+     * Returns the list of source folders for Java test source files
+     *
+     * @return a list of source folders to search for .java files
+     */
+    @NonNull
+    public List<File> getTestLibraries() {
+        if (testLibraries == null) {
+            testLibraries = client.getTestLibraries(this);
+        }
+
+        return testLibraries;
+    }
+
+    /**
      * Returns the resource folders.
      *
      * @return a list of files pointing to the resource folders, which might be empty if the project
@@ -798,7 +813,7 @@ public class Project {
      */
     @NonNull
     public List<Project> getDirectLibraries() {
-        return directLibraries != null ? directLibraries : Collections.<Project>emptyList();
+        return directLibraries != null ? directLibraries : Collections.emptyList();
     }
 
     /**

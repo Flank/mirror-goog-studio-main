@@ -40,6 +40,7 @@ import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Looks for leaks via static fields
@@ -67,7 +68,7 @@ public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiField.class);
+        return Collections.singletonList(PsiField.class);
     }
 
     @Override
@@ -103,7 +104,8 @@ public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
                 return;
             }
             if (fqn.startsWith("android.")) {
-                if (isLeakCandidate(cls, mContext.getEvaluator())) {
+                if (isLeakCandidate(cls, mContext.getEvaluator())
+                        && !isAppContextName(cls, field)) {
                     String message = "Do not place Android context classes in static fields; "
                             + "this is a memory leak (and also breaks Instant Run)";
                     report(field, modifierList, message);
@@ -133,7 +135,8 @@ public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
                         continue;
                     }
                     if (fqn.startsWith("android.")) {
-                        if (isLeakCandidate(innerCls, mContext.getEvaluator())) {
+                        if (isLeakCandidate(innerCls, mContext.getEvaluator())
+                                && !isAppContextName(innerCls, field)) {
                             String message =
                                     "Do not place Android context classes in static fields "
                                             + "(static reference to `"
@@ -155,6 +158,21 @@ public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
                     modifierList.getTextRange().getLength() > 0 ? modifierList : field);
             mContext.report(ISSUE, field, location, message);
         }
+    }
+
+    private static boolean isAppContextName(@NonNull PsiClass cls, @NonNull PsiField field) {
+        // Don't flag names like "sAppContext" or "applicationContext".
+        String name = field.getName();
+        if (name != null) {
+            String lower = name.toLowerCase(Locale.US);
+            if (lower.contains("appcontext") || lower.contains("application")) {
+                if (CLASS_CONTEXT.equals(cls.getQualifiedName())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static boolean isLeakCandidate(

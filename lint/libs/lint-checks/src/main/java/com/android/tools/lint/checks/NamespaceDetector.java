@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.HashMap;
 import java.util.Map;
@@ -122,12 +121,6 @@ public class NamespaceDetector extends LayoutDetector {
 
     /** Constructs a new {@link NamespaceDetector} */
     public NamespaceDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

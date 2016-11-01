@@ -120,11 +120,7 @@ public class BadHostnameVerifierDetector extends Detector implements JavaPsiScan
                 // assignment, as exposed by the unit test
                 //Object value = ConstantEvaluator.evaluate(mContext, argument);
                 //if (Boolean.TRUE.equals(value)) {
-                if (LintUtils.isTrueLiteral(argument)) {
-                    mComplex = false;
-                } else {
-                    mComplex = true; // "return false" or some complicated logic
-                }
+                mComplex = !LintUtils.isTrueLiteral(argument); // "return false" or unknown logic
             }
             super.visitReturnStatement(node);
         }

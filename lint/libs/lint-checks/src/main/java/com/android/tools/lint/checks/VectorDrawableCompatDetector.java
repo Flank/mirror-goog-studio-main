@@ -91,7 +91,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
     private boolean mSkipChecks;
 
     /** All vector drawables in the project. */
-    private Set<String> mVectors = Sets.newHashSet();
+    private final Set<String> mVectors = Sets.newHashSet();
 
     /** Whether the project uses AppCompat for vectors. */
     private boolean mUseSupportLibrary;

@@ -399,7 +399,7 @@ public abstract class JavaParser {
     public List<TypeDescriptor> getCatchTypes(@NonNull JavaContext context,
             @NonNull Catch catchBlock) {
         TypeReference typeReference = catchBlock.astExceptionDeclaration().astTypeReference();
-        return Collections.<TypeDescriptor>singletonList(new DefaultTypeDescriptor(
+        return Collections.singletonList(new DefaultTypeDescriptor(
                 typeReference.getTypeName()));
     }
 
@@ -515,7 +515,7 @@ public abstract class JavaParser {
     @Deprecated
     public static class DefaultTypeDescriptor extends TypeDescriptor {
 
-        private String name;
+        private final String name;
 
         public DefaultTypeDescriptor(String name) {
             this.name = name;

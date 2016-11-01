@@ -1187,7 +1187,7 @@ public class LintDriver {
                 fireEvent(EventType.SCANNING_FILE, context);
                 for (Detector detector : detectors) {
                     detector.beforeCheckFile(context);
-                    detector.visitBuildScript(context, Maps.<String, Object>newHashMap());
+                    detector.visitBuildScript(context, Maps.newHashMap());
                     detector.afterCheckFile(context);
                 }
             }

@@ -102,7 +102,7 @@ public class Main {
     private static final String ARG_ALL_ERROR  = "-Werror";
 
     private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir";
-    private LintCliFlags flags = new LintCliFlags();
+    private final LintCliFlags flags = new LintCliFlags();
     private IssueRegistry mGg;
 
     /** Creates a CLI driver */

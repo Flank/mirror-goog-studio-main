@@ -272,6 +272,18 @@ public abstract class LintClient {
     }
 
     /**
+     * Returns the list of libraries needed to compile the test source files
+     *
+     * @param project the project to look up test source file locations for
+     * @return a list of jar files to add to the regular project dependencies when compiling the
+     * test sources
+     */
+    @NonNull
+    public List<File> getTestLibraries(@NonNull Project project) {
+        return getClassPath(project).getTestLibraries();
+    }
+
+    /**
      * Returns the resource folders.
      *
      * @param project the project to look up the resource folder for
@@ -466,18 +478,21 @@ public abstract class LintClient {
         private final List<File> libraries;
         private final List<File> nonProvidedLibraries;
         private final List<File> testFolders;
+        private final List<File> testLibraries;
 
         public ClassPathInfo(
                 @NonNull List<File> sourceFolders,
                 @NonNull List<File> classFolders,
                 @NonNull List<File> libraries,
                 @NonNull List<File> nonProvidedLibraries,
-                @NonNull List<File> testFolders) {
+                @NonNull List<File> testFolders,
+                @NonNull List<File> testLibraries) {
             this.sourceFolders = sourceFolders;
             this.classFolders = classFolders;
             this.libraries = libraries;
             this.nonProvidedLibraries = nonProvidedLibraries;
             this.testFolders = testFolders;
+            this.testLibraries = testLibraries;
         }
 
         @NonNull
@@ -497,6 +512,10 @@ public abstract class LintClient {
 
         public List<File> getTestSourceFolders() {
             return testFolders;
+        }
+
+        public List<File> getTestLibraries() {
+            return testLibraries;
         }
     }
 
@@ -623,7 +642,8 @@ public abstract class LintClient {
                 }
             }
 
-            info = new ClassPathInfo(sources, classes, libraries, libraries, tests);
+            info = new ClassPathInfo(sources, classes, libraries, libraries, tests,
+                    Collections.emptyList());
             projectInfo.put(project, info);
         }
 
@@ -680,7 +700,7 @@ public abstract class LintClient {
      * @return a collection of projects in any order
      */
     public Collection<Project> getKnownProjects() {
-        return dirToProject != null ? dirToProject.values() : Collections.<Project>emptyList();
+        return dirToProject != null ? dirToProject.values() : Collections.emptyList();
     }
 
     /**
@@ -986,7 +1006,7 @@ public abstract class LintClient {
             }
         }
 
-        return files != null ? files : Collections.<File>emptyList();
+        return files != null ? files : Collections.emptyList();
     }
 
     /**

@@ -93,7 +93,7 @@ public class LintCliFlags {
      */
     @NonNull
     public Map<String,Severity> getSeverityOverrides() {
-        return severities == null ? Collections.<String,Severity>emptyMap() : severities;
+        return severities == null ? Collections.emptyMap() : severities;
     }
 
     /**

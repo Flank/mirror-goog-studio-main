@@ -13,6 +13,7 @@ import com.intellij.psi.PsiBlockStatement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
@@ -26,6 +27,7 @@ import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiPolyadicExpression;
+import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiStatement;
@@ -188,22 +190,28 @@ public class VersionChecks {
                 PsiIfStatement ifStatement = (PsiIfStatement)current;
                 PsiStatement thenBranch = ifStatement.getThenBranch();
                 PsiStatement elseBranch = ifStatement.getElseBranch();
-                if (thenBranch != null) {
-                    Boolean level = isVersionCheckConditional(api, thenBranch, ifStatement);
-                    //noinspection VariableNotUsedInsideIf
-                    if (level != null) {
-                        // See if the body does an immediate return
-                        if (isUnconditionalReturn(thenBranch)) {
-                            return true;
+                PsiExpression condition = ifStatement.getCondition();
+                if (condition != null) {
+                    if (thenBranch != null) {
+                        Boolean ok = isVersionCheckConditional(api, condition, true, thenBranch,
+                                null);
+                        //noinspection VariableNotUsedInsideIf
+                        if (ok != null) {
+                            // See if the body does an immediate return
+                            if (isUnconditionalReturn(thenBranch)) {
+                                return true;
+                            }
                         }
                     }
-                }
-                if (elseBranch != null) {
-                    Boolean level = isVersionCheckConditional(api, elseBranch, ifStatement);
-                    //noinspection VariableNotUsedInsideIf
-                    if (level != null) {
-                        if (isUnconditionalReturn(elseBranch)) {
-                            return true;
+                    if (elseBranch != null) {
+                        Boolean ok = isVersionCheckConditional(api, condition, false, elseBranch,
+                                null);
+
+                        //noinspection VariableNotUsedInsideIf
+                        if (ok != null) {
+                            if (isUnconditionalReturn(elseBranch)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -249,10 +257,22 @@ public class VersionChecks {
         while (current != null) {
             if (current instanceof PsiIfStatement) {
                 PsiIfStatement ifStatement = (PsiIfStatement) current;
-                if (prev != ifStatement.getCondition()) {
-                    Boolean isConditional = isVersionCheckConditional(api, prev, ifStatement);
-                    if (isConditional != null) {
-                        return isConditional;
+                PsiExpression condition = ifStatement.getCondition();
+                if (prev != condition && condition != null) {
+                    boolean fromThen = prev == ifStatement.getThenBranch();
+                    Boolean ok = isVersionCheckConditional(api, condition, fromThen, prev, null);
+                    if (ok != null) {
+                        return ok;
+                    }
+                }
+            } else if (current instanceof PsiConditionalExpression) {
+                PsiConditionalExpression ifStatement = (PsiConditionalExpression)current;
+                PsiExpression condition = ifStatement.getCondition();
+                if (prev != condition) {
+                    boolean fromThen = prev == ifStatement.getThenExpression();
+                    Boolean ok = isVersionCheckConditional(api, condition, fromThen, prev, null);
+                    if (ok != null) {
+                        return ok;
                     }
                 }
             } else if (current instanceof PsiPolyadicExpression &&
@@ -380,20 +400,18 @@ public class VersionChecks {
                 }
 
             }
+        } else if (element instanceof PsiPrefixExpression) {
+            PsiPrefixExpression prefixExpression = (PsiPrefixExpression) element;
+            if (prefixExpression.getOperationTokenType() == JavaTokenType.EXCL) {
+                PsiExpression operand = prefixExpression.getOperand();
+                if (operand != null) {
+                    Boolean ok = isVersionCheckConditional(api, operand, !and, null, null);
+                    if (ok != null) {
+                        return ok;
+                    }
+                }
+            }
         }
-        return null;
-    }
-
-    @Nullable
-    private static Boolean isVersionCheckConditional(int api, PsiElement prev,
-            PsiIfStatement ifStatement) {
-        PsiExpression condition = ifStatement.getCondition();
-
-        if (condition != null) {
-            boolean fromThen = prev == ifStatement.getThenBranch();
-            return isVersionCheckConditional(api, condition, fromThen, prev, null);
-        }
-
         return null;
     }
 
@@ -421,32 +439,42 @@ public class VersionChecks {
                 tokenType == JavaTokenType.LE || tokenType == JavaTokenType.LT ||
                 tokenType == JavaTokenType.EQEQ) {
             PsiExpression left = binary.getLOperand();
-            if (isSdkInt(left)) {
-                PsiExpression right = binary.getROperand();
-                int level = getApiLevel(right, apiLevelLookup);
-                if (level != -1) {
-                    if (tokenType == JavaTokenType.GE) {
-                        // if (SDK_INT >= ICE_CREAM_SANDWICH) { <call> } else { ... }
-                        return level >= api && fromThen;
-                    }
-                    else if (tokenType == JavaTokenType.GT) {
-                        // if (SDK_INT > ICE_CREAM_SANDWICH) { <call> } else { ... }
-                        return level >= api - 1 && fromThen;
-                    }
-                    else if (tokenType == JavaTokenType.LE) {
-                        // if (SDK_INT <= ICE_CREAM_SANDWICH) { ... } else { <call> }
-                        return level >= api - 1 && !fromThen;
-                    }
-                    else if (tokenType == JavaTokenType.LT) {
-                        // if (SDK_INT < ICE_CREAM_SANDWICH) { ... } else { <call> }
-                        return level >= api && !fromThen;
-                    }
-                    else if (tokenType == JavaTokenType.EQEQ) {
-                        // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else {  }
-                        return level >= api && fromThen;
-                    } else {
-                        assert false : tokenType;
-                    }
+            int level;
+            PsiExpression right;
+            if (!isSdkInt(left)) {
+                right = binary.getROperand();
+                if (right != null && isSdkInt(right)) {
+                    fromThen = !fromThen;
+                    level = getApiLevel(left, apiLevelLookup);
+                } else {
+                    return null;
+                }
+            } else {
+                right = binary.getROperand();
+                level = getApiLevel(right, apiLevelLookup);
+            }
+            if (level != -1) {
+                if (tokenType == JavaTokenType.GE) {
+                    // if (SDK_INT >= ICE_CREAM_SANDWICH) { <call> } else { ... }
+                    return level >= api && fromThen;
+                }
+                else if (tokenType == JavaTokenType.GT) {
+                    // if (SDK_INT > ICE_CREAM_SANDWICH) { <call> } else { ... }
+                    return level >= api - 1 && fromThen;
+                }
+                else if (tokenType == JavaTokenType.LE) {
+                    // if (SDK_INT <= ICE_CREAM_SANDWICH) { ... } else { <call> }
+                    return level >= api - 1 && !fromThen;
+                }
+                else if (tokenType == JavaTokenType.LT) {
+                    // if (SDK_INT < ICE_CREAM_SANDWICH) { ... } else { <call> }
+                    return level >= api && !fromThen;
+                }
+                else if (tokenType == JavaTokenType.EQEQ) {
+                    // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else {  }
+                    return level >= api && fromThen;
+                } else {
+                    assert false : tokenType;
                 }
             }
         }
@@ -481,10 +509,21 @@ public class VersionChecks {
         if (element instanceof PsiBinaryExpression) {
             PsiBinaryExpression inner = (PsiBinaryExpression) element;
             if (inner.getOperationTokenType() == JavaTokenType.OROR) {
-                return before != inner.getLOperand() &&
-                        (isOredWithConditional(inner.getLOperand(), api, before)
-                                || inner.getROperand() != before && isOredWithConditional(
-                                inner.getROperand(), api, before));
+                PsiExpression left = inner.getLOperand();
+
+                if (before != left) {
+                    Boolean ok = isVersionCheckConditional(api, left, false, null, null);
+                    if (ok != null) {
+                        return ok;
+                    }
+                    PsiExpression right = inner.getROperand();
+                    if (right != null) {
+                        ok = isVersionCheckConditional(api, right, false, null, null);
+                        if (ok != null) {
+                            return ok;
+                        }
+                    }
+                }
             }
             Boolean value = isVersionCheckConditional(api, false, inner, null);
             return value != null && value;
@@ -509,11 +548,22 @@ public class VersionChecks {
         if (element instanceof PsiBinaryExpression) {
             PsiBinaryExpression inner = (PsiBinaryExpression) element;
             if (inner.getOperationTokenType() == JavaTokenType.ANDAND) {
-                return before != inner.getLOperand() && (
-                        isAndedWithConditional(inner.getLOperand(), api, before)
-                                || inner.getROperand() != before && isAndedWithConditional(
-                                inner.getROperand(), api, before));
+                PsiExpression left = inner.getLOperand();
+                if (before != left) {
+                    Boolean ok = isVersionCheckConditional(api, left, true, null, null);
+                    if (ok != null) {
+                        return ok;
+                    }
+                    PsiExpression right = inner.getROperand();
+                    if (right != null) {
+                        ok = isVersionCheckConditional(api, right, true, null, null);
+                        if (ok != null) {
+                            return ok;
+                        }
+                    }
+                }
             }
+
             Boolean value = isVersionCheckConditional(api, true, inner, null);
             return value != null && value;
         } else if (element instanceof PsiPolyadicExpression) {
