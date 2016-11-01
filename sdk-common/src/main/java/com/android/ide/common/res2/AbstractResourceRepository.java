@@ -25,6 +25,7 @@ import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_IND
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
@@ -338,9 +339,9 @@ public abstract class AbstractResourceRepository {
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
     @NonNull
-    public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
+    public Map<ResourceType, ResourceValueMap> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
-        Map<ResourceType, Map<String, ResourceValue>> map = Maps.newEnumMap(ResourceType.class);
+        Map<ResourceType, ResourceValueMap> map = Maps.newEnumMap(ResourceType.class);
 
         synchronized (ITEM_MAP_LOCK) {
             Map<ResourceType, ListMultimap<String, ResourceItem>> itemMap = getMap();
@@ -361,27 +362,27 @@ public abstract class AbstractResourceRepository {
      * @param referenceConfig the configuration to best match.
      */
     @NonNull
-    public Map<String, ResourceValue> getConfiguredResources(
+    public ResourceValueMap getConfiguredResources(
             @NonNull ResourceType type,
             @NonNull FolderConfiguration referenceConfig) {
         return getConfiguredResources(getMap(), type, referenceConfig);
     }
 
     @NonNull
-    public Map<String, ResourceValue> getConfiguredResources(
+    public ResourceValueMap getConfiguredResources(
             @NonNull Map<ResourceType, ListMultimap<String, ResourceItem>> itemMap,
             @NonNull ResourceType type,
             @NonNull FolderConfiguration referenceConfig) {
         // get the resource item for the given type
         ListMultimap<String, ResourceItem> items = itemMap.get(type);
         if (items == null) {
-            return Maps.newHashMap();
+            return ResourceValueMap.create();
         }
 
         Set<String> keys = items.keySet();
 
         // create the map
-        Map<String, ResourceValue> map = Maps.newHashMapWithExpectedSize(keys.size());
+        ResourceValueMap map = ResourceValueMap.createWithExpectedSize(keys.size());
 
         for (String key : keys) {
             List<ResourceItem> keyItems = items.get(key);

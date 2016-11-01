@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FD_RES_VALUES;
 
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
@@ -197,7 +198,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         //assertTrue(item.hasDefault());
         FolderConfiguration folderConfig = new FolderConfiguration();
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("en"));
-        Map<ResourceType, Map<String, ResourceValue>> configuredItems = mRepository
+        Map<ResourceType, ResourceValueMap> configuredItems = mRepository
                 .getConfiguredResources(folderConfig);
         ResourceValue value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
@@ -247,12 +248,12 @@ public class ResourceRepositoryTest2 extends TestCase {
         folderConfig.setScreenOrientationQualifier(
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
-        Map<ResourceType, Map<String, ResourceValue>> configuredResources =
+        Map<ResourceType, ResourceValueMap> configuredResources =
                 mRepository.getConfiguredResources(folderConfig);
-        Map<String, ResourceValue> strings = configuredResources.get(ResourceType.STRING);
-        Map<String, ResourceValue> layouts = configuredResources.get(ResourceType.LAYOUT);
-        Map<String, ResourceValue> ids = configuredResources.get(ResourceType.ID);
-        Map<String, ResourceValue> dimens = configuredResources.get(ResourceType.DIMEN);
+        ResourceValueMap strings = configuredResources.get(ResourceType.STRING);
+        ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
+        ResourceValueMap ids = configuredResources.get(ResourceType.ID);
+        ResourceValueMap dimens = configuredResources.get(ResourceType.DIMEN);
         assertEquals(1, ids.size());
         assertEquals(1, dimens.size());
         assertEquals("dialog_min_width_major", dimens.get("dialog_min_width_major").getName());
@@ -279,9 +280,9 @@ public class ResourceRepositoryTest2 extends TestCase {
         folderConfig.setScreenOrientationQualifier(
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
-        Map<ResourceType, Map<String, ResourceValue>> configuredResources =
+        Map<ResourceType, ResourceValueMap> configuredResources =
                 mRepository.getConfiguredResources(folderConfig);
-        Map<String, ResourceValue> layouts = configuredResources.get(ResourceType.LAYOUT);
+        ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
         assertEquals(6, layouts.size());
         assertNotNull(layouts.get("layout1"));
 

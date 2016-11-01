@@ -159,9 +159,9 @@ public class ResourceItemResolverTest extends TestCase {
             @Override
             public ResourceResolver getResolver(boolean createIfNecessary) {
                 if (mResolver == null && createIfNecessary) {
-                    Map<ResourceType, Map<String, ResourceValue>> appResourceMap;
+                    Map<ResourceType, ResourceValueMap> appResourceMap;
                     appResourceMap = appResources.getConfiguredResources(config);
-                    Map<ResourceType, Map<String, ResourceValue>> frameworkResourcesMap =
+                    Map<ResourceType, ResourceValueMap> frameworkResourcesMap =
                             frameworkResources.getConfiguredResources(config);
                     assertNotNull(appResourceMap);
                     mResolver = ResourceResolver.create(appResourceMap, frameworkResourcesMap,

@@ -726,7 +726,7 @@ public abstract class ResourceRepository {
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
     @NonNull
-    public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
+    public Map<ResourceType, ResourceValueMap> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
         ensureInitialized();
 
@@ -741,12 +741,12 @@ public abstract class ResourceRepository {
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
     @NonNull
-    protected final Map<ResourceType, Map<String, ResourceValue>> doGetConfiguredResources(
+    protected final Map<ResourceType, ResourceValueMap> doGetConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
         ensureInitialized();
 
-        Map<ResourceType, Map<String, ResourceValue>> map =
-            new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
+        Map<ResourceType, ResourceValueMap> map =
+            new EnumMap<ResourceType, ResourceValueMap>(ResourceType.class);
 
         for (ResourceType key : ResourceType.values()) {
             // get the local results and put them in the map
@@ -853,17 +853,17 @@ public abstract class ResourceRepository {
      * @param referenceConfig the configuration to best match.
      */
     @NonNull
-    private Map<String, ResourceValue> getConfiguredResource(@NonNull ResourceType type,
-            @NonNull FolderConfiguration referenceConfig) {
+    private ResourceValueMap getConfiguredResource(@NonNull ResourceType type,
+                                                                  @NonNull FolderConfiguration referenceConfig) {
 
         // get the resource item for the given type
         Map<String, ResourceItem> items = mResourceMap.get(type);
         if (items == null) {
-            return new HashMap<String, ResourceValue>();
+            return ResourceValueMap.create();
         }
 
         // create the map
-        HashMap<String, ResourceValue> map = new HashMap<String, ResourceValue>(items.size());
+        ResourceValueMap map = ResourceValueMap.createWithExpectedSize(items.size());
 
         for (ResourceItem item : items.values()) {
             ResourceValue value = item.getResourceValue(type, referenceConfig,

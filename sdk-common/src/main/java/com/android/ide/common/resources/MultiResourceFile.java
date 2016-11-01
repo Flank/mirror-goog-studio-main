@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -45,8 +44,8 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     private static final SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
 
-    private final Map<ResourceType, Map<String, ResourceValue>> mResourceItems =
-        new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
+    private final Map<ResourceType, ResourceValueMap> mResourceItems =
+        new EnumMap<ResourceType, ResourceValueMap>(ResourceType.class);
 
     private Collection<ResourceType> mResourceTypeList = null;
 
@@ -79,8 +78,8 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         mNeedIdRefresh = false;
 
         // Copy the previous version of our list of ResourceItems and types
-        Map<ResourceType, Map<String, ResourceValue>> oldResourceItems
-                        = new EnumMap<ResourceType, Map<String, ResourceValue>>(mResourceItems);
+        Map<ResourceType, ResourceValueMap> oldResourceItems
+                        = new EnumMap<ResourceType, ResourceValueMap>(mResourceItems);
 
         // reset current content.
         mResourceItems.clear();
@@ -131,7 +130,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     @Override
     public boolean hasResources(ResourceType type) {
-        Map<String, ResourceValue> list = mResourceItems.get(type);
+        ResourceValueMap list = mResourceItems.get(type);
         return (list != null && !list.isEmpty());
     }
 
@@ -142,7 +141,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         repository.removeFile(mResourceTypeList, this);
 
         for (ResourceType type : mResourceTypeList) {
-            Map<String, ResourceValue> list = mResourceItems.get(type);
+            ResourceValueMap list = mResourceItems.get(type);
 
             if (list != null) {
                 Collection<ResourceValue> values = list.values();
@@ -183,11 +182,11 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
     public void addResourceValue(ResourceValue value) {
         ResourceType resType = value.getResourceType();
 
-        Map<String, ResourceValue> list = mResourceItems.get(resType);
+        ResourceValueMap list = mResourceItems.get(resType);
 
         // if the list does not exist, create it.
         if (list == null) {
-            list = new HashMap<String, ResourceValue>();
+            list = ResourceValueMap.create();
             mResourceItems.put(resType, list);
         } else {
             // look for a possible value already existing.
@@ -205,14 +204,14 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     @Override
     public boolean hasResourceValue(ResourceType type, String name) {
-        Map<String, ResourceValue> map = mResourceItems.get(type);
+        ResourceValueMap map = mResourceItems.get(type);
         return map != null && map.containsKey(name);
     }
 
     @Override
     public ResourceValue getValue(ResourceType type, String name) {
         // get the list for the given type
-        Map<String, ResourceValue> list = mResourceItems.get(type);
+        ResourceValueMap list = mResourceItems.get(type);
 
         if (list != null) {
             return list.get(name);
