@@ -169,15 +169,15 @@ public class ResourceRepositoryTest extends TestCase {
         folderConfig.setScreenOrientationQualifier(
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
-        Map<ResourceType, Map<String, ResourceValue>> configuredResources =
+        Map<ResourceType, ResourceValueMap> configuredResources =
                 mRepository.getConfiguredResources(folderConfig);
-        Map<String, ResourceValue> strings = configuredResources
+        ResourceValueMap strings = configuredResources
                 .get(ResourceType.STRING);
-        Map<String, ResourceValue> layouts = configuredResources
+        ResourceValueMap layouts = configuredResources
                 .get(ResourceType.LAYOUT);
-        Map<String, ResourceValue> ids = configuredResources
+        ResourceValueMap ids = configuredResources
                 .get(ResourceType.ID);
-        Map<String, ResourceValue> dimens = configuredResources
+        ResourceValueMap dimens = configuredResources
                 .get(ResourceType.DIMEN);
         assertEquals(1, ids.size());
         assertEquals(1, dimens.size());

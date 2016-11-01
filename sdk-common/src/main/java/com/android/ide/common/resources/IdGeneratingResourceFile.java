@@ -28,9 +28,7 @@ import com.android.resources.ResourceType;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -41,8 +39,7 @@ import java.util.Set;
 public final class IdGeneratingResourceFile extends ResourceFile
                                             implements IValueResourceRepository {
 
-    private final Map<String, ResourceValue> mIdResources =
-        new HashMap<String, ResourceValue>();
+    private final ResourceValueMap mIdResources = ResourceValueMap.create();
 
     private final Collection<ResourceType> mResourceTypeList;
 

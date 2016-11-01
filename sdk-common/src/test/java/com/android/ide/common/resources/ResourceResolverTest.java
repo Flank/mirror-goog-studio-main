@@ -127,9 +127,9 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+        Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
+        Map<ResourceType, ResourceValueMap> frameworkResources =
                 frameworkRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver = ResourceResolver.create(projectResources, frameworkResources,
@@ -346,7 +346,7 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+        Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
@@ -384,7 +384,7 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+        Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
@@ -453,7 +453,7 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+        Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
@@ -539,9 +539,9 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources = projectRepository
+        Map<ResourceType, ResourceValueMap> projectResources = projectRepository
                 .getConfiguredResources(config);
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources = frameworkRepository
+        Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
                 .getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver lightResolver = ResourceResolver.create(projectResources,
@@ -614,9 +614,9 @@ public class ResourceResolverTest extends TestCase {
         assertFalse(projectRepository.isFrameworkRepository());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources = projectRepository
+        Map<ResourceType, ResourceValueMap> projectResources = projectRepository
                 .getConfiguredResources(config);
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources = frameworkRepository
+        Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
                 .getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver = ResourceResolver.create(projectResources,
@@ -670,11 +670,11 @@ public class ResourceResolverTest extends TestCase {
 
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
-        Map<ResourceType, Map<String, ResourceValue>> projectResources =
+        Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
 
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
+        Map<ResourceType, ResourceValueMap> frameworkResources =
                 frameworkRepository.getConfiguredResources(config);
         assertNotNull(frameworkResources);
 
