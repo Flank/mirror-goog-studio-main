@@ -214,7 +214,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
                 unused.removeAll(ids);
             }
 
-            if (!unused.isEmpty() && !context.getDriver().hasParserErrors()) {
+            if (!unused.isEmpty()) {
                 mModel.unused = unused;
 
                 // Request another pass, and in the second pass we'll gather location

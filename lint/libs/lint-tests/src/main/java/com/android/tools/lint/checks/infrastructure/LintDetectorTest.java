@@ -691,7 +691,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
      */
     @NonNull
-    public TestFile base64gzip(@NonNull String to, @NonNull String encoded) {
+    public BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
         encoded = encoded.replaceAll("\n", "");
         byte[] bytes = Base64.getDecoder().decode(encoded);
 
@@ -703,7 +703,14 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             // Can't happen on a ByteArrayInputStream
         }
 
-        return file().to(to).withBytes(bytes);
+        byte[] finalBytes = bytes;
+        return new BinaryTestFile(to, new BytecodeProducer() {
+            @NonNull
+            @Override
+            public byte[] produce() {
+                return finalBytes;
+            }
+        });
     }
 
     public TestFile classpath(String... extraLibraries) {
@@ -1044,6 +1051,14 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return null;
     }
 
+    /**
+     * If true, simulate symbol resolutions when {@link JavaParser#prepareJavaParse(List)}
+     * is called
+     */
+    protected boolean forceErrors() {
+        return false;
+    }
+
     protected boolean ignoreSystemErrors() {
         return true;
     }
@@ -1150,8 +1165,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public JavaParser getJavaParser(@Nullable Project project) {
             return new EcjParser(this, project) {
                 @Override
-                public void prepareJavaParse(@NonNull List<JavaContext> contexts) {
-                    super.prepareJavaParse(contexts);
+                public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
+                    boolean success = super.prepareJavaParse(contexts);
+                    if (forceErrors()) {
+                        success = false;
+                    }
                     if (!allowCompilationErrors() && ecjResult != null) {
                         StringBuilder sb = new StringBuilder();
                         for (CompilationUnitDeclaration unit : ecjResult.getCompilationUnits()) {
@@ -1180,6 +1198,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                         }
 
                     }
+
+                    return success;
                 }
             };
         }

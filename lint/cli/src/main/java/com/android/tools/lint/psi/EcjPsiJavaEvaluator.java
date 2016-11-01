@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -47,6 +48,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 public class EcjPsiJavaEvaluator extends JavaEvaluator {
@@ -188,13 +190,21 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         return false;
     }
 
-    @NonNull
+    @Nullable
     @Override
     public String getInternalName(@NonNull PsiClass psiClass) {
         ReferenceBinding binding = null;
         if (psiClass instanceof EcjPsiClass) {
             //noinspection ConstantConditions
-            binding = ((TypeDeclaration) ((EcjPsiClass) psiClass).getNativeNode()).binding;
+            Object nativeNode = ((EcjPsiClass) psiClass).getNativeNode();
+            if (nativeNode instanceof TypeDeclaration) {
+                binding = ((TypeDeclaration) nativeNode).binding;
+            } else if (nativeNode instanceof TypeParameter) {
+                TypeVariableBinding b = ((TypeParameter) nativeNode).binding;
+                if (b.superclass != null) {
+                    binding = b.superclass;
+                }
+            }
         } else if (psiClass instanceof EcjPsiBinaryClass) {
             Binding binaryBinding = ((EcjPsiBinaryClass) psiClass).getBinding();
             if (binaryBinding instanceof ReferenceBinding) {
@@ -208,11 +218,14 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         return EcjPsiManager.getInternalName(binding.compoundName);
     }
 
-    @NonNull
+    @Nullable
     @Override
     public String getInternalName(@NonNull PsiClassType psiClassType) {
         if (psiClassType instanceof EcjPsiClassType) {
-            EcjPsiManager.getTypeName(((EcjPsiClassType)psiClassType).getBinding());
+            ReferenceBinding binding = ((EcjPsiClassType) psiClassType).getBinding();
+            if (binding.compoundName != null) {
+                return EcjPsiManager.getInternalName(binding.compoundName);
+            }
         }
         return super.getInternalName(psiClassType);
     }

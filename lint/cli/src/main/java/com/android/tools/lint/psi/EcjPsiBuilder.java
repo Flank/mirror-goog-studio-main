@@ -1672,7 +1672,12 @@ public class EcjPsiBuilder {
         EcjPsiTypeElement element = new EcjPsiTypeElement(mManager, reference);
         parent.adoptChild(element);
 
-        if (reference.resolvedType instanceof ReferenceBinding) {
+        if (reference instanceof UnionTypeReference) {
+            UnionTypeReference unionTypeReference = (UnionTypeReference) reference;
+            for (TypeReference t : unionTypeReference.typeReferences) {
+                toTypeElement(element, t);
+            }
+        } else if (reference.resolvedType instanceof ReferenceBinding) {
             EcjPsiJavaCodeReferenceElement nameElement = toTypeReference(
                     element, reference);
             element.setReferenceElement(nameElement);

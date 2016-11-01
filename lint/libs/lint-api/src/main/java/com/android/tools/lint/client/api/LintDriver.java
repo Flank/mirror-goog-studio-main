@@ -1615,7 +1615,7 @@ public class LintDriver {
         if (runCompatChecks) {
             visitor.setDisposeUnitsAfterUse(false);
         }
-        visitor.prepare(contexts);
+        parserErrors = !visitor.prepare(contexts);
         for (JavaContext context : contexts) {
             fireEvent(EventType.SCANNING_FILE, context);
             visitor.visitFile(context);

@@ -26,6 +26,7 @@ import com.android.tools.lint.checks.SupportAnnotationDetectorTest;
 import com.android.tools.lint.checks.TypoDetectorTest;
 import com.android.tools.lint.checks.TypoLookupTest;
 import com.android.tools.lint.checks.UnpackedNativeCodeDetectorTest;
+import com.android.tools.lint.checks.VersionChecksTest;
 import com.android.tools.lint.client.api.CustomRuleTest;
 import org.junit.runner.RunWith;
 
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 @JarTestSuiteRunner.ExcludeClasses({
         AnnotationDetectorTest.class,
         ApiDetectorTest.class,
+        VersionChecksTest.class,
         CallSuperDetectorTest.class,
         CustomRuleTest.class,
         JavaScriptInterfaceDetectorTest.class,

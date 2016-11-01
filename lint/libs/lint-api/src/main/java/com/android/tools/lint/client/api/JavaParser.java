@@ -92,8 +92,9 @@ public abstract class JavaParser {
      * file
      *
      * @param contexts a list of contexts to be parsed
+     * @return true if the preparation succeeded; false if there were errors
      */
-    public abstract void prepareJavaParse(@NonNull List<JavaContext> contexts);
+    public abstract boolean prepareJavaParse(@NonNull List<JavaContext> contexts);
 
     /**
      * Parse the file pointed to by the given context.
