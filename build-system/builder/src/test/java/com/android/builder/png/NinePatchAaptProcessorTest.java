@@ -78,7 +78,8 @@ public class NinePatchAaptProcessorTest {
 
 
     @AfterClass
-    public static void tearDownAndCheck() throws IOException, DataFormatException {
+    public static void tearDownAndCheck()
+            throws IOException, DataFormatException, InterruptedException {
         NinePatchAaptProcessorTestUtils.tearDownAndCheck(
                 sCruncherKey.get(), mSourceAndCrunchedFiles, sCruncher, sClassStartTime, expect);
         mSourceAndCrunchedFiles = null;
