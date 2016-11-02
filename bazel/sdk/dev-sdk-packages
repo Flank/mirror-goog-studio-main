@@ -1,4 +1,4 @@
-# Line format: <sdk package>[:include-glob[:exclude-glob]
+# Line format: <sdk package>[:include-glob[:exclude-glob]]
 
 # Match both adb and adb.exe.
 platform-tools:{adb*,api/*,package.xml,*.dll}
@@ -21,7 +21,9 @@ extras;android;gapid;3
 
 # Extra components picked to pass various AndroidGradleTestCase tests
 # TemplateTest uses a lot of them
-extras;android;m2repository:**{package.xml,/databinding/*/1.3/**,/animated-vector-drawable/25.0.0/**,/appcompat-v7/25.0.0/**,/constraint/**,/design/25.0.0/**,/gridlayout-v7/25.0.0/**,/recyclerview-v7/25.0.0/**,/support-annotations/25.0.0/**,/support-compat/25.0.0/**,/support-core-ui/25.0.0/**,/support-core-utils/25.0.0/**,/support-fragment/25.0.0/**,/support-media-compat/25.0.0/**,/support-v4/25.0.0/**,/support-vector-drawable/25.0.0/**,/support/transition/25.0.0/**,/espresso-core/2.2.2/**,/espresso-idling-resource/2.2.2/**,/test/exposed-instrumentation-api-publish/0.5/**,/test/rules/0.5/**,/test/runner/0.5/**,/testing-support-lib/0.1/**}
+extras;android;m2repository:**{package.xml,/databinding/*/1.3/**,/animated-vector-drawable/25.0.0/**,/appcompat-v7/25.0.0/**,/constraint/**,/design/25.0.0/**,/gridlayout-v7/25.0.0/**,/recyclerview-v7/25.0.0/**,/support-annotations/25.0.0/**,/support-compat/25.0.0/**,/support-core-ui/25.0.0/**,/support-core-utils/25.0.0/**,/support-fragment/25.0.0/**,/support-media-compat/25.0.0/**,/support-v4/25.0.0/**,/support-vector-drawable/25.0.0/**,/support/transition/25.0.0/**,/leanback-v17/25.0.0/**,/espresso-core/2.2.2/**,/espresso-idling-resource/2.2.2/**,/test/exposed-instrumentation-api-publish/0.5/**,/test/rules/0.5/**,/test/runner/0.5/**,/testing-support-lib/0.1/**}
 extras;google;m2repository:**{package.xml,/gms/**/9.6.1/**}
 extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-beta4
 extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta4
+
+cmake;3.6.3155560:**:docs/**
