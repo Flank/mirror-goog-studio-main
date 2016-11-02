@@ -518,8 +518,8 @@ def java_proto_library(name, srcs=None, deps=[], visibility=None):
       srcs = srcs,
       deps = deps,
       outs = outs,
-      protoc = "//prebuilts/tools/common/m2:protoc",
-      grpc_plugin = "//prebuilts/tools/common/m2:grpc-plugin",
+      protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0-beta-2:exe",
+      grpc_plugin = "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/0.13.2:exe",
       target_language = proto_languages.JAVA
   )
 

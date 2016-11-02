@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.android-annotations",
@@ -7,9 +8,16 @@ iml_module(
     visibility = ["//visibility:public"],
 )
 
-# TODO: Keep only only one rule in this BUILD file, since there's no real need for the split here.
-java_library(
+maven_java_library(
     name = "annotations",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
+    pom = ":pom",
+)
+
+maven_pom(
+    name = "pom",
+    group = "com.android.tools",
+    artifact = "annotations",
+    source = "//tools/buildSrc/base:base_version",
 )

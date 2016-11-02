@@ -16,25 +16,32 @@
 
 package com.android.tools.maven;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * A tool to create pom files. Usage:
- * PomGenerator target.pom <coordinates> <dep1> ... <depn>
+ * PomGenerator target.pom  <options>
  *
- * Where, coordinates and deps are one of the following:
- * .- A string of the form group:artifact:version
- * .- A .pom file path where to get this information from.
+ * Options:
+ * -o <pom> Where to write the pom file.
+ * -i <pom> [optional] The pom file to use as base for this pom.
+ * --group <group> [optional] The group to use.
+ * --artifact <artifact> [optional] The artifact name to use.
+ * --version <version> [optional] The version to use.
+ * --deps [pom1:...:pomn] The list of poms to set as dependencies.
  */
 public class PomGenerator {
 
@@ -52,38 +59,85 @@ public class PomGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        File target = new File(args[0]);
-        String input = args[1];
+        new PomGenerator().run(Arrays.asList(args));
+    }
+
+    private void run(List<String> args) throws Exception {
+        File in = null;
+        File out = null;
+        List<File> deps = null;
+        String group = null;
+        String artifact = null;
+        String version = null;
+        Iterator<String> it = args.iterator();
+        while (it.hasNext()) {
+            String arg = it.next();
+            if (arg.equals("-i") && it.hasNext()) {
+                in = new File(it.next());
+            } else if (arg.equals("-o") && it.hasNext()) {
+                out = new File(it.next());
+            } else if (arg.equals("--deps") && it.hasNext()) {
+                String val = it.next();
+                if (!val.isEmpty()) {
+                    deps = Arrays.stream(val.split(":"))
+                            .map(File::new)
+                            .collect(Collectors.toList());
+                }
+            } else if (arg.equals("--group") && it.hasNext()) {
+                group = it.next();
+            } else if (arg.equals("--artifact") && it.hasNext()) {
+                artifact = it.next();
+            } else if (arg.equals("--version") && it.hasNext()) {
+                version = it.next();
+            }
+        }
+        if (out == null) {
+            System.err.println("Output file must be specified.");
+            return;
+        }
+        generatePom(in, out, deps, group, artifact, version);
+    }
+
+    private void generatePom(File in, File out, List<File> deps2, String group, String artifact, String version) throws Exception {
+        // Avoid any manipulation if it is a copy:
+        if (in != null && out != null && deps2 == null && group == null && artifact == null && version == null) {
+            Files.copy(in.toPath(), out.toPath());
+            return;
+        }
 
         Model model;
-        if (MavenCoordinates.isMavenCoordinate(input)) {
+        if (in == null) {
             model = new Model();
-            MavenCoordinates coordinates = new MavenCoordinates(input);
-            model.setGroupId(coordinates.groupId);
-            model.setArtifactId(coordinates.artifactId);
-            model.setVersion(coordinates.version);
+            model.setModelVersion("4.0.0");
         } else {
-            model = pomToModel(input);
+            model = pomToModel(in.getAbsolutePath());
         }
 
-        List<Dependency> deps = new LinkedList<>();
-        for (int i = 2; i < args.length; i++) {
-            Dependency dependency = new Dependency();
-            MavenCoordinates coordinates;
-            if (MavenCoordinates.isMavenCoordinate(args[i])) {
-                coordinates = new MavenCoordinates(args[i]);
-            } else {
-                Model dependent = pomToModel(args[i]);
+        if (group != null) {
+            model.setGroupId(group);
+        }
+        if (artifact != null) {
+            model.setArtifactId(artifact);
+        }
+        if (version != null) {
+            model.setVersion(version);
+        }
+        if (deps2 != null) {
+            List<Dependency> deps = new LinkedList<>();
+            for (File dep : deps2) {
+                Dependency dependency = new Dependency();
+                MavenCoordinates coordinates;
+                Model dependent = pomToModel(dep.getAbsolutePath());
                 coordinates = new MavenCoordinates(dependent);
+
+                dependency.setGroupId(coordinates.groupId);
+                dependency.setArtifactId(coordinates.artifactId);
+                dependency.setVersion(coordinates.version);
+
+                deps.add(dependency);
             }
-
-            dependency.setGroupId(coordinates.groupId);
-            dependency.setArtifactId(coordinates.artifactId);
-            dependency.setVersion(coordinates.version);
-
-            deps.add(dependency);
+            model.setDependencies(deps);
         }
-        model.setDependencies(deps);
-        modelToPom(model, target);
+        modelToPom(model, out);
     }
 }
