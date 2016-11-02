@@ -29,7 +29,6 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
-import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -37,10 +36,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.io.Files;
 import com.google.common.truth.TestVerb;
-
-import org.junit.Assert;
-import org.junit.Assume;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,8 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
-
 import javax.imageio.ImageIO;
+import org.junit.Assert;
+import org.junit.Assume;
 
 /**
  * Utilities common to tests for both the synchronous and the asynchronous Aapt processor.
@@ -95,7 +91,7 @@ public class NinePatchAaptProcessorTestUtils {
             @NonNull PngCruncher cruncher,
             @NonNull AtomicLong classStartTime,
             @NonNull TestVerb expect)
-            throws IOException, DataFormatException {
+            throws IOException, DataFormatException, InterruptedException {
         if (isOnJenkins()) {
             return;
         }
@@ -111,7 +107,7 @@ public class NinePatchAaptProcessorTestUtils {
         System.out.println("total time : " + (System.currentTimeMillis() - classStartTime.get()));
         System.out.println("Comparing crunched files");
         long comparisonStartTime = System.currentTimeMillis();
-        syncFileSystem();
+        TestUtils.waitForFileSystemTick();
         for (Map.Entry<File, File> sourceAndCrunched : sourceAndCrunchedFiles.entrySet()) {
             System.out.println(sourceAndCrunched.getKey().getName());
             File crunched = new File(sourceAndCrunched.getKey().getParent(),
@@ -287,21 +283,6 @@ public class NinePatchAaptProcessorTestUtils {
         File folder = TestResources.getDirectory("/testData/png");
         assertTrue(folder.isDirectory());
         return folder;
-    }
-
-    private static void syncFileSystem() {
-        try {
-            if (System.getProperty("os.name").contains("Linux")) {
-                if (Runtime.getRuntime().exec("/bin/sync").waitFor() != 0) {
-                    throw new IOException("Failed to sync file system.");
-                }
-            }
-        } catch (IOException e) {
-            System.err.println(Throwables.getStackTraceAsString(e));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.err.println(Throwables.getStackTraceAsString(e));
-        }
     }
 
     /**
