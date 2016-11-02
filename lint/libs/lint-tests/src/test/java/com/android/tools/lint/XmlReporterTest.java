@@ -314,6 +314,93 @@ public class XmlReporterTest extends AbstractCheckTest {
         }
     }
 
+    public void testBaselineFile() throws Exception {
+        File file = new File(getTargetDir(), "report");
+        try {
+            LintCliClient client = new LintCliClient() {
+                @Override
+                String getRevision() {
+                    return "unittest"; // Hardcode version to keep unit test output stable
+                }
+            };
+            client.flags.setFullPath(true);
+
+            //noinspection ResultOfMethodCallIgnored
+            file.getParentFile().mkdirs();
+            XmlReporter reporter = new XmlReporter(client, file);
+            reporter.setIntendedForBaseline(true);
+            Project project = Project.create(client, new File("/foo/bar/Foo"),
+                    new File("/foo/bar/Foo"));
+
+            Warning warning1 = new Warning(ManifestDetector.USES_SDK,
+                    "<uses-sdk> tag should specify a target API level (the highest verified " +
+                            "version; when running on later versions, compatibility behaviors may " +
+                            "be enabled) with android:targetSdkVersion=\"?\"",
+                    Severity.WARNING, project);
+            warning1.line = 6;
+            warning1.file = new File("/foo/bar/../Foo/AndroidManifest.xml");
+            warning1.errorLine = "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n";
+            warning1.path = "AndroidManifest.xml";
+            warning1.location = Location.create(warning1.file,
+                    new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
+
+            Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
+                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    Severity.WARNING, project);
+            warning2.line = 11;
+            warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
+            warning2.errorLine = "        android:text=\"Fooo\" />\n" +
+                    "        ~~~~~~~~~~~~~~~~~~~\n";
+            warning2.path = "res/layout/main.xml";
+            warning2.location = Location.create(warning2.file,
+                    new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
+
+            List<Warning> warnings = new ArrayList<>();
+            warnings.add(warning1);
+            warnings.add(warning2);
+
+            reporter.write(new Reporter.Stats(0, 2), warnings);
+
+            String report = Files.toString(file, Charsets.UTF_8);
+            assertEquals(""
+                            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                            + "<issues format=\"4\" by=\"lint unittest\">\n"
+                            + "\n"
+                            + "    <issue\n"
+                            + "        id=\"UsesMinSdkAttributes\"\n"
+                            + "        message=\"&lt;uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=&quot;?&quot;\"\n"
+                            + "        errorLine1=\"    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />\"\n"
+                            + "        errorLine2=\"    ^\">\n"
+                            + "        <location\n"
+                            + "            file=\"/foo/bar/../Foo/AndroidManifest.xml\"\n"
+                            + "            line=\"7\"\n"
+                            + "            column=\"5\"/>\n"
+                            + "    </issue>\n"
+                            + "\n"
+                            + "    <issue\n"
+                            + "        id=\"HardcodedText\"\n"
+                            + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                            + "        errorLine1=\"        android:text=&quot;Fooo&quot; />\"\n"
+                            + "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n"
+                            + "        <location\n"
+                            + "            file=\"res/layout/main.xml\"\n"
+                            + "            line=\"12\"\n"
+                            + "            column=\"9\"/>\n"
+                            + "    </issue>\n"
+                            + "\n"
+                            + "</issues>\n",
+                    report);
+
+            // Make sure the XML is valid
+            Document document = PositionXmlParser.parse(report);
+            assertNotNull(document);
+            assertEquals(2, document.getElementsByTagName("issue").getLength());
+        } finally {
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+        }
+    }
+
     @Override
     protected Detector getDetector() {
         fail("Not used in this test");

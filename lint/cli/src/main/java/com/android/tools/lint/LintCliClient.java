@@ -491,6 +491,11 @@ public class LintCliClient extends LintClient {
             }
 
             if (flags.isWarningsAsErrors() && severity == Severity.WARNING) {
+                if (issue == IssueRegistry.BASELINE) {
+                    // Don't promote the baseline informational issue
+                    // (number of issues promoted) to error
+                    return severity;
+                }
                 severity = Severity.ERROR;
             }
 
@@ -716,9 +721,14 @@ public class LintCliClient extends LintClient {
         return sb.toString();
     }
 
-    String getDisplayPath(Project project, File file) {
+    @NonNull
+    String getDisplayPath(@NonNull Project project, @NonNull File file) {
+        return getDisplayPath(project, file, flags.isFullPath());
+    }
+
+    static String getDisplayPath(@NonNull Project project, @NonNull File file, boolean fullPath) {
         String path = file.getPath();
-        if (!flags.isFullPath() && path.startsWith(project.getReferenceDir().getPath())) {
+        if (!fullPath && path.startsWith(project.getReferenceDir().getPath())) {
             int chop = project.getReferenceDir().getPath().length();
             if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
                 chop++;
@@ -727,7 +737,7 @@ public class LintCliClient extends LintClient {
             if (path.isEmpty()) {
                 path = file.getName();
             }
-        } else if (flags.isFullPath()) {
+        } else if (fullPath) {
             path = getCleanPath(file.getAbsoluteFile());
         }
 
