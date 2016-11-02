@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,7 +66,11 @@ public class BuildCacheTest {
 
         File preDexDir = FileUtils.join(project.getIntermediatesDir(), "pre-dexed", "debug");
         List<File> dexFiles = Arrays.asList(preDexDir.listFiles());
-        List<File> cachedEntryDirs = Arrays.asList(buildCacheDir.listFiles());
+        List<File> cachedEntryDirs =
+                Arrays.asList(buildCacheDir.listFiles())
+                        .stream()
+                        .filter(file -> file.length() > 0) // Remove the lock files
+                        .collect(Collectors.toList());
 
         assertThat(dexFiles).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
@@ -91,8 +95,13 @@ public class BuildCacheTest {
 
         executor.run("clean", "assembleDebug");
 
+        cachedEntryDirs =
+                Arrays.asList(buildCacheDir.listFiles())
+                        .stream()
+                        .filter(file -> file.length() > 0) // Remove the lock files
+                        .collect(Collectors.toList());
         assertThat(preDexDir.list()).hasLength(2);
-        assertThat(buildCacheDir.list()).hasLength(1);
+        assertThat(cachedEntryDirs).hasSize(1);
 
         // Assert that the cached file is unchanged and the guava library's pre-dexed file is copied
         // from the cache

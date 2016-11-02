@@ -469,20 +469,19 @@ public final class FileCache {
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
             throws ExecutionException, IOException {
-        // For each file being accessed, we create a corresponding lock file to synchronize
-        // execution across processes. Note that we don't use the file being accessed (which might
-        // not already exist) as the lock file since we don't want it to be affected by our locking
-        // mechanism (specifically, the locking mechanism will always create the lock file and
-        // delete it after the action is executed; however, an action may or may not create the file
-        // that it is supposed to access).
+        // For each file/directory being accessed, we create a corresponding lock file to
+        // synchronize execution across processes. We don't use the file/directory being accessed as
+        // the lock file since we want to separate its usage from the locking mechanism and it is
+        // also not possible for the underlying locking mechanism (using Java's FileLock) to lock a
+        // directory.
         String lockFileName =
                 Hashing.sha1()
                         .hashString(
                                 FileUtils.getCaseSensitivityAwareCanonicalPath(accessedFile),
                                 StandardCharsets.UTF_8)
                         .toString();
-        // If the file being accessed is the cache directory itself, then we create the lock file
-        // within the tmpdir directory; otherwise we create it within the cache directory
+        // If the file/directory being accessed is the cache directory itself, we use a lock file
+        // within the tmpdir directory; otherwise we use a lock file within the cache directory
         File lockFile =
                 accessedFile.getCanonicalFile().equals(mCacheDirectory)
                         ? new File(System.getProperty("java.io.tmpdir"), lockFileName)

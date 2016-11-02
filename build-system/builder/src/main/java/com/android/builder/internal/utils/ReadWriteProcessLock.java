@@ -75,6 +75,12 @@ public final class ReadWriteProcessLock {
      * multiple {@code ReadWriteProcessLock} instances on different processes for a given lock
      * file).
      *
+     * <p>It is strongly recommended that the lock file is used solely for synchronization purposes.
+     * The client of this class should not access (read, write, or delete) the lock file. The lock
+     * file may or may not exist when this method is called. However, it will be created and will
+     * not be deleted once the client starts using the locking mechanism provided by this class.
+     * The client may delete the lock files only when the locking machanism is no longer in use.
+     *
      * @param lockFile the lock file, used solely for synchronization purposes
      */
     public static ReadWriteProcessLock getInstance(@NonNull File lockFile) throws IOException {
@@ -159,7 +165,14 @@ public final class ReadWriteProcessLock {
         }
     }
 
-    /** Facility to synchronize processes. */
+    /**
+     * Facility to synchronize processes.
+     *
+     * <p>Note that the methods in this class are never called from more than one thread per process
+     * for a given lock file. However, another thread in another process might be calling these
+     * methods at the same time on the same lock file, that's why we do not allow the lock file to
+     * be deleted, and that would make these methods also safe to be called from multiple processes.
+     */
     private static final class ProcessSynchronizer {
 
         @NonNull private final File mLockFile;
@@ -186,10 +199,6 @@ public final class ReadWriteProcessLock {
             Preconditions.checkNotNull(mFileChannel);
             Preconditions.checkNotNull(mFileLock);
 
-            // Delete the lock file first; if we delete the lock file after the file lock is
-            // released, another process might have grabbed the file lock and we might be deleting
-            // the file while the other process is using it.
-            mLockFile.delete();
             mFileLock.release();
             mFileChannel.close();
         }

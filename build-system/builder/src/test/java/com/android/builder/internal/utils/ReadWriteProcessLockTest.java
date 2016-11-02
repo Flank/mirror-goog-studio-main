@@ -17,9 +17,9 @@
 package com.android.builder.internal.utils;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.truth.MoreTruth;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,6 +44,27 @@ public class ReadWriteProcessLockTest {
         ReadWriteProcessLock lock1 = ReadWriteProcessLock.getInstance(lockFile);
         ReadWriteProcessLock lock2 = ReadWriteProcessLock.getInstance(lockFile);
         assertThat(lock1).isSameAs(lock2);
+    }
+
+    @Test
+    public void testLockFileNotDeleted() throws IOException {
+        // Case 1: lock file already existed
+        File lockFile1 = testFolder.newFile("lockfile1");
+        MoreTruth.assertThat(lockFile1).exists();
+        ReadWriteProcessLock readWriteLock1 = ReadWriteProcessLock.getInstance(lockFile1);
+        ReadWriteProcessLock.Lock lock1 = readWriteLock1.readLock();
+        lock1.lock();
+        lock1.unlock();
+        MoreTruth.assertThat(lockFile1).exists();
+
+        // Case 2: lock file did not exist
+        File lockFile2 = new File(testFolder.getRoot(), "lockfile2");
+        MoreTruth.assertThat(lockFile2).doesNotExist();
+        ReadWriteProcessLock readWriteLock2 = ReadWriteProcessLock.getInstance(lockFile2);
+        ReadWriteProcessLock.Lock lock2 = readWriteLock2.writeLock();
+        lock2.lock();
+        lock2.unlock();
+        MoreTruth.assertThat(lockFile2).exists();
     }
 
     @Test
@@ -114,7 +135,7 @@ public class ReadWriteProcessLockTest {
             @NonNull ConcurrencyTester<Void, Void> singleProcessTester) {
         IOExceptionFunction<Void, Void> actionUnderTest = (Void arg) -> {
             // Do some artificial work here
-            assertEquals(1, 1);
+            assertThat(1).isEqualTo(1);
             return null;
         };
         for (int i = 0; i < lockFiles.length; i++) {
