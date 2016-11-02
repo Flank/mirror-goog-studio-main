@@ -29,8 +29,8 @@ import com.android.builder.tasks.BooleanLatch;
 import com.android.ddmlib.IDevice;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -138,7 +138,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        syncFileSystem();
+        try {
+            TestUtils.waitForFileSystemTick();
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
         List<String> args = Lists.newArrayList();
 
         if (enableInfoLogging) {
@@ -234,19 +239,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             return failure;
         }
     }
-
-    private static void syncFileSystem() {
-        try {
-            if (System.getProperty("os.name").contains("Linux")) {
-                if (Runtime.getRuntime().exec("/bin/sync").waitFor() != 0) {
-                    throw new IOException("Failed to sync file system.");
-                }
-            }
-        } catch (IOException | InterruptedException e) {
-            System.err.println(Throwables.getStackTraceAsString(e));
-        }
-    }
-
 
     private void setInstantRunArgs(
             @Nullable AndroidVersion androidVersion,
