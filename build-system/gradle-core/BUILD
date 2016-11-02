@@ -1,4 +1,3 @@
-load("//tools/base/bazel:bazel.bzl", "java_proto_library")
 load("//tools/base/bazel:antlr.bzl", "antlr_sources")
 
 antlr_sources(
