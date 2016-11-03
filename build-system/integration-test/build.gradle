@@ -184,8 +184,15 @@ task performanceTest(type: Test) {
     }
     outputs.upToDateWhen { false }
 
+}
+
+configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,
+           connectedIntegrationTestPrebuilts, performanceTest]) {
     testLogging {
-       exceptionFormat = 'full'
+        events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_ERROR', 'STARTED']
+        displayGranularity = 2 // Show test class and method.
+        exceptionFormat = 'full'
+        showCauses = true
     }
 }
 
