@@ -98,8 +98,6 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunArtifact.Type.SPLIT_MAIN;
             case RELOAD_DEX:
                 return InstantRunArtifact.Type.RELOAD_DEX;
-            case RESTART_DEX:
-                return InstantRunArtifact.Type.RESTART_DEX;
             case DEX:
                 return InstantRunArtifact.Type.DEX;
             case SPLIT:
@@ -107,7 +105,7 @@ public class InstantRunAnalyticsHelper {
             case RESOURCES:
                 return InstantRunArtifact.Type.RESOURCES;
             default:
-                return null;
+                throw new RuntimeException("Cannot convert " + type);
         }
 
     }

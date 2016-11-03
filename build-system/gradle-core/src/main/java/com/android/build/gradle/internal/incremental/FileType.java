@@ -33,12 +33,6 @@ public enum FileType {
      */
     RELOAD_DEX,
     /**
-     * Restart.dex file that can be used for Dalvik to restart applications with minimum set of
-     * changes delivered.
-     */
-    @Deprecated
-    RESTART_DEX,
-    /**
      * Shard dex file that can be used to replace originally installed multi-dex shard.
      */
     DEX,
