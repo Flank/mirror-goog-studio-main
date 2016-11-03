@@ -28,6 +28,7 @@ import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.SubjectFactory;
 import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
@@ -60,7 +61,11 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
     protected boolean checkForJavaResource(@NonNull String resourcePath)
             throws ProcessException, IOException {
         try (ZipFile zipFile = new ZipFile(getSubject())) {
-            return zipFile.getEntry(resourcePath) != null;
+            ZipEntry zipEntry =
+                    zipFile.getEntry(
+                            FileUtils.toSystemIndependentPath(
+                                    FileUtils.join("resources", resourcePath)));
+            return zipEntry != null;
         }
     }
 
@@ -73,7 +78,8 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
     @Override
     public void containsJavaResourceWithContent(@NonNull String path, @NonNull String content)
             throws IOException, ProcessException {
-        containsFileWithContent(path, content);
+        containsFileWithContent(
+                FileUtils.toSystemIndependentPath(FileUtils.join("resources", path)), content);
     }
 
     /**
@@ -83,7 +89,8 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
     @Override
     public void containsJavaResourceWithContent(@NonNull String path, @NonNull byte[] content)
             throws IOException, ProcessException {
-        containsFileWithContent(path, content);
+        containsFileWithContent(
+                FileUtils.toSystemIndependentPath(FileUtils.join("resources", path)), content);
     }
 
     @Nullable
@@ -97,7 +104,9 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
         switch (scope) {
             case MAIN:
                 byte[] classesDex =
-                        extractContentAsByte(FileUtils.join(SdkConstants.FD_DEX, "classes.dex"));
+                        extractContentAsByte(
+                                FileUtils.toSystemIndependentPath(
+                                        FileUtils.join(SdkConstants.FD_DEX, "classes.dex")));
                 if (classesDex == null) {
                     return null;
                 }
@@ -113,7 +122,8 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
                     while (zipFile.getEntry(dexFileName) != null) {
                         DexBackedClassDef result =
                                 extractEntryAndRunAction(
-                                        FileUtils.join(SdkConstants.FD_DEX, dexFileName),
+                                        FileUtils.toSystemIndependentPath(
+                                                FileUtils.join(SdkConstants.FD_DEX, dexFileName)),
                                         bytes -> getDexClass(bytes, className));
                         if (result != null) {
                             return result;
