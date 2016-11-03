@@ -72,10 +72,9 @@ public class AntennaPodPerformanceMatrixTest {
         return Arrays.asList(
                 new Object[][] {
                     {EnumSet.of(ProjectScenario.NORMAL)},
-                    //TODO: re-enable Jack scenarios
-                    //{EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
+                    {EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
                     {EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS)},
-                    //{EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
+                    {EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
                 });
     }
 
@@ -102,19 +101,22 @@ public class AntennaPodPerformanceMatrixTest {
                         + "'} \n"
                         + "        jcenter()");
 
+        File appBuildFile = project.file("app/build.gradle");
         for (ProjectScenario projectScenario : projectScenarios) {
             switch (projectScenario) {
                 case NORMAL:
                     break;
                 case DEX_OUT_OF_PROCESS:
-                    DexInProcessHelper.disableDexInProcess(project.file("app/build.gradle"));
+                    DexInProcessHelper.disableDexInProcess(appBuildFile);
                     break;
                 case JACK_ON:
-                    JackHelper.enableJack(project.file("app/build.gradle"));
+                    disableRetrolambda(appBuildFile);
+                    JackHelper.enableJack(appBuildFile);
                     break;
                 case JACK_OUT_OF_PROCESS:
+                    disableRetrolambda(appBuildFile);
                     // automatically enables Jack as well
-                    JackHelper.disableJackInProcess(project.file("app/build.gradle"));
+                    JackHelper.disableJackInProcess(appBuildFile);
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -130,6 +132,13 @@ public class AntennaPodPerformanceMatrixTest {
                 "buildToolsVersion$1 \"25.0.0\"");
     }
 
+    private static void disableRetrolambda(@NonNull File buildGradleFile) throws IOException {
+        TestFileUtils.searchAndReplace(
+                buildGradleFile,
+                "apply plugin: \"me.tatarka.retrolambda\"",
+                "// retrolambda disabled");
+    }
+
     @Test
     public void runBenchmarks() throws Exception {
         Map<String, AndroidProject> model = project.model().getMulti();
@@ -143,6 +152,12 @@ public class AntennaPodPerformanceMatrixTest {
             InstantRun instantRunModel = null;
             List<String> tasks;
             boolean isEdit = false;
+
+            if (isJackOn() && isInstantRunOn(benchmarkMode)) {
+                // Jack does not support Instant Run, because it does not generate intermediate
+                // class files when compiling an app
+                continue;
+            }
 
             switch (benchmarkMode) {
                 case EVALUATION:
@@ -238,6 +253,27 @@ public class AntennaPodPerformanceMatrixTest {
                         .run(tasks);
             }
         }
+    }
+
+    private boolean isJackOn() {
+        return projectScenarios.contains(ProjectScenario.JACK_ON)
+                || projectScenarios.contains(ProjectScenario.JACK_OUT_OF_PROCESS);
+    }
+
+    private boolean isInstantRunOn(BenchmarkMode benchmarkMode) {
+        final List<Logging.BenchmarkMode> instantRunModes = ImmutableList.of(
+                BenchmarkMode.INSTANT_RUN_BUILD__FROM_CLEAN,
+                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
+                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
+                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
+                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__API_CHANGE,
+                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__RES__EDIT,
+                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__RES__ADD,
+                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__RES__EDIT,
+                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__RES__ADD,
+                BenchmarkMode.INSTANT_RUN_BUILD_INC_JAVA_DEPRECATED
+        );
+        return instantRunModes.contains(benchmarkMode);
     }
 
     private void doEdit(
