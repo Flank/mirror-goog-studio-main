@@ -33,4 +33,16 @@ public interface Task<T> {
      * the task.
      */
     void run(@NonNull Job<T> job, @NonNull JobContext<T> context) throws IOException;
+
+    /**
+     * Notification of the task completion. Future cannot be used here as the Task has no
+     * idea what the task completion result (if any) is supposed to be.
+     */
+    void finished();
+
+    /**
+     * Notification of an exception while executing the task
+     * @param e the exception raised by the task execution.
+     */
+    void error(Exception e);
 }

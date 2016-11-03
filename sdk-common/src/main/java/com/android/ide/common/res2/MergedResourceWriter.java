@@ -45,6 +45,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -125,6 +126,22 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      */
     private final Properties mCompiledFileMap;
 
+    private static class PngCrunchRequest {
+        private final File in;
+        private final File out;
+        private final String folderName;
+
+        private PngCrunchRequest(File in, File out, String folderName) {
+            this.in = in;
+            this.out = out;
+            this.folderName = folderName;
+        }
+    }
+
+    @NonNull
+    private final ConcurrentLinkedQueue<PngCrunchRequest> mPngCrunchRequests =
+            new ConcurrentLinkedQueue<>();
+
     public MergedResourceWriter(@NonNull File rootFolder,
             @Nullable File publicFile,
             @Nullable File blameLogFolder,
@@ -186,6 +203,65 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     public void end() throws ConsumerException {
         // Make sure all PNGs are generated first.
         super.end();
+        // now perform all the PNG crunching.
+        try {
+            if (mResourceCompiler instanceof QueueableResourceCompiler) {
+                ((QueueableResourceCompiler) mResourceCompiler).start();
+            }
+            while (!mPngCrunchRequests.isEmpty()) {
+                PngCrunchRequest request = mPngCrunchRequests.poll();
+                try {
+                    ListenableFuture<File> result = mResourceCompiler
+                            .compile(request.in, request.out);
+                    // adding to the mCompiling seems unnecessary at this point, the end() call will
+                    // take care of waiting for all requests to be processed.
+                    mCompiling.add(result);
+                    result.addListener(() -> {
+                        try {
+                            File outFile = result.get();
+                            if (outFile == null) {
+                                File typeFolder = new File(getRootFolder(), request.folderName);
+                                FileUtils.mkdirs(typeFolder);
+
+                                outFile = new File(typeFolder, request.in.getName());
+                                Files.copy(request.in, outFile);
+                            }
+
+                            if (mMergingLog != null) {
+                                mMergingLog.logCopy(request.in, outFile);
+                            }
+
+                            mCompiledFileMap.put(
+                                    request.in.getAbsolutePath(),
+                                    outFile.getAbsolutePath());
+                        } catch (Exception e) {
+                            /*
+                             * We will detect any exceptions (or generate them during copy)
+                             * asynchronously, so we need to be careful to report them back.
+                             * Because end() will wait for all futures and report any
+                             * failures, we will register a new future that will throw the
+                             * exception when we fail. This ensures that end() will throw
+                             * the exception.
+                             */
+                            SettableFuture<File> failureSimulator =
+                                    SettableFuture.create();
+                            failureSimulator.setException(e);
+                            mCompiling.add(failureSimulator);
+                        }
+                    }, MoreExecutors.sameThreadExecutor());
+                } catch(PngException | IOException e) {
+                    throw MergingException.wrapException(e).withFile(request.in).build();
+                }
+            }
+            if (mResourceCompiler instanceof QueueableResourceCompiler) {
+                ((QueueableResourceCompiler) mResourceCompiler).end();
+            }
+
+        } catch (Exception e) {
+            throw new ConsumerException(e);
+        }
+        // now wait for all PNGs to be actually crunched.This seems to only be necessary to
+        // propagate exception at this point. There should be a simpler way to do this.
         try {
             Future<File> first;
             while ((first = mCompiling.pollFirst()) != null) {
@@ -238,10 +314,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             if (item.isTouched()) {
                 getExecutor().execute(() -> {
                     File file = item.getFile();
-
-                    String filename = file.getName();
                     String folderName = getFolderName(item);
 
+                    // TODO : make this also a request and use multi-threading for generation.
                     if (type == DataFile.FileType.GENERATED_FILES) {
                         try {
                             mPreprocessor.generateFile(file, item.getSource().getFile());
@@ -250,46 +325,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         }
                     }
 
-                    try {
-                        ListenableFuture<File> result =
-                                mResourceCompiler.compile(file, getRootFolder());
-                        mCompiling.add(result);
-                        result.addListener(() -> {
-                            try {
-                                File outFile = result.get();
-                                if (outFile == null) {
-                                    File typeFolder = new File(getRootFolder(), folderName);
-                                    FileUtils.mkdirs(typeFolder);
-
-                                    outFile = new File(typeFolder, filename);
-                                    Files.copy(file, outFile);
-                                }
-
-                                if (mMergingLog != null) {
-                                    mMergingLog.logCopy(file, outFile);
-                                }
-
-                                mCompiledFileMap.put(
-                                        file.getAbsolutePath(),
-                                        outFile.getAbsolutePath());
-                            } catch (Exception e) {
-                                /*
-                                 * We will detect any exceptions (or generate them during copy)
-                                 * asynchronously, so we need to be careful to report them back.
-                                 * Because end() will wait for all futures and report any
-                                 * failures, we will register a new future that will throw the
-                                 * exception when we fail. This ensures that end() will throw
-                                 * the exception.
-                                 */
-                                SettableFuture<File> failureSimulator =
-                                        SettableFuture.create();
-                                failureSimulator.setException(e);
-                                mCompiling.add(failureSimulator);
-                            }
-                        }, MoreExecutors.sameThreadExecutor());
-                    } catch (PngException|IOException e) {
-                        throw MergingException.wrapException(e).withFile(file).build();
-                    }
+                    // enlist a new crunching request.
+                    mPngCrunchRequests.add(
+                            new PngCrunchRequest(file, getRootFolder(), folderName));
                     return null;
                 });
             }

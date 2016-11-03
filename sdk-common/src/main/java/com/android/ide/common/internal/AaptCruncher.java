@@ -24,6 +24,8 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
 /**
@@ -61,7 +63,7 @@ public class AaptCruncher implements PngCruncher {
      * @throws PngException
      */
     @Override
-    public void crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException {
+    public ListenableFuture<File> crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException {
 
         try {
             ProcessInfo processInfo = new ProcessInfoBuilder()
@@ -78,6 +80,7 @@ public class AaptCruncher implements PngCruncher {
         } catch (ProcessException e) {
             throw new PngException(e);
         }
+        return Futures.immediateFuture(to);
     }
 
     @Override
