@@ -212,7 +212,7 @@ public class NdkHandler {
      * Return true if NDK directory is configured.
      */
     public boolean isConfigured() {
-        return ndkDirectory != null;
+        return ndkDirectory != null && ndkDirectory.isDirectory();
     }
 
     /**
