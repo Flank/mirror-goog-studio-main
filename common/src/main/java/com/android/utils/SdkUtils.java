@@ -166,7 +166,7 @@ public class SdkUtils {
                     } else {
                         // No space anywhere on the line: it contains something wider than
                         // can fit (like a long URL) so just hard break it
-                        next = lineEnd + 1;
+                        next = lineEnd;
                     }
                 }
             }

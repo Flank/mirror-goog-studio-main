@@ -112,6 +112,19 @@ public class SdkUtilsTest extends TestCase {
             wrapped);
     }
 
+    public void testWrapLongContinuousLine() {
+        String s =
+          "Very_long_continuous_line_that_needs_wrapping";
+        String wrapped = SdkUtils.wrap(s, 10, "");
+        assertEquals(
+          "Very_long_\n" +
+          "continuous\n" +
+          "_line_that\n" +
+          "_needs_wra\n" +
+          "pping\n",
+          wrapped);
+    }
+
     public void testWrapPrefix() {
         String s =
             "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
