@@ -15,8 +15,11 @@
  */
 #include "perfd/cpu/cpu_service.h"
 
+#include <stdio.h>
+
 #include "perfd/cpu/simpleperf_manager.h"
 #include "utils/activity_manager.h"
+#include "utils/file_reader.h"
 #include "utils/process_manager.h"
 #include "utils/trace.h"
 
@@ -90,11 +93,10 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 
   bool success = false;
   string error;
-  string trace_path;
 
   if (request->profiler() == CpuProfilingAppStartRequest::SIMPLE_PERF) {
     success = simplerperf_manager_.StartProfiling(request->app_pkg_name(),
-                                                  &trace_path, &error);
+                                                  &trace_path_, &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
@@ -103,12 +105,11 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
-    success = manager->StartProfiling(mode, request->app_pkg_name(), &trace_path,
-                                     &error);
+    success = manager->StartProfiling(mode, request->app_pkg_name(),
+                                      &trace_path_, &error);
   }
 
   if (success) {
-    response->set_trace_filename(trace_path);
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
@@ -132,6 +133,11 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
   if (success) {
     response->set_status(CpuProfilingAppStopResponse::SUCCESS);
+    string trace_content;
+    FileReader::Read(trace_path_, &trace_content);
+    response->set_trace(trace_content);
+    remove(trace_path_.c_str());  // No more use of this file. Delete it.
+    trace_path_.clear();  // Make it clear no trace file is alive.
   } else {
     response->set_status(CpuProfilingAppStopResponse::FAILURE);
     response->set_error_message(error);

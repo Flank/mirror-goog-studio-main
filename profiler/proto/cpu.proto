@@ -128,7 +128,6 @@ message CpuProfilingAppStartResponse {
   }
   Status status = 1;
   string error_message = 2;
-  string trace_filename = 3;
 }
 
 // Request profiling of app (identified by its package name |app_pkg_id|) to
@@ -151,6 +150,7 @@ message CpuProfilingAppStopResponse {
   }
   Status status = 1;
   string error_message = 2;
+  bytes trace = 3;
 }
 
 // CPU data of a given app process.
