@@ -121,17 +121,6 @@ public class InstantRunBuildContext {
             return null;
         }
 
-        private boolean hasCodeArtifact() {
-            for (Artifact artifact : artifacts) {
-                FileType type = artifact.getType();
-                if (type == FileType.DEX || type == FileType.SPLIT
-                        || type == FileType.MAIN || type == FileType.RESTART_DEX) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private Element toXml(@NonNull Document document) {
             Element build = document.createElement(TAG_BUILD);
             toXml(document, build);
@@ -394,10 +383,8 @@ public class InstantRunBuildContext {
                 fileType != FileType.RESOURCES) {
             switch (patchingPolicy) {
                 case PRE_LOLLIPOP:
-                    if (fileType != FileType.RESTART_DEX) {
-                        return;
-                    }
-                    break;
+                    LOG.warn("IRBC:addChangedFile got notified with " + fileType);
+                    return;
                 case MULTI_DEX:
                     if (fileType != FileType.DEX) {
                         return;
@@ -702,6 +689,8 @@ public class InstantRunBuildContext {
         // add the current build to the list of builds to be persisted.
         previousBuilds.put(currentBuild.buildId, currentBuild);
 
+
+
         // purge unwanted past iterations.
         purge();
     }
@@ -773,9 +762,7 @@ public class InstantRunBuildContext {
         if (abi != null) {
             instantRun.setAttribute(ATTR_ABI, abi);
         }
-        if (token != null) {
-            instantRun.setAttribute(ATTR_TOKEN, token.toString());
-        }
+        instantRun.setAttribute(ATTR_TOKEN, token.toString());
         instantRun.setAttribute(ATTR_FORMAT, CURRENT_FORMAT);
         instantRun.setAttribute(ATTR_PLUGIN_VERSION, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
