@@ -345,37 +345,48 @@ public class SdkManagerCli {
 
     private static void usage(@NonNull PrintStream out) {
         out.println("Usage: ");
-        out.println("  sdkmanager [--uninstall] [<common args>] \\");
-        out.println("    [--package_file <package-file>] [<packages>...]");
+        out.println("  sdkmanager [--uninstall] [<common args>] "
+                + "[--package_file <file>] [<packages>...]");
         out.println("  sdkmanager --update [<common args>]");
         out.println("  sdkmanager --list [<common args>]");
         out.println();
         out.println("In its first form, installs, or uninstalls, or updates packages.");
-        out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or \n"
-                + "             \"platforms;android-23\").");
-        out.println("    <package-file> is a text file where each line is a sdk-style path\n"
-                + "                   of a package to install or uninstall.");
-        out.println("    Multiple --package_file arguments may be specified in combination\n"
-                + "     with explicit paths.");
-        out.println("In its second form (with --update), currently installed packages are\n"
-                + "    updated to the latest version.");
-        out.println("In its third form, all installed and available packages are printed "
-                + "out.");
+        out.println("    By default, the listed packages are installed or (if already installed)");
+        out.println("    updated to the latest version.");
+        out.println();
+        out.println("    --uninstall: uninstalled listed packages.");
+        out.println();
+        out.println("    <package> is a sdk-style path (e.g. \"build-tools;23.0.0\" or");
+        out.println("             \"platforms;android-23\").");
+        out.println("    <package-file> is a text file where each line is a sdk-style path");
+        out.println("                   of a package to install or uninstall.");
+        out.println("    Multiple --package_file arguments may be specified in combination");
+        out.println("    with explicit paths.");
+        out.println();
+        out.println("In its second form (with --update), all installed packages are");
+        out.println("    updated to the latest version.");
+        out.println();
+        out.println("In its third form, all installed and available packages are printed");
+        out.println("    out.");
         out.println();
         out.println("Common Arguments:");
-        out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK " +
-                "containing this tool");
-        out.println("    --channel=<channelId>: Include packages in channels up to "
-                + "<channelId>.");
-        out.println("                           Common channels are:\n"
-                + "                           0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).");
+        out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK ");
+        out.println("                              containing this tool");
         out.println();
-        out.println("    --include_obsolete: With --list, show obsolete packages in the\n"
-                + "                        package listing. With --update, update obsolete\n"
-                + "                        packages as well as non-obsolete.");
+        out.println("    --channel=<channelId>: Include packages in channels up to <channelId>.");
+        out.println("                           Common channels are:");
+        out.println("                           0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).");
+        out.println();
+        out.println("    --include_obsolete: With --list, show obsolete packages in the");
+        out.println("                        package listing. With --update, update obsolete");
+        out.println("                        packages as well as non-obsolete.");
+        out.println();
         out.println("    --no_https: Force all connections to use http rather than https.");
+        out.println();
         out.println("    --proxy=<http | socks>: Connect via a proxy of the given type.");
+        out.println();
         out.println("    --proxy_host=<IP or DNS address>: IP or DNS address of the proxy to use.");
+        out.println();
         out.println("    --proxy_port=<port #>: Proxy port to connect to.");
         out.println();
         out.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
