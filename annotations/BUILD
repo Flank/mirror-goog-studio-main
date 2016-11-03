@@ -11,13 +11,13 @@ iml_module(
 maven_java_library(
     name = "annotations",
     srcs = glob(["src/main/java/**"]),
-    visibility = ["//visibility:public"],
     pom = ":pom",
+    visibility = ["//visibility:public"],
 )
 
 maven_pom(
     name = "pom",
-    group = "com.android.tools",
     artifact = "annotations",
+    group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
 )

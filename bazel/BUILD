@@ -243,8 +243,8 @@ config_setting(
 
 # TODO: Temporary test rule for repo generation
 maven_repo(
-  name = "offline_repo",
-  artifacts = [
-      "//tools/base/common:tools.common",
-  ],
+    name = "offline_repo",
+    artifacts = [
+        "//tools/base/common:tools.common",
+    ],
 )
