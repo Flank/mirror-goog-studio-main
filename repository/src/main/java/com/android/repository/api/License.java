@@ -18,20 +18,14 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.repository.io.FileOp;
-import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -148,9 +142,9 @@ public abstract class License implements Comparable<License> {
         if (!fop.exists(licenseFile)) {
             return false;
         }
-        try {
-            for (String hash : CharStreams.readLines(
-                    new InputStreamReader(fop.newFileInputStream(licenseFile)))) {
+        try (InputStreamReader licenseReader = new InputStreamReader(
+                fop.newFileInputStream(licenseFile))) {
+            for (String hash : CharStreams.readLines(licenseReader)) {
                 if (hash.equals(getLicenseHash())) {
                     return true;
                 }
