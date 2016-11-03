@@ -17,12 +17,13 @@
 #define PERFD_CPU_CPU_PROFILER_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <string>
 
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "proto/cpu.grpc.pb.h"
-#include "perfd/cpu/simpleperf_manager.h"
 
 namespace profiler {
 
@@ -34,7 +35,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       : cache_(*cpu_cache),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
-        simplerperf_manager_(clock){}
+        simplerperf_manager_(clock) {}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -69,6 +70,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
   SimplePerfManager simplerperf_manager_;
+  // Absolute on-device path to the trace file. Activity manager or simpleperf
+  // determines the path and populate the file with trace data.
+  std::string trace_path_;
 };
 
 }  // namespace profiler
