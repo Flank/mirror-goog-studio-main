@@ -7,8 +7,8 @@ java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
-        "//tools/external/gradle:gradle-api.jar",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/external/gradle:gradle-api.jar",
     ],
 )
 
@@ -16,8 +16,8 @@ java_test(
     name = "tests",
     size = "small",
     srcs = glob(["src/test/java/**"]),
-    resources = glob(["src/test/resources/**"]),
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
         "//tools/base/testutils:tools.testutils",

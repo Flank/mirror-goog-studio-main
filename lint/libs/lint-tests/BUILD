@@ -32,6 +32,7 @@ java_test(
     test_class = "com.android.tools.lint.LintBazelSuite",
     deps = [
         ":lint-tests",
+        "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -43,7 +44,6 @@ java_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.truth_truth",

@@ -24,18 +24,18 @@ iml_module(
 maven_java_library(
     name = "tools.common",
     srcs = glob(["src/main/java/**"]),
+    pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations:annotations",  # for now, can't canonicalize because _maven gets appended
         "//tools/base/third_party:com.google.guava_guava",
     ],
-    pom = ":pom",
 )
 
 maven_pom(
     name = "pom",
-    group = "com.android.tools",
     artifact = "common",
+    group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
 )
 
