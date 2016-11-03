@@ -466,6 +466,11 @@ public final class GradleTestProject implements TestRule {
         return new File(getOutputDir(), path);
     }
 
+    /** Return a File under the intermediates directory from Android plugins. */
+    public File getIntermediateFile(String path) {
+        return new File(getIntermediatesDir(), path);
+    }
+
     /** Returns the directory to look for profiles in. Defaults to build/profile/ */
     @NonNull
     public Path getProfileDirectory() {
@@ -534,7 +539,23 @@ public final class GradleTestProject implements TestRule {
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
         return getOutputFile(
-                "atombundle/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE);
+                FileUtils.join(
+                        "atombundle",
+                        Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE));
+    }
+
+    /**
+     * Return the output atom File from the instantApp plugin for the given atom name and dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    public File getAtom(String atomName, String... dimensions) {
+        return getIntermediateFile(
+                FileUtils.join(
+                        "assets",
+                        Joiner.on("-").join(dimensions),
+                        atomName + SdkConstants.DOT_ATOM));
     }
 
     /** Returns the SDK dir */
