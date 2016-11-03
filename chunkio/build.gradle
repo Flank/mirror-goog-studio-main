@@ -15,7 +15,7 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'jacoco'
+apply plugin: 'jacoco-tools-base'
 
 sourceSets {
     main.resources.srcDir 'src/main/java'

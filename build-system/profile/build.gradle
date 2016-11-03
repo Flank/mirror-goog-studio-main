@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'jacoco'
+apply plugin: 'jacoco-tools-base'
 
 dependencies {
     compile project(':base:annotations')

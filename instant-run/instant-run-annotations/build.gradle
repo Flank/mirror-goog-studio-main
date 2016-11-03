@@ -15,7 +15,7 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'jacoco'
+apply plugin: 'jacoco-tools-base'
 
 sourceCompatibility = JavaVersion.VERSION_1_6
 targetCompatibility = JavaVersion.VERSION_1_6
