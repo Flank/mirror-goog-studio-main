@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_DEX;
 import static com.android.SdkConstants.FD_JAVA_RES;
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
-import static com.android.SdkConstants.FD_RES;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -34,9 +32,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.gradle.api.Task;
@@ -89,13 +90,52 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
         // Copy all the java resource files to be bundled.
         File javaResBundleFolder = new File(bundleFolder, FD_JAVA_RES);
         deleteDirectoryContents(javaResBundleFolder);
-        for (File javaResFolder : getJavaResFolders()) {
-            for (File javaResFile : FileUtils.getAllFiles(javaResFolder)) {
-                File destJavaResFile =
-                        new File(
-                                javaResBundleFolder,
-                                FileUtils.relativePath(javaResFile, javaResBundleFolder));
-                FileUtils.copyFile(javaResFile, destJavaResFile);
+        for (File javaResource : getJavaResources()) {
+            if (javaResource.isDirectory()) {
+                // Copy the files to the bundle folder.
+                for (File javaResFile : FileUtils.getAllFiles(javaResource)) {
+                    File destJavaResFile =
+                            new File(
+                                    javaResBundleFolder,
+                                    FileUtils.relativePath(javaResFile, javaResource));
+                    if (!destJavaResFile.getParentFile().exists()) {
+                        FileUtils.mkdirs(destJavaResFile.getParentFile());
+                    }
+                    FileUtils.copyFile(javaResFile, destJavaResFile);
+                }
+            } else {
+                // There is a bug somewhere in the proguard build tasks that places .class files as
+                // resources. These will be removed here, but this filtering code can and should be
+                // removed once that bug is fixed.
+                if (javaResource.getName().endsWith(".class")) {
+                    continue;
+                }
+
+                // Unpack the files to the bundle folder.
+                try (ZipFile zipFile = new ZipFile(javaResource)) {
+                    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry zipEntry = entries.nextElement();
+                        File destJavaResource =
+                                FileUtils.join(javaResBundleFolder, zipEntry.getName());
+                        if (zipEntry.isDirectory()) {
+                            FileUtils.mkdirs(destJavaResource);
+                        } else {
+                            if (!destJavaResource.getParentFile().exists()) {
+                                FileUtils.mkdirs(destJavaResource.getParentFile());
+                            }
+                            InputStream zipInputStream = zipFile.getInputStream(zipEntry);
+                            byte[] zipInputBuffer = IOUtils.toByteArray(zipInputStream);
+                            try (FileOutputStream destOutputStream =
+                                    new FileOutputStream(destJavaResource)) {
+                                destOutputStream.write(zipInputBuffer, 0, zipInputBuffer.length);
+                                destOutputStream.close();
+                            }
+                            zipInputStream.close();
+                        }
+                    }
+                    zipFile.close();
+                }
             }
         }
 
@@ -107,7 +147,9 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
                 try (FileInputStream fileInputStream = new FileInputStream(file)) {
                     byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);
                     zipOutputStream.putNextEntry(
-                            new ZipEntry(FileUtils.relativePath(file, bundleFolder)));
+                            new ZipEntry(
+                                    FileUtils.toSystemIndependentPath(
+                                            FileUtils.relativePath(file, bundleFolder))));
                     zipOutputStream.write(inputBuffer, 0, inputBuffer.length);
                     zipOutputStream.closeEntry();
                 }
@@ -152,19 +194,19 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
     }
 
     @InputFiles
-    public Set<File> getJavaResFolders() {
-        return javaResFolders;
+    public Set<File> getJavaResources() {
+        return javaResources;
     }
 
-    public void setJavaResFolders(Set<File> javaResFolders) {
-        this.javaResFolders = javaResFolders;
+    public void setJavaResources(Set<File> javaResources) {
+        this.javaResources = javaResources;
     }
 
     private File bundleFolder;
     private File bundleFile;
     private Set<File> jniFolders;
     private Set<File> dexFolders;
-    private Set<File> javaResFolders;
+    private Set<File> javaResources;
 
     // ----- FileSupplierTask -----
 
@@ -220,7 +262,7 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
                     () -> scope.getTransformManager().getPipelineOutput(StreamFilter.DEX).keySet());
             ConventionMappingHelper.map(
                     bundleAtom,
-                    "javaResFolders",
+                    "javaResources",
                     () ->
                             scope.getTransformManager()
                                     .getPipelineOutput(StreamFilter.RESOURCES)
