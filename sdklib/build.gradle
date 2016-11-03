@@ -1,7 +1,7 @@
 import com.google.common.collect.ImmutableMap
 
 apply plugin: 'java'
-apply plugin: 'jacoco'
+apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools'
