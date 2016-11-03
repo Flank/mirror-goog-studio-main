@@ -172,7 +172,7 @@ public class DefaultDexOptions implements DexOptions {
      *
      * <p>{@code Total Memory = maxProcessCount * javaMaxHeapSize}
      *
-     * <p>To avoid trashing, keep these two settings appropriate for your configuration.
+     * <p>To avoid thrashing, keep these two settings appropriate for your configuration.
      * @return the max number of concurrent dx processes.
      */
     @Nullable
