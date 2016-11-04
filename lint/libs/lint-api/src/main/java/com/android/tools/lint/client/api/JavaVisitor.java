@@ -418,7 +418,7 @@ public class JavaVisitor {
     }
 
     private class SuperclassVisitor extends ForwardingAstVisitor {
-        private JavaContext mContext;
+        private final JavaContext mContext;
 
         public SuperclassVisitor(@NonNull JavaContext context) {
             mContext = context;

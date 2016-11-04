@@ -105,8 +105,9 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
             } else if (method.getParameterList().getParametersCount() == 0) {
                 Location location = context.getNameLocation(call);
                 String message = String.format(
-                        "Implicitly using the default locale is a common source of bugs: " +
-                                "Use `%1$s(Locale)` instead", name);
+                        "Implicitly using the default locale is a common source of bugs: "
+                                + "Use `%1$s(Locale)` instead. For strings meant to be internal "
+                                + "use `Locale.ROOT`, otherwise `Locale.getDefault()`.", name);
                 context.report(STRING_LOCALE, call, location, message);
             }
         }

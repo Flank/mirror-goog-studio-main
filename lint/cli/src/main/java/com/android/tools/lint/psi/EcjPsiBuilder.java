@@ -512,6 +512,26 @@ public class EcjPsiBuilder {
         return modifierList;
     }
 
+    /** Like toModifierList but skips javadoc content from offsets */
+    private EcjPsiModifierList toModifierList(@NonNull EcjPsiSourceElement parent,
+            @NonNull FieldDeclaration node) {
+        EcjPsiModifierList modifierList = toModifierList(parent, node.modifiers, node.annotations);
+        int start = node.modifiersSourceStart > 0 ? node.modifiersSourceStart
+                : node.declarationSourceStart;
+        int end = start;
+        if (node.javadoc != null) {
+            start = Math.max(start, node.javadoc.sourceEnd+1);
+            end = Math.max(end, start);
+        }
+        if (node.annotations != null && node.annotations.length > 0) {
+            // TypeDeclaration range *includes* modifier keywords and annotations
+            Annotation last = node.annotations[node.annotations.length - 1];
+            end = Math.max(end, last.declarationSourceEnd + 1);
+        }
+        modifierList.setRange(start, end);
+        return modifierList;
+    }
+
     private EcjPsiModifierList toModifierList(@NonNull EcjPsiSourceElement parent,
             int modifiers, Annotation[] annotations) {
         int flags = 0;

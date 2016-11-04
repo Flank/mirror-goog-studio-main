@@ -41,12 +41,9 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
@@ -54,7 +51,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -186,52 +182,17 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
             "android.hardware.microphone";
 
     // https://developer.android.com/training/tv/start/hardware.html
-    private static final Set<String> UNSUPPORTED_HARDWARE_FEATURES =
-            ImmutableSet.<String>builder()
-                    .add(HARDWARE_FEATURE_TOUCHSCREEN)
-                    .add("android.hardware.faketouch")
-                    .add(HARDWARE_FEATURE_TELEPHONY)
-                    .add(HARDWARE_FEATURE_CAMERA)
-                    .add(HARDWARE_FEATURE_BLUETOOTH)
-                    .add("android.hardware.nfc")
-                    .add(HARDWARE_FEATURE_LOCATION_GPS)
-                    .add(HARDWARE_FEATURE_MICROPHONE)
-                    .add("android.hardware.sensors")
-                    .build();
-
-    private static final Map<String, String> PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE =
-            ImmutableMap.<String, String>builder()
-                    .put("android.permission.BLUETOOTH",
-                            HARDWARE_FEATURE_BLUETOOTH)
-                    .put("android.permission.BLUETOOTH_ADMIN",
-                            HARDWARE_FEATURE_BLUETOOTH)
-                    .put("android.permission.CAMERA",
-                            HARDWARE_FEATURE_CAMERA)
-                    .put("android.permission.RECORD_AUDIO",
-                            HARDWARE_FEATURE_MICROPHONE)
-                    .put("android.permission.ACCESS_FINE_LOCATION",
-                            HARDWARE_FEATURE_LOCATION_GPS)
-                    .put("android.permission.CALL_PHONE",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.CALL_PRIVILEGED",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.PROCESS_OUTGOING_CALLS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.READ_SMS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.RECEIVE_SMS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.RECEIVE_MMS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.RECEIVE_WAP_PUSH",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.SEND_SMS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.WRITE_APN_SETTINGS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .put("android.permission.WRITE_SMS",
-                            HARDWARE_FEATURE_TELEPHONY)
-                    .build();
+    private static final String[] UNSUPPORTED_HARDWARE_FEATURES = new String[]{
+            HARDWARE_FEATURE_TOUCHSCREEN,
+            "android.hardware.faketouch",
+            HARDWARE_FEATURE_TELEPHONY,
+            HARDWARE_FEATURE_CAMERA,
+            HARDWARE_FEATURE_BLUETOOTH,
+            "android.hardware.nfc",
+            HARDWARE_FEATURE_LOCATION_GPS,
+            HARDWARE_FEATURE_MICROPHONE,
+            "android.hardware.sensors"
+    };
 
     /**
      * If you change number of parameters or order, update
@@ -269,12 +230,6 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
 
     /** Set containing unsupported TV uses-features elements without required="false" */
     private Set<String> mUnsupportedTvUsesFeatures;
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -387,8 +342,8 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
                             // Filter out all permissions that already have their
                             // corresponding implied hardware declared in
                             // the AndroidManifest.xml
-                            String usesFeature =
-                                    PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE.get(input);
+                            String usesFeature = input != null
+                                    ? getImpliedUnsupportedHardware(input) : null;
                             return usesFeature != null
                                     && !mAllUnsupportedTvUsesFeatures.contains(usesFeature);
                         });
@@ -398,8 +353,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
 
                 for (Element permissionElement : permissionsWithoutUsesFeatures) {
                     String name = permissionElement.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                    String unsupportedHardwareName =
-                            PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE.get(name);
+                    String unsupportedHardwareName = getImpliedUnsupportedHardware(name);
 
                     if (unsupportedHardwareName != null) {
                         String message = String.format(
@@ -410,6 +364,44 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
                     }
                 }
             }
+        }
+    }
+
+    @Nullable
+    private static String getImpliedUnsupportedHardware(@NonNull String permission) {
+        switch (permission) {
+            case "android.permission.BLUETOOTH":
+                return HARDWARE_FEATURE_BLUETOOTH;
+            case "android.permission.BLUETOOTH_ADMIN":
+                return HARDWARE_FEATURE_BLUETOOTH;
+            case "android.permission.CAMERA":
+                return HARDWARE_FEATURE_CAMERA;
+            case "android.permission.RECORD_AUDIO":
+                return HARDWARE_FEATURE_MICROPHONE;
+            case "android.permission.ACCESS_FINE_LOCATION":
+                return HARDWARE_FEATURE_LOCATION_GPS;
+            case "android.permission.CALL_PHONE":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.CALL_PRIVILEGED":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.PROCESS_OUTGOING_CALLS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.READ_SMS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.RECEIVE_SMS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.RECEIVE_MMS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.RECEIVE_WAP_PUSH":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.SEND_SMS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.WRITE_APN_SETTINGS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            case "android.permission.WRITE_SMS":
+                return HARDWARE_FEATURE_TELEPHONY;
+            default:
+                return null;
         }
     }
 
@@ -506,7 +498,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
 
             // Store all <uses-permission> tags that imply unsupported hardware)
             String permissionName = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-            if (PERMISSIONS_TO_IMPLIED_UNSUPPORTED_HARDWARE.containsKey(permissionName)) {
+            if (getImpliedUnsupportedHardware(permissionName) != null) {
                 mUnsupportedHardwareImpliedPermissions.add(permissionName);
             }
         }

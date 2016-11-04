@@ -87,7 +87,6 @@ import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
@@ -580,7 +579,6 @@ public class LintUtils {
                 combined.set(i, p + ':' + combined.get(i+1));
                 combined.remove(i+1);
                 n--;
-                continue;
             }
         }
 

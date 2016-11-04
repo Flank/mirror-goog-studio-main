@@ -56,7 +56,7 @@ public class LintBaseline {
     private int foundWarningCount;
     private int baselineIssueCount;
 
-    private Multimap<String, Entry> messageToEntry = ArrayListMultimap.create(100, 20);
+    private final Multimap<String, Entry> messageToEntry = ArrayListMultimap.create(100, 20);
     private final File baselineFile;
 
     public LintBaseline(@Nullable LintClient client, @NonNull File baselineFile) {

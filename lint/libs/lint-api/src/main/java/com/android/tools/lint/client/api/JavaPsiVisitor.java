@@ -501,7 +501,7 @@ public class JavaPsiVisitor {
     }
 
     private class SuperclassPsiVisitor extends JavaRecursiveElementVisitor {
-        private JavaContext mContext;
+        private final JavaContext mContext;
 
         public SuperclassPsiVisitor(@NonNull JavaContext context) {
             mContext = context;

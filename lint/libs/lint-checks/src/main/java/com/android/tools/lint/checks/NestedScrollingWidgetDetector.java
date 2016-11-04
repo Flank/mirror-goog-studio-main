@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,12 +65,6 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
     public void beforeCheckFile(@NonNull Context context) {
         mVisitingHorizontalScroll = 0;
         mVisitingVerticalScroll = 0;
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

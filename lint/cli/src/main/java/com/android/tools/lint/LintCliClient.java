@@ -445,7 +445,7 @@ public class LintCliClient extends LintClient {
             }
 
             info = new ClassPathInfo(sources, classes, libraries, classPath.getLibraries(false),
-                    classPath.getTestSourceFolders());
+                    classPath.getTestSourceFolders(), classPath.getTestLibraries());
             mProjectInfo.put(project, info);
         }
 
@@ -468,7 +468,7 @@ public class LintCliClient extends LintClient {
      * flags supplied on the command line
      */
     class CliConfiguration extends DefaultConfiguration {
-        private boolean mFatalOnly;
+        private final boolean mFatalOnly;
 
         CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
                 boolean fatalOnly) {

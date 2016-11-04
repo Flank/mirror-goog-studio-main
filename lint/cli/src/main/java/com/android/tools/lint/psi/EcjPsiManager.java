@@ -731,6 +731,21 @@ public class EcjPsiManager {
                 // For example, TypeVariableBindings
                 return null;
             }
+
+            // For annotations try a little harder to obtain the actual AST because we'll
+            // want to get source retention data such as IntDef constants
+            if (referenceBinding.isAnnotationType()
+                    && referenceBinding instanceof SourceTypeBinding) {
+                PsiJavaFile file = mEcjResult.findFileContaining(referenceBinding);
+                //noinspection VariableNotUsedInsideIf
+                if (file != null) {
+                    element = mElementMap.get(binding);
+                    if (element != null) {
+                        return element;
+                    }
+                }
+            }
+
             return new EcjPsiBinaryClass(this, referenceBinding);
         } else if (binding instanceof FieldBinding) {
             FieldBinding fieldBinding = (FieldBinding) binding;

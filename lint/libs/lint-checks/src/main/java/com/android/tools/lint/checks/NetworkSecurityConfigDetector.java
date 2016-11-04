@@ -295,7 +295,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         }
     }
 
-    private void handlePinSet(XmlContext context, Element node) {
+    private static void handlePinSet(XmlContext context, Element node) {
 
         if (node.hasAttribute(ATTR_EXPIRATION)) {
             Attr expirationAttr = node.getAttributeNode(ATTR_EXPIRATION);

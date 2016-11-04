@@ -27,10 +27,10 @@ public class LocaleDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(""
-                + "src/test/pkg/LocaleTest.java:11: Warning: Implicitly using the default locale is a common source of bugs: Use toUpperCase(Locale) instead [DefaultLocale]\n"
+                + "src/test/pkg/LocaleTest.java:11: Warning: Implicitly using the default locale is a common source of bugs: Use toUpperCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]\n"
                 + "        System.out.println(\"WRONG\".toUpperCase());\n"
                 + "                                   ~~~~~~~~~~~\n"
-                + "src/test/pkg/LocaleTest.java:16: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead [DefaultLocale]\n"
+                + "src/test/pkg/LocaleTest.java:16: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]\n"
                 + "        System.out.println(\"WRONG\".toLowerCase());\n"
                 + "                                   ~~~~~~~~~~~\n"
                 + "src/test/pkg/LocaleTest.java:20: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]\n"
@@ -54,8 +54,7 @@ public class LocaleDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/LocaleTest.java:26: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]\n"
                 + "        String.format(\"WRONG: %1$tm %1$te,%1$tY\",\n"
                 + "        ^\n"
-                + "0 errors, 9 warnings\n"
-,
+                + "0 errors, 9 warnings\n",
 
             lintProject(
                     java("src/test/pkg/LocaleTest.java", ""

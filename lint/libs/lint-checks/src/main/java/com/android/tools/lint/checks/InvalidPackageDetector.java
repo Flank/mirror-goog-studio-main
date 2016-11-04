@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -93,12 +92,6 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
 
     /** Constructs a new package check */
     public InvalidPackageDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.SLOW;
     }
 
     @Override

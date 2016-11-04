@@ -70,7 +70,7 @@ public interface PermissionHolder {
 
         @VisibleForTesting
         public SetPermissionLookup(@NonNull Set<String> grantedPermissions) {
-            this(grantedPermissions, Collections.<String>emptySet());
+            this(grantedPermissions, Collections.emptySet());
         }
 
         @Override
@@ -103,8 +103,8 @@ public interface PermissionHolder {
         @NonNull
         public static PermissionHolder join(@NonNull PermissionHolder lookup,
                                             @NonNull PermissionRequirement requirement) {
-            SetPermissionLookup empty = new SetPermissionLookup(Collections.<String>emptySet(),
-                    Collections.<String>emptySet(), lookup.getMinSdkVersion(),
+            SetPermissionLookup empty = new SetPermissionLookup(Collections.emptySet(),
+                    Collections.emptySet(), lookup.getMinSdkVersion(),
                     lookup.getTargetSdkVersion());
             return join(lookup, requirement.getMissingPermissions(empty));
         }

@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
@@ -98,12 +97,6 @@ public class CordovaVersionDetector extends Detector implements Detector.ClassSc
      * used by {@link GradleVersion} except for the named qualifiers.
      */
     private GradleVersion mCordovaVersion;
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.NORMAL;
-    }
 
     @Override
     public void afterCheckProject(@NonNull Context context) {

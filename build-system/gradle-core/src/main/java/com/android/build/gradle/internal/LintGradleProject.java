@@ -33,7 +33,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -50,17 +59,6 @@ import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.w3c.dom.Document;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * An implementation of Lint's {@link Project} class wrapping a Gradle model (project or
@@ -81,6 +79,56 @@ public class LintGradleProject extends Project {
         directLibraries = Lists.newArrayList();
         if (manifest != null) {
             readManifest(manifest);
+        }
+    }
+
+    private static void addJarsFromJavaLibrariesTransitively(
+            @NonNull Collection<? extends JavaLibrary> libraries,
+            @NonNull List<File> list,
+            boolean skipProvided) {
+        for (JavaLibrary library : libraries) {
+            if (library.isSkipped()) {
+                continue;
+            }
+            if (skipProvided && library.isProvided()) {
+                continue;
+            }
+
+            File jar = library.getJarFile();
+            if (!list.contains(jar)) {
+                if (jar.exists()) {
+                    list.add(jar);
+                }
+            }
+
+            addJarsFromJavaLibrariesTransitively(library.getDependencies(), list, skipProvided);
+        }
+    }
+
+    private static void addJarsFromAndroidLibrariesTransitively(
+            @NonNull Collection<? extends AndroidLibrary> libraries,
+            @NonNull List<File> list,
+            boolean skipProvided) {
+        for (AndroidLibrary library : libraries) {
+            if (library.getProject() != null) {
+                continue;
+            }
+            if (library.isSkipped()) {
+                continue;
+            }
+            if (skipProvided && library.isProvided()) {
+                continue;
+            }
+
+            File jar = library.getJarFile();
+            if (!list.contains(jar)) {
+                if (jar.exists()) {
+                    list.add(jar);
+                }
+            }
+
+            addJarsFromJavaLibrariesTransitively(library.getJavaDependencies(), list, skipProvided);
+            addJarsFromAndroidLibrariesTransitively(library.getLibraryDependencies(), list, skipProvided);
         }
     }
 
@@ -451,13 +499,22 @@ public class LintGradleProject extends Project {
                 File outputClassFolder = mVariant.getMainArtifact().getClassesFolder();
                 if (outputClassFolder.exists()) {
                     javaClassFolders.add(outputClassFolder);
+                } else if (isLibrary()) {
+                    // For libraries we build the release variant instead
+                    for (Variant variant : mProject.getVariants()) {
+                        if (variant != mVariant) {
+                            outputClassFolder = variant.getMainArtifact().getClassesFolder();
+                            if (outputClassFolder.exists()) {
+                                javaClassFolders.add(outputClassFolder);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
             return javaClassFolders;
         }
-
-        private static boolean sProvidedAvailable = true;
 
         @NonNull
         @Override
@@ -484,17 +541,8 @@ public class LintGradleProject extends Project {
                     for (JavaLibrary lib : libs) {
                         File jar = lib.getJarFile();
                         if (jar.exists()) {
-                            if (sProvidedAvailable) {
-                                // Method added in 1.4-rc1; gracefully handle running with
-                                // older plugins
-                                try {
-                                    if (lib.isProvided()) {
-                                        continue;
-                                    }
-                                } catch (Throwable t) {
-                                    //noinspection AssignmentToStaticFieldFromInstanceMethod
-                                    sProvidedAvailable = false; // don't try again
-                                }
+                            if (lib.isProvided()) {
+                                continue;
                             }
 
                             nonProvidedJavaLibraries.add(jar);
@@ -503,6 +551,28 @@ public class LintGradleProject extends Project {
                 }
                 return nonProvidedJavaLibraries;
             }
+        }
+
+        @NonNull
+        @Override
+        public List<File> getTestLibraries() {
+            if (testLibraries == null) {
+                testLibraries = Lists.newArrayListWithExpectedSize(6);
+                for (AndroidArtifact artifact : mVariant.getExtraAndroidArtifacts()) {
+                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifact.getName())
+                            || AndroidProject.ARTIFACT_UNIT_TEST.equals(artifact.getName())) {
+                        Dependencies dependencies = artifact.getCompileDependencies();
+
+                        addJarsFromJavaLibrariesTransitively(dependencies.getJavaLibraries(),
+                                testLibraries, false);
+                        // Note that we don't include these for getJavaLibraries, but we need to
+                        // for tests since we don't keep them otherwise
+                        addJarsFromAndroidLibrariesTransitively(dependencies.getLibraries(),
+                                testLibraries, false);
+                    }
+                }
+            }
+            return testLibraries;
         }
 
         @Nullable
@@ -983,6 +1053,12 @@ public class LintGradleProject extends Project {
                         org.gradle.api.Project p =
                                 ((ProjectDependency) dependency).getDependencyProject();
                         if (p != null) {
+                            // Libraries don't have to use the same variant name as the
+                            // consuming app. In fact they're typically not: libraries generally
+                            // use the release variant. We can look up the variant name
+                            // in AndroidBundle#getProjectVariant, though it's always null
+                            // at the moment. So as a fallback, search for existing
+                            // code.
                             Project depProject = getProject(client, p, variant.getName());
                             if (depProject != null) {
                                 if (processedProjects == null) {
@@ -1179,7 +1255,8 @@ public class LintGradleProject extends Project {
             }
 
             if (javaLibraries == null) {
-                javaLibraries = Collections.singletonList(mLibrary.getJarFile());
+                javaLibraries = Lists.newArrayList();
+                javaLibraries.add(mLibrary.getJarFile());
             }
 
             return javaLibraries;

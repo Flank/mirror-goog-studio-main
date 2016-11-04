@@ -70,7 +70,6 @@ public class JarFileIssueRegistryTest extends AbstractCheckTest {
         Detector detector =
                 registry1.getIssues().get(0).getImplementation().getDetectorClass().newInstance();
         detector.getApplicableAsmNodeTypes();
-        assertSame(Speed.NORMAL, detector.getSpeed());
         List<String> applicableCallNames = detector.getApplicableCallNames();
         assertNotNull(applicableCallNames);
         assertTrue(applicableCallNames.contains("getActionBar"));

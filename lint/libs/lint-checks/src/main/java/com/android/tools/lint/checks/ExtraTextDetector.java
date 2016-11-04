@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -70,12 +69,6 @@ public class ExtraTextDetector extends ResourceXmlDetector {
                 || folderType == ResourceFolderType.ANIMATOR
                 || folderType == ResourceFolderType.DRAWABLE
                 || folderType == ResourceFolderType.COLOR;
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

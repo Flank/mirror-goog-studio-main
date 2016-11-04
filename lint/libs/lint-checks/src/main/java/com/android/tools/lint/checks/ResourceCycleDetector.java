@@ -47,7 +47,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -140,12 +139,6 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
                 || folderType == ResourceFolderType.COLOR
                 || folderType == ResourceFolderType.DRAWABLE
                 || folderType == ResourceFolderType.LAYOUT;
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

@@ -697,12 +697,9 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
                     returnValueIgnored = ((PsiDoWhileStatement)parent).getCondition() != node;
                 } else if (parent instanceof PsiAssertStatement) {
                     returnValueIgnored = ((PsiAssertStatement)parent).getAssertCondition() != node;
-                } else if (parent instanceof PsiReturnStatement
-                        || parent instanceof PsiDeclarationStatement) {
-                    returnValueIgnored = false;
-                } else {
-                    returnValueIgnored = true;
-                }
+                } else
+                    returnValueIgnored = !(parent instanceof PsiReturnStatement
+                            || parent instanceof PsiDeclarationStatement);
             }
             if (returnValueIgnored
                     // This issue used to be reported on SHARED_PREF instead of APPLY_SHARED_PREF

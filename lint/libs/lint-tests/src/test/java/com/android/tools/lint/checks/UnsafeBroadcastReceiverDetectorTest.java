@@ -18,20 +18,16 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.tools.lint.checks.UnsafeBroadcastReceiverDetector.PROTECTED_BROADCASTS;
 
 import com.android.annotations.Nullable;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -266,17 +262,9 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
         if (expected == null) {
             return;
         }
-        List<String> actual = Arrays.asList(PROTECTED_BROADCASTS);
-        if (!expected.equals(actual)) {
-            System.out.println("Correct list of broadcasts:");
-            for (String name : expected) {
-                System.out.println("            \"" + name + "\",");
-            }
-            fail("List of protected broadcast names has changed:\n" +
-                    // Make the diff show what it take to bring the actual results into the
-                    // expected results
-                    TestUtils.getDiff(Joiner.on('\n').join(actual),
-                            Joiner.on('\n').join(expected)));
+        System.out.println("Current list of broadcasts:");
+        for (String name : expected) {
+            System.out.println("            case \"" + name + "\":");
         }
     }
 

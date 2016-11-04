@@ -33,10 +33,8 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 import org.w3c.dom.Attr;
 
 /**
@@ -61,10 +59,6 @@ public class ManifestPermissionAttributeDetector extends Detector implements Det
                     Scope.MANIFEST_SCOPE
             ));
 
-    private static final Set<String> ALLOWED_TAGS = ImmutableSet.of(
-            NODE_ACTIVITY, NODE_APPLICATION, NODE_PROVIDER, NODE_SERVICE, NODE_RECEIVER,
-            NODE_ACTIVITY_ALIAS, NODE_PERMISSION);
-
     // ---- Implements Detector.XmlScanner ----
 
     @Override
@@ -76,11 +70,20 @@ public class ManifestPermissionAttributeDetector extends Detector implements Det
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String parent = attribute.getOwnerElement().getTagName();
 
-        if (!ALLOWED_TAGS.contains(parent)) {
-            String message =
-                    "Protecting an unsupported element with a permission is a no-op and " +
-                    "potentially dangerous.";
-            context.report(ISSUE, attribute, context.getLocation(attribute), message);
+        switch (parent) {
+            // Allowed tags:
+            case NODE_ACTIVITY:
+            case NODE_APPLICATION:
+            case NODE_PROVIDER:
+            case NODE_SERVICE:
+            case NODE_RECEIVER:
+            case NODE_ACTIVITY_ALIAS:
+            case NODE_PERMISSION:
+                return;
         }
+        String message =
+                "Protecting an unsupported element with a permission is a no-op and " +
+                "potentially dangerous.";
+        context.report(ISSUE, attribute, context.getLocation(attribute), message);
     }
 }

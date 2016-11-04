@@ -510,7 +510,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiImportStaticStatement.class);
+        return Collections.singletonList(PsiImportStaticStatement.class);
     }
 
     @Nullable

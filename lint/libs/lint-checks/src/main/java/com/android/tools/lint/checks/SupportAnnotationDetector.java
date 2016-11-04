@@ -87,6 +87,7 @@ import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiCatchSection;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiDisjunctionType;
@@ -355,7 +356,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 || signature.endsWith(".CheckReturnValue")) {
             checkResult(context, call, method, annotation);
         } else if (signature.equals(PERMISSION_ANNOTATION)) {
-            PermissionRequirement requirement = PermissionRequirement.create(context, annotation);
+            PermissionRequirement requirement = PermissionRequirement.create(annotation);
             checkPermission(context, call, method, null, requirement);
         } else if (signature.endsWith(THREAD_SUFFIX)
                 && signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
@@ -478,7 +479,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         if (operation == null) {
             return;
         }
-        Result result = PermissionFinder.findRequiredPermissions(operation, context, argument);
+        Result result = PermissionFinder.findRequiredPermissions(operation, argument);
         if (result != null) {
             checkPermission(context, call, method, result, result.requirement);
         }
@@ -555,7 +556,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         if (!requirement.isSatisfied(permissions)) {
             // See if it looks like we're holding the permission implicitly by @RequirePermission
             // annotations in the surrounding context
-            permissions  = addLocalPermissions(context, permissions, node);
+            permissions  = addLocalPermissions(permissions, node);
             if (!requirement.isSatisfied(permissions)) {
                 if (isIgnoredInIde(MISSING_PERMISSION, context, node)) {
                     return;
@@ -641,7 +642,6 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     @NonNull
     private static PermissionHolder addLocalPermissions(
-            @NonNull JavaContext context,
             @NonNull PermissionHolder permissions,
             @NonNull PsiElement node) {
         // Accumulate @RequirePermissions available in the local context
@@ -650,14 +650,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             return permissions;
         }
         PsiAnnotation annotation = method.getModifierList().findAnnotation(PERMISSION_ANNOTATION);
-        permissions = mergeAnnotationPermissions(context, permissions, annotation);
+        permissions = mergeAnnotationPermissions(permissions, annotation);
 
         PsiClass containingClass = method.getContainingClass();
         if (containingClass != null) {
             PsiModifierList modifierList = containingClass.getModifierList();
             if (modifierList != null) {
                 annotation = modifierList.findAnnotation(PERMISSION_ANNOTATION);
-                permissions = mergeAnnotationPermissions(context, permissions, annotation);
+                permissions = mergeAnnotationPermissions(permissions, annotation);
             }
         }
         return permissions;
@@ -665,11 +665,10 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     @NonNull
     private static PermissionHolder mergeAnnotationPermissions(
-            @NonNull JavaContext context,
             @NonNull PermissionHolder permissions,
             @Nullable PsiAnnotation annotation) {
         if (annotation != null) {
-            PermissionRequirement requirement = PermissionRequirement.create(context, annotation);
+            PermissionRequirement requirement = PermissionRequirement.create(annotation);
             permissions = SetPermissionLookup.join(permissions, requirement);
         }
 
@@ -998,7 +997,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             if ("NONE".equals(name)) {
                 return VISIBILITY_NONE;
             } else if ("PRIVATE".equals(name)) {
-                return VISIBILITY_NONE;
+                return VISIBILITY_PRIVATE;
             } else if ("PROTECTED".equals(name)) {
                 return VISIBILITY_PROTECTED;
             } else if ("PACKAGE_PRIVATE".equals(name)) {
@@ -2134,6 +2133,12 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 }
             }
 
+            if (allowed instanceof PsiCompiledElement) {
+                // If we for some reason have a compiled annotation, don't flag the error
+                // since we can't represent intdef data on these annotations
+                return;
+            }
+
             reportTypeDef(context, argument, errorNode, flag,
                     initializers, allAnnotations);
         }
@@ -2437,7 +2442,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
     }
 
     private static class MyLintInspectionBridge implements LintInspectionBridge {
-        public JavaContext context;
+        public final JavaContext context;
 
         public MyLintInspectionBridge(@NonNull JavaContext context) {
             this.context = context;
