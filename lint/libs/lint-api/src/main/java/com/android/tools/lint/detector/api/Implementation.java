@@ -31,7 +31,7 @@ import java.util.EnumSet;
 public class Implementation {
     private final Class<? extends Detector> detectorClass;
     private final EnumSet<Scope> scope;
-    private EnumSet<Scope>[] analysisScopes;
+    private final EnumSet<Scope>[] analysisScopes;
 
     @SuppressWarnings("unchecked")
     private static final EnumSet<Scope>[] EMPTY = new EnumSet[0];

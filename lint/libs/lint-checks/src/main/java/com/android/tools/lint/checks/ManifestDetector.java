@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ALLOW_BACKUP;
 import static com.android.SdkConstants.ATTR_FULL_BACKUP_CONTENT;
@@ -76,7 +75,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -454,17 +452,6 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     /** Whether we've seen an allow backup definition in any of the manifest files (or
      * if a manifest tag warning for this has been explicitly disabled) */
     private boolean mSeenAllowBackup;
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return file.getName().equals(ANDROID_MANIFEST_XML);
-    }
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {

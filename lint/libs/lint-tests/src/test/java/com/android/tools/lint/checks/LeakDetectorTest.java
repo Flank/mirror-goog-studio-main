@@ -40,7 +40,10 @@ public class LeakDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/LeakTest.java:21: Warning: Do not place Android context classes in static fields (static reference to MyObject which has field mActivity pointing to Activity); this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static MyObject sField10;\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n",
+                + "src/test/pkg/LeakTest.java:30: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
+                + "    private static Activity sAppContext1; // LEAK\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 5 warnings\n",
 
         lintProject(
                 java("src/test/pkg/LeakTest.java", ""
@@ -48,9 +51,9 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "import android.annotation.SuppressLint;\n"
                         + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
                         + "import android.app.Fragment;\n"
                         + "import android.widget.Button;\n"
-                        + "\n"
                         + "import java.util.List;\n"
                         + "\n"
                         + "@SuppressWarnings(\"unused\")\n"
@@ -73,6 +76,9 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "        private int mKey;\n"
                         + "        private Activity mActivity;\n"
                         + "    }\n"
+                        + "    private static Activity sAppContext1; // LEAK\n"
+                        + "    private static Context sAppContext2; // Probably app context leak\n"
+                        + "    private static Context applicationCtx; // Probably app context leak\n"
                         + "}\n")));
     }
 }

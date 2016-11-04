@@ -122,7 +122,7 @@ public class ExternalAnnotationRepository {
                     // set the ExternalAnnotationRepository to a no-op.
                     if (Project.isAospFrameworksProject(project.getDir())) {
                         return sSingleton = new ExternalAnnotationRepository(
-                                Collections.<AnnotationsDatabase>emptyList());
+                                Collections.emptyList());
                     }
                 }
             }
@@ -906,7 +906,7 @@ public class ExternalAnnotationRepository {
         }
 
         // SDK annotations
-        private Map<String,ClassInfo> mClassMap = Maps.newHashMapWithExpectedSize(800);
+        private final Map<String,ClassInfo> mClassMap = Maps.newHashMapWithExpectedSize(800);
 
         @Nullable
         private ClassInfo findClass(@NonNull ResolvedClass cls) {
@@ -1219,7 +1219,7 @@ public class ExternalAnnotationRepository {
                 }
             } else {
                 if (method.psiAnnotations == null) {
-                    method.psiAnnotations = method.psiAnnotations = Lists.newArrayListWithExpectedSize(annotations.size());
+                    method.psiAnnotations = Lists.newArrayListWithExpectedSize(annotations.size());
                 }
                 method.psiAnnotations.addAll(annotations);
             }
@@ -1257,7 +1257,7 @@ public class ExternalAnnotationRepository {
         private static class ResolvedExternalAnnotation extends ResolvedAnnotation {
 
             @NonNull
-            private String mSignature;
+            private final String mSignature;
 
             @Nullable
             private List<Value> mValues;
@@ -1317,11 +1317,11 @@ public class ExternalAnnotationRepository {
             @NonNull
             @Override
             public List<Value> getValues() {
-                return mValues == null ? Collections.<Value>emptyList() : mValues;
+                return mValues == null ? Collections.emptyList() : mValues;
             }
         }
 
-        private Map<String, ExternalPsiAnnotation> mMarkerAnnotations = Maps.newHashMapWithExpectedSize(30);
+        private final Map<String, ExternalPsiAnnotation> mMarkerAnnotations = Maps.newHashMapWithExpectedSize(30);
 
         private PsiAnnotation createAnnotation(Element annotationElement) {
             String tagName = annotationElement.getTagName();

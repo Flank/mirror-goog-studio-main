@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiDeclarationStatement;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
 public class FirebaseAnalyticsDetector extends Detector implements Detector.JavaPsiScanner {
@@ -56,23 +54,6 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
     private static final Implementation IMPLEMENTATION = new Implementation(
             FirebaseAnalyticsDetector.class,
             Scope.JAVA_FILE_SCOPE);
-
-    // This list is taken from:
-    // https://developers.google.com/android/reference/com/google/firebase/analytics/FirebaseAnalytics.Event
-    private static final Set<String> RESERVED_EVENT_NAMES = Sets.newHashSet(
-            "app_clear_data",
-            "app_uninstall",
-            "app_update",
-            "error",
-            "first_open",
-            "in_app_purchase",
-            "notification_dismiss",
-            "notification_foreground",
-            "notification_open",
-            "notification_receive",
-            "os_update",
-            "session_start",
-            "user_engagement");
 
     public static final Issue INVALID_NAME = Issue.create(
             "InvalidAnalyticsName",
@@ -90,6 +71,29 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
      * Constructs a new {@link FirebaseAnalyticsDetector}
      */
     public FirebaseAnalyticsDetector() {
+    }
+
+    // This list is taken from:
+    // https://developers.google.com/android/reference/com/google/firebase/analytics/FirebaseAnalytics.Event
+    private static boolean isReservedEventName(@NonNull String name) {
+        switch (name) {
+            case "app_clear_data":
+            case "app_uninstall":
+            case "app_update":
+            case "error":
+            case "first_open":
+            case "in_app_purchase":
+            case "notification_dismiss":
+            case "notification_foreground":
+            case "notification_open":
+            case "notification_receive":
+            case "os_update":
+            case "session_start":
+            case "user_engagement":
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override
@@ -329,7 +333,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             return "Analytics event name should not start with `firebase_`";
         }
 
-        if (RESERVED_EVENT_NAMES.contains(eventName)) {
+        if (isReservedEventName(eventName)) {
             return String.format("`%1$s` is a reserved Analytics event name and cannot be used",
                     eventName);
         }

@@ -51,7 +51,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.io.File;
 import java.util.ArrayList;
@@ -206,12 +205,6 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** Constructs a new {@link ButtonDetector} */
     public ButtonDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

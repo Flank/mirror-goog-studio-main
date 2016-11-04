@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,12 +65,6 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.MENU;
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

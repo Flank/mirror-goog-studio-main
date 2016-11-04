@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -109,12 +108,6 @@ public class DuplicateIdDetector extends LayoutDetector {
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return FolderTypeRelationship.isIdGeneratingFolderType(folderType);
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

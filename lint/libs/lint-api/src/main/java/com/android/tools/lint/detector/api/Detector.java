@@ -916,7 +916,7 @@ public abstract class Detector {
      * @param file the file in the context to check
      * @return true if this detector applies to the given context and file
      */
-    @Deprecated // Slated for removal in lint 2.0
+    @Deprecated // Slated for removal in lint 2.0 - this method isn't used
     public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return false;
     }

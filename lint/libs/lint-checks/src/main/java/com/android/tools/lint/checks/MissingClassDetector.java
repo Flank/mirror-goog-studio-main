@@ -52,7 +52,6 @@ import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.SdkUtils;
@@ -141,12 +140,6 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     /** Constructs a new {@link MissingClassDetector} */
     public MissingClassDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     // ---- Implements XmlScanner ----

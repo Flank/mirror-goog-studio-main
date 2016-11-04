@@ -21,7 +21,6 @@ import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_RESOURCES;
 import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
-import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.FORMAT_METHOD;
 import static com.android.SdkConstants.GET_STRING_METHOD;
 import static com.android.SdkConstants.TAG_STRING;
@@ -230,15 +229,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements JavaPsi
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        if (LintUtils.endsWith(file.getName(), DOT_JAVA)) {
-            return mFormatStrings != null;
-        }
-
-        return super.appliesTo(context, file);
     }
 
     @Override

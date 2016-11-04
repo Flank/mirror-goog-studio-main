@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY_ALIAS;
@@ -46,18 +45,15 @@ import static com.android.xml.AndroidManifest.NODE_USES_SDK;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -125,17 +121,6 @@ public class ManifestTypoDetector extends Detector implements Detector.XmlScanne
     public ManifestTypoDetector() {
     }
 
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return file.getName().equals(ANDROID_MANIFEST_XML);
-    }
-
     @Override
     public Collection<String> getApplicableElements() {
         return XmlScanner.ALL;
@@ -145,7 +130,6 @@ public class ManifestTypoDetector extends Detector implements Detector.XmlScanne
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (!sValidTags.contains(tag)) {
-            int tagLength = tag.length();
             // Try to find the corresponding match
             List<String> suggestions = null;
             for (String suggestion : sValidTags) {

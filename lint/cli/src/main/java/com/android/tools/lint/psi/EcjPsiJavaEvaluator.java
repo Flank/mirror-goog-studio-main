@@ -37,6 +37,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.nio.CharBuffer;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -65,14 +66,15 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
             boolean strict) {
         ReferenceBinding binding;
         if (cls instanceof EcjPsiClass) {
-            TypeDeclaration declaration = (TypeDeclaration) ((EcjPsiClass) cls).mNativeNode;
-            binding = declaration.binding;
+            binding = ((EcjPsiClass)cls).getBinding();
         } else if (cls instanceof EcjPsiBinaryClass) {
             binding = ((EcjPsiBinaryClass)cls).getTypeBinding();
+        } else if (cls instanceof EcjPsiTypeParameter) {
+            binding = ((EcjPsiTypeParameter)cls).getBinding();
         } else {
             return false;
         }
-        if (strict) {
+        if (strict && binding != null) {
             try {
                 binding = binding.superclass();
             } catch (AbortCompilation ignore) {
@@ -98,14 +100,13 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
             boolean strict) {
         ReferenceBinding binding;
         if (cls instanceof EcjPsiClass) {
-            TypeDeclaration declaration = (TypeDeclaration) ((EcjPsiClass) cls).mNativeNode;
-            binding = declaration.binding;
+            binding = ((EcjPsiClass) cls).getBinding();
         } else if (cls instanceof EcjPsiBinaryClass) {
             binding = ((EcjPsiBinaryClass)cls).getTypeBinding();
         } else {
             return false;
         }
-        if (strict) {
+        if (strict && binding != null) {
             try {
                 binding = binding.superclass();
             } catch (AbortCompilation ignore) {
@@ -197,18 +198,22 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         if (psiClass instanceof EcjPsiClass) {
             //noinspection ConstantConditions
             Object nativeNode = ((EcjPsiClass) psiClass).getNativeNode();
+            binding = ((EcjPsiClass) psiClass).getBinding();
             if (nativeNode instanceof TypeDeclaration) {
                 binding = ((TypeDeclaration) nativeNode).binding;
-            } else if (nativeNode instanceof TypeParameter) {
-                TypeVariableBinding b = ((TypeParameter) nativeNode).binding;
-                if (b.superclass != null) {
-                    binding = b.superclass;
-                }
             }
         } else if (psiClass instanceof EcjPsiBinaryClass) {
             Binding binaryBinding = ((EcjPsiBinaryClass) psiClass).getBinding();
             if (binaryBinding instanceof ReferenceBinding) {
                 binding = (ReferenceBinding) binaryBinding;
+            }
+        } else if (psiClass instanceof EcjPsiTypeParameter) {
+            Object nativeNode = ((EcjPsiTypeParameter) psiClass).getNativeNode();
+            if (nativeNode instanceof TypeParameter) {
+                TypeVariableBinding b = ((TypeParameter) nativeNode).binding;
+                if (b.superclass != null) {
+                    binding = b.superclass;
+                }
             }
         }
         if (binding == null) {
@@ -280,13 +285,22 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                     // for example, for unresolved problem bindings
                     break;
                 }
-                AnnotationBinding[] annotations = method.getAnnotations();
-                int count = annotations.length;
-                if (count > 0) {
-                    all = Lists.newArrayListWithExpectedSize(count);
-                    for (AnnotationBinding annotation : annotations) {
-                        if (annotation != null) {
-                            all.add(new EcjPsiBinaryAnnotation(mManager, modifierList, annotation));
+                PsiMethod methodElement = mManager.findMethod(method);
+                // Try to get source annotation, if possible, since they can carry more
+                // info than binary annotations (such as the IntDef annotation)
+                if (methodElement instanceof EcjPsiMethod) {
+                    PsiModifierList methodModifiers = methodElement.getModifierList();
+                    Collections.addAll(all, methodModifiers.getAnnotations());
+                } else {
+                    AnnotationBinding[] annotations = method.getAnnotations();
+                    int count = annotations.length;
+                    if (count > 0) {
+                        all = Lists.newArrayListWithExpectedSize(count);
+                        for (AnnotationBinding annotation : annotations) {
+                            if (annotation != null) {
+                                all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                        annotation));
+                            }
                         }
                     }
                 }
@@ -307,9 +321,7 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
             ReferenceBinding cls;
             if (owner instanceof EcjPsiClass) {
                 EcjPsiClass psiClass = (EcjPsiClass) owner;
-                TypeDeclaration declaration = (TypeDeclaration) psiClass.getNativeNode();
-                assert declaration != null;
-                cls = declaration.binding;
+                cls = psiClass.getBinding();
             } else if (owner instanceof EcjPsiBinaryClass) {
                 cls = ((EcjPsiBinaryClass) owner).getTypeBinding();
             } else {
@@ -321,13 +333,24 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
             ExternalAnnotationRepository manager = mManager.getAnnotationRepository();
 
             while (cls != null) {
-                AnnotationBinding[] annotations = cls.getAnnotations();
-                int count = annotations.length;
-                if (count > 0) {
-                    all = Lists.newArrayListWithExpectedSize(count);
-                    for (AnnotationBinding annotation : annotations) {
-                        if (annotation != null) {
-                            all.add(new EcjPsiBinaryAnnotation(mManager, modifierList, annotation));
+                PsiClass clsElement = mManager.findClass(cls);
+                // Try to get source annotation, if possible, since they can carry more
+                // info than binary annotations (such as the IntDef annotation)
+                if (clsElement instanceof EcjPsiClass) {
+                    PsiModifierList clsModifiers = clsElement.getModifierList();
+                    if (clsModifiers != null) {
+                        Collections.addAll(all, clsModifiers.getAnnotations());
+                    }
+                } else {
+                    AnnotationBinding[] annotations = cls.getAnnotations();
+                    int count = annotations.length;
+                    if (count > 0) {
+                        all = Lists.newArrayListWithExpectedSize(count);
+                        for (AnnotationBinding annotation : annotations) {
+                            if (annotation != null) {
+                                all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                        annotation));
+                            }
                         }
                     }
                 }
@@ -388,15 +411,28 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                     // for example, for unresolved problem bindings
                     break;
                 }
-                AnnotationBinding[][] parameterAnnotations = method.getParameterAnnotations();
-                if (parameterAnnotations != null && index < parameterAnnotations.length) {
-                    AnnotationBinding[] annotations = parameterAnnotations[index];
-                    int count = annotations.length;
-                    if (count > 0) {
-                        for (AnnotationBinding annotation : annotations) {
-                            if (annotation != null) {
-                                all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
-                                        annotation));
+                PsiMethod methodElement = mManager.findMethod(method);
+                // Try to get source annotation, if possible, since they can carry more
+                // info than binary annotations (such as the IntDef annotation)
+                if (methodElement instanceof EcjPsiMethod) {
+                    PsiParameter[] parameters = methodElement.getParameterList().getParameters();
+                    if (index < parameters.length) {
+                        PsiModifierList parameterModifiers = parameters[index].getModifierList();
+                        if (parameterModifiers != null) {
+                            Collections.addAll(all, parameterModifiers.getAnnotations());
+                        }
+                    }
+                } else {
+                    AnnotationBinding[][] parameterAnnotations = method.getParameterAnnotations();
+                    if (parameterAnnotations != null && index < parameterAnnotations.length) {
+                        AnnotationBinding[] annotations = parameterAnnotations[index];
+                        int count = annotations.length;
+                        if (count > 0) {
+                            for (AnnotationBinding annotation : annotations) {
+                                if (annotation != null) {
+                                    all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                            annotation));
+                                }
                             }
                         }
                     }

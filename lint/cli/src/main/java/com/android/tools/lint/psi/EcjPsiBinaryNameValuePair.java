@@ -96,7 +96,7 @@ class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameVa
 
     private static class EcjPsiBinaryArrayInitializerMemberValue extends EcjPsiBinaryElement
             implements PsiArrayInitializerMemberValue {
-        private PsiAnnotationMemberValue[] mInitializers;
+        private final PsiAnnotationMemberValue[] mInitializers;
 
         public EcjPsiBinaryArrayInitializerMemberValue(EcjPsiManager manager, Object[] values) {
             super(manager, null);

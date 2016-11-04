@@ -56,9 +56,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -89,15 +87,6 @@ public class DetectMissingPrefix extends LayoutDetector {
                     Scope.MANIFEST_AND_RESOURCE_SCOPE,
                     Scope.MANIFEST_SCOPE, Scope.RESOURCE_FILE_SCOPE));
 
-    private static final Set<String> NO_PREFIX_ATTRS = new HashSet<>();
-    static {
-        NO_PREFIX_ATTRS.add(ATTR_CLASS);
-        NO_PREFIX_ATTRS.add(ATTR_STYLE);
-        NO_PREFIX_ATTRS.add(ATTR_LAYOUT);
-        NO_PREFIX_ATTRS.add(ATTR_PACKAGE);
-        NO_PREFIX_ATTRS.add(ATTR_CORE_APP);
-    }
-
     /** Constructs a new {@link DetectMissingPrefix} */
     public DetectMissingPrefix() {
     }
@@ -118,6 +107,19 @@ public class DetectMissingPrefix extends LayoutDetector {
         return ALL;
     }
 
+    private static boolean isNoPrefixAttribute(@NonNull String attribute) {
+        switch (attribute) {
+            case ATTR_CLASS:
+            case ATTR_STYLE:
+            case ATTR_LAYOUT:
+            case ATTR_PACKAGE:
+            case ATTR_CORE_APP:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String uri = attribute.getNamespaceURI();
@@ -126,7 +128,7 @@ public class DetectMissingPrefix extends LayoutDetector {
             if (name == null) {
                 return;
             }
-            if (NO_PREFIX_ATTRS.contains(name)) {
+            if (isNoPrefixAttribute(name)) {
                 return;
             }
 

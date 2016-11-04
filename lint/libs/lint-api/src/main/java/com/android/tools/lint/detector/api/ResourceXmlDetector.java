@@ -19,7 +19,6 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.google.common.annotations.Beta;
-import java.io.File;
 
 /**
  * Specialized detector intended for XML resources. Detectors that apply to XML
@@ -31,10 +30,6 @@ import java.io.File;
  */
 @Beta
 public abstract class ResourceXmlDetector extends Detector implements Detector.XmlScanner {
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return LintUtils.isXmlFile(file);
-    }
 
     /**
      * Returns whether this detector applies to the given folder type. This

@@ -41,7 +41,6 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Arrays;
@@ -72,12 +71,6 @@ public class GridLayoutDetector extends LayoutDetector {
 
     /** Constructs a new {@link GridLayoutDetector} check */
     public GridLayoutDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

@@ -16,21 +16,17 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_DEBUGGABLE;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
@@ -63,17 +59,6 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
 
     /** Constructs a new {@link HardcodedDebugModeDetector} check */
     public HardcodedDebugModeDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return file.getName().equals(ANDROID_MANIFEST_XML);
     }
 
     // ---- Implements Detector.XmlScanner ----

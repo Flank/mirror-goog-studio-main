@@ -47,7 +47,7 @@ class OtherFileVisitor {
     private final List<Detector> detectors;
 
     @NonNull
-    private Map<Scope, List<File>> files = new EnumMap<>(Scope.class);
+    private final Map<Scope, List<File>> files = new EnumMap<>(Scope.class);
 
     OtherFileVisitor(@NonNull List<Detector> detectors) {
         this.detectors = detectors;

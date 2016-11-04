@@ -160,7 +160,7 @@ public class ControlFlowGraph {
      * destination node
      */
     public boolean isConnected(@NonNull Node from, @NonNull Node to) {
-        return isConnected(from, to, Sets.<Node>newIdentityHashSet());
+        return isConnected(from, to, Sets.newIdentityHashSet());
     }
 
     /**

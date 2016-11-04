@@ -67,7 +67,7 @@ public class SdCardDetector extends Detector implements Detector.JavaPsiScanner 
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiLiteralExpression.class);
+        return Collections.singletonList(PsiLiteralExpression.class);
     }
 
     @Override

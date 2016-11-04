@@ -89,7 +89,7 @@ public class PermissionRequirementTest extends TestCase {
         Set<String> emptySet = Collections.emptySet();
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
         PsiAnnotation annotation = createAnnotation(PERMISSION_ANNOTATION, values);
-        PermissionRequirement req = PermissionRequirement.create(null, annotation);
+        PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
 
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
@@ -116,7 +116,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_COARSE_LOCATION");
 
         PsiAnnotation annotation = createAnnotation(PERMISSION_ANNOTATION, values);
-        PermissionRequirement req = PermissionRequirement.create(null, annotation);
+        PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
@@ -142,7 +142,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_COARSE_LOCATION");
 
         PsiAnnotation annotation = createAnnotation(PERMISSION_ANNOTATION, values);
-        PermissionRequirement req = PermissionRequirement.create(null, annotation);
+        PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
@@ -170,7 +170,7 @@ public class PermissionRequirementTest extends TestCase {
         ResolvedAnnotation.Value values = new ResolvedAnnotation.Value("allOf",
                 "android.permission.ACCESS_FINE_LOCATION");
         PsiAnnotation annotation = createAnnotation(PERMISSION_ANNOTATION, values);
-        assertTrue(PermissionRequirement.create(null, annotation).isSingle());
+        assertTrue(PermissionRequirement.create(annotation).isSingle());
     }
 
     public void testRevocable() {
@@ -192,7 +192,7 @@ public class PermissionRequirementTest extends TestCase {
         // No date range applies to permission
         annotation = createAnnotation(PERMISSION_ANNOTATION,
                 new ResolvedAnnotation.Value("value", "android.permission.AUTHENTICATE_ACCOUNTS"));
-        req = PermissionRequirement.create(null, annotation);
+        req = PermissionRequirement.create(annotation);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
         assertTrue(req.appliesTo(getHolder(15, 23)));
@@ -203,7 +203,7 @@ public class PermissionRequirementTest extends TestCase {
         annotation = createAnnotation(PERMISSION_ANNOTATION,
                 new ResolvedAnnotation.Value("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                 new ResolvedAnnotation.Value("apis", "..22"));
-        req = PermissionRequirement.create(null, annotation);
+        req = PermissionRequirement.create(annotation);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
         assertTrue(req.appliesTo(getHolder(15, 23)));
@@ -214,7 +214,7 @@ public class PermissionRequirementTest extends TestCase {
         annotation = createAnnotation(PERMISSION_ANNOTATION,
                 new ResolvedAnnotation.Value("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                 new ResolvedAnnotation.Value("apis", "23.."));
-        req = PermissionRequirement.create(null, annotation);
+        req = PermissionRequirement.create(annotation);
         assertFalse(req.appliesTo(getHolder(15, 1)));
         assertFalse(req.appliesTo(getHolder(1, 19)));
         assertFalse(req.appliesTo(getHolder(15, 22)));
@@ -225,7 +225,7 @@ public class PermissionRequirementTest extends TestCase {
         annotation = createAnnotation(PERMISSION_ANNOTATION,
                 new ResolvedAnnotation.Value("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                 new ResolvedAnnotation.Value("apis", "14..18"));
-        req = PermissionRequirement.create(null, annotation);
+        req = PermissionRequirement.create(annotation);
         assertFalse(req.appliesTo(getHolder(1, 5)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
     }

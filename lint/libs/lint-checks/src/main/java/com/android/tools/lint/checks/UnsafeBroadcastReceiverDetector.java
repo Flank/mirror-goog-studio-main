@@ -42,7 +42,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.collect.Sets;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -123,7 +122,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             new Implementation(UnsafeBroadcastReceiverDetector.class,
                     Scope.MANIFEST_SCOPE));
 
-    /* List of protected broadcast strings. This list must be sorted alphabetically.
+    /* List of protected broadcast strings.
      * Protected broadcast strings are defined by <protected-broadcast> entries in the
      * manifest of system-level components or applications.
      * The below list is copied from frameworks/base/core/res/AndroidManifest.xml
@@ -133,382 +132,384 @@ public class UnsafeBroadcastReceiverDetector extends Detector
      * most situations.
      */
     @VisibleForTesting
-    static final String[] PROTECTED_BROADCASTS = new String[] {
-            "EventConditionProvider.EVALUATE",
-            "ScheduleConditionProvider.EVALUATE",
-            "action.cne.started",
-            "android.accounts.LOGIN_ACCOUNTS_CHANGED",
-            "android.app.action.ACTION_PASSWORD_CHANGED",
-            "android.app.action.ACTION_PASSWORD_EXPIRING",
-            "android.app.action.ACTION_PASSWORD_FAILED",
-            "android.app.action.ACTION_PASSWORD_SUCCEEDED",
-            "android.app.action.BUGREPORT_FAILED",
-            "android.app.action.BUGREPORT_SHARE",
-            "android.app.action.BUGREPORT_SHARING_DECLINED",
-            "android.app.action.CHOOSE_PRIVATE_KEY_ALIAS",
-            "android.app.action.DEVICE_ADMIN_DISABLED",
-            "android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED",
-            "android.app.action.DEVICE_ADMIN_ENABLED",
-            "android.app.action.DEVICE_OWNER_CHANGED",
-            "android.app.action.DEVICE_POLICY_MANAGER_STATE_CHANGED",
-            "android.app.action.ENTER_CAR_MODE",
-            "android.app.action.ENTER_DESK_MODE",
-            "android.app.action.EXIT_CAR_MODE",
-            "android.app.action.EXIT_DESK_MODE",
-            "android.app.action.INTERRUPTION_FILTER_CHANGED",
-            "android.app.action.INTERRUPTION_FILTER_CHANGED_INTERNAL",
-            "android.app.action.LOCK_TASK_ENTERING",
-            "android.app.action.LOCK_TASK_EXITING",
-            "android.app.action.NEXT_ALARM_CLOCK_CHANGED",
-            "android.app.action.NOTIFICATION_POLICY_ACCESS_GRANTED_CHANGED",
-            "android.app.action.NOTIFICATION_POLICY_CHANGED",
-            "android.app.action.NOTIFY_PENDING_SYSTEM_UPDATE",
-            "android.app.action.SECURITY_LOGS_AVAILABLE",
-            "android.app.action.SYSTEM_UPDATE_POLICY_CHANGED",
-            "android.app.backup.intent.CLEAR",
-            "android.app.backup.intent.INIT",
-            "android.app.backup.intent.RUN",
-            "android.appwidget.action.APPWIDGET_DELETED",
-            "android.appwidget.action.APPWIDGET_DISABLED",
-            "android.appwidget.action.APPWIDGET_ENABLED",
-            "android.appwidget.action.APPWIDGET_HOST_RESTORED",
-            "android.appwidget.action.APPWIDGET_RESTORED",
-            "android.appwidget.action.APPWIDGET_UPDATE_OPTIONS",
-            "android.bluetooth.a2dp-sink.profile.action.AUDIO_CONFIG_CHANGED",
-            "android.bluetooth.a2dp-sink.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.a2dp-sink.profile.action.PLAYING_STATE_CHANGED",
-            "android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.a2dp.profile.action.PLAYING_STATE_CHANGED",
-            "android.bluetooth.adapter.action.BLE_ACL_CONNECTED",
-            "android.bluetooth.adapter.action.BLE_ACL_DISCONNECTED",
-            "android.bluetooth.adapter.action.BLE_STATE_CHANGED",
-            "android.bluetooth.adapter.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.adapter.action.DISCOVERY_FINISHED",
-            "android.bluetooth.adapter.action.DISCOVERY_STARTED",
-            "android.bluetooth.adapter.action.LOCAL_NAME_CHANGED",
-            "android.bluetooth.adapter.action.SCAN_MODE_CHANGED",
-            "android.bluetooth.adapter.action.STATE_CHANGED",
-            "android.bluetooth.avrcp-controller.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.device.action.ACL_CONNECTED",
-            "android.bluetooth.device.action.ACL_DISCONNECTED",
-            "android.bluetooth.device.action.ACL_DISCONNECT_REQUESTED",
-            "android.bluetooth.device.action.ALIAS_CHANGED",
-            "android.bluetooth.device.action.BOND_STATE_CHANGED",
-            "android.bluetooth.device.action.CLASS_CHANGED",
-            "android.bluetooth.device.action.CONNECTION_ACCESS_CANCEL",
-            "android.bluetooth.device.action.CONNECTION_ACCESS_REPLY",
-            "android.bluetooth.device.action.CONNECTION_ACCESS_REQUEST",
-            "android.bluetooth.device.action.DISAPPEARED",
-            "android.bluetooth.device.action.FOUND",
-            "android.bluetooth.device.action.MAS_INSTANCE",
-            "android.bluetooth.device.action.NAME_CHANGED",
-            "android.bluetooth.device.action.NAME_FAILED",
-            "android.bluetooth.device.action.PAIRING_CANCEL",
-            "android.bluetooth.device.action.PAIRING_REQUEST",
-            "android.bluetooth.device.action.SDP_RECORD",
-            "android.bluetooth.device.action.UUID",
-            "android.bluetooth.devicepicker.action.DEVICE_SELECTED",
-            "android.bluetooth.devicepicker.action.LAUNCH",
-            "android.bluetooth.headset.action.VENDOR_SPECIFIC_HEADSET_EVENT",
-            "android.bluetooth.headset.profile.action.AUDIO_STATE_CHANGED",
-            "android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.headsetclient.profile.action.AG_CALL_CHANGED",
-            "android.bluetooth.headsetclient.profile.action.AG_EVENT",
-            "android.bluetooth.headsetclient.profile.action.AUDIO_STATE_CHANGED",
-            "android.bluetooth.headsetclient.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.headsetclient.profile.action.LAST_VTAG",
-            "android.bluetooth.headsetclient.profile.action.RESULT",
-            "android.bluetooth.input.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.input.profile.action.HANDSHAKE",
-            "android.bluetooth.input.profile.action.PROTOCOL_MODE_CHANGED",
-            "android.bluetooth.input.profile.action.REPORT",
-            "android.bluetooth.input.profile.action.VIRTUAL_UNPLUG_STATUS",
-            "android.bluetooth.intent.DISCOVERABLE_TIMEOUT",
-            "android.bluetooth.map.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED",
-            "android.bluetooth.pbap.intent.action.PBAP_STATE_CHANGED",
-            "android.btopp.intent.action.CONFIRM",
-            "android.btopp.intent.action.HIDE",
-            "android.btopp.intent.action.HIDE_COMPLETE",
-            "android.btopp.intent.action.INCOMING_FILE_NOTIFICATION",
-            "android.btopp.intent.action.LIST",
-            "android.btopp.intent.action.OPEN",
-            "android.btopp.intent.action.OPEN_INBOUND",
-            "android.btopp.intent.action.OPEN_OUTBOUND",
-            "android.btopp.intent.action.RETRY",
-            "android.btopp.intent.action.STOP_HANDOVER_TRANSFER",
-            "android.btopp.intent.action.TRANSFER_COMPLETE",
-            "android.btopp.intent.action.USER_CONFIRMATION_TIMEOUT",
-            "android.btopp.intent.action.WHITELIST_DEVICE",
-            "android.content.jobscheduler.JOB_DEADLINE_EXPIRED",
-            "android.content.jobscheduler.JOB_DELAY_EXPIRED",
-            "android.content.syncmanager.SYNC_ALARM",
-            "android.hardware.display.action.WIFI_DISPLAY_STATUS_CHANGED",
-            "android.hardware.usb.action.USB_ACCESSORY_ATTACHED",
-            "android.hardware.usb.action.USB_ACCESSORY_DETACHED",
-            "android.hardware.usb.action.USB_DEVICE_ATTACHED",
-            "android.hardware.usb.action.USB_DEVICE_DETACHED",
-            "android.hardware.usb.action.USB_PORT_CHANGED",
-            "android.hardware.usb.action.USB_STATE",
-            "android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED",
-            "android.intent.action.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED",
-            "android.intent.action.ACTION_DEFAULT_SUBSCRIPTION_CHANGED",
-            "android.intent.action.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED",
-            "android.intent.action.ACTION_IDLE_MAINTENANCE_END",
-            "android.intent.action.ACTION_IDLE_MAINTENANCE_START",
-            "android.intent.action.ACTION_POWER_CONNECTED",
-            "android.intent.action.ACTION_POWER_DISCONNECTED",
-            "android.intent.action.ACTION_RADIO_OFF",
-            "android.intent.action.ACTION_SET_RADIO_CAPABILITY_DONE",
-            "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED",
-            "android.intent.action.ACTION_SHUTDOWN",
-            "android.intent.action.ACTION_SUBINFO_CONTENT_CHANGE",
-            "android.intent.action.ACTION_SUBINFO_RECORD_UPDATED",
-            "android.intent.action.ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW",
-            "android.intent.action.ADVANCED_SETTINGS",
-            "android.intent.action.AIRPLANE_MODE",
-            "android.intent.action.ANR",
-            "android.intent.action.ANY_DATA_STATE",
-            "android.intent.action.APPLICATION_RESTRICTIONS_CHANGED",
-            "android.intent.action.BATTERY_CHANGED",
-            "android.intent.action.BATTERY_LOW",
-            "android.intent.action.BATTERY_OKAY",
-            "android.intent.action.BOOT_COMPLETED",
-            "android.intent.action.CALL",
-            "android.intent.action.CALL_PRIVILEGED",
-            "android.intent.action.CHARGING",
-            "android.intent.action.CLEAR_DNS_CACHE",
-            "android.intent.action.CONFIGURATION_CHANGED",
-            "android.intent.action.CONTENT_CHANGED",
-            "android.intent.action.DATE_CHANGED",
-            "android.intent.action.DEVICE_STORAGE_FULL",
-            "android.intent.action.DEVICE_STORAGE_LOW",
-            "android.intent.action.DEVICE_STORAGE_NOT_FULL",
-            "android.intent.action.DEVICE_STORAGE_OK",
-            "android.intent.action.DISCHARGING",
-            "android.intent.action.DOCK_EVENT",
-            "android.intent.action.DREAMING_STARTED",
-            "android.intent.action.DREAMING_STOPPED",
-            "android.intent.action.DROPBOX_ENTRY_ADDED",
-            "android.intent.action.DYNAMIC_SENSOR_CHANGED",
-            "android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE",
-            "android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE",
-            "android.intent.action.GLOBAL_BUTTON",
-            "android.intent.action.HDMI_PLUGGED",
-            "android.intent.action.HEADSET_PLUG",
-            "android.intent.action.INPUT_METHOD_CHANGED",
-            "android.intent.action.INTENT_FILTER_NEEDS_VERIFICATION",
-            "android.intent.action.LOCALE_CHANGED",
-            "android.intent.action.LOCKED_BOOT_COMPLETED",
-            "android.intent.action.MANAGED_PROFILE_ADDED",
-            "android.intent.action.MANAGED_PROFILE_AVAILABLE",
-            "android.intent.action.MANAGED_PROFILE_REMOVED",
-            "android.intent.action.MANAGED_PROFILE_UNAVAILABLE",
-            "android.intent.action.MANAGED_PROFILE_UNLOCKED",
-            "android.intent.action.MASTER_CLEAR_NOTIFICATION",
-            "android.intent.action.MEDIA_BAD_REMOVAL",
-            "android.intent.action.MEDIA_CHECKING",
-            "android.intent.action.MEDIA_EJECT",
-            "android.intent.action.MEDIA_MOUNTED",
-            "android.intent.action.MEDIA_NOFS",
-            "android.intent.action.MEDIA_REMOVED",
-            "android.intent.action.MEDIA_RESOURCE_GRANTED",
-            "android.intent.action.MEDIA_SHARED",
-            "android.intent.action.MEDIA_UNMOUNTABLE",
-            "android.intent.action.MEDIA_UNMOUNTED",
-            "android.intent.action.MEDIA_UNSHARED",
-            "android.intent.action.MY_PACKAGE_REPLACED",
-            "android.intent.action.NEW_OUTGOING_CALL",
-            "android.intent.action.PACKAGES_SUSPENDED",
-            "android.intent.action.PACKAGES_UNSUSPENDED",
-            "android.intent.action.PACKAGE_ADDED",
-            "android.intent.action.PACKAGE_CHANGED",
-            "android.intent.action.PACKAGE_DATA_CLEARED",
-            "android.intent.action.PACKAGE_FIRST_LAUNCH",
-            "android.intent.action.PACKAGE_FULLY_REMOVED",
-            "android.intent.action.PACKAGE_INSTALL",
-            "android.intent.action.PACKAGE_NEEDS_VERIFICATION",
-            "android.intent.action.PACKAGE_REMOVED",
-            "android.intent.action.PACKAGE_REPLACED",
-            "android.intent.action.PACKAGE_RESTARTED",
-            "android.intent.action.PACKAGE_VERIFIED",
-            "android.intent.action.PERMISSION_RESPONSE_RECEIVED",
-            "android.intent.action.PHONE_STATE",
-            "android.intent.action.PRECISE_CALL_STATE",
-            "android.intent.action.PRECISE_DATA_CONNECTION_STATE_CHANGED",
-            "android.intent.action.PRE_BOOT_COMPLETED",
-            "android.intent.action.PROXY_CHANGE",
-            "android.intent.action.QUERY_PACKAGE_RESTART",
-            "android.intent.action.REBOOT",
-            "android.intent.action.REQUEST_PERMISSION",
-            "android.intent.action.SCREEN_OFF",
-            "android.intent.action.SCREEN_ON",
-            "android.intent.action.SUBSCRIPTION_PHONE_STATE",
-            "android.intent.action.SUB_DEFAULT_CHANGED",
-            "android.intent.action.THERMAL_EVENT",
-            "android.intent.action.TIMEZONE_CHANGED",
-            "android.intent.action.TIME_SET",
-            "android.intent.action.TIME_TICK",
-            "android.intent.action.TWILIGHT_CHANGED",
-            "android.intent.action.UID_REMOVED",
-            "android.intent.action.USER_ADDED",
-            "android.intent.action.USER_BACKGROUND",
-            "android.intent.action.USER_FOREGROUND",
-            "android.intent.action.USER_INFO_CHANGED",
-            "android.intent.action.USER_INITIALIZE",
-            "android.intent.action.USER_PRESENT",
-            "android.intent.action.USER_REMOVED",
-            "android.intent.action.USER_STARTED",
-            "android.intent.action.USER_STARTING",
-            "android.intent.action.USER_STOPPED",
-            "android.intent.action.USER_STOPPING",
-            "android.intent.action.USER_SWITCHED",
-            "android.intent.action.USER_UNLOCKED",
-            "android.intent.action.WALLPAPER_CHANGED",
-            "android.intent.action.internal_sim_state_changed",
-            "android.internal.policy.action.BURN_IN_PROTECTION",
-            "android.location.GPS_ENABLED_CHANGE",
-            "android.location.GPS_FIX_CHANGE",
-            "android.location.MODE_CHANGED",
-            "android.location.PROVIDERS_CHANGED",
-            "android.media.ACTION_SCO_AUDIO_STATE_UPDATED",
-            "android.media.AUDIO_BECOMING_NOISY",
-            "android.media.INTERNAL_RINGER_MODE_CHANGED_ACTION",
-            "android.media.MASTER_MONO_CHANGED_ACTION",
-            "android.media.MASTER_MUTE_CHANGED_ACTION",
-            "android.media.MASTER_VOLUME_CHANGED_ACTION",
-            "android.media.RINGER_MODE_CHANGED",
-            "android.media.SCO_AUDIO_STATE_CHANGED",
-            "android.media.STREAM_DEVICES_CHANGED_ACTION",
-            "android.media.STREAM_MUTE_CHANGED_ACTION",
-            "android.media.VIBRATE_SETTING_CHANGED",
-            "android.media.VOLUME_CHANGED_ACTION",
-            "android.media.action.HDMI_AUDIO_PLUG",
-            "android.net.ConnectivityService.action.PKT_CNT_SAMPLE_INTERVAL_ELAPSED",
-            "android.net.conn.BACKGROUND_DATA_SETTING_CHANGED",
-            "android.net.conn.CAPTIVE_PORTAL",
-            "android.net.conn.CAPTIVE_PORTAL_TEST_COMPLETED",
-            "android.net.conn.CONNECTIVITY_CHANGE",
-            "android.net.conn.CONNECTIVITY_CHANGE_IMMEDIATE",
-            "android.net.conn.CONNECTIVITY_CHANGE_SUPL",
-            "android.net.conn.DATA_ACTIVITY_CHANGE",
-            "android.net.conn.INET_CONDITION_ACTION",
-            "android.net.conn.NETWORK_CONDITIONS_MEASURED",
-            "android.net.conn.RESTRICT_BACKGROUND_CHANGED",
-            "android.net.conn.TETHER_STATE_CHANGED",
-            "android.net.nsd.STATE_CHANGED",
-            "android.net.proxy.PAC_REFRESH",
-            "android.net.scoring.SCORER_CHANGED",
-            "android.net.scoring.SCORE_NETWORKS",
-            "android.net.sip.SIP_SERVICE_UP",
-            "android.net.wifi.CONFIGURED_NETWORKS_CHANGE",
-            "android.net.wifi.LINK_CONFIGURATION_CHANGED",
-            "android.net.wifi.PASSPOINT_ICON_RECEIVED",
-            "android.net.wifi.RSSI_CHANGED",
-            "android.net.wifi.SCAN_RESULTS",
-            "android.net.wifi.STATE_CHANGE",
-            "android.net.wifi.WIFI_AP_STATE_CHANGED",
-            "android.net.wifi.WIFI_CREDENTIAL_CHANGED",
-            "android.net.wifi.WIFI_SCAN_AVAILABLE",
-            "android.net.wifi.WIFI_STATE_CHANGED",
-            "android.net.wifi.p2p.CONNECTION_STATE_CHANGE",
-            "android.net.wifi.p2p.DISCOVERY_STATE_CHANGE",
-            "android.net.wifi.p2p.PEERS_CHANGED",
-            "android.net.wifi.p2p.PERSISTENT_GROUPS_CHANGED",
-            "android.net.wifi.p2p.STATE_CHANGED",
-            "android.net.wifi.p2p.THIS_DEVICE_CHANGED",
-            "android.net.wifi.supplicant.CONNECTION_CHANGE",
-            "android.net.wifi.supplicant.STATE_CHANGE",
-            "android.nfc.action.ADAPTER_STATE_CHANGED",
-            "android.nfc.action.TRANSACTION_DETECTED",
-            "android.nfc.handover.intent.action.HANDOVER_SEND",
-            "android.nfc.handover.intent.action.HANDOVER_SEND_MULTIPLE",
-            "android.nfc.handover.intent.action.HANDOVER_STARTED",
-            "android.nfc.handover.intent.action.TRANSFER_DONE",
-            "android.nfc.handover.intent.action.TRANSFER_PROGRESS",
-            "android.os.UpdateLock.UPDATE_LOCK_CHANGED",
-            "android.os.action.ACTION_EFFECTS_SUPPRESSOR_CHANGED",
-            "android.os.action.CHARGING",
-            "android.os.action.DEVICE_IDLE_MODE_CHANGED",
-            "android.os.action.DISCHARGING",
-            "android.os.action.LIGHT_DEVICE_IDLE_MODE_CHANGED",
-            "android.os.action.POWER_SAVE_MODE_CHANGED",
-            "android.os.action.POWER_SAVE_MODE_CHANGED_INTERNAL",
-            "android.os.action.POWER_SAVE_MODE_CHANGING",
-            "android.os.action.POWER_SAVE_TEMP_WHITELIST_CHANGED",
-            "android.os.action.POWER_SAVE_WHITELIST_CHANGED",
-            "android.os.action.SCREEN_BRIGHTNESS_BOOST_CHANGED",
-            "android.os.action.SETTING_RESTORED",
-            "android.os.storage.action.DISK_SCANNED",
-            "android.os.storage.action.VOLUME_STATE_CHANGED",
-            "android.permission.CLEAR_APP_GRANTED_URI_PERMISSIONS",
-            "android.permission.GET_APP_GRANTED_URI_PERMISSIONS",
-            "android.provider.Telephony.MMS_DOWNLOADED",
-            "android.provider.action.DEFAULT_SMS_PACKAGE_CHANGED",
-            "android.search.action.SEARCHABLES_CHANGED",
-            "android.security.STORAGE_CHANGED",
-            "android.telecom.action.DEFAULT_DIALER_CHANGED",
-            "android.telecom.action.PHONE_ACCOUNT_REGISTERED",
-            "android.telecom.action.PHONE_ACCOUNT_UNREGISTERED",
-            "android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION",
-            "android.telephony.action.CARRIER_CONFIG_CHANGED",
-            "com.android.bluetooth.btservice.action.ALARM_WAKEUP",
-            "com.android.bluetooth.map.USER_CONFIRM_TIMEOUT",
-            "com.android.bluetooth.pbap.authcancelled",
-            "com.android.bluetooth.pbap.authchall",
-            "com.android.bluetooth.pbap.authresponse",
-            "com.android.bluetooth.pbap.userconfirmtimeout",
-            "com.android.ims.IMS_INCOMING_CALL",
-            "com.android.ims.IMS_SERVICE_UP",
-            "com.android.ims.internal.uce.UCE_SERVICE_UP",
-            "com.android.intent.action.IMS_CONFIG_CHANGED",
-            "com.android.intent.action.IMS_FEATURE_CHANGED",
-            "com.android.internal.location.ALARM_TIMEOUT",
-            "com.android.internal.location.ALARM_WAKEUP",
-            "com.android.nfc.action.LLCP_DOWN",
-            "com.android.nfc.action.LLCP_UP",
-            "com.android.nfc.cardemulation.action.CLOSE_TAP_DIALOG",
-            "com.android.nfc.handover.action.ALLOW_CONNECT",
-            "com.android.nfc.handover.action.DENY_CONNECT",
-            "com.android.nfc_extras.action.AID_SELECTED",
-            "com.android.nfc_extras.action.RF_FIELD_OFF_DETECTED",
-            "com.android.nfc_extras.action.RF_FIELD_ON_DETECTED",
-            "com.android.phone.SIP_ADD_PHONE",
-            "com.android.phone.SIP_CALL_OPTION_CHANGED",
-            "com.android.phone.SIP_INCOMING_CALL",
-            "com.android.phone.SIP_REMOVE_PHONE",
-            "com.android.server.ACTION_EXPIRED_PASSWORD_NOTIFICATION",
-            "com.android.server.ACTION_TRIGGER_IDLE",
-            "com.android.server.NetworkTimeUpdateService.action.POLL",
-            "com.android.server.Wifi.action.TOGGLE_PNO",
-            "com.android.server.WifiManager.action.DELAYED_DRIVER_STOP",
-            "com.android.server.WifiManager.action.DEVICE_IDLE",
-            "com.android.server.WifiManager.action.START_PNO",
-            "com.android.server.WifiManager.action.START_SCAN",
-            "com.android.server.action.NETWORK_STATS_POLL",
-            "com.android.server.action.NETWORK_STATS_UPDATED",
-            "com.android.server.action.REMOTE_BUGREPORT_SHARING_ACCEPTED",
-            "com.android.server.action.REMOTE_BUGREPORT_SHARING_DECLINED",
-            "com.android.server.action.RESET_TWILIGHT_AUTO",
-            "com.android.server.action.UPDATE_TWILIGHT_STATE",
-            "com.android.server.am.DELETE_DUMPHEAP",
-            "com.android.server.connectivityservice.CONNECTED_TO_PROVISIONING_NETWORK_ACTION",
-            "com.android.server.device_idle.STEP_IDLE_STATE",
-            "com.android.server.device_idle.STEP_LIGHT_IDLE_STATE",
-            "com.android.server.fingerprint.ACTION_LOCKOUT_RESET",
-            "com.android.server.net.action.SNOOZE_WARNING",
-            "com.android.server.notification.CountdownConditionProvider",
-            "com.android.server.pm.DISABLE_QUIET_MODE_AFTER_UNLOCK",
-            "com.android.server.telecom.intent.action.CALLS_ADD_ENTRY",
-            "com.android.server.usb.ACTION_OPEN_IN_APPS",
-            "com.android.settings.location.MODE_CHANGING",
-            "com.android.sync.SYNC_CONN_STATUS_CHANGED",
-            "intent.action.ACTION_RF_BAND_INFO",
-            "wifi_scan_available",
-    };
-
-    private static final Set<String> PROTECTED_BROADCAST_SET =
-            Sets.newHashSet(PROTECTED_BROADCASTS);
+    static boolean isProtectedBroadcast(@NonNull String actionName) {
+        switch (actionName) {
+            case "EventConditionProvider.EVALUATE":
+            case "ScheduleConditionProvider.EVALUATE":
+            case "action.cne.started":
+            case "android.accounts.LOGIN_ACCOUNTS_CHANGED":
+            case "android.app.action.ACTION_PASSWORD_CHANGED":
+            case "android.app.action.ACTION_PASSWORD_EXPIRING":
+            case "android.app.action.ACTION_PASSWORD_FAILED":
+            case "android.app.action.ACTION_PASSWORD_SUCCEEDED":
+            case "android.app.action.BUGREPORT_FAILED":
+            case "android.app.action.BUGREPORT_SHARE":
+            case "android.app.action.BUGREPORT_SHARING_DECLINED":
+            case "android.app.action.CHOOSE_PRIVATE_KEY_ALIAS":
+            case "android.app.action.DEVICE_ADMIN_DISABLED":
+            case "android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED":
+            case "android.app.action.DEVICE_ADMIN_ENABLED":
+            case "android.app.action.DEVICE_OWNER_CHANGED":
+            case "android.app.action.DEVICE_POLICY_MANAGER_STATE_CHANGED":
+            case "android.app.action.ENTER_CAR_MODE":
+            case "android.app.action.ENTER_DESK_MODE":
+            case "android.app.action.EXIT_CAR_MODE":
+            case "android.app.action.EXIT_DESK_MODE":
+            case "android.app.action.INTERRUPTION_FILTER_CHANGED":
+            case "android.app.action.INTERRUPTION_FILTER_CHANGED_INTERNAL":
+            case "android.app.action.LOCK_TASK_ENTERING":
+            case "android.app.action.LOCK_TASK_EXITING":
+            case "android.app.action.NEXT_ALARM_CLOCK_CHANGED":
+            case "android.app.action.NOTIFICATION_POLICY_ACCESS_GRANTED_CHANGED":
+            case "android.app.action.NOTIFICATION_POLICY_CHANGED":
+            case "android.app.action.NOTIFY_PENDING_SYSTEM_UPDATE":
+            case "android.app.action.SECURITY_LOGS_AVAILABLE":
+            case "android.app.action.SYSTEM_UPDATE_POLICY_CHANGED":
+            case "android.app.backup.intent.CLEAR":
+            case "android.app.backup.intent.INIT":
+            case "android.app.backup.intent.RUN":
+            case "android.appwidget.action.APPWIDGET_DELETED":
+            case "android.appwidget.action.APPWIDGET_DISABLED":
+            case "android.appwidget.action.APPWIDGET_ENABLED":
+            case "android.appwidget.action.APPWIDGET_HOST_RESTORED":
+            case "android.appwidget.action.APPWIDGET_RESTORED":
+            case "android.appwidget.action.APPWIDGET_UPDATE_OPTIONS":
+            case "android.bluetooth.a2dp-sink.profile.action.AUDIO_CONFIG_CHANGED":
+            case "android.bluetooth.a2dp-sink.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.a2dp-sink.profile.action.PLAYING_STATE_CHANGED":
+            case "android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.a2dp.profile.action.PLAYING_STATE_CHANGED":
+            case "android.bluetooth.adapter.action.BLE_ACL_CONNECTED":
+            case "android.bluetooth.adapter.action.BLE_ACL_DISCONNECTED":
+            case "android.bluetooth.adapter.action.BLE_STATE_CHANGED":
+            case "android.bluetooth.adapter.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.adapter.action.DISCOVERY_FINISHED":
+            case "android.bluetooth.adapter.action.DISCOVERY_STARTED":
+            case "android.bluetooth.adapter.action.LOCAL_NAME_CHANGED":
+            case "android.bluetooth.adapter.action.SCAN_MODE_CHANGED":
+            case "android.bluetooth.adapter.action.STATE_CHANGED":
+            case "android.bluetooth.avrcp-controller.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.device.action.ACL_CONNECTED":
+            case "android.bluetooth.device.action.ACL_DISCONNECTED":
+            case "android.bluetooth.device.action.ACL_DISCONNECT_REQUESTED":
+            case "android.bluetooth.device.action.ALIAS_CHANGED":
+            case "android.bluetooth.device.action.BOND_STATE_CHANGED":
+            case "android.bluetooth.device.action.CLASS_CHANGED":
+            case "android.bluetooth.device.action.CONNECTION_ACCESS_CANCEL":
+            case "android.bluetooth.device.action.CONNECTION_ACCESS_REPLY":
+            case "android.bluetooth.device.action.CONNECTION_ACCESS_REQUEST":
+            case "android.bluetooth.device.action.DISAPPEARED":
+            case "android.bluetooth.device.action.FOUND":
+            case "android.bluetooth.device.action.MAS_INSTANCE":
+            case "android.bluetooth.device.action.NAME_CHANGED":
+            case "android.bluetooth.device.action.NAME_FAILED":
+            case "android.bluetooth.device.action.PAIRING_CANCEL":
+            case "android.bluetooth.device.action.PAIRING_REQUEST":
+            case "android.bluetooth.device.action.SDP_RECORD":
+            case "android.bluetooth.device.action.UUID":
+            case "android.bluetooth.devicepicker.action.DEVICE_SELECTED":
+            case "android.bluetooth.devicepicker.action.LAUNCH":
+            case "android.bluetooth.headset.action.VENDOR_SPECIFIC_HEADSET_EVENT":
+            case "android.bluetooth.headset.profile.action.AUDIO_STATE_CHANGED":
+            case "android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.headsetclient.profile.action.AG_CALL_CHANGED":
+            case "android.bluetooth.headsetclient.profile.action.AG_EVENT":
+            case "android.bluetooth.headsetclient.profile.action.AUDIO_STATE_CHANGED":
+            case "android.bluetooth.headsetclient.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.headsetclient.profile.action.LAST_VTAG":
+            case "android.bluetooth.headsetclient.profile.action.RESULT":
+            case "android.bluetooth.input.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.input.profile.action.HANDSHAKE":
+            case "android.bluetooth.input.profile.action.PROTOCOL_MODE_CHANGED":
+            case "android.bluetooth.input.profile.action.REPORT":
+            case "android.bluetooth.input.profile.action.VIRTUAL_UNPLUG_STATUS":
+            case "android.bluetooth.intent.DISCOVERABLE_TIMEOUT":
+            case "android.bluetooth.map.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.pbap.intent.action.PBAP_STATE_CHANGED":
+            case "android.btopp.intent.action.CONFIRM":
+            case "android.btopp.intent.action.HIDE":
+            case "android.btopp.intent.action.HIDE_COMPLETE":
+            case "android.btopp.intent.action.INCOMING_FILE_NOTIFICATION":
+            case "android.btopp.intent.action.LIST":
+            case "android.btopp.intent.action.OPEN":
+            case "android.btopp.intent.action.OPEN_INBOUND":
+            case "android.btopp.intent.action.OPEN_OUTBOUND":
+            case "android.btopp.intent.action.RETRY":
+            case "android.btopp.intent.action.STOP_HANDOVER_TRANSFER":
+            case "android.btopp.intent.action.TRANSFER_COMPLETE":
+            case "android.btopp.intent.action.USER_CONFIRMATION_TIMEOUT":
+            case "android.btopp.intent.action.WHITELIST_DEVICE":
+            case "android.content.jobscheduler.JOB_DEADLINE_EXPIRED":
+            case "android.content.jobscheduler.JOB_DELAY_EXPIRED":
+            case "android.content.syncmanager.SYNC_ALARM":
+            case "android.hardware.display.action.WIFI_DISPLAY_STATUS_CHANGED":
+            case "android.hardware.usb.action.USB_ACCESSORY_ATTACHED":
+            case "android.hardware.usb.action.USB_ACCESSORY_DETACHED":
+            case "android.hardware.usb.action.USB_DEVICE_ATTACHED":
+            case "android.hardware.usb.action.USB_DEVICE_DETACHED":
+            case "android.hardware.usb.action.USB_PORT_CHANGED":
+            case "android.hardware.usb.action.USB_STATE":
+            case "android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED":
+            case "android.intent.action.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED":
+            case "android.intent.action.ACTION_DEFAULT_SUBSCRIPTION_CHANGED":
+            case "android.intent.action.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED":
+            case "android.intent.action.ACTION_IDLE_MAINTENANCE_END":
+            case "android.intent.action.ACTION_IDLE_MAINTENANCE_START":
+            case "android.intent.action.ACTION_POWER_CONNECTED":
+            case "android.intent.action.ACTION_POWER_DISCONNECTED":
+            case "android.intent.action.ACTION_RADIO_OFF":
+            case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_DONE":
+            case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED":
+            case "android.intent.action.ACTION_SHUTDOWN":
+            case "android.intent.action.ACTION_SUBINFO_CONTENT_CHANGE":
+            case "android.intent.action.ACTION_SUBINFO_RECORD_UPDATED":
+            case "android.intent.action.ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW":
+            case "android.intent.action.ADVANCED_SETTINGS":
+            case "android.intent.action.AIRPLANE_MODE":
+            case "android.intent.action.ANR":
+            case "android.intent.action.ANY_DATA_STATE":
+            case "android.intent.action.APPLICATION_RESTRICTIONS_CHANGED":
+            case "android.intent.action.BATTERY_CHANGED":
+            case "android.intent.action.BATTERY_LOW":
+            case "android.intent.action.BATTERY_OKAY":
+            case "android.intent.action.BOOT_COMPLETED":
+            case "android.intent.action.CALL":
+            case "android.intent.action.CALL_PRIVILEGED":
+            case "android.intent.action.CHARGING":
+            case "android.intent.action.CLEAR_DNS_CACHE":
+            case "android.intent.action.CONFIGURATION_CHANGED":
+            case "android.intent.action.CONTENT_CHANGED":
+            case "android.intent.action.DATE_CHANGED":
+            case "android.intent.action.DEVICE_STORAGE_FULL":
+            case "android.intent.action.DEVICE_STORAGE_LOW":
+            case "android.intent.action.DEVICE_STORAGE_NOT_FULL":
+            case "android.intent.action.DEVICE_STORAGE_OK":
+            case "android.intent.action.DISCHARGING":
+            case "android.intent.action.DOCK_EVENT":
+            case "android.intent.action.DREAMING_STARTED":
+            case "android.intent.action.DREAMING_STOPPED":
+            case "android.intent.action.DROPBOX_ENTRY_ADDED":
+            case "android.intent.action.DYNAMIC_SENSOR_CHANGED":
+            case "android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE":
+            case "android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE":
+            case "android.intent.action.GLOBAL_BUTTON":
+            case "android.intent.action.HDMI_PLUGGED":
+            case "android.intent.action.HEADSET_PLUG":
+            case "android.intent.action.INPUT_METHOD_CHANGED":
+            case "android.intent.action.INTENT_FILTER_NEEDS_VERIFICATION":
+            case "android.intent.action.LOCALE_CHANGED":
+            case "android.intent.action.LOCKED_BOOT_COMPLETED":
+            case "android.intent.action.MANAGED_PROFILE_ADDED":
+            case "android.intent.action.MANAGED_PROFILE_AVAILABLE":
+            case "android.intent.action.MANAGED_PROFILE_REMOVED":
+            case "android.intent.action.MANAGED_PROFILE_UNAVAILABLE":
+            case "android.intent.action.MANAGED_PROFILE_UNLOCKED":
+            case "android.intent.action.MASTER_CLEAR_NOTIFICATION":
+            case "android.intent.action.MEDIA_BAD_REMOVAL":
+            case "android.intent.action.MEDIA_CHECKING":
+            case "android.intent.action.MEDIA_EJECT":
+            case "android.intent.action.MEDIA_MOUNTED":
+            case "android.intent.action.MEDIA_NOFS":
+            case "android.intent.action.MEDIA_REMOVED":
+            case "android.intent.action.MEDIA_RESOURCE_GRANTED":
+            case "android.intent.action.MEDIA_SHARED":
+            case "android.intent.action.MEDIA_UNMOUNTABLE":
+            case "android.intent.action.MEDIA_UNMOUNTED":
+            case "android.intent.action.MEDIA_UNSHARED":
+            case "android.intent.action.MY_PACKAGE_REPLACED":
+            case "android.intent.action.NEW_OUTGOING_CALL":
+            case "android.intent.action.PACKAGES_SUSPENDED":
+            case "android.intent.action.PACKAGES_UNSUSPENDED":
+            case "android.intent.action.PACKAGE_ADDED":
+            case "android.intent.action.PACKAGE_CHANGED":
+            case "android.intent.action.PACKAGE_DATA_CLEARED":
+            case "android.intent.action.PACKAGE_FIRST_LAUNCH":
+            case "android.intent.action.PACKAGE_FULLY_REMOVED":
+            case "android.intent.action.PACKAGE_INSTALL":
+            case "android.intent.action.PACKAGE_NEEDS_VERIFICATION":
+            case "android.intent.action.PACKAGE_REMOVED":
+            case "android.intent.action.PACKAGE_REPLACED":
+            case "android.intent.action.PACKAGE_RESTARTED":
+            case "android.intent.action.PACKAGE_VERIFIED":
+            case "android.intent.action.PERMISSION_RESPONSE_RECEIVED":
+            case "android.intent.action.PHONE_STATE":
+            case "android.intent.action.PRECISE_CALL_STATE":
+            case "android.intent.action.PRECISE_DATA_CONNECTION_STATE_CHANGED":
+            case "android.intent.action.PRE_BOOT_COMPLETED":
+            case "android.intent.action.PROXY_CHANGE":
+            case "android.intent.action.QUERY_PACKAGE_RESTART":
+            case "android.intent.action.REBOOT":
+            case "android.intent.action.REQUEST_PERMISSION":
+            case "android.intent.action.SCREEN_OFF":
+            case "android.intent.action.SCREEN_ON":
+            case "android.intent.action.SUBSCRIPTION_PHONE_STATE":
+            case "android.intent.action.SUB_DEFAULT_CHANGED":
+            case "android.intent.action.THERMAL_EVENT":
+            case "android.intent.action.TIMEZONE_CHANGED":
+            case "android.intent.action.TIME_SET":
+            case "android.intent.action.TIME_TICK":
+            case "android.intent.action.TWILIGHT_CHANGED":
+            case "android.intent.action.UID_REMOVED":
+            case "android.intent.action.USER_ADDED":
+            case "android.intent.action.USER_BACKGROUND":
+            case "android.intent.action.USER_FOREGROUND":
+            case "android.intent.action.USER_INFO_CHANGED":
+            case "android.intent.action.USER_INITIALIZE":
+            case "android.intent.action.USER_PRESENT":
+            case "android.intent.action.USER_REMOVED":
+            case "android.intent.action.USER_STARTED":
+            case "android.intent.action.USER_STARTING":
+            case "android.intent.action.USER_STOPPED":
+            case "android.intent.action.USER_STOPPING":
+            case "android.intent.action.USER_SWITCHED":
+            case "android.intent.action.USER_UNLOCKED":
+            case "android.intent.action.WALLPAPER_CHANGED":
+            case "android.intent.action.internal_sim_state_changed":
+            case "android.internal.policy.action.BURN_IN_PROTECTION":
+            case "android.location.GPS_ENABLED_CHANGE":
+            case "android.location.GPS_FIX_CHANGE":
+            case "android.location.MODE_CHANGED":
+            case "android.location.PROVIDERS_CHANGED":
+            case "android.media.ACTION_SCO_AUDIO_STATE_UPDATED":
+            case "android.media.AUDIO_BECOMING_NOISY":
+            case "android.media.INTERNAL_RINGER_MODE_CHANGED_ACTION":
+            case "android.media.MASTER_MONO_CHANGED_ACTION":
+            case "android.media.MASTER_MUTE_CHANGED_ACTION":
+            case "android.media.MASTER_VOLUME_CHANGED_ACTION":
+            case "android.media.RINGER_MODE_CHANGED":
+            case "android.media.SCO_AUDIO_STATE_CHANGED":
+            case "android.media.STREAM_DEVICES_CHANGED_ACTION":
+            case "android.media.STREAM_MUTE_CHANGED_ACTION":
+            case "android.media.VIBRATE_SETTING_CHANGED":
+            case "android.media.VOLUME_CHANGED_ACTION":
+            case "android.media.action.HDMI_AUDIO_PLUG":
+            case "android.net.ConnectivityService.action.PKT_CNT_SAMPLE_INTERVAL_ELAPSED":
+            case "android.net.conn.BACKGROUND_DATA_SETTING_CHANGED":
+            case "android.net.conn.CAPTIVE_PORTAL":
+            case "android.net.conn.CAPTIVE_PORTAL_TEST_COMPLETED":
+            case "android.net.conn.CONNECTIVITY_CHANGE":
+            case "android.net.conn.CONNECTIVITY_CHANGE_IMMEDIATE":
+            case "android.net.conn.CONNECTIVITY_CHANGE_SUPL":
+            case "android.net.conn.DATA_ACTIVITY_CHANGE":
+            case "android.net.conn.INET_CONDITION_ACTION":
+            case "android.net.conn.NETWORK_CONDITIONS_MEASURED":
+            case "android.net.conn.RESTRICT_BACKGROUND_CHANGED":
+            case "android.net.conn.TETHER_STATE_CHANGED":
+            case "android.net.nsd.STATE_CHANGED":
+            case "android.net.proxy.PAC_REFRESH":
+            case "android.net.scoring.SCORER_CHANGED":
+            case "android.net.scoring.SCORE_NETWORKS":
+            case "android.net.sip.SIP_SERVICE_UP":
+            case "android.net.wifi.CONFIGURED_NETWORKS_CHANGE":
+            case "android.net.wifi.LINK_CONFIGURATION_CHANGED":
+            case "android.net.wifi.PASSPOINT_ICON_RECEIVED":
+            case "android.net.wifi.RSSI_CHANGED":
+            case "android.net.wifi.SCAN_RESULTS":
+            case "android.net.wifi.STATE_CHANGE":
+            case "android.net.wifi.WIFI_AP_STATE_CHANGED":
+            case "android.net.wifi.WIFI_CREDENTIAL_CHANGED":
+            case "android.net.wifi.WIFI_SCAN_AVAILABLE":
+            case "android.net.wifi.WIFI_STATE_CHANGED":
+            case "android.net.wifi.p2p.CONNECTION_STATE_CHANGE":
+            case "android.net.wifi.p2p.DISCOVERY_STATE_CHANGE":
+            case "android.net.wifi.p2p.PEERS_CHANGED":
+            case "android.net.wifi.p2p.PERSISTENT_GROUPS_CHANGED":
+            case "android.net.wifi.p2p.STATE_CHANGED":
+            case "android.net.wifi.p2p.THIS_DEVICE_CHANGED":
+            case "android.net.wifi.supplicant.CONNECTION_CHANGE":
+            case "android.net.wifi.supplicant.STATE_CHANGE":
+            case "android.nfc.action.ADAPTER_STATE_CHANGED":
+            case "android.nfc.action.TRANSACTION_DETECTED":
+            case "android.nfc.handover.intent.action.HANDOVER_SEND":
+            case "android.nfc.handover.intent.action.HANDOVER_SEND_MULTIPLE":
+            case "android.nfc.handover.intent.action.HANDOVER_STARTED":
+            case "android.nfc.handover.intent.action.TRANSFER_DONE":
+            case "android.nfc.handover.intent.action.TRANSFER_PROGRESS":
+            case "android.os.UpdateLock.UPDATE_LOCK_CHANGED":
+            case "android.os.action.ACTION_EFFECTS_SUPPRESSOR_CHANGED":
+            case "android.os.action.CHARGING":
+            case "android.os.action.DEVICE_IDLE_MODE_CHANGED":
+            case "android.os.action.DISCHARGING":
+            case "android.os.action.LIGHT_DEVICE_IDLE_MODE_CHANGED":
+            case "android.os.action.POWER_SAVE_MODE_CHANGED":
+            case "android.os.action.POWER_SAVE_MODE_CHANGED_INTERNAL":
+            case "android.os.action.POWER_SAVE_MODE_CHANGING":
+            case "android.os.action.POWER_SAVE_TEMP_WHITELIST_CHANGED":
+            case "android.os.action.POWER_SAVE_WHITELIST_CHANGED":
+            case "android.os.action.SCREEN_BRIGHTNESS_BOOST_CHANGED":
+            case "android.os.action.SETTING_RESTORED":
+            case "android.os.storage.action.DISK_SCANNED":
+            case "android.os.storage.action.VOLUME_STATE_CHANGED":
+            case "android.permission.CLEAR_APP_GRANTED_URI_PERMISSIONS":
+            case "android.permission.GET_APP_GRANTED_URI_PERMISSIONS":
+            case "android.provider.Telephony.MMS_DOWNLOADED":
+            case "android.provider.action.DEFAULT_SMS_PACKAGE_CHANGED":
+            case "android.search.action.SEARCHABLES_CHANGED":
+            case "android.security.STORAGE_CHANGED":
+            case "android.telecom.action.DEFAULT_DIALER_CHANGED":
+            case "android.telecom.action.PHONE_ACCOUNT_REGISTERED":
+            case "android.telecom.action.PHONE_ACCOUNT_UNREGISTERED":
+            case "android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION":
+            case "android.telephony.action.CARRIER_CONFIG_CHANGED":
+            case "com.android.bluetooth.btservice.action.ALARM_WAKEUP":
+            case "com.android.bluetooth.map.USER_CONFIRM_TIMEOUT":
+            case "com.android.bluetooth.pbap.authcancelled":
+            case "com.android.bluetooth.pbap.authchall":
+            case "com.android.bluetooth.pbap.authresponse":
+            case "com.android.bluetooth.pbap.userconfirmtimeout":
+            case "com.android.ims.IMS_INCOMING_CALL":
+            case "com.android.ims.IMS_SERVICE_UP":
+            case "com.android.ims.internal.uce.UCE_SERVICE_UP":
+            case "com.android.intent.action.IMS_CONFIG_CHANGED":
+            case "com.android.intent.action.IMS_FEATURE_CHANGED":
+            case "com.android.internal.location.ALARM_TIMEOUT":
+            case "com.android.internal.location.ALARM_WAKEUP":
+            case "com.android.nfc.action.LLCP_DOWN":
+            case "com.android.nfc.action.LLCP_UP":
+            case "com.android.nfc.cardemulation.action.CLOSE_TAP_DIALOG":
+            case "com.android.nfc.handover.action.ALLOW_CONNECT":
+            case "com.android.nfc.handover.action.DENY_CONNECT":
+            case "com.android.nfc_extras.action.AID_SELECTED":
+            case "com.android.nfc_extras.action.RF_FIELD_OFF_DETECTED":
+            case "com.android.nfc_extras.action.RF_FIELD_ON_DETECTED":
+            case "com.android.phone.SIP_ADD_PHONE":
+            case "com.android.phone.SIP_CALL_OPTION_CHANGED":
+            case "com.android.phone.SIP_INCOMING_CALL":
+            case "com.android.phone.SIP_REMOVE_PHONE":
+            case "com.android.server.ACTION_EXPIRED_PASSWORD_NOTIFICATION":
+            case "com.android.server.ACTION_TRIGGER_IDLE":
+            case "com.android.server.NetworkTimeUpdateService.action.POLL":
+            case "com.android.server.Wifi.action.TOGGLE_PNO":
+            case "com.android.server.WifiManager.action.DELAYED_DRIVER_STOP":
+            case "com.android.server.WifiManager.action.DEVICE_IDLE":
+            case "com.android.server.WifiManager.action.START_PNO":
+            case "com.android.server.WifiManager.action.START_SCAN":
+            case "com.android.server.action.NETWORK_STATS_POLL":
+            case "com.android.server.action.NETWORK_STATS_UPDATED":
+            case "com.android.server.action.REMOTE_BUGREPORT_SHARING_ACCEPTED":
+            case "com.android.server.action.REMOTE_BUGREPORT_SHARING_DECLINED":
+            case "com.android.server.action.RESET_TWILIGHT_AUTO":
+            case "com.android.server.action.UPDATE_TWILIGHT_STATE":
+            case "com.android.server.am.DELETE_DUMPHEAP":
+            case "com.android.server.connectivityservice.CONNECTED_TO_PROVISIONING_NETWORK_ACTION":
+            case "com.android.server.device_idle.STEP_IDLE_STATE":
+            case "com.android.server.device_idle.STEP_LIGHT_IDLE_STATE":
+            case "com.android.server.fingerprint.ACTION_LOCKOUT_RESET":
+            case "com.android.server.net.action.SNOOZE_WARNING":
+            case "com.android.server.notification.CountdownConditionProvider":
+            case "com.android.server.pm.DISABLE_QUIET_MODE_AFTER_UNLOCK":
+            case "com.android.server.telecom.intent.action.CALLS_ADD_ENTRY":
+            case "com.android.server.usb.ACTION_OPEN_IN_APPS":
+            case "com.android.settings.location.MODE_CHANGING":
+            case "com.android.sync.SYNC_CONN_STATUS_CHANGED":
+            case "intent.action.ACTION_RF_BAND_INFO":
+            case "wifi_scan_available":
+                return true;
+            default:
+                return false;
+        }
+    }
 
     private final Set<String> mReceiversWithProtectedBroadcastIntentFilter = new HashSet<>();
 
@@ -561,7 +562,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                                         "caller has the BROADCAST_SMS permission, otherwise it " +
                                         "is possible for malicious actors to spoof intents.");
                             }
-                            else if (PROTECTED_BROADCAST_SET.contains(actionName)) {
+                            else if (isProtectedBroadcast(actionName)) {
                                 mReceiversWithProtectedBroadcastIntentFilter.add(name);
                             }
                         }

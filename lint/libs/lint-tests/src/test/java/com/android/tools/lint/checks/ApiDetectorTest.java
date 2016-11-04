@@ -3285,6 +3285,212 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testAnonymousInherited() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=172621
+        //noinspection all // Sample code
+        checkApiCheck(
+                "No warnings.",
+                null,
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.util.AttributeSet;\n"
+                        + "import android.view.ViewTreeObserver;\n"
+                        + "import android.widget.ListView;\n"
+                        + "\n"
+                        + "public class Test extends ListView {\n"
+                        + "\n"
+                        + "    public Test(Context context, AttributeSet attrs) {\n"
+                        + "        super(context, attrs);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private void doSomething() {\n"
+                        + "        getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {\n"
+                        + "            @Override\n"
+                        + "            public boolean onPreDraw() {\n"
+                        + "                setSelectionFromTop(0, 0);\n"
+                        + "                return true;\n"
+                        + "            }\n"
+                        + "         });\n"
+                        + "    }\n"
+                        + "}")
+        );
+    }
+
+    public void testUpdatedDescriptions() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=78495
+        // Without this fix, the required API level for getString would be 21 instead of 12
+        //noinspection all // Sample code
+        checkApiCheck(
+                ""
+                        + "src/test/pkg/Test.java:5: Error: Class requires API level 11 (current min is 1): android.app.Fragment [NewApi]\n"
+                        + "public class Test extends Fragment {\n"
+                        + "                          ~~~~~~~~\n"
+                        + "src/test/pkg/Test.java:11: Error: Call requires API level 12 (current min is 1): android.os.Bundle#getString [NewApi]\n"
+                        + "            mCurrentPhotoPath = savedInstanceState.getString(\"mCurrentPhotoPath\", \"\");\n"
+                        + "                                                   ~~~~~~~~~\n"
+                        + "2 errors, 0 warnings\n",
+                "No warnings.",
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.app.Fragment;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class Test extends Fragment {\n"
+                        + "    private String mCurrentPhotoPath = \"\";\n"
+                        + "    @Override\n"
+                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        if (savedInstanceState != null) {\n"
+                        + "            mCurrentPhotoPath = savedInstanceState.getString(\"mCurrentPhotoPath\", \"\");\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}")
+        );
+    }
+
+    public void testListView() throws Exception {
+        // Regression test for 56236: AbsListView#getChoiceMode incorrectly requires API 11
+        //noinspection all // Sample code
+        checkApiCheck(
+                ""
+                        + "src/p1/p2/Test.java:22: Error: Call requires API level 11 (current min is 1): android.widget.AbsListView#getChoiceMode [NewApi]\n"
+                        + "      if (this.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "               ~~~~~~~~~~~~~\n"
+                        + "src/p1/p2/Test.java:24: Error: Call requires API level 11 (current min is 1): android.widget.AbsListView#getChoiceMode [NewApi]\n"
+                        + "      if (getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "          ~~~~~~~~~~~~~\n"
+                        + "src/p1/p2/Test.java:26: Error: Call requires API level 11 (current min is 1): android.widget.AbsListView#getChoiceMode [NewApi]\n"
+                        + "      if (super.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "                ~~~~~~~~~~~~~\n"
+                        + "src/p1/p2/Test.java:29: Error: Call requires API level 11 (current min is 1): android.widget.AbsListView#getChoiceMode [NewApi]\n"
+                        + "      if (view.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "               ~~~~~~~~~~~~~\n"
+                        + "4 errors, 0 warnings\n",
+                "No warnings.",
+                manifest().minSdk(1),
+                java(""
+                        + "package p1.p2;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "import android.util.AttributeSet;\n"
+                        + "import android.widget.AbsListView;\n"
+                        + "import android.widget.ListAdapter;\n"
+                        + "import android.widget.ListView;\n"
+                        + "\n"
+                        + "public class Test {\n"
+                        + "  private class MyAbsListView extends AbsListView {\n"
+                        + "    private MyAbsListView(Context context, AttributeSet attrs, int defStyle) {\n"
+                        + "      super(context, attrs, defStyle);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    public ListAdapter getAdapter() {\n"
+                        + "      return null;\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    public void setSelection(int i) {\n"
+                        + "      if (this.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      if (getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      if (super.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      AbsListView view = (AbsListView) getEmptyView();\n"
+                        + "      if (view.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  private class MyListView extends ListView {\n"
+                        + "    private MyListView(Context context, AttributeSet attrs, int defStyle) {\n"
+                        + "      super(context, attrs, defStyle);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    public ListAdapter getAdapter() {\n"
+                        + "      return null;\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    public void setSelection(int i) {\n"
+                        + "      if (this.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      if (getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      if (super.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "      ListView view = (ListView) getEmptyView();\n"
+                        + "      if (view.getChoiceMode() != ListView.CHOICE_MODE_NONE) {\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n")
+        );
+    }
+
+    public void testThisCall() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=93158
+        // Make sure we properly resolve super classes in Class.this.call()
+        //noinspection all // Sample code
+        checkApiCheck(
+                ""
+                        + "src/p1/p2/Class.java:8: Error: Call requires API level 3 (current min is 1): android.app.Activity#hasWindowFocus [NewApi]\n"
+                        + "    if (activity.hasWindowFocus()) {\n"
+                        + "                 ~~~~~~~~~~~~~~\n"
+                        + "src/p1/p2/Class.java:15: Error: Call requires API level 3 (current min is 1): android.app.Activity#hasWindowFocus [NewApi]\n"
+                        + "        if (hasWindowFocus()) {\n"
+                        + "            ~~~~~~~~~~~~~~\n"
+                        + "src/p1/p2/Class.java:19: Error: Call requires API level 3 (current min is 1): android.app.Activity#hasWindowFocus [NewApi]\n"
+                        + "        if (Class.super.hasWindowFocus()) {\n"
+                        + "                        ~~~~~~~~~~~~~~\n"
+                        + "3 errors, 0 warnings\n",
+                "No warnings.",
+                manifest().minSdk(1),
+                java(""
+                        + "package p1.p2;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.app.Service;\n"
+                        + "\n"
+                        + "public class Class extends Activity {\n"
+                        + "  public void test(final Activity activity, WebView webView) {\n"
+                        + "    if (activity.hasWindowFocus()) {\n"
+                        + "      return;\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    webView.setWebChromeClient(new WebChromeClient() {\n"
+                        + "      @Override\n"
+                        + "      public void onProgressChanged(WebView view, int newProgress) {\n"
+                        + "        if (hasWindowFocus()) {\n"
+                        + "          return;\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        if (Class.super.hasWindowFocus()) {\n"
+                        + "          return;\n"
+                        + "        }\n"
+                        + "        foo();\n"
+                        + "      }\n"
+                        + "    });\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  public void foo() {\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  private static abstract class WebView extends Service {\n"
+                        + "    public abstract void setWebChromeClient(WebChromeClient client);\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  private static abstract class WebChromeClient {\n"
+                        + "    public abstract void onProgressChanged(WebView view, int newProgress);\n"
+                        + "  }\n"
+                        + "}")
+        );
+    }
+
     public void testReflectiveOperationException() throws Exception {
         //noinspection all // Sample code
         checkApiCheck(""

@@ -24,7 +24,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import org.w3c.dom.Element;
@@ -105,12 +104,6 @@ public class TooManyViewsDetector extends LayoutDetector {
 
     /** Constructs a new {@link TooManyViewsDetector} */
     public TooManyViewsDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

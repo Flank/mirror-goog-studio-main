@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
@@ -75,12 +74,6 @@ public class LabelForDetector extends LayoutDetector {
 
     /** Constructs a new {@link LabelForDetector} */
     public LabelForDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

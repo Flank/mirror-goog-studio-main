@@ -65,11 +65,6 @@ import static com.android.SdkConstants.WIDGET_PKG_PREFIX;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Default simple implementation of an {@link SdkInfo}
@@ -83,8 +78,7 @@ class DefaultSdkInfo extends SdkInfo {
     @Nullable
     public String getParentViewName(@NonNull String name) {
         name = getRawType(name);
-
-        return PARENTS.get(name);
+        return getParent(name);
     }
 
     @Override
@@ -95,7 +89,7 @@ class DefaultSdkInfo extends SdkInfo {
             fqcn = fqcn.substring(index + 1);
         }
 
-        String parent = PARENTS.get(fqcn);
+        String parent = getParent(fqcn);
         if (parent == null) {
             return null;
         }
@@ -131,7 +125,7 @@ class DefaultSdkInfo extends SdkInfo {
             if (implementsInterface(child, parent)) {
                 return true;
             }
-            child = PARENTS.get(child);
+            child = getParent(child);
             if (child == null) {
                 // Unknown view - err on the side of caution
                 return true;
@@ -142,7 +136,7 @@ class DefaultSdkInfo extends SdkInfo {
     }
 
     private static boolean implementsInterface(String className, String interfaceName) {
-        return interfaceName.equals(INTERFACES.get(className));
+        return interfaceName.equals(getInterface(className));
     }
 
     // Strip off type parameters, e.g. AdapterView<?> ⇒ AdapterView
@@ -166,122 +160,167 @@ class DefaultSdkInfo extends SdkInfo {
             return true;
         }
 
-        return LAYOUTS.contains(tag);
-    }
-
-    private static final int CLASS_COUNT = 59;
-    private static final int LAYOUT_COUNT = 20;
-
-    private static final Map<String,String> PARENTS = Maps.newHashMapWithExpectedSize(CLASS_COUNT);
-    private static final Set<String> LAYOUTS =  Sets.newHashSetWithExpectedSize(CLASS_COUNT);
-
-    static {
-        PARENTS.put(COMPOUND_BUTTON, BUTTON);
-        PARENTS.put(ABS_SPINNER, ADAPTER_VIEW);
-        PARENTS.put(ABS_LIST_VIEW, ADAPTER_VIEW);
-        PARENTS.put(ABS_SEEK_BAR, ADAPTER_VIEW);
-        PARENTS.put(ADAPTER_VIEW, VIEW_GROUP);
-        PARENTS.put(VIEW_GROUP, VIEW);
-
-        PARENTS.put(TEXT_VIEW, VIEW);
-        PARENTS.put(CHECKED_TEXT_VIEW, TEXT_VIEW);
-        PARENTS.put(RADIO_BUTTON, COMPOUND_BUTTON);
-        PARENTS.put(SPINNER, ABS_SPINNER);
-        PARENTS.put(IMAGE_BUTTON, IMAGE_VIEW);
-        PARENTS.put(IMAGE_VIEW, VIEW);
-        PARENTS.put(EDIT_TEXT, TEXT_VIEW);
-        PARENTS.put(PROGRESS_BAR, VIEW);
-        PARENTS.put(TOGGLE_BUTTON, COMPOUND_BUTTON);
-        PARENTS.put(VIEW_STUB, VIEW);
-        PARENTS.put(BUTTON, TEXT_VIEW);
-        PARENTS.put(SEEK_BAR, ABS_SEEK_BAR);
-        PARENTS.put(CHECK_BOX, COMPOUND_BUTTON);
-        PARENTS.put(SWITCH, COMPOUND_BUTTON);
-        PARENTS.put(GALLERY, ABS_SPINNER);
-        PARENTS.put(SURFACE_VIEW, VIEW);
-        PARENTS.put(ABSOLUTE_LAYOUT, VIEW_GROUP);
-        PARENTS.put(LINEAR_LAYOUT, VIEW_GROUP);
-        PARENTS.put(RELATIVE_LAYOUT, VIEW_GROUP);
-        PARENTS.put(LIST_VIEW, ABS_LIST_VIEW);
-        PARENTS.put(VIEW_SWITCHER, VIEW_ANIMATOR);
-        PARENTS.put(FRAME_LAYOUT, VIEW_GROUP);
-        PARENTS.put(HORIZONTAL_SCROLL_VIEW, FRAME_LAYOUT);
-        PARENTS.put(VIEW_ANIMATOR, FRAME_LAYOUT);
-        PARENTS.put(TAB_HOST, FRAME_LAYOUT);
-        PARENTS.put(TABLE_ROW, LINEAR_LAYOUT);
-        PARENTS.put(RADIO_GROUP, LINEAR_LAYOUT);
-        PARENTS.put(TAB_WIDGET, LINEAR_LAYOUT);
-        PARENTS.put(EXPANDABLE_LIST_VIEW, LIST_VIEW);
-        PARENTS.put(TABLE_LAYOUT, LINEAR_LAYOUT);
-        PARENTS.put(SCROLL_VIEW, FRAME_LAYOUT);
-        PARENTS.put(GRID_VIEW, ABS_LIST_VIEW);
-        PARENTS.put(WEB_VIEW, ABSOLUTE_LAYOUT);
-        PARENTS.put(AUTO_COMPLETE_TEXT_VIEW, EDIT_TEXT);
-        PARENTS.put(MULTI_AUTO_COMPLETE_TEXT_VIEW, AUTO_COMPLETE_TEXT_VIEW);
-        PARENTS.put(CHECKED_TEXT_VIEW, TEXT_VIEW);
-
-        PARENTS.put("MediaController", FRAME_LAYOUT);
-        PARENTS.put("SlidingDrawer", VIEW_GROUP);
-        PARENTS.put("DialerFilter", RELATIVE_LAYOUT);
-        PARENTS.put("DigitalClock", TEXT_VIEW);
-        PARENTS.put("Chronometer", TEXT_VIEW);
-        PARENTS.put("ImageSwitcher", VIEW_SWITCHER);
-        PARENTS.put("TextSwitcher", VIEW_SWITCHER);
-        PARENTS.put("AnalogClock", VIEW);
-        PARENTS.put("TwoLineListItem", RELATIVE_LAYOUT);
-        PARENTS.put("ZoomControls", LINEAR_LAYOUT);
-        PARENTS.put("DatePicker", FRAME_LAYOUT);
-        PARENTS.put("TimePicker", FRAME_LAYOUT);
-        PARENTS.put("VideoView", SURFACE_VIEW);
-        PARENTS.put("ZoomButton", IMAGE_BUTTON);
-        PARENTS.put("RatingBar", ABS_SEEK_BAR);
-        PARENTS.put("ViewFlipper", VIEW_ANIMATOR);
-        PARENTS.put("NumberPicker", LINEAR_LAYOUT);
-
-        assert PARENTS.size() <= CLASS_COUNT : PARENTS.size();
-
-        /*
-        // Check that all widgets lead to the root view
-        if (LintUtils.assertionsEnabled()) {
-            for (String key : PARENTS.keySet()) {
-                String parent = PARENTS.get(key);
-                if (!parent.equals(VIEW)) {
-                    String grandParent = PARENTS.get(parent);
-                    assert grandParent != null : parent;
-                }
-            }
+        switch (tag) {
+            case TAB_HOST:
+            case HORIZONTAL_SCROLL_VIEW:
+            case VIEW_SWITCHER:
+            case TAB_WIDGET:
+            case VIEW_ANIMATOR:
+            case SCROLL_VIEW:
+            case GRID_VIEW:
+            case TABLE_ROW:
+            case RADIO_GROUP:
+            case LIST_VIEW:
+            case EXPANDABLE_LIST_VIEW:
+            case "MediaController":
+            case "DialerFilter":
+            case "ViewFlipper":
+            case "SlidingDrawer":
+            case "StackView":
+            case "SearchView":
+            case "TextSwitcher":
+            case "AdapterViewFlipper":
+            case "ImageSwitcher":
+                return true;
         }
-        */
 
-        LAYOUTS.add(TAB_HOST);
-        LAYOUTS.add(HORIZONTAL_SCROLL_VIEW);
-        LAYOUTS.add(VIEW_SWITCHER);
-        LAYOUTS.add(TAB_WIDGET);
-        LAYOUTS.add(VIEW_ANIMATOR);
-        LAYOUTS.add(SCROLL_VIEW);
-        LAYOUTS.add(GRID_VIEW);
-        LAYOUTS.add(TABLE_ROW);
-        LAYOUTS.add(RADIO_GROUP);
-        LAYOUTS.add(LIST_VIEW);
-        LAYOUTS.add(EXPANDABLE_LIST_VIEW);
-        LAYOUTS.add("MediaController");
-        LAYOUTS.add("DialerFilter");
-        LAYOUTS.add("ViewFlipper");
-        LAYOUTS.add("SlidingDrawer");
-        LAYOUTS.add("StackView");
-        LAYOUTS.add("SearchView");
-        LAYOUTS.add("TextSwitcher");
-        LAYOUTS.add("AdapterViewFlipper");
-        LAYOUTS.add("ImageSwitcher");
-        assert LAYOUTS.size() <= LAYOUT_COUNT : LAYOUTS.size();
+        return false;
     }
 
-    // Currently using a map; this should really be a list, but using a map until we actually
-    // start adding more than one item
-    @NonNull
-    private static final Map<String, String> INTERFACES = new HashMap<>(2);
-    static {
-        INTERFACES.put(CHECKED_TEXT_VIEW, CHECKABLE);
-        INTERFACES.put(COMPOUND_BUTTON, CHECKABLE);
+    @Nullable
+    private static String getParent(@NonNull String layout) {
+        switch (layout) {
+            case COMPOUND_BUTTON:
+                return BUTTON;
+            case ABS_SPINNER:
+                return ADAPTER_VIEW;
+            case ABS_LIST_VIEW:
+                return ADAPTER_VIEW;
+            case ABS_SEEK_BAR:
+                return ADAPTER_VIEW;
+            case ADAPTER_VIEW:
+                return VIEW_GROUP;
+            case VIEW_GROUP:
+                return VIEW;
+
+            case TEXT_VIEW:
+                return VIEW;
+            case CHECKED_TEXT_VIEW:
+                return TEXT_VIEW;
+            case RADIO_BUTTON:
+                return COMPOUND_BUTTON;
+            case SPINNER:
+                return ABS_SPINNER;
+            case IMAGE_BUTTON:
+                return IMAGE_VIEW;
+            case IMAGE_VIEW:
+                return VIEW;
+            case EDIT_TEXT:
+                return TEXT_VIEW;
+            case PROGRESS_BAR:
+                return VIEW;
+            case TOGGLE_BUTTON:
+                return COMPOUND_BUTTON;
+            case VIEW_STUB:
+                return VIEW;
+            case BUTTON:
+                return TEXT_VIEW;
+            case SEEK_BAR:
+                return ABS_SEEK_BAR;
+            case CHECK_BOX:
+                return COMPOUND_BUTTON;
+            case SWITCH:
+                return COMPOUND_BUTTON;
+            case GALLERY:
+                return ABS_SPINNER;
+            case SURFACE_VIEW:
+                return VIEW;
+            case ABSOLUTE_LAYOUT:
+                return VIEW_GROUP;
+            case LINEAR_LAYOUT:
+                return VIEW_GROUP;
+            case RELATIVE_LAYOUT:
+                return VIEW_GROUP;
+            case LIST_VIEW:
+                return ABS_LIST_VIEW;
+            case VIEW_SWITCHER:
+                return VIEW_ANIMATOR;
+            case FRAME_LAYOUT:
+                return VIEW_GROUP;
+            case HORIZONTAL_SCROLL_VIEW:
+                return FRAME_LAYOUT;
+            case VIEW_ANIMATOR:
+                return FRAME_LAYOUT;
+            case TAB_HOST:
+                return FRAME_LAYOUT;
+            case TABLE_ROW:
+                return LINEAR_LAYOUT;
+            case RADIO_GROUP:
+                return LINEAR_LAYOUT;
+            case TAB_WIDGET:
+                return LINEAR_LAYOUT;
+            case EXPANDABLE_LIST_VIEW:
+                return LIST_VIEW;
+            case TABLE_LAYOUT:
+                return LINEAR_LAYOUT;
+            case SCROLL_VIEW:
+                return FRAME_LAYOUT;
+            case GRID_VIEW:
+                return ABS_LIST_VIEW;
+            case WEB_VIEW:
+                return ABSOLUTE_LAYOUT;
+            case AUTO_COMPLETE_TEXT_VIEW:
+                return EDIT_TEXT;
+            case MULTI_AUTO_COMPLETE_TEXT_VIEW:
+                return AUTO_COMPLETE_TEXT_VIEW;
+
+            case "MediaController":
+                return FRAME_LAYOUT;
+            case "SlidingDrawer":
+                return VIEW_GROUP;
+            case "DialerFilter":
+                return RELATIVE_LAYOUT;
+            case "DigitalClock":
+                return TEXT_VIEW;
+            case "Chronometer":
+                return TEXT_VIEW;
+            case "ImageSwitcher":
+                return VIEW_SWITCHER;
+            case "TextSwitcher":
+                return VIEW_SWITCHER;
+            case "AnalogClock":
+                return VIEW;
+            case "TwoLineListItem":
+                return RELATIVE_LAYOUT;
+            case "ZoomControls":
+                return LINEAR_LAYOUT;
+            case "DatePicker":
+                return FRAME_LAYOUT;
+            case "TimePicker":
+                return FRAME_LAYOUT;
+            case "VideoView":
+                return SURFACE_VIEW;
+            case "ZoomButton":
+                return IMAGE_BUTTON;
+            case "RatingBar":
+                return ABS_SEEK_BAR;
+            case "ViewFlipper":
+                return VIEW_ANIMATOR;
+            case "NumberPicker":
+                return LINEAR_LAYOUT;
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static String getInterface(@NonNull String cls) {
+        switch (cls) {
+            case CHECKED_TEXT_VIEW:
+            case COMPOUND_BUTTON:
+                return CHECKABLE;
+            default:
+                return null;
+        }
     }
 }

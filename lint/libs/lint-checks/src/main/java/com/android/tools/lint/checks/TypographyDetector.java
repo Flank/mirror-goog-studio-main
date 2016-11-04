@@ -32,7 +32,6 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -198,12 +197,6 @@ public class TypographyDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     @Override

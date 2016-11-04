@@ -38,13 +38,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.GradleException;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -54,6 +47,11 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.GradleException;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 
 /**
  * DSL object for configuring lint options.

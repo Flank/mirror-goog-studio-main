@@ -71,7 +71,7 @@ public class WrongImportDetector extends Detector implements JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiImportStatement.class);
+        return Collections.singletonList(PsiImportStatement.class);
     }
 
     @Override

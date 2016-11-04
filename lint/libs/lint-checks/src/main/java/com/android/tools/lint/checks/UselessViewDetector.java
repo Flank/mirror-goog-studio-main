@@ -49,7 +49,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,12 +91,6 @@ public class UselessViewDetector extends LayoutDetector {
 
     /** Constructs a new {@link UselessViewDetector} */
     public UselessViewDetector() {
-    }
-
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
     }
 
     private static final List<String> CONTAINERS = new ArrayList<>(18);

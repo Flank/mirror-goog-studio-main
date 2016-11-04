@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ICON;
 import static com.android.SdkConstants.DOT_9PNG;
@@ -72,7 +71,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiAnonymousClass;
@@ -603,7 +601,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 } else {
                     // Must just test the noSize elements against themselves
                     HashSet<File> noSizeSet = new HashSet<>(noSize);
-                    sets = Collections.<Set<File>>singletonList(noSizeSet);
+                    sets = Collections.singletonList(noSizeSet);
                 }
             }
 
@@ -1985,54 +1983,6 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         }
     }
 
-    @Nullable
-    private static String getWebpFormat(@NonNull File file) {
-        InputStream is = null;
-        try {
-            is = new BufferedInputStream(new FileInputStream(file));
-
-            // WEBP header:
-            //
-            //   0                   1                   2                   3
-            //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-            //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-            //  |      'R'      |      'I'      |      'F'      |      'F'      |
-            //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-            //  |                           File Size                           |
-            //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-            //  |      'W'      |      'E'      |      'B'      |      'P'      |
-            //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-            //noinspection DuplicateCondition
-            if (is.read() != 'R' || is.read() != 'I' || is.read() != 'F' || is.read() != 'F' ||
-                    is.read() == -1 || is.read() == -1 || is.read() == -1 || is.read() == -1 ||
-                    is.read() != 'W' || is.read() != 'E' || is.read() != 'B' || is.read() != 'P') {
-                return null;
-            }
-
-            //See https://developers.google.com/speed/webp/docs/riff_container
-
-            if (is.read() != 'V' || is.read() != 'P' || is.read() != '8') {
-                return null;
-            }
-
-            // Found WEBP header. API level 15 is required for the simple format; extended
-            // or lossless formats require API 18.
-            int format = is.read();
-            if (format == 'L') {
-                return "VP8L";
-            } else if (format == 'X') {
-                return "VP8X";
-            } else if (format == ' ') {
-                return "VP8";
-            }
-        } catch (IOException ignore) {
-        } finally {
-            Closeables.closeQuietly(is);
-        }
-        return null;
-    }
-
     private static class WebpHeader {
         public String format;
         int width;
@@ -2239,11 +2189,6 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     }
 
     // XML detector: Skim manifest and menu files
-
-    @Override
-    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
-        return file.getName().equals(ANDROID_MANIFEST_XML);
-    }
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {

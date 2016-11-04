@@ -72,6 +72,7 @@ import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -82,7 +83,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import java.io.File;
@@ -90,10 +90,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -125,7 +123,32 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * Set of layout parameter names that are considered valid no matter what so
      * no other checking is necessary - such as layout_width and layout_height.
      */
-    private static final Set<String> VALID = new HashSet<>(10);
+    private static boolean isValid(@NonNull String attribute) {
+        switch (attribute) {
+            // Available (mostly) everywhere: No check
+            case ATTR_LAYOUT_WIDTH:
+            case ATTR_LAYOUT_HEIGHT:
+
+                // The layout_gravity isn't "global" but it's defined on many of the most
+                // common layouts (FrameLayout, LinearLayout and GridLayout) so we don't
+                // currently check for it. In order to do this we'd need to make the map point
+                // to lists rather than individual layouts or we'd need a bunch of special cases
+                // like the one done for layout_column below.
+            case ATTR_LAYOUT_GRAVITY:
+
+                // From ViewGroup.MarginLayoutParams
+            case ATTR_LAYOUT_MARGIN_LEFT:
+            case ATTR_LAYOUT_MARGIN_START:
+            case ATTR_LAYOUT_MARGIN_RIGHT:
+            case ATTR_LAYOUT_MARGIN_END:
+            case ATTR_LAYOUT_MARGIN_TOP:
+            case ATTR_LAYOUT_MARGIN_BOTTOM:
+            case ATTR_LAYOUT_MARGIN:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     /**
      * Mapping from a layout parameter name (local name only) to the defining
@@ -136,77 +159,91 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * every single layout attribute pointing to a list, this is just special
      * cased instead.
      */
-    private static final Map<String, String> PARAM_TO_VIEW = new HashMap<>(28);
+    @Nullable
+    private static String getLayoutForAttribute(@NonNull String attribute) {
+        switch (attribute) {
 
-    static {
-        // Available (mostly) everywhere: No check
-        VALID.add(ATTR_LAYOUT_WIDTH);
-        VALID.add(ATTR_LAYOUT_HEIGHT);
+            // Absolute Layout
+            case ATTR_LAYOUT_X:
+                return ABSOLUTE_LAYOUT;
+            case ATTR_LAYOUT_Y:
+                return ABSOLUTE_LAYOUT;
 
-        // The layout_gravity isn't "global" but it's defined on many of the most
-        // common layouts (FrameLayout, LinearLayout and GridLayout) so we don't
-        // currently check for it. In order to do this we'd need to make the map point
-        // to lists rather than individual layouts or we'd need a bunch of special cases
-        // like the one done for layout_column below.
-        VALID.add(ATTR_LAYOUT_GRAVITY);
+            // Linear Layout
+            case ATTR_LAYOUT_WEIGHT:
+                return LINEAR_LAYOUT;
 
-        // From ViewGroup.MarginLayoutParams
-        VALID.add(ATTR_LAYOUT_MARGIN_LEFT);
-        VALID.add(ATTR_LAYOUT_MARGIN_START);
-        VALID.add(ATTR_LAYOUT_MARGIN_RIGHT);
-        VALID.add(ATTR_LAYOUT_MARGIN_END);
-        VALID.add(ATTR_LAYOUT_MARGIN_TOP);
-        VALID.add(ATTR_LAYOUT_MARGIN_BOTTOM);
-        VALID.add(ATTR_LAYOUT_MARGIN);
+            // Grid Layout
+            case ATTR_LAYOUT_COLUMN:
+                return GRID_LAYOUT;
+            case ATTR_LAYOUT_COLUMN_SPAN:
+                return GRID_LAYOUT;
+            case ATTR_LAYOUT_ROW:
+                return GRID_LAYOUT;
+            case ATTR_LAYOUT_ROW_SPAN:
+                return GRID_LAYOUT;
 
-        // Absolute Layout
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_X, ABSOLUTE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_Y, ABSOLUTE_LAYOUT);
+            // Table Layout
+            // ATTR_LAYOUT_COLUMN is defined for both GridLayout and TableLayout,
+            // so we don't want to do
+            //    case ATTR_LAYOUT_COLUMN: return TABLE_ROW;
+            // here since it would wipe out the above GridLayout registration.
+            // Since this is the only case where there is a conflict (in addition to layout_gravity
+            // which is defined in many places), rather than making the map point to lists
+            // this specific case is just special cased below, look for ATTR_LAYOUT_COLUMN.
 
-        // Linear Layout
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_WEIGHT, LINEAR_LAYOUT);
+            case ATTR_LAYOUT_SPAN:
+                return TABLE_ROW;
 
-        // Grid Layout
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_COLUMN, GRID_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_COLUMN_SPAN, GRID_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ROW, GRID_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ROW_SPAN, GRID_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ROW_SPAN, GRID_LAYOUT);
-
-        // Table Layout
-        // ATTR_LAYOUT_COLUMN is defined for both GridLayout and TableLayout,
-        // so we don't want to do
-        //    PARAM_TO_VIEW.put(ATTR_LAYOUT_COLUMN, TABLE_ROW);
-        // here since it would wipe out the above GridLayout registration.
-        // Since this is the only case where there is a conflict (in addition to layout_gravity
-        // which is defined in many places), rather than making the map point to lists
-        // this specific case is just special cased below, look for ATTR_LAYOUT_COLUMN.
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_SPAN, TABLE_ROW);
-
-        // Relative Layout
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_LEFT, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_START, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_RIGHT, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_END, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_TOP, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_BOTTOM, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_TOP, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_BOTTOM, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_LEFT, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_START, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_RIGHT, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_PARENT_END, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ALIGN_BASELINE, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_CENTER_IN_PARENT, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_CENTER_VERTICAL, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_CENTER_HORIZONTAL, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_TO_RIGHT_OF, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_TO_END_OF, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_TO_LEFT_OF, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_TO_START_OF, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_BELOW, RELATIVE_LAYOUT);
-        PARAM_TO_VIEW.put(ATTR_LAYOUT_ABOVE, RELATIVE_LAYOUT);
+            // Relative Layout
+            case ATTR_LAYOUT_ALIGN_LEFT:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_START:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_RIGHT:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_END:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_TOP:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_BOTTOM:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_TOP:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_BOTTOM:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_LEFT:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_START:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_RIGHT:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_PARENT_END:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ALIGN_BASELINE:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_CENTER_IN_PARENT:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_CENTER_VERTICAL:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_CENTER_HORIZONTAL:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_TO_RIGHT_OF:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_TO_END_OF:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_TO_LEFT_OF:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_TO_START_OF:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_BELOW:
+                return RELATIVE_LAYOUT;
+            case ATTR_LAYOUT_ABOVE:
+                return RELATIVE_LAYOUT;
+        }
+        return null;
     }
 
     /**
@@ -234,12 +271,6 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     public ObsoleteLayoutParamsDetector() {
     }
 
-    @NonNull
-    @Override
-    public Speed getSpeed() {
-        return Speed.FAST;
-    }
-
     @Override
     public Collection<String> getApplicableElements() {
         return Collections.singletonList(VIEW_INCLUDE);
@@ -255,11 +286,11 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
         String name = attribute.getLocalName();
         if (name != null && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 && ANDROID_URI.equals(attribute.getNamespaceURI())) {
-            if (VALID.contains(name)) {
+            if (isValid(name)) {
                 return;
             }
 
-            String parent = PARAM_TO_VIEW.get(name);
+            String parent = getLayoutForAttribute(name);
             if (parent != null) {
                 Element viewElement = attribute.getOwnerElement();
                 Node layoutNode = viewElement.getParentNode();
@@ -361,7 +392,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             }
 
             String name = pending.getFirst();
-            String parent = PARAM_TO_VIEW.get(name);
+            String parent = getLayoutForAttribute(name);
             if (parent == null) {
                 continue;
             }

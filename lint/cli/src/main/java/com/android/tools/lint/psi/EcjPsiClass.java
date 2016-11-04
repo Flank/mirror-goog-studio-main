@@ -86,21 +86,10 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     private List<EcjPsiField> mFields;
 
     private PsiReferenceList mExtendsList;
+
     private PsiReferenceList mImplementsList;
 
     EcjPsiClass(@NonNull EcjPsiManager manager, @NonNull TypeDeclaration declaration,
-            @Nullable String name) {
-        super(manager, declaration);
-        mEcjModifiers = declaration.modifiers;
-        mName = name;
-        if (declaration.binding != null && declaration.binding.compoundName != null) {
-            mQualifiedName = getTypeName(declaration.binding);
-        }
-
-        mManager.registerElement(declaration.binding, this);
-    }
-
-    EcjPsiClass(@NonNull EcjPsiManager manager, @NonNull TypeParameter declaration,
             @Nullable String name) {
         super(manager, declaration);
         mEcjModifiers = declaration.modifiers;
@@ -632,12 +621,14 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     }
 
     @Override
-    public boolean isInheritor(@NonNull PsiClass psiClass, boolean b) {
-        throw new UnimplementedLintPsiApiException();
+    public boolean isInheritor(@NonNull PsiClass baseClass, boolean checkDeep) {
+        String qualifiedName = baseClass.getQualifiedName();
+        return qualifiedName != null && new EcjPsiJavaEvaluator(mManager)
+                .inheritsFrom(this, qualifiedName, false);
     }
 
     @Override
-    public boolean isInheritorDeep(PsiClass psiClass, PsiClass psiClass1) {
+    public boolean isInheritorDeep(PsiClass baseClass, @Nullable PsiClass classToByPass) {
         throw new UnimplementedLintPsiApiException();
     }
 

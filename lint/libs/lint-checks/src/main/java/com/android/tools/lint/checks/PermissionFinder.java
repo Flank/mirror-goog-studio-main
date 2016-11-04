@@ -22,7 +22,6 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.JavaContext;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
@@ -92,14 +91,12 @@ public class PermissionFinder {
      * Searches for a permission requirement for the given parameter in the given call
      *
      * @param operation the operation to look up
-     * @param context   the context to use for lookup
      * @param parameter the parameter which contains the value which implies the permission
      * @return the result with the permission requirement, or null if nothing is found
      */
     @Nullable
     public static Result findRequiredPermissions(
             @NonNull Operation operation,
-            @NonNull JavaContext context,
             @NonNull PsiElement parameter) {
 
         // To find the permission required by an intent, we proceed in 3 steps:
@@ -112,15 +109,13 @@ public class PermissionFinder {
         // (3) Find the place where the action is defined, and look for permission
         //     annotations on that action declaration!
 
-        return new PermissionFinder(context, operation).search(parameter);
+        return new PermissionFinder(operation).search(parameter);
     }
 
-    private PermissionFinder(@NonNull JavaContext context, @NonNull Operation operation) {
-        mContext = context;
+    private PermissionFinder(@NonNull Operation operation) {
         mOperation = operation;
     }
 
-    @NonNull private final JavaContext mContext;
     @NonNull private final Operation mOperation;
 
     @Nullable
@@ -264,7 +259,7 @@ public class PermissionFinder {
     private Result getPermissionRequirement(
             @NonNull PsiField field,
             @NonNull PsiAnnotation annotation) {
-        PermissionRequirement requirement = PermissionRequirement.create(mContext, annotation);
+        PermissionRequirement requirement = PermissionRequirement.create(annotation);
         PsiClass containingClass = field.getContainingClass();
         String name = containingClass != null
                 ? containingClass.getName() + "." + field.getName()

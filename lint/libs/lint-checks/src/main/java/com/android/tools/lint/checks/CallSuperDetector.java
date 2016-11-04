@@ -76,7 +76,7 @@ public class CallSuperDetector extends Detector implements JavaPsiScanner {
 
     @Override
     public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.<Class<? extends PsiElement>>singletonList(PsiMethod.class);
+        return Collections.singletonList(PsiMethod.class);
     }
 
     @Override

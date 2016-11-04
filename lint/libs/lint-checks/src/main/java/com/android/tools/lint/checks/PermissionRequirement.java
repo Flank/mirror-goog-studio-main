@@ -26,7 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
-import com.android.tools.lint.detector.api.JavaContext;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaTokenType;
@@ -107,7 +106,6 @@ public abstract class PermissionRequirement {
 
     @NonNull
     public static PermissionRequirement create(
-            @NonNull JavaContext context,
             @NonNull PsiAnnotation annotation) {
 
         String value = getAnnotationStringValue(annotation, ATTR_VALUE);

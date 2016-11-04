@@ -57,4 +57,17 @@ public class DefaultSdkInfoTest extends TestCase {
         assertFalse(info.isSubViewOf("TextView", "View"));
         assertFalse(info.isSubViewOf("Spinner", "AdapterView<?>"));
     }
+
+    /*
+    // Check that all widgets lead to the root view
+    if (LintUtils.assertionsEnabled()) {
+        for (String key : PARENTS.keySet()) {
+            String parent = PARENTS.get(key);
+            if (!parent.equals(VIEW)) {
+                String grandParent = PARENTS.get(parent);
+                assert grandParent != null : parent;
+            }
+        }
+    }
+    */
 }
