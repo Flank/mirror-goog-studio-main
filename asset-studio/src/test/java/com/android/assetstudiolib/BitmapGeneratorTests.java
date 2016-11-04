@@ -16,6 +16,8 @@
 
 package com.android.assetstudiolib;
 
+import com.android.utils.FileUtils;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.fail;
@@ -61,7 +63,7 @@ public final class BitmapGeneratorTests {
 
                 String path = "testdata" + File.separator + folderName + File.separator
                         + relativePath;
-                InputStream is = BitmapGeneratorTests.class.getResourceAsStream(path);
+                InputStream is = BitmapGeneratorTests.class.getResourceAsStream(FileUtils.toSystemIndependentPath(path));
                 if (is == null) {
                     String filePath = folderName + File.separator + relativePath;
                     String generatedFilePath = generateGoldenImage(getTargetDir(), image, path, filePath);
