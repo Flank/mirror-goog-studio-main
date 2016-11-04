@@ -20,15 +20,17 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "MemoryProfiler";
 
 service MemoryService {
+  rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
+  }
+  rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
+  }
   rpc SetMemoryConfig(MemoryConfig) returns (MemoryStatus) {
   }
   rpc GetData(MemoryRequest) returns (MemoryData) {
   }
   rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {
   }
-  rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
-  }
-  rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
+  rpc GetHeapDump(HeapDumpDataRequest) returns (HeapDumpDataResponse) {
   }
 }
 
@@ -113,8 +115,9 @@ message MemoryData {
   message HeapDumpSample {
     int64 start_time = 1;
     int64 end_time = 2;
-    bool success = 3;
+    int32 dump_id = 3;
     string file_path = 4;
+    bool success = 5;
   }
 
   // end timestamp after which values are yet to be queried for
@@ -137,4 +140,21 @@ message HeapDumpResponse {
     FAILURE_UNKNOWN = 3;
   }
   Status status = 1;
+}
+
+message HeapDumpDataRequest {
+  int32 app_id = 1;
+  int32 dump_id = 2;
+}
+
+message HeapDumpDataResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  bytes data = 2;
 }
