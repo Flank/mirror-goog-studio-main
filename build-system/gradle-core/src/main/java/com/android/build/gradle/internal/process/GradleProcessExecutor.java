@@ -26,6 +26,8 @@ import com.android.ide.common.process.ProcessResult;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.process.ExecResult;
@@ -106,8 +108,16 @@ public class GradleProcessExecutor implements ProcessExecutor {
 
         @Override
         public void execute(ExecSpec execSpec) {
+
+            /*
+             * Gradle doesn't work correctly when there are empty args.
+             */
+            List<String> args =
+                    processInfo.getArgs().stream()
+                            .map(a -> a.isEmpty()? "\"\"" : a)
+                            .collect(Collectors.toList());
             execSpec.setExecutable(processInfo.getExecutable());
-            execSpec.args(processInfo.getArgs());
+            execSpec.args(args);
             execSpec.environment(processInfo.getEnvironment());
             execSpec.setStandardOutput(processOutput.getStandardOutput());
             execSpec.setErrorOutput(processOutput.getErrorOutput());
