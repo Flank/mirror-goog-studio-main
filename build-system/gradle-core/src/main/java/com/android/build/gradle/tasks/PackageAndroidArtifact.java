@@ -562,13 +562,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
         KnownFilesSaveData saveData = KnownFilesSaveData.make(getIncrementalFolder());
 
+        Set<Runnable> cacheUpdates = new HashSet<>();
         ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
                 getChangedInputs(
                         changedInputs,
                         saveData,
                         InputSet.DEX,
                         getDexFolders(),
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedJavaResources =
                 getChangedInputs(
@@ -576,7 +578,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         saveData,
                         InputSet.JAVA_RESOURCE,
                         getJavaResourceFiles(),
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedAssets =
                 getChangedInputs(
@@ -584,7 +587,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         saveData,
                         InputSet.ASSET,
                         Collections.singleton(getAssets()),
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
                 getChangedInputs(
@@ -592,7 +596,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         saveData,
                         InputSet.ANDROID_RESOURCE,
                         androidResources,
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedNLibs =
                 getChangedInputs(
@@ -600,7 +605,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         saveData,
                         InputSet.NATIVE_RESOURCE,
                         getJniFolders(),
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedAtomMetadata;
         if (getAtomMetadataFolder() == null) {
@@ -611,7 +617,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                     saveData,
                     InputSet.ATOM_METADATA,
                     ImmutableList.of(getAtomMetadataFolder()),
-                    cacheByPath);
+                    cacheByPath,
+                    cacheUpdates);
         }
 
         doTask(
@@ -623,17 +630,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 changedAtomMetadata);
 
         /*
-         * Removed cached versions of deleted zip files because we no longer need to compute diffs.
+         * Update the cache
          */
-        changedInputs.keySet().stream()
-                .filter(f -> !f.exists())
-                .forEach(f -> {
-                    try {
-                        cacheByPath.remove(f);
-                    } catch (IOException e) {
-                        throw new IOExceptionWrapper(e);
-                    }
-                });
+        cacheUpdates.forEach(Runnable::run);
 
         /*
          * Update the save data keep files.
@@ -673,7 +672,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
      *     <li>Deleted inputs are filtered through {@link KnownFilesSaveData} to get only those
      *     whose input set matches {@code inputSet}.
      *     <li>Non-deleted inputs are processed through
-     *     {@link IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath)}
+     *     {@link IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath,
+     *     Set)}
      *     to obtain the incremental file changes.
      *     <li>The results of processed deleted and non-deleted are merged and returned.
      * </ol>
@@ -683,6 +683,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
      * @param inputSet the input set to filter
      * @param baseFiles the base files of the input set
      * @param cacheByPath where to cache files
+     * @param cacheUpdates receives the runnables that will update the cache
      * @return the status of all relative files in the input set
      */
     @NonNull
@@ -691,7 +692,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
             @NonNull KnownFilesSaveData saveData,
             @NonNull InputSet inputSet,
             @NonNull Collection<File> baseFiles,
-            @NonNull FileCacheByPath cacheByPath)
+            @NonNull FileCacheByPath cacheByPath,
+            @NonNull Set<Runnable> cacheUpdates)
             throws IOException {
 
         /*
@@ -712,7 +714,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 IncrementalRelativeFileSets.makeFromBaseFiles(
                         baseFiles,
                         nonDeletedFiles,
-                        cacheByPath);
+                        cacheByPath,
+                        cacheUpdates);
 
         /*
          * Merge everything.

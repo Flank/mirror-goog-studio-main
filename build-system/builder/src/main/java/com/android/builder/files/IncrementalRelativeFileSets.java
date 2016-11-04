@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.internal.packaging.zip.StoredEntry;
 import com.android.builder.internal.packaging.zip.StoredEntryType;
 import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.builder.internal.utils.IOExceptionRunnable;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.base.Functions;
@@ -31,7 +32,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -111,22 +111,64 @@ public final class IncrementalRelativeFileSets {
     /**
      * Computes the incremental file set that results from comparing a zip file with a possibly
      * existing cached file. If the cached file does not exist, then the whole zip is reported
-     * as {@link FileStatus#NEW}.
+     * as {@link FileStatus#NEW}. If {@code zip} does not exist and a cached file exists, then
+     * the whole zip is reported as {@link FileStatus#REMOVED}. Otherwise, both zips are compared
+     * and the difference returned.
      *
      * @param zip the zip file to read, must be a valid, existing zip file
+     * @param cache the cache where to find the old version of the zip
+     * @param cacheUpdates receives all runnables that will update the cache; running all runnables
+     * placed in this set will ensure that a second invocation of this method reports no changes
      * @return the file set
      * @throws IOException failed to read the zip file
      */
     @NonNull
-    public static ImmutableMap<RelativeFile, FileStatus> fromZip(@NonNull File zip,
-            @NonNull FileCacheByPath cache) throws IOException {
-        Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
-
+    public static ImmutableMap<RelativeFile, FileStatus> fromZip(
+            @NonNull File zip,
+            @NonNull FileCacheByPath cache,
+            @NonNull Set<Runnable> cacheUpdates) throws IOException {
         File oldFile = cache.get(zip);
         if (oldFile == null) {
+            /*
+             * No old zip in cache. If the zip also doesn't exist, report all empty.
+             */
+            if (!zip.isFile()) {
+                return ImmutableMap.of();
+            }
+
+            cacheUpdates.add(IOExceptionRunnable.asRunnable(() -> cache.add(zip)));
             return fromZip(zip, FileStatus.NEW);
         }
 
+        if (!zip.isFile()) {
+            /*
+             * Zip does not exist, but a cached version does. This means the zip was deleted
+             * and all entries are removed.
+             */
+
+            ImmutableMap.Builder<RelativeFile, FileStatus> builder = ImmutableMap.builder();
+
+            try (ZFile zipReader = new ZFile(oldFile)) {
+                for (StoredEntry entry : zipReader.entries()) {
+                    if (entry.getType() == StoredEntryType.FILE) {
+                        File file =
+                                new File(
+                                        zip,
+                                        FileUtils.toSystemDependentPath(
+                                                entry.getCentralDirectoryHeader().getName()));
+                        builder.put(new RelativeFile(zip, file), FileStatus.REMOVED);
+                    }
+                }
+            }
+
+
+            cacheUpdates.add(IOExceptionRunnable.asRunnable(() -> cache.remove(zip)));
+            return builder.build();
+        }
+
+        /*
+         * We have both a new and old zip. Compare both.
+         */
         Map<RelativeFile, FileStatus> result = Maps.newHashMap();
 
         Closer closer = Closer.create();
@@ -182,6 +224,7 @@ public final class IncrementalRelativeFileSets {
             closer.close();
         }
 
+        cacheUpdates.add(IOExceptionRunnable.asRunnable(() -> cache.add(zip)));
         return ImmutableMap.copyOf(result);
     }
 
@@ -264,6 +307,11 @@ public final class IncrementalRelativeFileSets {
      * @param baseFiles the files; all entries must exist and be either directories or zip files
      * @param updates the files updated in the directories or base zip files updated
      * @param cache the file cache where to find old versions of zip files
+     * @param cacheUpdates receives all runnables that will update the cache; running all runnables
+     * placed in this set will ensure that a second invocation of this method reports no changes
+     * for zip files; the updates are reported as deferrable runnables instead of immediately run
+     * in this method to allow not changing the cache contents if something else fails and we want
+     * to restore the previous state
      * @return the data
      * @throws IOException failed to read a zip file
      */
@@ -271,7 +319,8 @@ public final class IncrementalRelativeFileSets {
     public static ImmutableMap<RelativeFile, FileStatus> makeFromBaseFiles(
             @NonNull Collection<File> baseFiles,
             @NonNull Map<File, FileStatus> updates,
-            @NonNull FileCacheByPath cache)
+            @NonNull FileCacheByPath cache,
+            @NonNull Set<Runnable> cacheUpdates)
             throws IOException {
         for (File f : baseFiles) {
             Preconditions.checkArgument(f.exists(), "!f.exists()");
@@ -284,22 +333,7 @@ public final class IncrementalRelativeFileSets {
             FileStatus status = fileUpdate.getValue();
 
             if (baseFiles.contains(file)) {
-                /*
-                 * If the file exists in the set of base files, assume it is a zip file.
-                 */
-                switch (status) {
-                    case CHANGED:
-                        relativeUpdates.putAll(IncrementalRelativeFileSets.fromZip(file, cache));
-                        break;
-                    case NEW:
-                        relativeUpdates.putAll(
-                                IncrementalRelativeFileSets.fromZip(file, FileStatus.NEW));
-                        break;
-                    case REMOVED:
-                        relativeUpdates.putAll(
-                                IncrementalRelativeFileSets.fromZip(file, FileStatus.REMOVED));
-                        break;
-                }
+                relativeUpdates.putAll(fromZip(file, cache, cacheUpdates));
             } else {
                 /*
                  * We ignore directories because there are no relative files for directories.

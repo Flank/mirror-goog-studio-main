@@ -21,19 +21,20 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.builder.internal.packaging.zip.ZFile;
 import com.android.ide.common.res2.FileStatus;
+import com.android.utils.FileUtils;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link IncrementalRelativeFileSets}.
@@ -137,9 +138,8 @@ public class IncrementalRelativeFileSetsTest {
 
     @Test
     public void unionOfEmptySet() throws Exception {
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.union(
-                Sets.<ImmutableMap<RelativeFile, FileStatus>>newHashSet());
-
+        ImmutableMap<RelativeFile, FileStatus> set =
+                IncrementalRelativeFileSets.union(new HashSet<>());
         assertEquals(0, set.size());
     }
 
@@ -269,7 +269,7 @@ public class IncrementalRelativeFileSetsTest {
         File f0 = new File(foo, "f0");
         assertTrue(f0.createNewFile());
         File bar = new File(foo, "bar");
-        bar.mkdir();
+        assertTrue(bar.mkdir());
         File f1 = new File(bar, "f1");
         assertTrue(f1.createNewFile());
 
@@ -284,7 +284,8 @@ public class IncrementalRelativeFileSetsTest {
                                 f0, FileStatus.NEW,
                                 f1, FileStatus.NEW,
                                 bar, FileStatus.NEW),
-                        cache);
+                        cache,
+                        new HashSet<>());
 
         assertEquals(2, set.size());
         assertTrue(set.containsKey(expectedF0));
@@ -299,7 +300,7 @@ public class IncrementalRelativeFileSetsTest {
         File f0 = new File(foo, "f0");
         assertTrue(f0.createNewFile());
         File bar = new File(foo, "bar");
-        bar.mkdir();
+        assertTrue(bar.mkdir());
         File f1 = new File(bar, "f1");
         assertTrue(f1.createNewFile());
 
@@ -314,5 +315,97 @@ public class IncrementalRelativeFileSetsTest {
         assertTrue(set.containsKey(expectedF1));
         assertEquals(FileStatus.NEW, set.get(expectedF0));
         assertEquals(FileStatus.NEW, set.get(expectedF1));
+    }
+
+    @Test
+    public void makingFromCacheNewZip() throws Exception {
+        File cacheDir = temporaryFolder.newFolder();
+        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+
+        File foo = new File(temporaryFolder.getRoot(), "foo");
+        try (ZFile zffooz = new ZFile(foo)) {
+            zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
+            zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
+        }
+
+        Set<Runnable> updates = new HashSet<>();
+        ImmutableMap<RelativeFile, FileStatus> m =
+                IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(2, m.size());
+
+        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        assertTrue(m.containsKey(f0z));
+        assertEquals(m.get(f0z), FileStatus.NEW);
+
+        RelativeFile f1z = new RelativeFile(foo, new File(foo, "f1z"));
+        assertTrue(m.containsKey(f1z));
+        assertEquals(m.get(f1z), FileStatus.NEW);
+
+        updates.forEach(Runnable::run);
+        m = IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(0, m.size());
+    }
+
+    @Test
+    public void makingFromCacheDeletedZip() throws Exception {
+        File cacheDir = temporaryFolder.newFolder();
+        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+
+        File foo = new File(temporaryFolder.getRoot(), "foo");
+        try (ZFile zffooz = new ZFile(foo)) {
+            zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
+            zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
+        }
+
+        cache.add(foo);
+        FileUtils.delete(foo);
+
+        Set<Runnable> updates = new HashSet<>();
+        ImmutableMap<RelativeFile, FileStatus> m =
+                IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(2, m.size());
+
+        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        assertTrue(m.containsKey(f0z));
+        assertEquals(m.get(f0z), FileStatus.REMOVED);
+
+        RelativeFile f1z = new RelativeFile(foo, new File(foo, "f1z"));
+        assertTrue(m.containsKey(f1z));
+        assertEquals(m.get(f1z), FileStatus.REMOVED);
+
+        updates.forEach(Runnable::run);
+        m = IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(0, m.size());
+    }
+
+    @Test
+    public void makingFromCacheUpdatedZip() throws Exception {
+        File cacheDir = temporaryFolder.newFolder();
+        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+
+        File foo = new File(temporaryFolder.getRoot(), "foo");
+        try (ZFile zffooz = new ZFile(foo)) {
+            zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
+            zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
+        }
+
+        cache.add(foo);
+
+        try (ZFile zffooz = new ZFile(foo)) {
+            zffooz.add("f0z", new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
+        }
+
+        Set<Runnable> updates = new HashSet<>();
+        ImmutableMap<RelativeFile, FileStatus> m =
+                IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(1, m.size());
+
+        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        assertTrue(m.containsKey(f0z));
+        assertEquals(m.get(f0z), FileStatus.CHANGED);
+
+        updates.forEach(Runnable::run);
+        m = IncrementalRelativeFileSets.fromZip(foo, cache, updates);
+        assertEquals(0, m.size());
     }
 }
