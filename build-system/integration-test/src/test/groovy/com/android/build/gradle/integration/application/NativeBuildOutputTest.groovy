@@ -405,7 +405,8 @@ class NativeBuildOutputTest {
 
         project.file("CMakeLists.txt") << cmakeLists;
 
-        checkSucceeded(["building", FileUtils.join("x86", "libhello-jni.so")], []);
+        checkSucceeded(["Building CXX", FileUtils.join("cpp", "hello-jni.cpp"),
+                        FileUtils.join("x86", "libhello-jni.so")], []);
     }
 
     private void checkSucceeded(List<String> expectInStdout, List<String> dontExpectInStdout) {

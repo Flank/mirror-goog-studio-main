@@ -35,7 +35,6 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import org.gradle.api.tasks.TaskAction;
 
@@ -90,14 +89,18 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
         diagnostic("about to execute %s clean commands", cleanCommands.size());
         executeProcessBatch(cleanCommands, targetNames);
 
-        if (stlSharedObjectFiles.size() > 0) {
+        if (!stlSharedObjectFiles.isEmpty()) {
             diagnostic("remove STL shared object files");
             for (Abi abi : stlSharedObjectFiles.keySet()) {
                 File stlSharedObjectFile = checkNotNull(stlSharedObjectFiles.get(abi));
                 File objAbi = FileUtils.join(objFolder, abi.getName(),
                         stlSharedObjectFile.getName());
-                diagnostic("remove file %s", objAbi);
-                objAbi.delete();
+
+                if (objAbi.delete()) {
+                    diagnostic("removed file %s", objAbi);
+                } else {
+                    diagnostic("failed to remove file %s", objAbi);
+                }
             }
         }
         diagnostic("clean complete");
@@ -108,11 +111,11 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
      * that point.
      */
     protected void executeProcessBatch(@NonNull List<String> commands,
-            @NonNull List<String> targetNames) throws ProcessException {
+            @NonNull List<String> targetNames) throws ProcessException, IOException {
         for (int commandIndex = 0; commandIndex < commands.size(); ++commandIndex) {
             String command = commands.get(commandIndex);
             String target = targetNames.get(commandIndex);
-            diagnostic("cleaning %s", target);
+            getLogger().lifecycle(String.format("Clean %s", target));
             List<String> tokens = StringHelper.tokenizeString(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
             processBuilder.setExecutable(tokens.get(0));
@@ -122,7 +125,7 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
             diagnostic("%s", processBuilder);
             ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
                     getBuilder(),
-                    processBuilder.createProcess());
+                    processBuilder);
         }
     }
 

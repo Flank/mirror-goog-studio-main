@@ -272,7 +272,7 @@ public abstract class ExternalNativeJsonGenerator {
                     String buildOutput = ExternalNativeBuildTaskUtils
                             .executeBuildProcessAndLogError(
                                     androidBuilder,
-                                    processBuilder.createProcess());
+                                    processBuilder);
                     diagnostic("done executing %s", getNativeBuildSystem().getName());
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -353,7 +353,7 @@ public abstract class ExternalNativeJsonGenerator {
      * Log low level diagnostic information.
      */
     void diagnostic(String format, Object... args) {
-        androidBuilder.getLogger().info(
+        androidBuilder.getLogger().verbose(
                 "External native generate JSON " + variantName + ": " + format, args);
     }
 
