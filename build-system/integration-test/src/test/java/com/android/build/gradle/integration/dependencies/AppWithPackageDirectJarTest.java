@@ -16,30 +16,30 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * test for package (apk) jar in app
@@ -50,7 +50,7 @@ public class AppWithPackageDirectJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -61,13 +61,14 @@ public class AppWithPackageDirectJarTest {
                 "dependencies {\n" +
                 "    apk project(\":jar\")\n" +
                 "}\n");
-        models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
+        project.execute("clean", ":app:assembleDebug");
+        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
@@ -77,18 +78,33 @@ public class AppWithPackageDirectJarTest {
     }
 
     @Test
-    public void checkPackagedJarIsNotInTheModel() {
-        Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+    public void checkPackagedJarIsNotInTheCompileModel() {
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getModelMap().get(":app").getVariants(), "debug");
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Dependencies compileDeps = variant.getMainArtifact().getCompileDependencies();
-        assertThat(compileDeps.getProjects()).named("Project compileDeps").isEmpty();
-        assertThat(compileDeps.getJavaLibraries()).named("javalibs compileDeps count").isEmpty();
-
-        Dependencies packageDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDeps.getProjects()).named("Project packageDeps").isEmpty();
-
-        assertThat(packageDeps.getJavaLibraries()).named("javalibs packageDeps count").hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(packageDeps.getJavaLibraries());
-        assertThat(javaLibrary.getProject()).isEqualTo(":jar");
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        assertThat(helper.on(compileGraph).withType(MODULE).asList())
+                .named("app sub-module compile deps")
+                .isEmpty();
+        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                .named("app java compile deps")
+                .isEmpty();
     }
+
+    @Test
+    public void checkPackagedJarIsInThePackageModel() {
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getModelMap().get(":app").getVariants(), "debug");
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
+        assertThat(helper.on(packageGraph).withType(MODULE).mapTo(COORDINATES))
+                .named("app sub-module package deps")
+                .containsExactly(":jar");
+        assertThat(helper.on(packageGraph).withType(JAVA).asList())
+                .named("app java package deps")
+                .isEmpty();
+    }
+
 }

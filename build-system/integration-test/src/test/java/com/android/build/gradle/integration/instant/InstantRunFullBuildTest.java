@@ -55,7 +55,7 @@ public class InstantRunFullBuildTest {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
         mProject.execute("clean");
-        AndroidProject model = mProject.model().getSingle();
+        AndroidProject model = mProject.model().getSingle().getOnlyModel();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
     }
 

@@ -16,33 +16,40 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 /**
  * test for optional aar (using the provided scope)
@@ -53,7 +60,8 @@ public class OptionalAarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> models;
+    private static LibraryGraphHelper helper;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -71,13 +79,17 @@ public class OptionalAarTest {
                 "dependencies {\n" +
                 "    provided project(\":library2\")\n" +
                 "}\n");
-        models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
+        project.execute("clean", ":app:assembleDebug");
+        models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        helper = new LibraryGraphHelper(models);
+
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         models = null;
+        helper = null;
     }
 
     @Test
@@ -105,42 +117,38 @@ public class OptionalAarTest {
 
     @Test
     public void checkAppModelDoesNotIncludeOptionalLibrary() {
-        Collection<Variant> variants = models.get(":app").getVariants();
+        Collection<Variant> variants = models.getModelMap().get(":app").getVariants();
 
         // get the main artifact of the debug artifact and its dependencies
         Variant variant = ModelHelper.getVariant(variants, "debug");
 
-        AndroidArtifact artifact = variant.getMainArtifact();
-        Dependencies dependencies = artifact.getCompileDependencies();
-        Collection<AndroidLibrary> libs = dependencies.getLibraries();
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
 
-        assertThat(libs).hasSize(1);
+        LibraryGraphHelper.Items moduleItems = helper.on(graph).withType(MODULE);
+        assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":library");
+        // nothing is marked as provided
+        assertThat(graph.getProvidedLibraries()).isEmpty();
 
-        AndroidLibrary library = Iterables.getOnlyElement(libs);
-        assertThat(library.getProject()).isEqualTo(":library");
-        assertThat(library.isProvided()).isFalse();
+        GraphItem libraryItem = moduleItems.asSingleGraphItem();
+        assertThat(libraryItem.getDependencies()).isEmpty();
 
-        assertThat(library.getLibraryDependencies()).isEmpty();
     }
 
     @Test
     public void checkLibraryModelIncludesOptionalLibrary() {
-        Collection<Variant> variants = models.get(":library").getVariants();
+        Collection<Variant> variants = models.getModelMap().get(":library").getVariants();
 
         // get the main artifact of the debug artifact and its dependencies
         Variant variant = ModelHelper.getVariant(variants, "debug");
+        AndroidArtifact mainArtifact = variant.getMainArtifact();
 
-        AndroidArtifact artifact = variant.getMainArtifact();
-        Dependencies compileDependencies = artifact.getCompileDependencies();
-        Collection<AndroidLibrary> libs = compileDependencies.getLibraries();
+        LibraryGraph compileGraph = mainArtifact.getCompileGraph();
+        LibraryGraphHelper.Items moduleItems = helper.on(compileGraph).withType(MODULE);
+        assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":library2");
+        assertThat(compileGraph.getProvidedLibraries())
+                .containsExactly(moduleItems.asSingleGraphItem().getArtifactAddress());
 
-        assertThat(libs).hasSize(1);
-
-        AndroidLibrary library = Iterables.getOnlyElement(libs);
-        assertThat(library.getProject()).isEqualTo(":library2");
-        assertThat(library.isProvided()).isTrue();
-
-        Dependencies packageDependencies = artifact.getPackageDependencies();
-        assertThat(packageDependencies.getLibraries()).isEmpty();
+        LibraryGraph packageGraph = mainArtifact.getPackageGraph();
+        assertThat(packageGraph.getDependencies()).isEmpty();
     }
 }

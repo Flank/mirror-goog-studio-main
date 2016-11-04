@@ -92,7 +92,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-
 /**
  * A manager to resolve configuration dependencies.
  */
@@ -239,8 +238,9 @@ public class DependencyManager {
             if (modelLevelInt != null) {
                 modelLevel = modelLevelInt;
             }
-            // TODO enable package-flag for sync
-            needPackageScope = false; //modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL;
+            if (modelLevel > AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+                needPackageScope = AndroidGradleOptions.buildModelWithFullDependencies(project);
+            }
         }
 
         Configuration compileClasspath = variantDeps.getCompileConfiguration();

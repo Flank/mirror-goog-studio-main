@@ -85,7 +85,8 @@ public class AntennaPodInstantRunTest {
     public void buildAntennaPod() throws Exception {
         project.execute("clean");
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getMulti().get(":app"));
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)

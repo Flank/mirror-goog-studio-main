@@ -22,8 +22,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -87,6 +89,10 @@ public class CreatingCache<K, V> {
     @Nullable
     public V get(@NonNull K key) {
         return get(key, null);
+    }
+
+    public synchronized List<V> values() {
+        return Lists.newArrayList(mCache.values());
     }
 
     /**

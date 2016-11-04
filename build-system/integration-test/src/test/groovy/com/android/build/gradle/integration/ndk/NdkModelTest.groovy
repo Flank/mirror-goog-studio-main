@@ -170,7 +170,7 @@ android {
     compileSdkVersion "Google Inc.:Google APIs:$GradleTestProject.LATEST_GOOGLE_APIS_VERSION"
 }
 """
-        AndroidProject model = project.executeAndReturnModel("assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
         NativeLibrary lib = ModelHelper.getVariant(model.getVariants(), "debug").getMainArtifact()
                 .getNativeLibraries().first()
         for (String flag : lib.getCCompilerFlags()) {
@@ -191,7 +191,7 @@ android {
      */
     private void checkModel(Map variantToolchains) {
 
-        AndroidProject model = project.executeAndReturnModel("assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
 
         Collection<Variant> variants = model.getVariants()
         for (Map.Entry entry : variantToolchains) {

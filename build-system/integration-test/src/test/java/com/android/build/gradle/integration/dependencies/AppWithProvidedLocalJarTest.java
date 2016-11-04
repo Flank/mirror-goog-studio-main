@@ -18,26 +18,24 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
-import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * test for provided local jar in app
@@ -48,7 +46,7 @@ public class AppWithProvidedLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -65,7 +63,8 @@ public class AppWithProvidedLocalJarTest {
                 "    provided files(\"libs/util-1.0.jar\")\n" +
                 "}\n");
 
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
+        model = project.model().withFeature(BuildModel.Feature.FULL_DEPENDENCIES).getSingle();
     }
 
     @AfterClass
@@ -82,19 +81,25 @@ public class AppWithProvidedLocalJarTest {
 
     @Test
     public void checkProvidedLocalJarIsInTheMainArtifactDependency() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Dependencies compileDeps = variant.getMainArtifact().getCompileDependencies();
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Collection<JavaLibrary> javaLibs = compileDeps.getJavaLibraries();
-        assertThat(javaLibs).named("Java libs").hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibs);
-        assertThat(javaLibrary.isProvided())
-                .named("single java lib provided property")
-                .isTrue();
-        assertThat(javaLibrary.getProject()).isNull();
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
 
-        Dependencies packageDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDeps.getJavaLibraries()).isEmpty();
+        // assert that there is one java library dependency
+        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                .named("Java Library dependencies")
+                .hasSize(1);
+        // and that it's provided
+        GraphItem javaItem = helper.on(compileGraph).withType(JAVA).asSingleGraphItem();
+        assertThat(compileGraph.getProvidedLibraries())
+                .named("compile provided list")
+                .containsExactly(javaItem.getArtifactAddress());
+
+        // check that the package graph does not contain the item (or anything else)
+        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
+
+        assertThat(packageGraph.getDependencies()).named("package dependencies").isEmpty();
     }
 }

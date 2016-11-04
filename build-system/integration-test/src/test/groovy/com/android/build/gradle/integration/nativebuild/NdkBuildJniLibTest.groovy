@@ -107,8 +107,8 @@ android {
     @Test
     public void checkModel() {
         // Make sure we can successfully get AndroidProject
-        project.model()
-                .getMulti(AndroidProject.class).get(":app");
+        project.model().getMulti().getModelMap().get(":app");
+
         NativeAndroidProject model = project.model()
                 .getMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();

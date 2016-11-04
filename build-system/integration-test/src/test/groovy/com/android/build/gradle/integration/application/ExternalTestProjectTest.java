@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -154,9 +156,9 @@ public class ExternalTestProjectTest {
                 + "    compile project(path: ':app1')\n"
                 + "}\n");
 
-        Map<String, AndroidProject> modelMap = project.model().ignoreSyncIssues().getMulti();
+        ModelContainer<AndroidProject> modelMap = project.model().ignoreSyncIssues().getMulti();
 
-        AndroidProject model = modelMap.get(":app2");
+        AndroidProject model = modelMap.getModelMap().get(":app2");
         assertNotNull(model);
 
         SyncIssue issue = assertThat(model).hasSingleIssue(

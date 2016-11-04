@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_JARS;
+import static java.util.stream.Collectors.toList;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -40,16 +41,19 @@ import com.android.ide.common.caching.CreatingCache;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -168,17 +172,24 @@ final class DependenciesConverter  {
     }
 
     @NonNull
+    private static final DependenciesImpl EMPTY = new DependenciesImpl(
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            null);
+
+    @NonNull
     static DependenciesImpl getEmpty() {
-        return new DependenciesImpl(
-                ImmutableList.of(),
-                ImmutableList.of(),
-                ImmutableList.of(),
-                ImmutableList.of(),
-                null);
+        return EMPTY;
     }
 
     @NonNull
     static DependenciesImpl cloneDependenciesForJavaArtifacts(@NonNull Dependencies dependencies) {
+        if (dependencies == EMPTY) {
+            return EMPTY;
+        }
+
         List<AndroidAtom> atoms = Collections.emptyList();
         List<AndroidLibrary> libraries = Collections.emptyList();
         List<JavaLibrary> javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
@@ -208,23 +219,26 @@ final class DependenciesConverter  {
         // Only AndroidLibrary contain their own children.
         // And Java-only sub-project are just passed as a list of String (gradlePath)
 
-
-        // collect flat JavaLibrary list but we only pass the direct dependencies
-        List<JavaDependency> javaDependencies = dependencyContainer.getDirectJavaDependencies();
-        List<JavaLibrary> clonedJavaLibraries = cloneJavaLibraries(javaDependencies);
-
-        // collect the flat java sub-modules
-        List<String> clonedProjects = javaDependencies.stream()
+        // collect the java sub-project. We can just get the list of direct JavaDependencies,
+        // and filter by projectPath
+        List<JavaDependency> directJavaDeps = dependencyContainer.getDirectJavaDependencies();
+        List<String> clonedProjects = directJavaDeps.stream()
                 .filter(javaDependency -> javaDependency.getProjectPath() != null)
                 .map(JavaDependency::getProjectPath)
-                .collect(Collectors.toList());
+                .collect(toList());
+
+        // for the JavaLibraries that are not projects, we return a flat list, but we need
+        // to gather it from the graph, to find all the transitive dependencies.
+        List<DependencyNode> dependencyNodes = dependencyContainer.getDependencies();
+        Set<JavaLibrary> clonedJavaLibraries = Sets.newLinkedHashSet();
+        // clone recursively, but skip the sub-projects
+        cloneJavaLibraries(dependencyNodes, clonedJavaLibraries);
 
         // collect the flat atom lists
         List<AtomDependency> atomDependencies = dependencyContainer.getAllAtomDependencies();
         List<AndroidAtom> clonedAndroidAtoms = clonedAndroidAtoms(atomDependencies);
 
         // collect the android dependencies. We have to use the graph for this.
-        List<DependencyNode> dependencyNodes = dependencyContainer.getDependencies();
         List<AndroidLibrary> clonedAndroidLibraries = cloneAndroidLibraries(dependencyNodes);
 
         if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
@@ -253,25 +267,42 @@ final class DependenciesConverter  {
         return new DependenciesImpl(
                 clonedAndroidAtoms,
                 clonedAndroidLibraries,
-                clonedJavaLibraries,
+                new ArrayList<>(clonedJavaLibraries),
                 clonedProjects,
                 baseAtom);
     }
 
-    private List<JavaLibrary> cloneJavaLibraries(
-            @NonNull List<JavaDependency> javaDependencies) {
-        // filter the external libraries only.
-        return javaDependencies.stream()
-                .filter(javaDependency -> javaDependency.getProjectPath() == null)
-                .map((Function<JavaDependency, JavaLibrary>) dep -> sJarCache.get(factory.create(dep)))
-                .collect(Collectors.toList());
+    private void cloneJavaLibraries(
+            @NonNull List<DependencyNode> nodes,
+            @NonNull Set<JavaLibrary> outLibraries) {
+
+        for (DependencyNode node : nodes) {
+            Dependency dependency = dependencyContainer.getDependencyMap().get(node.getAddress());
+            if (dependency.getProjectPath() != null) {
+                continue;
+            }
+
+            switch (node.getNodeType()) {
+                case JAVA:
+                    JavaDependency javaDep = (JavaDependency) dependency;
+                    outLibraries.add(sJarCache.get(factory.create(javaDep)));
+                    // intended fall-through
+                case ANDROID:
+                    // dont convert but go recursively for potential java dependencies.
+                    cloneJavaLibraries(node.getDependencies(), outLibraries);
+                    break;
+                case ATOM:
+                    // do nothing
+                    break;
+            }
+        }
     }
 
     private List<AndroidAtom> clonedAndroidAtoms(
             @NonNull List<AtomDependency> atomDependencies) {
         return atomDependencies.stream()
                 .map((Function<AtomDependency, AndroidAtom>) dep -> sAtomCache.get(factory.create(dep)))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @NonNull
@@ -367,7 +398,7 @@ final class DependenciesConverter  {
      * @return its local jars.
      */
     @NonNull
-    private static Collection<File> findLocalJar(@NonNull AndroidDependency dependency) {
+    static Collection<File> findLocalJar(@NonNull AndroidDependency dependency) {
         // if the library is exploded, just use the normal method.
         File explodedFolder = dependency.getExtractedFolder();
         if (explodedFolder.isDirectory()) {

@@ -99,7 +99,7 @@ public class InstantRunChangeDeviceTest {
 
     @Test
     public void switchScenario() throws Exception {
-        AndroidProject model = mProject.model().getSingle();
+        AndroidProject model = mProject.model().getSingle().getOnlyModel();
         File apk = model.getVariants().stream()
                 .filter(variant -> variant.getName().equals("debug")).iterator().next()
                 .getMainArtifact()

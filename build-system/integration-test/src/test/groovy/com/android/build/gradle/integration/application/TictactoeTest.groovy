@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
 import com.android.builder.model.Variant
-import com.android.utils.FileUtils
+import com.android.builder.model.level2.LibraryGraph
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -30,6 +30,8 @@ import org.junit.ClassRule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
@@ -43,7 +45,7 @@ class  TictactoeTest {
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("tictactoe")
             .create()
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
 
     @BeforeClass
     static void setUp() {
@@ -58,35 +60,20 @@ class  TictactoeTest {
 
     @Test
     public void testModel() throws Exception {
-        AndroidProject libModel = models.get(":lib")
+        LibraryGraphHelper helper = new LibraryGraphHelper(models)
+
+        AndroidProject libModel = models.getModelMap().get(":lib")
         assertNotNull("lib module model null-check", libModel)
         assertTrue("lib module library flag", libModel.isLibrary())
         assertEquals("Project Type", AndroidProject.PROJECT_TYPE_LIBRARY, libModel.getProjectType())
 
-        AndroidProject appModel = models.get(":app")
+        AndroidProject appModel = models.getModelMap().get(":app")
         assertNotNull("app module model null-check", appModel)
 
         Collection<Variant> variants = appModel.getVariants()
         Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
 
-        Dependencies dependencies = debugVariant.getMainArtifact().getCompileDependencies()
-        assertNotNull(dependencies)
-
-        Collection<AndroidLibrary> libs = dependencies.getLibraries()
-        assertNotNull(libs)
-        assertEquals(1, libs.size())
-
-        AndroidLibrary androidLibrary = libs.iterator().next()
-        assertNotNull(androidLibrary)
-
-        assertEquals("Dependency project path", ":lib", androidLibrary.getProject())
-
-        // check that the folder name is located inside the lib project's intermediate staging folder
-        // reconstruct the path
-        File staging = FileUtils.join(project.getTestDir(),
-                "lib", "build", "intermediates", "bundles", "default");
-        assertThat(androidLibrary.getFolder())
-                .named("ndroidLib.getFolder")
-                .isEqualTo(staging);
+        LibraryGraph graph = debugVariant.getMainArtifact().getCompileGraph();
+        assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":lib")
     }
 }

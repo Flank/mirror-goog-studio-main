@@ -16,12 +16,16 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.build.gradle.internal.ide.DependenciesConverter.cloneDependenciesForJavaArtifacts;
+import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraphForJavaArtifacts;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -55,8 +59,9 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getClassesFolder(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                DependenciesConverter.cloneDependenciesForJavaArtifacts(javaArtifact.getCompileDependencies()),
-                DependenciesConverter.cloneDependenciesForJavaArtifacts(javaArtifact.getPackageDependencies()),
+                cloneDependenciesForJavaArtifacts(javaArtifact.getDependencies()),
+                cloneGraphForJavaArtifacts(javaArtifact.getCompileGraph()),
+                cloneGraphForJavaArtifacts(javaArtifact.getPackageGraph()),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }
@@ -71,11 +76,12 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
             @NonNull File javaResourcesFolder,
             @Nullable File mockablePlatformJar,
             @NonNull Dependencies compileDependencies,
-            @NonNull Dependencies packageDependencies,
+            @NonNull LibraryGraph compileGraph,
+            @NonNull LibraryGraph packageGraph,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders) {
         super(name, assembleTaskName, compileTaskName,
-                classesFolder, javaResourcesFolder, compileDependencies, packageDependencies,
+                classesFolder, javaResourcesFolder, compileDependencies, compileGraph, packageGraph,
                 variantSourceProvider, multiFlavorSourceProviders, generatedSourceFolders);
         this.ideSetupTaskNames = Sets.newHashSet(ideSetupTaskNames);
         this.mockablePlatformJar = mockablePlatformJar;

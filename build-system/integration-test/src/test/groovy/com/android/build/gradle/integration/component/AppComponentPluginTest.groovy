@@ -61,7 +61,7 @@ model {
 
     @Test
     public void basicAssemble() {
-        AndroidProject model = project.executeAndReturnModel("assemble");
+        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel()
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo(project.name)
         assertThat(model.getBuildTypes()).hasSize(2)
@@ -117,7 +117,7 @@ model {
                 "assembleF1DebugAndroidTest",
                 "assembleF2DebugAndroidTest");
 
-        AndroidProject model = project.executeAndReturnModel("assemble");
+        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel()
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo(project.name)
         assertThat(model.getBuildTypes()).hasSize(3)
@@ -127,7 +127,7 @@ model {
 
     @Test
     void generationInModel() {
-        AndroidProject model = project.model().getSingle()
+        AndroidProject model = project.model().getSingle().getOnlyModel()
         assertThat(model.getPluginGeneration())
                 .named("Plugin Generation")
                 .isEqualTo(AndroidProject.GENERATION_COMPONENT)

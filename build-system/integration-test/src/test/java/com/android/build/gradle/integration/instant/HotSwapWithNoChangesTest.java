@@ -117,7 +117,7 @@ public class HotSwapWithNoChangesTest {
 
     private void doTestArtifacts(IOExceptionRunnable runColdSwapBuild) throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle());
+                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
                 .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)

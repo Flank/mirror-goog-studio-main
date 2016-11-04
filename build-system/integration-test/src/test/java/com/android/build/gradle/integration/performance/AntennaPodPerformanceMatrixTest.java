@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
@@ -141,7 +143,8 @@ public class AntennaPodPerformanceMatrixTest {
 
     @Test
     public void runBenchmarks() throws Exception {
-        Map<String, AndroidProject> model = project.model().getMulti();
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         project.executor()
                 .withEnableInfoLogging(false)
@@ -191,7 +194,7 @@ public class AntennaPodPerformanceMatrixTest {
                     break;
                 case INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
                 case INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE:
-                    instantRunModel = InstantRunTestUtils.getInstantRunModel(model.get(":app"));
+                    instantRunModel = InstantRunTestUtils.getInstantRunModel(models.get(":app"));
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
                     project.executor()
@@ -218,7 +221,7 @@ public class AntennaPodPerformanceMatrixTest {
                     break;
                 case GENERATE_SOURCES:
                     project.executor().withEnableInfoLogging(false).run("clean");
-                    tasks = ModelHelper.getDebugGenerateSourcesCommands(model);
+                    tasks = ModelHelper.getDebugGenerateSourcesCommands(models);
                     break;
                 case NO_OP:
                     // Do an initial build for NO_OP.

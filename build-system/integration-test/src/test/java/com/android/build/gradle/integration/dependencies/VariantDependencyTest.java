@@ -21,12 +21,16 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.ApkInfoParser;
@@ -36,6 +40,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.repository.Revision;
@@ -43,10 +49,12 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.StdLogger;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -59,8 +67,9 @@ public class VariantDependencyTest {
             .fromTestApp(HelloWorldApp.noBuildFile())
             .create();
 
-    private static AndroidProject model;
+    private static ModelContainer<AndroidProject> model;
     private static ApkInfoParser apkInfoParser;
+    private static LibraryGraphHelper helper;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -108,6 +117,7 @@ public class VariantDependencyTest {
 
         project.execute("clean", "assemble");
         model = project.model().getSingle();
+        helper = new LibraryGraphHelper(model);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo =
@@ -129,6 +139,7 @@ public class VariantDependencyTest {
     public static void cleanUp() {
         project = null;
         model = null;
+        helper = null;
         apkInfoParser = null;
     }
 
@@ -164,13 +175,13 @@ public class VariantDependencyTest {
 
     @Test
     public void modelVariantCount() {
-        Collection<Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getOnlyModel().getVariants();
         assertThat(variants).named("variants").hasSize(8);
     }
 
     @Test
     public void modelVariantSpecificDependency() {
-        Collection<Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getOnlyModel().getVariants();
         String variantName = "freeLollipopDebug";
         checkVariant(
                 variants,
@@ -180,7 +191,7 @@ public class VariantDependencyTest {
 
     @Test
     public void modelMultiFlavorDependency() {
-        Collection<Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getOnlyModel().getVariants();
 
         checkVariant(
                 variants,
@@ -194,7 +205,7 @@ public class VariantDependencyTest {
 
     @Test
     public void modelDefaultDependency() {
-        Collection<Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getOnlyModel().getVariants();
 
         checkVariant(variants, "paidLollipopDebug", null);
         checkVariant(variants, "paidLollipopRelease", null);
@@ -215,29 +226,22 @@ public class VariantDependencyTest {
                 .named("main artifact for " + variantName)
                 .isNotNull();
 
-        Dependencies dependencies = artifact.getCompileDependencies();
-        assertThat(dependencies)
+        LibraryGraph graph = artifact.getCompileGraph();
+        assertThat(graph)
                 .named("dependencies for main artifact of " + variantName)
                 .isNotNull();
 
+        List<GraphItem> androidDependencyItems = helper.on(graph).withType(ANDROID).asList();
         if (dependencyName != null) {
-            assertThat(dependencies.getLibraries())
+            assertThat(androidDependencyItems)
                     .named("aar deps for " + variantName)
                     .isNotEmpty();
 
-            AndroidLibrary library = dependencies.getLibraries().iterator().next();
-            assertThat(library).named("first aar depts for " + variantName).isNotNull();
-
-            MavenCoordinates coordinates = library.getResolvedCoordinates();
-            assertThat(coordinates)
-                    .named("first aar lib coord for " + variantName)
-                    .isNotNull();
-            assertThat(coordinates.toString())
-                    .named("first aar lib coord for " + variantName)
-                    .isEqualTo(dependencyName);
+            GraphItem library = Iterables.getFirst(androidDependencyItems, null);
+            assertThat(library).named("first graph item for " + variantName).isNotNull();
+            assertThat(library.getArtifactAddress()).isEqualTo(dependencyName);
         } else {
-            assertTrue("${variantName} aar deps empty",
-                    dependencies.getLibraries().isEmpty());
+            assertThat(androidDependencyItems).named("android deps for " + variantName).isEmpty();
         }
     }
 
@@ -245,7 +249,8 @@ public class VariantDependencyTest {
             @NonNull String variantName,
             @NonNull String checkFilePath) throws IOException {
         // use the model to get the output APK!
-        File apk = ModelHelper.findOutputFileByVariantName(model.getVariants(), variantName);
+        File apk = ModelHelper.findOutputFileByVariantName(
+                model.getOnlyModel().getVariants(), variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).contains(checkFilePath);
     }
@@ -254,7 +259,8 @@ public class VariantDependencyTest {
             @NonNull String variantName,
             @NonNull Set<String> checkFilePath) throws IOException {
         // use the model to get the output APK!
-        File apk = ModelHelper.findOutputFileByVariantName(model.getVariants(), variantName);
+        File apk = ModelHelper.findOutputFileByVariantName(
+                model.getOnlyModel().getVariants(), variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).entries(".*").containsNoneIn(checkFilePath);
     }

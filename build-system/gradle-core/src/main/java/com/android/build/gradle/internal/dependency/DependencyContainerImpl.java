@@ -112,6 +112,16 @@ public class DependencyContainerImpl implements DependencyContainer {
     }
 
     @NonNull
+    public List<String> getProvidedList() {
+        return mutableDependencyDataMap.getProvidedList();
+    }
+
+    @NonNull
+    public List<String> getSkippedList() {
+        return mutableDependencyDataMap.getSkippedList();
+    }
+
+    @NonNull
     @Override
     public ImmutableList<Dependency> getAllDependencies() {
         return allDependencies;

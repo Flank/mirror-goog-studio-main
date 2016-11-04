@@ -30,11 +30,11 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.Variant;
-import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -84,9 +84,9 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     private final ProductFlavorContainer defaultConfig;
 
-    private final Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
-    private final Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
-    private final Collection<Variant> variants = Lists.newArrayList();
+    private final Collection<BuildTypeContainer> buildTypes;
+    private final Collection<ProductFlavorContainer> productFlavors;
+    private final Collection<Variant> variants;
 
     @NonNull
     private final Collection<String> flavorDimensions;
@@ -96,6 +96,9 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull String name,
             @NonNull ProductFlavorContainer defaultConfig,
             @NonNull Collection<String> flavorDimensions,
+            @NonNull Collection<BuildTypeContainer> buildTypes,
+            @NonNull Collection<ProductFlavorContainer> productFlavors,
+            @NonNull Collection<Variant> variants,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
             @NonNull Collection<File> frameworkSource,
@@ -117,6 +120,9 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.name = name;
         this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
+        this.buildTypes = buildTypes;
+        this.productFlavors = productFlavors;
+        this.variants = variants;
         this.compileTarget = compileTarget;
         this.bootClasspath = bootClasspath;
         this.frameworkSource = frameworkSource;
@@ -134,25 +140,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.generation = generation;
         this.nativeToolchains = nativeToolchains;
         this.buildToolsVersion = buildToolsVersion;
-    }
-
-    @NonNull
-    DefaultAndroidProject addBuildType(@NonNull BuildTypeContainer buildTypeContainer) {
-        buildTypes.add(buildTypeContainer);
-        return this;
-    }
-
-    @NonNull
-    DefaultAndroidProject addProductFlavors(
-            @NonNull ProductFlavorContainer productFlavorContainer) {
-        productFlavors.add(productFlavorContainer);
-        return this;
-    }
-
-    @NonNull
-    DefaultAndroidProject addVariant(@NonNull VariantImpl variant) {
-        variants.add(variant);
-        return this;
     }
 
     @Override

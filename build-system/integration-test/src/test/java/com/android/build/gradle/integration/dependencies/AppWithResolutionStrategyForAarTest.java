@@ -16,11 +16,19 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -28,19 +36,17 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * test for flavored dependency on a different package.
@@ -51,7 +57,7 @@ public class AppWithResolutionStrategyForAarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -101,50 +107,46 @@ public class AppWithResolutionStrategyForAarTest {
                 "    compile \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n" +
                 "}\n");
 
-        models = project.model().getMulti();
+        modelContainer = project.model().getMulti();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
     public void checkModelContainsCorrectDependencies() {
-        AndroidProject appProject = models.get(":app");
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        AndroidProject appProject = modelContainer.getModelMap().get(":app");
         Collection<Variant> appVariants = appProject.getVariants();
 
-        checkJarDependency(appVariants, "debug", "org.jdeferred:jdeferred-android-aar:aar:1.2.2");
-        checkJarDependency(appVariants, "release", "org.jdeferred:jdeferred-android-aar:aar:1.2.3");
+        checkJarDependency(helper, appVariants, "debug", "org.jdeferred:jdeferred-android-aar:aar:1.2.2");
+        checkJarDependency(helper, appVariants, "release", "org.jdeferred:jdeferred-android-aar:aar:1.2.3");
     }
 
     private static void checkJarDependency(
+            @NonNull LibraryGraphHelper helper,
             @NonNull Collection<Variant> appVariants,
             @NonNull String variantName,
             @NonNull String aarCoodinate) {
         Variant appVariant = ModelHelper.getVariant(appVariants, variantName);
 
         AndroidArtifact appArtifact = appVariant.getMainArtifact();
-        Dependencies artifactDependencies = appArtifact.getCompileDependencies();
 
-        Collection<AndroidLibrary> directLibraries = artifactDependencies.getLibraries();
-        assertThat(directLibraries)
-                .named("direct libs of " + variantName)
-                .hasSize(1);
-        AndroidLibrary directLibrary = Iterables.getOnlyElement(directLibraries);
-        assertThat(directLibrary.getProject())
-                .named("Single lib name of " + variantName)
-                .isEqualTo(":library");
+        LibraryGraph artifactCompileGraph = appArtifact.getCompileGraph();
 
-        List<? extends AndroidLibrary> transitiveLibraries = directLibrary.getLibraryDependencies();
-        assertThat(transitiveLibraries)
-                .named("transitive libs of single direct lib of " + variantName)
-                .hasSize(1);
+        Items moduleDeps = helper.on(artifactCompileGraph).withType(MODULE);
+        assertThat(moduleDeps.mapTo(GRADLE_PATH))
+                .named("module dependencies of " + variantName)
+                .containsExactly(":library");
 
-        AndroidLibrary transitiveLibrary = Iterables.getOnlyElement(transitiveLibraries);
-        assertThat(transitiveLibrary.getResolvedCoordinates().toString())
-                .named("coord of single transitive deps of " + variantName)
-                .isEqualTo(aarCoodinate);
+        Items transitiveLibs = moduleDeps.getTransitiveFromSingleItem();
+
+        assertThat(transitiveLibs.withType(ANDROID).mapTo(COORDINATES))
+                .named("transitive libs of single direct module of " + variantName)
+                .containsExactly(aarCoodinate);
     }
 }

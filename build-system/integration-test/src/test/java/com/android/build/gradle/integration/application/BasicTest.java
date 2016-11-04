@@ -62,7 +62,7 @@ public class BasicTest {
 
     @BeforeClass
     public static void getModel() throws IOException {
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
     @AfterClass
@@ -141,7 +141,6 @@ public class BasicTest {
 
     @Test
     public void generationInModel() {
-        AndroidProject model = project.model().getSingle();
         assertThat(model.getPluginGeneration())
                 .named("Plugin Generation")
                 .isEqualTo(AndroidProject.GENERATION_ORIGINAL);

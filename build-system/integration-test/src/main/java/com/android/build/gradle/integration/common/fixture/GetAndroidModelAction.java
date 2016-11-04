@@ -16,9 +16,13 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.level2.GlobalLibraryMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.io.Serializable;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.model.DomainObjectSet;
@@ -31,7 +35,7 @@ import java.util.Map;
 /**
  * a Build Action that returns all the models of the parameterized type for all the Gradle projects
  */
-public class GetAndroidModelAction<T> implements BuildAction<Map<String, T>> {
+public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelAction.ModelContainer<T>> {
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 
@@ -39,6 +43,32 @@ public class GetAndroidModelAction<T> implements BuildAction<Map<String, T>> {
 
     // Determines whether models are fetched with multiple threads.
     private final boolean isMultiThreaded;
+
+    public static final class ModelContainer<T> implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final Map<String, T> modelMap;
+        private final GlobalLibraryMap globalLibraryMap;
+
+        public ModelContainer(
+                Map<String, T> modelMap,
+                GlobalLibraryMap globalLibraryMap) {
+            this.modelMap = modelMap;
+            this.globalLibraryMap = globalLibraryMap;
+        }
+
+        public Map<String, T> getModelMap() {
+            return modelMap;
+        }
+
+        public GlobalLibraryMap getGlobalLibraryMap() {
+            return globalLibraryMap;
+        }
+
+        public T getOnlyModel() {
+            return Iterables.getOnlyElement(modelMap.values());
+        }
+    }
 
     public GetAndroidModelAction(Class<T> type) {
         this(type, true);
@@ -50,7 +80,7 @@ public class GetAndroidModelAction<T> implements BuildAction<Map<String, T>> {
     }
 
     @Override
-    public Map<String, T> execute(BuildController buildController) {
+    public ModelContainer<T> execute(BuildController buildController) {
 
         long t1 = System.currentTimeMillis();
         GradleBuild gradleBuild = buildController.getBuildModel();
@@ -62,7 +92,6 @@ public class GetAndroidModelAction<T> implements BuildAction<Map<String, T>> {
         List<BasicGradleProject> projectList = Lists.newArrayList(projects);
         List<Thread> threads = Lists.newArrayListWithCapacity(CPU_COUNT);
         List<ModelQuery> queries = Lists.newArrayListWithCapacity(CPU_COUNT);
-
 
         if (isMultiThreaded) {
             for (int i = 0; i < CPU_COUNT; i++) {
@@ -92,10 +121,20 @@ public class GetAndroidModelAction<T> implements BuildAction<Map<String, T>> {
             modelMap.putAll(modelQuery.getModels());
         }
 
+
+        GlobalLibraryMap globalLibraryMap = null;
+        for (BasicGradleProject project : projects) {
+            globalLibraryMap = buildController.findModel(project, GlobalLibraryMap.class);
+            //noinspection VariableNotUsedInsideIf
+            if (globalLibraryMap != null) {
+                break;
+            }
+        }
+
         long t2 = System.currentTimeMillis();
         System.out.println("GetAndroidModelAction: " + (t2-t1) + "ms");
 
-        return modelMap;
+        return new ModelContainer<T>(modelMap, globalLibraryMap);
     }
 
     // index used by threads to get the new project to query.

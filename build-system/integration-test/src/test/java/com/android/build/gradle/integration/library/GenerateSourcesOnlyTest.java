@@ -64,7 +64,7 @@ public class GenerateSourcesOnlyTest {
     @Test
     public void checkLibraryNotBuilt() {
         List<String> generateSources =
-                ModelHelper.getDebugGenerateSourcesCommands(project.model().getMulti());
+                ModelHelper.getDebugGenerateSourcesCommands(project.model().getMulti().getModelMap());
 
         GradleBuildResult result =
                 project.executor()

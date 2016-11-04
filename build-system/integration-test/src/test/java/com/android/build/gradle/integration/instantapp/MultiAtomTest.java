@@ -19,18 +19,22 @@ package com.android.build.gradle.integration.instantapp;
 import static com.android.SdkConstants.FD_RES_CLASS;
 import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.utils.FileUtils;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Map;
 import org.junit.AfterClass;
@@ -90,27 +94,29 @@ public class MultiAtomTest {
 
     @Test
     public void testModelLevel1() {
-        Map<String, AndroidProject> models;
-        models = sProject.model().level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
+        ModelContainer<AndroidProject> modelContainer;
+        modelContainer = sProject.model().level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
 
-        AndroidProject instantAppModel = models.get(":instantApp");
+        AndroidProject instantAppModel = modelContainer.getModelMap().get(":instantApp");
         assertThat(instantAppModel).named("Instant app model").isNotNull();
         assertThat(instantAppModel.getProjectType())
                 .named("Instant app project type")
                 .isEqualTo(AndroidProject.PROJECT_TYPE_INSTANTAPP);
 
         Variant variant = ModelHelper.getVariant(instantAppModel.getVariants(), "release");
-        Dependencies dependencies = variant.getMainArtifact().getPackageDependencies();
+        Dependencies dependencies = variant.getMainArtifact().getDependencies();
         assertThat(dependencies.getJavaLibraries()).named("Javalibs dependencies").isEmpty();
         assertThat(dependencies.getLibraries()).named("Android dependencies").isEmpty();
-        assertThat(dependencies.getAtoms()).named("Atoms dependencies").isEmpty();
-        assertThat(dependencies.getBaseAtom()).named("Base atom").isNull();
+        assertThat(dependencies.getAtoms()).named("Atoms dependencies").hasSize(7);
+        assertThat(dependencies.getBaseAtom()).named("Base atom").isNotNull();
     }
 
     @Test
     public void testModelFull() {
-        Map<String, AndroidProject> models;
-        models = sProject.model().level(AndroidProject.MODEL_LEVEL_2_DEP_GRAPH).getMulti();
+        ModelContainer<AndroidProject> modelContainer = sProject.model().getMulti();
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
+
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         AndroidProject instantAppModel = models.get(":instantApp");
         assertThat(instantAppModel).named("InstantApp model").isNotNull();
@@ -119,38 +125,49 @@ public class MultiAtomTest {
                 .isEqualTo(AndroidProject.PROJECT_TYPE_INSTANTAPP);
 
         Variant variant = ModelHelper.getVariant(instantAppModel.getVariants(), "release");
-        Dependencies instantAppDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(instantAppDeps.getJavaLibraries())
+        LibraryGraph instantAppDeps = variant.getMainArtifact().getCompileGraph();
+        assertThat(helper.on(instantAppDeps).withType(JAVA).asList())
                 .named("InstantApp Javalibs dependencies")
                 .isEmpty();
-        assertThat(instantAppDeps.getLibraries())
+        assertThat(helper.on(instantAppDeps).withType(ANDROID).asList())
                 .named("InstantApp Android dependencies")
                 .isEmpty();
-        assertThat(instantAppDeps.getAtoms()).named("InstantApp Atoms dependencies").hasSize(3);
+        assertThat(helper.on(instantAppDeps).withType(MODULE).asList())
+                .named("InstantApp Atoms dependencies").hasSize(3);
 
-        AndroidAtom baseAtom = instantAppDeps.getBaseAtom();
-        assertThat(baseAtom).named("Base atom").isNotNull();
-        assertThat(baseAtom.getResolvedCoordinates())
-                .named("Base atom resolved coordinates")
-                .isEqualTo("multiAtom", "base", "unspecified", "atombundle", null);
+        // TODO: do we need this?
+        //AndroidAtom baseAtom = instantAppDeps.getBaseAtom();
+        //assertThat(baseAtom).named("Base atom").isNotNull();
+        //assertThat(baseAtom.getResolvedCoordinates())
+        //        .named("Base atom resolved coordinates")
+        //        .isEqualTo("multiAtom", "base", "unspecified", "atombundle", null);
 
         AndroidProject atomCModel = models.get(":atomc");
         assertThat(atomCModel).named("AtomC model").isNotNull();
 
         Variant atomCVariant = ModelHelper.getVariant(atomCModel.getVariants(), "release");
         assertThat(atomCVariant).named("AtomC release variant").isNotNull();
-        Dependencies atomCDeps = atomCVariant.getMainArtifact().getPackageDependencies();
-        assertThat(atomCDeps.getJavaLibraries()).named("atomC javalibs dependencies").isEmpty();
+        LibraryGraph atomCDeps = atomCVariant.getMainArtifact().getCompileGraph();
+        assertThat(helper.on(atomCDeps).withType(JAVA).asList())
+                .named("atomC javalibs dependencies")
+                .isEmpty();
 
-        assertThat(atomCDeps.getLibraries()).named("AtomC lib dependencies").hasSize(1);
-        AndroidLibrary libC = Iterables.getOnlyElement(atomCDeps.getLibraries());
-        assertThat(libC.getResolvedCoordinates())
-                .named("LibC resolved coordinates")
-                .isEqualTo("multiAtom", "libc", "unspecified", "aar", null);
+        assertThat(helper.on(atomCDeps).withType(ANDROID).asList())
+                .named("AtomC lib dependencies")
+                .isEmpty();
 
-        assertThat(atomCDeps.getAtoms()).named("AtomC atom dependencies").hasSize(1);
-        assertThat(Iterables.getOnlyElement(atomCDeps.getAtoms()))
-                .named("AtomC atom dependency")
-                .isEqualTo(atomCDeps.getBaseAtom());
+        assertThat(helper.on(atomCDeps).withType(MODULE).mapTo(Property.GRADLE_PATH))
+                .named("AtomC module dependencies")
+                .containsAllOf(":libc", ":base");
+
+        //AndroidLibrary libC = Iterables.getOnlyElement(atomCDeps.getLibraries());
+        //assertThat(libC.getResolvedCoordinates())
+        //        .named("LibC resolved coordinates")
+        //        .isEqualTo("multiAtom", "libc", "unspecified", "aar", null);
+        //
+        //assertThat(atomCDeps.getAtoms()).named("AtomC atom dependencies").hasSize(1);
+        //assertThat(Iterables.getOnlyElement(atomCDeps.getAtoms()))
+        //        .named("AtomC atom dependency")
+        //        .isEqualTo(atomCDeps.getBaseAtom());
     }
 }

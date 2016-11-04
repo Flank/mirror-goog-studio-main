@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -50,11 +51,10 @@ class FlavorsTest {
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("flavors")
             .create()
-    AndroidProject model
 
     @Test
     void "check flavors show up in model"() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         File projectDir = project.getTestDir()
 
@@ -100,7 +100,7 @@ class FlavorsTest {
 
     @Test
     public void "compound source sets are in the model"() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         for (variant in model.variants) {
             assert variant.extraJavaArtifacts.every { it.multiFlavorSourceProvider != null }

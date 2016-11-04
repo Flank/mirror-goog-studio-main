@@ -19,10 +19,8 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
-import com.android.builder.model.level2.Library;
 import java.io.File;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether
@@ -34,9 +32,12 @@ public interface AndroidProject {
     String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
     // Sent by Studio 1.1+
     String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
-    // Sent by Studio 2.2+. The value of the prop is a monotonically increasing integer.
+    // Sent by Studio 2.3+. The value of the prop is a monotonically increasing integer.
     // see MODEL_LEVEL_* constants
     String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
+    // Sent by Studio 2.+. Additional model feature trigger on a case by case basis
+    // Value is simply true to enable.
+    String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
 
     // Sent by Studio 2.2+
     // This property will enable compatibility checks between Android Studio and the Android

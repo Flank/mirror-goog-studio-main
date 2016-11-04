@@ -16,30 +16,36 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for provided java submodule in app
@@ -50,7 +56,6 @@ public class AppWithProvidedProjectJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -62,13 +67,12 @@ public class AppWithProvidedProjectJarTest {
                 "    provided project(\":jar\")\n" +
                 "}\n");
 
-        models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
+        project.execute("clean", ":app:assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
     }
 
     @Test
@@ -79,19 +83,29 @@ public class AppWithProvidedProjectJarTest {
 
     @Test
     public void checkProvidedJarIsInTheMainArtifactDependency() {
-        Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        ModelContainer<AndroidProject> modelContainer = project.model()
+                .withFeature(FULL_DEPENDENCIES).getMulti();
 
-        Dependencies compileDeps = variant.getMainArtifact().getCompileDependencies();
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Collection<JavaLibrary> javaLibs = compileDeps.getJavaLibraries();
-        assertThat(javaLibs).named("Java libs").hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibs);
-        assertThat(javaLibrary.isProvided())
-                .named("single java lib provided property")
-                .isTrue();
-        assertThat(javaLibrary.getProject()).named("single java lib path").isEqualTo(":jar");
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getModelMap().get(":app").getVariants(), "debug");
 
-        Dependencies packageDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDeps.getJavaLibraries()).isEmpty();
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+
+        // assert that there is one sub-module dependency
+        assertThat(helper.on(compileGraph).withType(MODULE).asList())
+                .named("Module dependencies")
+                .hasSize(1);
+        // and that it's provided
+        GraphItem javaItem = helper.on(compileGraph).withType(MODULE).asSingleGraphItem();
+        assertThat(compileGraph.getProvidedLibraries())
+                .named("compile provided list")
+                .containsExactly(javaItem.getArtifactAddress());
+
+        // check that the package graph does not contain the item (or anything else)
+        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
+
+        assertThat(packageGraph.getDependencies()).named("package dependencies").isEmpty();
     }
 }

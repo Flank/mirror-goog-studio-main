@@ -129,7 +129,7 @@ android {
 
     @Test
     void buildToolsInModel() {
-        AndroidProject model = project.model().getSingle()
+        AndroidProject model = project.model().getSingle().getOnlyModel()
         assertThat(model.getBuildToolsVersion())
                 .named("Build Tools Version")
                 .isEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)

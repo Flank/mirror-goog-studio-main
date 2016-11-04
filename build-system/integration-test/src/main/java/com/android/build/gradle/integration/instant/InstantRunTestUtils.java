@@ -170,7 +170,8 @@ public final class InstantRunTestUtils {
             int apiLevel,
             @NonNull ColdswapMode coldswapMode) {
         project.execute("clean");
-        InstantRun instantRunModel = getInstantRunModel(project.model().getSingle());
+        InstantRun instantRunModel = getInstantRunModel(
+                Iterables.getOnlyElement(project.model().getSingle().getModelMap().values()));
 
         project.executor()
                 .withInstantRun(apiLevel, coldswapMode, OptionalCompilationStep.FULL_APK)

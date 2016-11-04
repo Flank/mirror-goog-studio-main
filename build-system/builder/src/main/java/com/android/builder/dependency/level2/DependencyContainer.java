@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
  *
  * Each dependency can be queried from {@link #isProvided(Dependency)} and
  * {@link #isSkipped(Dependency)}. This is queried on {@link Dependency} rather than the nodes,
- * because the information it for all usage of a given dependency, no matter how many time
+ * because the information is for all usage of a given dependency, no matter how many time
  * it shows up in the graph.
  */
 @Immutable

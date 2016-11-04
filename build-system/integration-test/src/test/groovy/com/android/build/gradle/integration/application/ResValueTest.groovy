@@ -100,7 +100,7 @@ class ResValueTest {
                 'generateFlavor1DebugResValue',
                 'generateFlavor1ReleaseResValue',
                 'generateFlavor2DebugResValue',
-                'generateFlavor2ReleaseResValue')
+                'generateFlavor2ReleaseResValue').getOnlyModel()
     }
 
     @AfterClass

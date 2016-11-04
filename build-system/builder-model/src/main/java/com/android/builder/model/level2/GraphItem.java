@@ -25,8 +25,7 @@ import java.util.List;
  *
  * This does not directly contain artifact information, instead it focuses on the graph
  * information (transitive dependencies) as well as the usage of this particular dependency
- * in this node of the graph (ie what are its modifiers: is it provided, skipped, or what version
- * was originally requested.)
+ * in this node of the graph (ie what are its modifiers: what version was originally requested.)
  */
 public interface GraphItem {
 

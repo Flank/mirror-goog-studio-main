@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
-import static org.junit.Assert.assertEquals;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -50,11 +51,22 @@ import org.gradle.tooling.model.GradleTask;
  */
 public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
+    public enum Feature {
+        /** full dependencies, including package graph, and provided and skipped properties. */
+        FULL_DEPENDENCIES(AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
+
+        private String featureName;
+
+        Feature(String featureName) {
+            this.featureName = featureName;
+        }
+    }
 
     private boolean mAssertNoSyncIssues = true;
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
     private final boolean isImproveDependencyEnabled;
+    private final List<String> modelFeatures = Lists.newArrayList();
 
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
@@ -90,17 +102,23 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         return this;
     }
 
+    public BuildModel withFeature(Feature feature) {
+        modelFeatures.add(feature.featureName);
+        return this;
+    }
+
     /**
      * Returns the project model.
      *
      * This will fail if the project is a multi-project setup.
      */
-    public AndroidProject getSingle() {
-        AndroidProject androidProject = getSingle(AndroidProject.class);
+    public ModelContainer<AndroidProject> getSingle() {
+        ModelContainer<AndroidProject> container = getSingleModel(AndroidProject.class);
         if (mAssertNoSyncIssues) {
-            assertNoSyncIssues(androidProject.getName(), androidProject);
+            AndroidProject project = Iterables.getOnlyElement(container.getModelMap().values());
+            assertNoSyncIssues(project.getName(), project);
         }
-        return androidProject;
+        return container;
     }
 
     /**
@@ -109,30 +127,55 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      * This will fail if the project is a multi-project setup.
      */
     public <T> T getSingle(@NonNull Class<T> modelClass) {
-        Map<String, T> modelMap = buildModel(
+        // if passing AndroidStudio.class, use getSingle() instead
+        assertThat(modelClass)
+                .named("Class name in getSingle(Class<T>)")
+                .isNotEqualTo(AndroidProject.class);
+
+        ModelContainer<T> container = getSingleModel(modelClass);
+
+        return Iterables.getOnlyElement(container.getModelMap().values());
+    }
+
+    /**
+     * Returns the project model.
+     *
+     * This will fail if the project is a multi-project setup.
+     */
+    private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) {
+        ModelContainer<T> container = buildModel(
                 projectConnection,
-                new GetAndroidModelAction<>(modelClass),
+                new GetAndroidModelAction<T>(modelClass),
                 modelLevel);
 
         // ensure there was only one project
-        assertEquals("Quering GradleTestProject.getModel() with multi-project settings",
-                1, modelMap.size());
+        assertThat(container.getModelMap())
+                .named("Quering GradleTestProject.getModel() with multi-project settings")
+                .hasSize(1);
 
-        return modelMap.get(":");
+        return container;
     }
 
+
     /** Returns a project model for each sub-project. */
-    public Map<String, AndroidProject> getMulti() {
-        Map<String, AndroidProject> models = getMulti(AndroidProject.class);
+    public ModelContainer<AndroidProject> getMulti() {
+        ModelContainer<AndroidProject> container = getMultiContainer(AndroidProject.class);
         if (mAssertNoSyncIssues) {
-            models.forEach(BuildModel::assertNoSyncIssues);
+            container.getModelMap().forEach(BuildModel::assertNoSyncIssues);
         }
-        return models;
+        return container;
     }
 
     /** Returns a project model for each sub-project. */
     public <T> Map<String, T> getMulti(@NonNull Class<T> modelClass) {
+        assertThat(modelClass)
+                .named("class name in getMulti(Class<T>)")
+                .isNotEqualTo(AndroidProject.class);
 
+        return getMultiContainer(modelClass).getModelMap();
+    }
+
+    private <T> ModelContainer<T> getMultiContainer(@NonNull Class<T> modelClass) {
         // TODO: Make buildModel multithreaded all the time.
         // Getting multiple NativeAndroidProject results in duplicated class implemented error
         // in a multithreaded environment.  This is due to issues in Gradle relating to the
@@ -164,11 +207,11 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      */
     @NonNull
-    private <K, V> Map<K, V> buildModel(
+    private <T> ModelContainer<T> buildModel(
             @NonNull ProjectConnection connection,
-            @NonNull BuildAction<Map<K, V>> action,
+            @NonNull BuildAction<ModelContainer<T>> action,
             int modelLevel) {
-        BuildActionExecuter<Map<K, V>> executor = connection.action(action);
+        BuildActionExecuter<ModelContainer<T>> executor = connection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(5);
         arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "=true");
@@ -178,7 +221,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             case AndroidProject.MODEL_LEVEL_0_ORIGNAL:
                 // nothing.
                 break;
-            case AndroidProject.MODEL_LEVEL_2_DEP_GRAPH:
+            case AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL:
                 arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED + "="
                         + modelLevel);
                 // intended fall-through
@@ -193,6 +236,11 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             arguments.add("-P"
                     + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
                     + "=true");
+        }
+
+        // model feature
+        for (String feature : modelFeatures) {
+            arguments.add("-P" + feature + "=true");
         }
 
         setJvmArguments(executor);

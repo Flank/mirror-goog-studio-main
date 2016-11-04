@@ -112,7 +112,7 @@ public class ConnectedColdSwapTest {
         // Set up
         device.uninstallPackage(HelloWorldApp.APP_ID);
         logcat.start(device, "coldswaptest");
-        AndroidProject model = project.model().getSingle();
+        AndroidProject model = project.model().getSingle().getOnlyModel();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
 

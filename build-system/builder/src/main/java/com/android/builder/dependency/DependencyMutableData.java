@@ -22,7 +22,7 @@ import com.google.common.base.MoreObjects;
  * Mutable data for an Android dependency.
  */
 public class DependencyMutableData {
-    // TODO skip in tow different classes since different graph use the booleans. No graph use both.
+    // TODO skip in two different classes since different graph use the booleans. No graph use both.
 
     private boolean isSkipped = false;
     private boolean isProvided = false;

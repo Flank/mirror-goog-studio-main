@@ -25,7 +25,6 @@ import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyNode.NodeType;
 import com.android.builder.dependency.level2.JavaDependency;
-import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -73,11 +72,14 @@ public class DependencyGraph {
     }
 
     @NonNull
+    private static DependencyGraph EMPTY = new DependencyGraph(
+            ImmutableMap.of(),
+            ImmutableList.of(),
+            MutableDependencyDataMap.EMPTY);
+
+    @NonNull
     public static DependencyGraph getEmpty() {
-        return new DependencyGraph(
-                ImmutableMap.of(),
-                ImmutableList.of(),
-                MutableDependencyDataMap.EMPTY);
+        return EMPTY;
     }
 
     @NonNull
@@ -189,8 +191,8 @@ public class DependencyGraph {
     private AtomDependency getBaseAtom() {
         // search for the base atom. This is normally the single atom from which all other
         // depends.
-        // first collect the direct level atom dependencies. From then on, we expect all
-        // transitive dependencies to be atoms only (this is check at resolution time)
+        // first collect the direct level atom dependencies, since only atom can depend on atoms,
+        // looking at other types on the direct dependencies is not needed.
         List<DependencyNode> atomList = dependencies.stream()
                 .filter(node -> node.getNodeType() == NodeType.ATOM)
                 .collect(Collectors.toList());
@@ -224,8 +226,8 @@ public class DependencyGraph {
 
     /**
      * Resolves a given list of libraries, finds out if they depend on other libraries, and
-     * returns a flat list of all the direct and indirect dependencies in the proper order (first
-     * is higher priority when calling aapt).
+     * returns a flat list of all the direct and indirect dependencies in the reverse order of what
+     * we need. This will get reverse later.
      *
      * @param dependencyNodes     the dependency nodes to flatten.
      * @param outFlatDependencies where to store all the dependencies

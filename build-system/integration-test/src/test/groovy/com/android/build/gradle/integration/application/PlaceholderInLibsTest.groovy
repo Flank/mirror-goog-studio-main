@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ApkHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -38,7 +39,7 @@ import static org.junit.Assert.assertNotNull
  */
 @CompileStatic
 class PlaceholderInLibsTest {
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
@@ -61,7 +62,7 @@ class PlaceholderInLibsTest {
     public void "test library placeholder substitution in final apk"() throws Exception {
 
         // Load the custom model for the project
-        Collection<Variant> variants = models.get(":app").getVariants()
+        Collection<Variant> variants = models.getModelMap().get(":app").getVariants()
         assertEquals("Variant Count", 2 , variants.size())
 
         // get the main artifact of the debug artifact

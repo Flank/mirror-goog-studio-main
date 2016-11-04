@@ -16,31 +16,29 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for compile library in app
@@ -51,7 +49,7 @@ public class AppWithCompileLibTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -62,13 +60,13 @@ public class AppWithCompileLibTest {
                 "dependencies {\n" +
                 "    compile project(\":library\")\n" +
                 "}\n");
-        models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
+        modelContainer = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
@@ -80,11 +78,15 @@ public class AppWithCompileLibTest {
 
     @Test
     public void checkCompiledLibraryIsInTheModel() {
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
         Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
-        Collection<AndroidLibrary> libraries = deps.getLibraries();
-        assertThat(libraries).hasSize(1);
-        assertThat(Iterables.getOnlyElement(libraries).getProject()).isEqualTo(":library");
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+
+        assertThat(helper.on(graph).withType(MODULE).mapTo(COORDINATES))
+                .named("app compile dependencies sub-modules")
+                .containsExactly(":library");
     }
 }

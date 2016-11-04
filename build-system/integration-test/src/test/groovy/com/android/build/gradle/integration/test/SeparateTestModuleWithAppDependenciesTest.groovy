@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.test
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import org.junit.AfterClass
@@ -29,7 +30,7 @@ class SeparateTestModuleWithAppDependenciesTest {
             .fromTestProject("separateTestModule")
             .create()
 
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
 
     @BeforeClass
     static void setup() {
