@@ -478,33 +478,8 @@ public class LintDriver {
 
         if (baseline != null) {
             Project lastProject = Iterables.getLast(projects);
-            int baselineErrorCount = baseline.getFoundErrorCount();
-            int baselineWarningCount = baseline.getFoundWarningCount();
-            int fixedCount = baseline.getFixedCount();
-
-            if (baselineErrorCount > 0 || baselineWarningCount > 0) {
-                File baselineFile = baseline.getFile();
-                String message = String.format("%1$s were filtered out because "
-                                + "they were listed in the baseline file, %2$s\n",
-                        LintUtils.describeCounts(baselineErrorCount, baselineWarningCount, false),
-                        baselineFile);
-                Project main = request.getMainProject(lastProject);
-                client.report(new Context(this, main, main, baselineFile),
-                        IssueRegistry.BASELINE,
-                        client.getConfiguration(main, this).getSeverity(IssueRegistry.BASELINE),
-                        Location.create(baselineFile), message, TextFormat.RAW);
-            }
-            if (fixedCount > 0) {
-                File baselineFile = baseline.getFile();
-                String message = String.format("%1$d errors/warnings were listed in the "
-                        + "baseline file (%2$s) but not found in the project; perhaps they have "
-                        + "been fixed?\n", fixedCount, baselineFile);
-                Project main = request.getMainProject(lastProject);
-                client.report(new Context(this, main, main, baselineFile),
-                        IssueRegistry.BASELINE,
-                        client.getConfiguration(main, this).getSeverity(IssueRegistry.BASELINE),
-                        Location.create(baselineFile), message, TextFormat.RAW);
-            }
+            Project main = request.getMainProject(lastProject);
+            baseline.reportBaselineIssues(this, main);
         }
 
         fireEvent(canceled ? EventType.CANCELED : EventType.COMPLETED, null);
@@ -2014,7 +1989,8 @@ public class LintDriver {
             }
 
             if (baseline != null) {
-                boolean filtered = baseline.findAndMark(issue, location, message, severity);
+                boolean filtered = baseline.findAndMark(issue, location, message, severity,
+                        context.getProject());
                 if (filtered) {
                     return;
                 }
@@ -2036,6 +2012,23 @@ public class LintDriver {
         public void log(@NonNull Severity severity, @Nullable Throwable exception,
                 @Nullable String format, @Nullable Object... args) {
             mDelegate.log(exception, format, args);
+        }
+
+        @NonNull
+        @Override
+        public List<File> getTestLibraries(@NonNull Project project) {
+            return mDelegate.getTestLibraries(project);
+        }
+
+        @Nullable
+        @Override
+        public String getClientRevision() {
+            return mDelegate.getClientRevision();
+        }
+
+        @Override
+        public void runReadAction(@NonNull Runnable runnable) {
+            mDelegate.runReadAction(runnable);
         }
 
         @Override

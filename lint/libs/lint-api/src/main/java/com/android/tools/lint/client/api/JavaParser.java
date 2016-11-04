@@ -418,13 +418,6 @@ public abstract class JavaParser {
     }
 
     /**
-     * Runs the given runnable under a readlock such that it can access the PSI
-     *
-     * @param runnable the runnable to be run
-     */
-    public abstract void runReadAction(@NonNull Runnable runnable);
-
-    /**
      * A description of a type, such as a primitive int or the android.app.Activity class
      * @deprecated Use {@link PsiType} instead
      */

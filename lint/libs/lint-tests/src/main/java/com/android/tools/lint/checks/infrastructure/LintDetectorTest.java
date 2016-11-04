@@ -1098,6 +1098,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             writer.getBuffer().setLength(0);
         }
 
+        @Override
+        public String getClientRevision() {
+            return "unittest"; // Hardcode version to keep unit test output stable
+        }
+
         public String analyze(List<File> files) throws Exception {
             driver = new LintDriver(new CustomIssueRegistry(), this);
             configureDriver(driver);

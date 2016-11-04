@@ -806,6 +806,8 @@ public final class SdkConstants {
     public static final String LT_ENTITY = "&lt;";                           //$NON-NLS-1$
     /** The entity for the greater than character */
     public static final String GT_ENTITY = "&gt;";                           //$NON-NLS-1$
+    /** The entity for a newline */
+    public static final String NEWLINE_ENTITY = "&#xA;";                     //$NON-NLS-1$
 
     // ---- Elements and Attributes ----
 
