@@ -78,15 +78,25 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
     }
 
     public void setNoCompress(String noCompress) {
-        noCompressList = Collections.singletonList(noCompress);
+        setNoCompress(new String[] { noCompress });
     }
 
     public void setNoCompress(String... noCompress) {
+        for (String p : noCompress) {
+            if (p.equals("\"\"")) {
+                LoggerWrapper.getLogger(AaptOptions.class).warning("noCompress pattern '\"\"' "
+                        + "no longer matches every file. It now matches exactly two double quote "
+                        + "characters. Please use '' instead.");
+            }
+        }
+
         noCompressList = Arrays.asList(noCompress);
     }
 
     /**
-     * Extensions of files that will not be stored compressed in the APK.
+     * Extensions of files that will not be stored compressed in the APK. Adding an empty
+     * extension, <i>i.e.</i>, setting {@code noCompress ''} will trivially disable compression
+     * for all files.
      *
      * <p>Equivalent of the -0 flag. See <code>aapt --help</code>
      */
