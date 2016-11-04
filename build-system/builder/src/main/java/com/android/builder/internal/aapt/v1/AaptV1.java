@@ -31,6 +31,7 @@ import com.android.ide.common.internal.PngException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.repository.Revision;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
@@ -45,35 +46,22 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
 
 /**
  * Implementation of an interface to the original {@code aapt}. This implementation relies on
  * process execution of {@code aapt}.
  */
-public class AaptV1 extends AbstractProcessExecutionAapt {
-
-    /**
-     * How much time to wait for {@code aapt} to flush the files.
-     */
-    private static final Duration MAX_WAIT_FOR_AAPT_FLUSH = Duration.ofSeconds(10);
-
-    /**
-     * How much time to wait between retries while waiting for {@code aapt} to flush the files.
-     */
-    private static final Duration MAX_CYCLE_AAPT_FLUSH_WAIT = Duration.ofMillis(50);
+public class AaptV1 extends AbstractProcessExecutionAapt implements QueueableResourceCompiler {
 
     /**
      * What mode should PNG be processed?
@@ -372,12 +360,26 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         return builder;
     }
 
+    int key;
+
+    @Override
+    public void start() {
+        if (mCruncher != null) {
+            key = mCruncher.start();
+        }
+    }
+
+    @Override
+    public void end() throws InterruptedException {
+        if (mCruncher != null && key != -1) {
+            mCruncher.end(key);
+        }
+    }
+
     @NonNull
     @Override
     public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
             throws AaptException {
-        ListenableFuture<File> compilationFuture;
-
         /*
          * Do not compile raw resources.
          */
@@ -390,111 +392,77 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             /*
              * Revert to old-style crunching.
              */
-            compilationFuture = super.compile(file, output);
-        } else {
-            Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-            Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
+            return super.compile(file, output);
+        }
+        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
+        Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
 
-            SettableFuture<File> future = SettableFuture.create();
-            compilationFuture = future;
+        SettableFuture<File> actualResult = SettableFuture.create();
 
-            if (!mProcessMode.shouldProcess(file)) {
-                future.set(null);
-            } else {
-                File outputFile = compileOutputFor(file, output);
+        if (!mProcessMode.shouldProcess(file)) {
+            actualResult.set(null);
+            return actualResult;
+        }
+        File outputFile = compileOutputFor(file, output);
 
-                try {
-                    Files.createParentDirs(outputFile);
-                } catch (IOException e) {
-                    throw new AaptException(e, String.format(
-                            "Failed to create parent directories for file '%s'",
-                            output.getAbsolutePath()));
-                }
-
-                int key = mCruncher.start();
-                try {
-                    mCruncher.crunchPng(key, file, outputFile);
-                } catch (PngException e) {
-                    throw new AaptException(e, String.format(
-                            "Failed to crunch file '%s' into '%s'",
-                            file.getAbsolutePath(),
-                            outputFile.getAbsolutePath()));
-                }
-
-                mWaitExecutor.execute(() -> {
-                    try {
-                        mCruncher.end(key);
-
-                        /*
-                         * Sometimes aapt doesn't flush the file fast enough and we get here
-                         * without the file actually existing, or with the file existing, but not
-                         * completely written. It is pretty crap, but that's what
-                         * we've got. So, we wait for a little bit to make sure the file exists
-                         * and is a valid png before moving forward.
-                         */
-                        Instant maxWaitUntil = Instant.now().plus(MAX_WAIT_FOR_AAPT_FLUSH);
-                        while (Instant.now().isBefore(maxWaitUntil)) {
-                            if (outputFile.exists()) {
-                                try {
-                                    BufferedImage png = ImageIO.read(outputFile);
-                                    if (png != null && png.getWidth() > 0 && png.getHeight() > 0) {
-                                        break;
-                                    }
-                                } catch (IOException e) {
-                                    /*
-                                     * Image still not there.
-                                     */
-                                }
-                            }
-
-                            try {
-                                Thread.sleep(MAX_CYCLE_AAPT_FLUSH_WAIT.toMillis());
-                            } catch (InterruptedException e) {
-                                /*
-                                 * Ignored, just try again.
-                                 */
-                            }
-                        }
-
-                        Preconditions.checkState(
-                                outputFile.exists(),
-                                "aapt did not generate '" + outputFile.getAbsolutePath() + "'");
-                        future.set(outputFile);
-                    } catch (Exception e) {
-                        future.setException(e);
-                    }
-                });
-            }
+        try {
+            Files.createParentDirs(outputFile);
+        } catch (IOException e) {
+            throw new AaptException(e, String.format(
+                    "Failed to create parent directories for file '%s'",
+                    output.getAbsolutePath()));
         }
 
-        /*
-         * When the compilationFuture is complete, check if the generated file is not bigger than
-         * the original file. If the original file is smaller, copy the original file over the
-         * generated file.
-         *
-         * However, this doesn't work with 9-patch because those need to be processed.
-         *
-         * Return a new future after this verification is done.
-         */
-        if (file.getName().endsWith(SdkConstants.DOT_9PNG)) {
-            return compilationFuture;
+        ListenableFuture<File> futureResult;
+        try {
+            futureResult = mCruncher.crunchPng(key, file, outputFile);
+        } catch (PngException e) {
+            throw new AaptException(e, String.format(
+                    "Failed to crunch file '%s' into '%s'",
+                    file.getAbsolutePath(),
+                    outputFile.getAbsolutePath()));
         }
+        futureResult.addListener(() -> {
 
-        return Futures.transform(compilationFuture, (File result) -> {
-            SettableFuture<File> returnFuture = SettableFuture.create();
-
+            File result;
             try {
-                if (result != null && file.length() < result.length()) {
-                    Files.copy(file, result);
-                }
-
-                returnFuture.set(result);
-            } catch (Exception e) {
-                returnFuture.setException(e);
+                result = futureResult.get();
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+                actualResult.setException(e);
+                return;
+            } catch (ExecutionException e) {
+                actualResult.setException(e);
+                return;
             }
 
-            return returnFuture;
-        });
+            /*
+             * When the compilationFuture is complete, check if the generated file is not bigger than
+             * the original file. If the original file is smaller, copy the original file over the
+             * generated file.
+             *
+             * However, this doesn't work with 9-patch because those need to be processed.
+             *
+             * Return a new future after this verification is done.
+             */
+            if (file.getName().endsWith(SdkConstants.DOT_9PNG)) {
+                actualResult.set(result);
+                return;
+            }
+
+            if (result != null && file.length() < result.length()) {
+                try {
+                    Files.copy(file, result);
+                } catch (IOException e) {
+                    actualResult.setException(e);
+                    return;
+                }
+            }
+
+            actualResult.set(result);
+
+        }, mWaitExecutor);
+        return actualResult;
     }
 
     @Nullable

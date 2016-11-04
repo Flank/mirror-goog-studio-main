@@ -46,6 +46,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -53,6 +54,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import java.util.concurrent.ExecutionException;
 import proguard.ClassPath;
 
 /**
@@ -162,6 +164,7 @@ public class ProGuardTransform extends BaseProguardAction {
     @Override
     public void transform(@NonNull final TransformInvocation invocation) throws TransformException {
         // only run one minification at a time (across projects)
+        SettableFuture<TransformOutputProvider> resultFuture = SettableFuture.create();
         final Job<Void> job = new Job<>(getName(),
                 new com.android.builder.tasks.Task<Void>() {
                     @Override
@@ -172,13 +175,25 @@ public class ProGuardTransform extends BaseProguardAction {
                                 invocation.getReferencedInputs(),
                                 invocation.getOutputProvider());
                     }
-                });
+
+                    @Override
+                    public void finished() {
+                        resultFuture.set(invocation.getOutputProvider());
+                    }
+
+                    @Override
+                    public void error(Exception e) {
+                        resultFuture.setException(e);
+                    }
+                }, resultFuture);
         try {
             SimpleWorkQueue.push(job);
 
             // wait for the task completion.
-            if (!job.awaitRethrowExceptions()) {
-                throw new RuntimeException("Job failed, see logs for details");
+            try {
+                job.awaitRethrowExceptions();
+            } catch (ExecutionException e) {
+                throw new RuntimeException("Job failed, see logs for details", e.getCause());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

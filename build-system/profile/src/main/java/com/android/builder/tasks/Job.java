@@ -20,9 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Definition of a queued job. A job has a title, a task to execute, a latch to signal its
@@ -30,68 +30,53 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class Job<T> {
 
-    private final String mJobTitle;
-    private final Task<T> mTask;
-    private final BooleanLatch mBooleanLatch;
-    private final AtomicBoolean mResult = new AtomicBoolean(false);
-    private final AtomicReference<Exception> mException;
+    private final String jobTitle;
+    private final Task<T> task;
+    private final ListenableFuture<?> resultFuture;
 
-    public Job(String jobTile, Task<T> task) {
-        mJobTitle = jobTile;
-        mTask = task;
-        mBooleanLatch = new BooleanLatch();
-        mException = new AtomicReference(null);
+    public Job(String jobTile, Task<T> task, ListenableFuture<?> resultFuture) {
+        this.jobTitle = jobTile;
+        this.task = task;
+        this.resultFuture = resultFuture;
     }
 
     public String getJobTitle() {
-        return mJobTitle;
+        return jobTitle;
     }
 
     public void runTask(@NonNull JobContext<T> jobContext) throws IOException {
-        mTask.run(this, jobContext);
+        task.run(this, jobContext);
     }
 
     public void finished() {
-        mResult.set(true);
-        mBooleanLatch.signal();
+        task.finished();
     }
 
     public void error(@Nullable Exception e) {
-        mResult.set(false);
-        mException.set(e);
-        mBooleanLatch.signal();
-    }
-
-    @Nullable
-    public Exception getFailureReason() {
-        return mException.get();
+        task.error(e);
     }
 
     public boolean await() throws InterruptedException {
 
-        mBooleanLatch.await();
-        return mResult.get();
-    }
-
-    public boolean awaitRethrowExceptions() throws InterruptedException, RuntimeException {
-        boolean result = await();
-        if (!result && mException.get() != null) {
-            throw new RuntimeException(mException.get());
+        try {
+            resultFuture.get();
+            return true;
+        } catch (ExecutionException e) {
+            return false;
         }
-        return result;
     }
 
-    public boolean failed() {
-        return !mResult.get();
+    public void awaitRethrowExceptions()
+            throws InterruptedException, ExecutionException {
+        resultFuture.get();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("\ntitle", mJobTitle)
-                .add("\ntask", mTask)
-                .add("\nlatch", mBooleanLatch)
-                .add("\nresult", mResult.get())
+                .add("\ntitle", jobTitle)
+                .add("\ntask", task)
+                .add("\nfuture", resultFuture)
                 .toString();
     }
 }
