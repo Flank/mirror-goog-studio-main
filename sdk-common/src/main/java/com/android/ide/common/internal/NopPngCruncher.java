@@ -17,6 +17,7 @@ package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
 /**
@@ -30,12 +31,11 @@ public class NopPngCruncher implements PngCruncher {
   }
 
   @Override
-  public void crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException {
+  public ListenableFuture<File> crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException {
     throw new PngException("unexpected use of NopPngCruncher");
   }
 
   @Override
   public void end(int key) throws InterruptedException {
-
   }
 }

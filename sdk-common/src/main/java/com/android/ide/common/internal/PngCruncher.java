@@ -18,6 +18,7 @@ package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
 /**
@@ -44,10 +45,11 @@ public interface PngCruncher {
      * @param key obtained from the {@link #start()}
      * @param from the file to crunch
      * @param to the output file
+     * @return a {@link ListenableFuture} instance calling code can listen to for completion.
      *
      * @throws PngException
      */
-    void crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException;
+    ListenableFuture<File> crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException;
 
     /**
      * Wait until all Png crunching requests have been executed. If there are no other users of

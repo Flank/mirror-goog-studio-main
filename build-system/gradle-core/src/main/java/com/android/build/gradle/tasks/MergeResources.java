@@ -145,7 +145,7 @@ public class MergeResources extends IncrementalTask {
                                 getCrunchPng(),
                                 variantScope,
                                 getAaptTempDir());
-                resourceCompiler = aapt::compile;
+                resourceCompiler = aapt;
             } else {
                 resourceCompiler = ResourceCompiler.NONE;
             }
