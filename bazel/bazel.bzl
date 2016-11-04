@@ -1,3 +1,6 @@
+
+load(":utils.bzl", "create_java_compiler_args")
+
 def _kotlin_jar_impl(ctx):
 
   class_jar = ctx.outputs.class_jar
@@ -8,19 +11,15 @@ def _kotlin_jar_impl(ctx):
     if hasattr(this_dep, "java"):
       all_deps += this_dep.java.transitive_runtime_deps
 
-  args = []
-  if ctx.files.deps:
-    args = ["-cp", ":".join([dep.path for dep in all_deps])]
-  args += ["-o", class_jar.path]
-  args += [src.path for src in ctx.files.srcs]
+  args, option_files = create_java_compiler_args(ctx, class_jar.path,
+                                                 all_deps)
 
-  # Execute the command
+  cmd = ctx.executable._kotlinc.path + " " + " ".join(args)
   ctx.action(
-    inputs = (ctx.files.srcs + list(all_deps)),
+    inputs = ctx.files.srcs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
-    executable = ctx.executable._kotlinc,
-    arguments = args,
+    command = cmd,
   )
 
 _kotlin_jar = rule(
@@ -56,15 +55,16 @@ def _groovy_jar_impl(ctx):
       all_deps += this_dep.java.transitive_runtime_deps
 
   class_jar = ctx.outputs.class_jar
-  args = ["-o", class_jar.path, "-cp", ":".join([dep.path for dep in all_deps])] + [src.path for src in ctx.files.srcs]
 
-  # Execute the command
+  args, option_files = create_java_compiler_args(ctx, class_jar.path,
+                                                 all_deps)
+
+  cmd = ctx.executable._groovy.path + " " + " ".join(args)
   ctx.action(
-      inputs = (ctx.files.srcs + list(all_deps)),
+      inputs = ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "groovyc",
-      executable = ctx.executable._groovy,
-      arguments = args,
+      command = cmd
   )
 
 _groovy_jar = rule(
@@ -172,15 +172,16 @@ def _form_jar_impl(ctx):
       all_deps += this_dep.java.transitive_runtime_deps
 
   class_jar = ctx.outputs.class_jar
-  args = ["-o", class_jar.path, "-cp", ":".join([dep.path for dep in all_deps])] + [src.path for src in ctx.files.srcs]
 
-  # Execute the command
+  args, option_files = create_java_compiler_args(ctx, class_jar.path,
+                                                 all_deps)
+
+  cmd = ctx.executable._formc.path + " " + " ".join(args)
   ctx.action(
-      inputs = ctx.files.srcs + list(all_deps),
+      inputs = ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "formc",
-      executable = ctx.executable._formc,
-      arguments = args,
+      command = cmd
   )
 
 _form_jar = rule(
@@ -292,7 +293,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     srcs = jars,
     outs = [name + ".jar"],
     tools = ["//tools/base/bazel:singlejar"],
-    cmd = "$(location //tools/base/bazel:singlejar) $@ $(SRCS)",
+    cmd = "$(location //tools/base/bazel:singlejar) --jvm_flag=-Xmx1g $@ $(SRCS)",
   )
 
   native.java_library(
