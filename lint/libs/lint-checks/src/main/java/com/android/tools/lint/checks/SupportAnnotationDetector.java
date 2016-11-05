@@ -225,7 +225,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             Severity.ERROR,
             IMPLEMENTATION);
 
-    /** Using a restricted API */
+    /** Using an intended-for-tests API */
     public static final Issue TEST_VISIBILITY = Issue.create(
             "VisibleForTests",
             "Visible Only For Tests",
@@ -1138,7 +1138,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 if (cls != null) {
                     PsiExpression qualifier = methodExpression.getQualifierExpression();
                     String className = cls.getName();
-                    if (qualifier != null && qualifier.textMatches(className)) {
+                    if (qualifier != null && className != null && qualifier.textMatches(className)) {
                         locationNode = qualifier;
                         api = className;
                     }
@@ -1146,7 +1146,17 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             }
         }
 
+        // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
         String message = api + " can only be called " + where;
+
+
+        // Most users will encounter this for the support library; let's have a clearer error message
+        // for that specific scenario
+        if (where.equals("from within the same library (groupId=com.android.support)")) {
+            // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
+            message = "This API is marked as internal to the support library and should not be accessed from apps";
+        }
+
         bridge.report(RESTRICTED, locationNode, node, message);
     }
 

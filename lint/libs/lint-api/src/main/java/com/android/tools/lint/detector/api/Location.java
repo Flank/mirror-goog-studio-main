@@ -26,6 +26,7 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.res2.ResourceFile;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.tools.lint.client.api.JavaParser;
+import com.android.tools.lint.client.api.LintClient;
 import com.google.common.annotations.Beta;
 import com.intellij.psi.PsiElement;
 import java.io.File;
@@ -46,13 +47,43 @@ public class Location {
     private String message;
     private Location secondary;
     private Object clientData;
+    private boolean visible = true;
+    private boolean selfExplanatory = true;
 
     /**
-     * Special marker location which means location not available, or not applicable, or filtered out, etc.
-     * For example, the infrastructure may return {@link #NONE} if you ask {@link JavaParser#getLocation(JavaContext, PsiElement)}
-     * for an element which is not in the current file during an incremental lint run in a single file.
+     * Special marker location which means location not available, or not applicable, or filtered
+     * out, etc. For example, the infrastructure may return {@link #NONE} if you ask {@link
+     * JavaParser#getLocation(JavaContext, PsiElement)} for an element which is not in the current
+     * file during an incremental lint run in a single file.
      */
-    public static final Location NONE = new Location(new File("NONE"), null, null);
+    public static final Location NONE = new Location(new File("NONE"), null, null) {
+        @NonNull
+        @Override
+        public Location setVisible(boolean visible) {
+            return this;
+        }
+
+        @Override
+        public Location setMessage(@NonNull String message, boolean selfExplanatory) {
+            return this;
+        }
+
+        @Override
+        public Location setClientData(@Nullable Object clientData) {
+            return this;
+        }
+
+        @NonNull
+        @Override
+        public Location setSelfExplanatory(boolean selfExplanatory) {
+            return this;
+        }
+
+        @Override
+        public Location setSecondary(@Nullable Location secondary) {
+            return this;
+        }
+    };
 
     /**
      * (Private constructor, use one of the factory methods
@@ -74,6 +105,43 @@ public class Location {
         this.file = file;
         this.start = start;
         this.end = end;
+    }
+
+    /**
+     * Whether this location should be visible on its own. "Visible" here refers to whether
+     * the location is shown in the IDE if the user navigates to the given location.
+     * <p>
+     * For visible locations, especially those that appear far away from the primary
+     * location, it's important that the error message make sense on its own.
+     * For example, for duplicate declarations, usually the primary error message says
+     * something like "foo has already been defined", and the secondary error message
+     * says "previous definition here". In something like a text or HTML report, this
+     * makes sense -- you see the "foo has already been defined" error message, and
+     * it also reports the locations of the previous error message. But if the secondary
+     * error message is visible, the user may encounter that error first, and if that
+     * error message just says "previous definition here", that doesn't make a lot of
+     * sense.
+     * <p>
+     * This attribute is ignored for the primary location for an issue (e.g. the location
+     * passed to {@link LintClient#report(Context, Issue, Severity, Location, String, TextFormat)},
+     * and it applies for all the secondary locations linked from that location.
+     *
+     * @return whether this secondary location should be shown on its own in the editor.
+     */
+    public boolean isVisible() {
+        return visible;
+    }
+
+    /**
+     * Sets whether this location should be visible on its own. See {@link #isVisible()}.
+     *
+     * @param visible whether this location should be visible
+     * @return this, for constructor chaining
+     */
+    @NonNull
+    public Location setVisible(boolean visible) {
+        this.visible = visible;
+        return this;
     }
 
     /**
@@ -126,9 +194,11 @@ public class Location {
      * Sets a secondary location for this location.
      *
      * @param secondary a secondary location associated with this location
+     * @return this, for constructor chaining
      */
-    public void setSecondary(@Nullable Location secondary) {
+    public Location setSecondary(@Nullable Location secondary) {
         this.secondary = secondary;
+        return this;
     }
 
     /**
@@ -141,9 +211,39 @@ public class Location {
      */
     @NonNull
     public Location withSecondary(@NonNull Location secondary, @NonNull String message) {
-        secondary.setMessage(message);
+        return withSecondary(secondary, message, false);
+    }
+
+    /**
+     * Sets a secondary location with the given message and returns the current location
+     * updated with the given secondary location.
+     *
+     * @param secondary       a secondary location associated with this location
+     * @param message         a message to be set on the secondary location
+     * @param selfExplanatory if true, the message is itself self-explanatory; see
+     *                        {@link #isSelfExplanatory()}}
+     * @return current location updated with the secondary location
+     */
+    @NonNull
+    public Location withSecondary(@NonNull Location secondary, @NonNull String message,
+                                  boolean selfExplanatory) {
+        secondary.setMessage(message, selfExplanatory);
         setSecondary(secondary);
         return this;
+    }
+    /**
+     * Sets a custom message for this location. This is typically used for
+     * secondary locations, to describe the significance of this alternate
+     * location. For example, for a duplicate id warning, the primary location
+     * might say "This is a duplicate id", pointing to the second occurrence of
+     * id declaration, and then the secondary location could point to the
+     * original declaration with the custom message "Originally defined here".
+     *
+     * @param message the message to apply to this location
+     * @return this, for constructor chaining
+     */
+    public Location setMessage(@NonNull String message) {
+        return setMessage(message, false);
     }
 
     /**
@@ -154,10 +254,42 @@ public class Location {
      * id declaration, and then the secondary location could point to the
      * original declaration with the custom message "Originally defined here".
      *
-     * @param message the message to apply to this location
+     * @param message         the message to apply to this location
+     * @param selfExplanatory if true, the message is itself self-explanatory;
+     *                        if false, it's just describing this particular
+     *                        location and the primary error message is
+     *                        necessary. Controls whether (for example) the
+     *                        IDE will include the original error message along
+     *                        with this location when showing the message.
+     * @return this, for constructor chaining
      */
-    public void setMessage(@NonNull String message) {
+    public Location setMessage(@NonNull String message, boolean selfExplanatory) {
         this.message = message;
+        setSelfExplanatory(selfExplanatory);
+        return this;
+    }
+
+    /**
+     * Whether this message is self-explanatory. If false, it's just describing this particular
+     * location and the primary error message is necessary. Controls whether (for example) the
+     * IDE will include the original error message along with this location when showing the
+     * message.
+     *
+     * @@return whether this message is self explanatory.
+     */
+    public boolean isSelfExplanatory() {
+        return selfExplanatory;
+    }
+
+    /**
+     * Sets whether this message is self-explanatory. See {@link #isSelfExplanatory()}.
+     * @param selfExplanatory whether this message is self explanatory.
+     * @return this, for constructor chaining
+     */
+    @NonNull
+    public Location setSelfExplanatory(boolean selfExplanatory) {
+        this.selfExplanatory = selfExplanatory;
+        return this;
     }
 
     /**
@@ -182,9 +314,11 @@ public class Location {
      * temporary state associated with the location.
      *
      * @param clientData the data to store with this location
+     * @return this, for constructor chaining
      */
-    public void setClientData(@Nullable Object clientData) {
+    public Location setClientData(@Nullable Object clientData) {
         this.clientData = clientData;
+        return this;
     }
 
     /**
