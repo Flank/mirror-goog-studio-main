@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -28,18 +27,23 @@ import com.android.build.gradle.external.gson.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.BuildCommandException;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessInfo;
+import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.ide.common.process.ProcessOutput;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.io.FileBackedOutputStream;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -209,7 +213,6 @@ public class ExternalNativeBuildTaskUtils {
         return map;
     }
 
-
     /**
      * Execute an external process and log the result in the case of a process exceptions.
      * Returns the info part of the log so that it can be parsed by ndk-build parser;
@@ -218,69 +221,123 @@ public class ExternalNativeBuildTaskUtils {
     @NonNull
     public static String executeBuildProcessAndLogError(
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ProcessInfo process)
-            throws BuildCommandException {
-        ExecuteBuildProcessLogger logger =
-                new ExecuteBuildProcessLogger(androidBuilder.getLogger());
+            @NonNull ProcessInfoBuilder process)
+            throws BuildCommandException, IOException {
+        ProgressiveLoggingProcessOutputHandler handler =
+                new ProgressiveLoggingProcessOutputHandler(androidBuilder.getLogger());
         try {
-            androidBuilder.executeProcess(process, new LoggedProcessOutputHandler(logger))
+            // Log the command to execute but only in verbose (ie --info)
+            androidBuilder.getLogger().verbose(process.toString());
+            androidBuilder.executeProcess(process.createProcess(), handler)
                     .rethrowFailure().assertNormalExitValue();
-            return logger.getOutput();
+
+            return handler.getCombinedOutputString();
         } catch (ProcessException e) {
             // Also, add process output to the process exception so that it can be analyzed by
-            // caller
-            String combinedMessage = String.format("%s\n%s", e.getMessage(), logger.getOutput());
+            // caller. Use combined stderr stdout instead of just stdout because compiler errors
+            // go to stdout.
+            String combinedMessage = String.format("%s\n%s", e.getMessage(),
+                    handler.getCombinedOutputString());
             throw new BuildCommandException(combinedMessage);
         }
     }
 
-    private static class ExecuteBuildProcessLogger implements ILogger {
-
-        @SuppressWarnings("StringBufferField")
-        private final StringBuilder output = new StringBuilder();
+    /**
+     * A process output handler that receives STDOUT and STDERR progressively (as it is happening)
+     * and logs the output line-by-line to Gradle. This class also collected precise byte-for-byte
+     * output.
+     */
+    private static class ProgressiveLoggingProcessOutputHandler implements ProcessOutputHandler {
+        @NonNull
         private final ILogger logger;
+        @NonNull
+        private final FileBackedOutputStream combinedOutput;
+        @NonNull
+        private final ProgressiveLoggingProcessOutput loggingProcessOutput;
 
-        private ExecuteBuildProcessLogger(ILogger logger) {
+        public ProgressiveLoggingProcessOutputHandler(@NonNull ILogger logger) {
             this.logger = logger;
+            combinedOutput = new FileBackedOutputStream(2048);
+            loggingProcessOutput = new ProgressiveLoggingProcessOutput();
         }
 
-        private String getOutput() {
-            return this.output.toString();
+        @NonNull
+        String getCombinedOutputString() throws IOException {
+            return combinedOutput.asByteSource().asCharSource(Charsets.UTF_8).read();
         }
 
-        @Override
-        public void error(
-                @Nullable Throwable t,
-                @Nullable String msgFormat,
-                Object... args) {
-            if (msgFormat != null) {
-                output.append(msgFormat);
+        @NonNull @Override public ProcessOutput createOutput() {
+            return loggingProcessOutput;
+        }
+
+        @Override public void handleOutput(@NonNull ProcessOutput processOutput)
+                throws ProcessException {
+            // Nothing to do here because the process output is handled as it comes in.
+        }
+
+        private class ProgressiveLoggingProcessOutput implements ProcessOutput {
+            @NonNull
+            private final ProgressiveLoggingOutputStream outputStream;
+            @NonNull
+            private final ProgressiveLoggingOutputStream errorStream;
+
+            ProgressiveLoggingProcessOutput() {
+                outputStream = new ProgressiveLoggingOutputStream();
+                errorStream = new ProgressiveLoggingOutputStream();
             }
-            logger.error(t, msgFormat, args);
-        }
 
-        @Override
-        public void warning(@NonNull String msgFormat, Object... args) {
-            // executeProcess doesn't currently output to warning. Capture it anyway. If this
-            // changes later don't want to lose information.
-            output.append(msgFormat);
-            logger.warning(msgFormat, args);
-        }
+            @NonNull @Override public ProgressiveLoggingOutputStream getStandardOutput() {
+                return outputStream;
+            }
 
-        @Override
-        public void info(@NonNull String msgFormat, Object... args) {
-            // Cannot String.format(msgFormat, args) or printf or similar because compiler output
-            // may produce msgFormat with embedded percent (%)
-            output.append(msgFormat);
-            logger.info(msgFormat, args);
-        }
+            @NonNull @Override public ProgressiveLoggingOutputStream getErrorOutput() {
+                return errorStream;
+            }
 
-        @Override
-        public void verbose(@NonNull String msgFormat, Object... args) {
-            // executeProcess doesn't currently output to verbose. Capture it anyway. If this
-            // changes later don't want to lose information.
-            output.append(msgFormat);
-            logger.verbose(msgFormat, args);
+            @Override public void close() throws IOException {
+            }
+
+            private class ProgressiveLoggingOutputStream extends OutputStream {
+                private static final int INITIAL_BUFFER_SIZE = 256;
+                @NonNull
+                byte[] buffer = new byte[INITIAL_BUFFER_SIZE];
+                int nextByteIndex = 0;
+
+                @Override public void write(int b) throws IOException {
+                    combinedOutput.write(b);
+                    // Check for /r and /n respectively
+                    if (b == 0x0A || b == 0x0D) {
+                        printBuffer();
+                    } else {
+                        writeBuffer(b);
+                    }
+                }
+
+                private void writeBuffer(int b) {
+                    if (nextByteIndex == buffer.length) {
+                        buffer = Arrays.copyOf(buffer, buffer.length * 2);
+                    }
+                    buffer[nextByteIndex] = (byte) b;
+                    nextByteIndex++;
+                }
+
+                private void printBuffer() throws UnsupportedEncodingException {
+                    if (nextByteIndex == 0) {
+                        return;
+                    }
+                    String line = new String(buffer, 0, nextByteIndex, "UTF-8");
+                    logger.info(line);
+                    nextByteIndex = 0;
+                }
+
+                @Override public void flush() throws IOException {
+                    printBuffer();
+                }
+
+                @Override public void close() throws IOException {
+                    printBuffer();
+                }
+            }
         }
     }
 }
