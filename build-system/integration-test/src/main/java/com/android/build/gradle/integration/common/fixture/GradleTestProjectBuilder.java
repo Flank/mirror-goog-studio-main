@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -54,6 +55,9 @@ public final class GradleTestProjectBuilder {
         if (targetGradleVersion == null) {
             targetGradleVersion = GradleTestProject.GRADLE_TEST_VERSION;
         }
+        // Initially, all Gradle test projects disable the build cache by default. A specific test
+        // may still be able to enable the build cache at a later time.
+        gradleProperties.add(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE + "=false");
         return new GradleTestProject(
                 name,
                 testProject,

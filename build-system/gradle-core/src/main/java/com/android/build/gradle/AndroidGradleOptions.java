@@ -46,7 +46,7 @@ public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_AAPT2 = false;
 
-    private static final boolean DEFAULT_ENABLE_BUILD_CACHE = false;
+    private static final boolean DEFAULT_ENABLE_BUILD_CACHE = true;
 
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
