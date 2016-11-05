@@ -21,7 +21,6 @@ import com.android.sdklib.tool.SdkManagerCli;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -278,16 +277,12 @@ public final class DevSdkUpdater {
      */
     private static void filterSdkFiles(
             File sdkRoot, Map<String, Filters> filterMap, String platform) throws IOException {
-        FileSystem fs = FileSystems.getDefault();
         for (Map.Entry<String, Filters> pkgFilterEntry : filterMap.entrySet()) {
             String pkg = pkgFilterEntry.getKey();
             Filters filters = pkgFilterEntry.getValue();
 
-            String includeFilter = filters.getInclude();
-            String excludeFilter = filters.getExclude();
-
-            PathMatcher includeMatcher = fs.getPathMatcher("glob:" + includeFilter);
-            PathMatcher excludeMatcher = fs.getPathMatcher("glob:" + excludeFilter);
+            PathMatcher includeMatcher = filters.getIncludePathMatcher();
+            PathMatcher excludeMatcher = filters.getExcludePathMatcher();
             System.out.print(String.format("Filtering %s with \"%s\"... ", pkg, filters));
             System.out.flush();
             for (OsEntry osEntry : OS_ENTRIES) {
@@ -347,21 +342,25 @@ public final class DevSdkUpdater {
 
         public final String mInclude;
         public final String mExclude;
+        final PathMatcher mIncludePathMatcher;
+        final PathMatcher mExcludePathMatcher;
 
         private Filters(String include, String exclude) {
             mInclude = include;
             mExclude = exclude;
+            mIncludePathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + include);
+            mExcludePathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + exclude);
         }
         private Filters(String include) {
             this(include, "");
         }
 
-        public String getInclude() {
-            return mInclude;
+        PathMatcher getIncludePathMatcher() {
+            return mIncludePathMatcher;
         }
 
-        public String getExclude() {
-            return mExclude;
+        PathMatcher getExcludePathMatcher() {
+            return mExcludePathMatcher;
         }
 
         @Override
