@@ -383,7 +383,6 @@ public class InstantRunBuildContext {
                 fileType != FileType.RESOURCES) {
             switch (patchingPolicy) {
                 case PRE_LOLLIPOP:
-                    LOG.warn("IRBC:addChangedFile got notified with " + fileType);
                     return;
                 case MULTI_DEX:
                     if (fileType != FileType.DEX) {
