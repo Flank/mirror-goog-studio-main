@@ -82,10 +82,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                         + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
 
-        // Disable the build cache for all benchmarks, until we figure out how to measure its
-        // impact.
-        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false");
-
         // Explicitly specify the aapt1, until we start recording both.
         withProperty(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false");
 
