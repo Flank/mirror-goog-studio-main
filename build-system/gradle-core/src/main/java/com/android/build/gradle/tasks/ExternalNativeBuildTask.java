@@ -155,7 +155,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
                 }
 
                 buildCommands.add(libraryValue.buildCommand);
-                libraryNames.add(checkNotNull(libraryValue.output).getPath());
+                libraryNames.add(libraryValue.artifactName + " " + libraryValue.abi);
                 diagnostic("about to build %s", libraryValue.buildCommand);
             }
         }
@@ -191,7 +191,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
             }
         }
 
-        if (stlSharedObjectFiles.size() > 0) {
+        if (!stlSharedObjectFiles.isEmpty()) {
             diagnostic("copy STL shared object files");
             for (Abi abi : stlSharedObjectFiles.keySet()) {
                 File stlSharedObjectFile = checkNotNull(stlSharedObjectFiles.get(abi));
@@ -211,7 +211,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
      */
     protected void executeProcessBatch(
             @NonNull List<String> libraryNames,
-            @NonNull List<String> commands) throws BuildCommandException {
+            @NonNull List<String> commands) throws BuildCommandException, IOException {
         // Order of building doesn't matter to final result but building in reverse order causes
         // the dependencies to be built first for CMake and ndk-build. This gives better progress
         // visibility to the user because they will see "building XXXXX.a" before
@@ -219,7 +219,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
         // so we can build in toposort order.
         for (int library = libraryNames.size() - 1; library >= 0; --library) {
             String libraryName = libraryNames.get(library);
-            getLogger().lifecycle(String.format("  building %s", libraryName));
+            getLogger().lifecycle(String.format("Build %s", libraryName));
             String command = commands.get(library);
             List<String> tokens = StringHelper.tokenizeString(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
@@ -230,7 +230,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
             diagnostic("%s", processBuilder);
             ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
                     getBuilder(),
-                    processBuilder.createProcess());
+                    processBuilder);
         }
     }
 
