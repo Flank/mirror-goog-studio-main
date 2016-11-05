@@ -103,14 +103,14 @@ filegroup(
 
 filegroup(
     name = "support_latest",
-    srcs = [":support_24.2.1"],
+    srcs = [":support_25.0.0"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "support_24.2.1",
+    name = "support_25.0.0",
     srcs = glob(
-        include = ["*/extras/android/m2repository/com/android/support/*/24.2.1/**"],
+        include = ["*/extras/android/m2repository/com/android/support/*/25.0.0/**"],
     ),
 )
 
