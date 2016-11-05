@@ -125,6 +125,10 @@ public class LintCliClient extends LintClient {
         if (baselineFile != null) {
             baseline = new LintBaseline(this, baselineFile);
             driver.setBaseline(baseline);
+            if (flags.isRemoveFixedBaselineIssues()) {
+                baseline.setWriteOnClose(true);
+                baseline.setRemoveFixed(true);
+            }
         }
 
         addProgressPrinter();
@@ -170,11 +174,6 @@ public class LintCliClient extends LintClient {
                         flags.getBaselineFile().getName()));
             }
             System.out.println();
-            if (fixedCount > 0) {
-                System.out.println(String.format("%1$d errors/warnings were listed in the "
-                        + "baseline file (%2$s) but not found in the project; perhaps they have "
-                        + "been fixed?\n", fixedCount, baselineFile));
-            }
         }
 
         if (baselineFile != null && !baselineFile.exists()) {
@@ -273,10 +272,6 @@ public class LintCliClient extends LintClient {
             @NonNull String message,
             @NonNull TextFormat format) {
         assert context.isEnabled(issue) || issue == LINT_ERROR;
-
-        if (severity == Severity.IGNORE) {
-            return;
-        }
 
         if (severity == Severity.ERROR || severity == Severity.FATAL) {
             hasErrors = true;
@@ -792,8 +787,9 @@ public class LintCliClient extends LintClient {
         return new CliConfiguration(file, flags.isFatalOnly());
     }
 
+    @Override
     @Nullable
-    String getRevision() {
+    public String getClientRevision() {
         File file = findResource("tools" + File.separator +
                 "source.properties");
         if (file != null && file.exists()) {

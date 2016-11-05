@@ -94,6 +94,7 @@ public class Main {
     private static final String ARG_RESOURCES  = "--resources";
     private static final String ARG_LIBRARIES  = "--libraries";
     private static final String ARG_BASELINE   = "--baseline";
+    private static final String ARG_REMOVE_FIXED = "--remove-fixed";
 
     private static final String ARG_NO_WARN_2  = "--nowarn";
     // GCC style flag names for options
@@ -629,6 +630,8 @@ public class Main {
                     System.exit(ERRNO_INVALID_ARGS);
                 }
                 flags.setBaselineFile(input);
+            } else if (arg.equals(ARG_REMOVE_FIXED)) {
+                flags.setRemovedFixedBaselineIssues(true);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -879,7 +882,7 @@ public class Main {
     }
 
     private static void printVersion(LintCliClient client) {
-        String revision = client.getRevision();
+        String revision = client.getClientRevision();
         if (revision != null) {
             System.out.println(String.format("lint: version %1$s", revision));
         } else {

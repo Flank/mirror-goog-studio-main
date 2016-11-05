@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -70,7 +71,7 @@ public class XmlReporter extends Reporter {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         // Format 4: added urls= attribute with all more info links, comma separated
         writer.write("<issues format=\"4\"");
-        String revision = client.getRevision();
+        String revision = client.getClientRevision();
         if (revision != null) {
             writer.write(String.format(" by=\"lint %1$s\"", revision));
         }
@@ -202,26 +203,7 @@ public class XmlReporter extends Reporter {
         writer.write(name);
         writer.write('=');
         writer.write('"');
-        for (int i = 0, n = value.length(); i < n; i++) {
-            char c = value.charAt(i);
-            switch (c) {
-                case '"':
-                    writer.write("&quot;");
-                    break;
-                case '\'':
-                    writer.write("&apos;");
-                    break;
-                case '&':
-                    writer.write("&amp;");
-                    break;
-                case '<':
-                    writer.write("&lt;");
-                    break;
-                default:
-                    writer.write(c);
-                    break;
-            }
-        }
+        writer.write(XmlUtils.toXmlAttributeValue(value));
         writer.write('"');
     }
 

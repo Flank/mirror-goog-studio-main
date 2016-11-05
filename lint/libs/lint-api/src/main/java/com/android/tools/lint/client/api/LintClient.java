@@ -86,12 +86,12 @@ public abstract class LintClient {
 
     protected LintClient(@NonNull String clientName) {
         //noinspection AssignmentToStaticFieldFromInstanceMethod
-        sClientName = clientName;
+        LintClient.clientName = clientName;
     }
 
     protected LintClient() {
         //noinspection AssignmentToStaticFieldFromInstanceMethod
-        sClientName = "unknown";
+        clientName = "unknown";
     }
 
     /**
@@ -1234,7 +1234,7 @@ public abstract class LintClient {
 
     /** The client name. */
     @NonNull
-    private static String sClientName = CLIENT_UNKNOWN;
+    private static String clientName = CLIENT_UNKNOWN;
 
     /**
      * Returns the name of the embedding client. It could be not just
@@ -1245,7 +1245,14 @@ public abstract class LintClient {
      */
     @NonNull
     public static String getClientName() {
-        return sClientName;
+        return clientName;
+    }
+
+
+    /** Returns the version number of this lint client, if known */
+    @Nullable
+    public String getClientRevision() {
+        return null;
     }
 
     /**
@@ -1255,7 +1262,7 @@ public abstract class LintClient {
      * @return true if running in Android Studio / IntelliJ IDEA
      */
     public static boolean isStudio() {
-        return CLIENT_STUDIO.equals(sClientName);
+        return CLIENT_STUDIO.equals(clientName);
     }
 
     /**
@@ -1264,7 +1271,16 @@ public abstract class LintClient {
      * @return true if running in Gradle
      */
     public static boolean isGradle() {
-        return CLIENT_GRADLE.equals(sClientName);
+        return CLIENT_GRADLE.equals(clientName);
+    }
+
+    /**
+     * Runs the given runnable under a readlock such that it can access the PSI
+     *
+     * @param runnable the runnable to be run
+     */
+    public void runReadAction(@NonNull Runnable runnable) {
+        runnable.run();
     }
 
     /** Returns a repository logger used by this client. */
