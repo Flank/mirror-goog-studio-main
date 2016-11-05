@@ -13,16 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.testutils.filesystemdiff;
 
-package com.android.testutils;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+public class DirectoryEntry extends FileSystemEntry {
+    private List<FileSystemEntry> mChildEntries = new ArrayList<>();
 
-@RunWith(JarTestSuiteRunner.class)
-public class JarTestSuite {
-    @BeforeClass
-    public static void setUp() {
-        BazelRunfilesManifestProcessor.setUpRunfiles();
+    public DirectoryEntry(Path path) {
+        super(path);
+    }
+
+    @Override
+    public Kind getKind() {
+        return Kind.Directory;
+    }
+
+    @Override
+    public List<FileSystemEntry> getChildEntries() {
+        return mChildEntries;
+    }
+
+    public void addChildEntry(FileSystemEntry child) {
+        mChildEntries.add(child);
     }
 }

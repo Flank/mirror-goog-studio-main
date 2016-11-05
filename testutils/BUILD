@@ -45,6 +45,7 @@ java_test(
     deps = [
         ":tools.testutils",
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:org.smali_dexlib2",
