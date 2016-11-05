@@ -22,6 +22,7 @@ import static java.io.File.separator;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.Lint;
+import com.android.builder.Version;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.sdklib.BuildToolInfo;
@@ -80,6 +81,12 @@ public class LintGradleClient extends LintCliClient {
         this.registry = registry;
         this.buildToolInfo = buildToolInfo;
         this.variant = variant;
+    }
+
+    @Nullable
+    @Override
+    public String getClientRevision() {
+        return Version.ANDROID_GRADLE_PLUGIN_VERSION;
     }
 
     public void setCustomRules(List<File> customRules) {

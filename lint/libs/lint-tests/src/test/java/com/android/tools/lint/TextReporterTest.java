@@ -36,12 +36,7 @@ public class TextReporterTest extends AbstractCheckTest {
     public void test() throws Exception {
         File file = new File(getTargetDir(), "report");
         try {
-            LintCliClient client = new LintCliClient() {
-                @Override
-                String getRevision() {
-                    return "unittest"; // Hardcode version to keep unit test output stable
-                }
-            };
+            LintCliClient client = createClient();
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
@@ -113,12 +108,7 @@ public class TextReporterTest extends AbstractCheckTest {
     public void testWithExplanations() throws Exception {
         File file = new File(getTargetDir(), "report");
         try {
-            LintCliClient client = new LintCliClient() {
-                @Override
-                String getRevision() {
-                    return "unittest"; // Hardcode version to keep unit test output stable
-                }
-            };
+            LintCliClient client = createClient();
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);

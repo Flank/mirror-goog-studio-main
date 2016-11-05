@@ -1266,13 +1266,6 @@ public class EcjParser extends JavaParser {
         return null;
     }
 
-    @Override
-    public void runReadAction(@NonNull Runnable runnable) {
-        // No lock needed for read access under ECJ, but we should consider
-        // having a debug mode where we enforce read access to help catch bugs
-        runnable.run();
-    }
-
     @Nullable
     @Override
     public ResolvedClass findClass(@NonNull JavaContext context,

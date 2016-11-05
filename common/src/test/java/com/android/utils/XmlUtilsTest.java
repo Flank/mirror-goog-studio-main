@@ -127,22 +127,23 @@ public class XmlUtilsTest extends TestCase {
         assertEquals("'", XmlUtils.fromXmlAttributeValue("&apos;"));
         assertEquals("foo\"b''ar", XmlUtils.fromXmlAttributeValue("foo&quot;b&apos;&apos;ar"));
         assertEquals("<\"'>&", XmlUtils.fromXmlAttributeValue("&lt;&quot;&apos;>&amp;"));
+        assertEquals("a\nb\nc", XmlUtils.fromXmlAttributeValue("a&#xA;b&#xA;c"));
     }
 
     public void testAppendXmlAttributeValue() throws Exception {
         StringBuilder sb = new StringBuilder();
-        XmlUtils.appendXmlAttributeValue(sb, "<\"'>&");
-        assertEquals("&lt;&quot;&apos;>&amp;", sb.toString());
+        XmlUtils.appendXmlAttributeValue(sb, "<\"'>&\n\n");
+        assertEquals("&lt;&quot;&apos;>&amp;&#xA;&#xA;", sb.toString());
     }
 
     public void testToXmlTextValue() throws Exception {
-        assertEquals("&lt;\"'>&amp;", XmlUtils.toXmlTextValue("<\"'>&"));
+        assertEquals("&lt;\"'>&amp;\n", XmlUtils.toXmlTextValue("<\"'>&\n"));
     }
 
     public void testAppendXmlTextValue() throws Exception {
         StringBuilder sb = new StringBuilder();
-        XmlUtils.appendXmlTextValue(sb, "<\"'>&");
-        assertEquals("&lt;\"'>&amp;", sb.toString());
+        XmlUtils.appendXmlTextValue(sb, "<\"'>&\n");
+        assertEquals("&lt;\"'>&amp;\n", sb.toString());
     }
 
     public void testHasChildren() throws Exception {

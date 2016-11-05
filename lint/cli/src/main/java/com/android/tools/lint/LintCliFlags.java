@@ -60,6 +60,7 @@ public class LintCliFlags {
 
     private File defaultConfiguration;
     private boolean showAll;
+    private boolean removedFixedBaselineIssues;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -422,5 +423,28 @@ public class LintCliFlags {
      */
     public void setBaselineFile(@Nullable File baselineFile) {
         this.baselineFile = baselineFile;
+    }
+
+    /**
+     * Whether lint will update the baseline file to remove any issues that
+     * are no longer present in the codebase. This will only remove fixed issues,
+     * it will not insert any newly found issues.
+     * <p>
+     * Only applies when a baseline file has been configured.
+     *
+     * @return whether to update the baseline file.
+     */
+    public boolean isRemoveFixedBaselineIssues() {
+        return removedFixedBaselineIssues;
+    }
+
+    /**
+     * Sets whether lint should remove fixed baseline issues.
+     *
+     * @see #isRemoveFixedBaselineIssues()
+     * @param removeFixed
+     */
+    public void setRemovedFixedBaselineIssues(boolean removeFixed) {
+        removedFixedBaselineIssues = removeFixed;
     }
 }

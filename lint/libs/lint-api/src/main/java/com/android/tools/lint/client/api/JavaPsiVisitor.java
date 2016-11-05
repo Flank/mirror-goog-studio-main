@@ -292,8 +292,9 @@ public class JavaPsiVisitor {
             }
             try {
                 context.setJavaFile(javaFile);
+                LintClient client = context.getClient();
 
-                parser.runReadAction(() -> {
+                client.runReadAction(() -> {
                     for (VisitingDetector v : allDetectors) {
                         v.setContext(context);
                         v.getDetector().beforeCheckFile(context);
@@ -301,14 +302,14 @@ public class JavaPsiVisitor {
                 });
 
                 if (!superClassDetectors.isEmpty()) {
-                    parser.runReadAction(() -> {
+                    client.runReadAction(() -> {
                         SuperclassPsiVisitor visitor = new SuperclassPsiVisitor(context);
                         javaFile.accept(visitor);
                     });
                 }
 
                 for (final VisitingDetector v : fullTreeDetectors) {
-                    parser.runReadAction(() -> {
+                    client.runReadAction(() -> {
                         JavaElementVisitor visitor = v.getVisitor();
                         javaFile.accept(visitor);
                     });
@@ -318,7 +319,7 @@ public class JavaPsiVisitor {
                         || !resourceFieldDetectors.isEmpty()
                         || !constructorDetectors.isEmpty()
                         || !referenceDetectors.isEmpty()) {
-                    parser.runReadAction(() -> {
+                    client.runReadAction(() -> {
                         // TODO: Do we need to break this one up into finer grain
                         // locking units
                         JavaElementVisitor visitor = new DelegatingPsiVisitor(context);
@@ -326,7 +327,7 @@ public class JavaPsiVisitor {
                     });
                 } else {
                     if (!nodePsiTypeDetectors.isEmpty()) {
-                        parser.runReadAction(() -> {
+                        client.runReadAction(() -> {
                             // TODO: Do we need to break this one up into finer grain
                             // locking units
                             JavaElementVisitor visitor = new DispatchPsiVisitor();
@@ -335,7 +336,7 @@ public class JavaPsiVisitor {
                     }
                 }
 
-                parser.runReadAction(() -> {
+                client.runReadAction(() -> {
                     for (VisitingDetector v : allDetectors) {
                         v.getDetector().afterCheckFile(context);
                     }
