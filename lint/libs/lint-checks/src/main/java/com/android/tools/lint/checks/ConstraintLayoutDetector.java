@@ -24,6 +24,7 @@ import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
+import static com.android.tools.lint.detector.api.TextFormat.RAW;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -116,8 +117,9 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
                         // Keep in sync with #isUpgradeDependencyError below
                         String message = "Using version " + version.getRevision()
-                                         + " of the constraint library, which is obsolete";
-                        context.report(ISSUE, layout, context.getLocation(layout), message);
+                                + " of the constraint library, which is obsolete";
+                        context.report(GradleDetector.DEPENDENCY, layout,
+                                context.getLocation(layout), message);
                     }
                 }
             }
@@ -238,6 +240,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
     public static boolean isUpgradeDependencyError(
             @NonNull String errorMessage,
             @NonNull TextFormat format) {
-        return errorMessage.startsWith("Using version ");
+        errorMessage = format.convertTo(errorMessage, RAW);
+        return errorMessage.contains(" of the constraint library, which is obsolete");
     }
 }

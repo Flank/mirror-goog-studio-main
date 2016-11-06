@@ -254,7 +254,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 Attr first = findIdAttribute(attribute.getOwnerDocument(), id);
                 if (first != null && first != attribute) {
                     Location secondLocation = context.getLocation(first);
-                    secondLocation.setMessage(String.format("`%1$s` originally defined here", id));
+                    secondLocation.setMessage(String.format("Duplicate id `%1$s` originally defined here", id), true);
                     location.setSecondary(secondLocation);
                 }
 

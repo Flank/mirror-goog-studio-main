@@ -63,4 +63,24 @@ public class EcjSourceFile extends CompilationUnit {
     public static EcjSourceFile create(@NonNull CharSequence source, @NonNull File file) {
         return create(source, file, UTF_8);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        EcjSourceFile that = (EcjSourceFile) o;
+
+        return file.equals(that.file);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return file.hashCode();
+    }
 }
