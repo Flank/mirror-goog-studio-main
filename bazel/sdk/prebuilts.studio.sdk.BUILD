@@ -87,16 +87,16 @@ filegroup(
 
 filegroup(
     name = "constraint-layout_latest",
-    srcs = [":constraint-layout_1.0.0-beta1"],
+    srcs = [":constraint-layout_1.0.0-beta3"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "constraint-layout_1.0.0-beta1",
+    name = "constraint-layout_1.0.0-beta3",
     srcs = glob(
         include = [
-            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0-beta1/**",
-            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta1/**"
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0-beta3/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta3/**"
         ],
     ),
 )
