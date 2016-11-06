@@ -216,4 +216,24 @@ class EcjPsiJavaFile extends EcjPsiSourceElement implements PsiJavaFile {
     public File getIoFile() {
         return mSource.getFile();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        EcjPsiJavaFile that = (EcjPsiJavaFile) o;
+
+        return mSource.equals(that.mSource);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return mSource.hashCode();
+    }
 }

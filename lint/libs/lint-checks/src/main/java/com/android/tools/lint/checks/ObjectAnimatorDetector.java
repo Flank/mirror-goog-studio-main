@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
@@ -57,6 +58,7 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -391,10 +393,11 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
                 return;
             }
 
-            report(context, MISSING_KEEP, propertyNameExpression, bestMethod,
-                    "This method is accessed from an ObjectAnimator so it should be "
-                            + "annotated with `@Keep` to ensure that it is discarded or "
-                            + "renamed in release builds");
+            report(context, MISSING_KEEP, propertyNameExpression, bestMethod, ""
+                  // Keep in sync with isAddKeepErrorMessage below
+                  + "This method is accessed from an ObjectAnimator so it should be "
+                  + "annotated with `@Keep` to ensure that it is discarded or "
+                  + "renamed in release builds");
         }
     }
 
@@ -423,12 +426,59 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
 
         Location location = reportOnMethod ? methodLocation : context.getNameLocation(locationNode);
         if (reportOnMethod) {
-            location = location.withSecondary(context.getLocation(propertyNameExpression),
-                    "ObjectAnimator usage here");
+            Location secondary = context.getLocation(propertyNameExpression);
+            location.setSecondary(secondary);
+            secondary.setMessage("ObjectAnimator usage here");
+
+            // In the same compilation unit, don't show the error on the reference,
+            // but in other files (where you may not spot the problem), highlight it.
+            if (Objects.equals(propertyNameExpression.getContainingFile(),
+                    method.getContainingFile())) {
+                // Same compilation unit: we don't need to show (in the IDE) the secondary
+                // location since we're drawing attention to the keep issue)
+                secondary.setVisible(false);
+            } else {
+                //noinspection ConstantConditions
+                assert issue == MISSING_KEEP;
+                String secondaryMessage = String.format("The method referenced here (%1$s) has "
+                                + "not been annotated with `@Keep` which means it could be "
+                                + "discarded or renamed in release builds",
+                        method.getName());
+
+                // If on the other hand we're in a separate compilation unit, we should
+                // draw attention to the problem
+                if (location == Location.NONE) {
+                    // When running within the IDE in single file scope the IDE just creates
+                    // none-locations for items in other files; in this case make this
+                    // the primary locations instead
+                    location = secondary;
+                    message = secondaryMessage;
+                } else {
+                    secondary.setMessage(secondaryMessage);
+                }
+            }
         } else if (methodLocation != null) {
             location = location.withSecondary(methodLocation, "Property setter here");
         }
         context.report(issue, method, location, message);
+    }
+
+    /**
+     * Returns true if the error message (which should have been produced by this detector)
+     * corresponds to the method listed <b>on</b> a property method that it's missing a
+     * Keep annotation. Used by IDE quickfixes to only add keep annotations on the actual
+     * keep method, not on the error message (with the same inspection id) shown on the
+     * object animator.
+     *
+     * @param message    the original message produced by lint
+     * @param textFormat the format it's been provided in
+     * @return true if this is a message on a property method missing {@code @Keep}
+     */
+    @SuppressWarnings("unused") // Referenced from IDE
+    public static boolean isAddKeepErrorMessage(@NonNull String message,
+        @NonNull TextFormat textFormat) {
+        message = textFormat.convertTo(message, TextFormat.RAW);
+        return message.contains("This method is accessed from an ObjectAnimator so");
     }
 
     // Copy of PropertyValuesHolder#getMethodName - copy to ensure lint & platform agree

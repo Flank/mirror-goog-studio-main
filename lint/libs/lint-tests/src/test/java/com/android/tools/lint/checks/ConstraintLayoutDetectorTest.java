@@ -40,9 +40,6 @@ import java.util.List;
 public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
     public void test1() throws Exception {
         assertEquals(""
-                + "res/layout/layout1.xml:2: Error: Using version 1.0.0-alpha3 of the constraint library, which is obsolete [MissingConstraints]\n"
-                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
                 + "res/layout/layout1.xml:19: Error: This view is not constrained, it only has designtime positions, so it will jump to (0,0) unless you add constraints [MissingConstraints]\n"
                 + "    <TextView\n"
                 + "    ^\n"
@@ -52,7 +49,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                 + "res/layout/layout1.xml:53: Error: This view is not constrained horizontally: at runtime it will jump to the left unless you add a horizontal constraint [MissingConstraints]\n"
                 + "    <TextView\n"
                 + "    ^\n"
-                + "4 errors, 0 warnings\n",
+                + "3 errors, 0 warnings\n",
                 lintProject(xml("res/layout/layout1.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
