@@ -1,0 +1,467 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint;
+
+import com.android.annotations.NonNull;
+import com.android.ide.common.xml.XmlFormatPreferences;
+import com.android.ide.common.xml.XmlFormatStyle;
+import com.android.ide.common.xml.XmlPrettyPrinter;
+import com.android.testutils.TestUtils;
+import com.android.tools.lint.checks.AbstractCheckTest;
+import com.android.tools.lint.checks.HardcodedValuesDetector;
+import com.android.tools.lint.checks.ManifestDetector;
+import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.detector.api.DefaultPosition;
+import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.w3c.dom.Document;
+
+public class MaterialHtmlReporterTest  extends AbstractCheckTest {
+    public void test() throws Exception {
+        //noinspection ResultOfMethodCallIgnored
+        File projectDir = TestUtils.createTempDirDeletedOnExit();
+        File buildDir = new File(projectDir, "build");
+        File reportFile = new File(buildDir, "report");
+        //noinspection ResultOfMethodCallIgnored
+        buildDir.mkdirs();
+
+        try {
+            LintCliClient client = new LintCliClient() {
+                @Override
+                IssueRegistry getRegistry() {
+                    if (registry == null) {
+                        registry = new IssueRegistry()  {
+                            @NonNull
+                            @Override
+                            public List<Issue> getIssues() {
+                                return Arrays.asList(
+                                        ManifestDetector.USES_SDK,
+                                        HardcodedValuesDetector.ISSUE,
+                                        // Not reported, but for the disabled-list
+                                        ManifestDetector.MOCK_LOCATION);
+                            }
+                        };
+                    }
+                    return registry;
+                }
+            };
+
+            MaterialHtmlReporter reporter = new MaterialHtmlReporter(client, reportFile,
+                    new LintCliFlags());
+            File res = new File(projectDir, "res");
+            File layout = new File(res, "layout");
+            File main = new File(layout, "main.xml");
+            File manifest = new File(projectDir, "AndroidManifest.xml");
+            Project project = Project.create(client, projectDir, projectDir);
+            Warning warning1 = new Warning(ManifestDetector.USES_SDK,
+                    "<uses-sdk> tag should specify a target API level (the highest verified " +
+                            "version; when running on later versions, compatibility behaviors may " +
+                            "be enabled) with android:targetSdkVersion=\"?\"",
+                    Severity.WARNING, project);
+            warning1.line = 6;
+            warning1.file = manifest;
+            warning1.errorLine = "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n";
+            warning1.path = "AndroidManifest.xml";
+            warning1.location = Location.create(warning1.file,
+                    new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
+
+            Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
+                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    Severity.WARNING, project);
+            warning2.line = 11;
+            warning2.file = main;
+            warning2.errorLine = " (java.lang.String)         android:text=\"Fooo\" />\n" +
+                    "        ~~~~~~~~~~~~~~~~~~~\n";
+            warning2.path = "res/layout/main.xml";
+            warning2.location = Location.create(warning2.file,
+                    new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
+
+            List<Warning> warnings = new ArrayList<>();
+            warnings.add(warning1);
+            warnings.add(warning2);
+
+            reporter.write(new Reporter.Stats(0, 2), warnings);
+
+            String report = Files.toString(reportFile, Charsets.UTF_8);
+
+            // Replace the timestamp to make golden file comparison work
+            String timestampPrefix = "Check performed at ";
+            int begin = report.indexOf(timestampPrefix);
+            assertTrue(begin != -1);
+            begin += timestampPrefix.length();
+            int end = report.indexOf(".<br/>", begin);
+            assertTrue(end != -1);
+            report = report.substring(0, begin) + "$DATE" + report.substring(end);
+
+            // Not intended to be user configurable; we'll remove the old support soon
+            assertTrue("This test is hardcoded for inline resource mode",
+                    HtmlReporter.INLINE_RESOURCES);
+
+            // NOTE: If you change the output, please validate it manually in
+            //  http://validator.w3.org/#validate_by_input
+            // before updating the following
+            assertEquals(""
+                            + "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+                            + "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+                            + "\n"
+                            + "<head>\n"
+                            + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n"
+                            + "<title>Lint Report</title>\n"
+                            + "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/icon?family=Material+Icons\">\n"
+                            + " <link rel=\"stylesheet\" href=\"https://code.getmdl.io/1.2.1/material.blue-indigo.min.css\" />\n"
+                            + "<link rel=\"stylesheet\" href=\"http://fonts.googleapis.com/css?family=Roboto:300,400,500,700\" type=\"text/css\">\n"
+                            + "<script defer src=\"https://code.getmdl.io/1.2.0/material.min.js\"></script>\n"
+                            + "<style>\n"
+                            + "section.section--center {\n"
+                            + "    max-width: 860px;\n"
+                            + "}\n"
+                            + ".mdl-card__supporting-text + .mdl-card__actions {\n"
+                            + "    border-top: 1px solid rgba(0, 0, 0, 0.12);\n"
+                            + "}\n"
+                            + "main > .mdl-layout__tab-panel {\n"
+                            + "  padding: 8px;\n"
+                            + "  padding-top: 48px;\n"
+                            + "}\n"
+                            + "\n"
+                            + ".mdl-card__actions {\n"
+                            + "    margin: 0;\n"
+                            + "    padding: 4px 40px;\n"
+                            + "    color: inherit;\n"
+                            + "}\n"
+                            + ".mdl-card > * {\n"
+                            + "    height: auto;\n"
+                            + "}\n"
+                            + ".mdl-card__actions a {\n"
+                            + "    color: #00BCD4;\n"
+                            + "    margin: 0;\n"
+                            + "}\n"
+                            + ".error-icon {\n"
+                            + "    color: #bb7777;\n"
+                            + "    vertical-align: bottom;\n"
+                            + "}\n"
+                            + ".warning-icon {\n"
+                            + "    vertical-align: bottom;\n"
+                            + "}\n"
+                            + ".mdl-layout__content section:not(:last-of-type) {\n"
+                            + "  position: relative;\n"
+                            + "  margin-bottom: 48px;\n"
+                            + "}\n"
+                            + "\n"
+                            + ".mdl-card .mdl-card__supporting-text {\n"
+                            + "  margin: 40px;\n"
+                            + "  -webkit-flex-grow: 1;\n"
+                            + "      -ms-flex-positive: 1;\n"
+                            + "          flex-grow: 1;\n"
+                            + "  padding: 0;\n"
+                            + "  color: inherit;\n"
+                            + "  width: calc(100% - 80px);\n"
+                            + "}\n"
+                            + "div.mdl-layout__drawer-button .material-icons {\n"
+                            + "    line-height: 48px;\n"
+                            + "}\n"
+                            + ".mdl-card .mdl-card__supporting-text {\n"
+                            + "    margin-top: 0px;\n"
+                            + "}\n"
+                            + ".chips {\n"
+                            + "    float: right;\n"
+                            + "    vertical-align: middle;\n"
+                            + "}\n"
+                            + "pre.errorlines {\n"
+                            + "    background-color: #2b2b2b;\n"
+                            + "    color: #a9b7c6;\n"
+                            + "    font-family: monospace;\n"
+                            + "    font-size: 0.9rem;    line-height: 0.9rem;\n"
+                            + "    padding: 6px;\n"
+                            + "    border: 1px solid #e0e0e0;\n"
+                            + "}\n"
+                            + ".prefix {\n"
+                            + "    color: #9876aa;\n"
+                            + "}\n"
+                            + ".attribute {\n"
+                            + "    color: #BABABA;\n"
+                            + "}\n"
+                            + ".value {\n"
+                            + "    color: #6a8759;\n"
+                            + "}\n"
+                            + ".tag {\n"
+                            + "    color: #e8bf6a;\n"
+                            + "}\n"
+                            + ".comment {\n"
+                            + "    color: #808080;\n"
+                            + "}\n"
+                            + ".javadoc {\n"
+                            + "    font-style: italic;\n"
+                            + "    color: #629755;\n"
+                            + "}\n"
+                            + ".annotation {\n"
+                            + "    color: #BBB529;\n"
+                            + "}\n"
+                            + ".string {\n"
+                            + "    color: #6a8759;\n"
+                            + "}\n"
+                            + ".number {\n"
+                            + "    color: #6897bb;\n"
+                            + "}\n"
+                            + ".keyword {\n"
+                            + "    color: #cc7832;\n"
+                            + "}\n"
+                            + ".caretline {\n"
+                            + "    background-color: #323232;\n"
+                            + "}\n"
+                            + ".lineno {\n"
+                            + "    color: #606366;\n"
+                            + "    background-color: #313335;\n"
+                            + "}\n"
+                            + ".error {\n"
+                            + "    text-decoration: none;\n"
+                            + "    background-color: #622a2a;\n"
+                            + "}\n"
+                            + ".warning {\n"
+                            + "    text-decoration: none;\n"
+                            + "    background-color: #52503a;\n"
+                            + "}\n"
+                            + ".overview {\n"
+                            + "    padding: 10pt;\n"
+                            + "    width: 100%;\n"
+                            + "    overflow: auto;\n"
+                            + "    border-collapse:collapse;\n"
+                            + "}\n"
+                            + ".overview tr {\n"
+                            + "    border-bottom: solid 1px #eeeeee;\n"
+                            + "}\n"
+                            + ".categoryColumn a {\n"
+                            + "     text-decoration: none;\n"
+                            + "     color: inherit;\n"
+                            + "}\n"
+                            + ".countColumn {\n"
+                            + "    text-align: right;\n"
+                            + "    padding-right: 20px;\n"
+                            + "    width: 50px;\n"
+                            + "}\n"
+                            + ".issueColumn {\n"
+                            + "   padding-left: 16px;\n"
+                            + "}\n"
+                            + ".categoryColumn {\n"
+                            + "   position: relative;\n"
+                            + "   left: -50px;\n"
+                            + "   padding-top: 20px;\n"
+                            + "   padding-bottom: 5px;\n"
+                            + "}\n"
+                            + "\n"
+                            + "</style>\n"
+                            + "<script language=\"javascript\" type=\"text/javascript\"> \n"
+                            + "<!--\n"
+                            + "function reveal(id) {\n"
+                            + "if (document.getElementById) {\n"
+                            + "document.getElementById(id).style.display = 'block';\n"
+                            + "document.getElementById(id+'Link').style.display = 'none';\n"
+                            + "}\n"
+                            + "}\n"
+                            + "function hideid(id) {\n"
+                            + "if (document.getElementById) {\n"
+                            + "document.getElementById(id).style.display = 'none';\n"
+                            + "}\n"
+                            + "}\n"
+                            + "//--> \n"
+                            + "</script>\n"
+                            + "</head>\n"
+                            + "<body class=\"mdl-color--grey-100 mdl-color-text--grey-700 mdl-base\">\n"
+                            + "<div class=\"mdl-layout mdl-js-layout mdl-layout--fixed-header\">\n"
+                            + "  <header class=\"mdl-layout__header\">\n"
+                            + "    <div class=\"mdl-layout__header-row\">\n"
+                            + "      <span class=\"mdl-layout-title\">Lint Report: 2 warnings</span>\n"
+                            + "      <div class=\"mdl-layout-spacer\"></div>\n"
+                            + "      <nav class=\"mdl-navigation mdl-layout--large-screen-only\">\n"
+                            + "Check performed at $DATE.<br/>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "<div class=\"chips\">\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">UsesMinSdkAttributes</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Correctness</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Warning</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Priority 9/10</span>\n"
+                            + "</span>\n"
+                            + "</div>\n"
+                            + "              </div>\n"
+                            + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
+                            + "<button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"explanationUsesMinSdkAttributesLink\" onclick=\"reveal('explanationUsesMinSdkAttributes');\">\n"
+                            + "Explain</button><button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"card2Link\" onclick=\"hideid('card2');\">\n"
+                            + "Dismiss</button>            </div>\n"
+                            + "            </div>\n"
+                            + "          </section>\n"
+                            + "<a name=\"Internationalization\"></a>\n"
+                            + "<a name=\"HardcodedText\"></a>\n"
+                            + "<section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"card3\" style=\"display: block;\">\n"
+                            + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n"
+                            + "  <div class=\"mdl-card__title\">\n"
+                            + "    <h2 class=\"mdl-card__title-text\">Hardcoded text</h2>\n"
+                            + "  </div>\n"
+                            + "              <div class=\"mdl-card__supporting-text\">\n"
+                            + "<div class=\"issue\">\n"
+                            + "<div class=\"warningslist\">\n"
+                            + "<span class=\"location\"><a href=\"../res/layout/main.xml\">res/layout/main.xml</a>:12</span>: <span class=\"message\">[I18N] Hardcoded string \"Fooo\", should use @string resource</span><br />\n"
+                            + "</div>\n"
+                            + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationHardcodedText\" style=\"display: none;\">\n"
+                            + "Hardcoding text attributes directly in layout files is bad for several reasons:<br/>\n"
+                            + "<br/>\n"
+                            + "* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)<br/>\n"
+                            + "<br/>\n"
+                            + "* The application cannot be translated to other languages by just adding new translations for existing string resources.<br/>\n"
+                            + "<br/>\n"
+                            + "There are quickfixes to automatically extract this hardcoded string into a resource lookup.<br/><br/>To suppress this error, use the issue id \"HardcodedText\" as explained in the <a href=\"#SuppressInfo\">Suppressing Warnings and Errors</a> section.<br/>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "<div class=\"chips\">\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">HardcodedText</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Internationalization</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Warning</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Priority 5/10</span>\n"
+                            + "</span>\n"
+                            + "</div>\n"
+                            + "              </div>\n"
+                            + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
+                            + "<button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"explanationHardcodedTextLink\" onclick=\"reveal('explanationHardcodedText');\">\n"
+                            + "Explain</button><button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"card3Link\" onclick=\"hideid('card3');\">\n"
+                            + "Dismiss</button>            </div>\n"
+                            + "            </div>\n"
+                            + "          </section>\n"
+                            + "<a name=\"MissingIssues\"></a>\n"
+                            + "<section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"card4\" style=\"display: block;\">\n"
+                            + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n"
+                            + "  <div class=\"mdl-card__title\">\n"
+                            + "    <h2 class=\"mdl-card__title-text\">Disabled Checks</h2>\n"
+                            + "  </div>\n"
+                            + "              <div class=\"mdl-card__supporting-text\">\n"
+                            + "One or more issues were not run by lint, either \n"
+                            + "because the check is not enabled by default, or because \n"
+                            + "it was disabled with a command line flag or via one or \n"
+                            + "more <code>lint.xml</code> configuration files in the project directories.\n"
+                            + "<div id=\"SuppressedIssues\" style=\"display: none;\"><br/><br/></div>              </div>\n"
+                            + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
+                            + "<button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"SuppressedIssuesLink\" onclick=\"reveal('SuppressedIssues');\">\n"
+                            + "List Missing Issues</button><button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"card4Link\" onclick=\"hideid('card4');\">\n"
+                            + "Dismiss</button>            </div>\n"
+                            + "            </div>\n"
+                            + "          </section>\n"
+                            + "<a name=\"SuppressInfo\"></a>\n"
+                            + "<section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"card5\" style=\"display: block;\">\n"
+                            + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n"
+                            + "  <div class=\"mdl-card__title\">\n"
+                            + "    <h2 class=\"mdl-card__title-text\">Suppressing Warnings and Errors</h2>\n"
+                            + "  </div>\n"
+                            + "              <div class=\"mdl-card__supporting-text\">\n"
+                            + "Lint errors can be suppressed in a variety of ways:<br/>\n"
+                            + "<br/>\n"
+                            + "1. With a <code>@SuppressLint</code> annotation in the Java code<br/>\n"
+                            + "2. With a <code>tools:ignore</code> attribute in the XML file<br/>\n"
+                            + "3. With a //noinspection comment in the source code<br/>\n"
+                            + "4. With ignore flags specified in the <code>build.gradle</code> file, as explained below<br/>\n"
+                            + "5. With a <code>lint.xml</code> configuration file in the project<br/>\n"
+                            + "6. With a <code>lint.xml</code> configuration file passed to lint via the --config flag<br/>\n"
+                            + "7. With the --ignore flag passed to lint.<br/>\n"
+                            + "<br/>\n"
+                            + "To suppress a lint warning with an annotation, add a <code>@SuppressLint(\"id\")</code> annotation on the class, method or variable declaration closest to the warning instance you want to disable. The id can be one or more issue id's, such as <code>\"UnusedResources\"</code> or <code>{\"UnusedResources\",\"UnusedIds\"}</code>, or it can be <code>\"all\"</code> to suppress all lint warnings in the given scope.<br/>\n"
+                            + "<br/>\n"
+                            + "To suppress a lint warning with a comment, add a <code>//noinspection id</code> comment on the line before the statement with the error.<br/>\n"
+                            + "<br/>\n"
+                            + "To suppress a lint warning in an XML file, add a <code>tools:ignore=\"id\"</code> attribute on the element containing the error, or one of its surrounding elements. You also need to define the namespace for the tools prefix on the root element in your document, next to the <code>xmlns:android</code> declaration:<br/>\n"
+                            + "<code>xmlns:tools=\"http://schemas.android.com/tools\"</code><br/>\n"
+                            + "<br/>\n"
+                            + "To suppress a lint warning in a <code>build.gradle</code> file, add a section like this:<br/>\n"
+                            + "<br/>\n"
+                            + "android {<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;lintOptions {<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;disable 'TypographyFractions','TypographyQuotes'<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;}<br/>\n"
+                            + "}<br/>\n"
+                            + "<br/>\n"
+                            + "Here we specify a comma separated list of issue id's after the disable command. You can also use <code>warning</code> or <code>error</code> instead of <code>disable</code> to change the severity of issues.<br/>\n"
+                            + "<br/>\n"
+                            + "To suppress lint warnings with a configuration XML file, create a file named <code>lint.xml</code> and place it at the root directory of the module in which it applies.<br/>\n"
+                            + "<br/>\n"
+                            + "The format of the <code>lint.xml</code> file is something like the following:<br/>\n"
+                            + "<br/>\n"
+                            + "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?><br/>\n"
+                            + "&lt;lint><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- Disable this given check in this project --><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;issue id=\"IconMissingDensityFolder\" severity=\"ignore\" /><br/>\n"
+                            + "<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- Ignore the ObsoleteLayoutParam issue in the given files --><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;issue id=\"ObsoleteLayoutParam\"><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore path=\"res/layout/activation.xml\" /><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore path=\"res/layout-xlarge/activation.xml\" /><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;/issue><br/>\n"
+                            + "<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- Ignore the UselessLeaf issue in the given file --><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;issue id=\"UselessLeaf\"><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore path=\"res/layout/main.xml\" /><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;/issue><br/>\n"
+                            + "<br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- Change the severity of hardcoded strings to \"error\" --><br/>\n"
+                            + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;issue id=\"HardcodedText\" severity=\"error\" /><br/>\n"
+                            + "&lt;/lint><br/>\n"
+                            + "<br/>\n"
+                            + "To suppress lint checks from the command line, pass the --ignore flag with a comma separated list of ids to be suppressed, such as:<br/>\n"
+                            + "<code>$ lint --ignore UnusedResources,UselessLeaf /my/project/path</code><br/>\n"
+                            + "<br/>\n"
+                            + "For more information, see <a href=\"http://g.co/androidstudio/suppressing-lint-warnings\">http://g.co/androidstudio/suppressing-lint-warnings</a><br/>\n"
+                            + "\n"
+                            + "            </div>\n"
+                            + "            </div>\n"
+                            + "          </section>    </div>\n"
+                            + "  </main>\n"
+                            + "</div>\n"
+                            + "</body>\n"
+                            + "</html>",
+                    report);
+        } finally {
+            deleteFile(projectDir);
+        }
+    }
+
+    @Override
+    protected Detector getDetector() {
+        fail("Not used in this test");
+        return null;
+    }
+}

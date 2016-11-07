@@ -29,6 +29,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.HtmlReporter;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
+import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -531,7 +532,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
                     }
                     closeWriter = true;
                 }
-                flags.getReporters().add(new TextReporter(client, flags, file, writer,
+                flags.getReporters().add(Reporter.createTextReporter(client, flags, file, writer,
                         closeWriter));
             }
             if (htmlReport) {
@@ -543,7 +544,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
                 }
                 output = validateOutputFile(output);
                 try {
-                    flags.getReporters().add(new HtmlReporter(client, output, flags));
+                    flags.getReporters().add(Reporter.createHtmlReporter(client, output, flags,
+                            false));
                 } catch (IOException e) {
                     throw new GradleException("HTML invalid argument.", e);
                 }
@@ -557,7 +559,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
                 }
                 output = validateOutputFile(output);
                 try {
-                    flags.getReporters().add(new XmlReporter(client, output));
+                    flags.getReporters().add(Reporter.createXmlReporter(client, output, false));
                 } catch (IOException e) {
                     throw new org.gradle.api.GradleException("XML invalid argument.", e);
                 }

@@ -185,10 +185,8 @@ public class LintCliClient extends LintClient {
             if (!ok) {
                 System.err.println("Couldn't create baseline folder " + dir);
             } else {
-                XmlReporter reporter = new XmlReporter(this, baselineFile);
-                reporter.setIntendedForBaseline(true);
-                reporter.write(stats, warnings
-                );
+                Reporter reporter = Reporter.createXmlReporter(this, baselineFile, true);
+                reporter.write(stats, warnings);
                 String message = ""
                         + "Created baseline file " + baselineFile + "\n"
                         + "\n"
@@ -273,7 +271,7 @@ public class LintCliClient extends LintClient {
             @NonNull TextFormat format) {
         assert context.isEnabled(issue) || issue == LINT_ERROR;
 
-        if (severity == Severity.ERROR || severity == Severity.FATAL) {
+        if (severity.isError()) {
             hasErrors = true;
             errorCount++;
         } else {
@@ -304,6 +302,10 @@ public class LintCliClient extends LintClient {
             int line = startPosition.getLine();
             warning.line = line;
             warning.offset = startPosition.getOffset();
+            Position endPosition = location.getEnd();
+            if (endPosition != null) {
+                warning.endOffset = endPosition.getOffset();
+            }
             if (line >= 0) {
                 if (context.file == location.getFile()) {
                     warning.fileContents = context.getContents();
@@ -336,7 +338,6 @@ public class LintCliClient extends LintClient {
                         }
 
                         boolean displayCaret = true;
-                        Position endPosition = location.getEnd();
                         if (endPosition != null) {
                             int endLine = endPosition.getLine();
                             int endColumn = endPosition.getColumn();

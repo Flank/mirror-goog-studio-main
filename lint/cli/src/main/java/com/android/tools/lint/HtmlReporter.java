@@ -84,7 +84,6 @@ public class HtmlReporter extends Reporter {
 
     protected final Writer writer;
     protected final LintCliFlags flags;
-    private String stripPrefix;
     private String fixUrl;
 
     /**
@@ -392,7 +391,7 @@ public class HtmlReporter extends Reporter {
         writer.write("</div>\n");
 
         writer.write("Severity: ");
-        if (severity == Severity.ERROR || severity == Severity.FATAL) {
+        if (severity.isError()) {
             writer.write("<span class=\"error\">");
         } else if (severity == Severity.WARNING) {
             writer.write("<span class=\"warning\">");
@@ -580,7 +579,7 @@ public class HtmlReporter extends Reporter {
 
             boolean isError = false;
             for (Warning warning : warnings) {
-                if (warning.severity == Severity.ERROR || warning.severity == Severity.FATAL) {
+                if (warning.severity.isError()) {
                     isError = true;
                     break;
                 }
@@ -740,7 +739,7 @@ public class HtmlReporter extends Reporter {
     }
 
     /** Provide a sorting rank for a url */
-    private static int getDpiRank(String url) {
+    static int getDpiRank(String url) {
         if (url.contains("-xhdpi")) {
             return 0;
         } else if (url.contains("-hdpi")) {
@@ -793,6 +792,101 @@ public class HtmlReporter extends Reporter {
         }
     }
 
+    @Override
+    public void writeProjectList(@NonNull Stats stats,
+            @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects) throws IOException {
+        writer.write(
+                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
+                        "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+                        "<head>\n" +
+                        "<title>" + title + "</title>\n");
+        writeStyleSheet();
+        writer.write(
+                "</head>\n" +
+                        "<body>\n" +
+                        "<h1>" +
+                        title +
+                        "</h1>\n" +
+                        "<div class=\"titleSeparator\"></div>\n");
+
+
+        writer.write(String.format("Check performed at %1$s.",
+                new Date().toString()));
+        writer.write("<br/>\n");
+        appendEscapedText(String.format("%1$s found",
+                describeCounts(stats.errorCount, stats.warningCount, false)));
+        if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+            File baselineFile = flags.getBaselineFile();
+            assert baselineFile != null;
+            appendEscapedText(String.format(" (%1$ss filtered by "
+                            + "baseline %2$s)",
+                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
+                    baselineFile.getName()));
+        }
+        writer.write(":\n<br/><br/>\n");
+
+        if (stats.errorCount == 0 && stats.warningCount == 0) {
+            writer.write("Congratulations!");
+            return;
+        }
+
+        String errorUrl = null;
+        String warningUrl = null;
+        if (!INLINE_RESOURCES && !simpleFormat) {
+            errorUrl = addLocalResources(HtmlReporter.getErrorIconUrl());
+            warningUrl = addLocalResources(HtmlReporter.getWarningIconUrl());
+        }
+
+        writer.write("<table class=\"overview\">\n");
+        writer.write("<tr><th>");
+        writer.write("Project");
+        writer.write("</th><th class=\"countColumn\">");
+
+        if (INLINE_RESOURCES) {
+            String markup = getErrorIcon();
+            writer.write(markup);
+            writer.write('\n');
+        } else {
+            if (errorUrl != null) {
+                writer.write("<img border=\"0\" align=\"top\" src=\"");
+                writer.write(errorUrl);
+                writer.write("\" alt=\"Error\" />\n");
+            }
+        }
+        writer.write("Errors");
+        writer.write("</th><th class=\"countColumn\">");
+
+        if (INLINE_RESOURCES) {
+            String markup = getWarningIcon();
+            writer.write(markup);
+            writer.write('\n');
+        } else {
+            if (warningUrl != null) {
+                writer.write("<img border=\"0\" align=\"top\" src=\"");
+                writer.write(warningUrl);
+                writer.write("\" alt=\"Warning\" />\n");
+            }
+        }
+        writer.write("Warnings");
+        writer.write("</th></tr>\n");
+
+        for (MultiProjectHtmlReporter.ProjectEntry entry : projects) {
+            writer.write("<tr><td>");
+            writer.write("<a href=\"");
+            appendEscapedText(entry.fileName);
+            writer.write("\">");
+            writer.write(entry.path);
+            writer.write("</a></td><td class=\"countColumn\">");
+            writer.write(Integer.toString(entry.errorCount));
+            writer.write("</td><td class=\"countColumn\">");
+            writer.write(Integer.toString(entry.warningCount));
+            writer.write("</td></tr>\n");
+        }
+        writer.write("</table>\n");
+
+        writer.write("</body>\n</html>\n");
+    }
+
     protected void appendEscapedText(String textValue) throws IOException {
         for (int i = 0, n = textValue.length(); i < n; i++) {
             char c = textValue.charAt(i);
@@ -812,24 +906,6 @@ public class HtmlReporter extends Reporter {
                 }
             }
         }
-    }
-
-    private String stripPath(String path) {
-        if (stripPrefix != null && path.startsWith(stripPrefix)
-                && path.length() > stripPrefix.length()) {
-            int index = stripPrefix.length();
-            if (path.charAt(index) == File.separatorChar) {
-                index++;
-            }
-            return path.substring(index);
-        }
-
-        return path;
-    }
-
-    /** Sets path prefix to strip from displayed file names */
-    void setStripPrefix(String prefix) {
-        stripPrefix = prefix;
     }
 
     static URL getWarningIconUrl() {
