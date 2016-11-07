@@ -1019,6 +1019,7 @@ public final class SdkConstants {
     public static final String ATTR_TEST_ONLY = "testOnly";            //$NON-NLS-1$
 
     // Attributes: Resources
+    public static final String ATTR_ATTR = "attr";
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
     public static final String ATTR_FRAGMENT = "fragment";             //$NON-NLS-1$
     public static final String ATTR_TYPE = "type";                     //$NON-NLS-1$
@@ -1515,6 +1516,7 @@ public final class SdkConstants {
     public static final String STRING_PREFIX = "@string/";              //$NON-NLS-1$
     public static final String DIMEN_PREFIX = "@dimen/";                //$NON-NLS-1$
     public static final String MIPMAP_PREFIX = "@mipmap/";              //$NON-NLS-1$
+    public static final String AAPT_ATTR_PREFIX = "@aapt:_aapt/";
 
     public static final String ANDROID_LAYOUT_RESOURCE_PREFIX = "@android:layout/"; //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/";   //$NON-NLS-1$
