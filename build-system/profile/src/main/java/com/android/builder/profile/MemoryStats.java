@@ -16,9 +16,8 @@
 
 package com.android.builder.profile;
 
+import com.android.tools.analytics.CommonMetricsData;
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 
 /**
  * Used to get the memory statistics about the currently running JVM, such as GC time.
@@ -27,20 +26,9 @@ public class MemoryStats {
 
     /** Gets the current memory properties */
     static GradleBuildMemorySample getCurrentProperties() {
-        long gcTime = 0;
-        long gcCount = 0;
-        for(GarbageCollectorMXBean g: ManagementFactory.getGarbageCollectorMXBeans()) {
-            if (g.getCollectionTime() != -1) {
-                gcTime += g.getCollectionTime();
-            }
-            if (g.getCollectionCount() != -1) {
-                gcCount += g.getCollectionCount();
-            }
-        }
 
         return GradleBuildMemorySample.newBuilder()
-                .setGcCount(gcCount)
-                .setGcTimeMs(gcTime)
+                .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
                 .setTimestamp(System.currentTimeMillis())
                 .build();
     }

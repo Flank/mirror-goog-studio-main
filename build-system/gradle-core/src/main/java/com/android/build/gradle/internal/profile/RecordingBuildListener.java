@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.builder.profile.ProcessRecorder;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -73,6 +74,7 @@ public class RecordingBuildListener implements TaskExecutionListener {
                         .setFailed(taskState.getFailure() != null));
 
         mRecorder.closeRecord(task.getProject().getPath(), getVariantName(task), record);
+        ProcessRecorder.recordMemorySample();
     }
 
     @Nullable
