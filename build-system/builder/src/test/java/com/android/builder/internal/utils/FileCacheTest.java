@@ -16,10 +16,8 @@
 
 package com.android.builder.internal.utils;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
@@ -34,7 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -42,176 +40,164 @@ import org.junit.rules.TemporaryFolder;
 /** Test cases for {@link FileCache}. */
 public class FileCacheTest {
 
-    @Rule public TemporaryFolder cacheFolder = new TemporaryFolder();
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+    @NonNull private File cacheDir;
+    @NonNull private File outputDir;
+
+    @Before
+    public void setUp() throws IOException {
+        cacheDir = temporaryFolder.newFolder();
+        outputDir = temporaryFolder.newFolder();
+    }
 
     @Test
     public void testCreateFile_SameInputSameOutput() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = testFolder.newFile();
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        String[] fileContents = {"Foo line", "Bar line"};
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File outputFile = new File(outputDir, "output");
 
-        fileCache.createFile(
-                outputFile,
-                inputs,
-                () -> {
-                    Files.write(fileContents[0], outputFile, StandardCharsets.UTF_8);
-                    return null;
-                });
-
-        assertEquals(0, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFile, StandardCharsets.UTF_8));
+        // First access to the cache, expect cache miss
+        fileCache.createFile(outputFile, inputs, () -> {
+            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(0);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputFile).hasContents("Some text");
 
         FileUtils.delete(outputFile);
 
-        fileCache.createFile(
-                outputFile,
-                inputs,
-                () -> {
-                    Files.write(fileContents[1], outputFile, StandardCharsets.UTF_8);
-                    return null;
-                });
-
-        assertEquals(1, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFile, StandardCharsets.UTF_8));
+        // Second access to the cache, expect cache hit
+        fileCache.createFile(outputFile, inputs, () -> {
+            fail("This statement should not be executed");
+            Files.write("This text should not be written", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(1);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputFile).hasContents("Some text");
     }
 
     @Test
     public void testCreateFile_SameInputDifferentOutputs() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        String[] fileContents = {"Foo line", "Bar line"};
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
-        for (int i = 0; i < 2; i++) {
-            File outputFile = outputFiles[i];
-            String fileContent = fileContents[i];
+        // First access to the cache
+        File outputFile1 = new File(outputDir, "output1");
+        fileCache.createFile(outputFile1, inputs, () -> {
+            Files.write("Some text", outputFile1, StandardCharsets.UTF_8);
+            return null;
+        });
 
-            fileCache.createFile(
-                    outputFile,
-                    inputs,
-                    () -> {
-                        Files.write(fileContent, outputFile, StandardCharsets.UTF_8);
-                        return null;
-                    });
-        }
-
-        assertEquals(1, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFiles[0], StandardCharsets.UTF_8));
-        assertEquals(fileContents[0], Files.toString(outputFiles[1], StandardCharsets.UTF_8));
+        // Second access to the cache, expect cache hit
+        File outputFile2 = new File(outputDir, "output2");
+        fileCache.createFile(outputFile2, inputs, () -> {
+            fail("This statement should not be executed");
+            Files.write("This text should not be written", outputFile2, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(1);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputFile1).hasContents("Some text");
+        assertThat(outputFile2).hasContents("Some text");
     }
 
     @Test
     public void testCreateFile_DifferentInputsSameOutput() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = testFolder.newFile();
-        FileCache.Inputs[] inputList = {
-            new FileCache.Inputs.Builder().putFilePath("file1", new File("foo")).build(),
-            new FileCache.Inputs.Builder().putFilePath("file2", new File("bar")).build(),
-        };
-        String[] fileContents = {"Foo line", "Bar line"};
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        File outputFile = new File(outputDir, "output");
 
-        for (int i = 0; i < 2; i++) {
-            FileCache.Inputs inputs = inputList[i];
-            String fileContent = fileContents[i];
+        // First access to the cache
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input1")).build();
+        fileCache.createFile(outputFile, inputs1, () -> {
+            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
 
-            fileCache.createFile(
-                    outputFile,
-                    inputs,
-                    () -> {
-                        Files.write(fileContent, outputFile, StandardCharsets.UTF_8);
-                        return null;
-                    });
-        }
-
-        assertEquals(0, fileCache.getHits());
-        assertEquals(2, fileCache.getMisses());
-        assertEquals(fileContents[1], Files.toString(outputFile, StandardCharsets.UTF_8));
+        // Second access to the cache, expect cache miss
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input2")).build();
+        fileCache.createFile(outputFile, inputs2, () -> {
+            Files.write("Some other text", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(0);
+        assertThat(fileCache.getMisses()).isEqualTo(2);
+        assertThat(outputFile).hasContents("Some other text");
     }
 
     @Test
     public void testCreateFile_DifferentInputsDifferentOutputs() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
-        FileCache.Inputs[] inputList = {
-            new FileCache.Inputs.Builder().putFilePath("file1", new File("foo")).build(),
-            new FileCache.Inputs.Builder().putFilePath("file2", new File("bar")).build(),
-        };
-        String[] fileContents = {"Foo line", "Bar line"};
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
 
-        for (int i = 0; i < 2; i++) {
-            File outputFile = outputFiles[i];
-            FileCache.Inputs inputs = inputList[i];
-            String fileContent = fileContents[i];
+        // First access to the cache
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input1")).build();
+        File outputFile1 = new File(outputDir, "output1");
+        fileCache.createFile(outputFile1, inputs1, () -> {
+            Files.write("Some text", outputFile1, StandardCharsets.UTF_8);
+            return null;
+        });
 
-            fileCache.createFile(
-                    outputFile,
-                    inputs,
-                    () -> {
-                        Files.write(fileContent, outputFile, StandardCharsets.UTF_8);
-                        return null;
-                    });
-        }
-
-        assertEquals(0, fileCache.getHits());
-        assertEquals(2, fileCache.getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFiles[0], StandardCharsets.UTF_8));
-        assertEquals(fileContents[1], Files.toString(outputFiles[1], StandardCharsets.UTF_8));
+        // Second access to the cache, expect cache miss
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input2")).build();
+        File outputFile2 = new File(outputDir, "output2");
+        fileCache.createFile(outputFile2, inputs2, () -> {
+            Files.write("Some other text", outputFile2, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(0);
+        assertThat(fileCache.getMisses()).isEqualTo(2);
+        assertThat(outputFile1).hasContents("Some text");
+        assertThat(outputFile2).hasContents("Some other text");
     }
 
     @Test
     public void testCreateFile_OutputToDirectory() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-
-        // Test same input different outputs
-        File[] outputDirs = {testFolder.newFolder(), testFolder.newFolder()};
-        Files.touch(new File(outputDirs[0], "tmp0"));
-        Files.touch(new File(outputDirs[1], "tmp1"));
-
+        // Use same input different outputs
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        String[] fileNames = {"fooFile", "barFile"};
-        String[] fileContents = {"Foo line", "Bar line"};
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
-        for (int i = 0; i < 2; i++) {
-            File outputDir = outputDirs[i];
-            String fileName = fileNames[i];
-            String fileContent = fileContents[i];
+        // First access to the cache
+        File outputDir1 = new File(outputDir, "output1");
+        fileCache.createFile(outputDir1, inputs, () -> {
+            FileUtils.mkdirs(outputDir1);
+            Files.write(
+                    "Some text", new File(outputDir1, "fileInOutput1"), StandardCharsets.UTF_8);
+            return null;
+        });
 
-            fileCache.createFile(
-                    outputDir,
-                    inputs,
-                    () -> {
-                        FileUtils.mkdirs(outputDir);
-                        Files.write(
-                                fileContent, new File(outputDir, fileName), StandardCharsets.UTF_8);
-                        return null;
-                    });
-        }
-
-        assertEquals(1, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(1, outputDirs[0].list().length);
-        assertEquals(1, outputDirs[1].list().length);
-        assertEquals(
-                fileContents[0],
-                Files.toString(new File(outputDirs[0], fileNames[0]), StandardCharsets.UTF_8));
-        assertEquals(
-                fileContents[0],
-                Files.toString(new File(outputDirs[1], fileNames[0]), StandardCharsets.UTF_8));
+        // Second access to the cache, expect cache hit
+        File outputDir2 = new File(outputDir, "output2");
+        fileCache.createFile(outputDir2, inputs, () -> {
+            fail("This statement should not be executed");
+            FileUtils.mkdirs(outputDir2);
+            Files.write(
+                    "This text should not be written",
+                    new File(outputDir2, "fileInOutput2"), StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getHits()).isEqualTo(1);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputDir1.list()).hasLength(1);
+        assertThat(outputDir2.list()).hasLength(1);
+        assertThat(new File(outputDir1, "fileInOutput1")).hasContents("Some text");
+        assertThat(new File(outputDir2, "fileInOutput1")).hasContents("Some text");
     }
 
     @Test
     public void testInvalidCacheDirectory() {
+        // Use an invalid character in the directory name
+        File cacheDirectory = new File("\0");
         try {
-            FileCache.getInstanceWithSingleProcessLocking(new File("\0"));
+            FileCache.getInstanceWithSingleProcessLocking(cacheDirectory);
             fail("expected IOException");
         } catch (IOException exception) {
             // Expected
@@ -220,42 +206,32 @@ public class FileCacheTest {
 
     @Test
     public void testCacheDirectoryDidNotExist_ExistsAfterCreateFile() throws Exception {
-        FileCache fileCache =
-                FileCache.getInstanceWithSingleProcessLocking(
-                        new File(cacheFolder.getRoot(), "foo"));
-        assertFalse(fileCache.getCacheDirectory().exists());
+        FileUtils.delete(cacheDir);
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        assertThat(fileCache.getCacheDirectory()).doesNotExist();
 
-        File outputFile = testFolder.newFile();
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        String fileContent = "Foo line";
-
-        fileCache.createFile(
-                outputFile,
-                inputs,
-                () -> {
-                    Files.write(fileContent, outputFile, StandardCharsets.UTF_8);
-                    return null;
-                });
-        assertTrue(fileCache.getCacheDirectory().exists());
-
-        assertEquals(0, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContent, Files.toString(outputFile, StandardCharsets.UTF_8));
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File outputFile = new File(outputDir, "output");
+        fileCache.createFile(outputFile, inputs, () -> {
+            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
+        assertThat(fileCache.getCacheDirectory()).exists();
     }
 
     @Test
     public void testSameCacheDirectory() throws IOException {
-        FileCache fileCache1 = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        FileCache fileCache2 = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
+        FileCache fileCache1 = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        FileCache fileCache2 = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         assertThat(fileCache1).isSameAs(fileCache2);
     }
 
     @Test
     public void testInconsistentLockingScope() throws IOException {
-        FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
+        FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         try {
-            FileCache.getInstanceWithInterProcessLocking(cacheFolder.getRoot());
+            FileCache.getInstanceWithInterProcessLocking(cacheDir);
             fail("expected IllegalStateException");
         } catch (IllegalStateException exception) {
             // Expected
@@ -264,32 +240,28 @@ public class FileCacheTest {
 
     @Test
     public void testUnusualInput() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = testFolder.newFile();
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder().putFilePath("file", new File("")).build();
-        String fileContent = "Foo line";
 
-        fileCache.createFile(
-                outputFile,
-                inputs,
-                () -> {
-                    Files.write(fileContent, outputFile, StandardCharsets.UTF_8);
-                    return null;
-                });
+        File outputFile = new File(outputDir, "output");
+        fileCache.createFile(outputFile, inputs, () -> {
+            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
+            return null;
+        });
 
-        assertEquals(0, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContent, Files.toString(outputFile, StandardCharsets.UTF_8));
+        assertThat(fileCache.getHits()).isEqualTo(0);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputFile).hasContents("Some text");
     }
 
     @Test
     public void testInvalidOutputFile() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = new File(cacheFolder.getRoot(), "output");
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
+        File outputFile = new File(cacheDir, "output");
         try {
             fileCache.createFile(outputFile, inputs, () -> null);
             fail("expected IllegalArgumentException");
@@ -303,10 +275,7 @@ public class FileCacheTest {
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
 
-        fileCache =
-                FileCache.getInstanceWithSingleProcessLocking(
-                        new File(cacheFolder.getRoot(), "cache"));
-        outputFile = cacheFolder.getRoot();
+        outputFile = cacheDir.getParentFile();
         try {
             fileCache.createFile(outputFile, inputs, () -> null);
             fail("expected IllegalArgumentException");
@@ -317,10 +286,9 @@ public class FileCacheTest {
                             outputFile.getAbsolutePath(),
                             fileCache.getCacheDirectory().getAbsolutePath()));
         }
-        assertFalse(fileCache.getCacheDirectory().exists());
+        assertThat(fileCache.getCacheDirectory().list()).isEmpty();
 
-        fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        outputFile = cacheFolder.getRoot();
+        outputFile = cacheDir;
         try {
             fileCache.createFile(outputFile, inputs, () -> null);
             fail("expected IllegalArgumentException");
@@ -335,151 +303,174 @@ public class FileCacheTest {
 
     @Test
     public void testOutputFileAlreadyExistsAndIsNotCreated() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-
-        // Test same input different outputs
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
-        fileCache.createFile(
-                outputFiles[0],
-                inputs,
-                () -> {
-                    assertFalse(outputFiles[0].exists());
-                    assertTrue(outputFiles[0].getParentFile().exists());
-                    return null;
-                });
+        File outputDir1 = new File(outputDir, "dir1");
+        File outputDir2 = new File(outputDir, "dir2");
+        FileUtils.mkdirs(outputDir1);
+        FileUtils.mkdirs(outputDir2);
+        File fileInOutputDir1 = new File(outputDir1, "output1");
+        File fileInOutputDir2 = new File(outputDir2, "output2");
+        Files.touch(fileInOutputDir1);
+        Files.touch(fileInOutputDir2);
 
-        fileCache.createFile(outputFiles[1], inputs, () -> null);
-        assertFalse(outputFiles[1].exists());
-        assertTrue(outputFiles[1].getParentFile().exists());
+        fileCache.createFile(fileInOutputDir1, inputs, () -> {
+            // The cache should have deleted the existing output file (but not the parent directory)
+            // before calling this callback
+            assertThat(fileInOutputDir1).doesNotExist();
+            assertThat(fileInOutputDir1.getParentFile()).exists();
+            return null;
+        });
+
+        // Since the callback didn't create an output, if the cache is called again, it should
+        // delete any existing output files (but not their parent directories)
+        fileCache.createFile(fileInOutputDir2, inputs, () -> null);
+        assertThat(fileInOutputDir2).doesNotExist();
+        assertThat(fileInOutputDir2.getParentFile()).exists();
     }
 
     @Test
     public void testOutputFileDoesNotAlreadyExistAndIsCreated() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-
-        // Test same input different outputs
-        File[] outputFiles = {
-            new File(testFolder.getRoot(), "dir1/file1"),
-            new File(testFolder.getRoot(), "dir2/file2")
-        };
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
-        fileCache.createFile(
-                outputFiles[0],
-                inputs,
-                () -> {
-                    assertFalse(outputFiles[0].exists());
-                    assertTrue(outputFiles[0].getParentFile().exists());
-                    Files.touch(outputFiles[0]);
-                    return null;
-                });
+        File outputDir1 = new File(outputDir, "dir1");
+        File outputDir2 = new File(outputDir, "dir2");
+        File fileInOutputDir1 = new File(outputDir1, "output1");
+        File fileInOutputDir2 = new File(outputDir2, "output2");
 
-        fileCache.createFile(outputFiles[1], inputs, () -> null);
-        assertTrue(outputFiles[1].exists());
+        fileCache.createFile(fileInOutputDir1, inputs, () -> {
+            // The cache should have created the parent directory of the output file (but should not
+            // have created the output file) before calling this callback
+            assertThat(fileInOutputDir1).doesNotExist();
+            assertThat(fileInOutputDir1.getParentFile()).exists();
+            Files.touch(fileInOutputDir1);
+            return null;
+        });
+
+        // Since the callback created an output, if the cache is called again, it should create new
+        // output files (together with their parent directories)
+        fileCache.createFile(fileInOutputDir2, inputs, () -> null);
+        assertThat(fileInOutputDir2).exists();
     }
 
     @Test
-    public void testFileProducerIOException() throws IOException {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = testFolder.newFile();
+    public void testCreateFile_FileCreatorIOException() throws IOException {
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File outputFile = new File(outputDir, "output");
 
         try {
-            fileCache.createFile(
-                    outputFile,
-                    inputs,
-                    () -> {
-                        throw new IOException("Some I/O exception");
-                    });
+            fileCache.createFile(outputFile, inputs, () -> {
+                throw new IOException("Some I/O exception");
+            });
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(IOException.class);
             assertThat(Throwables.getRootCause(exception)).hasMessage("Some I/O exception");
         }
-
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
 
     @Test
-    public void testFileProducerRuntimeException() throws IOException {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = testFolder.newFile();
+    public void testCreateFile_FileCreatorRuntimeException() throws IOException {
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File outputFile = new File(outputDir, "output");
 
         try {
-            fileCache.createFile(
-                    outputFile,
-                    inputs,
-                    () -> {
-                        throw new RuntimeException("Some runtime exception");
-                    });
+            fileCache.createFile(outputFile, inputs, () -> {
+                throw new RuntimeException("Some runtime exception");
+            });
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(RuntimeException.class);
             assertThat(Throwables.getRootCause(exception)).hasMessage("Some runtime exception");
         }
-
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
 
     @Test
-    public void testIOExceptionNotCausedByFileProducer() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File outputFile = new File("\0");
+    public void testCreateFile_IOExceptionNotThrownByFileCreator() throws Exception {
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
 
+        // Use an invalid character in the file name
+        File outputFile = new File("\0");
         try {
             fileCache.createFile(outputFile, inputs, () -> null);
             fail("expected IOException");
         } catch (IOException exception) {
             // Expected
         }
-
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
 
     @Test
     public void testDeleteFileCache() throws IOException {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        assertThat(fileCache.getCacheDirectory()).exists();
+
         fileCache.delete();
-        assertFalse(fileCache.getCacheDirectory().exists());
+        assertThat(fileCache.getCacheDirectory()).doesNotExist();
     }
 
     @Test
-    public void testCreateFile_MultiThreadsWithSingleProcessLocking() throws IOException {
-        testCreateFile_MultiThreadsWithSameCacheSameInputDifferentOutputs(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
-        testCreateFile_MultiThreadsWithSameCacheDifferentInputsDifferentOutputs(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
-        testCreateFile_MultiThreadsWithDifferentCaches(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()),
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
+    public void testCreateFile_MultiThreads_SingleProcessLocking_SameInputDifferentOutputs()
+            throws IOException {
+        testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testMultiThreadsWithInterProcessLocking() throws IOException {
-        testCreateFile_MultiThreadsWithSameCacheSameInputDifferentOutputs(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
-        testCreateFile_MultiThreadsWithSameCacheDifferentInputsDifferentOutputs(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
-        testCreateFile_MultiThreadsWithDifferentCaches(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()),
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
+    public void testCreateFile_MultiThreads_SingleProcessLocking_DifferentInputsDifferentOutputs()
+            throws IOException {
+        testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
     }
 
-    private void testCreateFile_MultiThreadsWithSameCacheSameInputDifferentOutputs(
+    @Test
+    public void testCreateFile_MultiThreads_SingleProcessLocking_DifferentCaches()
+            throws IOException {
+        testCreateFile_MultiThreads_DifferentCaches(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()),
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testCreateFile_MultiThreads_InterProcessLocking_SameInputDifferentOutputs()
+            throws IOException {
+        testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testCreateFile_MultiThreads_InterProcessLocking_DifferentInputsDifferentOutputs()
+            throws IOException {
+        testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testCreateFile_MultiThreads_InterProcessLocking_DifferentCaches()
+            throws IOException {
+        testCreateFile_MultiThreads_DifferentCaches(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()),
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    private void testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
-        String fileContent = "Foo line";
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
+        String fileContent = "Some text";
 
         ConcurrencyTester<File, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForCreateFile(
@@ -492,20 +483,20 @@ public class FileCacheTest {
         // Since we use the same input, we expect only one of the actions to be executed
         tester.assertThatOnlyOneActionIsExecuted();
 
-        assertEquals(1, fileCache.getHits());
-        assertEquals(1, fileCache.getMisses());
-        assertEquals(fileContent, Files.toString(outputFiles[0], StandardCharsets.UTF_8));
-        assertEquals(fileContent, Files.toString(outputFiles[1], StandardCharsets.UTF_8));
+        assertThat(fileCache.getHits()).isEqualTo(1);
+        assertThat(fileCache.getMisses()).isEqualTo(1);
+        assertThat(outputFiles[0]).hasContents(fileContent);
+        assertThat(outputFiles[1]).hasContents(fileContent);
     }
 
-    private void testCreateFile_MultiThreadsWithSameCacheDifferentInputsDifferentOutputs(
+    private void testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs[] inputList = {
-                new FileCache.Inputs.Builder().putFilePath("file1", new File("foo")).build(),
-                new FileCache.Inputs.Builder().putFilePath("file2", new File("bar")).build(),
+                new FileCache.Inputs.Builder().putFilePath("file1", new File("input1")).build(),
+                new FileCache.Inputs.Builder().putFilePath("file2", new File("input2")).build(),
         };
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
-        String[] fileContents = {"Foo line", "Bar line"};
+        File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
+        String[] fileContents = {"Foo text", "Bar text"};
 
         ConcurrencyTester<File, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForCreateFile(
@@ -518,20 +509,20 @@ public class FileCacheTest {
         // Since we use different inputs, the actions are allowed to run concurrently
         tester.assertThatActionsCanRunConcurrently();
 
-        assertEquals(0, fileCache.getHits());
-        assertEquals(2, fileCache.getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFiles[0], StandardCharsets.UTF_8));
-        assertEquals(fileContents[1], Files.toString(outputFiles[1], StandardCharsets.UTF_8));
+        assertThat(fileCache.getHits()).isEqualTo(0);
+        assertThat(fileCache.getMisses()).isEqualTo(2);
+        assertThat(outputFiles[0]).hasContents(fileContents[0]);
+        assertThat(outputFiles[1]).hasContents(fileContents[1]);
     }
 
-    private void testCreateFile_MultiThreadsWithDifferentCaches(
+    private void testCreateFile_MultiThreads_DifferentCaches(
             @NonNull FileCache fileCache1, @NonNull FileCache fileCache2) throws IOException {
-        // Test same input different outputs, different caches
+        // Use same input different outputs, different caches
         FileCache[] fileCaches = {fileCache1, fileCache2};
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("foo")).build();
-        File[] outputFiles = {testFolder.newFile(), testFolder.newFile()};
-        String[] fileContents = {"Foo line", "Bar line"};
+                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+        File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
+        String[] fileContents = {"Foo text", "Bar text"};
 
         ConcurrencyTester<File, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForCreateFile(
@@ -545,12 +536,12 @@ public class FileCacheTest {
         // to run concurrently
         tester.assertThatActionsCanRunConcurrently();
 
-        assertEquals(0, fileCaches[0].getHits());
-        assertEquals(1, fileCaches[0].getMisses());
-        assertEquals(0, fileCaches[1].getHits());
-        assertEquals(1, fileCaches[1].getMisses());
-        assertEquals(fileContents[0], Files.toString(outputFiles[0], StandardCharsets.UTF_8));
-        assertEquals(fileContents[1], Files.toString(outputFiles[1], StandardCharsets.UTF_8));
+        assertThat(fileCaches[0].getHits()).isEqualTo(0);
+        assertThat(fileCaches[0].getMisses()).isEqualTo(1);
+        assertThat(fileCaches[1].getHits()).isEqualTo(0);
+        assertThat(fileCaches[1].getMisses()).isEqualTo(1);
+        assertThat(outputFiles[0]).hasContents(fileContents[0]);
+        assertThat(outputFiles[1]).hasContents(fileContents[1]);
     }
 
     /**
@@ -588,17 +579,19 @@ public class FileCacheTest {
 
     @Test
     public void testDoLockedReturnValue() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File accessedFile = new File(testFolder.getRoot(), "foo");
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        File accessedFile = new File(cacheDir, "foo");
 
-        assertTrue(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true));
-        assertFalse(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> false));
+        assertThat(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true))
+                .isTrue();
+        assertThat(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> false))
+                .isFalse();
     }
 
     @Test
     public void testDoLockedException() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheFolder.getRoot());
-        File accessedFile = new File(testFolder.getRoot(), "foo");
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        File accessedFile = new File(cacheDir, "foo");
 
         try {
             fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> {
@@ -621,7 +614,9 @@ public class FileCacheTest {
         }
 
         try {
-            fileCache.doLocked(new File("\0"), FileCache.LockingType.SHARED, () -> true);
+            // Use an invalid character in the file name
+            accessedFile = new File("\0");
+            fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true);
             fail("expected IOException");
         } catch (IOException exception) {
             // Expected
@@ -629,43 +624,63 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testDoLocked_MultiThreadsWithSingleProcessLocking() throws IOException {
-        testDoLocked_MultiThreadsWithSameFileExclusiveLock(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
-        testDoLocked_MultiThreadsWithSameFileSharedLock(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
-        testDoLocked_MultiThreadsWithDifferentFiles(
-                FileCache.getInstanceWithSingleProcessLocking(cacheFolder.newFolder()));
+    public void testDoLocked_MultiThreads_SingleProcessLocking_SameFileMixedLocks()
+            throws IOException {
+        testDoLocked_MultiThreads_SameFileMixedLocks(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testDoLocked_MultiThreadsWithInterProcessLocking() throws IOException {
-        testDoLocked_MultiThreadsWithSameFileExclusiveLock(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
-        testDoLocked_MultiThreadsWithSameFileSharedLock(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
-        testDoLocked_MultiThreadsWithDifferentFiles(
-                FileCache.getInstanceWithInterProcessLocking(cacheFolder.newFolder()));
+    public void testDoLocked_MultiThreads_SingleProcessLocking_SameFileSharedLock()
+            throws IOException {
+        testDoLocked_MultiThreads_SameFileSharedLock(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
     }
 
-    private void testDoLocked_MultiThreadsWithSameFileExclusiveLock(@NonNull FileCache fileCache) {
+    @Test
+    public void testDoLocked_MultiThreads_SingleProcessLocking_DifferentFiles() throws IOException {
+        testDoLocked_MultiThreads_DifferentFiles(
+                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testDoLocked_MultiThreads_InterProcessLocking_SameFileMixedLocks()
+            throws IOException {
+        testDoLocked_MultiThreads_SameFileMixedLocks(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testDoLocked_MultiThreads_InterProcessLocking_SameFileSharedLock()
+            throws IOException {
+        testDoLocked_MultiThreads_SameFileSharedLock(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    @Test
+    public void testDoLocked_MultiThreads_InterProcessLocking_DifferentFiles() throws IOException {
+        testDoLocked_MultiThreads_DifferentFiles(
+                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+    }
+
+    private void testDoLocked_MultiThreads_SameFileMixedLocks(@NonNull FileCache fileCache) {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
                 tester,
                 fileCache,
                 new String[] {"foo", "foo", "foobar".substring(0, 3)},
                 new FileCache.LockingType[] {
-                    FileCache.LockingType.EXCLUSIVE,
+                    FileCache.LockingType.SHARED,
                     FileCache.LockingType.EXCLUSIVE,
                     FileCache.LockingType.EXCLUSIVE
                 });
 
-        // Since we access the same file and use exclusive locks, the actions are not allowed to
+        // Since we access the same file and use mixed locks, the actions are not allowed to
         // run concurrently
         tester.assertThatActionsCannotRunConcurrently();
     }
 
-    private void testDoLocked_MultiThreadsWithSameFileSharedLock(@NonNull FileCache fileCache) {
+    private void testDoLocked_MultiThreads_SameFileSharedLock(@NonNull FileCache fileCache) {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
                 tester,
@@ -682,19 +697,19 @@ public class FileCacheTest {
         tester.assertThatActionsCanRunConcurrently();
     }
 
-    private void testDoLocked_MultiThreadsWithDifferentFiles(@NonNull FileCache fileCache) {
+    private void testDoLocked_MultiThreads_DifferentFiles(@NonNull FileCache fileCache) {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
                 tester,
                 fileCache,
                 new String[] {"foo1", "foo2", "foo3"},
                 new FileCache.LockingType[] {
-                    FileCache.LockingType.EXCLUSIVE,
+                    FileCache.LockingType.SHARED,
                     FileCache.LockingType.EXCLUSIVE,
                     FileCache.LockingType.EXCLUSIVE
                 });
 
-        // Since we access different files, even though we use exclusive locks, the actions are
+        // Since we access different files, even though we use mixed locks, the actions are
         // allowed to run concurrently
         tester.assertThatActionsCanRunConcurrently();
     }
@@ -710,7 +725,7 @@ public class FileCacheTest {
             @NonNull FileCache.LockingType[] lockingTypes) {
         IOExceptionFunction<Void, Void> actionUnderTest = (Void arg) -> {
             // Do some artificial work here
-            assertEquals(1, 1);
+            assertThat(1).isEqualTo(1);
             return null;
         };
         for (int i = 0; i < fileNames.length; i++) {
@@ -721,7 +736,7 @@ public class FileCacheTest {
                     (IOExceptionFunction<Void, Void> anActionUnderTest) -> {
                         try {
                             fileCache.doLocked(
-                                    new File(testFolder.getRoot(), fileName),
+                                    new File(cacheDir, fileName),
                                     lockingType,
                                     () -> anActionUnderTest.apply(null));
                         } catch (ExecutionException exception) {
@@ -734,6 +749,8 @@ public class FileCacheTest {
 
     @Test
     public void testInputsGetKey() throws IOException {
+        File inputDir = temporaryFolder.newFolder();
+
         // Test all types of input parameters
         File inputFile =
                 new File(
@@ -785,12 +802,12 @@ public class FileCacheTest {
         assertThat(inputs.getKey()).isEqualTo("d78d98a050e19057d83ad84ddebde43e2f8e67d7");
 
         // Test file hash
-        inputFile = testFolder.newFile();
-        Files.write("Some content", inputFile, StandardCharsets.UTF_8);
+        inputFile = new File(inputDir, "input");
+        Files.write("Some text", inputFile, StandardCharsets.UTF_8);
         inputs = new FileCache.Inputs.Builder().putFileHash("fileHash", inputFile).build();
         assertThat(inputs.toString())
-                .isEqualTo("fileHash=9f1a6ecf74e9f9b1ae52e8eb581d420e63e8453a");
-        assertThat(inputs.getKey()).isEqualTo("e670eb8fa97fdb081904581445aa57af7fb5274a");
+                .isEqualTo("fileHash=02d92c580d4ede6c80a878bdd9f3142d8f757be8");
+        assertThat(inputs.getKey()).isEqualTo("4f81fcad8e33bbf04da9d6b0401b03472e0289d6");
 
         // Test unusual file path
         inputFile = new File("foo`-=[]\\\\;',./~!@#$%^&*()_+{}|:\\\"<>?");
@@ -809,7 +826,8 @@ public class FileCacheTest {
         assertThat(inputs.getKey()).isEqualTo("3fe9ece2d6113d8db5c0c5576cc1378823d839ab");
 
         // Test empty file content
-        inputFile = testFolder.newFile();
+        inputFile = new File(inputDir, "input");
+        Files.write("", inputFile, StandardCharsets.UTF_8);
         inputs = new FileCache.Inputs.Builder().putFileHash("fileHash", inputFile).build();
         assertThat(inputs.toString())
                 .isEqualTo("fileHash=da39a3ee5e6b4b0d3255bfef95601890afd80709");
@@ -905,24 +923,24 @@ public class FileCacheTest {
         // Test inputs with different file paths, same canonical path
         inputs1 =
                 new FileCache.Inputs.Builder()
-                        .putFilePath("file", testFolder.getRoot().getParentFile())
+                        .putFilePath("file", inputDir.getParentFile())
                         .build();
         inputs2 =
                 new FileCache.Inputs.Builder()
-                        .putFilePath("file", new File(testFolder.getRoot().getPath() + "/.."))
+                        .putFilePath("file", new File(inputDir.getPath() + "/.."))
                         .build();
         assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
 
         // Test inputs with same file hash
-        File fooFile = testFolder.newFile();
-        Files.write("Some foo content", fooFile, StandardCharsets.UTF_8);
+        File fooFile = new File(inputDir, "fooInput");
+        Files.write("Foo text", fooFile, StandardCharsets.UTF_8);
         inputs1 = new FileCache.Inputs.Builder().putFileHash("fileHash", fooFile).build();
         inputs2 = new FileCache.Inputs.Builder().putFileHash("fileHash", fooFile).build();
         assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
 
         // Test inputs with different file hashes, same file path
-        File barFile = testFolder.newFile();
-        Files.write("Some bar content", barFile, StandardCharsets.UTF_8);
+        File barFile = new File(inputDir, "barInput");
+        Files.write("Bar text", barFile, StandardCharsets.UTF_8);
         inputs1 =
                 new FileCache.Inputs.Builder()
                         .putFilePath("file", fooFile)
