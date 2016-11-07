@@ -203,6 +203,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         model,
                         project -> project.equals(":WordPress") ? "vanillaDebug" : "debug"));
 
+        project.executor().run("clean");
+
         project.executor()
                 .recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN)
                 .run("assembleVanillaDebug");
