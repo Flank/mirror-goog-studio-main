@@ -40,12 +40,13 @@ public class TestInstrumenter {
     protected static void main(
             @NonNull String[] args, @NonNull IncrementalVisitor.VisitorBuilder visitorBuilder)
             throws IOException {
-        if (args.length != 3) {
+        if (args.length < 3) {
             throw new IllegalArgumentException(
                     "Three arguments required:\n"
                             + " 1. Input jars to instrument (':'-separated)\n"
                             + " 2. Output jar file\n"
-                            + " 3. Classpath (':'-separated)");
+                            + " 3. Classpath (':'-separated)"
+                            + " 4. Target Platform API level (Optional)");
         }
 
         ImmutableList.Builder<URL> classPath = ImmutableList.builder();
@@ -58,9 +59,15 @@ public class TestInstrumenter {
             classPath.add(jar.toUri().toURL());
             inputJars.add(jar);
         }
+        // if the target api level is not specified, use the max integer value, which will make
+        // all classes targeting a lower level.
+        int targetPlatformApi = args.length > 3
+                ? Integer.parseInt(args[3])
+                : Integer.MAX_VALUE;
+
         Path outputJar = Paths.get(args[1]);
 
-        main(inputJars.build(), outputJar, classPath.build(), visitorBuilder);
+        main(targetPlatformApi, inputJars.build(), outputJar, classPath.build(), visitorBuilder);
     }
 
     private static Path assertIsFile(@NonNull Path file) {
@@ -71,6 +78,7 @@ public class TestInstrumenter {
     }
 
     private static void main(
+            int targetPlatformApi,
             @NonNull List<Path> inputJars,
             @NonNull Path outputJar,
             @NonNull List<URL> classpath,
@@ -110,6 +118,7 @@ public class TestInstrumenter {
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                                 throws IOException {
                             IncrementalVisitor.instrumentClass(
+                                    targetPlatformApi,
                                     inputDir.toFile(),
                                     file.toFile(),
                                     outputDir.toFile(),
