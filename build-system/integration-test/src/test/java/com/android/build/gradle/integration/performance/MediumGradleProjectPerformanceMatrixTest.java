@@ -95,10 +95,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                             "Unknown project scenario" + projectScenario);
             }
         }
-
-        Files.copy(
-                project.file("gradle.properties-example").toPath(),
-                project.file("gradle.properties").toPath());
         Files.copy(
                 project.file("WordPress/gradle.properties-example").toPath(),
                 project.file("WordPress/gradle.properties").toPath());
