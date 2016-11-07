@@ -40,10 +40,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Records all the {@link GradleBuildProfileSpan}s for a process, in order it was received. */
 public class ProcessRecorder {
+
+    private boolean finished = false;
 
     private final GradleBuildMemorySample mStartMemoryStats;
 
@@ -56,6 +59,8 @@ public class ProcessRecorder {
     @NonNull private final Path mBenchmarkProfileOutputFile;
 
     private static final AtomicLong lastRecordId = new AtomicLong(1);
+
+    private final ConcurrentLinkedQueue<GradleBuildProfileSpan> spans;
 
     static long allocateRecordId() {
         return lastRecordId.incrementAndGet();
@@ -78,8 +83,10 @@ public class ProcessRecorder {
         mBuild = GradleBuildProfile.newBuilder();
         mStartMemoryStats = createAndRecordMemorySample();
         mProjects = CacheBuilder.newBuilder().build(new ProjectCacheLoader(mNameAnonymizer));
+        spans = new ConcurrentLinkedQueue<>();
     }
 
+    /** Append a span record to the build profile. Thread safe. */
     void writeRecord(
             @NonNull String project,
             @Nullable String variant,
@@ -87,15 +94,23 @@ public class ProcessRecorder {
 
         executionRecord.setProject(mNameAnonymizer.anonymizeProjectPath(project));
         executionRecord.setVariant(mNameAnonymizer.anonymizeVariant(project, variant));
-
-        mBuild.addSpan(executionRecord.build());
+        spans.add(executionRecord.build());
     }
 
     /**
      * Done with the recording processing, finish processing the outstanding {@link
      * GradleBuildProfileSpan} publication and shutdowns the processing queue.
+     *
+     * Should be called exactly once.
      */
-    void finish() throws InterruptedException {
+    synchronized void finish() throws InterruptedException {
+        if (finished) {
+            throw new IllegalStateException("Finish can only be called once.");
+        }
+        finished = true;
+        // This will not throw ConcurrentModificationException if writeRecord() calls are still
+        // happening. ConcurrentLinkedQueue iterators are instead weakly consistent.
+        mBuild.addAllSpan(spans);
         GradleBuildMemorySample memoryStats = createAndRecordMemorySample();
         mBuild.setBuildTime(
                 memoryStats.getTimestamp() - mStartMemoryStats.getTimestamp());
