@@ -33,8 +33,6 @@ sourceSets {
     }
 }
 
-ext.proguardVersion = "5.3.1"
-
 dependencies {
     compile project(':base:builder')
     compile project(':base:lint')
@@ -42,13 +40,13 @@ dependencies {
     compile project(':base:transform-api')
     compile project(':base:gradle-api')
     compile project(':dataBinding:compilerCommon')
-    compile 'org.ow2.asm:asm:5.0.4'
-    compile 'org.ow2.asm:asm-commons:5.0.4'
-    compile "net.sf.proguard:proguard-gradle:${project.ext.proguardVersion}"
-    compile "org.jacoco:org.jacoco.core:0.7.5.201505241946"   // When updating this version, also
-    compile "org.jacoco:org.jacoco.report:0.7.5.201505241946" // update JacocoPlugin.
-    compile "net.sf.jopt-simple:jopt-simple:4.9"
-    compile "com.google.protobuf:protobuf-java:3.0.0"
+    compile libs.asm
+    compile libs.asm_commons
+    compile libs.proguard
+    compile libs.jacoco_core
+    compile libs.jacoco_report
+    compile libs.jopt
+    compile libs.protobuf
     testCompile project(':base:instant-run:instant-run-annotations')
     testCompile project(':base:instant-run:instant-run-runtime')
 
@@ -64,16 +62,16 @@ dependencies {
 
     includeInJar project(':base:instant-run:instant-run-server')
 
-    antlr 'org.antlr:antlr:3.5.2'
+    antlr libs.antlr3
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.google.truth:truth:0.28'
-    testCompile 'org.mockito:mockito-core:1.9.5'
-    testCompile 'com.google.guava:guava:18.0'
-	testCompile 'nl.jqno.equalsverifier:equalsverifier:2.1.5'
+    testCompile libs.junit
+    testCompile libs.truth
+    testCompile libs.mockito_core
+    testCompile libs.guava
+	testCompile libs.equalsverifier
     testCompile project(':base:project-test-lib')
     testCompile project(':base:testutils')
-    testCompile 'org.jsoup:jsoup:1.6.3'
+    testCompile libs.jsoup
 }
 
 jar {

@@ -10,5 +10,5 @@ project.startScripts.applicationName = archivesBaseName
 dependencies {
     compile project(':base:sdk-common')
     testCompile project(':base:testutils')
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
 }

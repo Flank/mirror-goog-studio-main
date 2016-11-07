@@ -4,14 +4,14 @@ apply plugin: 'jacoco-tools-base'
 dependencies {
     compile project(':base:annotations')
     compile project(':base:common')
-    compile 'com.google.guava:guava:17.0'
-    compile 'com.google.code.gson:gson:2.2.4'
     compile project(':analytics-library:tracker')
+    compile libs.guava
+    compile libs.gson
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.google.truth:truth:0.28'
-    testCompile 'org.mockito:mockito-all:1.9.5'
-    testCompile 'com.google.jimfs:jimfs:1.1'
+    testCompile libs.junit
+    testCompile libs.truth
+    testCompile libs.mockito_all
+    testCompile libs.jimfs
 }
 
 configurations {

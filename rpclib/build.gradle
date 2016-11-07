@@ -7,7 +7,7 @@ version = rootProject.ext.baseVersion
 dependencies {
   compile project(':base:common')
 
-  testCompile 'junit:junit:4.12'
+  testCompile libs.junit
 }
 
 project.ext.pomName = 'Android Tools rpclib'
