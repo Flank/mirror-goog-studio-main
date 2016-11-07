@@ -316,6 +316,12 @@ public class ManifestMerger2 {
                   MergingReport.MergedManifestKind.MERGED, document.prettyPrint());
             }
 
+            if (mOptionalFeatures.contains(Invoker.Feature.TEST_ONLY)) {
+                mergingReport.setMergedDocument(
+                        MergingReport.MergedManifestKind.MERGED,
+                        addTestOnlyAttribute(document).prettyPrint());
+            }
+
             if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
                 try {
                     mergingReport.setMergedDocument(MergingReport.MergedManifestKind.BLAME,
@@ -339,7 +345,27 @@ public class ManifestMerger2 {
                         MergingReport.MergedManifestKind.INSTANT_RUN,
                         instantRunReplacement(document).prettyPrint());
             }
+
         }
+    }
+
+    /**
+     * Set android:testOnly="true" to ensure APK will be rejected by the Play store.
+     */
+    @NonNull
+    private static XmlDocument addTestOnlyAttribute(XmlDocument document) {
+        Optional<XmlElement> applicationOptional = document
+                .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
+        String prefix = document.getXml().lookupPrefix(SdkConstants.ANDROID_URI);
+        prefix = prefix == null ? SdkConstants.ANDROID_NS_NAME_PREFIX : prefix + ":";
+        if (applicationOptional.isPresent()) {
+            XmlElement application = applicationOptional.get();
+            application.getXml().setAttributeNS(
+                    SdkConstants.ANDROID_URI,
+                    prefix + SdkConstants.ATTR_TEST_ONLY,
+                    "true");
+        }
+        return document.reparse();
     }
 
     @NonNull
@@ -852,6 +878,12 @@ public class ManifestMerger2 {
              * Clients will only request the merged XML documents, not XML pretty printed documents
              */
             SKIP_XML_STRING,
+
+            /**
+             * Add android:testOnly="true" attribute to prevent APK from being uploaded to Play
+             * store.
+             */
+            TEST_ONLY,
         }
 
         /**

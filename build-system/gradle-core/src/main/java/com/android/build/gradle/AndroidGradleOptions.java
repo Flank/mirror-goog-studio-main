@@ -161,6 +161,10 @@ public class AndroidGradleOptions {
         return getBoolean(project, PROPERTY_ENABLE_AAPT2, DEFAULT_ENABLE_AAPT2);
     }
 
+    public static boolean getTestOnly(@NonNull Project project) {
+        return getBoolean(project, AndroidProject.PROPERTY_TEST_ONLY);
+    }
+
     /**
      * Returns the level of model-only mode.
      *
