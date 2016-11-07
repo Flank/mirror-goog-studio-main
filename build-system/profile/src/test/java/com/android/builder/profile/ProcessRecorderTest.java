@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Jimfs;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
@@ -142,6 +143,35 @@ public class ProcessRecorderTest {
                         + records.get(4).getDurationInMs());
 
         assertThat(records.get(4).getDurationInMs()).isAtLeast(records.get(5).getDurationInMs());
+    }
+
+    @Test
+    public void testConcurrentRecording() throws InterruptedException {
+        Runnable recordRunnable =
+                () -> {
+                    for (int i = 0; i < 20; i++) {
+                        ThreadRecorder.get()
+                                .record(
+                                        ExecutionType.TASK_EXECUTION,
+                                        ":projectName",
+                                        "variant",
+                                        () -> null);
+                    }
+                };
+
+        ImmutableList.Builder<Thread> threadBuilder = ImmutableList.builder();
+        for (int i = 0; i < 20; i++) {
+            threadBuilder.add(new Thread(recordRunnable));
+        }
+        ImmutableList<Thread> threads = threadBuilder.build();
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        ProcessRecorder.get().finish();
     }
 
     private GradleBuildProfile loadProfile() throws IOException {
