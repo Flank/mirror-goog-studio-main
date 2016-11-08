@@ -145,3 +145,15 @@ filegroup(
     name = "add-ons/addon-google_apis-google-24",
     srcs = glob(["*/add-ons/addon-google_apis-google-24/**"]),
 )
+
+filegroup(
+    name = "_android_jar",
+    srcs = glob(["*/platforms/android-25/android.jar"]),
+)
+
+java_import(
+    name = "android_jar",
+    jars = [":_android_jar"],
+    visibility = ["//visibility:public"],
+    neverlink = 1,
+)

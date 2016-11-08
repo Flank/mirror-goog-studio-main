@@ -198,9 +198,7 @@ configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,
 }
 
 task buildTestDependencies {
-    dependsOn ':base:gradle-core:instrumentIncrementalTestPatches',
-              ':base:gradle-core:instrumentIncrementalTestBaseClasses',
-              ':base:instant-run:instant-run-server:jar'
+    dependsOn ':base:instant-run:instant-run-server:jar'
 }
 
 DevicePool devicePool = new DevicePool();

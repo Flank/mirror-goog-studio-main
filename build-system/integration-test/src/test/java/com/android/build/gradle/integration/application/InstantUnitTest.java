@@ -31,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@Ignore
 public class InstantUnitTest {
 
     @Rule

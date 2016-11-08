@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../build-system/instant-run-instrumentation/src/instrumenter">
+      <sourceFolder url="file://$MODULE_DIR$/../build-system/instant-run-instrumentation/src/instrumenter/java" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="bazel" />
+    <orderEntry type="module" module-name="instant-run-instrumentation" />
+    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="library" name="guava-tools" level="project" />
+    <orderEntry type="module" module-name="instant-run-runtime" scope="TEST" />
+    <orderEntry type="module" module-name="common" />
+  </component>
+</module>

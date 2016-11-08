@@ -23,3 +23,25 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
     ],
 )
+
+java_library(
+    name = "instant-run-common",
+    srcs = glob(["instant-run-common/src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = ["//tools/base/annotations"],
+)
+
+java_library(
+    name = "instant-run-client",
+    srcs = glob(["instant-run-client/src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":instant-run-common",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-all",
+    ],
+)

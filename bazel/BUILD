@@ -3,7 +3,10 @@ load("//tools/base/bazel:maven.bzl", "maven_repo")
 java_library(
     name = "utils",
     srcs = glob(["src/**/utils/*.java"]),
-    visibility = ["//tools/base/bazel/sdk:__pkg__"],
+    visibility = [
+        "//tools/base/bazel/sdk:__pkg__",
+        "//tools/base/build-system/instant-run-instrumentation:__pkg__",
+    ],
 )
 
 # Part of the standalone-jps-builder artifact from IDEA
@@ -14,6 +17,17 @@ java_import(
         "prebuilts/jdom.jar",
         "prebuilts/jgoodies-forms.jar",
         "prebuilts/jps-builders.jar",
+    ],
+)
+
+java_binary(
+    name = "jasmin-compiler",
+    srcs = glob(["src/com/android/tools/jasmin/JasminCompiler.java"]),
+    main_class = "com.android.tools.jasmin.JasminCompiler",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":utils",
+        "//prebuilts/tools/common/jasmin",
     ],
 )
 
