@@ -1589,8 +1589,9 @@ public class JavaPsiVisitor {
         public void visitReferenceExpression(PsiReferenceExpression node) {
             if (mVisitResources) {
                 // R.type.name
-                if (node.getQualifier() instanceof PsiReferenceExpression) {
-                    PsiReferenceExpression select = (PsiReferenceExpression) node.getQualifier();
+                PsiElement qualifier = node.getQualifier();
+                if (qualifier instanceof PsiReferenceExpression) {
+                    PsiReferenceExpression select = (PsiReferenceExpression)qualifier;
                     if (select.getQualifier() instanceof PsiReferenceExpression) {
                         PsiReferenceExpression reference = (PsiReferenceExpression) select.getQualifier();
                         if (R_CLASS.equals(reference.getReferenceName())) {
@@ -1613,14 +1614,12 @@ public class JavaPsiVisitor {
                                     }
                                 }
                             }
-
-                            return;
                         }
                     }
                 }
 
                 // Arbitrary packages -- android.R.type.name, foo.bar.R.type.name
-                if (R_CLASS.equals(node.getReferenceName())) {
+                if (qualifier != null && R_CLASS.equals(node.getReferenceName())) {
                     PsiElement parent = node.getParent();
                     if (parent instanceof PsiReferenceExpression) {
                         PsiElement grandParent = parent.getParent();
@@ -1636,8 +1635,7 @@ public class JavaPsiVisitor {
                                         ? ResourceType.getEnum(typeName)
                                         : null;
                                 if (type != null) {
-                                    boolean isFramework = node.getQualifier().textMatches(
-                                            ANDROID_PKG);
+                                    boolean isFramework = qualifier.textMatches(ANDROID_PKG);
                                     for (VisitingDetector v : resourceFieldDetectors) {
                                         JavaPsiScanner detector = v.getJavaScanner();
                                         if (detector != null) {
@@ -1647,8 +1645,6 @@ public class JavaPsiVisitor {
                                         }
                                     }
                                 }
-
-                                return;
                             }
                         }
                     }
