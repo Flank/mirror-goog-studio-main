@@ -161,6 +161,30 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
+    public void addNewLayoutFolderAndFile() throws IOException, ProcessException {
+        project.execute("assembleDebug");
+        File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File landscapeActivity = new File(mainActivity
+                .getParentFile().getParentFile(), "layout-land/activity_main.xml");
+        landscapeActivity.getParentFile().mkdirs();
+        Files.copy(mainActivity, landscapeActivity);
+        project.execute("assembleDebug");
+        assertUpToDate(EXPORT_INFO_TASK, false);
+        assertUpToDate(PROCESS_LAYOUTS_TASK, false);
+
+        assertThatApk(project.getApk("debug")).hasMainDexFile().that().containsClass(
+                "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;");
+
+        // delete and recompile
+        assertThat(landscapeActivity.delete()).isTrue();
+        project.execute("assembleDebug");
+        assertUpToDate(EXPORT_INFO_TASK, false);
+        assertUpToDate(PROCESS_LAYOUTS_TASK, false);
+        assertThatApk(project.getApk("debug")).doesNotContainClass(
+                "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;");
+    }
+
+    @Test
     public void addNewLayout()
             throws IOException, ProcessException, SAXException, ParserConfigurationException {
         project.execute("assembleDebug");
