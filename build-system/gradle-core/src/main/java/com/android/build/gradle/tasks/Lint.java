@@ -227,8 +227,8 @@ public class Lint extends BaseTask {
                     System.err.println("Couldn't create baseline folder " + dir);
                 } else {
                     XmlReporter reporter = new XmlReporter(client, baselineFile);
-                    reporter.write(
-                            stats, mergedWarnings);
+                    reporter.setIntendedForBaseline(true);
+                    reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
                     System.err.println("(Also breaking build in case this was not intentional.)");
                     String message = ""
