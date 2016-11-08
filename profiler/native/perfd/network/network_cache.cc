@@ -92,6 +92,10 @@ shared_ptr<File> NetworkCache::FinishPayload(const std::string &payload_id) {
   return file_to;
 }
 
+shared_ptr<File> NetworkCache::GetPayloadFile(const std::string &payload_id) {
+  return cache_complete_->GetFile(payload_id);
+}
+
 ConnectionDetails* NetworkCache::GetDetails(int64_t conn_id) {
   return DoGetDetails(conn_id);
 }

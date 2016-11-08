@@ -60,6 +60,11 @@ class NetworkCache final {
   // contents of the file into a final location, returning it.
   std::shared_ptr<File> FinishPayload(const std::string &payload_id);
 
+  // Return the cached file associated with the |payload_id|. While the pointer
+  // returned will never be null, the file may not exist, if |FinishPayload|
+  // wasn't called first, or if the cleanup thread has since deleted the file.
+  std::shared_ptr<File> GetPayloadFile(const std::string &payload_id);
+
   // Return details for the request with a matching |conn_id|, or nullptr if no
   // match.
   // A connection will exist only after registered by |AddConnection|, although
