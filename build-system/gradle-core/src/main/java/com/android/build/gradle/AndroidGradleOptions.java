@@ -91,7 +91,7 @@ public class AndroidGradleOptions {
     /**
      * Set to true to delay dependency resolution to task execution.
      */
-    private static final String PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION =
+    public static final String PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION =
             "android.enableImprovedDependenciesResolution";
 
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -53,6 +54,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     private boolean mAssertNoSyncIssues = true;
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
+    private final boolean isImproveDependencyEnabled;
 
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
@@ -61,6 +63,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 project.getBenchmarkRecorder(),
                 project.getProfileDirectory(),
                 project.getHeapSize());
+        isImproveDependencyEnabled = project.isImprovedDependencyEnabled();
     }
 
     /** Do not fail if there are sync issues */
@@ -184,6 +187,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 break;
             default:
                 throw new RuntimeException("Unsupported ModelLevel");
+        }
+
+        if (isImproveDependencyEnabled) {
+            arguments.add("-P"
+                    + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
+                    + "=true");
         }
 
         setJvmArguments(executor);
