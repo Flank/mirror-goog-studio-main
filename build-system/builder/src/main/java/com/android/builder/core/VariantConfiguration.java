@@ -22,7 +22,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.dependency.DependenciesMutableData;
 import com.android.builder.dependency.DependencyContainer;
+import com.android.builder.dependency.DependencyContainerImpl;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
@@ -68,6 +70,14 @@ import java.util.Set;
  * @param <F> the type used for the product flavors.
  */
 public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, F extends ProductFlavor> {
+
+    private static final DependencyContainer UNRESOLVED_CONTAINER =
+            new DependencyContainerImpl(
+                    DependenciesMutableData.EMPTY,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of());
 
     /**
      * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
@@ -134,6 +144,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     private ProductFlavor mMergedFlavor;
 
+    private boolean isDependenciesResolved = false;
     private DependencyContainer mFlatCompileDependencies;
     private DependencyContainer mFlatPackageDependencies;
     private DependencyContainer mCompileDependencies;
@@ -594,27 +605,37 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @return the config object
      */
     @NonNull
-    public VariantConfiguration setDependencies(
+    public VariantConfiguration setResolvedDependencies(
             @NonNull DependencyContainer compileDependencies,
             @NonNull DependencyContainer flattenedCompileDependencies,
             @NonNull DependencyContainer packageDependencies,
             @NonNull DependencyContainer flattenedPackageDependencies) {
+        isDependenciesResolved = true;
         mCompileDependencies = compileDependencies;
         mFlatCompileDependencies = flattenedCompileDependencies;
         mPackageDependencies = packageDependencies;
         mFlatPackageDependencies = flattenedPackageDependencies;
-
         return this;
     }
 
     @NonNull
     public DependencyContainer getCompileDependencies() {
-        return mCompileDependencies;
+        return isDependenciesResolved ? mCompileDependencies : UNRESOLVED_CONTAINER;
     }
 
     @NonNull
     public DependencyContainer getPackageDependencies() {
-        return mPackageDependencies;
+        return isDependenciesResolved ? mPackageDependencies : UNRESOLVED_CONTAINER;
+    }
+
+    @NonNull
+    private DependencyContainer getFlatCompileDependencies() {
+        return isDependenciesResolved ? mFlatCompileDependencies : UNRESOLVED_CONTAINER;
+    }
+
+    @NonNull
+    private DependencyContainer getFlatPackageDependencies() {
+        return isDependenciesResolved ? mFlatPackageDependencies : UNRESOLVED_CONTAINER;
     }
 
     /**
@@ -702,7 +723,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<AndroidLibrary> getFlatCompileAndroidLibraries() {
-        return mFlatCompileDependencies.getAndroidDependencies();
+        return getFlatCompileDependencies().getAndroidDependencies();
     }
 
     /**
@@ -712,7 +733,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<AndroidAtom> getFlatAndroidAtomsDependencies() {
-        return mFlatPackageDependencies.getAtomDependencies();
+        return getFlatPackageDependencies().getAtomDependencies();
     }
 
     /**
@@ -720,7 +741,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<AndroidLibrary> getFlatPackageAndroidLibraries() {
-        return mFlatPackageDependencies.getAndroidDependencies();
+        return getFlatPackageDependencies().getAndroidDependencies();
     }
 
     @NonNull
@@ -1253,7 +1274,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         // the list of dependency must be reversed to use the right overlay order.
         if (includeDependencies) {
             // use the package one to ignore the optional libs.
-            for (AndroidLibrary dependency : mFlatPackageDependencies.getAndroidDependencies().reverse()) {
+            for (AndroidLibrary dependency : getFlatPackageDependencies().getAndroidDependencies().reverse()) {
                 File resFolder = dependency.getResFolder();
                 if (resFolder.isDirectory()) {
                     ResourceSet resourceSet = new ResourceSet(dependency.getFolder().getName(),
@@ -1338,7 +1359,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         if (includeDependencies) {
             // use the package one to ignore the optional libs.
-            List<AndroidLibrary> flatLibs = mFlatPackageDependencies.getAndroidDependencies();
+            List<AndroidLibrary> flatLibs = getFlatPackageDependencies().getAndroidDependencies();
             // the list of dependency must be reversed to use the right overlay order.
             for (int n = flatLibs.size() - 1 ; n >= 0 ; n--) {
                 AndroidLibrary dependency = flatLibs.get(n);
@@ -1544,7 +1565,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         List<File> list = Lists.newArrayList();
 
         // use the package one to ignore the optional libs.
-        for (AndroidLibrary lib : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary lib : getFlatPackageDependencies().getAndroidDependencies()) {
             File rsLib = lib.getRenderscriptFolder();
             if (rsLib.isDirectory()) {
                 list.add(rsLib);
@@ -1581,7 +1602,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         List<File> list = Lists.newArrayList();
 
         // use the package one to ignore the optional libs.
-        for (AndroidLibrary lib : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary lib : getFlatPackageDependencies().getAndroidDependencies()) {
             File aidlLib = lib.getAidlFolder();
             if (aidlLib.isDirectory()) {
                 list.add(aidlLib);
@@ -1627,27 +1648,27 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public Set<File> getCompileClasspath() {
 
         Set<File> classpath = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatCompileDependencies.getJarDependencies().size() +
-                        mFlatCompileDependencies.getAtomDependencies().size() +
-                        mFlatCompileDependencies.getLocalDependencies().size() +
-                        mFlatCompileDependencies.getAndroidDependencies().size());
+                getFlatCompileDependencies().getJarDependencies().size() +
+                        getFlatCompileDependencies().getAtomDependencies().size() +
+                        getFlatCompileDependencies().getLocalDependencies().size() +
+                        getFlatCompileDependencies().getAndroidDependencies().size());
 
-        for (AndroidLibrary android : mFlatCompileDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary android : getFlatCompileDependencies().getAndroidDependencies()) {
             classpath.add(android.getJarFile());
             for (File jarFile : android.getLocalJars()) {
                 classpath.add(jarFile);
             }
         }
 
-        for (AndroidAtom atom : mFlatCompileDependencies.getAtomDependencies()) {
+        for (AndroidAtom atom : getFlatCompileDependencies().getAtomDependencies()) {
             classpath.add(atom.getJarFile());
         }
 
-        for (JavaLibrary javaLibrary : mFlatCompileDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatCompileDependencies().getJarDependencies()) {
             classpath.add(javaLibrary.getJarFile());
         }
 
-        for (JavaLibrary javaLibrary : mFlatCompileDependencies.getLocalDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatCompileDependencies().getLocalDependencies()) {
             classpath.add(javaLibrary.getJarFile());
         }
 
@@ -1665,11 +1686,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         Set<File> localJars = getLocalPackagedJars();
 
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getJarDependencies().size() +
+                getFlatPackageDependencies().getJarDependencies().size() +
                         localJars.size() +
-                        mFlatPackageDependencies.getAndroidDependencies().size());
+                        getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getJarDependencies()) {
             File jarFile = javaLibrary.getJarFile();
             if (jarFile.exists()) {
                 jars.add(jarFile);
@@ -1678,7 +1699,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         jars.addAll(localJars);
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             File libJar = androidLibrary.getJarFile();
             if (libJar.exists()) {
                 jars.add(libJar);
@@ -1703,10 +1724,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getExternalPackagedJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getJarDependencies().size() +
-                        mFlatPackageDependencies.getAndroidDependencies().size());
+                getFlatPackageDependencies().getJarDependencies().size() +
+                        getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getJarDependencies()) {
             // only take java libraries that are not coming from a module.
             if (javaLibrary.getProject() == null) {
                 File jarFile = javaLibrary.getJarFile();
@@ -1716,7 +1737,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
         }
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             // only take android libraries that are not coming from a module.
             if (androidLibrary.getProject() == null) {
                 File libJar = androidLibrary.getJarFile();
@@ -1744,9 +1765,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getExternalPackagedJniJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getJarDependencies().size());
+                getFlatPackageDependencies().getJarDependencies().size());
 
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getJarDependencies()) {
             if (javaLibrary.getProject() == null) {
                 File jarFile = javaLibrary.getJarFile();
                 if (jarFile.exists()) {
@@ -1766,9 +1787,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getLocalPackagedJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getLocalDependencies().size());
+                getFlatPackageDependencies().getLocalDependencies().size());
 
-        for (JavaLibrary jar : mFlatPackageDependencies.getLocalDependencies()) {
+        for (JavaLibrary jar : getFlatPackageDependencies().getLocalDependencies()) {
             File jarFile = jar.getJarFile();
             if (jarFile.exists()) {
                 jars.add(jarFile);
@@ -1786,10 +1807,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getSubProjectPackagedJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getJarDependencies().size() +
-                        mFlatPackageDependencies.getAndroidDependencies().size());
+                getFlatPackageDependencies().getJarDependencies().size() +
+                        getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             // only take the sub-project android libraries.
             if (androidLibrary.getProject() != null) {
                 File libJar = androidLibrary.getJarFile();
@@ -1799,7 +1820,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
         }
 
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getJarDependencies()) {
             if (javaLibrary.getProject() != null) {
                 File jarFile = javaLibrary.getJarFile();
                 if (jarFile.exists()) {
@@ -1819,9 +1840,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getSubProjectLocalPackagedJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getAndroidDependencies().size());
+                getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             // only take the sub-project android libraries.
             if (androidLibrary.getProject() != null) {
                 for (File jarFile : androidLibrary.getLocalJars()) {
@@ -1843,9 +1864,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getSubProjectJniLibFolders() {
         Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getAndroidDependencies().size());
+                getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             // only take the sub-project android libraries.
             if (androidLibrary.getProject() != null) {
                 File jniDir = androidLibrary.getJniFolder();
@@ -1866,9 +1887,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getSubProjectPackagedJniJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getJarDependencies().size());
+                getFlatPackageDependencies().getJarDependencies().size());
 
-        for (JavaLibrary ja : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary ja : getFlatPackageDependencies().getJarDependencies()) {
             if (ja.getProject() != null) {
                 File jarFile = ja.getJarFile();
                 if (jarFile.exists()) {
@@ -1888,9 +1909,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Set<File> getExternalAarJniLibFolders() {
         Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getAndroidDependencies().size());
+                getFlatPackageDependencies().getAndroidDependencies().size());
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             // only take the external android libraries.
             if (androidLibrary.getProject() == null) {
                 File jniDir = androidLibrary.getJniFolder();
@@ -1911,27 +1932,27 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public List<File> getProvidedOnlyJars() {
         Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                mFlatPackageDependencies.getAndroidDependencies().size() +
-                        mFlatPackageDependencies.getJarDependencies().size() +
-                        mFlatPackageDependencies.getLocalDependencies().size());
+                getFlatPackageDependencies().getAndroidDependencies().size() +
+                        getFlatPackageDependencies().getJarDependencies().size() +
+                        getFlatPackageDependencies().getLocalDependencies().size());
 
         // TODO: we might want to cache this somehow, or precompute during dependency manager.
         Set<MavenCoordinates> packageArtifacts = Sets.newHashSet();
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getJarDependencies()) {
             packageArtifacts.add(javaLibrary.getResolvedCoordinates());
         }
 
-        for (JavaLibrary javaLibrary : mFlatPackageDependencies.getLocalDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatPackageDependencies().getLocalDependencies()) {
             packageArtifacts.add(javaLibrary.getResolvedCoordinates());
         }
 
-        for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
             packageArtifacts.add(androidLibrary.getResolvedCoordinates());
         }
 
         // now find provided only jars by filtering out packaged dependencies
 
-        for (JavaLibrary javaLibrary : mFlatCompileDependencies.getJarDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatCompileDependencies().getJarDependencies()) {
             if (!packageArtifacts.contains(javaLibrary.getResolvedCoordinates())) {
                 File jarFile = javaLibrary.getJarFile();
                 if (jarFile.exists()) {
@@ -1940,7 +1961,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
         }
 
-        for (JavaLibrary javaLibrary : mFlatCompileDependencies.getLocalDependencies()) {
+        for (JavaLibrary javaLibrary : getFlatCompileDependencies().getLocalDependencies()) {
             if (!packageArtifacts.contains(javaLibrary.getResolvedCoordinates())) {
                 File jarFile = javaLibrary.getJarFile();
                 if (jarFile.exists()) {
@@ -1949,7 +1970,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
         }
 
-        for (AndroidLibrary androidLibrary : mFlatCompileDependencies.getAndroidDependencies()) {
+        for (AndroidLibrary androidLibrary : getFlatCompileDependencies().getAndroidDependencies()) {
             if (!packageArtifacts.contains(androidLibrary.getResolvedCoordinates())) {
                 File libJar = androidLibrary.getJarFile();
                 if (libJar.exists()) {
@@ -2197,7 +2218,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         // now add the one coming from the library dependencies
         if (includeLibraries) {
-            for (AndroidLibrary androidLibrary : mFlatPackageDependencies.getAndroidDependencies()) {
+            for (AndroidLibrary androidLibrary : getFlatPackageDependencies().getAndroidDependencies()) {
                 File proguardRules = androidLibrary.getProguardRules();
                 if (proguardRules.exists()) {
                     fullList.add(proguardRules);

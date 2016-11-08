@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
+import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -128,6 +129,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private AndroidTask<DefaultTask> assembleTask;
     private AndroidTask<DefaultTask> preBuildTask;
     private AndroidTask<PrepareDependenciesTask> prepareDependenciesTask;
+    @Nullable
+    private AndroidTask<ResolveDependenciesTask> resolveDependenciesTask;
     private AndroidTask<ProcessAndroidResources> generateRClassTask;
 
     private AndroidTask<Task> sourceGenTask;
@@ -953,7 +956,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // The base bundle dir must be recomputable from outside of this project.
         // DirName is a set for folders (flavor1/flavor2/buildtype) which is difficult to
         // recompute if all you have is the fullName (flavor1Flavor2Buildtype) as it would
-        // require string manipulation which could break is a flavor is using camelcase in
+        // require string manipulation which could break if a flavor is using camelcase in
         // its name (myFlavor).
         // So here we use getFullName directly. It's a direct match with the externally visible
         // variant name (which is == to getFullName), and set as the published artifact's
@@ -1050,6 +1053,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setPrepareDependenciesTask(
             AndroidTask<PrepareDependenciesTask> prepareDependenciesTask) {
         this.prepareDependenciesTask = prepareDependenciesTask;
+    }
+
+    @Override
+    public AndroidTask<ResolveDependenciesTask> getResolveDependenciesTask() {
+        return resolveDependenciesTask;
+    }
+
+    @Override
+    public void setResolveDependenciesTask(
+            AndroidTask<ResolveDependenciesTask> resolveDependenciesTask) {
+        this.resolveDependenciesTask = resolveDependenciesTask;
     }
 
     @Override

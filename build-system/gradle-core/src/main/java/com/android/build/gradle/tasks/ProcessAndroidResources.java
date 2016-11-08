@@ -59,6 +59,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -69,6 +70,8 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 @ParallelizableTask
 public class ProcessAndroidResources extends IncrementalTask {
@@ -117,7 +120,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File instantRunSupportDir;
 
-    private File baseFeature;
+    private Supplier<File> baseFeature;
 
     private Collection<File> previousFeatures;
 
@@ -367,15 +370,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.setPreviousFeatures(ImmutableSet.of());
 
-            AndroidAtom baseAtom = scope
-                    .getVariantScope()
-                    .getVariantConfiguration()
-                    .getPackageDependencies()
-                    .getBaseAtom();
-            if (baseAtom != null ) {
-                processResources.setBaseFeature(baseAtom.getResourcePackage());
-            }
-
+            processResources.setBaseFeature(() -> {
+                AndroidAtom baseAtom = scope
+                        .getVariantScope()
+                        .getVariantConfiguration()
+                        .getPackageDependencies()
+                        .getBaseAtom();
+                return baseAtom != null ? baseAtom.getResourcePackage() : null;
+            });
         }
     }
 
@@ -469,13 +471,15 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.setPreviousFeatures(previousAtoms);
 
-            AndroidAtom baseAtom = scope
-                    .getVariantScope()
-                    .getVariantConfiguration()
-                    .getPackageDependencies()
-                    .getBaseAtom();
-            assert baseAtom != null;
-            processResources.setBaseFeature(baseAtom.getResourcePackage());
+            processResources.setBaseFeature(() -> {
+                AndroidAtom baseAtom = scope
+                        .getVariantScope()
+                        .getVariantConfiguration()
+                        .getPackageDependencies()
+                        .getBaseAtom();
+                assert baseAtom != null;
+                return baseAtom.getResourcePackage();
+            });
         }
 
         private List<AndroidLibrary> computeFlatLibraryList() {
@@ -718,10 +722,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public File getBaseFeature() {
-        return baseFeature;
+        return baseFeature.get();
     }
 
-    public void setBaseFeature(File baseFeature) {
+    public void setBaseFeature(Supplier<File> baseFeature) {
         this.baseFeature = baseFeature;
     }
 

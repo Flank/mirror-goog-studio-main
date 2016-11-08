@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
+import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -325,6 +326,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<PrepareDependenciesTask> getPrepareDependenciesTask();
 
     void setPrepareDependenciesTask(AndroidTask<PrepareDependenciesTask> prepareDependenciesTask);
+
+    @Nullable
+    AndroidTask<ResolveDependenciesTask> getResolveDependenciesTask();
+
+    void setResolveDependenciesTask(AndroidTask<ResolveDependenciesTask> resolveDependenciesTask);
 
     AndroidTask<ProcessAndroidResources> getGenerateRClassTask();
 
