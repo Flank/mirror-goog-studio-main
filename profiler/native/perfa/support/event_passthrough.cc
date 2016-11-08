@@ -27,7 +27,7 @@ using profiler::proto::ActivityEventData;
 using profiler::proto::FragmentEventData;
 using profiler::proto::EventProfilerData;
 using profiler::proto::SystemEventData;
-using profiler::proto::ProfilerData;
+using profiler::proto::CommonData;
 using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
 
@@ -37,12 +37,12 @@ void SendData(EventProfilerData* data) {
   auto event_stub = Perfa::Instance().event_stub();
   // TODO: Use a consistent clock for all RPC calls. In the future the clock
   // should come from
-  // Perfa, or a pre-populated ProfilerData should be requested from Perfa.
+  // Perfa, or a pre-populated CommonData should be requested from Perfa.
   SteadyClock clock;
   ClientContext context;
   EmptyEventResponse response;
 
-  ProfilerData* profiler_data = data->mutable_basic_info();
+  CommonData* profiler_data = data->mutable_basic_info();
   profiler_data->set_end_timestamp(clock.GetCurrentTime());
   event_stub.SendEvent(&context, *data, &response);
   // TODO: Handle response codes.

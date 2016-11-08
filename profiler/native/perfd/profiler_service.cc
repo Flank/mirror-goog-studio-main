@@ -21,6 +21,7 @@
 #include "utils/trace.h"
 
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 
 namespace profiler {
@@ -45,5 +46,4 @@ Status ProfilerServiceImpl::GetVersion(
   response->set_version(profiler::kAndroidStudioVersion);
   return Status::OK;
 }
-
 }  // namespace profiler

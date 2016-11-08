@@ -25,7 +25,7 @@
 namespace profiler {
 
 class ProfilerServiceImpl final
-    : public profiler::proto::DeviceService::Service {
+    : public profiler::proto::ProfilerService::Service {
  public:
   explicit ProfilerServiceImpl(const Daemon& daemon) : clock_(daemon.clock()) {}
 
@@ -36,7 +36,6 @@ class ProfilerServiceImpl final
   grpc::Status GetVersion(grpc::ServerContext* context,
                           const profiler::proto::VersionRequest* request,
                           profiler::proto::VersionResponse* reply) override;
-
  private:
   // Clock knows about timestamps.
   const Clock& clock_;

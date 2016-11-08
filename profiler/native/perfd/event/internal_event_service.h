@@ -30,7 +30,7 @@ class InternalEventServiceImpl final
 
   // RPC to store events in the event data cache. Incoming event data should
   // have
-  // their ProfilerData::end_timestamp field populated.
+  // their CommonData::end_timestamp field populated.
   grpc::Status SendEvent(
       grpc::ServerContext* context,
       const profiler::proto::EventProfilerData* request,

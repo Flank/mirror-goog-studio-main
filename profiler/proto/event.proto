@@ -30,7 +30,7 @@ service EventService {
 }
 
 message EventProfilerData {
-  ProfilerData basic_info = 1;
+  CommonData basic_info = 1;
   oneof data {
     SystemEventData system_data = 2;
     FragmentEventData fragment_data = 3;
