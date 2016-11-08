@@ -166,13 +166,15 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         @Model
         public static List<ProductFlavorCombo<ProductFlavor>> createProductFlavorCombo(
                 @Path("android.productFlavors") ModelMap<ProductFlavor> productFlavors) {
-            // TODO: Create custom product flavor container to manually configure flavor dimensions.
-            Set<String> flavorDimensionList = productFlavors.values().stream()
+            List<String> flavorDimensionList = productFlavors.values().stream()
                     .filter(flavor -> flavor.getDimension() != null)
-                    .map(ProductFlavor::getDimension).collect(Collectors.toSet());
+                    .map(ProductFlavor::getDimension)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
 
             return ProductFlavorCombo.createCombinations(
-                    Lists.newArrayList(flavorDimensionList),
+                    flavorDimensionList,
                     productFlavors.values());
         }
 
