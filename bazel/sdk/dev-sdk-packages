@@ -16,8 +16,8 @@ platforms;android-25
 platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
-# Needed for typo checking
-tools:support/*.txt
+# mksdcard for AvdListDialogTest; support/*.txt for typo checking
+tools:{package.xml,mksdcard*,support/*.txt}
 
 # Subset of docs happened to be used by tests
 docs:reference/android/{*,content/*}
