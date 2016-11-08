@@ -780,6 +780,18 @@ public class ResourceUsageModel {
     }
 
     /**
+     * Whether we should ignore tools attribute resource references.
+     * <p>
+     * For example, for resource shrinking we want to ignore tools attributes,
+     * whereas for resource refactoring on the source code we do not.
+     *
+     * @return whether tools attributes should be ignored
+     */
+    protected boolean ignoreToolsAttributes() {
+        return false;
+    }
+
+    /**
      * Records resource declarations and usages within an XML resource file
      * @param folderType the type of resource file
      * @param node the root node to start the recursive search from
@@ -793,8 +805,7 @@ public class ResourceUsageModel {
         if (nodeType == Node.ELEMENT_NODE) {
             Element element = (Element) node;
 
-            String tag = element.getLocalName();
-            if ("attr".equals(tag) &&
+            if ("attr".equals(element.getLocalName()) &&
                     AAPT_URI.equals(element.getNamespaceURI()) &&
                     from != null) {
                 // AAPT inlined resource.
@@ -820,8 +831,10 @@ public class ResourceUsageModel {
                     // a keep attribute
                     if (TOOLS_URI.equals(attr.getNamespaceURI())) {
                         recordToolsAttributes(attr);
-                        // Skip all other tools: attributes
-                        continue;
+                        // Skip all other tools: attributes?
+                        if (ignoreToolsAttributes()) {
+                            continue;
+                        }
                     }
 
                     String value = attr.getValue();

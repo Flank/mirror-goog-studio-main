@@ -1686,6 +1686,19 @@ public class ResourceUsageAnalyzer {
     private class ResourceShrinkerUsageModel extends ResourceUsageModel {
         public File file;
 
+        /**
+         * Whether we should ignore tools attribute resource references.
+         * <p>
+         * For example, for resource shrinking we want to ignore tools attributes,
+         * whereas for resource refactoring on the source code we do not.
+         *
+         * @return whether tools attributes should be ignored
+         */
+        @Override
+        protected boolean ignoreToolsAttributes() {
+            return true;
+        }
+
         @NonNull
         @Override
         protected List<Resource> findRoots(@NonNull List<Resource> resources) {
