@@ -46,7 +46,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>This class is used to avoid creating the same file/directory multiple times. The main API
  * method {@link #createFile(File, Inputs, Callable)} creates an output file/directory by either
  * copying it from the cache, or creating it first and caching it if the cached file/directory does
- * not already exist.
+ * not yet exist. Similarly, the {@link #createFileInCacheIfAbsent(Inputs, ExceptionConsumer)}
+ * method returns the cached output file/directory, and creates it first if the cached
+ * file/directory does not yet exist.
  */
 @Immutable
 public final class FileCache {
@@ -141,14 +143,27 @@ public final class FileCache {
     }
 
     /**
-     * Returns a {@code FileCache} instance with inter-process locking (i.e., synchronization takes
-     * place for threads of the same process as well as those across different processes). This
-     * method guarantees that there is only one {@code FileCache} instance per process for a given
-     * cache directory (there could still be multiple {@code FileCache} instances on different
+     * Returns a {@code FileCache} instance with {@link LockingScope#INTER_PROCESS}.
+     *
+     * <p>Threads of the same process as well as those across different processes can read same the
+     * cache entry concurrently, but only one of them can write to the same cache entry or the same
+     * output file/directory at a time, without any other thread concurrently reading that cache
+     * entry. If the cache is being deleted by another thread of any process, then any read or write
+     * access to the cache will block until the deletion completes. The user must access the cache
+     * via {@code FileCache}'s API; otherwise, the previous concurrency guarantees will no longer
+     * hold.
+     *
+     * <p>Note that if this cache is never used by more than one process at a time, it may be
+     * preferable to configure the cache with {@code SINGLE_PROCESS} locking scope instead since
+     * there will be less synchronization overhead.
+     *
+     * <p>This method guarantees that there is only one {@code FileCache} instance per process for a
+     * given cache directory (there could still be multiple {@code FileCache} instances on different
      * processes for a given cache directory).
      *
      * @param cacheDirectory the directory that will contain the cached files/directories (may not
      *     already exist)
+     * @see #getInstanceWithSingleProcessLocking(File)
      */
     @NonNull
     public static FileCache getInstanceWithInterProcessLocking(@NonNull File cacheDirectory)
@@ -157,14 +172,29 @@ public final class FileCache {
     }
 
     /**
-     * Returns a {@code FileCache} instance with single-process locking (i.e., synchronization takes
-     * place for threads of the same process only and not for threads across different processes).
-     * This method guarantees that there is only one {@code FileCache} instance per process for a
+     * Returns a {@code FileCache} instance with {@link LockingScope#SINGLE_PROCESS}.
+     *
+     * <p>Threads of the same process as well as those across different processes can read same the
+     * cache entry concurrently; however, only one thread in the current process can write to the
+     * same cache entry or the same output file/directory at a time, without any other thread in the
+     * current process concurrently reading that cache entry, but there is no guarantee that that
+     * cache entry is not being read or written to by another thread of another process. If the
+     * cache is being deleted by another thread of the current process, then any read or write
+     * access to the cache will block until the deletion completes. The user must access the cache
+     * via {@code FileCache}'s API; otherwise, the previous concurrency guarantees will no longer
+     * hold.
+     *
+     * <p>Note that if this cache may be used by more than one process at a time, the client must
+     * configure the cache with {@code INTER_PROCESS} locking scope instead, even though there
+     * will be more synchronization overhead.
+     *
+     * <p>This method guarantees that there is only one {@code FileCache} instance per process for a
      * given cache directory (there could still be multiple {@code FileCache} instances on different
      * processes for a given cache directory).
      *
      * @param cacheDirectory the directory that will contain the cached files/directories (may not
      *     already exist)
+     * @see #getInstanceWithInterProcessLocking(File)
      */
     @NonNull
     public static FileCache getInstanceWithSingleProcessLocking(@NonNull File cacheDirectory)
@@ -179,84 +209,44 @@ public final class FileCache {
 
     /**
      * Creates an output file/directory by either copying it from the cache, or creating it first
-     * via the given file producer callback function and caching it if the cached file/directory
-     * does not already exist.
+     * via the given file creator callback function and caching it if the cached file/directory does
+     * not yet exist.
      *
      * <p>The output file/directory must not reside in, contain, or be identical to the cache
      * directory.
      *
      * <p>To determine whether to reuse a cached file/directory or create a new file/directory, the
-     * client needs to provide all the inputs that affect the creation of the output file/directory,
-     * including input files/directories and other input parameters to the {@link Inputs} object. If
-     * some inputs are missing (e.g., {@code encoding=utf-8}), the client may reuse a cached
-     * file/directory that is incorrect. On the other hand, if some irrelevant inputs are included
-     * (e.g., {@code verbose=true}), the cache may create a new cached file/directory even though an
-     * existing one can be used. In other words, missing inputs affect correctness, and irrelevant
-     * inputs affect performance. Thus, the client needs to consider carefully what to include and
-     * exclude in these inputs. For example, it is important to select a combination of properties
-     * that uniquely identify an input file/directory depending on the specific use case (common
-     * properties of a file/directory include its path, name, hash, size, and timestamp). As another
-     * example, if the client uses different commands or different versions of the same command to
-     * create the output, then the commands or their versions also need to be specified as part of
-     * the inputs.
+     * client needs to provide all the inputs that affect the creation of the output file/directory
+     * to the {@link Inputs} object.
      *
-     * <p>If this method is called multiple times on the same list of inputs, the first call will
-     * invoke the file producer and cache the output file/directory and subsequent calls will reuse
-     * the cached file/directory without invoking the file producer. Specifically, on the first
-     * call, the cache deletes the output file/directory (if it exists), creates its parent
-     * directories, invokes the file producer to create the output file/directory, and copies the
-     * output file/directory to the cache. On subsequent calls, the cache will create/replace the
-     * output file/directory with the cached result.
+     * <p>If this method is called multiple times on the same list of inputs, on the first call, the
+     * cache will delete the output file/directory (if it exists), create its parent directories,
+     * invoke the file creator to create the output file/directory, and copy the output
+     * file/directory to the cache. On subsequent calls, the cache will create/replace the output
+     * file/directory with the cached result without invoking the file creator.
      *
-     * <p>Note that the file producer is not required to always create an output (e.g., it may not
-     * create dex files for jars that don't contain class files). If the file producer does not
-     * create an output on the first call, the cache will remember this result and produce no output
-     * on subsequent calls (it will still delete the output file/directory if it exists and creates
-     * its parent directory on both the first and subsequent calls).
+     * <p>Note that the file creator is not required to always create an output. If the file creator
+     * does not create an output on the first call, the cache will remember this result and produce
+     * no output on subsequent calls (it will still delete the output file/directory if it exists
+     * and creates its parent directory on both the first and subsequent calls).
      *
-     * <p>If this cache is configured with {@link LockingScope#INTER_PROCESS}, threads of the same
-     * process as well as those across different processes can read same the cache entry
-     * concurrently, but only one of them can write to the same cache entry or the same output
-     * file/directory at a time, without any other thread concurrently reading that cache entry. If
-     * this cache is configured with {@link LockingScope#SINGLE_PROCESS}, threads of the same
-     * process as well as those across different processes can read same the cache entry
-     * concurrently; however, only one thread in the current process can write to the same cache
-     * entry or the same output file/directory at a time, without any other thread in the current
-     * process concurrently reading that cache entry, but there is no guarantee that that cache
-     * entry is not being read or written to by another thread of another process. The advantage of
-     * having {@code SINGLE_PROCESS} locking scope is that the cache will incur less synchronization
-     * overhead than with {@code INTER_PROCESS} locking scope. However, if the cache may be used by
-     * more than one process at a time, then the client must configure the cache with {@code
-     * INTER_PROCESS} locking scope.
-     *
-     * <p>If the cache is being deleted by another thread of any process in the case of {@code
-     * INTER_PROCESS} locking scope, or by another thread of the current process in the case of
-     * {@code SINGLE_PROCESS} locking scope (i.e., another thread is calling the {@link #delete()}
-     * method on this cache), then this method will block until the deletion completes and will
-     * then re-create the cache directory.
-     *
-     * <p>The user is strongly advised to access the cache via {@code FileCache}'s API; otherwise,
-     * the above concurrency guarantees will no longer hold.
-     *
-     * <p>When this method throws an exception, the client can check whether the exception is caused
-     * by the file producer or not. If the thrown exception has type {@link ExecutionException},
-     * it means that an exception occurred during the execution of the file producer. If the thrown
-     * exception has type {@link IOException} or {@link RuntimeException}, it means that the
-     * exception occurred during the execution of this method, but not because of the file producer.
+     * <p>Depending on whether there are other threads/processes concurrently accessing this cache
+     * and the type of locking scope configured for this cache, this method may block until it is
+     * allowed to continue.
      *
      * @param outputFile the output file/directory
-     * @param inputs all the inputs the affect the creation of the output file/directory
-     * @param fileProducer the callback function to create the output file/directory
-     * @throws ExecutionException if an exception occurs during the execution of the file producer
-     * @throws IOException if an I/O exception occurs during the execution of this method, but not
-     *     because of the file producer
-     * @throws RuntimeException if a runtime exception occurs during the execution of this method,
-     *     but not because of the file producer
+     * @param inputs all the inputs that affect the creation of the output file/directory
+     * @param fileCreator the callback function to create the output file/directory
+     * @throws ExecutionException if an exception occurred during the execution of the file creator
+     * @throws IOException if an I/O exception occurred, but not during the execution of the file
+     *     creator (or the file creator was not executed)
+     * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
+     *     file creator (or the file creator was not executed)
      */
     public void createFile(
             @NonNull File outputFile,
             @NonNull Inputs inputs,
-            @NonNull Callable<Void> fileProducer)
+            @NonNull Callable<Void> fileCreator)
             throws ExecutionException, IOException {
         Preconditions.checkArgument(
                 !FileUtils.isFileInDirectory(outputFile, mCacheDirectory),
@@ -275,12 +265,8 @@ public final class FileCache {
                         "Output directory must not be the same as the cache directory '%1$s'",
                         mCacheDirectory.getAbsolutePath()));
 
-        // For each unique list of inputs, we compute a unique key and use it as the name of the
-        // cache entry directory. The cache entry directory is a directory that contains the actual
-        // cached file and an inputs file describing the inputs.
-        File cacheEntryDir = new File(mCacheDirectory, inputs.getKey());
-        File cachedFile = new File(cacheEntryDir, "output");
-        File inputsFile = new File(cacheEntryDir, "inputs");
+        File cacheEntryDir = getCacheEntryDir(inputs);
+        File cachedFile = getCachedFile(cacheEntryDir);
 
         // Callable to create the output file
         Callable<Void> createOutputFile = () -> {
@@ -289,16 +275,16 @@ public final class FileCache {
             FileUtils.deletePath(outputFile);
             Files.createParentDirs(outputFile);
             try {
-                fileProducer.call();
+                fileCreator.call();
             } catch (Exception exception) {
-                throw new FileProducerException(exception);
+                throw new FileCreatorException(exception);
             }
             return null;
         };
 
         // Callable to copy the output file to the cached file
         Callable<Void> copyOutputFileToCachedFile = () -> {
-            // Only copy if the output file exists as file producer is not required to always
+            // Only copy if the output file exists as file creator is not required to always
             // produce an output
             if (outputFile.exists()) {
                 copyFileOrDirectory(outputFile, cachedFile);
@@ -312,7 +298,7 @@ public final class FileCache {
             // this method
             FileUtils.deletePath(outputFile);
             Files.createParentDirs(outputFile);
-            // Only copy if the cached file exist as file producer may not have produced an output
+            // Only copy if the cached file exist as file creator may not have produced an output
             // during the first time this cache is called on the given inputs
             if (cachedFile.exists()) {
                 copyFileOrDirectory(cachedFile, outputFile);
@@ -320,51 +306,161 @@ public final class FileCache {
             return null;
         };
 
+        // If the cache is hit, copy the cached file to the output file. The cached file should have
+        // been guarded with a SHARED lock when this callable is invoked (see method
+        // checkHitOrMiss). Here, we guard the output file with an EXCLUSIVE lock so that other
+        // threads/processes won't be able to write to the same output file at the same time.
+        Callable<Void> actionIfCacheHit =
+                () -> doLocked(outputFile, LockingType.EXCLUSIVE, copyCachedFileToOutputFile);
+
+        // If the cache is missed, create the output file and copy it to the cached file. The cached
+        // file should have been guarded with an EXCLUSIVE lock when this callable is invoked (see
+        // method checkHitOrMiss). Here, we again guard the output file with an EXCLUSIVE lock.
+        Callable<Void> actionIfCacheMissed =
+                () -> doLocked(
+                        outputFile,
+                        LockingType.EXCLUSIVE, () -> {
+                                createOutputFile.call();
+                                copyOutputFileToCachedFile.call();
+                                return null;
+                        });
+
+        checkHitOrMiss(inputs, cacheEntryDir, actionIfCacheHit, actionIfCacheMissed);
+    }
+
+    /**
+     * Returns a cached output file/directory. If the cached file/directory does not yet exist,
+     * this method creates it first via the given file creator callback function.
+     *
+     * <p>To determine whether a cached file/directory exists, the client needs to provide all the
+     * inputs that affect the creation of the output file/directory to the {@link Inputs} object.
+     *
+     * <p>If this method is called multiple times on the same list of inputs, the first call will
+     * invoke the file creator to create the cached output file/directory (which is given as the
+     * argument to the file creator callback function), and subsequent calls will return the cached
+     * file/directory without invoking the file creator.
+     *
+     * <p>Note that the file creator is not required to always create an output. If the file creator
+     * does not create an output on the first call, the cache will remember this result and return a
+     * cached file that does not exist on subsequent calls.
+     *
+     * <p>Depending on whether there are other threads/processes concurrently accessing this cache
+     * and the type of locking scope configured for this cache, this method may block until it is
+     * allowed to continue.
+     *
+     * <p>Note that this method returns a cached file/directory that is located inside the cache
+     * directory. To avoid corrupting the cache, the client must never write to the returned cached
+     * file/directory (or any other files/directories inside the cache directory) without using the
+     * cache's API. If the client wants to read the returned cached file/directory, it must ensure
+     * that another thread (of the same or a different process) is not overwriting or deleting the
+     * same cached file/directory at the same time.
+     *
+     * <p>WARNING: DO NOT use this method if the returned cached file/directory will be annotated
+     * with Gradle's {@code @OutputFile} or {@code @OutputDirectory} annotations as it is undefined
+     * behavior of Gradle incremental builds when multiple Gradle tasks have the same
+     * output-annotated file/directory.
+     *
+     * @param inputs all the inputs that affect the creation of the output file/directory
+     * @param fileCreator the callback function to create the output file/directory
+     * @return the cached output file/directory
+     * @throws ExecutionException if an exception occurred during the execution of the file creator
+     * @throws IOException if an I/O exception occurred, but not during the execution of the file
+     *     creator (or the file creator was not executed)
+     * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
+     *     file creator (or the file creator was not executed)
+     */
+    public File createFileInCacheIfAbsent(
+            @NonNull Inputs inputs,
+            @NonNull ExceptionConsumer<File> fileCreator)
+            throws ExecutionException, IOException {
+        File cacheEntryDir = getCacheEntryDir(inputs);
+        File cachedFile = getCachedFile(cacheEntryDir);
+
+        // If the cache is hit, do nothing. If the cache is missed, create the cached output file;
+        // the cached file should have been guarded with an EXCLUSIVE lock when this callable is
+        // invoked (see method checkHitOrMiss).
+        Callable<Void> actionIfCacheMissed = () -> {
+            try {
+                fileCreator.accept(cachedFile);
+            } catch (Exception exception) {
+                throw new FileCreatorException(exception);
+            }
+            return null;
+        };
+        checkHitOrMiss(inputs, cacheEntryDir, () -> null, actionIfCacheMissed);
+
+        return cachedFile;
+    }
+
+    /**
+     * Checks whether the cache is hit (a cache entry directory for the given inputs exists) or
+     * missed, and invokes the respective provided actions.
+     *
+     * @param inputs all the inputs that affect the creation of the output file/directory
+     * @param cacheEntryDir the cache entry directory
+     * @param actionIfCacheHit action to invoke if the cache is hit
+     * @param actionIfCacheMissed action to invoke if the cache is missed
+     * @throws ExecutionException if a {@link FileCreatorException} occurred
+     * @throws IOException if an I/O exception occurred, and the exception was not wrapped by
+     *     {@link FileCreatorException}
+     * @throws RuntimeException if a runtime exception occurred, and the exception was not wrapped
+     *     by {@link FileCreatorException}
+     */
+    private void checkHitOrMiss(
+            @NonNull Inputs inputs,
+            @NonNull File cacheEntryDir,
+            @NonNull Callable<Void> actionIfCacheHit,
+            @NonNull Callable<Void> actionIfCacheMissed)
+            throws ExecutionException, IOException {
         try {
+            // Guard the cache directory with a SHARED lock so that other threads/processes can read
+            // or write to the cache at the same time but cannot delete the cache while it is being
+            // read/written to. (Further locking within the cache will make sure multiple
+            // threads/processes can read but cannot write to the same cache entry at the same
+            // time.)
             doLocked(mCacheDirectory, LockingType.SHARED, () -> {
                 // Create (or recreate) the cache directory since it may not exist or might have
                 // been deleted. The following method is thread-safe so it's okay to call it from
                 // multiple threads (and processes).
                 FileUtils.mkdirs(mCacheDirectory);
 
-                // Copy the cached file to the output file if the cache entry directory exists
+                // Guard the cache entry directory with a SHARED LOCK so that multiple
+                // threads/processes can read it at the same time
                 boolean isHit = doLocked(cacheEntryDir, LockingType.SHARED, () -> {
                     if (cacheEntryDir.exists()) {
                         mHits.incrementAndGet();
-                        doLocked(outputFile, LockingType.EXCLUSIVE, copyCachedFileToOutputFile);
+                        actionIfCacheHit.call();
                         return true;
                     } else {
                         return false;
                     }
                 });
+                // If the cache is hit, return immediately
                 if (isHit) {
                     return null;
                 }
 
+                // Guard the cache entry directory with an EXCLUSIVE lock so that only one
+                // thread/process can write to it
                 doLocked(cacheEntryDir, LockingType.EXCLUSIVE, () -> {
                     // Check again if the cache entry directory exists as it might have been created
-                    // by another thread/process since the last time we checked for its existence.
-                    // If it exists, copy the cached file to the output file, this time with an
-                    // EXCLUSIVE lock on the cache entry directory instead of a SHARED lock as
-                    // before.
+                    // by another thread/process since the last time we checked for its existence
                     if (cacheEntryDir.exists()) {
                         mHits.incrementAndGet();
-                        doLocked(outputFile, LockingType.EXCLUSIVE, copyCachedFileToOutputFile);
+                        actionIfCacheHit.call();
                     } else {
-                        // If the cache entry directory does not exist, create the output file and
-                        // copy it to the cached file
+                        // If the cache is missed, create the cache entry
                         mMisses.incrementAndGet();
                         try {
                             FileUtils.mkdirs(cacheEntryDir);
-                            doLocked(outputFile, LockingType.EXCLUSIVE, () -> {
-                                createOutputFile.call();
-                                copyOutputFileToCachedFile.call();
-                                return null;
-                            });
+                            actionIfCacheMissed.call();
                             // Write the inputs to the inputs file for diagnostic purposes
-                            Files.write(inputs.toString(), inputsFile, StandardCharsets.UTF_8);
+                            Files.write(
+                                    inputs.toString(),
+                                    getInputsFile(cacheEntryDir),
+                                    StandardCharsets.UTF_8);
                         } catch (Exception exception) {
-                            // If an exception occurs, clean up the cache entry directory
+                            // If an exception occurs, delete the cache entry directory
                             FileUtils.deletePath(cacheEntryDir);
                             throw exception;
                         }
@@ -374,12 +470,12 @@ public final class FileCache {
                 return null;
             });
         } catch (ExecutionException exception) {
-            // If FileProducerException was thrown, it will be wrapped by a chain of execution
+            // If FileCreatorException was thrown, it will be wrapped by a chain of execution
             // exceptions (due to nested doLocked() method calls), so let's iterate through the
             // causal chain and find out.
             for (Throwable cause : Throwables.getCausalChain(exception)) {
-                if (cause instanceof FileProducerException) {
-                    // Externally, FileProducerException is regarded as ExecutionException (see the
+                if (cause instanceof FileCreatorException) {
+                    // Externally, FileCreatorException is regarded as ExecutionException (see the
                     // javadoc of this method), so we simply rethrow the exception here.
                     throw exception;
                 } else if (cause instanceof IOException) {
@@ -398,6 +494,56 @@ public final class FileCache {
             throw new RuntimeException(
                     "Unable to find root cause of ExecutionException, " + exception);
         }
+    }
+
+    /**
+     * Returns the path of the cache entry directory, which is a directory containing the actual
+     * cached file/directory and possibly some other info files. The cache entry directory is unique
+     * to the given list of inputs (different lists of inputs correspond to different cache entry
+     * directories).
+     */
+    @NonNull
+    private File getCacheEntryDir(@NonNull Inputs inputs) {
+        return new File(mCacheDirectory, inputs.getKey());
+    }
+
+    /**
+     * Returns the path of the cached output file/directory inside the cache entry directory.
+     */
+    @NonNull
+    private File getCachedFile(@NonNull File cacheEntryDir) {
+        return new File(cacheEntryDir, "output");
+    }
+
+    /**
+     * Returns the path of an inputs file inside the cache entry directory, which will be used to
+     * describe the inputs to an API call on the cache.
+     */
+    @NonNull
+    private File getInputsFile(@NonNull File cacheEntryDir) {
+        return new File(cacheEntryDir, "inputs");
+    }
+
+    /**
+     * Returns the path of the cached output file/directory that is unique to the given list of
+     * inputs (different lists of inputs correspond to different cached files/directories).
+     *
+     * <p>Note that this method returns the path only, the cached file/directory may or may not have
+     * been created.
+     *
+     * <p>This method is typically used together with the
+     * {@link #createFileInCacheIfAbsent(Inputs, ExceptionConsumer)} method to get the path of the
+     * cached file/directory in advance, before attempting to create it at a later time. The
+     * returned path of this method is guaranteed to be the same as the returned path by that
+     * method. The client calling this method should take precautions in handling the returned
+     * cached file/directory; refer to the javadoc of
+     * {@link #createFileInCacheIfAbsent(Inputs, ExceptionConsumer)} for more details.
+     *
+     * @param inputs all the inputs that affect the creation of the output file/directory
+     */
+    @NonNull
+    public File getCachedFile(@NonNull Inputs inputs) {
+        return getCachedFile(getCacheEntryDir(inputs));
     }
 
     /**
@@ -444,11 +590,10 @@ public final class FileCache {
      * @param accessedFile the file/directory that an action is going to access
      * @param lockingType the type of lock (shared/reading or exclusive/writing)
      * @param action the action that will be accessing the file/directory
-     * @throws ExecutionException if an exception occurs during the execution of the action
-     * @throws IOException if an I/O exception occurs during the execution of this method, but not
-     *     because of the action
-     * @throws RuntimeException if a runtime exception occurs during the execution of this method,
-     *     but not because of the action
+     * @throws ExecutionException if an exception occurred during the execution of the action
+     * @throws IOException if an I/O exception occurred, but not during the execution of the action
+     * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
+     *     action
      */
     @VisibleForTesting
     <V> V doLocked(
@@ -571,23 +716,38 @@ public final class FileCache {
     }
 
     /**
-     * Checked exception thrown when the file producer callback function aborts due to an {@link
+     * Checked exception thrown when the file creator callback function aborts due to an {@link
      * Exception}. This class is a private sub-class of {@link ExecutionException} and is used to
      * distinguish itself from other execution exceptions thrown elsewhere.
      */
     @Immutable
-    private static final class FileProducerException extends ExecutionException {
+    private static final class FileCreatorException extends ExecutionException {
 
-        public FileProducerException(@NonNull Exception exception) {
+        public FileCreatorException(@NonNull Exception exception) {
             super(exception);
         }
     }
 
     /**
-     * List of input parameters to be provided by the client when calling method {@link
-     * FileCache#createFile(File, Inputs, Callable)}. The input parameters have the order in which
-     * they were added to this {@code Inputs} object. If a parameter with the same name exists, the
-     * parameter's value is overwritten (retaining its previous order).
+     * List of input parameters to be provided by the client when using {@link FileCache}.
+     *
+     * <p>The input parameters have the order in which they were added to this {@code Inputs}
+     * object. If a parameter with the same name exists, the parameter's value is overwritten
+     * (retaining its previous order).
+     *
+     * <p>Note that the client of {@link FileCache} needs to exhaustively provide all the inputs
+     * that affect the creation of the output file/directory, including input files/directories and
+     * other input parameters to the {@link Inputs} object. If some inputs are missing, the client
+     * may reuse a cached file/directory that is incorrect. On the other hand, if some irrelevant
+     * inputs are included, the cache may create a new cached file/directory even though an existing
+     * one can be used. In other words, missing inputs affect correctness, and irrelevant inputs
+     * affect performance. Thus, the client needs to consider carefully what to include and exclude
+     * in these inputs. For example, it is important to select a combination of properties that
+     * uniquely identify an input file/directory depending on the specific use case (common
+     * properties of a file/directory include its path, name, hash, size, and timestamp). As another
+     * example, if the client uses different commands or different versions of the same command to
+     * create the output, then the commands or their versions also need to be specified as part of
+     * the inputs.
      */
     @Immutable
     public static final class Inputs {
