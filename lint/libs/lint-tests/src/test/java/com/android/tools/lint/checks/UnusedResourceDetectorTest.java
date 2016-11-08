@@ -817,6 +817,47 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testToolsNamespaceReferences() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=226204
+        mEnableIds = false;
+        assertEquals("No warnings.",
+                lintProject(
+                        xml("res/layout/my_layout.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                + "    android:id=\"@+id/activity_main\"\n"
+                                + "    android:layout_width=\"match_parent\"\n"
+                                + "    android:layout_height=\"match_parent\"\n"
+                                + "    tools:context=\"com.example.tnorbye.myapplication.MainActivity\">\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "        android:layout_width=\"wrap_content\"\n"
+                                + "        android:layout_height=\"wrap_content\"\n"
+                                + "        android:text=\"Hello World!\"\n"
+                                + "        tools:background=\"@drawable/my_drawable\"\n"
+                                + "        app:layout_constraintBottom_toBottomOf=\"@+id/activity_main\"\n"
+                                + "        app:layout_constraintLeft_toLeftOf=\"@+id/activity_main\"\n"
+                                + "        app:layout_constraintRight_toRightOf=\"@+id/activity_main\"\n"
+                                + "        app:layout_constraintTop_toTopOf=\"@+id/activity_main\" />\n"
+                                + "\n"
+                                + "</android.support.constraint.ConstraintLayout>\n"),
+                        xml("res/drawable/my_drawable.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                + "\n"
+                                + "</selector>"),
+
+                        // By content
+                        xml("res/raw/used.xml", ""
+                                + "<resources\n"
+                                + "        xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                + "        tools:shrinkMode=\"strict\"\n"
+                                + "        tools:keep=\"@raw/used,@layout/my_layout\" />\n")
+                ));
+    }
+
     @Override
     protected TestLintClient createClient() {
         if (!getName().startsWith("testDynamicResources")) {

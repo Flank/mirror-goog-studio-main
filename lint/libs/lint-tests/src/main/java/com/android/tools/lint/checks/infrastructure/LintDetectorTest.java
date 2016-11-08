@@ -19,10 +19,12 @@ package com.android.tools.lint.checks.infrastructure;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.utils.SdkUtils.escapePropertyValue;
@@ -404,6 +406,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     @NonNull
     public TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
+        if (!to.endsWith(DOT_JAVA)) {
+            throw new IllegalArgumentException("Expected .java suffix for Java test file");
+        }
+
         return file().to(to).withSource(source);
     }
 
@@ -427,6 +433,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     @NonNull
     public TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
+        if (!to.endsWith(DOT_XML)) {
+            throw new IllegalArgumentException("Expected .xml suffix for XML test file");
+        }
         return file().to(to).withSource(source);
     }
 
@@ -787,6 +796,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     @NonNull
     public JarTestFile jar(@NonNull String to, @NonNull TestFile... files) {
+        if (!to.endsWith(DOT_JAR)) {
+            throw new IllegalArgumentException("Expected .jar suffix for jar test file");
+        }
+
         JarTestFile jar = new JarTestFile(to);
         jar.files(files);
         return jar;

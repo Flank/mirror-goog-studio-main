@@ -203,7 +203,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"hello\" tools:ignore=\"StringFormatMatches\">%1$d</string>\n"
                             + "    <string name=\"hello2\" tools:ignore=\"StringFormatMatches,StringFormatCount\">%3$d: %1$s, %2$s?</string>\n"
                             + "</resources>\n"),
-                    java("src/test/pkg/StringFormatActivity_ignore.java.txt", ""
+                    java("src/test/pkg/StringFormatActivity.java", ""
                             + "package test.pkg;\n"
                             + "\n"
                             + "import android.annotation.SuppressLint;\n"

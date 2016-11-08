@@ -607,7 +607,7 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                 + "    <string name=\"ok\">\"Ok\"</string>\n"
                                 + "\n"
                                 + "</resources>\n"),
-                        xml("res/layout/buttonbar", ""
+                        xml("res/layout/buttonbar.xml", ""
                                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "    android:layout_width=\"match_parent\"\n"
