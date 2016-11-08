@@ -176,7 +176,8 @@ public class LibraryTaskManager extends TaskManager {
                                         false /*includeDependencies*/,
                                         false /*processResources*/);
 
-                        if (variantData.getVariantDependency().hasNonOptionalLibraries()) {
+                        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                                || variantData.getVariantDependency().hasNonOptionalLibraries()) {
                             // Add a task to merge the resource folders, including the libraries, in order to
                             // generate the R.txt file with all the symbols, including the ones from
                             // the dependencies.
@@ -325,7 +326,8 @@ public class LibraryTaskManager extends TaskManager {
         copyLintTask.dependsOn(tasks, LINT_COMPILE);
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
-        if (variantData.getVariantDependency().isAnnotationsPresent()) {
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                || variantData.getVariantDependency().isAnnotationsPresent()) {
             AndroidTask<ExtractAnnotations> extractAnnotationsTask =
                     getAndroidTasks().create(
                             tasks,

@@ -445,19 +445,21 @@ public class VariantManager implements VariantModel {
                         variantDep.getPackageConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
             }
 
-            SpanRecorders.record(project,
-                    testVariantConfig.getFullName(),
-                    ExecutionType.RESOLVE_DEPENDENCIES,
-                    (Recorder.Block<Void>) () -> {
-                        taskManager.resolveDependencies(variantDep,
-                                null /*testedProjectPath*/);
-                        return null;
-                    });
-            testVariantConfig.setDependencies(
-                    variantDep.getCompileDependencies(),
-                    variantDep.getFlattenedCompileDependencies(),
-                    variantDep.getPackageDependencies(),
-                    variantDep.getFlattenedPackageDependencies());
+            if (!AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+                SpanRecorders.record(project,
+                        testVariantConfig.getFullName(),
+                        ExecutionType.RESOLVE_DEPENDENCIES,
+                        (Recorder.Block<Void>) () -> {
+                            taskManager.resolveDependencies(variantDep,
+                                    null /*testedProjectPath*/);
+                            return null;
+                        });
+                testVariantConfig.setResolvedDependencies(
+                        variantDep.getCompileDependencies(),
+                        variantDep.getFlattenedCompileDependencies(),
+                        variantDep.getPackageDependencies(),
+                        variantDep.getFlattenedPackageDependencies());
+            }
             switch (variantType) {
                 case ANDROID_TEST:
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
@@ -611,25 +613,27 @@ public class VariantManager implements VariantModel {
                 ((TestAndroidConfig) extension).getTargetProjectPath() :
                 null;
 
-        SpanRecorders.record(
-                project,
-                variantConfig.getFullName(),
-                ExecutionType.RESOLVE_DEPENDENCIES,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        taskManager.resolveDependencies(
-                                variantDep,
-                                testedProjectPath);
-                        return null;
-                    }
-                });
+        if (!AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            SpanRecorders.record(
+                    project,
+                    variantConfig.getFullName(),
+                    ExecutionType.RESOLVE_DEPENDENCIES,
+                    new Recorder.Block<Void>() {
+                        @Override
+                        public Void call() {
+                            taskManager.resolveDependencies(
+                                    variantDep,
+                                    testedProjectPath);
+                            return null;
+                        }
+                    });
 
-        variantConfig.setDependencies(
-                variantDep.getCompileDependencies(),
-                variantDep.getFlattenedCompileDependencies(),
-                variantDep.getPackageDependencies(),
-                variantDep.getFlattenedPackageDependencies());
+            variantConfig.setResolvedDependencies(
+                    variantDep.getCompileDependencies(),
+                    variantDep.getFlattenedCompileDependencies(),
+                    variantDep.getPackageDependencies(),
+                    variantDep.getFlattenedPackageDependencies());
+        }
 
         return variantData;
     }

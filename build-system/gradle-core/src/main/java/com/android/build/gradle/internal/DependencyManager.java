@@ -157,7 +157,7 @@ public class DependencyManager {
         }
     }
 
-    public void resolveDependencies(
+    public Set<LibraryDependency> resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
@@ -172,11 +172,10 @@ public class DependencyManager {
                 variantDeps,
                 testedProjectPath,
                 libsToExplode);
-
-        processLibraries(libsToExplode);
+        return libsToExplode;
     }
 
-    private void processLibraries(@NonNull Set<LibraryDependency> libsToExplode) {
+    public void processLibraries(@NonNull Set<LibraryDependency> libsToExplode) {
         for (LibraryDependency lib: libsToExplode) {
             maybeCreatePrepareLibraryTask(lib, project);
         }
@@ -798,12 +797,23 @@ public class DependencyManager {
                                     provided);
 
                         } else {
-                            File explodedDir = project.file(
-                                    project.getBuildDir() +
-                                            "/" +
-                                            FD_INTERMEDIATES +
-                                            "/" + EXPLODED_AAR + "/" +
-                                            path);
+                            // When improved dependency resolution is enabled, the aar are exploded
+                            // to a directory specific to the variant.  Otherwise, it would conflict
+                            // with the up-to-date check of the original PrepareLibraryTask.
+                            // TODO This is currently very inefficient.  Use build cache.
+                            File explodedDir =
+                                    AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                                            ? FileUtils.join(
+                                                    project.getBuildDir(),
+                                                    FD_INTERMEDIATES,
+                                                    EXPLODED_AAR ,
+                                                    configDependencies.getName(),
+                                                    path)
+                                            : FileUtils.join(
+                                                    project.getBuildDir(),
+                                                    FD_INTERMEDIATES,
+                                                    EXPLODED_AAR,
+                                                    path);
 
                             libraryDependency = LibraryDependency.createExplodedAarLibrary(
                                     artifact.getFile(),

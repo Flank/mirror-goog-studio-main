@@ -25,6 +25,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.ApkOutputFile;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
@@ -140,8 +141,23 @@ public class ModelBuilder implements ToolingModelBuilder {
         return modelName.equals(AndroidProject.class.getName());
     }
 
+    private void resolveDependencies() {
+        for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+            final String testedProjectPath = config instanceof TestAndroidConfig ?
+                    ((TestAndroidConfig) config).getTargetProjectPath() :
+                    null;
+            taskManager.getDependencyManager().resolveDependencies(
+                    variantData.getVariantDependency(),
+                    testedProjectPath);
+        }
+    }
+
     @Override
     public Object buildAll(String modelName, Project project) {
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            resolveDependencies();
+        }
+
         Integer modelLevelInt = AndroidGradleOptions.buildModelOnlyVersion(project);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
