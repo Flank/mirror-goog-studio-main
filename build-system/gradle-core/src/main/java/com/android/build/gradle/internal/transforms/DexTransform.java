@@ -38,14 +38,12 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
 import com.android.builder.internal.utils.FileCache;
-import com.android.builder.internal.utils.IOExceptionConsumer;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
@@ -486,7 +484,7 @@ public class DexTransform extends Transform {
                 hashs.add(hash);
             }
 
-            Callable<Void> fileProducer = () -> {
+            Callable<Void> preDexLibraryAction = () -> {
                 FileUtils.deletePath(to);
                 Files.createParentDirs(to);
                 if (multiDex) {
@@ -500,7 +498,8 @@ public class DexTransform extends Transform {
             if (buildCache.isPresent()) {
                 // To use the cache, we need to specify all the inputs that affect the outcome of a
                 // pre-dex (see DxDexKey for an exhaustive list of these inputs)
-                FileCache.Inputs.Builder buildCacheInputs = new FileCache.Inputs.Builder();
+                FileCache.Inputs.Builder buildCacheInputs =
+                        new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY);
 
                 // As a general rule, we use the file's path and hash to uniquely identify a file.
                 // However, certain types of files are usually copied/duplicated at different
@@ -513,45 +512,41 @@ public class DexTransform extends Transform {
                     // artifact information (e.g., "exploded-aar/com.android.support/support-v4/
                     // 23.3.0/jars/classes.jar")
                     buildCacheInputs.putString(
-                            String.valueOf(FileCacheInputName.EXPLODED_AAR_FILE_PATH),
+                            FileCacheInputParams.EXPLODED_AAR_FILE_PATH.name(),
                             from.getPath().substring(from.getPath().lastIndexOf("exploded-aar")));
                 } else if (from.getName().equals("instant-run.jar")) {
                     // If the file is an instant-run.jar file, we use the the file name itself as
                     // the file's identifier
                     buildCacheInputs.putString(
-                            String.valueOf(FileCacheInputName.INSTANT_RUN_JAR_FILE_NAME),
-                            from.getName());
+                            FileCacheInputParams.INSTANT_RUN_JAR_FILE_NAME.name(), from.getName());
                 } else {
                     // In all other cases, we use the file's path as the file's identifier
-                    buildCacheInputs.putFilePath(
-                            String.valueOf(FileCacheInputName.FILE_PATH), from);
+                    buildCacheInputs.putFilePath(FileCacheInputParams.FILE_PATH.name(), from);
                 }
                 // In all cases, in addition to the file's path, we always use the file's hash to
                 // identify an input file, and provide other input parameters to the cache
                 buildCacheInputs
-                        .putFileHash(String.valueOf(FileCacheInputName.FILE_HASH), from)
+                        .putFileHash(FileCacheInputParams.FILE_HASH.name(), from)
                         .putString(
-                                String.valueOf(FileCacheInputName.BUILD_TOOLS_REVISION),
+                                FileCacheInputParams.BUILD_TOOLS_REVISION.name(),
                                 androidBuilder
                                         .getTargetInfo()
                                         .getBuildTools()
                                         .getRevision()
                                         .toString())
                         .putBoolean(
-                                String.valueOf(FileCacheInputName.JUMBO_MODE),
-                                dexOptions.getJumboMode())
-                        .putBoolean(String.valueOf(FileCacheInputName.OPTIMIZE), true)
-                        .putBoolean(String.valueOf(FileCacheInputName.MULTI_DEX), multiDex);
+                                FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
+                        .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
+                        .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
                 List<String> additionalParams = dexOptions.getAdditionalParameters();
                 for (int i = 0; i < additionalParams.size(); i++) {
                     buildCacheInputs.putString(
-                            String.valueOf(FileCacheInputName.ADDITIONAL_PARAMETERS)
-                                    + "[" + i + "]",
+                            FileCacheInputParams.ADDITIONAL_PARAMETERS.name() + "[" + i + "]",
                             additionalParams.get(i));
                 }
 
                 try {
-                    buildCache.get().createFile(to, buildCacheInputs.build(), fileProducer);
+                    buildCache.get().createFile(to, buildCacheInputs.build(), preDexLibraryAction);
                 } catch (ExecutionException exception) {
                     throw new RuntimeException(
                             String.format(
@@ -572,10 +567,10 @@ public class DexTransform extends Transform {
                             to.getAbsolutePath(),
                             buildCache.get().getCacheDirectory().getAbsolutePath(),
                             exception.getMessage());
-                    fileProducer.call();
+                    preDexLibraryAction.call();
                 }
             } else {
-                fileProducer.call();
+                preDexLibraryAction.call();
             }
 
             for (File file : Files.fileTreeTraverser().breadthFirstTraversal(to)) {
@@ -589,13 +584,13 @@ public class DexTransform extends Transform {
     }
 
     /**
-     * Parameter name in a parameter name-value pair provided as input to {@link FileCache}.
+     * Input parameters to be provided by the client when using {@link FileCache}.
      *
-     * <p>Users of {@link FileCache} need to provide pairs of parameter names and values as inputs
-     * to the {@code FileCache}. This enum class provides the possible parameter names that are used
-     * by the {@link DexTransform.PreDexTask} class.
+     * <p>The clients of {@link FileCache} need to exhaustively specify all the inputs that affect
+     * the creation of an output file/directory. This enum class lists the input parameters that are
+     * used in {@link DexTransform.PreDexTask}.
      */
-    private enum FileCacheInputName {
+    private enum FileCacheInputParams {
 
         /** Path of an input file. */
         FILE_PATH,
