@@ -4338,6 +4338,25 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    @SuppressWarnings("all") // sample code
+    public void testResourceReference() throws Exception {
+        checkApiCheck(""
+                        + "src/test/pkg/TestResourceReference.java:5: Warning: Field requires API level 21 (current min is 10): android.R.interpolator#fast_out_linear_in [InlinedApi]\n"
+                        + "        int id = android.R.interpolator.fast_out_linear_in;\n"
+                        + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n", null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class TestResourceReference {\n"
+                        + "    protected void test() {\n"
+                        + "        int id = android.R.interpolator.fast_out_linear_in;\n"
+                        + "    }\n"
+                        + "}")
+        );
+    }
+
     public void testSupportLibraryCalls() throws Exception {
         //noinspection all // Sample code
         checkApiCheck(""
