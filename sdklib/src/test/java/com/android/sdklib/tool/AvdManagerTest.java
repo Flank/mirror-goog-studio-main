@@ -149,6 +149,67 @@ public class AvdManagerTest extends TestCase {
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
     }
 
+    public void testRenameAvd() throws Exception {
+
+        MockLog log = new MockLog();
+        // Create an AVD
+        AvdInfo origAvd = mAvdManager.createAvd(
+                mAvdFolder,
+                this.getName(),
+                mSystemImage,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                false,
+                log);
+
+        assertNotNull("Could not create AVD", origAvd);
+        assertTrue("Expected config.ini in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, "config.ini")));
+        Properties properties = new Properties();
+        properties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
+        assertEquals("system-images/android-23/default/x86/", properties.get("image.sysdir.1"));
+        assertTrue("Expected userdata.img in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+
+        // Create an AVD that is the same, but with a different name
+        String newName = this.getName() + "_renamed";
+        AvdInfo renamedAvd = mAvdManager.createAvd(
+                mAvdFolder,
+                newName,
+                mSystemImage,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                true, // Yes, edit the existing AVD
+                log);
+
+        assertNotNull("Could not rename AVD", renamedAvd);
+        String parentFolder = mAvdFolder.getParent();
+        String newNameIni = newName + ".ini";
+        assertTrue("Expected renamed " + newNameIni + " in " + parentFolder,
+                   mFileOp.exists(new File(parentFolder, newNameIni)));
+        Properties newProperties = new Properties();
+        newProperties.load(mFileOp.newFileInputStream(new File(parentFolder, newNameIni)));
+        assertEquals(mAvdFolder.getPath(), newProperties.get("path"));
+
+        assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
+        Properties baseProperties = new Properties();
+        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertEquals("system-images/android-23/default/x86/", baseProperties.get("image.sysdir.1"));
+        assertTrue("Expected userdata.img in " + mAvdFolder,
+                   mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+    }
+
 
     private static void recordSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
