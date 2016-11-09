@@ -21,6 +21,10 @@ filegroup(
     srcs = glob(
         include = ["*/build-tools/25.0.0/**"],
     ),
+    visibility = [
+        "//tools/adt/idea/android-tests:__pkg__",
+        "//tools/adt/idea/designer:__pkg__",
+    ],
 )
 
 filegroup(
@@ -96,7 +100,7 @@ filegroup(
     srcs = glob(
         include = [
             "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0-beta3/**",
-            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta3/**"
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta3/**",
         ],
     ),
 )
