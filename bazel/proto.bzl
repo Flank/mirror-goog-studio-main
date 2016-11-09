@@ -57,8 +57,7 @@ def _gen_proto_impl(ctx):
         mnemonic = "FixProtoSrcJar",
         inputs = outs,
         outputs = [srcjar],
-        arguments = [srcjar.path + ".jar", srcjar.path],
-        command = "cp $1 $2"
+        command = "cp " + srcjar.path + ".jar" + " " + srcjar.path
     )
 
 _gen_proto_rule = rule(
