@@ -186,8 +186,8 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     /**
      * Returns the manifest placeholders.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide/manifest-merger#TOC-Placeholder-support">
-     *     Manifest merger</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/manifest-build-variables.html">
+     *     Inject Build Variables into the Manifest</a>.
      */
     @NonNull
     @Override
@@ -198,8 +198,8 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     /**
      * Adds manifest placeholders.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide/manifest-merger#TOC-Placeholder-support">
-     *     Manifest merger</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/manifest-build-variables.html">
+     *     Inject Build Variables into the Manifest</a>.
      */
     public void addManifestPlaceholders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.putAll(manifestPlaceholders);
@@ -208,8 +208,8 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     /**
      * Sets a new set of manifest placeholders.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide/manifest-merger#TOC-Placeholder-support">
-     *     Manifest merger</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/manifest-build-variables.html">
+     *     Inject Build Variables into the Manifest</a>.
      */
     public void setManifestPlaceholders(@NonNull Map<String, Object> manifestPlaceholders) {
         mManifestPlaceholders.clear();

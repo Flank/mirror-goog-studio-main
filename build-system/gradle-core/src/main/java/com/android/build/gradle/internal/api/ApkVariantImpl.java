@@ -53,7 +53,7 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
     public Object getDex() {
         throw new RuntimeException("Access to the dex task is now impossible, starting with 1.4.0\n"
                 + "1.4.0 introduces a new Transform API allowing manipulation of the .class files.\n"
-                + "See more information: http://tools.android.com/tech-docs/new-build-system/transform-api");
+                + "See more information: https://developer.android.com/studio/plugins/index.html");
     }
 
     @Override

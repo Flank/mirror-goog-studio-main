@@ -71,7 +71,7 @@ public class NdkCompile extends NdkTask {
             "Consider using CMake or ndk-build integration with the stable Android Gradle plugin:\n"
             + " https://developer.android.com/studio/projects/add-native-code.html\n"
             + "or use the experimental plugin:\n"
-            + " http://tools.android.com/tech-docs/new-build-system/gradle-experimental.\n";
+            + " https://developer.android.com/studio/build/experimental-plugin.html.\n";
 
     private List<File> sourceFolders;
     private File generatedMakefile;

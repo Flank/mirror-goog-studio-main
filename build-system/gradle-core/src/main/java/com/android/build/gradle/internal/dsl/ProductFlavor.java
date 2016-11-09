@@ -490,7 +490,7 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     /**
      * Options for configuring jack.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/jackandjill">Jack and Jill</a>
+     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
      */
     @Override
     @NonNull
@@ -501,7 +501,7 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     /**
      * Configure Jack options for this product flavor.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/jackandjill">Jack and Jill</a>
+     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
      */
     public void jackOptions(@NonNull Action<JackOptions> action) {
         action.execute(jackOptions);
@@ -523,7 +523,7 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     /**
      * Whether the experimental Jack toolchain should be used.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/jackandjill">Jack and Jill</a>
+     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
      *
      * @deprecated use getJack.setEnabled instead.
      */
@@ -537,7 +537,7 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     /**
      * Whether the experimental Jack toolchain should be used.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/jackandjill">Jack and Jill</a>
+     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
      *
      * @deprecated use getJack.setEnabled instead.
      */

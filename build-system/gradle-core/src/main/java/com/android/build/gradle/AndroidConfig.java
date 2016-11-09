@@ -110,7 +110,7 @@ public interface AndroidConfig {
     /**
      * APK splits options.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits">APK Splits</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">APK Splits</a>.
      */
     Splits getSplits();
 

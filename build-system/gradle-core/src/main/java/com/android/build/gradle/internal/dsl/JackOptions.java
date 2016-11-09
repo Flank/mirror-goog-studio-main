@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * DSL object for configuring Jack options.
  *
- * <p>See <a href="http://tools.android.com/tech-docs/jackandjill">Jack and Jill</a>
+ * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
  */
 @SuppressWarnings("UnnecessaryInheritDoc")
 public class JackOptions implements CoreJackOptions {

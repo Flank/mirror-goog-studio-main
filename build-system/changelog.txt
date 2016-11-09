@@ -673,7 +673,7 @@
 0.2
 
 * Fixed support for windows.
-* Added support for customized sourceset. (http://tools.android.com/tech-docs/new-build-system/using-the-new-build-system#TOC-Working-with-and-Customizing-SourceSets)
+* Added support for customized sourceset. (https://developer.android.com/studio/build/build-variants.html#sourcesets)
 * Added support for dependency per configuration.
 * Fixed support for dependency on local jar files.
 * New samples "migrated" and "flavorlib"
