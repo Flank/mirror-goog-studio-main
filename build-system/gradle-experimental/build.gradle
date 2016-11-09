@@ -24,7 +24,7 @@ dependencies {
     compile fileTree(dir:gradleLib)
     compile project(':base:gradle-core')
 
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
     testCompile project(':base:project-test-lib')
 }
 

@@ -20,5 +20,5 @@ apply plugin: 'jacoco-tools-base'
 dependencies {
     compile project(':base:instant-run:instant-run-common')
     compile project(':base:ddmlib')
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
 }
