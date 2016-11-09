@@ -155,7 +155,7 @@ message CpuProfilingAppStopResponse {
 
 // CPU data of a given app process.
 message CpuProfilerData {
-  ProfilerData basic_info = 1;
+  CommonData basic_info = 1;
   oneof data {
     CpuUsageData cpu_usage = 2;
     ThreadActivities thread_activities = 3;

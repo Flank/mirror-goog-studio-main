@@ -29,7 +29,7 @@ class PerfaServiceImpl : public proto::PerfaService::Service {
       grpc::ServerWriter<proto::PerfaControlRequest>* writer) override;
 
   grpc::Status DataStream(grpc::ServerContext* context,
-                          grpc::ServerReader<proto::ProfilerData>* reader,
+                          grpc::ServerReader<proto::CommonData>* reader,
                           proto::DataStreamResponse* response) override;
 };
 

@@ -38,7 +38,7 @@ using proto::InternalMemoryService;
 using proto::InternalNetworkService;
 using proto::PerfaControlRequest;
 using proto::PerfaService;
-using proto::ProfilerData;
+using proto::CommonData;
 using proto::RegisterApplication;
 using std::lock_guard;
 
@@ -79,7 +79,7 @@ void Perfa::RunControlThread() {
   }
 }
 
-bool Perfa::WriteData(const ProfilerData& data) {
+bool Perfa::WriteData(const CommonData& data) {
   return data_stream_->Write(data);
 }
 

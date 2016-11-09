@@ -36,7 +36,7 @@ class Perfa {
   // necessary, but consider calling |Initialize| on your own first.
   static Perfa& Instance();
 
-  bool WriteData(const proto::ProfilerData& data);
+  bool WriteData(const proto::CommonData& data);
 
   const proto::InternalEnergyService::Stub& energy_stub() {
     return *energy_stub_;
@@ -71,7 +71,7 @@ class Perfa {
 
   grpc::ClientContext data_context_;
   proto::DataStreamResponse data_response_;
-  std::unique_ptr<grpc::ClientWriter<proto::ProfilerData>> data_stream_;
+  std::unique_ptr<grpc::ClientWriter<proto::CommonData>> data_stream_;
 
   void RunControlThread();
 };

@@ -17,11 +17,9 @@ syntax = "proto3";
 
 package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
-option java_outer_classname = "ProfilerService";
+option java_outer_classname = "Profiler";
 
-import "profiler.proto";
-
-service DeviceService {
+service ProfilerService {
   // Gets current timestamp that used in the device's profiling data.
   // A client may use this API to relate profiling data' timestamps to other
   // clocks such as the desktop's calendar time.
@@ -31,6 +29,29 @@ service DeviceService {
 
   // Gets version.
   rpc GetVersion(VersionRequest) returns (VersionResponse) {
+  }
+
+  // Gets the currently connected devices.
+  // TODO: expand with timing information for historical requests.
+  rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse) {
+  }
+
+  // Gets the running processes of a given device
+  // TODO expand with timing information for historical requests.
+  rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
+  }
+
+  // Connect to remote profiler service
+  rpc Connect(ConnectRequest) returns (ConnectResponse) {
+  }
+
+  // Disconnect from remote profiler service
+  rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {
+  }
+
+  // TODO: Workaround until perfd supports answering device information
+  // Will be removed once perfd is updated.
+  rpc SetProcesses(SetProcessesRequest) returns (SetProcessesResponse) {
   }
 }
 
@@ -53,4 +74,58 @@ message VersionRequest {
 
 message VersionResponse {
   string version = 1;
+}
+
+message GetDevicesRequest {
+}
+
+message GetDevicesResponse {
+  repeated Device device = 1;
+}
+
+message GetProcessesRequest {
+  string serial = 1;
+}
+
+message GetProcessesResponse {
+  repeated Process process = 2;
+}
+
+message ConnectRequest {
+  int32 port = 1;
+}
+
+message ConnectResponse {
+}
+
+message DisconnectRequest {
+  int32 port = 1;
+}
+
+message DisconnectResponse {
+}
+
+message DeviceProcesses {
+  Device device = 1;
+  repeated Process process = 2;
+}
+
+message SetProcessesRequest {
+  repeated DeviceProcesses device_processes = 1;
+}
+
+message SetProcessesResponse {
+}
+
+message Device {
+  string manufacturer = 1;
+  string model = 2;
+  string serial = 3;
+  string version = 4;
+  string api = 5;  
+}
+
+message Process {
+  string name = 1;
+  int32 pid = 2;
 }

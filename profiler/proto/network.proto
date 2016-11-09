@@ -53,7 +53,7 @@ service NetworkService {
 
 
 message NetworkProfilerData {
-  ProfilerData basic_info = 1;
+  CommonData basic_info = 1;
   oneof data {
     TrafficData traffic_data = 2;
     ConnectionData connection_data = 3;
