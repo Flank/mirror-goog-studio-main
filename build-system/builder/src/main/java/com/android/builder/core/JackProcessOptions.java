@@ -39,8 +39,8 @@ public class JackProcessOptions {
     // Class name of the code coverage plugin.
     public static final String COVERAGE_PLUGIN_NAME = "com.android.jack.coverage.CodeCoverage";
 
-    private boolean mDebugLog = false;
-    private boolean mVerbose = false;
+    private boolean debugJackInternals = false;
+    private boolean verboseProcessing = false;
     private boolean mDebuggable = true;
     @NonNull
     private List<File> mClasspaths = ImmutableList.of();
@@ -93,22 +93,25 @@ public class JackProcessOptions {
     private List<File> mJackPluginClassPath = ImmutableList.of();
     private boolean useJill = false;
 
-    public boolean isDebugLog() {
-        return mDebugLog;
+    /** Generate debug logs of Jack internals. */
+    public boolean isDebugJackInternals() {
+        return debugJackInternals;
     }
 
-    public void setDebugLog(boolean debugLog) {
-        mDebugLog = debugLog;
+    public void setDebugJackInternals(boolean debugJackInternals) {
+        this.debugJackInternals = debugJackInternals;
     }
 
-    public boolean isVerbose() {
-        return mVerbose;
+    /** Generates verbose logs when processing user code or libraries. */
+    public boolean isVerboseProcessing() {
+        return verboseProcessing;
     }
 
-    public void setVerbose(boolean verbose) {
-        mVerbose = verbose;
+    public void setVerboseProcessing(boolean verboseCompilationOutput) {
+        this.verboseProcessing = verboseCompilationOutput;
     }
 
+    /** If the generated Jack output should contain debug information. */
     public boolean isDebuggable() {
         return mDebuggable;
     }

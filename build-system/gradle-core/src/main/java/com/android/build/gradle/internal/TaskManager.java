@@ -316,6 +316,10 @@ public abstract class TaskManager {
         return project.getLogger().isEnabled(LogLevel.DEBUG);
     }
 
+    private boolean isInfoLog() {
+        return project.getLogger().isEnabled(LogLevel.INFO);
+    }
+
     public DataBindingBuilder getDataBindingBuilder() {
         return dataBindingBuilder;
     }
@@ -2062,6 +2066,9 @@ public abstract class TaskManager {
                         .coreJackOptions(scope.getVariantConfiguration().getJackOptions())
                         .minApiVersion(scope.getMinSdkVersion())
                         .forPackagedLibs()
+                        .debugJackInternals(isDebugLog())
+                        .verboseProcessing(isInfoLog())
+                        .debuggable(scope.getVariantConfiguration().getBuildType().isDebuggable())
                         .create();
         Optional<AndroidTask<TransformTask>> packageTask =
                 scope.getTransformManager().addTransform(tasks, scope, preDexPackagedTransform);
@@ -2086,11 +2093,14 @@ public abstract class TaskManager {
                         .coreJackOptions(scope.getVariantConfiguration().getJackOptions())
                         .minApiVersion(scope.getMinSdkVersion())
                         .forClasspathLibs()
+                        .debugJackInternals(isDebugLog())
+                        .verboseProcessing(isInfoLog())
+                        .debuggable(scope.getVariantConfiguration().getBuildType().isDebuggable())
                         .create();
         scope.getTransformManager().addTransform(tasks, scope, preDexRuntimeTransform);
 
         // ----- Create Jack Task -----
-        JackTransform jackTransform = new JackTransform(scope, isDebugLog(), compileJavaSources);
+        JackTransform jackTransform = new JackTransform(scope, compileJavaSources);
         scope.getVariantData().jackTransform = jackTransform;
         TransformTask.ConfigActionCallback<JackTransform> jackTransformCallback =
                 (transform, task) -> {

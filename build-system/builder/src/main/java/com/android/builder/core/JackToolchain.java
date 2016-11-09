@@ -40,6 +40,7 @@ import com.android.jack.api.v01.DebugInfoLevel;
 import com.android.jack.api.v01.MultiDexKind;
 import com.android.jack.api.v01.ReporterKind;
 import com.android.jack.api.v01.UnrecoverableException;
+import com.android.jack.api.v02.VerbosityLevel;
 import com.android.jack.api.v04.Api04Config;
 import com.android.jill.api.JillProvider;
 import com.android.jill.api.v01.Api01TranslationTask;
@@ -48,6 +49,7 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
@@ -56,6 +58,11 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  * Features exposed by the Jack toolchain. This is used for invoking Jack to convert inputs (source
@@ -208,10 +215,15 @@ public class JackToolchain {
 
         // Get configuration object
         try {
+            setJackLogLevels(options);
             Api04Config config = createJackConfig(jackProvider, apiVersion);
 
             config.setDebugInfoLevel(
                     options.isDebuggable() ? DebugInfoLevel.FULL : DebugInfoLevel.NONE);
+
+            if (options.isVerboseProcessing()) {
+                config.setVerbosityLevel(VerbosityLevel.INFO);
+            }
 
             config.setClasspath(options.getClasspaths());
             if (options.getDexOutputDirectory() != null) {
@@ -318,6 +330,32 @@ public class JackToolchain {
                     "Something out of Jack control has happened: " + e.getMessage(), e);
         } catch (CompilationException e) {
             throw new ToolchainException("Jack compilation exception", e);
+        }
+    }
+
+    /**
+     * Sets logging levels for Jack internals which is useful when debugging Jack issues. This will
+     * set appropriate logging level per namespace.
+     * <p>N.B. This is not an ideal solution, but until Jack exposes API,
+     * we need to set it this way.
+     */
+    private static void setJackLogLevels(@NonNull JackProcessOptions options) {
+        Map<String, Level> namespaceToLevel;
+        if (options.isDebugJackInternals()) {
+            namespaceToLevel = ImmutableMap.of("", Level.FINE, "com.android.sched", Level.WARNING);
+        } else {
+            namespaceToLevel = ImmutableMap.of("", Level.SEVERE);
+        }
+
+        LogManager logManager = LogManager.getLogManager();
+        Enumeration<String> loggerNames = logManager.getLoggerNames();
+
+        while (loggerNames.hasMoreElements()) {
+            String loggerName = loggerNames.nextElement();
+            Logger logger = logManager.getLogger(loggerName);
+            if (logger != null && namespaceToLevel.containsKey(loggerName)) {
+                logger.setLevel(namespaceToLevel.get(loggerName));
+            }
         }
     }
 
@@ -437,7 +475,8 @@ public class JackToolchain {
                     jillProvider.createConfig(com.android.jill.api.v01.Api01Config.class);
             config.setInputJavaBinaryFile(inputFile);
             config.setOutputJackFile(jackOptions.getOutputFile());
-            config.setVerbose(jackOptions.isVerbose());
+            config.setVerbose(jackOptions.isVerboseProcessing());
+            config.setDebugInfo(jackOptions.isDebuggable());
 
             translationTask = config.getTask();
 
@@ -486,7 +525,7 @@ public class JackToolchain {
         builder.addArgs("--output");
         builder.addArgs(jackOptions.getOutputFile().getAbsolutePath());
 
-        if (jackOptions.isVerbose()) {
+        if (jackOptions.isVerboseProcessing()) {
             builder.addArgs("--verbose");
         }
 
