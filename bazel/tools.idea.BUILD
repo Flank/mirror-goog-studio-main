@@ -3513,8 +3513,8 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/netty-all-4.1.1.Final",
-    jars = ["idea/lib/netty-all-4.1.1.Final.jar"],
+    name = "idea/lib/netty-all-4.1.2.Final",
+    jars = ["idea/lib/netty-all-4.1.2.Final.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
