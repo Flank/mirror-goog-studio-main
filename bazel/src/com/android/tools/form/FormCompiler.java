@@ -68,7 +68,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
 
         addUrlsTo(System.getProperty("java.class.path"), urls);
         addUrlsTo(System.getProperty("sun.boot.class.path"), urls);
-        addUrlsTo(classPath, urls);
+        addUrlsTo(classPath.replaceAll(":", File.pathSeparator), urls);
 
         for (String file : files) {
             if (file.endsWith(".jar")) {
@@ -90,7 +90,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
     }
 
     private void addUrlsTo(String classPath, ArrayList<URL> urls) throws MalformedURLException {
-        for (StringTokenizer token = new StringTokenizer(classPath, ":"); token.hasMoreTokens(); ) {
+        for (StringTokenizer token = new StringTokenizer(classPath, File.pathSeparator); token.hasMoreTokens(); ) {
             urls.add(new File(token.nextToken()).toURI().toURL());
         }
     }

@@ -40,7 +40,7 @@ public class GroovyCompiler extends JarOutputCompiler {
     @Override
     protected boolean compile(List<String> files, String classPath, File outDir) {
         CompilerConfiguration config = new CompilerConfiguration();
-        config.setClasspath(classPath);
+        config.setClasspath(classPath.replaceAll(":", File.pathSeparator));
         config.setTargetDirectory(outDir);
         CompilationUnit cu = new CompilationUnit(config);
         for (String name : files) {
