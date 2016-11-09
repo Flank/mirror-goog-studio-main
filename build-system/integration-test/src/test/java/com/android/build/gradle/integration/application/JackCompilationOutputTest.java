@@ -25,20 +25,19 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.api.client.util.Charsets;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Tests to verify we process Jack compilation output properly.
@@ -130,5 +129,31 @@ public class JackCompilationOutputTest {
                         Pattern.compile(
                                 "^AGPBI.*warning.*User.java.*\"startLine\":4.*",
                                 Pattern.MULTILINE));
+    }
+
+    @Test
+    public void checkLogLevels() throws Exception {
+        GradleBuildResult basicRun = project.executor().run("clean", "assembleDebug");
+
+        GradleBuildResult infoRun =
+                project.executor().withArgument("--info").run("clean", "assembleDebug");
+
+        GradleBuildResult debugRun =
+                project.executor().withArgument("--debug").run("clean", "assembleDebug");
+
+        // basic should be contained in both info and debug
+        for (String s : Splitter.on(System.lineSeparator()).split(basicRun.getStderr())) {
+            assertThat(infoRun.getStdout()).contains(s);
+            assertThat(debugRun.getStdout()).contains(s);
+        }
+
+        // info should be contained in debug
+        for (String s : Splitter.on(System.lineSeparator()).split(infoRun.getStderr())) {
+            assertThat(debugRun.getStdout()).contains(s);
+        }
+
+        // length of basic < length info < length debug
+        assertThat(basicRun.getStdout().length()).isLessThan(infoRun.getStdout().length());
+        assertThat(infoRun.getStdout().length()).isLessThan(debugRun.getStdout().length());
     }
 }
