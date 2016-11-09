@@ -10,9 +10,9 @@ dependencies {
     compile project(':base:layoutlib-api')
     compile project(':base:sdk-common')
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-all:1.9.5'
-    testCompile 'com.google.truth:truth:0.28'
+    testCompile libs.junit
+    testCompile libs.mockito_all
+    testCompile libs.truth
 }
 
 sourceSets {

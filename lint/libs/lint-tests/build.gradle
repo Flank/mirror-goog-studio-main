@@ -7,14 +7,13 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:lint')
-
-    compile 'junit:junit:4.12'
     compile project(':base:testutils')
+    compile libs.junit
 
 
-    testCompile 'org.mockito:mockito-all:1.9.5'
-    testCompile 'org.codehaus.groovy:groovy-all:2.2.1'
-    testCompile 'com.google.truth:truth:0.28'
+    testCompile libs.mockito_all
+    testCompile libs.groovy
+    testCompile libs.truth
 }
 
 sourceSets {

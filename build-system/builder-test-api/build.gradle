@@ -5,7 +5,7 @@ apply plugin: 'clone-artifacts'
 dependencies {
     compile project(':base:ddmlib')
 
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
 }
 
 group = 'com.android.tools.build'

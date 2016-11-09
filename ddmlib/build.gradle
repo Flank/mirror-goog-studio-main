@@ -8,12 +8,11 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:common')
+    compile libs.kxml
 
-    compile 'net.sf.kxml:kxml2:2.3.0'
-
-    testCompile 'org.easymock:easymock:3.1'
-    testCompile 'junit:junit:4.12'
     testCompile project(':base:testutils')
+    testCompile libs.easymock
+    testCompile libs.junit
 }
 
 sourceSets {

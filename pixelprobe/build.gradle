@@ -20,7 +20,7 @@ apply plugin: 'jacoco-tools-base'
 dependencies {
     compile project(':base:chunkio')
 
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
 }
 
 sourceSets {

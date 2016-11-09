@@ -4,7 +4,7 @@ apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:common')
-    testCompile 'junit:junit:4.12'
+    testCompile libs.junit
 }
 
 group = 'com.android.tools'
