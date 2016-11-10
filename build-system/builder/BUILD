@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 fileset(
     name = "resources",
@@ -9,26 +10,25 @@ fileset(
     },
 )
 
-java_library(
+maven_java_library(
     name = "builder",
-    srcs = glob(["src/main/java/**/*.java"]),
+    pom = ":pom",
+    srcs = glob(["src/main/java/**/*.java"]) + ["//tools/base/apkzlib:sources", "//tools/base/build-system/profile:sources"], # TODO: Implement this properly.
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library:analytics-protos",
+        "//tools/analytics-library:tools.analytics-protos",
         "//tools/analytics-library:tools.analytics-shared",
         "//tools/analytics-library:tools.analytics-tracker",
-        "//tools/base/annotations",
-        "//tools/base/apkzlib",
+        "//tools/base/annotations:annotations",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/profile",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/jack/jack-api",
-        "//tools/base/jack/jill-api",
+        "//tools/base/jack/jack-api:jack-api",
+        "//tools/base/jack/jill-api:jill-api",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
@@ -41,6 +41,13 @@ java_library(
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "builder",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(

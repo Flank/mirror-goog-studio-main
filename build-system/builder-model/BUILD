@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.builder-model",
@@ -15,8 +16,9 @@ fileset(
     mappings = {"//tools/buildSrc/base:": "com/android/builder/model/"},
 )
 
-java_library(
+maven_java_library(
     name = "builder-model",
+    pom = ":pom",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
@@ -24,8 +26,15 @@ java_library(
     resources = [":version.properties"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "builder-model",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(

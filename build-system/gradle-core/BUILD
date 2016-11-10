@@ -1,17 +1,19 @@
 load("//tools/base/bazel:antlr.bzl", "antlr_sources")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 antlr_sources(
     name = "proguard-parser",
     srcs = glob(["src/main/antlr/**"]),
 )
 
-java_library(
+maven_java_library(
     name = "gradle-core",
+    pom = ":pom",
     srcs = glob([
         "src/main/java/**/*.java",
         "src/main/generated/**/*.java",
         "src/fromGradle/java/**/*.java",
-    ]) + [":proguard-parser"],
+    ]) + [":proguard-parser", "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs"],
     javacopts = ["-extra_checks:off"],
     resources = glob([
         "src/main/resources/**",
@@ -19,21 +21,18 @@ java_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library:analytics-protos",
-        "//tools/base/annotations",
-        "//tools/base/apkzlib",
+        "//tools/analytics-library:tools.analytics-protos",
+        "//tools/base/annotations:annotations",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system/gradle-core/src/main/proto",  # TODO: move this to this package?
-        "//tools/base/build-system/profile",
+        "//tools/base/build-system/builder:builder",
+        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/build-system/gradle-api:gradle-api",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
-        "//tools/base/lint/cli",
+        "//tools/base/lint/cli:cli",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
@@ -52,8 +51,15 @@ java_library(
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api.jar",
+        "//tools/external/gradle:gradle-api.jar_neverlink",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "gradle-core",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

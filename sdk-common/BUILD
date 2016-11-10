@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.sdk-common",
@@ -34,14 +35,15 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.sdk-common",
+    pom = ":pom",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/build-system:tools.builder-test-api",
-        "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
@@ -52,6 +54,13 @@ java_library(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "sdk-common",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

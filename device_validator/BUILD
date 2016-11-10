@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.dvlib",
@@ -11,13 +12,21 @@ iml_module(
     deps = ["//tools/base/common:studio.common[module]"],
 )
 
-java_library(
+maven_java_library(
     name = "tools.dvlib",
+    pom = ":pom",
     srcs = glob(["dvlib/src/main/java/**"]),
     resources = glob(["dvlib/src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/common:tools.common",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "dvlib",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:base_version",
 )

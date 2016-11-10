@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.layoutlib-api",
@@ -21,15 +22,23 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.layoutlib-api",
+    pom = ":pom",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "layoutlib-api",
+    group = "com.android.tools.layoutlib",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

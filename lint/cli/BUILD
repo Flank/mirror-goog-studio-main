@@ -1,5 +1,8 @@
-java_library(
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+
+maven_java_library(
     name = "cli",
+    pom = ":pom",
     # TODO: move resources out of java?
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(
@@ -9,8 +12,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
+        "//tools/base/annotations:annotations",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
@@ -19,4 +22,11 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "lint",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
 )
