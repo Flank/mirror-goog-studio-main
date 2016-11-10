@@ -35,6 +35,14 @@ class EventServiceImpl final : public profiler::proto::EventService::Service {
                        const profiler::proto::EventDataRequest* request,
                        profiler::proto::EventDataResponse* response) override;
 
+ grpc::Status StartMonitoringApp(grpc::ServerContext* context,
+                                 const profiler::proto::EventStartRequest* request,
+                                 profiler::proto::EventStartResponse* response) override;
+
+ grpc::Status StopMonitoringApp(grpc::ServerContext* context,
+                                const profiler::proto::EventStopRequest* request,
+                                profiler::proto::EventStopResponse* response) override;
+
  private:
   EventCache& cache_;
 };

@@ -47,6 +47,17 @@ class MemoryServiceImpl final
       const ::profiler::proto::HeapDumpRequest* request,
       ::profiler::proto::HeapDumpResponse* response) override;
 
+  ::grpc::Status StartMonitoringApp(
+      ::grpc::ServerContext* context,
+      const profiler::proto::MemoryStartRequest* request,
+      ::profiler::proto::MemoryStartResponse* response) override;
+
+  ::grpc::Status StopMonitoringApp(
+      ::grpc::ServerContext* context,
+      const profiler::proto::MemoryStopRequest* request,
+      ::profiler::proto::MemoryStopResponse* response) override;
+
+
  private:
   const Clock& clock_;
   std::unordered_map<int32_t, MemoryCollector>&

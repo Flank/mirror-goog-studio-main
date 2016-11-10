@@ -26,6 +26,36 @@ service MemoryService {
   }
   rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {
   }
+  rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
+  }
+  rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
+  }
+}
+
+message MemoryStartRequest {
+  int32 app_id = 1;
+}
+
+message MemoryStartResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message MemoryStopRequest {
+  int32 app_id = 1;
+}
+
+message MemoryStopResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
 }
 
 enum MemoryFeature {
