@@ -73,16 +73,6 @@ public class BasicTest2 {
 
     @BeforeClass
     public static void getModel() throws IOException {
-        if (GradleTestProject.USE_JACK) {
-            // disable test coverage - http://b.android.com/194950
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\n"
-                            + "android.buildTypes {"
-                            + "    debug.testCoverageEnabled = false\n"
-                            + "    release.testCoverageEnabled = false\n"
-                            + "}\n");
-        }
         model = project.executeAndReturnModel("clean");
     }
 
