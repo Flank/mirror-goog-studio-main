@@ -10,10 +10,29 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:guava-tools",
-        "//tools/idea/.idea/libraries:mockito[test]",
+    ],
+)
+
+java_test(
+    name = "apkzlib_tests",
+    srcs = glob([
+        "src/test/java/**/*.java",
+    ]),
+    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    resources = glob(["src/test/resources/**"]),
+    tags = ["manual"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":apkzlib",
+        "//tools/base/annotations",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
+        "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
+        "//tools/base/third_party:org.mockito_mockito-all",
     ],
 )
