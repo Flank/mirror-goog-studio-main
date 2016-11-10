@@ -93,15 +93,15 @@ tasks.compileJava.dependsOn(configurations.provided)
 tasks.sourcesJar.dependsOn(configurations.sourcesProvided)
 
 tasks.jar {
-    for (File prov : configurations.provided) {
-        from({ zipTree(prov) })
-    }
+    from({
+        configurations.provided.collect({zipTree(it)})
+    })
 }
 
 tasks.sourcesJar {
-    for (File src : configurations.sourcesProvided) {
-        from({ zipTree(src) })
-    }
+    from({
+        configurations.sourcesProvided.collect({zipTree(it)})
+    })
 }
 javadoc {
     classpath += configurations.provided
