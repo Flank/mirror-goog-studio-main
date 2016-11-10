@@ -58,6 +58,7 @@ java_test(
     deps = [
         ":builder",
         "//tools/base/annotations",
+        "//tools/base/apkzlib",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
