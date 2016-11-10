@@ -211,8 +211,6 @@ public class DexTransformTest {
         FileCache buildCache =
                 FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
 
-        // Build tools revision
-
         // Run dexing
         runDexing(
                 ImmutableList.of(fooInput, barInput),

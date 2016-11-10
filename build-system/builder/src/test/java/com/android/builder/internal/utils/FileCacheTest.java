@@ -20,12 +20,12 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,7 +56,8 @@ public class FileCacheTest {
     public void testCreateFile_SameInputSameOutput() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
 
         // First access to the cache, expect cache miss
@@ -85,7 +86,8 @@ public class FileCacheTest {
     public void testCreateFile_SameInputDifferentOutputs() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         // First access to the cache
         File outputFile1 = new File(outputDir, "output1");
@@ -114,7 +116,8 @@ public class FileCacheTest {
 
         // First access to the cache
         FileCache.Inputs inputs1 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input1")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input1")).build();
         fileCache.createFile(outputFile, inputs1, () -> {
             Files.write("Some text", outputFile, StandardCharsets.UTF_8);
             return null;
@@ -122,7 +125,8 @@ public class FileCacheTest {
 
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input2")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input2")).build();
         fileCache.createFile(outputFile, inputs2, () -> {
             Files.write("Some other text", outputFile, StandardCharsets.UTF_8);
             return null;
@@ -138,7 +142,8 @@ public class FileCacheTest {
 
         // First access to the cache
         FileCache.Inputs inputs1 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input1")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input1")).build();
         File outputFile1 = new File(outputDir, "output1");
         fileCache.createFile(outputFile1, inputs1, () -> {
             Files.write("Some text", outputFile1, StandardCharsets.UTF_8);
@@ -147,7 +152,8 @@ public class FileCacheTest {
 
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input2")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input2")).build();
         File outputFile2 = new File(outputDir, "output2");
         fileCache.createFile(outputFile2, inputs2, () -> {
             Files.write("Some other text", outputFile2, StandardCharsets.UTF_8);
@@ -163,7 +169,8 @@ public class FileCacheTest {
     public void testCreateFileInCacheIfAbsent_SameInput() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         // First access to the cache, expect cache miss
         File cachedFile = fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
@@ -190,14 +197,16 @@ public class FileCacheTest {
 
         // First access to the cache
         FileCache.Inputs inputs1 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input1")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input1")).build();
         File cachedFile1 = fileCache.createFileInCacheIfAbsent(inputs1, (outputFile) -> {
             Files.write("Some text", outputFile, StandardCharsets.UTF_8);
         });
 
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input2")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input2")).build();
         File cachedFile2 = fileCache.createFileInCacheIfAbsent(inputs2, (outputFile) -> {
             Files.write("Some other text", outputFile, StandardCharsets.UTF_8);
         });
@@ -213,7 +222,8 @@ public class FileCacheTest {
         // Use same input different outputs
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         // First access to the cache
         File outputDir1 = new File(outputDir, "outputDir1");
@@ -247,7 +257,8 @@ public class FileCacheTest {
         // Use same input
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         // First access to the cache
         File cachedDir1 = fileCache.createFileInCacheIfAbsent(inputs, (outputDir) -> {
@@ -275,7 +286,8 @@ public class FileCacheTest {
     public void testCreateFileThenCreateFileInCacheIfAbsent() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         File outputFile = new File(outputDir, "output");
         fileCache.createFile(outputFile, inputs, () -> {
@@ -298,7 +310,8 @@ public class FileCacheTest {
     public void testCreateFileInCacheIfAbsentThenCreateFile() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         File cachedFile = fileCache.createFileInCacheIfAbsent(inputs, (cachedOutputFile) -> {
             Files.write("Some text", cachedOutputFile, StandardCharsets.UTF_8);
@@ -336,7 +349,8 @@ public class FileCacheTest {
         assertThat(fileCache.getCacheDirectory()).doesNotExist();
 
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
         fileCache.createFile(outputFile, inputs, () -> {
             Files.write("Some text", outputFile, StandardCharsets.UTF_8);
@@ -353,7 +367,8 @@ public class FileCacheTest {
         assertThat(fileCache.getCacheDirectory()).doesNotExist();
 
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
             Files.write("Some text", outputFile, StandardCharsets.UTF_8);
         });
@@ -382,7 +397,8 @@ public class FileCacheTest {
     public void testUnusualInput() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("")).build();
 
         File outputFile = new File(outputDir, "output");
         fileCache.createFile(outputFile, inputs, () -> {
@@ -399,7 +415,8 @@ public class FileCacheTest {
     public void testInvalidOutputFile() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         File outputFile = new File(cacheDir, "output");
         try {
@@ -445,7 +462,8 @@ public class FileCacheTest {
     public void testOutputFileAlreadyExistsAndIsNotCreated() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         File outputDir1 = new File(outputDir, "dir1");
         File outputDir2 = new File(outputDir, "dir2");
@@ -475,7 +493,8 @@ public class FileCacheTest {
     public void testOutputFileDoesNotAlreadyExistAndIsCreated() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         File outputDir1 = new File(outputDir, "dir1");
         File outputDir2 = new File(outputDir, "dir2");
@@ -501,7 +520,8 @@ public class FileCacheTest {
     public void testCreateFile_FileCreatorIOException() throws IOException {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
 
         try {
@@ -520,7 +540,8 @@ public class FileCacheTest {
     public void testCreateFile_FileCreatorRuntimeException() throws IOException {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
 
         try {
@@ -539,7 +560,8 @@ public class FileCacheTest {
     public void testCreateFile_IOExceptionNotThrownByFileCreator() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         // Use an invalid character in the file name
         File outputFile = new File("\0");
@@ -556,7 +578,8 @@ public class FileCacheTest {
     public void testCreateFileInCacheIfAbsent_FileCreatorIOException() throws IOException {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         try {
             fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
@@ -574,7 +597,8 @@ public class FileCacheTest {
     public void testCreateFileInCacheIfAbsent_FileCreatorRuntimeException() throws IOException {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         try {
             fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
@@ -593,7 +617,8 @@ public class FileCacheTest {
             throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
         try {
             fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
@@ -609,12 +634,13 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testGetCachedFile() throws Exception {
+    public void testGetFileInCache() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
 
-        File cachedFile = fileCache.getCachedFile(inputs);
+        File cachedFile = fileCache.getFileInCache(inputs);
         assertThat(FileUtils.isFileInDirectory(cachedFile, fileCache.getCacheDirectory())).isTrue();
 
         File outputFile = new File(outputDir, "output");
@@ -688,7 +714,8 @@ public class FileCacheTest {
     private void testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
         String fileContent = "Some text";
 
@@ -712,8 +739,10 @@ public class FileCacheTest {
     private void testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs[] inputList = {
-                new FileCache.Inputs.Builder().putFilePath("file1", new File("input1")).build(),
-                new FileCache.Inputs.Builder().putFilePath("file2", new File("input2")).build(),
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file1", new File("input1")).build(),
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file2", new File("input2")).build(),
         };
         File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
         String[] fileContents = {"Foo text", "Bar text"};
@@ -740,7 +769,8 @@ public class FileCacheTest {
         // Use same input different outputs, different caches
         FileCache[] fileCaches = {fileCache1, fileCache2};
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         File[] outputFiles = {new File(outputDir, "output1"), new File(outputDir, "output2")};
         String[] fileContents = {"Foo text", "Bar text"};
 
@@ -844,7 +874,8 @@ public class FileCacheTest {
     private void testCreateFileInCacheIfAbsent_MultiThreads_SameCacheSameInput(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         String fileContent = "Some text";
         File[] cachedFiles = new File[2];
 
@@ -868,8 +899,10 @@ public class FileCacheTest {
     private void testCreateFileInCacheIfAbsent_MultiThreads_SameCacheDifferentInputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs[] inputList = {
-                new FileCache.Inputs.Builder().putFilePath("file1", new File("input1")).build(),
-                new FileCache.Inputs.Builder().putFilePath("file2", new File("input2")).build(),
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file1", new File("input1")).build(),
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file2", new File("input2")).build(),
         };
         String[] fileContents = {"Foo text", "Bar text"};
         File[] cachedFiles = new File[2];
@@ -897,7 +930,8 @@ public class FileCacheTest {
         // Use same input, different caches
         FileCache[] fileCaches = {fileCache1, fileCache2};
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder().putFilePath("file", new File("input")).build();
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
         String[] fileContents = {"Foo text", "Bar text"};
         File[] cachedFiles = new File[2];
 
@@ -1140,7 +1174,7 @@ public class FileCacheTest {
                         "/Users/foo/Android/Sdk/extras/android/m2repository/com/android/support/"
                                 + "support-annotations/23.3.0/support-annotations-23.3.0.jar");
         FileCache.Inputs inputs =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", inputFile)
                         .putString(
                                 "buildToolsRevision", Revision.parseRevision("23.0.3").toString())
@@ -1149,30 +1183,26 @@ public class FileCacheTest {
                         .putBoolean("multiDex", true)
                         .putFilePath("classpath", new File("foo"))
                         .build();
-        assertThat(inputs.toString())
-                .isEqualTo(
-                        Joiner.on(System.lineSeparator())
-                                .join(
-                                        "file=" + inputFile.getPath(),
-                                        "buildToolsRevision=23.0.3",
-                                        "jumboMode=true",
-                                        "optimize=false",
-                                        "multiDex=true",
-                                        "classpath=foo"));
-        // In the assertion below, we represent the expected hash code as the regular expression
-        // \w{40} since the computed hash code in the short key might be different on different
-        // platforms
-        assertThat(inputs.getKey()).matches("\\w{40}");
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "file=" + inputFile.getPath(),
+                        "buildToolsRevision=23.0.3",
+                        "jumboMode=true",
+                        "optimize=false",
+                        "multiDex=true",
+                        "classpath=foo"));
+        assertThat(inputs.getKey()).isEqualTo(
+                Hashing.sha1().hashString(inputs.toString(), StandardCharsets.UTF_8).toString());
 
         // Test relative input file path
         inputFile = new File("com.android.support/design/23.3.0/jars/classes.jar");
-        inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
-        assertThat(inputs.toString()).isEqualTo("file=" + inputFile.getPath());
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            assertThat(inputs.getKey()).isEqualTo("4b30578b0f46117c61911c027a589b48b80bd3d1");
-        } else {
-            assertThat(inputs.getKey()).isEqualTo("25dcc2247956f01b9dbdca420eff87c96aaf2874");
-        }
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFilePath("file", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "file=" + inputFile.getPath()));
 
         // Test Windows-based input file path
         inputFile =
@@ -1180,45 +1210,54 @@ public class FileCacheTest {
                         "C:\\Users\\foo\\Android\\Sdk\\extras\\android\\m2repository\\"
                                 + "com\\android\\support\\support-annotations\\23.3.0\\"
                                 + "support-annotations-23.3.0.jar");
-        inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
-        assertThat(inputs.toString()).isEqualTo("file=" + inputFile.getPath());
-        assertThat(inputs.getKey()).isEqualTo("d78d98a050e19057d83ad84ddebde43e2f8e67d7");
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFilePath("file", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "file=" + inputFile.getPath()));
 
         // Test file hash
         inputFile = new File(inputDir, "input");
         Files.write("Some text", inputFile, StandardCharsets.UTF_8);
-        inputs = new FileCache.Inputs.Builder().putFileHash("fileHash", inputFile).build();
-        assertThat(inputs.toString())
-                .isEqualTo("fileHash=02d92c580d4ede6c80a878bdd9f3142d8f757be8");
-        assertThat(inputs.getKey()).isEqualTo("4f81fcad8e33bbf04da9d6b0401b03472e0289d6");
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFileHash("fileHash", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "fileHash=02d92c580d4ede6c80a878bdd9f3142d8f757be8"));
 
         // Test unusual file path
         inputFile = new File("foo`-=[]\\\\;',./~!@#$%^&*()_+{}|:\\\"<>?");
-        inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
-        assertThat(inputs.toString()).isEqualTo("file=" + inputFile.getPath());
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            assertThat(inputs.getKey()).isEqualTo("c9a5f22f392f6186b18b66f70e59fa20583533dd");
-        } else {
-            assertThat(inputs.getKey()).isEqualTo("7f205499565a454d0186f34313e63281c7192a43");
-        }
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFilePath("file", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "file=" + inputFile.getPath()));
 
         // Test empty file path
         inputFile = new File("");
-        inputs = new FileCache.Inputs.Builder().putFilePath("file", inputFile).build();
-        assertThat(inputs.toString()).isEqualTo("file=");
-        assertThat(inputs.getKey()).isEqualTo("3fe9ece2d6113d8db5c0c5576cc1378823d839ab");
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFilePath("file", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "file="));
 
         // Test empty file content
         inputFile = new File(inputDir, "input");
         Files.write("", inputFile, StandardCharsets.UTF_8);
-        inputs = new FileCache.Inputs.Builder().putFileHash("fileHash", inputFile).build();
-        assertThat(inputs.toString())
-                .isEqualTo("fileHash=da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertThat(inputs.getKey()).isEqualTo("1c0664f09cb5710ca68017f6f95078fced34f2f5");
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFileHash("fileHash", inputFile).build();
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "fileHash=da39a3ee5e6b4b0d3255bfef95601890afd80709"));
 
         // Test empty inputs
         try {
-            new FileCache.Inputs.Builder().build();
+            new FileCache.Inputs.Builder(FileCache.Command.TEST).build();
             fail("expected IllegalStateException");
         } catch (IllegalStateException exception) {
             assertThat(exception).hasMessage("Inputs must not be empty.");
@@ -1226,38 +1265,47 @@ public class FileCacheTest {
 
         // Test duplicate parameters with the same name and type
         inputs =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putString("arg", "true")
                         .putString("arg", "false")
                         .build();
-        assertThat(inputs.toString()).isEqualTo("arg=false");
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "arg=false"));
 
         // Test duplicate parameters with the same name and different types
         inputs =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putString("arg", "true")
                         .putBoolean("arg", false)
                         .build();
-        assertThat(inputs.toString()).isEqualTo("arg=false");
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "arg=false"));
 
         // Test duplicate parameters interleaved with other parameters
         inputs =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putString("arg1", "true")
                         .putString("arg2", "true")
                         .putString("arg1", "false")
                         .build();
-        assertThat(inputs.toString())
-                .isEqualTo("arg1=false" + System.lineSeparator() + "arg2=true");
+        assertThat(inputs.toString()).isEqualTo(
+                Joiner.on(System.lineSeparator()).join(
+                        "COMMAND=TEST",
+                        "arg1=false",
+                        "arg2=true"));
 
         // Test inputs with different sizes
         FileCache.Inputs inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .build();
         FileCache.Inputs inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .putBoolean("arg3", true)
@@ -1266,12 +1314,12 @@ public class FileCacheTest {
 
         // Test inputs with same size, different orders
         inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .build();
         inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg2", true)
                         .putBoolean("arg1", true)
                         .build();
@@ -1279,12 +1327,12 @@ public class FileCacheTest {
 
         // Test inputs with same size, same order, different values
         inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .build();
         inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", false)
                         .build();
@@ -1292,12 +1340,12 @@ public class FileCacheTest {
 
         // Test inputs with same size, same order, same values
         inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .build();
         inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putBoolean("arg1", true)
                         .putBoolean("arg2", true)
                         .build();
@@ -1305,11 +1353,11 @@ public class FileCacheTest {
 
         // Test inputs with different file paths, same canonical path
         inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", inputDir.getParentFile())
                         .build();
         inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File(inputDir.getPath() + "/.."))
                         .build();
         assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
@@ -1317,20 +1365,22 @@ public class FileCacheTest {
         // Test inputs with same file hash
         File fooFile = new File(inputDir, "fooInput");
         Files.write("Foo text", fooFile, StandardCharsets.UTF_8);
-        inputs1 = new FileCache.Inputs.Builder().putFileHash("fileHash", fooFile).build();
-        inputs2 = new FileCache.Inputs.Builder().putFileHash("fileHash", fooFile).build();
+        inputs1 = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFileHash("fileHash", fooFile).build();
+        inputs2 = new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                .putFileHash("fileHash", fooFile).build();
         assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
 
         // Test inputs with different file hashes, same file path
         File barFile = new File(inputDir, "barInput");
         Files.write("Bar text", barFile, StandardCharsets.UTF_8);
         inputs1 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", fooFile)
                         .putFileHash("fileHash", fooFile)
                         .build();
         inputs2 =
-                new FileCache.Inputs.Builder()
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", fooFile)
                         .putFileHash("fileHash", barFile)
                         .build();
