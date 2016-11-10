@@ -1,0 +1,26 @@
+apply plugin: 'java'
+apply plugin: 'sdk-java-lib'
+
+dependencies {
+    compile project(':base:annotations')
+
+    compile 'com.google.guava:guava:18.0'
+    compile 'org.bouncycastle:bcpkix-jdk15on:1.48'
+    compile 'org.bouncycastle:bcprov-jdk15on:1.48'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-all:1.9.5'
+}
+
+configurations {
+    sourcesOnly
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    sourcesOnly sourcesJar
+}

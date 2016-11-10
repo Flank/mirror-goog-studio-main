@@ -1070,5 +1070,6 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="module" module-name="apkzlib" exported="" />
   </component>
 </module>
