@@ -447,39 +447,6 @@ public final class FileUtils {
     }
 
     /**
-     * Reads a portion of a file to memory.
-     *
-     * @param file the file to read data from
-     * @param start the offset in the file to start reading
-     * @param length the number of bytes to read
-     * @return the bytes read
-     * @throws Exception failed to read the file
-     */
-    @NonNull
-    public static byte[] readSegment(@NonNull File file, long start, int length) throws Exception {
-        Preconditions.checkArgument(start >= 0, "start < 0");
-        Preconditions.checkArgument(length >= 0, "length < 0");
-
-        byte data[];
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            raf.seek(start);
-
-            data = new byte[length];
-            int tot = 0;
-            while (tot < length) {
-                int r = raf.read(data, tot, length - tot);
-                if (r < 0) {
-                    throw new EOFException();
-                }
-
-                tot += r;
-            }
-        }
-
-        return data;
-    }
-
-    /**
      * Join multiple file paths as String.
      */
     @NonNull

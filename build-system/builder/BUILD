@@ -20,6 +20,7 @@ java_library(
         "//tools/analytics-library:tools.analytics-shared",
         "//tools/analytics-library:tools.analytics-tracker",
         "//tools/base/annotations",
+        "//tools/base/apkzlib",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",

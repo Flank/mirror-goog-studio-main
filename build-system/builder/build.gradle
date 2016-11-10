@@ -78,18 +78,30 @@ dependencies {
     sourcesProvided(project(path:':base:profile', configuration:'sourcesOnly')) {
         transitive = false
     }
+
+    provided(project(':base:apkzlib')) {
+        transitive = false
+    }
+    sourcesProvided(project(path:':base:apkzlib', configuration:'sourcesOnly')) {
+        transitive = false
+    }
 }
 
-sourceSets.main.compileClasspath += [configurations.provided]
-sourceSets.test.runtimeClasspath += [configurations.provided]
+sourceSets.main.compileClasspath += files(configurations.provided)
+sourceSets.test.runtimeClasspath += files(configurations.provided)
 tasks.compileJava.dependsOn(configurations.provided)
 tasks.sourcesJar.dependsOn(configurations.sourcesProvided)
 
 tasks.jar {
-    from({zipTree(configurations.provided.singleFile)})
+    for (File prov : configurations.provided) {
+        from({ zipTree(prov) })
+    }
 }
+
 tasks.sourcesJar {
-    from({zipTree(configurations.sourcesProvided.singleFile)})
+    for (File src : configurations.sourcesProvided) {
+        from({ zipTree(src) })
+    }
 }
 javadoc {
     classpath += configurations.provided

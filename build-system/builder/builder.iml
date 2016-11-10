@@ -32,5 +32,6 @@
     <orderEntry type="module" module-name="builder-model" exported="" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="module" module-name="analytics-protos-base" exported="" />
+    <orderEntry type="module" module-name="apkzlib" exported="" />
   </component>
 </module>

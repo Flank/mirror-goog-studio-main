@@ -14,28 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.builder.signing;
+package com.android.builder.internal.packaging.zfile;
 
 import com.android.annotations.NonNull;
+import com.android.builder.internal.packaging.zip.ZFileOptions;
 import com.android.builder.packaging.ApkCreator;
 import com.android.builder.packaging.ApkCreatorFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.security.NoSuchAlgorithmException;
 
 /**
- * APK builder factory that creates {@link SignedJarApkCreator}s.
+ * Creates instances of {@link ApkZFileCreator}.
  */
-public class SignedJarApkCreatorFactory implements ApkCreatorFactory {
+public class ApkZFileCreatorFactory implements ApkCreatorFactory {
+
+    /**
+     * Options for the {@link ZFileOptions} to use in all APKs.
+     */
+    @NonNull
+    private final ZFileOptions mOptions;
+
+    /**
+     * Creates a new factory.
+     *
+     * @param options the options to use for all instances created
+     */
+    public ApkZFileCreatorFactory(@NonNull ZFileOptions options) {
+        mOptions = options;
+    }
+
 
     @Override
+    @NonNull
     public ApkCreator make(@NonNull CreationData creationData) {
         try {
-            return new SignedJarApkCreator(creationData);
+            return new ApkZFileCreator(creationData, mOptions);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
         }
     }
 }
