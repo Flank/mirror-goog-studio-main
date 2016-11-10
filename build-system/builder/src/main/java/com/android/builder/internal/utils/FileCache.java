@@ -542,7 +542,7 @@ public final class FileCache {
      * @param inputs all the inputs that affect the creation of the output file/directory
      */
     @NonNull
-    public File getCachedFile(@NonNull Inputs inputs) {
+    public File getFileInCache(@NonNull Inputs inputs) {
         return getCachedFile(getCacheEntryDir(inputs));
     }
 
@@ -731,34 +731,57 @@ public final class FileCache {
     /**
      * List of input parameters to be provided by the client when using {@link FileCache}.
      *
+     * <p>The clients of {@link FileCache} need to exhaustively specify all the inputs that affect
+     * the creation of an output file/directory to the {@link Inputs} object, including a command
+     * for the file creator callback function, the input files/directories and other input
+     * parameters. A command identifies a file creator (which usually corresponds to a Gradle task)
+     * and is used to separate the cached results of different file creators when they use the same
+     * cache. If the client uses a different file creator, or changes the file creator's
+     * implementation, then it needs to provide a new unique command. For input files/directories,
+     * it is important to select a combination of properties that uniquely identifies an input
+     * file/directory depending on the specific use case (common properties of a file/directory
+     * include its path, name, hash, size, and timestamp; it is usually good practice to use both
+     * the path and hash to identify an input file/directory).
+     *
+     * <p>When constructing the {@link Inputs} object, the client is required to provide the command
+     * (via the {@link Inputs.Builder} constructor) and at least one other input parameter.
+     *
      * <p>The input parameters have the order in which they were added to this {@code Inputs}
      * object. If a parameter with the same name exists, the parameter's value is overwritten
      * (retaining its previous order).
      *
-     * <p>Note that the client of {@link FileCache} needs to exhaustively provide all the inputs
-     * that affect the creation of the output file/directory, including input files/directories and
-     * other input parameters to the {@link Inputs} object. If some inputs are missing, the client
-     * may reuse a cached file/directory that is incorrect. On the other hand, if some irrelevant
-     * inputs are included, the cache may create a new cached file/directory even though an existing
-     * one can be used. In other words, missing inputs affect correctness, and irrelevant inputs
-     * affect performance. Thus, the client needs to consider carefully what to include and exclude
-     * in these inputs. For example, it is important to select a combination of properties that
-     * uniquely identify an input file/directory depending on the specific use case (common
-     * properties of a file/directory include its path, name, hash, size, and timestamp). As another
-     * example, if the client uses different commands or different versions of the same command to
-     * create the output, then the commands or their versions also need to be specified as part of
-     * the inputs.
+     * <p>Note that if some inputs are missing, the cache may return a cached file/directory that is
+     * incorrect. On the other hand, if some irrelevant inputs are included, the cache may create a
+     * new cached file/directory even though an existing one can be used. In other words, missing
+     * inputs affect correctness, and irrelevant inputs affect performance. Thus, the client needs
+     * to consider carefully what to include and exclude in these inputs.
      */
     @Immutable
     public static final class Inputs {
 
-        @NonNull private final LinkedHashMap<String, String> mParameters;
+        @NonNull private static final String COMMAND = "COMMAND";
+
+        @NonNull private final Command command;
+
+        @NonNull private final LinkedHashMap<String, String> parameters;
 
         /** Builder of {@link FileCache.Inputs}. */
         public static final class Builder {
 
+            @NonNull private final Command command;
+
             @NonNull
-            private final LinkedHashMap<String, String> mParameters = Maps.newLinkedHashMap();
+            private final LinkedHashMap<String, String> parameters = Maps.newLinkedHashMap();
+
+            /**
+             * Creates a {@link Builder} instance to construct an {@link Inputs} object.
+             *
+             * @param command the command that identifies a file creator callback function (which
+             *     usually corresponds to a Gradle task)
+             */
+            public Builder(@NonNull Command command) {
+                this.command = command;
+            }
 
             /**
              * Adds the path of a file/directory as an input parameter. If a parameter with the same
@@ -770,7 +793,7 @@ public final class FileCache {
              * inputs as well.
              */
             public Builder putFilePath(@NonNull String name, @NonNull File file) {
-                mParameters.put(name, file.getPath());
+                parameters.put(name, file.getPath());
                 return this;
             }
 
@@ -792,7 +815,7 @@ public final class FileCache {
                     throws IOException {
                 Preconditions.checkArgument(file.isFile(), file + " is not a file.");
 
-                mParameters.put(name, Files.hash(file, Hashing.sha1()).toString());
+                parameters.put(name, Files.hash(file, Hashing.sha1()).toString());
                 return this;
             }
 
@@ -801,7 +824,7 @@ public final class FileCache {
              * exists, the parameter's value is overwritten.
              */
             public Builder putString(@NonNull String name, @NonNull String value) {
-                mParameters.put(name, value);
+                parameters.put(name, value);
                 return this;
             }
 
@@ -810,7 +833,7 @@ public final class FileCache {
              * exists, the parameter's value is overwritten.
              */
             public Builder putBoolean(@NonNull String name, @NonNull boolean value) {
-                mParameters.put(name, String.valueOf(value));
+                parameters.put(name, String.valueOf(value));
                 return this;
             }
 
@@ -820,19 +843,21 @@ public final class FileCache {
              * @throws IllegalStateException if the inputs are empty
              */
             public Inputs build() {
-                Preconditions.checkState(!mParameters.isEmpty(), "Inputs must not be empty.");
+                Preconditions.checkState(!parameters.isEmpty(), "Inputs must not be empty.");
                 return new Inputs(this);
             }
         }
 
         private Inputs(@NonNull Builder builder) {
-            mParameters = Maps.newLinkedHashMap(builder.mParameters);
+            command = builder.command;
+            parameters = Maps.newLinkedHashMap(builder.parameters);
         }
 
         @Override
         @NonNull
         public String toString() {
-            return Joiner.on(System.lineSeparator()).withKeyValueSeparator("=").join(mParameters);
+            return COMMAND + "=" + command.name() + System.lineSeparator() +
+                    Joiner.on(System.lineSeparator()).withKeyValueSeparator("=").join(parameters);
         }
 
         /**
@@ -845,5 +870,22 @@ public final class FileCache {
         public String getKey() {
             return Hashing.sha1().hashString(toString(), StandardCharsets.UTF_8).toString();
         }
+    }
+
+    /**
+     * Command to be provided by the client when using {@link FileCache}. A command identifies a
+     * file creator callback function (which usually corresponds to a Gradle task) and is used to
+     * separate the cached results of different file creators when they use the same cache.
+     */
+    public enum Command {
+
+        /** Command used for testing only. */
+        TEST,
+
+        /** The predex-library command. */
+        PREDEX_LIBRARY,
+
+        /** The prepare-library command. */
+        PREPARE_LIBRARY
     }
 }
