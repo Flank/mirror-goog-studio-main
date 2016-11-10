@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.gradle.tasks.JackPreDexTransform;
+import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -45,17 +45,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Project;
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -78,27 +73,26 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
     public static final Set<ContentType> CONTENT_RESOURCES = ImmutableSet.of(RESOURCES);
-    public static final Set<ContentType> CONTENT_NATIVE_LIBS = ImmutableSet.of(
-            ExtendedContentType.NATIVE_LIBS);
-    public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(
-            ExtendedContentType.DEX);
+    public static final Set<ContentType> CONTENT_NATIVE_LIBS =
+            ImmutableSet.of(ExtendedContentType.NATIVE_LIBS);
+    public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
-    public static final Set<ContentType> DATA_BINDING_ARTIFACT = ImmutableSet.of(
-            ExtendedContentType.DATA_BINDING, CLASSES);
-    public static final Set<Scope> SCOPE_FULL_PROJECT = Sets.immutableEnumSet(
-            Scope.PROJECT,
-            Scope.PROJECT_LOCAL_DEPS,
-            Scope.SUB_PROJECTS,
-            Scope.SUB_PROJECTS_LOCAL_DEPS,
-            Scope.EXTERNAL_LIBRARIES);
+    public static final Set<ContentType> DATA_BINDING_ARTIFACT =
+            ImmutableSet.of(ExtendedContentType.DATA_BINDING, CLASSES);
+    public static final Set<Scope> SCOPE_FULL_PROJECT =
+            Sets.immutableEnumSet(
+                    Scope.PROJECT,
+                    Scope.PROJECT_LOCAL_DEPS,
+                    Scope.SUB_PROJECTS,
+                    Scope.SUB_PROJECTS_LOCAL_DEPS,
+                    Scope.EXTERNAL_LIBRARIES);
     public static final Set<QualifiedContent.ScopeType> SCOPE_FULL_INSTANT_RUN_PROJECT =
             new ImmutableSet.Builder<QualifiedContent.ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
                     .build();
-    public static final Set<Scope> SCOPE_FULL_LIBRARY = Sets.immutableEnumSet(
-            Scope.PROJECT,
-            Scope.PROJECT_LOCAL_DEPS);
+    public static final Set<Scope> SCOPE_FULL_LIBRARY =
+            Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
 
     @NonNull
     private final Project project;
@@ -112,16 +106,15 @@ public class TransformManager extends FilterableStreamCollection {
     /**
      * These are the streams that are available for new Transforms to consume.
      *
-     * Once a new transform is added, the streams that it consumes are removed from this list,
+     * <p>Once a new transform is added, the streams that it consumes are removed from this list,
      * and the streams it produces are put instead.
      *
-     * When all the transforms have been added, the remaining streams should be consumed by
+     * <p>When all the transforms have been added, the remaining streams should be consumed by
      * standard Tasks somehow.
      *
      * @see #getStreams(StreamFilter)
      */
-    @NonNull
-    private final List<TransformStream> streams = Lists.newArrayList();
+    @NonNull private final List<TransformStream> streams = Lists.newArrayList();
     @NonNull
     private final List<Transform> transforms = Lists.newArrayList();
     @NonNull private final Recorder recorder;

@@ -52,7 +52,7 @@ public class JackSmokeTest {
         GradleBuildResult result = sBasic
                 .executor().withArguments(JACK_OPTIONS)
                 .run("clean", "assembleDebug", "assembleDebugAndroidTest");
-        assertThat(result.getTask(":transformJackWithJackForDebug")).wasExecuted();
+        assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
 
         assertThatApk(sBasic.getApk("debug")).contains("classes.dex");
     }
@@ -61,7 +61,7 @@ public class JackSmokeTest {
     public void assembleMinifyDebug() {
         GradleBuildResult result = sMinify.executor().withArguments(JACK_OPTIONS)
                 .run("clean", "assembleDebug", "assembleDebugAndroidTest");
-        assertThat(result.getTask(":transformJackWithJackForDebug")).wasExecuted();
+        assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
     }
 
     @Test
@@ -69,9 +69,13 @@ public class JackSmokeTest {
         GradleBuildResult result = sMultiDex.executor().withArguments(JACK_OPTIONS)
                 .run("clean", "assembleIcsDebugAndroidTest", "assembleDebug",
                         "assembleLollipopDebugAndroidTest");
-        assertThat(result.getTask(":transformJackWithJackForIcsDebug")).wasExecuted();
-        assertThat(result.getTask(":transformJackWithJackForLollipopDebug")).wasExecuted();
-        assertThat(result.getTask(":transformJackWithJackForLollipopDebugAndroidTest")).wasExecuted();
+        assertThat(result.getTask(":transformJackAndJavaSourcesWithJackCompileForIcsDebug"))
+                .wasExecuted();
+        assertThat(result.getTask(":transformJackAndJavaSourcesWithJackCompileForLollipopDebug"))
+                .wasExecuted();
+        assertThat(result.getTask(":transformJackWithJackDexerForLollipopDebug")).wasNotExecuted();
+        assertThat(result.getTask(":transformJackWithJackDexerForLollipopDebugAndroidTest"))
+                .wasNotExecuted();
     }
 
     @Test

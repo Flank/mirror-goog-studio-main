@@ -266,7 +266,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
                 if (config.getBuildType().isMinifyEnabled()) {
-                    if (config.getBuildType().isShrinkResources() && config.getJackOptions().isEnabled()) {
+                    if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
                         LoggingUtil.displayWarning(Logging.getLogger(getClass()),
                                 scope.getGlobalScope().getProject(),
                                 "shrinkResources does not yet work with useJack=true");

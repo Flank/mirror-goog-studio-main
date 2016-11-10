@@ -238,7 +238,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean isJackEnabled() {
-        return getVariantConfiguration().getJackOptions().isEnabled();
+        return getVariantConfiguration().isJackEnabled();
     }
 
     @NonNull

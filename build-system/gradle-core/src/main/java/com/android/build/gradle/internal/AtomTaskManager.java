@@ -20,10 +20,8 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -242,12 +240,8 @@ public class AtomTaskManager extends TaskManager {
 
                     // Then, build the dex with jack if enabled.
                     // TODO: This means recompiling everything twice if jack is enabled.
-                    CoreJackOptions jackOptions =
-                            variantData.getVariantConfiguration().getJackOptions();
-                    if (jackOptions.isEnabled()) {
-                        AndroidTask<TransformTask> jackTask =
-                                createJackTask(tasks, variantScope, true /*compileJavaSource*/);
-                        setJavaCompilerTask(jackTask, tasks, variantScope);
+                    if (variantData.getVariantConfiguration().isJackEnabled()) {
+                        createJackTask(tasks, variantScope);
                     } else {
                         // Prevent the use of java 1.8 without jack, which would otherwise cause an
                         // internal javac error.

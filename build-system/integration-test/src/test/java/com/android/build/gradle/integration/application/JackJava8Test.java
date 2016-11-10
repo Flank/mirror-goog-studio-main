@@ -24,33 +24,17 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import org.gradle.api.JavaVersion;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Jack test for Java 8 features. Also testing the additional parameters property of the
  * jack options DSL block.
  */
-@RunWith(Parameterized.class)
 public class JackJava8Test {
-
-    @Parameterized.Parameters(name = "specifyUsingAdditionalParameters_{0}")
-    public static List<Boolean> parameters() {
-        return Arrays.asList(true, false);
-    }
-
-    private boolean specifyUsingAdditionalParameters;
-
-    public JackJava8Test(boolean specifyUsingAdditionalParameters) {
-        this.specifyUsingAdditionalParameters = specifyUsingAdditionalParameters;
-    }
 
     private AndroidTestApp app = HelloWorldApp.forPlugin("com.android.application");
     private File javaSrc;
@@ -64,22 +48,15 @@ public class JackJava8Test {
     public void setUp() throws IOException {
         Assume.assumeTrue("Jack tool requires Java 7", JavaVersion.current().isJava7Compatible());
 
-        String minSdkVersionSpec;
-        if (specifyUsingAdditionalParameters) {
-            minSdkVersionSpec = "        jackOptions{\n"
-                    + "            additionalParameters ('jack.android.min-api-level': '24')\n"
-                    + "        }\n";
-        } else {
-            minSdkVersionSpec = "        minSdkVersion 24\n";
-        }
-
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
-                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
                         + "    compileSdkVersion 'android-24'\n"
                         + "    defaultConfig {\n"
-                        + minSdkVersionSpec
+                        + "        minSdkVersion 24\n"
                         + "        jackOptions {\n"
                         + "            enabled true\n"
                         + "        }\n"

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.builder.core.JackProcessOptions.ProcessingTool;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser;
@@ -59,6 +60,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -124,8 +126,8 @@ public class JackToolchain {
             FileUtils.mkdirs(options.getDexOutputDirectory());
         }
 
-        if (options.getOutputFile() != null) {
-            FileUtils.mkdirs(options.getOutputFile().getParentFile());
+        if (options.getJackOutputFile() != null) {
+            FileUtils.mkdirs(options.getJackOutputFile().getParentFile());
         }
 
         if (options.getCoverageMetadataFile() != null) {
@@ -135,19 +137,6 @@ public class JackToolchain {
                 logger.warning(
                         "Cannot create %1$s directory.",
                         options.getCoverageMetadataFile().getParent());
-            }
-        }
-
-        // set the incremental dir if set and either already exists or can be created.
-        if (options.getIncrementalDir() != null) {
-            try {
-                FileUtils.mkdirs(options.getIncrementalDir());
-            } catch (RuntimeException ignored) {
-                logger.warning(
-                        "Cannot create %1$s directory jack incremental support disabled",
-                        options.getIncrementalDir());
-                // unset the incremental dir if it neither already exists nor can be created.
-                options.setIncrementalDir(null);
             }
         }
 
@@ -183,7 +172,7 @@ public class JackToolchain {
             @NonNull JackProcessOptions options, @NonNull ProcessOutput output)
             throws ToolchainException, ClassNotFoundException, ProcessException {
 
-        if (options.getUseJill()) {
+        if (options.getProcessingToolUsed() == ProcessingTool.JILL) {
             convertUsingJillApis(options);
         } else {
             convertUsingJackApis(options, output);
@@ -225,12 +214,12 @@ public class JackToolchain {
                 config.setVerbosityLevel(VerbosityLevel.INFO);
             }
 
-            config.setClasspath(options.getClasspaths());
+            config.setClasspath(options.getClassPaths());
             if (options.getDexOutputDirectory() != null) {
                 config.setOutputDexDir(options.getDexOutputDirectory());
             }
-            if (options.getOutputFile() != null) {
-                config.setOutputJackFile(options.getOutputFile());
+            if (options.getJackOutputFile() != null) {
+                config.setOutputJackFile(options.getJackOutputFile());
             }
             config.setImportedJackLibraryFiles(options.getImportFiles());
             if (!DefaultApiVersion.isPreview(options.getMinSdkVersion())) {
@@ -253,9 +242,6 @@ public class JackToolchain {
                 config.setProperty("jack.obfuscation.mapping.dump", "true");
                 config.setObfuscationMappingOutputFile(options.getMappingFile());
             }
-
-            config.setProperty("jack.import.type.policy", "keep-first");
-            config.setProperty("jack.import.resource.policy", "keep-first");
 
             config.setReporter(ReporterKind.SDK, output.getStandardOutput());
 
@@ -297,10 +283,9 @@ public class JackToolchain {
 
             config.setProcessorOptions(options.getAnnotationProcessorOptions());
 
-            // apply all additional parameters
-            for (String paramKey : options.getAdditionalParameters().keySet()) {
-                String paramValue = options.getAdditionalParameters().get(paramKey);
-                config.setProperty(paramKey, paramValue);
+            // apply all additional params
+            for (Map.Entry<String, String> param : options.getAdditionalParameters().entrySet()) {
+                config.setProperty(param.getKey(), param.getValue());
             }
 
             if (apiVersion.getVersion() >= BuildToolInfo.JackVersion.V4.getVersion()) {
@@ -376,7 +361,7 @@ public class JackToolchain {
             @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull JavaProcessExecutor javaProcessExecutor)
             throws ProcessException {
-        if (options.getUseJill()) {
+        if (options.getProcessingToolUsed() == ProcessingTool.JILL) {
             convertUsingJillCli(options, processOutputHandler, javaProcessExecutor);
         } else {
             convertUsingJackCli(options, processOutputHandler, javaProcessExecutor);
@@ -414,6 +399,8 @@ public class JackToolchain {
     private Api04Config api04Specific(
             @NonNull Api04Config config, @NonNull JackProcessOptions options)
             throws ConfigurationException {
+        List<File> pluginPaths = Lists.newArrayList(options.getJackPluginClassPath());
+        List<String> pluginNames = Lists.newArrayList(options.getJackPluginNames());
         if (options.getCoverageMetadataFile() != null) {
             String coveragePluginPath =
                     buildToolInfo.getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
@@ -428,8 +415,8 @@ public class JackToolchain {
                             "Unable to find coverage plugin '%s'.  Disabling code " + "coverage.",
                             coveragePlugin.getAbsolutePath());
                 } else {
-                    options.addJackPluginClassPath(new File(coveragePluginPath));
-                    options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
+                    pluginPaths.add(new File(coveragePluginPath));
+                    pluginNames.add(JackProcessOptions.COVERAGE_PLUGIN_NAME);
                     config.setProperty(
                             "jack.coverage.metadata.file",
                             options.getCoverageMetadataFile().getAbsolutePath());
@@ -439,8 +426,8 @@ public class JackToolchain {
         }
 
         // jack plugins
-        config.setPluginNames(Lists.newArrayList(options.getJackPluginNames()));
-        config.setPluginPath(options.getJackPluginClassPath());
+        config.setPluginPath(pluginPaths);
+        config.setPluginNames(pluginNames);
 
         if (options.getEncoding() != null) {
             config.setDefaultCharset(Charset.forName(options.getEncoding()));
@@ -458,7 +445,7 @@ public class JackToolchain {
     private void convertUsingJillApis(@NonNull JackProcessOptions jackOptions)
             throws ClassNotFoundException, ToolchainException {
         checkState(jackOptions.getImportFiles().size() == 1, "Jill can convert a file at a time.");
-        checkNotNull(jackOptions.getOutputFile(), "Jill output file is required.");
+        checkNotNull(jackOptions.getJackOutputFile(), "Output file is not specified.");
 
         BuildToolsServiceLoader.BuildToolServiceLoader buildToolServiceLoader =
                 BuildToolsServiceLoader.INSTANCE.forVersion(buildToolInfo);
@@ -474,7 +461,7 @@ public class JackToolchain {
             com.android.jill.api.v01.Api01Config config =
                     jillProvider.createConfig(com.android.jill.api.v01.Api01Config.class);
             config.setInputJavaBinaryFile(inputFile);
-            config.setOutputJackFile(jackOptions.getOutputFile());
+            config.setOutputJackFile(jackOptions.getJackOutputFile());
             config.setVerbose(jackOptions.isVerboseProcessing());
             config.setDebugInfo(jackOptions.isDebuggable());
 
@@ -504,7 +491,7 @@ public class JackToolchain {
             @NonNull JavaProcessExecutor javaProcessExecutor)
             throws ProcessException {
         checkState(jackOptions.getImportFiles().size() == 1, "Jill can convert a file at a time.");
-        checkNotNull(jackOptions.getOutputFile(), "Jill output file is required.");
+        checkNotNull(jackOptions.getJackOutputFile(), "Output file is not specified.");
 
         // launch jill: create the command line
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
@@ -523,7 +510,7 @@ public class JackToolchain {
         }
         builder.addArgs(jackOptions.getImportFiles().get(0).getAbsolutePath());
         builder.addArgs("--output");
-        builder.addArgs(jackOptions.getOutputFile().getAbsolutePath());
+        builder.addArgs(jackOptions.getJackOutputFile().getAbsolutePath());
 
         if (jackOptions.isVerboseProcessing()) {
             builder.addArgs("--verbose");

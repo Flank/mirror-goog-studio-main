@@ -446,36 +446,6 @@ public class VariantDependencies {
     }
 
     @NonNull
-    public Set<File> getAnnotationProcessorClassPath() {
-        if (getAnnotationProcessorConfiguration().getAllDependencies().isEmpty()
-                || getAnnotationProcessorConfiguration().getState() != RESOLVED) {
-            return Collections.emptySet();
-        }
-
-        ResolvedConfiguration resolvedConfiguration =
-                getAnnotationProcessorConfiguration().getResolvedConfiguration();
-        if (resolvedConfiguration.hasError()) {
-            resolvedConfiguration.rethrowFailure();
-        }
-        return getAnnotationProcessorConfiguration().getFiles();
-    }
-
-    @NonNull
-    public Set<File> getJackPluginClassPath() {
-        if (getJackPluginConfiguration().getAllDependencies().isEmpty()
-                || getJackPluginConfiguration().getState() != RESOLVED) {
-            return Collections.emptySet();
-        }
-
-        ResolvedConfiguration resolvedConfiguration =
-                getJackPluginConfiguration().getResolvedConfiguration();
-        if (resolvedConfiguration.hasError()) {
-            resolvedConfiguration.rethrowFailure();
-        }
-        return getJackPluginConfiguration().getFiles();
-    }
-
-    @NonNull
     public DependencyChecker getChecker() {
         return checker;
     }
