@@ -88,6 +88,7 @@ dependencies {
 }
 
 sourceSets.main.compileClasspath += files(configurations.provided)
+sourceSets.test.compileClasspath += files(configurations.provided)
 sourceSets.test.runtimeClasspath += files(configurations.provided)
 tasks.compileJava.dependsOn(configurations.provided)
 tasks.sourcesJar.dependsOn(configurations.sourcesProvided)
