@@ -88,7 +88,6 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      * @param dataItemKey the key for the items
      * @param items the items, from lower priority to higher priority.
      * @param consumer the consumer to receive the merged items.
-     * @throws MergingException
      */
     protected abstract void mergeItems(
             @NonNull String dataItemKey,
@@ -688,12 +687,11 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             return fileValidity;
         }
 
-        if (DataSet.isIgnored(file)) {
-            fileValidity.status = FileValidity.FileStatus.IGNORED_FILE;
-            return fileValidity;
-        }
-
         for (S dataSet : mDataSets) {
+            if (dataSet.isIgnored(file)) {
+                continue;
+            }
+
             File sourceFile = dataSet.findMatchingSourceFile(file);
 
             if (sourceFile != null) {
