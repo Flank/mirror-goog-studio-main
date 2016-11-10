@@ -74,7 +74,7 @@ public class ZFileOptions {
         mTracker = new ByteTracker();
         mCompressor =
                 new DeflateExecutionCompressor(
-                        MoreExecutors.sameThreadExecutor(), mTracker, Deflater.DEFAULT_COMPRESSION);
+                        MoreExecutors.directExecutor(), mTracker, Deflater.DEFAULT_COMPRESSION);
         mAlignmentRule = AlignmentRules.compose();
     }
 
