@@ -21,6 +21,7 @@ java_library(
     deps = [
         "//tools/analytics-library:analytics-protos",
         "//tools/base/annotations",
+        "//tools/base/apkzlib",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder",
@@ -75,6 +76,7 @@ java_test(
         ":gradle-core",
         "//tools/analytics-library:analytics-protos",
         "//tools/base/annotations",
+        "//tools/base/apkzlib",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
