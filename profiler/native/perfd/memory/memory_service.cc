@@ -26,6 +26,10 @@ using profiler::proto::MemoryData;
 using profiler::proto::MemoryFeature;
 using profiler::proto::MemoryRequest;
 using profiler::proto::MemoryStatus;
+using profiler::proto::MemoryStartRequest;
+using profiler::proto::MemoryStartResponse;
+using profiler::proto::MemoryStopRequest;
+using profiler::proto::MemoryStopResponse;
 
 namespace profiler {
 
@@ -105,6 +109,20 @@ namespace profiler {
     response->set_status(HeapDumpResponse::IN_PROGRESS);
   }
 
+  return ::grpc::Status::OK;
+}
+
+grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
+                                                const MemoryStartRequest* request,
+                                                MemoryStartResponse* response) {
+  response->set_status(MemoryStartResponse::SUCCESS);
+  return ::grpc::Status::OK;
+}
+
+grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
+                                               const MemoryStopRequest* request,
+                                               MemoryStopResponse* response) {
+  response->set_status(MemoryStopResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
 

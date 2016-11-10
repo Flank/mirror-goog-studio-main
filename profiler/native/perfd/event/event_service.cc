@@ -25,6 +25,10 @@ using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::EventDataRequest;
 using profiler::proto::EventDataResponse;
+using profiler::proto::EventStartRequest;
+using profiler::proto::EventStartResponse;
+using profiler::proto::EventStopRequest;
+using profiler::proto::EventStopResponse;
 
 namespace profiler {
 EventServiceImpl::EventServiceImpl(EventCache* cache) : cache_(*cache) {}
@@ -38,6 +42,20 @@ Status EventServiceImpl::GetData(ServerContext* context,
   int64_t endTime = request->end_timestamp();
   cache_.GetData(startTime, endTime, response);
   return status;
+}
+
+grpc::Status EventServiceImpl::StartMonitoringApp(ServerContext* context,
+                                                const EventStartRequest* request,
+                                                EventStartResponse* response) {
+  response->set_status(EventStartResponse::SUCCESS);
+  return grpc::Status::OK;
+}
+
+grpc::Status EventServiceImpl::StopMonitoringApp(ServerContext* context,
+                                               const EventStopRequest* request,
+                                               EventStopResponse* response) {
+  response->set_status(EventStopResponse::SUCCESS);
+  return grpc::Status::OK;
 }
 
 }  // namespace profiler

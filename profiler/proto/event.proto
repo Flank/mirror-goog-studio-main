@@ -27,6 +27,38 @@ service EventService {
   // mathematically written as in interval (start_timestamp, end_timestamp].
   rpc GetData(EventDataRequest) returns (EventDataResponse) {
   }
+
+  rpc StartMonitoringApp(EventStartRequest) returns (EventStartResponse) {
+  }
+
+  rpc StopMonitoringApp(EventStopRequest) returns (EventStopResponse) {
+  }
+}
+
+message EventStartRequest {
+  int32 app_id = 1;
+}
+
+message EventStartResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message EventStopRequest {
+  int32 app_id = 1;
+}
+
+message EventStopResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
 }
 
 message EventProfilerData {
