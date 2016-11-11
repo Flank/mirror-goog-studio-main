@@ -25,6 +25,8 @@
 #include "utils/thread_name.h"
 #include "utils/trace.h"
 
+using ::profiler::proto::HeapDumpDataResponse;
+
 namespace profiler {
 
 MemoryCollector::~MemoryCollector() { Stop(); }
@@ -70,7 +72,7 @@ void MemoryCollector::CollectorMain() {
 
 bool MemoryCollector::TriggerHeapDump() {
   if (is_heap_dump_running_) {
-    Log::V("An heap dump operation is already in progress.");
+    Log::V("A heap dump operation is already in progress.");
     return false;
   }
 
@@ -80,12 +82,7 @@ bool MemoryCollector::TriggerHeapDump() {
     ss << "/data/local/tmp/" << pid_ << "_" << request_time << ".hprof";
     std::string dump_file_path = ss.str();
 
-    proto::MemoryData_HeapDumpSample sample;
-    sample.set_start_time(request_time);
-    sample.set_end_time(kUnfinishedTimestamp);
-    sample.set_file_path(dump_file_path);
-
-    if (!memory_cache_.StartHeapDumpSample(sample)) {
+    if (!memory_cache_.StartHeapDumpSample(dump_file_path, request_time)) {
       Log::V("StartHeapDumpSample failed.");
       return false;
     }
@@ -121,5 +118,10 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   }
 
   is_heap_dump_running_.exchange(false);
+}
+
+void MemoryCollector::GetHeapDumpData(int32_t dump_id,
+                                      HeapDumpDataResponse* response) {
+  memory_cache_.ReadHeapDumpFileContents(dump_id, response);
 }
 }  // namespace profiler

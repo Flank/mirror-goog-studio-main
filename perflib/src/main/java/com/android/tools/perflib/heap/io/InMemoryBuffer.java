@@ -36,6 +36,11 @@ public class InMemoryBuffer implements DataBuffer {
         mBuffer = ByteBuffer.wrap(data);
     }
 
+    public InMemoryBuffer(ByteBuffer data) {
+        mBuffer = data;
+        mBuffer.rewind();
+    }
+
     @Override
     public void dispose() {}
 

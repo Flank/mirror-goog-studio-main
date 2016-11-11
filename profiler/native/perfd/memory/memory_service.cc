@@ -19,6 +19,8 @@
 
 #include "utils/trace.h"
 
+using profiler::proto::HeapDumpDataRequest;
+using profiler::proto::HeapDumpDataResponse;
 using profiler::proto::HeapDumpRequest;
 using profiler::proto::HeapDumpResponse;
 using profiler::proto::MemoryConfig;
@@ -32,6 +34,20 @@ using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
 
 namespace profiler {
+
+grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
+                                                const MemoryStartRequest* request,
+                                                MemoryStartResponse* response) {
+  response->set_status(MemoryStartResponse::SUCCESS);
+  return ::grpc::Status::OK;
+}
+
+grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
+                                               const MemoryStopRequest* request,
+                                               MemoryStopResponse* response) {
+  response->set_status(MemoryStopResponse::SUCCESS);
+  return ::grpc::Status::OK;
+}
 
 ::grpc::Status MemoryServiceImpl::SetMemoryConfig(
     ::grpc::ServerContext* context,
@@ -112,18 +128,34 @@ namespace profiler {
   return ::grpc::Status::OK;
 }
 
-grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
-                                                const MemoryStartRequest* request,
-                                                MemoryStartResponse* response) {
-  response->set_status(MemoryStartResponse::SUCCESS);
-  return ::grpc::Status::OK;
-}
+::grpc::Status MemoryServiceImpl::GetHeapDump(
+    ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
+    HeapDumpDataResponse* response) {
+  Trace trace("MEM:GetFile");
+  int32_t app_id = request->app_id();
 
-grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
-                                               const MemoryStopRequest* request,
-                                               MemoryStopResponse* response) {
-  response->set_status(MemoryStopResponse::SUCCESS);
-  return ::grpc::Status::OK;
+  auto result = collectors_.find(app_id);
+  if (result == collectors_.end()) {
+    response->set_status(HeapDumpDataResponse::FAILURE_UNKNOWN);
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+
+  (result->second).GetHeapDumpData(request->dump_id(), response);
+  switch (response->status()) {
+    case HeapDumpDataResponse::NOT_READY:
+    case HeapDumpDataResponse::SUCCESS:
+      return ::grpc::Status::OK;
+    case HeapDumpDataResponse::NOT_FOUND:
+      return ::grpc::Status(
+          ::grpc::StatusCode::NOT_FOUND,
+          "The requested file_id was not matched to a file.");
+    default:
+      return ::grpc::Status(
+          ::grpc::StatusCode::UNKNOWN,
+          "Unknown issue when attempting to retrieve file.");
+  }
 }
 
 }  // namespace profiler

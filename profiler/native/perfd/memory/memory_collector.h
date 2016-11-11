@@ -33,8 +33,6 @@ class MemoryCollector {
   static const int64_t kSecondsToBuffer = 5;
   static constexpr int64_t kSamplesCount =
       1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
-  static const int64_t kUnfinishedTimestamp =
-      -1;  // Indicates that a heap dump is in progress.
 
  public:
   MemoryCollector(int32_t pid, const Clock& clock)
@@ -44,6 +42,8 @@ class MemoryCollector {
   void Start();
   void Stop();
   bool TriggerHeapDump();
+  void GetHeapDumpData(int32_t dump_id,
+                       ::profiler::proto::HeapDumpDataResponse* response);
   MemoryCache* memory_cache() { return &memory_cache_; }
 
  private:

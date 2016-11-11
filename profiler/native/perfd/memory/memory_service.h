@@ -33,6 +33,16 @@ class MemoryServiceImpl final
       : clock_(clock), collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
 
+  ::grpc::Status StartMonitoringApp(
+      ::grpc::ServerContext* context,
+      const profiler::proto::MemoryStartRequest* request,
+      ::profiler::proto::MemoryStartResponse* response) override;
+
+  ::grpc::Status StopMonitoringApp(
+      ::grpc::ServerContext* context,
+      const profiler::proto::MemoryStopRequest* request,
+      ::profiler::proto::MemoryStopResponse* response) override;
+
   ::grpc::Status SetMemoryConfig(
       ::grpc::ServerContext* context,
       const ::profiler::proto::MemoryConfig* request,
@@ -47,16 +57,10 @@ class MemoryServiceImpl final
       const ::profiler::proto::HeapDumpRequest* request,
       ::profiler::proto::HeapDumpResponse* response) override;
 
-  ::grpc::Status StartMonitoringApp(
+  ::grpc::Status GetHeapDump(
       ::grpc::ServerContext* context,
-      const profiler::proto::MemoryStartRequest* request,
-      ::profiler::proto::MemoryStartResponse* response) override;
-
-  ::grpc::Status StopMonitoringApp(
-      ::grpc::ServerContext* context,
-      const profiler::proto::MemoryStopRequest* request,
-      ::profiler::proto::MemoryStopResponse* response) override;
-
+      const ::profiler::proto::HeapDumpDataRequest* request,
+      ::profiler::proto::HeapDumpDataResponse* response) override;
 
  private:
   const Clock& clock_;
