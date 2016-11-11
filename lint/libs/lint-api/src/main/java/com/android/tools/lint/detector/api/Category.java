@@ -185,6 +185,9 @@ public final class Category implements Comparable<Category> {
     /** Issues related to messages/strings */
     public static final Category MESSAGES = create(CORRECTNESS, "Messages", 95);
 
+    /** Issues related to Chrome OS devices */
+    public static final Category CHROME_OS = create(CORRECTNESS, "Chrome OS", 93);
+
     /** Issues related to right to left and bidirectional text support */
     public static final Category RTL = create(I18N, "Bidirectional Text", 40);
 }
