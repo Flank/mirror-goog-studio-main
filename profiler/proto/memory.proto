@@ -24,8 +24,6 @@ service MemoryService {
   }
   rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
   }
-  rpc SetMemoryConfig(MemoryConfig) returns (MemoryStatus) {
-  }
   rpc GetData(MemoryRequest) returns (MemoryData) {
   }
   rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {
@@ -58,25 +56,6 @@ message MemoryStopResponse {
     FAILURE_UNKNOWN = 2;
   }
   Status status = 1;
-}
-
-enum MemoryFeature {
-  UNSPECIFIED = 0;
-  MEMORY_LEVELS = 1;
-}
-
-message MemoryConfig {
-  message Option {
-    MemoryFeature feature = 1;
-    bool enabled = 2;
-  }
-
-  int32 app_id = 1;
-  repeated Option options = 2;
-}
-
-message MemoryStatus {
-  int64 status_timestamp = 2;
 }
 
 message MemoryRequest {
