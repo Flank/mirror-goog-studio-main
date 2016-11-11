@@ -43,11 +43,6 @@ class MemoryServiceImpl final
       const profiler::proto::MemoryStopRequest* request,
       ::profiler::proto::MemoryStopResponse* response) override;
 
-  ::grpc::Status SetMemoryConfig(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::MemoryConfig* request,
-      ::profiler::proto::MemoryStatus* response) override;
-
   ::grpc::Status GetData(::grpc::ServerContext* context,
                          const ::profiler::proto::MemoryRequest* request,
                          ::profiler::proto::MemoryData* response) override;
@@ -63,6 +58,8 @@ class MemoryServiceImpl final
       ::profiler::proto::HeapDumpDataResponse* response) override;
 
  private:
+  MemoryCollector* GetCollector(int32_t app_id);
+
   const Clock& clock_;
   std::unordered_map<int32_t, MemoryCollector>&
       collectors_;  // maps pid to MemoryCollector

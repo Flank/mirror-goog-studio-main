@@ -23,11 +23,8 @@ using profiler::proto::HeapDumpDataRequest;
 using profiler::proto::HeapDumpDataResponse;
 using profiler::proto::HeapDumpRequest;
 using profiler::proto::HeapDumpResponse;
-using profiler::proto::MemoryConfig;
 using profiler::proto::MemoryData;
-using profiler::proto::MemoryFeature;
 using profiler::proto::MemoryRequest;
-using profiler::proto::MemoryStatus;
 using profiler::proto::MemoryStartRequest;
 using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
@@ -38,6 +35,7 @@ namespace profiler {
 grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
                                                 const MemoryStartRequest* request,
                                                 MemoryStartResponse* response) {
+  GetCollector(request->app_id())->Start();
   response->set_status(MemoryStartResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
@@ -45,46 +43,11 @@ grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* contex
 grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
                                                const MemoryStopRequest* request,
                                                MemoryStopResponse* response) {
-  response->set_status(MemoryStopResponse::SUCCESS);
-  return ::grpc::Status::OK;
-}
-
-::grpc::Status MemoryServiceImpl::SetMemoryConfig(
-    ::grpc::ServerContext* context,
-    const ::profiler::proto::MemoryConfig* request, MemoryStatus* response) {
-  Trace trace("MEM:SetMemoryConfig");
-  int32_t app_id = request->app_id();
-
-  response->set_status_timestamp(clock_.GetCurrentTime());
-  for (int i = 0; i < request->options_size(); i++) {
-    const MemoryConfig::Option& option = request->options(i);
-    switch (option.feature()) {
-      case MemoryFeature::MEMORY_LEVELS: {
-        auto got = collectors_.find(app_id);
-        if (got == collectors_.end()) {
-          // Use the forward version of pair to avoid defining a move
-          // constructor.
-          auto emplace_result = collectors_.emplace(
-              std::piecewise_construct, std::forward_as_tuple(app_id),
-              std::forward_as_tuple(app_id, clock_));
-          assert(emplace_result.second);
-          got = emplace_result.first;
-        }
-        MemoryCollector& collector = got->second;
-
-        if (option.enabled()) {
-          collector.Start();
-        } else {
-          collector.Stop();
-        }
-      } break;
-
-      default:
-        return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
-                              "Memory feature not handled.");
-    }
+  auto got = collectors_.find(request->app_id());
+  if (got != collectors_.end()) {
+    got->second.Stop();
   }
-
+  response->set_status(MemoryStopResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
 
@@ -156,6 +119,19 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
           ::grpc::StatusCode::UNKNOWN,
           "Unknown issue when attempting to retrieve file.");
   }
+}
+
+MemoryCollector* MemoryServiceImpl::GetCollector(int32_t app_id) {
+  auto got = collectors_.find(app_id);
+  if (got == collectors_.end()) {
+    // Use the forward version of pair to avoid defining a move constructor.
+    auto emplace_result = collectors_.emplace(
+        std::piecewise_construct, std::forward_as_tuple(app_id),
+        std::forward_as_tuple(app_id, clock_));
+    assert(emplace_result.second);
+    got = emplace_result.first;
+  }
+  return &got->second;
 }
 
 }  // namespace profiler
