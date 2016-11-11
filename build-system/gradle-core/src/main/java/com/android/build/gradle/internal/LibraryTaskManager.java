@@ -303,6 +303,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // merge jni libs.
         createMergeJniLibFoldersTasks(tasks, variantScope);
+        createStripNativeLibraryTask(tasks, variantScope);
 
         // package the renderscript header files files into the bundle folder
         AndroidTask<Sync> packageRenderscriptTask = ThreadRecorder.get().record(
@@ -446,7 +447,6 @@ public class LibraryTaskManager extends TaskManager {
                         return null;
                     }
                 });
-
 
         bundle.dependsOn(
                 packageRes.getName(),
