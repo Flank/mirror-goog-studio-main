@@ -1,6 +1,6 @@
 apply plugin: 'java'
 
-group = 'com.android.tools.external.com-intellij.uast'
+group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'uast'
 version = '162.2228.14'
 
@@ -14,4 +14,3 @@ project.ext.pomDesc = 'A subset of IntelliJ IDEA\'s AST APIs and implementation,
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
-
