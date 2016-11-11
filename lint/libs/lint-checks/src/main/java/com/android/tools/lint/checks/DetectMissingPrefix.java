@@ -33,6 +33,8 @@ import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_TAG;
+import static com.android.SdkConstants.XMLNS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.resources.ResourceFolderType.ANIM;
 import static com.android.resources.ResourceFolderType.ANIMATOR;
 import static com.android.resources.ResourceFolderType.COLOR;
@@ -59,6 +61,7 @@ import java.util.Collection;
 import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
@@ -210,10 +213,32 @@ public class DetectMissingPrefix extends LayoutDetector {
                 }
             }
 
+            // A namespace declaration?
+            String prefix = attribute.getPrefix();
+            if (XMLNS.equals(prefix)) {
+                String name = attribute.getNodeName();
+                // See if it's already reported on the root
+                Element root = attribute.getOwnerDocument().getDocumentElement();
+                NamedNodeMap attributes = root.getAttributes();
+                for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                    Node item = attributes.item(i);
+                    if (name.equals(item.getNodeName())
+                            && attribute.getValue().equals(item.getNodeValue())) {
+                        context.report(NamespaceDetector.UNUSED, attribute,
+                                context.getLocation(attribute),
+                                String.format("Unused namespace declaration %1$s; already "
+                                                + "declared on the root element",
+                                        name));
+                    }
+                }
+
+                return;
+            }
+
             context.report(MISSING_NAMESPACE, attribute,
                     context.getLocation(attribute),
                     String.format("Unexpected namespace prefix \"%1$s\" found for tag `%2$s`",
-                            attribute.getPrefix(), attribute.getOwnerElement().getTagName()));
+                            prefix, attribute.getOwnerElement().getTagName()));
         }
     }
 

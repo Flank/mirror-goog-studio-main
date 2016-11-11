@@ -1129,11 +1129,6 @@ public abstract class Detector {
 
     // ---- Dummy implementations to make implementing an OtherFileScanner easier: ----
 
-    @SuppressWarnings({"UnusedParameters", "unused"})
-    public boolean appliesToFolder(@NonNull Scope scope, @Nullable ResourceFolderType folderType) {
-        return false;
-    }
-
     @NonNull
     public EnumSet<Scope> getApplicableFiles() {
         return Scope.OTHER_SCOPE;

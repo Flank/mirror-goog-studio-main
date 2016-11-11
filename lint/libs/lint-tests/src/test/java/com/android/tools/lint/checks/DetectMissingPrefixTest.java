@@ -18,6 +18,10 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Issue;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class DetectMissingPrefixTest extends AbstractCheckTest {
@@ -394,6 +398,40 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                                 + "</inset>")
                 )
         );
+    }
+
+    public void testXmlns() throws Exception {
+        assertEquals(""
+                + "res/layout/foo.xml:10: Warning: Unused namespace declaration xmlns:android; already declared on the root element [UnusedNamespace]\n"
+                + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n",
+                lintProject(
+                        xml("res/layout/foo.xml", ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<RelativeLayout\n"
+                                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    android:id=\"@+id/playbackReplayOptionsLayout\"\n"
+                                + "    android:layout_width=\"match_parent\"\n"
+                                + "    android:layout_height=\"wrap_content\"\n"
+                                + "    android:layout_marginBottom=\"10dp\">\n"
+                                + "    <RelativeLayout\n"
+                                + "        android:id=\"@+id/continueBlock\"\n"
+                                + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "        android:layout_width=\"wrap_content\"\n"
+                                + "        android:layout_height=\"wrap_content\"\n"
+                                + "        android:layout_toRightOf=\"@+id/replayBlock\">\n"
+                                + "    </RelativeLayout>\n"
+                                + "</RelativeLayout>\n")
+                )
+        );
+    }
+
+    @Override
+    protected List<Issue> getIssues() {
+        List<Issue> combined = Lists.newArrayList(super.getIssues());
+        combined.add(NamespaceDetector.UNUSED);
+        return combined;
     }
 
     @Override
