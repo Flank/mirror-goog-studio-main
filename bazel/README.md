@@ -28,6 +28,8 @@ The command to run all the bazel tests run by the PSQ is:
 bazel test $(<tools/base/bazel/test_targets)
 ```
 
+The test output is typically present in `bazel-testlogs/pkg/target/test.xml` (or `test.log`)
+
 To run all the tests found in `tools/base`:
 
 ```shell
@@ -37,8 +39,10 @@ bazel test //tools/base/...
 To run all the tests in the IntelliJ Android plugin:
 
 ```
-bazel test //tools/adt/idea:android_tests
+bazel test //tools/adt/idea/android-tests/...
 ```
+
+> Note: The file `tools/base/bazel/test_targets` contains the up-to-date list of test targets.
 
 To build Studio without running the tests:
 
@@ -57,6 +61,12 @@ To debug a single test, which will open remote debugging:
 ```
 bazel test //tools/adt/idea:android_tests --test_filter=AndroidLayoutDomTest --java_debug
 ```
+
+## Useful Bazel options
+
+ * `--nocache_test_results` may be required if you are trying to re-run a test without changing
+   anything.
+ * `--test_filter=<TestName>` to run a specific test
 
 ## BUILD files
 
