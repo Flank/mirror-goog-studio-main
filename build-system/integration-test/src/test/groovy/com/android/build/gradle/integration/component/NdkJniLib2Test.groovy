@@ -121,7 +121,7 @@ model {
         assertThatAar(app).contains("lib/x86/libhello-jni.so")
 
         File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so")
-        assertThatNativeLib(lib).isNotStripped()
+        assertThatNativeLib(lib).isStripped()
         lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so")
         assertThatNativeLib(lib).isStripped()
     }
