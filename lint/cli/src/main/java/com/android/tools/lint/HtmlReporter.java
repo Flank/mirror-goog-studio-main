@@ -365,14 +365,9 @@ public class HtmlReporter extends Reporter {
         writer.write("<div class=\"metadata\">");
 
         if (client.getRegistry() instanceof BuiltinIssueRegistry) {
-            boolean adtHasFix = QuickfixHandler.ADT.hasAutoFix(issue);
-            boolean studioHasFix = QuickfixHandler.STUDIO.hasAutoFix(issue);
-            if (adtHasFix || studioHasFix) {
-                String adt = "Eclipse/ADT";
-                String studio = "Android Studio/IntelliJ";
-                String tools = adtHasFix && studioHasFix
-                        ? (studio + " & " + adt) : studioHasFix ? studio : adt;
-                writer.write("Note: This issue has an associated quickfix operation in " + tools);
+            if (hasAutoFix(issue)) {
+                writer.write("Note: This issue has an associated quickfix operation in "
+                        + "Android Studio and IntelliJ");
                 if (!INLINE_RESOURCES) {
                     writer.write(getFixIcon());
                 } else if (fixUrl != null) {
