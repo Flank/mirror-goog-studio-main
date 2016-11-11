@@ -33,13 +33,21 @@ class MemoryCache {
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
-  bool StartHeapDumpSample(const proto::MemoryData::HeapDumpSample& sample);
+  bool StartHeapDumpSample(const std::string& dump_file_path,
+                           int64_t request_time);
   bool EndHeapDumpSample(int64_t end_time, bool success);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
+  void ReadHeapDumpFileContents(int32_t dump_id,
+                                proto::HeapDumpDataResponse* response);
 
  private:
+  // Gets the index into |*_samples_| for the corresponding |id|.
+  int32_t GetSampleIndex(int32_t id);
+  // Gets the next index into |*_samples_| for the corresponding |id|.
+  int32_t GetNextSampleIndex(int32_t id);
+
   const Clock& clock_;
 
   // TODO replace these with circular buffer class when it becomes available.
@@ -52,15 +60,13 @@ class MemoryCache {
 
   int32_t put_memory_sample_index_;
   int32_t put_vm_stats_sample_index_;
-  int32_t put_heap_dump_sample_index_;
+  int32_t next_heap_dump_sample_id_;
+  // TODO consider configuring cache sizes independently.
   int32_t samples_capacity_;
 
   bool memory_samples_buffer_full_;
   bool vm_stats_samples_buffer_full_;
-  bool heap_dump_samples_buffer_full_;
   bool has_unfinished_heap_dump_sample_;
-
-  int32_t IncrementSampleIndex(int32_t index);
 };
 
 }  // namespace profiler
