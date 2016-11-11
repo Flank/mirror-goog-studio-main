@@ -44,6 +44,7 @@ import com.android.builder.dependency.DependencyContainerImpl;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
+import com.android.builder.internal.utils.FileCache;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -64,7 +65,6 @@ import com.google.common.collect.Sets;
 import org.gradle.api.CircularReferenceException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -81,7 +81,6 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.specs.Specs;
 import org.gradle.util.GUtil;
 
@@ -92,6 +91,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -215,9 +215,12 @@ public class DependencyManager {
                     "prepare" + bundleName + "Library", PrepareLibraryTask.class);
 
             prepareLibraryTask.setDescription("Prepare " + library.getName());
-            prepareLibraryTask.setBundle(library.getBundle());
-            prepareLibraryTask.setExplodedDir(library.getFolder());
             prepareLibraryTask.setVariantName("");
+            prepareLibraryTask.init(
+                    library.getBundle(),
+                    library.getFolder(),
+                    AndroidGradleOptions.getBuildCache(project),
+                    library.getResolvedCoordinates());
 
             prepareLibTaskMap.put(key, prepareLibraryTask);
         }
@@ -797,23 +800,35 @@ public class DependencyManager {
                                     provided);
 
                         } else {
-                            // When improved dependency resolution is enabled, the aar are exploded
-                            // to a directory specific to the variant.  Otherwise, it would conflict
-                            // with the up-to-date check of the original PrepareLibraryTask.
-                            // TODO This is currently very inefficient.  Use build cache.
-                            File explodedDir =
-                                    AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                                            ? FileUtils.join(
-                                                    project.getBuildDir(),
-                                                    FD_INTERMEDIATES,
-                                                    EXPLODED_AAR ,
-                                                    configDependencies.getName(),
-                                                    path)
-                                            : FileUtils.join(
-                                                    project.getBuildDir(),
-                                                    FD_INTERMEDIATES,
-                                                    EXPLODED_AAR,
-                                                    path);
+                            // If the build cache is enabled, we create and cache the exploded aar
+                            // inside the build cache directory; otherwise, we explode the aar to a
+                            // location inside the project's build directory.
+                            Optional<FileCache> buildCache =
+                                    AndroidGradleOptions.getBuildCache(project);
+                            File explodedDir;
+                            if (buildCache.isPresent()) {
+                                explodedDir = buildCache.get().getFileInCache(
+                                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates));
+                            } else {
+                                // When improved dependency resolution is enabled, the aar is
+                                // exploded to a directory specific to the variant.  Otherwise, it
+                                // would conflict with the up-to-date check of the original
+                                // PrepareLibraryTask.
+                                explodedDir =
+                                        AndroidGradleOptions
+                                                .isImprovedDependencyResolutionEnabled(project)
+                                                ? FileUtils.join(
+                                                        project.getBuildDir(),
+                                                        FD_INTERMEDIATES,
+                                                        EXPLODED_AAR ,
+                                                        configDependencies.getName(),
+                                                        path)
+                                                : FileUtils.join(
+                                                        project.getBuildDir(),
+                                                        FD_INTERMEDIATES,
+                                                        EXPLODED_AAR,
+                                                        path);
+                            }
 
                             libraryDependency = LibraryDependency.createExplodedAarLibrary(
                                     artifact.getFile(),
@@ -1081,14 +1096,14 @@ public class DependencyManager {
                         + 10); // in case of classifier which is rare.
 
         pathBuilder.append(normalize(logger, moduleVersion, moduleVersion.getGroup()))
-                .append('/')
+                .append(File.separatorChar)
                 .append(normalize(logger, moduleVersion, moduleVersion.getName()))
-                .append('/')
+                .append(File.separatorChar)
                 .append(normalize(logger, moduleVersion,
                         moduleVersion.getVersion()));
 
         if (artifact.getClassifier() != null && !artifact.getClassifier().isEmpty()) {
-            pathBuilder.append('/').append(normalize(logger, moduleVersion,
+            pathBuilder.append(File.separatorChar).append(normalize(logger, moduleVersion,
                     artifact.getClassifier()));
         }
 
