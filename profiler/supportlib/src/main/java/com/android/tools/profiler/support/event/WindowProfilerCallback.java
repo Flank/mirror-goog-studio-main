@@ -42,12 +42,12 @@ public final class WindowProfilerCallback implements Window.Callback {
     }
 
     // Native function to send touch event states via RPC to perfd.
-    private native void sendTouchEvent(int state);
-    private native void sendKeyEvent(int state);
+    private native void sendTouchEvent(int state, long downTime);
+    private native void sendKeyEvent(int state, long downTime);
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
-        sendKeyEvent(keyEvent.getAction());
+        sendKeyEvent(keyEvent.getAction(), keyEvent.getDownTime());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchKeyEvent(keyEvent);
         }
@@ -64,7 +64,7 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent motionEvent) {
-        sendTouchEvent(motionEvent.getAction());
+        sendTouchEvent(motionEvent.getAction(), motionEvent.getDownTime());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchTouchEvent(motionEvent);
         }
