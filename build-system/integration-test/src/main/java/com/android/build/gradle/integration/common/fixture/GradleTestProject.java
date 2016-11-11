@@ -96,7 +96,7 @@ public final class GradleTestProject implements TestRule {
 
     public static final String GRADLE_TEST_VERSION;
     public static final String GRADLE_EXP_TEST_VERSION;
-    public static final String GRADLE_NIGHTLY_VERSION = "3.3-20161020000024+0000";
+    public static final String GRADLE_NIGHTLY_VERSION = "3.3-20161111000054+0000";
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
@@ -108,7 +108,7 @@ public final class GradleTestProject implements TestRule {
 
     static {
         boolean useNightly =
-                Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
+                Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
         GRADLE_TEST_VERSION =
                 useNightly ? GRADLE_NIGHTLY_VERSION : BasePlugin.GRADLE_MIN_VERSION.toString();
 

@@ -113,7 +113,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class BasePlugin implements ToolingRegistryProvider {
 
     @VisibleForTesting
-    public static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("2.14.1");
+    public static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("3.1");
 
     private BaseExtension extension;
 
