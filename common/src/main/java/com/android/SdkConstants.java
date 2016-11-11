@@ -1793,6 +1793,27 @@ public final class SdkConstants {
     /** The fully qualified class name of a Button view */
     public static final String FQCN_BUTTON = "android.widget.Button"; //$NON-NLS-1$
 
+    /** The fully qualified class name of a CheckBox view */
+    public static final String FQCN_CHECK_BOX = "android.widget.CheckBox"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a CheckedTextView view */
+    public static final String FQCN_CHECKED_TEXT_VIEW = "android.widget.CheckedTextView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of an ImageButton view */
+    public static final String FQCN_IMAGE_BUTTON = "android.widget.ImageButton"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a RatingBar view */
+    public static final String FQCN_RATING_BAR = "android.widget.RatingBar"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a SeekBar view */
+    public static final String FQCN_SEEK_BAR = "android.widget.SeekBar"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a MultiAutoCompleteTextView view */
+    public static final String FQCN_AUTO_COMPLETE_TEXT_VIEW = "android.widget.AutoCompleteTextView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a MultiAutoCompleteTextView view */
+    public static final String FQCN_MULTI_AUTO_COMPLETE_TEXT_VIEW = "android.widget.MultiAutoCompleteTextView"; //$NON-NLS-1$
+
     /** The fully qualified class name of a RadioButton view */
     public static final String FQCN_RADIO_BUTTON = "android.widget.RadioButton"; //$NON-NLS-1$
 
