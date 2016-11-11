@@ -1048,18 +1048,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     protected boolean isEnabled(Issue issue) {
-        Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
-        if (issue.getImplementation().getDetectorClass() == detectorClass) {
-            return true;
-        }
-
         if (issue == IssueRegistry.LINT_ERROR) {
             return !ignoreSystemErrors();
         } else if (issue == IssueRegistry.PARSER_ERROR) {
             return !allowCompilationErrors();
+        } else {
+            return getIssues().contains(issue);
         }
-
-        return false;
     }
 
     protected boolean includeParentPath() {
