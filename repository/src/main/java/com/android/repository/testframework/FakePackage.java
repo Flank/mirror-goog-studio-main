@@ -34,10 +34,8 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * A fake {@link RepoPackage} (implementing both {@link LocalPackage} and {@link RemotePackage},
@@ -45,6 +43,7 @@ import java.util.Collections;
  */
 @SuppressWarnings("ConstantConditions")
 public class FakePackage implements LocalPackage, RemotePackage {
+
     private final String mPath;
     private Revision mVersion = new Revision(1);
     private Collection<Dependency> mDependencies = ImmutableList.of();
@@ -54,6 +53,7 @@ public class FakePackage implements LocalPackage, RemotePackage {
     private String mDisplayName = "fake package";
     private License mLicense;
     private boolean mObsolete;
+    private File myLocation;
 
     public FakePackage(@NonNull String path) {
         mPath = path;
@@ -186,11 +186,12 @@ public class FakePackage implements LocalPackage, RemotePackage {
     @NonNull
     @Override
     public File getLocation() {
-        return null;
+        return myLocation;
     }
 
     @Override
     public void setInstalledPath(@NonNull File root) {
+        myLocation = root;
     }
 
     @Override

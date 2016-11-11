@@ -45,6 +45,9 @@ public class SdkInstallListenerFactory implements InstallerFactory.StatusChangeL
         if (p.getTypeDetails() instanceof DetailsTypes.MavenType) {
             result.add(new MavenInstallListener(mSdkHandler));
         }
+        if (p.getTypeDetails() instanceof DetailsTypes.SourceDetailsType) {
+            result.add(new SourceInstallListener(mSdkHandler));
+        }
         return result;
     }
 
