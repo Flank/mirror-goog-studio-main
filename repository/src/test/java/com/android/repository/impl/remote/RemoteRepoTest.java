@@ -16,6 +16,8 @@
 
 package com.android.repository.impl.remote;
 
+import static com.android.repository.testframework.FakePackage.*;
+
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
 import com.android.repository.api.RemotePackage;
@@ -140,7 +142,7 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("legacy");
+                    FakeRemotePackage legacy = new FakeRemotePackage("legacy");
                     legacy.setRevision(new Revision(1, 2, 9));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                     return ImmutableSet.of(legacy);
@@ -171,7 +173,7 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("dummy;foo");
+                    FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
                     legacy.setRevision(new Revision(1, 2, 3));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                     return ImmutableSet.of(legacy);
@@ -271,7 +273,7 @@ public class RemoteRepoTest extends TestCase {
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
                 (source1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
-                    FakePackage legacy = new FakePackage("dummy;foo");
+                    FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
                     legacy.setRevision(new Revision(1, 2, 4));
                     legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                     return ImmutableSet.of(legacy);

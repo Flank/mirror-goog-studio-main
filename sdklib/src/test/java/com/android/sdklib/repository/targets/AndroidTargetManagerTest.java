@@ -30,14 +30,10 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
-import com.android.sdklib.repository.meta.RepoFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link AndroidTargetManager}.
@@ -217,7 +214,7 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(new File("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
 
         Set<IAndroidTarget.OptionalLibrary> desired
-                = Sets.<IAndroidTarget.OptionalLibrary>newHashSet(
+                = Sets.newHashSet(
                 new OptionalLibraryImpl("com.google.android.maps",
                                         new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"), "",
                                         false),
@@ -755,13 +752,13 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(target19, targetMgr.getTargetFromPackage(real2, progress));
     }
 
-    private static class FakePlatformPackage extends FakePackage {
+    private static class FakePlatformPackage extends FakePackage.FakeLocalPackage {
         private final DetailsTypes.PlatformDetailsType mDetails;
         private final File mLocation;
 
         public FakePlatformPackage(@NonNull String path, @NonNull File location, int apiLevel) {
             super(path);
-            mDetails = ((RepoFactory)AndroidSdkHandler.getRepositoryModule().createLatestFactory())
+            mDetails = AndroidSdkHandler.getRepositoryModule().createLatestFactory()
                     .createPlatformDetailsType();
             mDetails.setApiLevel(apiLevel);
             mLocation = location;

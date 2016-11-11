@@ -360,7 +360,7 @@ public abstract class Archive {
         /**
          * Sets the source revision for this patch.
          */
-        protected void setBasedOn(@NonNull RevisionType revision) {
+        public void setBasedOn(@NonNull RevisionType revision) {
             // Stub
         }
     }

@@ -31,7 +31,6 @@ import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDownloader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeSettingsController;

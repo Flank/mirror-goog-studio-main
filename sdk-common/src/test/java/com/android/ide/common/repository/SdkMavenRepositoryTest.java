@@ -28,13 +28,11 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 public class SdkMavenRepositoryTest extends TestCase {
     private static final File SDK_HOME = new File("/sdk");
@@ -59,12 +57,13 @@ public class SdkMavenRepositoryTest extends TestCase {
         String path = String.format("extras;%s;m2repository", vendor);
         // Create and add the package
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
-        FakePackage pkg = new FakePackage(path);
+        LocalPackage pkg = new FakePackage.FakeLocalPackage(path);
         existing.put(path, pkg);
         mRepositoryPackages.setLocalPkgInfos(existing);
         // SdkMavenRepo requires that the path exists.
         ProgressIndicator progress = new FakeProgressIndicator();
-        mFileOp.mkdirs(pkg.getInstallDir(mSdkHandler.getSdkManager(progress), progress));
+        mFileOp.mkdirs(new FakePackage.FakeRemotePackage(path)
+                .getInstallDir(mSdkHandler.getSdkManager(progress), progress));
     }
 
     private void registerAndroidRepo() {
@@ -182,12 +181,12 @@ public class SdkMavenRepositoryTest extends TestCase {
     }
 
     public void testFindBestPackage() {
-        FakePackage r1 = new FakePackage("extras;m2repository;group;artifact;1");
-        FakePackage r123 = new FakePackage("extras;m2repository;group;artifact;1.2.3");
-        FakePackage r2 = new FakePackage("extras;m2repository;group;artifact;2");
-        FakePackage r211 = new FakePackage("extras;m2repository;group;artifact;2.1.1");
-        FakePackage bogus = new FakePackage("foo;group;artifact;2.1.2");
-        FakePackage other = new FakePackage("extras;m2repository;group2;artifact;2.1.3");
+        RepoPackage r1 = new FakePackage.FakeRemotePackage("extras;m2repository;group;artifact;1");
+        RepoPackage r123 = new FakePackage.FakeRemotePackage("extras;m2repository;group;artifact;1.2.3");
+        RepoPackage r2 = new FakePackage.FakeRemotePackage("extras;m2repository;group;artifact;2");
+        RepoPackage r211 = new FakePackage.FakeRemotePackage("extras;m2repository;group;artifact;2.1.1");
+        RepoPackage bogus = new FakePackage.FakeRemotePackage("foo;group;artifact;2.1.2");
+        RepoPackage other = new FakePackage.FakeRemotePackage("extras;m2repository;group2;artifact;2.1.3");
         List<RepoPackage> packages = ImmutableList.of(r1, r123, r2, r211, bogus, other);
 
         GradleCoordinate pattern = new GradleCoordinate("group", "artifact", 1);

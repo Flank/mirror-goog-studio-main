@@ -16,6 +16,7 @@
 
 package com.android.sdklib.tool;
 
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -33,7 +34,6 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
@@ -102,18 +102,18 @@ public class SdkManagerCliTest {
         Path root = mFileSystem.getPath(SDK_LOCATION);
         ProgressIndicator progress = new FakeProgressIndicator();
         Files.createDirectories(root);
-        FakePackage installed = new FakePackage("test;p1");
+        FakeRemotePackage installed = new FakeRemotePackage("test;p1");
         installed.setDisplayName("package 1");
         Path p1Path = root.resolve("test/p1");
         Files.createDirectories(p1Path);
         InstallerUtil.writePackageXml(installed, new File(p1Path.toString()), repoManager, mFileOp,
                 progress);
-        installed = new FakePackage("upgrade");
+        installed = new FakeRemotePackage("upgrade");
         installed.setDisplayName("upgrade v1");
         Files.createDirectories(root.resolve("upgrade"));
         InstallerUtil.writePackageXml(installed, new File(SDK_LOCATION, "upgrade"), repoManager,
                 mFileOp, progress);
-        installed = new FakePackage("obsolete");
+        installed = new FakeRemotePackage("obsolete");
         installed.setDisplayName("obsolete local");
         installed.setObsolete(true);
         Files.createDirectories(root.resolve("obsolete"));
@@ -128,19 +128,19 @@ public class SdkManagerCliTest {
         License license2 = factory.createLicenseType("my license 2", "lic2");
 
         Map<String, RemotePackage> remotes = new HashMap<>();
-        FakePackage remote1 = new FakePackage("test;remote1");
+        FakeRemotePackage remote1 = new FakeRemotePackage("test;remote1");
         remote1.setLicense(license);
         String archiveUrl = "http://www.example.com/package1";
         remote1.setCompleteUrl(archiveUrl);
         remotes.put(remote1.getPath(), remote1);
 
-        FakePackage upgrade = new FakePackage("upgrade");
+        FakeRemotePackage upgrade = new FakeRemotePackage("upgrade");
         upgrade.setRevision(new Revision(2));
         upgrade.setDisplayName("upgrade v2");
         upgrade.setCompleteUrl(archiveUrl);
         remotes.put(upgrade.getPath(), upgrade);
 
-        FakePackage obsoleteRemote = new FakePackage("obsolete");
+        FakeRemotePackage obsoleteRemote = new FakeRemotePackage("obsolete");
         obsoleteRemote.setRevision(new Revision(2));
         obsoleteRemote.setDisplayName("obsolete package");
         obsoleteRemote.setLicense(license2);
@@ -148,13 +148,13 @@ public class SdkManagerCliTest {
         obsoleteRemote.setCompleteUrl(archiveUrl);
         remotes.put(obsoleteRemote.getPath(), obsoleteRemote);
 
-        FakePackage dependsOn = new FakePackage("depends_on");
+        FakeRemotePackage dependsOn = new FakeRemotePackage("depends_on");
         dependsOn.setLicense(license);
         dependsOn.setDependencies(Collections.singletonList(new FakeDependency("depended_on")));
         dependsOn.setCompleteUrl(archiveUrl);
         remotes.put(dependsOn.getPath(), dependsOn);
 
-        FakePackage dependedOn = new FakePackage("depended_on");
+        FakeRemotePackage dependedOn = new FakeRemotePackage("depended_on");
         dependedOn.setLicense(license2);
         dependedOn.setCompleteUrl(archiveUrl);
         remotes.put(dependedOn.getPath(), dependedOn);

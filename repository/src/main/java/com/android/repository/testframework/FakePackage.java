@@ -38,62 +38,156 @@ import java.io.File;
 import java.util.Collection;
 
 /**
- * A fake {@link RepoPackage} (implementing both {@link LocalPackage} and {@link RemotePackage},
- * for use in unit tests.
+ * A fake {@link RepoPackage} for use in unit tests, that contains some behavior (e.g. around
+ * {@link FakeRemotePackage.FakeArchive}) to make it a little easier to work with in some situations
+ * than a plain mock would be.
+ *
+ * Probably you want {@link FakeLocalPackage} or {@link FakeRemotePackage}.
  */
 @SuppressWarnings("ConstantConditions")
-public class FakePackage implements LocalPackage, RemotePackage {
+public abstract class FakePackage {
+    /**
+     * A fake {@link LocalPackage} for use in unit tests.
+     */
+    public static class FakeLocalPackage extends FakePackage implements LocalPackage {
+        private File mLocation;
+
+        @Override
+        @NonNull
+        public File getLocation() {
+            return mLocation;
+        }
+
+        @Override
+        public void setInstalledPath(@NonNull File root) {
+            mLocation = root;
+        }
+
+        public FakeLocalPackage(@NonNull String path) {
+            super(path);
+        }
+
+        @Override
+        public int compareTo(@NonNull RepoPackage other) {
+            return super.compareTo(other);
+        }
+    }
+
+    /**
+     * A fake {@link RemotePackage} for use in unit tests.
+     */
+    public static class FakeRemotePackage extends FakePackage implements RemotePackage {
+        private FakeArchive mArchive = new FakeArchive();
+        private Channel mChannel;
+
+        public FakeRemotePackage(@NonNull String path) {
+            super(path);
+        }
+
+        public void setCompleteUrl(String url) {
+            mArchive.setCompleteUrl(url);
+        }
+
+        public void setPatchInfo(String url, Revision src) {
+            mArchive.setPatchInfo(url, src);
+        }
+
+        @Override
+        @Nullable
+        public Archive getArchive() {
+            return mArchive;
+        }
+
+        @Override
+        @NonNull
+        public RepositorySource getSource() {
+            return null;
+        }
+
+        public void setChannel(Channel channel) {
+            mChannel = channel;
+        }
+
+        @Override
+        public void setSource(@NonNull RepositorySource source) {
+        }
+
+        @Override
+        @NonNull
+        public File getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
+            return new File(manager.getLocalPath(),
+                    getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar));
+        }
+
+        @Override
+        @NonNull
+        public Channel getChannel() {
+            return mChannel == null ? Channel.DEFAULT : mChannel;
+        }
+
+        @Override
+        public int compareTo(@NonNull RepoPackage other) {
+            return super.compareTo(other);
+        }
+
+        private static class FakeArchive extends Archive {
+
+            private String mCompleteUrl;
+            private String mPatchUrl;
+            private Revision mPatchSrc;
+
+            public void setCompleteUrl(String url) {
+                mCompleteUrl = url;
+            }
+
+            public void setPatchInfo(String url, Revision src) {
+                mPatchUrl = url;
+                mPatchSrc = src;
+            }
+
+            @NonNull
+            @Override
+            public CompleteType getComplete() {
+                if (mCompleteUrl != null) {
+                    CompleteType result = createFactory().createCompleteType();
+                    result.setUrl(mCompleteUrl);
+                    return result;
+                }
+                return null;
+            }
+
+            @Nullable
+            @Override
+            protected PatchesType getPatches() {
+                if (mPatchUrl != null) {
+                    PatchType patch = createFactory().createPatchType();
+                    patch.setBasedOn(createFactory().createRevisionType(mPatchSrc));
+                    patch.setUrl(mPatchUrl);
+                    PatchesType result = createFactory().createPatchesType();
+                    result.getPatch().add(patch);
+                    return result;
+                }
+                return null;
+            }
+
+            @NonNull
+            @Override
+            public CommonFactory createFactory() {
+                return RepoManager.getCommonModule().createLatestFactory();
+            }
+        }
+    }
 
     private final String mPath;
     private Revision mVersion = new Revision(1);
     private Collection<Dependency> mDependencies = ImmutableList.of();
     private TypeDetails mDetails;
-    private Channel mChannel;
-    private Archive mArchive;
     private String mDisplayName = "fake package";
     private License mLicense;
     private boolean mObsolete;
-    private File myLocation;
 
     public FakePackage(@NonNull String path) {
         mPath = path;
-    }
-
-    @NonNull
-    @Override
-    public RepositorySource getSource() {
-        return null;
-    }
-
-    @Override
-    public void setSource(@NonNull RepositorySource source) {
-    }
-
-    @Nullable
-    @Override
-    public Archive getArchive() {
-        return mArchive;
-    }
-
-    public void setCompleteUrl(String url) {
-        mArchive = new FakeArchive(url);
-    }
-
-    public void setChannel(Channel channel) {
-        mChannel = channel;
-    }
-
-    @NonNull
-    @Override
-    public Channel getChannel() {
-        return mChannel == null ? Channel.DEFAULT : mChannel;
-    }
-
-    @NonNull
-    @Override
-    public File getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
-        return new File(manager.getLocalPath(),
-                getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar));
     }
 
     public void setTypeDetails(TypeDetails details) {
@@ -101,20 +195,17 @@ public class FakePackage implements LocalPackage, RemotePackage {
     }
 
     @NonNull
-    @Override
     public TypeDetails getTypeDetails() {
         return mDetails == null ? (TypeDetails) RepoManager.getGenericModule()
                 .createLatestFactory().createGenericDetailsType() : mDetails;
     }
 
     @NonNull
-    @Override
     public Revision getVersion() {
         return mVersion;
     }
 
     @NonNull
-    @Override
     public String getDisplayName() {
         return mDisplayName;
     }
@@ -124,7 +215,6 @@ public class FakePackage implements LocalPackage, RemotePackage {
     }
 
     @Nullable
-    @Override
     public License getLicense() {
         return mLicense;
     }
@@ -134,18 +224,15 @@ public class FakePackage implements LocalPackage, RemotePackage {
     }
 
     @NonNull
-    @Override
     public Collection<Dependency> getAllDependencies() {
         return mDependencies;
     }
 
     @NonNull
-    @Override
     public String getPath() {
         return mPath;
     }
 
-    @Override
     public boolean obsolete() {
         return mObsolete;
     }
@@ -155,19 +242,20 @@ public class FakePackage implements LocalPackage, RemotePackage {
     }
 
     @NonNull
-    @Override
     public CommonFactory createFactory() {
-        return null;
+        return RepoManager.getCommonModule().createLatestFactory();
     }
 
     @NonNull
-    @Override
     public RepoPackageImpl asMarshallable() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
+    @SuppressWarnings("CovariantCompareTo")
     public int compareTo(@NonNull RepoPackage o) {
+        if (this instanceof LocalPackage != o instanceof LocalPackage) {
+            return this instanceof LocalPackage ? 1 : -1;
+        }
         return ComparisonChain.start().compare(getPath(), o.getPath())
                 .compare(getVersion(), o.getVersion()).result();
     }
@@ -183,17 +271,6 @@ public class FakePackage implements LocalPackage, RemotePackage {
         return Objects.hashCode(getPath(), getVersion());
     }
 
-    @NonNull
-    @Override
-    public File getLocation() {
-        return myLocation;
-    }
-
-    @Override
-    public void setInstalledPath(@NonNull File root) {
-        myLocation = root;
-    }
-
     @Override
     public String toString() {
         return mPath;
@@ -207,41 +284,4 @@ public class FakePackage implements LocalPackage, RemotePackage {
         mVersion = revision;
     }
 
-    private static class FakeArchive extends Archive {
-
-        private String mCompleteUrl;
-
-        public FakeArchive(String url) {
-            mCompleteUrl = url;
-        }
-
-        @NonNull
-        @Override
-        public CompleteType getComplete() {
-            return new CompleteType() {
-                @NonNull
-                @Override
-                public String getChecksum() {
-                    return null;
-                }
-
-                @NonNull
-                @Override
-                public String getUrl() {
-                    return mCompleteUrl;
-                }
-
-                @Override
-                public long getSize() {
-                    return 0;
-                }
-            };
-        }
-
-        @NonNull
-        @Override
-        public CommonFactory createFactory() {
-            return null;
-        }
-    }
 }

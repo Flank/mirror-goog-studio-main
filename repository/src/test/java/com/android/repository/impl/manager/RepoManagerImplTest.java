@@ -16,6 +16,9 @@
 
 package com.android.repository.impl.manager;
 
+import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
+
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
@@ -28,16 +31,11 @@ import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +43,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link RepoManagerImpl}.
@@ -302,11 +302,11 @@ public class RepoManagerImplTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         final Map<String, LocalPackage> localPackages = new HashMap<>();
         FakeLoader<LocalPackage> localLoader = new FakeLoader<>(localPackages);
-        localPackages.put("foo", new FakePackage("foo"));
+        localPackages.put("foo", new FakeLocalPackage("foo"));
 
         final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
         FakeLoader<RemotePackage> remoteLoader = new FakeLoader<>(remotePackages);
-        FakePackage remote = new FakePackage("foo");
+        FakeRemotePackage remote = new FakeRemotePackage("foo");
         remote.setRevision(new Revision(2));
         remotePackages.put("foo", remote);
 
@@ -337,13 +337,13 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakePackage("bar"));
+        localPackages.put("bar", new FakeLocalPackage("bar"));
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());
 
         // update remote and ensure the remote listener fired
-        remotePackages.put("baz", new FakePackage("baz"));
+        remotePackages.put("baz", new FakeRemotePackage("baz"));
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         assertFalse(localRan.get());
         assertTrue(remoteRan.compareAndSet(true, false));
