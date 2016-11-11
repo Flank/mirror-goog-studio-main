@@ -119,7 +119,7 @@ tasks.withType(Javadoc) {
 }
 
 // Only package JavaDoc if using --init-script=buildSrc/base/release.gradle
-if (project.has("release")) {
+if (project.hasProperty("release")) {
     artifacts {
         archives javadocJar
     }

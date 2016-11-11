@@ -7,7 +7,7 @@ apply plugin: 'idea'
 apply plugin: 'jacoco-tools-base'
 
 // Extract gradle libraries to ensure gradle-core is compatible with older version.
-String gradleVersion = "2.14.1"
+String gradleVersion = "3.1"
 File gradleBinary = file("$rootProject.projectDir/external/gradle/gradle-$gradleVersion-bin.zip")
 File gradleLib = file("$rootProject.ext.androidHostOut/alternate-gradle/gradle-$gradleVersion/lib")
 
@@ -79,7 +79,7 @@ tasks.withType(Javadoc) {
 }
 
 // Only package JavaDoc if using --init-script=buildSrc/base/release.gradle
-if (project.has("release")) {
+if (project.hasProperty("release")) {
   artifacts {
     archives javadocJar
   }
