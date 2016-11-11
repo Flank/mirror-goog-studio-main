@@ -60,7 +60,7 @@ struct ConnectionDetails final {
 
     // Key/value pairs sent with this response
     // Available when |end_timestamp| is non-zero.
-    std::string fields;  // TODO: Populate this
+    std::string fields;
 
     // An absolute path to a file on the device containing the contents of this
     // response's body, if any (or empty string otherwise).

@@ -21,6 +21,7 @@ service InternalNetworkService {
   rpc RegisterHttpData(HttpDataRequest) returns (EmptyNetworkReply) {}
   rpc SendChunk(ChunkRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpEvent(HttpEventRequest) returns (EmptyNetworkReply) {}
+  rpc SendHttpResponse(HttpResponseRequest) returns (EmptyNetworkReply) {}
 }
 
 // HTTP request registration data, used to communicate with perfd that a new
@@ -64,6 +65,14 @@ message HttpEventRequest {
   int64 conn_id = 1;
   int64 timestamp = 2;
   Event event = 3;
+}
+
+// Response data of HTTP connection.
+message HttpResponseRequest {
+  int64 conn_id = 1;
+  // Header fields associated with this response. See also:
+  // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Response_fields.
+  string fields = 2;
 }
 
 message EmptyNetworkReply {}
