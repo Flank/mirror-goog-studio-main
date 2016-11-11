@@ -132,11 +132,8 @@ public class XmlReporter extends Reporter {
 
                 if (!isIntendedForBaseline() &&
                         client.getRegistry() instanceof BuiltinIssueRegistry) {
-                    boolean adt = QuickfixHandler.ADT.hasAutoFix(issue);
-                    boolean studio = QuickfixHandler.STUDIO.hasAutoFix(issue);
-                    if (adt || studio) {
-                        String value = adt && studio ? "studio,adt" : studio ? "studio" : "adt";
-                        writeAttribute(writer, 2, "quickfix", value);
+                    if (hasAutoFix(issue)) {
+                        writeAttribute(writer, 2, "quickfix", "studio");
                     }
                 }
 
