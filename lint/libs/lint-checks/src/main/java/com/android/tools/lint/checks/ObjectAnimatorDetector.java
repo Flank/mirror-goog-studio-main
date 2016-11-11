@@ -396,7 +396,7 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
             report(context, MISSING_KEEP, propertyNameExpression, bestMethod, ""
                   // Keep in sync with isAddKeepErrorMessage below
                   + "This method is accessed from an ObjectAnimator so it should be "
-                  + "annotated with `@Keep` to ensure that it is discarded or "
+                  + "annotated with `@Keep` to ensure that it is not discarded or "
                   + "renamed in release builds");
         }
     }
