@@ -559,8 +559,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Project project = context.getProject();
         Variant variant = project.getCurrentVariant();
         if (variant != null) {
-            Dependencies dependencies = getCompileDependencies(variant.getMainArtifact(),
-                    project.getGradleModelVersion());
+            // getCompileDependencies was added in builder model 2.2; in older versions, just
+            // use getDependencies
+            Dependencies dependencies = variant.getMainArtifact().getDependencies();
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 MavenCoordinates mc = library.getResolvedCoordinates();
                 // Even though the method is annotated as non-null, this code can run
@@ -1627,16 +1628,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         AndroidArtifact artifact = variant.getMainArtifact();
         GradleVersion version = project.getGradleModelVersion();
-        return getCompileDependencies(artifact, version);
-    }
-
-    @NonNull
-    public static Dependencies getCompileDependencies(
-            @NonNull AndroidArtifact artifact,
-            @Nullable GradleVersion version) {
         // getCompileDependencies was added in builder model 2.2; in older versions, just
         // use getDependencies
-        Dependencies compileDependencies = artifact.getDependencies();
-        return compileDependencies;
+        return artifact.getDependencies();
     }
 }
