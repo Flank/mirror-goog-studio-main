@@ -170,7 +170,6 @@ public abstract class LintInspectionBridge {
         return null;
     }
 
-    @NotNull
     @NonNull
     public abstract JavaEvaluator getEvaluator();
 

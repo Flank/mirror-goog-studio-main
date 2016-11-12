@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint;
+package com.android.tools.lint.checks.infrastructure;
 
-import com.android.testutils.JarTestSuiteRunner;
-import com.android.tools.lint.checks.UnpackedNativeCodeDetectorTest;
-import com.android.tools.lint.client.api.CustomRuleTest;
-import org.junit.runner.RunWith;
+import java.io.InputStream;
 
-/**
- * Suite used to run lint tests with Bazel. Skips tests that are known to fail under Bazel for now.
- */
-@RunWith(JarTestSuiteRunner.class)
-@JarTestSuiteRunner.ExcludeClasses({
-        LintBazelSuite.class,
-        CustomRuleTest.class,
-        UnpackedNativeCodeDetectorTest.class,
-})
-public class LintBazelSuite {}
-
+public interface TestResourceProvider {
+    InputStream getTestResource(String relativePath, boolean expectExists);
+}

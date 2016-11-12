@@ -1,9 +1,11 @@
 java_library(
     name = "lint-tests",
-    srcs = glob(["src/main/java/**"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",
@@ -16,14 +18,14 @@ java_library(
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm",
     ],
 )
 
-# TODO: Remove the list of excluded tests from LintBazelSuite.
 java_test(
     name = "tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = glob(["src/test/java/**/*.java"]),
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -31,9 +33,10 @@ java_test(
         "//tools/base/files/typos",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    test_class = "com.android.tools.lint.LintBazelSuite",
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",
+        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
         "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
@@ -53,7 +56,6 @@ java_test(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
-        "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
 )

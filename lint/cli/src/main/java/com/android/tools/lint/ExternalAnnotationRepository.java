@@ -212,9 +212,17 @@ public class ExternalAnnotationRepository {
         //  https://android-review.googlesource.com/#/c/137750/
         // Switch over to this when it's in more common usage
         // (until it is, we'll pay for failed proxying errors)
-        File zip = new File(library.getResFolder().getParent(), FN_ANNOTATIONS_ZIP);
-        if (zip.exists()) {
-            result.add(zip);
+        try {
+            File zip = library.getExternalAnnotations();
+            if (zip.exists()) {
+                result.add(zip);
+            }
+        } catch (Throwable ignore) {
+            // Using some older version than 1.2
+            File zip = new File(library.getResFolder().getParent(), FN_ANNOTATIONS_ZIP);
+            if (zip.exists()) {
+                result.add(zip);
+            }
         }
 
         for (AndroidLibrary dependency : library.getLibraryDependencies()) {

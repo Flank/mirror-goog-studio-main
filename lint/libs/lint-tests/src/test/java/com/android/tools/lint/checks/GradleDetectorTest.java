@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
 import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.tools.lint.checks.GradleDetector.ACCIDENTAL_OCTAL;
+import static com.android.tools.lint.checks.GradleDetector.BUNDLED_GMS;
 import static com.android.tools.lint.checks.GradleDetector.COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.DEPENDENCY;
 import static com.android.tools.lint.checks.GradleDetector.DEPRECATED;
@@ -35,38 +36,29 @@ import static com.android.tools.lint.checks.GradleDetector.getNewValue;
 import static com.android.tools.lint.checks.GradleDetector.getOldValue;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.Variant;
-import com.android.ide.common.repository.GradleCoordinate;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +88,7 @@ import org.junit.Assert;
  */
 public class GradleDetectorTest extends AbstractCheckTest {
 
-    private File mSdkDir;
+    private File sdkDir;
 
     @Override
     protected void setUp() throws Exception {
@@ -107,18 +99,26 @@ public class GradleDetectorTest extends AbstractCheckTest {
     protected void tearDown() throws Exception {
         super.tearDown();
 
-        if (mSdkDir != null) {
-            deleteFile(mSdkDir);
-            mSdkDir = null;
+        if (sdkDir != null) {
+            deleteFile(sdkDir);
+            sdkDir = null;
         }
+    }
+
+    @Override
+    @NonNull
+    protected TestLintTask lint() {
+        TestLintTask task = super.lint();
+        task.sdkHome(getMockSupportLibraryInstallation());
+        return task;
     }
 
     /** Creates a mock SDK installation structure, containing a fixed set of dependencies */
     private File getMockSupportLibraryInstallation() {
-        if (mSdkDir == null) {
+        if (sdkDir == null) {
             // Make fake SDK "installation" such that we can predict the set
             // of Maven repositories discovered by this test
-            mSdkDir = TestUtils.createTempDirDeletedOnExit();
+            sdkDir = TestUtils.createTempDirDeletedOnExit();
 
             String[] paths = new String[]{
                     // Android repository
@@ -166,10 +166,10 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     "build-tools/23.0.3/aapt"
             };
 
-            createSdkPaths(mSdkDir, paths);
+            createSdkPaths(sdkDir, paths);
         }
 
-        return mSdkDir;
+        return sdkDir;
     }
 
     public static void createSdkPaths(File sdkDir, String[] paths) {
@@ -239,8 +239,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        mEnabled = Sets.newHashSet(COMPATIBILITY, DEPRECATED, DEPENDENCY, PLUS);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -268,112 +267,130 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 8 warnings\n",
+                + "1 errors, 8 warnings\n";
 
-            lintProject(mDependencies));
+        lint().files(
+                mDependencies)
+                .issues(COMPATIBILITY, DEPRECATED, DEPENDENCY, PLUS)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testCompatibility() throws Exception {
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:16: Error: This support library should not use a lower version (18) than the targetSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:support-v4:18.0.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 18\n"
-                            + "    buildToolsVersion \"19.0.0\"\n"
-                            + "\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion 7\n"
-                            + "        targetSdkVersion 19\n"
-                            + "        versionCode 1\n"
-                            + "        versionName \"1.0\"\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.android.support:support-v4:18.0.0'\n"
-                            + "    compile 'com.android.support.test:espresso:0.2'\n"
-                            + "    compile 'com.android.support:multidex:1.0.1'\n"
-                            + "    compile 'com.android.support:multidex-instrumentation:1.0.1'\n"
-                            + "\n"
-                            + "    // Suppressed:\n"
-                            + "    //noinspection GradleCompatible\n"
-                            + "    compile 'com.android.support:support-v4:18.0.0'\n"
-                            + "}\n")));
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 18\n"
+                        + "    buildToolsVersion \"19.0.0\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 7\n"
+                        + "        targetSdkVersion 19\n"
+                        + "        versionCode 1\n"
+                        + "        versionName \"1.0\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:support-v4:18.0.0'\n"
+                        + "    compile 'com.android.support.test:espresso:0.2'\n"
+                        + "    compile 'com.android.support:multidex:1.0.1'\n"
+                        + "    compile 'com.android.support:multidex-instrumentation:1.0.1'\n"
+                        + "\n"
+                        + "    // Suppressed:\n"
+                        + "    //noinspection GradleCompatible\n"
+                        + "    compile 'com.android.support:support-v4:18.0.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testIncompatiblePlugin() throws Exception {
-        mEnabled = Collections.singleton(GRADLE_PLUGIN_COMPATIBILITY);
-        //noinspection all // Sample code
-        assertEquals(""
-                + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is " + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
+        String expected = ""
+                + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is "
+                + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is "
+                + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
                 + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "buildscript {\n"
-                            + "  repositories {\n"
-                            + "    mavenCentral()\n"
-                            + "  }\n"
-                            + "  dependencies {\n"
-                            + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
-                            + "  }\n"
-                            + "}\n"
-                            + "\n"
-                            + "allprojects {\n"
-                            + "  repositories {\n"
-                            + "    mavenCentral()\n"
-                            + "  }\n"
-                            + "}\n")));
+        lint().files(
+                gradle(""
+                        + "buildscript {\n"
+                        + "  repositories {\n"
+                        + "    mavenCentral()\n"
+                        + "  }\n"
+                        + "  dependencies {\n"
+                        + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"
+                        + "allprojects {\n"
+                        + "  repositories {\n"
+                        + "    mavenCentral()\n"
+                        + "  }\n"
+                        + "}\n"))
+                .issues(GRADLE_PLUGIN_COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
+
     }
 
     public void testSetter() throws Exception {
-        mEnabled = Collections.singleton(GRADLE_GETTER);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:18: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
                 + "        versionCode getVersionCode\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:19: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
                 + "        versionName getVersionName\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "2 errors, 0 warnings\n",
+                + "2 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "def getVersionName() {\n"
-                            + "    \"1.0\"\n"
-                            + "}\n"
-                            + "\n"
-                            + "def getVersionCode() {\n"
-                            + "    50\n"
-                            + "}\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 19\n"
-                            + "    buildToolsVersion \"19.0.0\"\n"
-                            + "\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion 7\n"
-                            + "        targetSdkVersion 17\n"
-                            + "        versionCode getVersionCode\n"
-                            + "        versionName getVersionName\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "def getVersionName() {\n"
+                        + "    \"1.0\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "def getVersionCode() {\n"
+                        + "    50\n"
+                        + "}\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "    buildToolsVersion \"19.0.0\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 7\n"
+                        + "        targetSdkVersion 17\n"
+                        + "        versionCode getVersionCode\n"
+                        + "        versionName getVersionName\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(GRADLE_GETTER)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .ignoreUnknownGradleConstructs()
+                .run()
+                .expect(expected);
     }
 
     public void testDependencies() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -392,180 +409,212 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n"
                 + "    androidTestCompile 'com.android.support.test:runner:0.3'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
+                + "0 errors, 6 warnings\n";
 
-                lintProject(mDependencies));
+        lint().files(
+                mDependencies)
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testLongHandDependencies() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:9: Warning: A newer version of com.android.support:support-v4 than 19.0 is available: 21.0.2 [GradleDependency]\n"
                 + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 19\n"
-                            + "    buildToolsVersion \"19.1\"\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "    buildToolsVersion \"19.1\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
+
     }
 
     public void testDependenciesMinSdkVersion() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 19\n"
-                            + "\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion 15\n"
-                            + "        targetSdkVersion 17\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.android.support:appcompat-v7:+'\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 17\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:+'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testDependenciesMinSdkVersionLollipop() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 21\n"
-                            + "\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion 15\n"
-                            + "        targetSdkVersion 17\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.android.support:appcompat-v7:+'\n"
-                            + "}\n")));
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 21\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 17\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:+'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
     }
 
     public void testDependenciesNoMicroVersion() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=77594
-        mEnabled = Collections.singleton(DEPENDENCY);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.7 [GradleDependency]\n"
                 + "    compile 'com.google.code.gson:gson:2.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 19\n"
-                            + "\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion 15\n"
-                            + "        targetSdkVersion 17\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.google.code.gson:gson:2.2'\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 17\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.code.gson:gson:2.2'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testPaths() throws Exception {
-        mEnabled = Collections.singleton(PATH);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n"
                 + "    compile files('my\\\\libs\\\\http.jar')\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:5: Warning: Avoid using absolute paths in .gradle files [GradlePath]\n"
                 + "    compile files('/libs/android-support-v4.jar')\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                + "0 errors, 2 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile files('my\\\\libs\\\\http.jar')\n"
-                            + "    compile files('/libs/android-support-v4.jar')\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile files('my\\\\libs\\\\http.jar')\n"
+                        + "    compile files('/libs/android-support-v4.jar')\n"
+                        + "}\n"))
+                .issues(PATH)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .ignoreUnknownGradleConstructs()
+                .run()
+                .expect(expected);
     }
 
     public void testIdSuffix() throws Exception {
-        mEnabled = Collections.singleton(PATH);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:6: Warning: Application ID suffix should probably start with a \".\" [GradlePath]\n"
                 + "            applicationIdSuffix \"debug\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    buildTypes {\n"
-                            + "        debug {\n"
-                            + "            applicationIdSuffix \"debug\"\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            applicationIdSuffix \"debug\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(PATH)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testPackage() throws Exception {
-        mEnabled = Collections.singleton(DEPRECATED);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:5: Warning: Deprecated: Replace 'packageName' with 'applicationId' [GradleDeprecated]\n"
                 + "        packageName 'my.pkg'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:9: Warning: Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix' [GradleDeprecated]\n"
                 + "            packageNameSuffix \".debug\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                + "0 errors, 2 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    defaultConfig {\n"
-                            + "        packageName 'my.pkg'\n"
-                            + "    }\n"
-                            + "    buildTypes {\n"
-                            + "        debug {\n"
-                            + "            packageNameSuffix \".debug\"\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        packageName 'my.pkg'\n"
+                        + "    }\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            packageNameSuffix \".debug\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(DEPRECATED)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testPlus() throws Exception {
-        mEnabled = Collections.singleton(PLUS);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:9: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -575,28 +624,32 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:11: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+@aar) [GradleDynamicVersion]\n"
                 + "    compile 'com.android.support:appcompat-v7:+@aar'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 3 warnings\n",
+                + "0 errors, 3 warnings\n";
 
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "    buildToolsVersion \"19.0.1\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:+'\n"
+                        + "    compile group: 'com.android.support', name: 'support-v4', version: '21.0.+'\n"
+                        + "    compile 'com.android.support:appcompat-v7:+@aar'\n"
+                        + "}\n"))
+                .issues(PLUS)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 19\n"
-                            + "    buildToolsVersion \"19.0.1\"\n"
-                            + "}\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.android.support:appcompat-v7:+'\n"
-                            + "    compile group: 'com.android.support', name: 'support-v4', version: '21.0.+'\n"
-                            + "    compile 'com.android.support:appcompat-v7:+@aar'\n"
-                            + "}\n")));
     }
 
     public void testStringInt() throws Exception {
-        mEnabled = Collections.singleton(STRING_INTEGER);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:4: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n"
                 + "    compileSdkVersion '19'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -606,120 +659,142 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:8: Error: Use an integer rather than a string here (replace '16' with just 16) [StringShouldBeInt]\n"
                 + "        targetSdkVersion '16'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~\n"
-                + "3 errors, 0 warnings\n",
+                + "3 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion '19'\n"
-                            + "    buildToolsVersion \"19.0.1\"\n"
-                            + "    defaultConfig {\n"
-                            + "        minSdkVersion '8'\n"
-                            + "        targetSdkVersion '16'\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion '19'\n"
+                        + "    buildToolsVersion \"19.0.1\"\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion '8'\n"
+                        + "        targetSdkVersion '16'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(STRING_INTEGER)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testSuppressLine2() throws Exception {
-        mEnabled = null;
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-
-                lintProject(source("build.gradle", ""
-                            + "//noinspection GradleDeprecated\n"
-                            + "apply plugin: 'android'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "}\n")));
+        lint().files(
+                gradle(""
+                        + "//noinspection GradleDeprecated\n"
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "}\n"))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
     }
 
     public void testDeprecatedPluginId() throws Exception {
-        mEnabled = Sets.newHashSet(DEPRECATED);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:4: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
                 + "apply plugin: 'android'\n"
                 + "~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:5: Warning: 'android-library' is deprecated; use 'com.android.library' instead [GradleDeprecated]\n"
                 + "apply plugin: 'android-library'\n"
                 + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                + "0 errors, 2 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "apply plugin: 'com.android.library'\n"
-                            + "apply plugin: 'java'\n"
-                            + "apply plugin: 'android'\n"
-                            + "apply plugin: 'android-library'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "apply plugin: 'com.android.library'\n"
+                        + "apply plugin: 'java'\n"
+                        + "apply plugin: 'android'\n"
+                        + "apply plugin: 'android-library'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "}\n"))
+                .issues(DEPRECATED)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .ignoreUnknownGradleConstructs()
+                .run()
+                .expect(expected);
     }
 
     public void testIgnoresGStringsInDependencies() throws Exception {
-        mEnabled = null;
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-
-                lintProject(source("build.gradle", ""
-                            + "buildscript {\n"
-                            + "  ext.androidGradleVersion = '0.11.0'\n"
-                            + "  dependencies {\n"
-                            + "    classpath \"com.android.tools.build:gradle:$androidGradleVersion\"\n"
-                            + "  }\n"
-                            + "}\n")));
+        lint().files(
+                gradle(""
+                        + "buildscript {\n"
+                        + "  ext.androidGradleVersion = '0.11.0'\n"
+                        + "  dependencies {\n"
+                        + "    classpath \"com.android.tools.build:gradle:$androidGradleVersion\"\n"
+                        + "  }\n"
+                        + "}\n"))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .ignoreUnknownGradleConstructs()
+                .run()
+                .expectClean();
     }
 
     public void testAccidentalOctal() throws Exception {
-        mEnabled = Collections.singleton(ACCIDENTAL_OCTAL);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:13: Error: The leading 0 turns this number into octal which is probably not what was intended (interpreted as 8) [AccidentalOctal]\n"
                 + "        versionCode 010\n"
                 + "        ~~~~~~~~~~~~~~~\n"
                 + "build.gradle:16: Error: The leading 0 turns this number into octal which is probably not what was intended (and it is not a valid octal number) [AccidentalOctal]\n"
                 + "        versionCode 01 // line suffix comments are not handled correctly\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "2 errors, 0 warnings\n",
+                + "2 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    defaultConfig {\n"
-                            + "        // Ok: not octal\n"
-                            + "        versionCode 1\n"
-                            + "        versionCode 10\n"
-                            + "        versionCode 100\n"
-                            + "        // ok: octal == decimal\n"
-                            + "        versionCode 01\n"
-                            + "\n"
-                            + "        // Errors\n"
-                            + "        versionCode 010\n"
-                            + "\n"
-                            + "        // Lint Groovy Bug:\n"
-                            + "        versionCode 01 // line suffix comments are not handled correctly\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        // Ok: not octal\n"
+                        + "        versionCode 1\n"
+                        + "        versionCode 10\n"
+                        + "        versionCode 100\n"
+                        + "        // ok: octal == decimal\n"
+                        + "        versionCode 01\n"
+                        + "\n"
+                        + "        // Errors\n"
+                        + "        versionCode 010\n"
+                        + "\n"
+                        + "        // Lint Groovy Bug:\n"
+                        + "        versionCode 01 // line suffix comments are not handled correctly\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(ACCIDENTAL_OCTAL)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testBadPlayServicesVersion() throws Exception {
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 6.1.71 instead. [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'android'\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.google.android.gms:play-services:4.4.+'\n"
-                            + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "\n"
+                        + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testRemoteVersions() throws Exception {
@@ -798,233 +873,286 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void testPreviewVersions() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
         // This test only works when SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION contains
         // a preview string:
         if (!GRADLE_PLUGIN_RECOMMENDED_VERSION.startsWith("1.0.0-rc")) {
             return;
         }
-        //noinspection all // Sample code
-        assertEquals(""
-                        + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 1.0.0-rc0 is available: " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradleDependency]\n"
-                        + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
+        String expected = ""
+                + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 1.0.0-rc0 is available: "
+                + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradleDependency]\n"
+                + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
 
-                lintProject(source("build.gradle", ""
-                            + "buildscript {\n"
-                            + "    repositories {\n"
-                            + "        jcenter()\n"
-                            + "    }\n"
-                            + "    dependencies {\n"
-                            + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
-                            + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
-                            + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "\n"
-                            + "allprojects {\n"
-                            + "    repositories {\n"
-                            + "        jcenter()\n"
-                            + "    }\n"
-                            + "}\n")));
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "buildscript {\n"
+                        + "    repositories {\n"
+                        + "        jcenter()\n"
+                        + "    }\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.0.0-rc0'\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "allprojects {\n"
+                        + "    repositories {\n"
+                        + "        jcenter()\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
-    public void testDependenciesInVariables() throws Exception {
-        mEnabled = Collections.singleton(DEPENDENCY);
-        //noinspection all // Sample code
-        assertEquals(""
+    public void testDependenciesInVariables() {
+        String expected = ""
                 + "build.gradle:10: Warning: A newer version of com.google.android.gms:play-services-wearable than 5.0.77 is available: 6.1.71 [GradleDependency]\n"
                 + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-
-                lintProject(source("build.gradle", ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "android {\n"
-                            + "    compileSdkVersion 21\n"
-                            + "}\n"
-                            + "\n"
-                            + "final GPS_VERSION = '5.0.77'\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
-                            + "}\n")));
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                source("build.gradle",""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 21\n"
+                        + "}\n"
+                        + "\n"
+                        + "final GPS_VERSION = '5.0.77'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.android.gms:play-services-wearable:${GPS_VERSION}\"\n"
+                        + "}\n"),
+                gradle("internal-only.gradle", ""
+                        // Not part of the lint check; used only to provide a mock model to
+                        // the infrastructure
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-wearable:5.0.77'\n"
+                        + "}"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
-    public void testPlayServiceConsistency() throws Exception {
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
+    public void testPlayServiceConsistency() {
+        String expected = ""
                 + "build.gradle:4: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally("build.gradle",
-                        mPlayServices2));
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
+                        + "    compile 'com.google.android.gms:play-services-location:7.3.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
     }
 
     public void testSupportLibraryConsistency() throws Exception {
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
-                    + "build.gradle:4: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:appcompat-v7:24.2 [GradleCompatible]\n"
-                    + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "1 errors, 0 warnings\n",
-                lintProjectIncrementally("build.gradle",
-                        source("build.gradle", ""
-                                + "apply plugin: 'android'\n"
-                                + "\n"
-                                + "dependencies {\n"
-                                + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
-                                + "    compile \"com.android.support:support-v13:24.1\"\n"
-                                + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
-                                + "    compile \"com.android.support:cardview-v7:24.2\""
-                                + "    compile \"com.android.support:multidex:1.0.1\""
-                                + "    compile \"com.android.support:support-annotations:25.0.0\""
-                                + "}\n")));
+        String expected = ""
+                + "build.gradle:4: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n"
+                + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                        + "    compile \"com.android.support:support-v13:24.1\"\n"
+                        + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
+                        + "    compile \"com.android.support:cardview-v7:24.2\"\n"
+                        + "    compile \"com.android.support:multidex:1.0.1\"\n"
+                        + "    compile \"com.android.support:support-annotations:25.0.0\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
     }
 
-    public void testWearableConsistency1() throws Exception {
+    public void testWearableConsistency1() {
         // Regression test 1 for b/29006320.
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
-                    + "build.gradle:4: Error: Project depends on com.google.android.support:wearable:2.0.0-alpha3, so it must also depend (as a provided dependency) on com.google.android.wearable:wearable:2.0.0-alpha3 [GradleCompatible]\n"
-                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally("build.gradle",
-                        source("build.gradle", ""
-                                + "apply plugin: 'android'\n"
-                                + "\n"
-                                + "dependencies {\n"
-                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                                + "}\n")));
+        String expected = ""
+                + "build.gradle:4: Error: Project depends on com.google.android.support:wearable:2.0.0-alpha3, so it must also depend (as a provided dependency) on com.google.android.wearable:wearable:2.0.0-alpha3 [GradleCompatible]\n"
+                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental("build.gradle")
+                .run()
+                .expect(expected);
     }
 
-    public void testWearableConsistency2() throws Exception {
+    public void testWearableConsistency2() {
         // Regression test 2 for b/29006320.
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
-                    + "build.gradle:4: Error: The wearable libraries for com.google.android.support and com.google.android.wearable must use exactly the same versions; found 2.0.0-alpha3 and 2.0.0-alpha4 [GradleCompatible]\n"
-                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally("build.gradle",
-                source("build.gradle", ""
+        String expected = ""
+                + "build.gradle:4: Error: The wearable libraries for com.google.android.support and com.google.android.wearable must use exactly the same versions; found 2.0.0-alpha3 and 2.0.0-alpha4 [GradleCompatible]\n"
+                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
                         + "apply plugin: 'android'\n"
                         + "\n"
                         + "dependencies {\n"
                         + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
                         + "    provided \"com.google.android.wearable:wearable:2.0.0-alpha4\"\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
     }
 
-    public void testWearableConsistency3() throws Exception {
+    public void testWearableConsistency3() {
         // Regression test 3 for b/29006320.
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
-                    + "build.gradle:4: Error: This dependency should be marked as provided, not compile [GradleCompatible]\n"
-                    + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                    + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                    + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally("build.gradle",
-                        source("build.gradle", ""
-                                + "apply plugin: 'android'\n"
-                                + "\n"
-                                + "dependencies {\n"
-                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                                + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
-                                + "}\n")));
+        String expected = ""
+                + "build.gradle:4: Error: This dependency should be marked as provided, not compile [GradleCompatible]\n"
+                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                        + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
     }
 
-    public void testWearableConsistency4() throws Exception {
+    public void testWearableConsistency4() {
         // Regression test for 226240; gracefully handle null resolved coordinates.
-        // Requires custom model mocks.
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals("No warnings.",
-
-                lintProjectIncrementally("build.gradle",
-                        source("build.gradle", ""
-                                + "apply plugin: 'android'\n"
-                                + "\n"
-                                + "dependencies {\n"
-                                + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
-                                + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
-                                + "}\n")));
+        String expected = "No warnings.";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n"
+                        + "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .modifyGradleMocks((project, variant) -> {
+                    // Null out the resolved coordinates in the result to simulate the
+                    // observed failure in issue 226240
+                    //noinspection ConstantConditions
+                    Dependencies dependencies = variant.getMainArtifact().getDependencies();
+                    AndroidLibrary library1 = dependencies.getLibraries().iterator().next();
+                    JavaLibrary library2 = dependencies.getJavaLibraries().iterator()
+                            .next();
+                    when(library1.getResolvedCoordinates()).thenReturn(null);
+                    when(library2.getResolvedCoordinates()).thenReturn(null);
+                })
+                .run()
+                .expect(expected);
     }
 
     public void testSupportLibraryConsistencyNonIncremental() throws Exception {
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
-                    + "build.gradle: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:appcompat-v7:24.2 [GradleCompatible]\n"
-                    + "1 errors, 0 warnings\n",
-                lintProject(
-                        source("build.gradle", ""
-                                + "apply plugin: 'android'\n"
-                                + "\n"
-                                + "dependencies {\n"
-                                + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
-                                + "    compile \"com.android.support:support-v13:24.1\"\n"
-                                + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\""
-                                + "    compile \"com.android.support:cardview-v7:24.2\""
-                                + "    compile \"com.android.support:multidex:1.0.1\""
-                                + "}\n")));
+        String expected = ""
+                + "build.gradle: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n"
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                        + "    compile \"com.android.support:support-v13:24.1\"\n"
+                        + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
+                        + "    compile \"com.android.support:cardview-v7:24.2\"\n"
+                        + "    compile \"com.android.support:multidex:1.0.1\"\n"
+                        + "    compile \"com.android.support:support-annotations:25.0.0\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testPlayServiceConsistencyNonIncremental() throws Exception {
-        // Requires custom model mocks
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(mPlayServices2));
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
+                        + "    compile 'com.google.android.gms:play-services-location:7.3.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
-
     public void testWrongQuotes() throws Exception {
-        mEnabled = Collections.singleton(NOT_INTERPOLATED);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:5: Error: It looks like you are trying to substitute a version variable, but using single quotes ('). For Groovy string interpolation you must use double quotes (\"). [NotInterpolated]\n"
                 + "    compile 'com.android.support:design:${supportLibVersion}'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(source("build.gradle", ""
+        lint().files(
+                gradle(""
                         + "ext {\n"
                         + "    supportLibVersion = \"23.1.1\"\n"
                         + "}\n"
                         + "dependencies {\n"
                         + "    compile 'com.android.support:design:${supportLibVersion}'\n"
                         + "    compile \"com.android.support:appcompat-v7:${supportLibVersion}\"\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(NOT_INTERPOLATED)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .ignoreUnknownGradleConstructs()
+                .run()
+                .expect(expected);
     }
 
     public void testOldFabric() throws Exception {
         // This version of Fabric created a unique string for every build which results in
         // Hotswaps getting disabled due to resource changes
-        mEnabled = Collections.singleton(DEPENDENCY);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:3: Warning: Use Fabric Gradle plugin version 1.21.6 or later to improve Instant Run performance (was 1.21.2) [GradleDependency]\n"
                 + "    classpath 'io.fabric.tools:gradle:1.21.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:4: Warning: Use Fabric Gradle plugin version 1.21.6 or later to improve Instant Run performance (was 1.20.0) [GradleDependency]\n"
                 + "    classpath 'io.fabric.tools:gradle:1.20.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                + "0 errors, 2 warnings\n";
 
-                lintProject(source("build.gradle", ""
+        lint().files(
+                gradle(""
                         + "buildscript {\n"
                         + "  dependencies {\n"
                         + "    classpath 'io.fabric.tools:gradle:1.21.2'\n" // Not OK
@@ -1032,22 +1160,26 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    classpath 'io.fabric.tools:gradle:1.22.0'\n" // OK
                         + "    classpath 'io.fabric.tools:gradle:1.+'\n" // OK
                         + "  }\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testOldBugSnag() throws Exception {
         // This version of BugSnag triggered instant run full rebuilds
-        mEnabled = Collections.singleton(DEPENDENCY);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:3: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.0) [GradleDependency]\n"
                 + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:4: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.1) [GradleDependency]\n"
                 + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                + "0 errors, 2 warnings\n";
 
-                lintProject(source("build.gradle", ""
+        lint().files(
+                gradle(""
                         + "buildscript {\n"
                         + "  dependencies {\n"
                         + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n" // Old
@@ -1055,32 +1187,40 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" // OK
                         + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" // OK
                         + "  }\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
+
     }
 
     public void testBadBuildTools() throws Exception {
         // Warn about build tools 23.0.0 which is known to be a bad version
-        mEnabled = Collections.singleton(COMPATIBILITY);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:7: Error: Build Tools 23.0.0 should not be used; it has some known serious bugs. Use version 23.0.3 instead. [GradleCompatible]\n"
                 + "    buildToolsVersion \"23.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "1 errors, 0 warnings\n";
 
-                lintProject(
-                        source("build.gradle", ""
-                                + "apply plugin: 'com.android.application'\n"
-                                + "\n"
-                                + "android {\n"
-                                + "    compileSdkVersion 18\n"
-                                + "    buildToolsVersion \"19.0.0\"\n" // OK
-                                + "    buildToolsVersion \"22.1.0\"\n" // OK
-                                + "    buildToolsVersion \"23.0.0\"\n" // ERROR
-                                + "    buildToolsVersion \"23.0.1\"\n" // OK
-                                + "    buildToolsVersion \"23.1.0\"\n" // OK
-                                + "    buildToolsVersion \"24.0.0\"\n" // OK
-                                + "    buildToolsVersion \"23.0.+\"\n" // OK
-                                + "}")));
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 18\n"
+                        + "    buildToolsVersion \"19.0.0\"\n" // OK
+                        + "    buildToolsVersion \"22.1.0\"\n" // OK
+                        + "    buildToolsVersion \"23.0.0\"\n" // ERROR
+                        + "    buildToolsVersion \"23.0.1\"\n" // OK
+                        + "    buildToolsVersion \"23.1.0\"\n" // OK
+                        + "    buildToolsVersion \"24.0.0\"\n" // OK
+                        + "    buildToolsVersion \"23.0.+\"\n" // OK
+                        + "}"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     @Override
@@ -1140,11 +1280,8 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void testSupportAnnotations() throws Exception {
-        mEnabled = Sets.newHashSet(COMPATIBILITY);
-        assertEquals(""
-                + "No warnings.",
-
-                lintProject(source("build.gradle", ""
+        lint().files(
+                gradle(""
                         + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
@@ -1154,40 +1291,60 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "dependencies {\n"
                         + "    testCompile 'com.android.support:support-annotations:24.0.0'\n"
                         + "    compile 'com.android.support:appcompat-v7:+'\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
     }
 
     public void testBundledGmsDependency() throws Exception {
-        Assert.assertThat(lintProject(source("build.gradle", ""
-                + "dependencies {\n"
-                + "    compile 'com.google.android.gms:play-services:8.5.6'\n"
-                + "}\n")), containsString(GradleDetector.BUNDLED_GMS.getId()));
+        lint().files(
+                gradle(""
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services:8.5.6'\n"
+                        + "}\n"))
+                .issues(BUNDLED_GMS)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(""
+                        + "build.gradle:2: Warning: Avoid using bundled version of Google Play services SDK. [UseOfBundledGooglePlayServices]\n"
+                        + "    compile 'com.google.android.gms:play-services:8.5.6'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n");
     }
 
     public void testUnbundledGmsDependency() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(source("build.gradle", ""
+        lint().files(
+                gradle(""
                         + "dependencies {\n"
                         + "    compile 'com.google.android.gms:play-services-auth:9.2.1'\n"
-                        + "}\n")));
+                        + "}\n"))
+                .issues(BUNDLED_GMS)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
     }
 
     public void testHighAppVersionCode() throws Exception {
-        mEnabled = Collections.singleton(HIGH_APP_VERSION_CODE);
-        assertEquals(""
+        String expected = ""
                 + "build.gradle:5: Error: The 'versionCode' is very high and close to the max allowed value [HighAppVersionCode]\n"
                 + "        versionCode 2146435071\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProject(source("build.gradle", ""
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
                         + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
                         + "    defaultConfig {\n"
                         + "        versionCode 2146435071\n"
                         + "    }\n"
-                        + "}")));
+                        + "}"))
+                .issues(HIGH_APP_VERSION_CODE)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     // -------------------------------------------------------------------------------------------
@@ -1213,267 +1370,8 @@ public class GradleDetectorTest extends AbstractCheckTest {
     private Set<Issue> mEnabled;
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && (mEnabled == null || mEnabled.contains(issue));
-            }
-        };
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        return new ToolsBaseTestLintClient() {
-            @Nullable
-            @Override
-            public File getSdkHome() {
-                return getMockSupportLibraryInstallation();
-            }
-
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                if ("testDependenciesInVariables".equals(getName())) {
-                        return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        /*
-                        Simulate variant which has an AndroidLibrary with
-                        resolved coordinates
-
-                        com.google.android.gms:play-services-wearable:5.0.77"
-                         */
-                        MavenCoordinates coordinates = mock(MavenCoordinates.class);
-                        when(coordinates.getGroupId()).thenReturn("com.google.android.gms");
-                        when(coordinates.getArtifactId()).thenReturn("play-services-wearable");
-                        when(coordinates.getVersion()).thenReturn("5.0.77");
-
-                        AndroidLibrary library = mock(AndroidLibrary.class);
-                        when(library.getResolvedCoordinates()).thenReturn(coordinates);
-                        List<AndroidLibrary> libraries = Collections.singletonList(library);
-
-                        Dependencies dependencies = mock(Dependencies.class);
-                        when(dependencies.getLibraries()).thenReturn(libraries);
-
-                        AndroidArtifact artifact = mock(AndroidArtifact.class);
-                        //noinspection deprecation
-                        when(artifact.getDependencies()).thenReturn(dependencies);
-
-                        Variant variant = mock(Variant.class);
-                        when(variant.getMainArtifact()).thenReturn(artifact);
-                        return variant;
-                    }
-                        };
-                }
-
-                if ("testPlayServiceConsistency".equals(getName())
-                        || "testPlayServiceConsistencyNonIncremental".equals(getName())) {
-                    return new Project(this, dir, referenceDir) {
-                        @Override
-                        public boolean isGradleProject() {
-                            return true;
-                        }
-
-                        @Nullable
-                        @Override
-                        public Variant getCurrentVariant() {
-                        /*
-                        Simulate variant which has an AndroidLibrary with
-                        resolved coordinates
-
-                        b//22709708
-                        com.google.android.gms:play-services-location:7.3.0
-                        com.google.android.gms:play-services-wearable:7.5.0
-                         */
-                            List<AndroidLibrary> libraries = Arrays.asList(
-                                createMockLibrary("com.google.android.gms:play-services-location:7.3.0"),
-                                createMockLibrary("com.google.android.gms:play-services-wearable:7.5.0")
-                            );
-
-                            Dependencies dependencies = mock(Dependencies.class);
-                            when(dependencies.getLibraries()).thenReturn(libraries);
-
-                            AndroidArtifact artifact = mock(AndroidArtifact.class);
-                            when(artifact.getDependencies()).thenReturn(dependencies);
-
-                            Variant variant = mock(Variant.class);
-                            when(variant.getMainArtifact()).thenReturn(artifact);
-                            return variant;
-                        }
-                    };
-                }
-
-                if (getName().startsWith("testWearableConsistency")) {
-                    return new Project(this, dir, referenceDir) {
-                        @Override
-                        public boolean isGradleProject() {
-                            return true;
-                        }
-
-                        @Nullable
-                        @Override
-                        public Variant getCurrentVariant() {
-                            // Simulate variant which has an AndroidLibrary various combinations
-                            // of the com.google.android.support:wearable and
-                            // com.google.android.wearable libraries, which must be in sync.
-                            // See b/29006320.
-                            List<AndroidLibrary> androidLibraries;
-                            List<JavaLibrary> javaLibraries;
-                            if ("testWearableConsistency1".equals(GradleDetectorTest.this.getName())) {
-                                // Missing wearable library: not ok
-                                androidLibraries = Collections.singletonList(
-                                        createMockLibrary(
-                                                "com.google.android.support:wearable:2.0.0-alpha3")
-                                );
-                                javaLibraries = Collections.emptyList();
-                            } else if ("testWearableConsistency2".equals(GradleDetectorTest.this.getName())) {
-                                // Different versions: not ok
-                                androidLibraries = Collections.singletonList(
-                                        createMockLibrary(
-                                                "com.google.android.support:wearable:2.0.0-alpha3")
-                                );
-                                javaLibraries = Collections.singletonList(
-                                        createMockJavaLibrary("com.google.android.wearable:wearable:2.0.0-alpha4", true)
-                                );
-                            } else if ("testWearableConsistency3".equals(GradleDetectorTest.this.getName())) {
-                                // Same versions, but wear library wasn't reported
-                                androidLibraries = Collections.singletonList(
-                                        createMockLibrary(
-                                                "com.google.android.support:wearable:2.0.0-alpha3")
-                                );
-                                javaLibraries = Collections.singletonList(
-                                        createMockJavaLibrary(
-                                                "com.google.android.wearable:wearable:2.0.0-alpha3", false)
-                                );
-                            } else if ("testWearableConsistency4".equals(GradleDetectorTest.this.getName())) {
-                                // Null resolved coordinates
-                                AndroidLibrary mockLibrary1 = createMockLibrary(
-                                        "com.google.android.support:wearable:2.0.0-alpha3");
-                                JavaLibrary mockLibrary2 = createMockJavaLibrary(
-                                        "com.google.android.wearable:wearable:2.0.0-alpha3", false);
-                                when(mockLibrary1.getResolvedCoordinates()).thenReturn(null);
-                                when(mockLibrary2.getResolvedCoordinates()).thenReturn(null);
-                                androidLibraries = Collections.singletonList(mockLibrary1);
-                                javaLibraries = Collections.singletonList(mockLibrary2);
-                            } else {
-                                fail("Unexpected test " + getName());
-                                return null;
-                            }
-
-
-                            Dependencies dependencies = mock(Dependencies.class);
-                            when(dependencies.getLibraries()).thenReturn(androidLibraries);
-                            when(dependencies.getJavaLibraries()).thenReturn(javaLibraries);
-
-                            AndroidArtifact artifact = mock(AndroidArtifact.class);
-                            //noinspection deprecation
-                            when(artifact.getDependencies()).thenReturn(dependencies);
-
-                            Variant variant = mock(Variant.class);
-                            when(variant.getMainArtifact()).thenReturn(artifact);
-                            return variant;
-                        }
-                    };
-                }
-
-                if ("testSupportLibraryConsistency".equals(getName())
-                        || "testSupportLibraryConsistencyNonIncremental".equals(getName())) {
-                    return new Project(this, dir, referenceDir) {
-                        @Override
-                        public boolean isGradleProject() {
-                            return true;
-                        }
-
-                        @Nullable
-                        @Override
-                        public Variant getCurrentVariant() {
-                            /*
-                            Simulate variant which has an AndroidLibrary with
-                            resolved coordinates
-
-                            compile "com.android.support:appcompat-v7:24.2"
-                            compile "com.android.support:support-v13:24.1"
-                            compile "com.android.support:preference-v7:25.0-SNAPSHOT"
-                            compile "com.android.support:cardview-v7:24.2"
-                            compile "com.android.support:support-annotations:25.0.0" // allowed
-                             */
-                            List<AndroidLibrary> libraries = Arrays.asList(
-                                    createMockLibrary("com.android.support:appcompat-v7:24.2"),
-                                    createMockLibrary("com.android.support:support-v13:24.1"),
-                                    createMockLibrary("com.android.support:preference-v7:25.0-SNAPSHOT"),
-                                    createMockLibrary("com.android.support:cardview-v7:24.2"),
-                                    createMockLibrary("com.android.support:multidex:1.0.1")
-                            );
-                            List<JavaLibrary> javaLibraries = Collections.singletonList(
-                                    createMockJavaLibrary(
-                                            "com.android.support:support-annotations:25.0.0"));
-
-                            Dependencies dependencies = mock(Dependencies.class);
-                            when(dependencies.getLibraries()).thenReturn(libraries);
-                            when(dependencies.getJavaLibraries()).thenReturn(javaLibraries);
-
-                            AndroidArtifact artifact = mock(AndroidArtifact.class);
-                            //noinspection deprecation
-                            when(artifact.getDependencies()).thenReturn(dependencies);
-
-                            Variant variant = mock(Variant.class);
-                            when(variant.getMainArtifact()).thenReturn(artifact);
-                            return variant;
-                        }
-                    };
-                }
-
-                return super.createProject(dir, referenceDir);
-            }
-
-            private AndroidLibrary createMockLibrary(String s) {
-                return createMockLibrary(s, false);
-            }
-
-            private AndroidLibrary createMockLibrary(String s, boolean isProvided) {
-                GradleCoordinate coordinate = GradleCoordinate.parseCoordinateString(s);
-                assertNotNull(coordinate);
-                MavenCoordinates mavenCoordinates = mock(MavenCoordinates.class);
-                when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
-                when(mavenCoordinates.getArtifactId()).thenReturn(coordinate.getArtifactId());
-                when(mavenCoordinates.getVersion()).thenReturn(coordinate.getRevision());
-                when(mavenCoordinates.toString()).thenReturn(s);
-
-                AndroidLibrary library1 = mock(AndroidLibrary.class);
-                when(library1.getResolvedCoordinates()).thenReturn(mavenCoordinates);
-                when(library1.getLintJar()).thenReturn(new File("lint.jar"));
-                when(library1.isProvided()).thenReturn(isProvided);
-
-                return library1;
-            }
-
-            private JavaLibrary createMockJavaLibrary(String s) {
-                return createMockJavaLibrary(s, false);
-            }
-
-            private JavaLibrary createMockJavaLibrary(String s, boolean isProvided) {
-                GradleCoordinate coordinate = GradleCoordinate.parseCoordinateString(s);
-                assertNotNull(coordinate);
-                MavenCoordinates mavenCoordinates = mock(MavenCoordinates.class);
-                when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
-                when(mavenCoordinates.getArtifactId()).thenReturn(coordinate.getArtifactId());
-                when(mavenCoordinates.getVersion()).thenReturn(coordinate.getRevision());
-                when(mavenCoordinates.toString()).thenReturn(s);
-
-                JavaLibrary library1 = mock(JavaLibrary.class);
-                when(library1.getResolvedCoordinates()).thenReturn(mavenCoordinates);
-                when(library1.isProvided()).thenReturn(isProvided);
-
-                return library1;
-            }
-        };
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && (mEnabled == null || mEnabled.contains(issue));
     }
 
     // Copy of com.android.build.gradle.tasks.GroovyGradleDetector (with "static" added as
@@ -1711,12 +1609,4 @@ public class GradleDetectorTest extends AbstractCheckTest {
             + "    androidTestCompile 'com.android.support.test:runner:0.3'\n"
             + "}\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mPlayServices2 = source("build.gradle", ""
-            + "apply plugin: 'android'\n"
-            + "\n"
-            + "dependencies {\n"
-            + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
-            + "    compile 'com.google.android.gms:play-services-location:7.3.0'\n"
-            + "}\n");
 }

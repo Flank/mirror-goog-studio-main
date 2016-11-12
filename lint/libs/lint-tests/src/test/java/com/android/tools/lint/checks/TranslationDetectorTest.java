@@ -16,21 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.Variant;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Project;
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class TranslationDetectorTest extends AbstractCheckTest {
@@ -538,7 +524,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
 
     public void testResConfigs() throws Exception {
         TranslationDetector.sCompleteRegions = false;
-        assertEquals(""
+        String expected = ""
                 + "res/values/strings.xml:25: Error: \"menu_settings\" is not translated in \"cs\" (Czech), \"de-DE\" (German: Germany) [MissingTranslation]\n"
                 + "    <string name=\"menu_settings\">Settings</string>\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~\n"
@@ -549,18 +535,40 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                 + "res/values-de-rDE/strings.xml:11: Error: \"continue_skip_label\" is translated here but not found in default locale [ExtraTranslation]\n"
                 + "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "3 errors, 0 warnings\n",
+                + "3 errors, 0 warnings\n";
 
-                lintProject(
-                        mStrings,
-                        mStrings2,
-                        mStrings3,
-                        mStrings4,
-                        mStrings5,
-                        mStrings6,
-                        mArrays,
-                        mDonottranslate,
-                        mStrings7));
+        //noinspection all // Sample code
+        lint().files(
+                mStrings,
+                mStrings2,
+                mStrings3,
+                mStrings4,
+                mStrings5,
+                mStrings6,
+                mArrays,
+                mDonottranslate,
+                mStrings7,
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        resConfigs \"cs\"\n"
+                        + "    }\n"
+                        + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
+                        + "    productFlavors {\n"
+                        + "        beta {\n"
+                        + "            flavorDimension \"releaseType\"\n"
+                        + "            resConfig \"en\", \"de\"\n"
+                        + "            resConfigs \"nodpi\", \"hdpi\"\n"
+                        + "        }\n"
+                        + "        normal { flavorDimension \"releaseType\" }\n"
+                        + "        free { flavorDimension \"pricing\" }\n"
+                        + "        paid { flavorDimension \"pricing\" }\n"
+                        + "    }\n"
+                        + "}"))
+                .run()
+                .expect(expected);
     }
 
     public void testMissingBaseCompletely() throws Exception {
@@ -635,114 +643,6 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                                 + "    <string name=\"app_name\">Min Applikasjon</string>\n"
                                 + "</resources>\n")
                 ));
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        if (!getName().startsWith("testResConfigs")) {
-            return super.createClient();
-        }
-
-        // Set up a mock project model for the resource configuration test(s)
-        // where we provide a subset of densities to be included
-
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        /*
-                        Simulate variant freeBetaDebug in this setup:
-                            defaultConfig {
-                                ...
-                                resConfigs "cs"
-                            }
-                            flavorDimensions  "pricing", "releaseType"
-                            productFlavors {
-                                beta {
-                                    flavorDimension "releaseType"
-                                    resConfig "en", "de"
-                                    resConfigs "nodpi", "hdpi"
-                                }
-                                normal { flavorDimension "releaseType" }
-                                free { flavorDimension "pricing" }
-                                paid { flavorDimension "pricing" }
-                            }
-                         */
-                        ProductFlavor flavorFree = mock(ProductFlavor.class);
-                        when(flavorFree.getName()).thenReturn("free");
-                        when(flavorFree.getResourceConfigurations())
-                                .thenReturn(Collections.<String>emptyList());
-
-                        ProductFlavor flavorNormal = mock(ProductFlavor.class);
-                        when(flavorNormal.getName()).thenReturn("normal");
-                        when(flavorNormal.getResourceConfigurations())
-                                .thenReturn(Collections.<String>emptyList());
-
-                        ProductFlavor flavorPaid = mock(ProductFlavor.class);
-                        when(flavorPaid.getName()).thenReturn("paid");
-                        when(flavorPaid.getResourceConfigurations())
-                                .thenReturn(Collections.<String>emptyList());
-
-                        ProductFlavor flavorBeta = mock(ProductFlavor.class);
-                        when(flavorBeta.getName()).thenReturn("beta");
-                        List<String> resConfigs = Arrays.asList("hdpi", "en", "de", "nodpi");
-                        when(flavorBeta.getResourceConfigurations()).thenReturn(resConfigs);
-
-                        ProductFlavor defaultFlavor = mock(ProductFlavor.class);
-                        when(defaultFlavor.getName()).thenReturn("main");
-                        when(defaultFlavor.getResourceConfigurations()).thenReturn(
-                                Collections.singleton("cs"));
-
-                        ProductFlavorContainer containerBeta =
-                                mock(ProductFlavorContainer.class);
-                        when(containerBeta.getProductFlavor()).thenReturn(flavorBeta);
-
-                        ProductFlavorContainer containerFree =
-                                mock(ProductFlavorContainer.class);
-                        when(containerFree.getProductFlavor()).thenReturn(flavorFree);
-
-                        ProductFlavorContainer containerPaid =
-                                mock(ProductFlavorContainer.class);
-                        when(containerPaid.getProductFlavor()).thenReturn(flavorPaid);
-
-                        ProductFlavorContainer containerNormal =
-                                mock(ProductFlavorContainer.class);
-                        when(containerNormal.getProductFlavor()).thenReturn(flavorNormal);
-
-                        ProductFlavorContainer defaultContainer =
-                                mock(ProductFlavorContainer.class);
-                        when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
-
-                        List<ProductFlavorContainer> containers = Arrays.asList(
-                                containerPaid, containerFree, containerNormal, containerBeta
-                        );
-
-                        AndroidProject project = mock(AndroidProject.class);
-                        when(project.getProductFlavors()).thenReturn(containers);
-                        when(project.getDefaultConfig()).thenReturn(defaultContainer);
-                        return project;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        List<String> productFlavorNames = Arrays.asList("free", "beta");
-                        Variant mock = mock(Variant.class);
-                        when(mock.getProductFlavors()).thenReturn(productFlavorNames);
-                        return mock;
-                    }
-                };
-            }
-        };
     }
 
     @SuppressWarnings("all") // Sample code

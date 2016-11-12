@@ -37,7 +37,7 @@ public class CircularDependencyException extends RuntimeException {
     @Nullable
     private Location location;
 
-    CircularDependencyException(@NonNull String message) {
+    public CircularDependencyException(@NonNull String message) {
         super(message);
     }
 

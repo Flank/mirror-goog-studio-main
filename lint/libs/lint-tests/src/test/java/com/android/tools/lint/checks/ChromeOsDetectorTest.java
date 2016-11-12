@@ -20,12 +20,8 @@ import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.checks.ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE;
 import static com.android.tools.lint.checks.ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,13 +36,8 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && enabled.contains(issue);
-            }
-        };
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && enabled.contains(issue);
     }
 
     public void testInvalidUnsupportedHardware() throws Exception {

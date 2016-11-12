@@ -16,18 +16,10 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.DOT_GIF;
-import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.DOT_JAVA;
-import static com.android.SdkConstants.DOT_JPEG;
-import static com.android.SdkConstants.DOT_JPG;
-import static com.android.SdkConstants.DOT_PNG;
-import static com.android.SdkConstants.DOT_XML;
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static com.android.utils.SdkUtils.escapePropertyValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -52,11 +44,18 @@ import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.BytecodeProducer;
+import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
+import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
-import com.android.tools.lint.client.api.JavaPsiVisitor;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
@@ -72,55 +71,35 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
 import javax.imageio.ImageIO;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.intellij.lang.annotations.Language;
-import org.objectweb.asm.Opcodes;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -142,6 +121,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         super.setUp();
         BuiltinIssueRegistry.reset();
         LintDriver.clearCrashCount();
+        EcjParser.skipComputingEcjErrors = false;
     }
 
     @Override
@@ -237,7 +217,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     private String lintFiles(File targetDir, List<File> files) throws Exception {
-        Collections.sort(files, (file1, file2) -> {
+        files.sort((file1, file2) -> {
             ResourceFolderType folder1 = ResourceFolderType.getFolderType(
                     file1.getParentFile().getName());
             ResourceFolderType folder2 = ResourceFolderType.getFolderType(
@@ -248,7 +228,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return file1.compareTo(file2);
         });
 
-        addManifestFile(targetDir);
+        addManifestFileIfNecessary(new File(targetDir, ANDROID_MANIFEST_XML));
 
         return checkLint(files);
     }
@@ -269,6 +249,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     protected String checkLint(TestLintClient lintClient, List<File> files) throws Exception {
+
         if (!allowAndroidBuildEnvironment() && System.getenv("ANDROID_BUILD_TOP") != null) {
             fail("Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
                     + "special support for detecting AOSP projects (looking for .class "
@@ -379,6 +360,22 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return checkLint(client, Collections.singletonList(projectDir));
     }
 
+    protected static ProjectDescription project(@NonNull TestFile... files) {
+        return new ProjectDescription(files);
+    }
+
+    @NonNull
+    protected TestLintTask lint() {
+        TestLintTask task = TestLintTask.lint();
+        task.issues(getIssues().toArray(new Issue[0]));
+        return task;
+    }
+
+    // TODO: Configure whether to show text summary or HTML;
+    // make a result object so you can assert which output format to use,
+    // which isssues to include
+
+
     /**
      * Run lint on the given files when constructed as a separate project
      * @return The output of the lint check. On Windows, this transforms all directory
@@ -397,291 +394,90 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public TestFile file() {
-        return new TestFile();
+    public static TestFile file() {
+        return TestFiles.file();
     }
 
     @NonNull
-    public TestFile source(@NonNull String to, @NonNull String source) {
-        return file().to(to).withSource(source);
+    public static TestFile source(@NonNull String to, @NonNull String source) {
+        return TestFiles.source(to, source);
     }
 
     @NonNull
-    public TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
-        if (!to.endsWith(DOT_JAVA)) {
-            throw new IllegalArgumentException("Expected .java suffix for Java test file");
-        }
-
-        return file().to(to).withSource(source);
-    }
-
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
-    private static final Pattern CLASS_PATTERN = Pattern
-            .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{", Pattern.MULTILINE);
-
-    @NonNull
-    public TestFile java(@NonNull @Language("JAVA") String source) {
-        // Figure out the "to" path: the package plus class name + java in the src/ folder
-        Matcher matcher = PACKAGE_PATTERN.matcher(source);
-        assertTrue("Couldn't find package declaration in source", matcher.find());
-        String pkg = matcher.group(1).trim();
-        matcher = CLASS_PATTERN.matcher(source);
-        assertTrue("Couldn't find class declaration in source", matcher.find());
-        String cls = matcher.group(2).trim();
-        String to = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
-
-        return file().to(to).withSource(source);
+    public static TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
+        return TestFiles.java(to, source);
     }
 
     @NonNull
-    public TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
-        if (!to.endsWith(DOT_XML)) {
-            throw new IllegalArgumentException("Expected .xml suffix for XML test file");
-        }
-        return file().to(to).withSource(source);
+    public static TestFile java(@NonNull @Language("JAVA") String source) {
+        return TestFiles.java(source);
+    }
+
+    @NonNull
+    public static TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
+        return TestFiles.xml(to, source);
     }
 
     @NonNull
     public TestFile copy(@NonNull String from) {
-        return file().from(from).to(from);
+        return TestFiles.copy(from, this);
     }
 
     @NonNull
     public TestFile copy(@NonNull String from, @NonNull String to) {
-        return file().from(from).to(to);
+        return TestFiles.copy(from, to, this);
     }
 
     @NonNull
-    public ManifestTestFile manifest() {
-        return new ManifestTestFile();
-    }
-
-    public class ManifestTestFile extends TestFile {
-        public String pkg = "test.pkg";
-        public int minSdk;
-        public int targetSdk;
-        public String[] permissions;
-
-        public ManifestTestFile() {
-            to(FN_ANDROID_MANIFEST_XML);
-        }
-
-        public ManifestTestFile minSdk(int min) {
-            minSdk = min;
-            return this;
-        }
-
-        public ManifestTestFile targetSdk(int target) {
-            targetSdk = target;
-            return this;
-        }
-
-        public ManifestTestFile permissions(String... permissions) {
-            this.permissions = permissions;
-            return this;
-        }
-
-        public ManifestTestFile pkg(String pkg) {
-            this.pkg = pkg;
-            return this;
-        }
-
-        @Override
-        @NonNull
-        public String getContents() {
-            if (contents == null) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                sb.append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n");
-                sb.append("    package=\"").append(pkg).append("\"\n");
-                sb.append("    android:versionCode=\"1\"\n");
-                sb.append("    android:versionName=\"1.0\" >\n");
-                if (minSdk > 0 || targetSdk > 0) {
-                    sb.append("    <uses-sdk ");
-                    if (minSdk > 0) {
-                        sb.append(" android:minSdkVersion=\"").append(Integer.toString(minSdk))
-                                .append("\"");
-                    }
-                    if (targetSdk > 0) {
-                        sb.append(" android:targetSdkVersion=\"")
-                                .append(Integer.toString(targetSdk))
-                                .append("\"");
-                    }
-                    sb.append(" />\n");
-                }
-                if (permissions != null && permissions.length > 0) {
-                    StringBuilder permissionBlock = new StringBuilder();
-                    for (String permission : permissions) {
-                        permissionBlock
-                                .append("    <uses-permission android:name=\"")
-                                .append(permission)
-                                .append("\" />\n");
-                    }
-                    sb.append(permissionBlock);
-                    sb.append("\n");
-                }
-
-                sb.append(""
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:icon=\"@drawable/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\" >\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>");
-                contents = sb.toString();
-            }
-
-            return contents;
-        }
-
-        @NonNull
-        @Override
-        public File createFile(@NonNull File targetDir) throws IOException {
-            getContents(); // lazy init
-            return super.createFile(targetDir);
-        }
+    public static GradleTestFile gradle(@NonNull String to,
+            @NonNull @Language("Groovy") String source) {
+        return TestFiles.gradle(to, source);
     }
 
     @NonNull
-    public PropertyTestFile projectProperties() {
-        return new PropertyTestFile();
-    }
-
-    public class PropertyTestFile extends TestFile {
-        @SuppressWarnings("StringBufferField")
-        private StringBuilder mStringBuilder = new StringBuilder();
-
-        private int mNextLibraryIndex = 1;
-
-        public PropertyTestFile() {
-            to("project.properties");
-        }
-
-        public PropertyTestFile property(String key, String value) {
-            String escapedValue = escapePropertyValue(value);
-            mStringBuilder.append(key).append('=').append(escapedValue).append('\n');
-            return this;
-        }
-
-        public PropertyTestFile compileSdk(int target) {
-            mStringBuilder.append("target=android-").append(Integer.toString(target)).append('\n');
-            return this;
-        }
-
-        public PropertyTestFile library(boolean isLibrary) {
-            mStringBuilder.append("android.library=").append(Boolean.toString(isLibrary))
-                    .append('\n');
-            return this;
-        }
-
-        public PropertyTestFile manifestMerger(boolean merger) {
-            mStringBuilder.append("manifestmerger.enabled=").append(Boolean.toString(merger))
-                    .append('\n');
-            return this;
-        }
-
-        public PropertyTestFile dependsOn(String relative) {
-            assertTrue(relative.startsWith("../"));
-            mStringBuilder.append("android.library.reference.")
-                    .append(Integer.toString(mNextLibraryIndex++))
-                    .append("=").append(escapePropertyValue(relative))
-                    .append('\n');
-            return this;
-        }
-
-        @Override
-        public TestFile withSource(@NonNull String source) {
-            fail("Don't call withSource on " + this.getClass());
-            return this;
-        }
-
-        @Override
-        @NonNull
-        public String getContents() {
-            contents = mStringBuilder.toString();
-            return contents;
-        }
-
-        @NonNull
-        @Override
-        public File createFile(@NonNull File targetDir) throws IOException {
-            getContents(); // lazy init
-            return super.createFile(targetDir);
-        }
-    }
-
-    /** Produces byte arrays, for use with {@link BinaryTestFile} */
-    public static class ByteProducer {
-        @SuppressWarnings("MethodMayBeStatic") // intended for override
-        @NonNull
-        public byte[] produce() {
-            return new byte[0];
-        }
-    }
-
-    public static class BytecodeProducer extends ByteProducer implements Opcodes {
-        /**
-         *  Typically generated by first getting asm output like this:
-         * <pre>
-         *     assertEquals("", asmify(new File("/full/path/to/my/file.class")));
-         * </pre>
-         * ...and when the test fails, the actual test output is the necessary assembly
-         *
-         */
-        @Override
-        @SuppressWarnings("MethodMayBeStatic") // intended for override
-        @NonNull
-        public byte[] produce() {
-            return new byte[0];
-        }
+    public static GradleTestFile gradle(@NonNull @Language("Groovy") String source) {
+        return TestFiles.gradle(source);
     }
 
     @NonNull
-    public BinaryTestFile bytecode(@NonNull String to, @NonNull BytecodeProducer producer) {
-        return new BinaryTestFile(to, producer);
+    public static ManifestTestFile manifest() {
+        return TestFiles.manifest();
     }
 
     @NonNull
-    public BinaryTestFile bytes(@NonNull String to, @NonNull byte[] bytes) {
-        BytecodeProducer producer = new BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return bytes;
-            }
-        };
-        return new BinaryTestFile(to, producer);
+    public static TestFile manifest(@NonNull @Language("XML") String source) {
+        return TestFiles.source(ANDROID_MANIFEST_XML, source);
+    }
+
+    @NonNull
+    public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile projectProperties() {
+        return TestFiles.projectProperties();
+    }
+
+    @NonNull
+    public static BinaryTestFile bytecode(@NonNull String to, @NonNull BytecodeProducer producer) {
+        return TestFiles.bytecode(to, producer);
+    }
+
+    @NonNull
+    public static BinaryTestFile bytes(@NonNull String to, @NonNull byte[] bytes) {
+        return TestFiles.bytes(to, bytes);
     }
 
     public static String toBase64(@NonNull byte[] bytes) {
-        String base64 = Base64.getEncoder().encodeToString(bytes);
-        return "\"\"\n+ \""
-                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+        return TestFiles.toBase64(bytes);
     }
 
     public static String toBase64gzip(@NonNull byte[] bytes) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try (GZIPOutputStream stream = new GZIPOutputStream(out)) {
-                stream.write(bytes);
-            }
-            bytes = out.toByteArray();
-        } catch (IOException ignore) {
-            // Can't happen on a ByteArrayInputStream
-        }
-
-        String base64 = Base64.getEncoder().encodeToString(bytes);
-        return "\"\"\n+ \""
-                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+        return TestFiles.toBase64gzip(bytes);
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
-        return toBase64(Files.toByteArray(file));
+        return TestFiles.toBase64(file);
     }
 
     public static String toBase64gzip(@NonNull File file) throws IOException {
-        return toBase64gzip(Files.toByteArray(file));
+        return TestFiles.toBase64gzip(file);
     }
 
     /**
@@ -693,16 +489,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * @param encoded the encoded data
      * @return the new test file
      */
-    public BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
-        final byte[] bytes = Base64.getDecoder().decode(encoded);
-        return new BinaryTestFile(to, new BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return bytes;
-            }
-        });
+    public static BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
+        return TestFiles.base64(to, encoded);
     }
 
     /**
@@ -712,103 +500,26 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
      */
     @NonNull
-    public BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
-        byte[] bytes = Base64.getDecoder().decode(encoded);
-
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-            GZIPInputStream stream = new GZIPInputStream(in);
-            bytes = ByteStreams.toByteArray(stream);
-        } catch (IOException ignore) {
-            // Can't happen on a ByteArrayInputStream
-        }
-
-        byte[] finalBytes = bytes;
-        return new BinaryTestFile(to, new BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return finalBytes;
-            }
-        });
+    public static BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
+        return TestFiles.base64gzip(to, encoded);
     }
 
-    public TestFile classpath(String... extraLibraries) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<classpath>\n"
-                + "\t<classpathentry kind=\"src\" path=\"src\"/>\n"
-                + "\t<classpathentry kind=\"src\" path=\"gen\"/>\n"
-                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.ANDROID_FRAMEWORK\"/>\n"
-                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.LIBRARIES\"/>\n"
-                + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n");
-        for (String path : extraLibraries) {
-            sb.append("\t<classpathentry kind=\"lib\" path=\"").append(path).append("\"/>\n");
-        }
-        sb.append("</classpath>\n");
-        return source(".classpath", sb.toString());
-    }
-
-    public class BinaryTestFile extends TestFile {
-        private final BytecodeProducer mProducer;
-
-        public BinaryTestFile(@NonNull String to, @NonNull BytecodeProducer producer) {
-            to(to);
-            mProducer = producer;
-        }
-
-        @Override
-        public TestFile withSource(@NonNull String source) {
-            fail("Don't call withSource on " + this.getClass());
-            return this;
-        }
-
-        @Override
-        @NonNull
-        public String getContents() {
-            fail("Don't call getContents on binary " + this.getClass());
-            return null;
-        }
-
-        public byte[] getBinaryContents() {
-            return mProducer.produce();
-        }
-
-        @NonNull
-        @Override
-        public File createFile(@NonNull File targetDir) throws IOException {
-            int index = targetRelativePath.lastIndexOf('/');
-            String relative = null;
-            String name = targetRelativePath;
-            if (index != -1) {
-                name = targetRelativePath.substring(index + 1);
-                relative = targetRelativePath.substring(0, index);
-            }
-            InputStream stream = new ByteArrayInputStream(getBinaryContents());
-            return makeTestFile(targetDir, name, relative, stream);
-        }
+    public static TestFile classpath(String... extraLibraries) {
+        return TestFiles.classpath(extraLibraries);
     }
 
     @NonNull
-    public JarTestFile jar(@NonNull String to) {
-        return new JarTestFile(to);
+    public static JarTestFile jar(@NonNull String to) {
+        return TestFiles.jar(to);
     }
 
     @NonNull
-    public JarTestFile jar(@NonNull String to, @NonNull TestFile... files) {
-        if (!to.endsWith(DOT_JAR)) {
-            throw new IllegalArgumentException("Expected .jar suffix for jar test file");
-        }
-
-        JarTestFile jar = new JarTestFile(to);
-        jar.files(files);
-        return jar;
+    public static JarTestFile jar(@NonNull String to, @NonNull TestFile... files) {
+        return TestFiles.jar(to, files);
     }
 
-    public ImageTestFile image(@NonNull String to, int width, int height) {
-        return new ImageTestFile(to, width, height);
+    public static ImageTestFile image(@NonNull String to, int width, int height) {
+        return TestFiles.image(to, width, height);
     }
 
     protected static boolean imageFormatSupported(@NonNull String format) {
@@ -820,165 +531,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             // Can't just look through ImageIO.getWriterFormatNames() -- it lies.
             // (For example, on some systems it will claim to support JPG but then
             // throw an exception when actually used.)
-            ImageIO.write(new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB), format,
-                    new ByteArrayOutputStream());
+            ImageIO.write(new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB),
+                    format, new ByteArrayOutputStream());
             return true;
         } catch (Throwable e) {
             return false;
-        }
-    }
-
-    public class ImageTestFile extends BinaryTestFile {
-        private final BufferedImage mImage;
-        private String mFormat;
-
-        public ImageTestFile(@NonNull String to, int width, int height) {
-            super(to, new BytecodeProducer());
-
-            if (SdkUtils.endsWithIgnoreCase(to, DOT_PNG)) {
-                mFormat = "PNG";
-            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_JPG) || SdkUtils.endsWithIgnoreCase(to, DOT_JPEG)) {
-                mFormat = "JPG";
-            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_GIF)) {
-                mFormat = "GIF";
-            }
-            mImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        }
-
-        @NonNull
-        public ImageTestFile fill(int argb) {
-            return fill(0, 0, mImage.getWidth(), mImage.getHeight(), argb);
-        }
-
-        @NonNull
-        public ImageTestFile fill(int x, int y, int width, int height, int argb) {
-            Graphics2D graphics = mImage.createGraphics();
-            graphics.setColor(new Color(argb, true));
-            graphics.fillRect(x, y, width, height);
-            graphics.dispose();
-            return this;
-        }
-
-        @NonNull
-        public ImageTestFile text(int x, int y, String s, int argb) {
-            Graphics2D graphics = mImage.createGraphics();
-            graphics.setColor(new Color(argb, true));
-            graphics.drawString(s, x, y);
-            graphics.dispose();
-            return this;
-        }
-
-        @Override
-        public byte[] getBinaryContents() {
-            assertNotNull("Must set image type", mFormat);
-            ByteArrayOutputStream output = new ByteArrayOutputStream(2048);
-            try {
-                ImageIO.write(mImage, mFormat, output);
-            } catch (IOException e) {
-                fail(e.getLocalizedMessage() + " writing " + output + " in format " + mFormat);
-            }
-
-            return output.toByteArray();
-        }
-
-        public ImageTestFile format(String format) {
-            this.mFormat = format;
-            return this;
-        }
-    }
-
-    public class JarTestFile extends TestFile {
-        private List<TestFile> mFiles = Lists.newArrayList();
-        private Map<TestFile, String> mPath = Maps.newHashMap();
-
-        public JarTestFile(@NonNull String to) {
-            to(to);
-        }
-
-        public JarTestFile files(@NonNull TestFile... files) {
-            mFiles.addAll(Arrays.asList(files));
-            return this;
-        }
-
-        public JarTestFile add(@NonNull TestFile file, @NonNull String path) {
-            add(file);
-            mPath.put(file, path);
-            return this;
-        }
-
-        public JarTestFile add(@NonNull TestFile file) {
-            mFiles.add(file);
-            mPath.put(file, null);
-            return this;
-        }
-
-        @Override
-        public TestFile withSource(@NonNull String source) {
-            fail("Don't call withSource on " + this.getClass());
-            return this;
-        }
-
-        @Override
-        @NonNull
-        public String getContents() {
-            fail("Don't call getContents on binary " + this.getClass());
-            return null;
-        }
-
-        @NonNull
-        @Override
-        public File createFile(@NonNull File targetDir) throws IOException {
-            int index = targetRelativePath.lastIndexOf('/');
-            String relative = null;
-            String name = targetRelativePath;
-            if (index != -1) {
-                name = targetRelativePath.substring(index + 1);
-                relative = targetRelativePath.substring(0, index);
-            }
-
-            File dir = targetDir;
-            if (relative != null) {
-                dir = new File(dir, relative);
-                if (!dir.exists()) {
-                    boolean mkdir = dir.mkdirs();
-                    assertTrue(dir.getPath(), mkdir);
-                }
-            } else if (!dir.exists()) {
-                boolean mkdir = dir.mkdirs();
-                assertTrue(dir.getPath(), mkdir);
-            }
-            File tempFile = new File(dir, name);
-            if (tempFile.exists()) {
-                boolean deleted = tempFile.delete();
-                assertTrue(tempFile.getPath(), deleted);
-            }
-
-            Manifest manifest = new Manifest();
-            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-
-            try (JarOutputStream jarOutputStream = new JarOutputStream(
-                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
-                for (TestFile file : mFiles) {
-                    String path = mPath.get(file);
-                    if (path == null) {
-                        path = file.targetRelativePath;
-                    }
-                    jarOutputStream.putNextEntry(new ZipEntry(path));
-                    if (file instanceof BinaryTestFile) {
-                        byte[] bytes = ((BinaryTestFile) file).getBinaryContents();
-                        assertNotNull(file.targetRelativePath, bytes);
-                        ByteStreams.copy(new ByteArrayInputStream(bytes), jarOutputStream);
-                    } else {
-                        String contents = file.getContents();
-                        assertNotNull(file.targetRelativePath, contents);
-                        byte[] bytes = contents.getBytes(Charsets.UTF_8);
-                        ByteStreams.copy(new ByteArrayInputStream(bytes), jarOutputStream);
-                    }
-                    jarOutputStream.closeEntry();
-                }
-            }
-
-            return tempFile;
         }
     }
 
@@ -994,7 +551,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         List<TestFile> testFiles = Lists.newArrayList();
         for (String relativePath : relativePaths) {
-            testFiles.add(file().copy(relativePath));
+            testFiles.add(file().copy(relativePath, this));
         }
         return getProjectDir(name, testFiles.toArray(new TestFile[testFiles.size()]));
     }
@@ -1008,39 +565,75 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         if (name != null) {
             projectDir = new File(projectDir, name);
         }
+        populateProjectDirectory(projectDir, testFiles);
+        return projectDir;
+    }
+
+    public static void populateProjectDirectory(@NonNull File projectDir,
+            @NonNull TestFile... testFiles) throws IOException {
         if (!projectDir.exists()) {
             assertTrue(projectDir.getPath(), projectDir.mkdirs());
         }
 
+        boolean haveGradle = false;
         for (TestFile fp : testFiles) {
+            if (fp instanceof GradleTestFile) {
+                haveGradle = true;
+            }
+        }
+
+        for (TestFile fp : testFiles) {
+            if (haveGradle) {
+                if (ANDROID_MANIFEST_XML.equals(fp.targetRelativePath)) {
+                    // The default should be src/main/AndroidManifest.xml, not just AndroidManifest.xml
+                    //fp.to("src/main/AndroidManifest.xml");
+                    fp.within("src/main");
+                } else if (fp instanceof JavaTestFile
+                        && fp.targetRootFolder != null
+                        && fp.targetRootFolder.equals("src")) {
+                    fp.within("src/main/java");
+                }
+            }
+
             File file = fp.createFile(projectDir);
             assertNotNull(file);
         }
 
-        addManifestFile(projectDir);
-        return projectDir;
+        File manifest;
+        if (haveGradle) {
+            manifest = new File(projectDir, "src/main/AndroidManifest.xml");
+        } else {
+            manifest = new File(projectDir, ANDROID_MANIFEST_XML);
+        }
+        addManifestFileIfNecessary(manifest);
     }
 
-    private static void addManifestFile(File projectDir) throws IOException {
+    private static void addManifestFileIfNecessary(File manifest) throws IOException {
         // Ensure that there is at least a manifest file there to make it a valid project
         // as far as Lint is concerned:
-        if (!new File(projectDir, "AndroidManifest.xml").exists()) {
-            File manifest = new File(projectDir, "AndroidManifest.xml");
-            FileWriter fw = new FileWriter(manifest);
-            fw.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    package=\"foo.bar2\"\n" +
-                "    android:versionCode=\"1\"\n" +
-                "    android:versionName=\"1.0\" >\n" +
-                "</manifest>\n");
-            fw.close();
+        if (!manifest.exists()) {
+            File parentFile = manifest.getParentFile();
+            if (parentFile != null && !parentFile.isDirectory()) {
+                boolean ok = parentFile.mkdirs();
+                assertTrue("Couldn't create directory " + parentFile, ok);
+            }
+            try (FileWriter fw = new FileWriter(manifest)) {
+                fw.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"foo.bar2\"\n" +
+                        "    android:versionCode=\"1\"\n" +
+                        "    android:versionName=\"1.0\" >\n" +
+                        "</manifest>\n");
+            }
         }
     }
 
     private StringBuilder mOutput = null;
 
+    // Implements TestResourceProvider
+
     @Override
-    protected InputStream getTestResource(String relativePath, boolean expectExists) {
+    public InputStream getTestResource(String relativePath, boolean expectExists) {
         String path = "data" + File.separator + relativePath;
         InputStream stream = getClass().getResourceAsStream(path);
         if (!expectExists && stream == null) {
@@ -1084,13 +677,25 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     public class TestLintClient extends LintCliClient {
-        private StringWriter writer = new StringWriter();
-        private File incrementalCheck;
-
         public TestLintClient() {
             super(new LintCliFlags(), "test");
             flags.getReporters().add(new TextReporter(this, flags, writer, false));
         }
+
+        protected final StringWriter writer = new StringWriter();
+        protected File incrementalCheck;
+
+        /**
+         * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea
+         * (because it enables some special support in lint for checking code in AOSP
+         * itself.) However, some lint tests (particularly custom lint checks) may not care
+         * about this.
+         */
+        @SuppressWarnings("MethodMayBeStatic")
+        protected boolean allowAndroidBuildEnvironment() {
+            return true;
+        }
+
 
         @Override
         public String getSuperClass(@NonNull Project project, @NonNull String name) {
@@ -1108,76 +713,48 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             writer.getBuffer().setLength(0);
         }
 
+        @NonNull
+        @Override
+        protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+            if (projectDirs.contains(dir)) {
+                throw new CircularDependencyException(
+                        "Circular library dependencies; check your project.properties files carefully");
+            }
+            projectDirs.add(dir);
+            return Project.create(this, dir, referenceDir);
+        }
+
         @Override
         public String getClientRevision() {
             return "unittest"; // Hardcode version to keep unit test output stable
         }
 
-        public String analyze(List<File> files) throws Exception {
-            driver = new LintDriver(new CustomIssueRegistry(), this);
-            configureDriver(driver);
-            LintRequest request = new LintRequest(this, files);
-            if (incrementalCheck != null) {
-                assertEquals(1, files.size());
-                File projectDir = files.get(0);
-                assertTrue(isProjectDirectory(projectDir));
-                Project project = createProject(projectDir, projectDir);
-                project.addFile(incrementalCheck);
-                List<Project> projects = Collections.singletonList(project);
-                request.setProjects(projects);
-            }
-
-            driver.analyze(request.setScope(getLintScope(files)));
-
-            // Check compare contract
-            Warning prev = null;
-            for (Warning warning : warnings) {
-                if (prev != null) {
-                    boolean equals = warning.equals(prev);
-                    assertEquals(equals, prev.equals(warning));
-                    int compare = warning.compareTo(prev);
-                    assertEquals(equals, compare == 0);
-                    assertEquals(-compare, prev.compareTo(warning));
+        protected String cleanup(String result) {
+            List<File> sorted = new ArrayList<>(sCleanDirs);
+            // Process dirs in order such that we match longest substrings first
+            sorted.sort((file1, file2) -> {
+                String path1 = file1.getPath();
+                String path2 = file2.getPath();
+                int delta = path2.length() - path1.length();
+                if (delta != 0) {
+                    return delta;
+                } else {
+                    return path1.compareTo(path2);
                 }
-                prev = warning;
-            }
+            });
 
-            Collections.sort(warnings);
-
-            // Check compare contract and transitivity
-            Warning prev2 = prev;
-            prev = null;
-            for (Warning warning : warnings) {
-                if (prev != null && prev2 != null) {
-                    assertTrue(warning.compareTo(prev) >= 0);
-                    assertTrue(prev.compareTo(prev2) >= 0);
-                    assertTrue(warning.compareTo(prev2) >= 0);
-
-                    assertTrue(prev.compareTo(warning) <= 0);
-                    assertTrue(prev2.compareTo(prev) <= 0);
-                    assertTrue(prev2.compareTo(warning) <= 0);
+            for (File dir : sorted) {
+                if (result.contains(dir.getPath())) {
+                    result = result.replace(dir.getPath(), "/TESTROOT");
                 }
-                prev2 = prev;
-                prev = warning;
             }
 
-            Stats stats = new Stats(errorCount, warningCount);
-            for (Reporter reporter : flags.getReporters()) {
-                reporter.write(stats, warnings);
+            // The output typically contains a few directory/filenames.
+            // On Windows we need to change the separators to the unix-style
+            // forward slash to make the test as OS-agnostic as possible.
+            if (File.separatorChar != '/') {
+                result = result.replace(File.separatorChar, '/');
             }
-
-            mOutput.append(writer.toString());
-
-            if (mOutput.length() == 0) {
-                mOutput.append("No warnings.");
-            }
-
-            String result = mOutput.toString();
-            if (result.equals("No issues found.\n")) {
-                result = "No warnings.";
-            }
-
-            result = cleanup(result);
 
             return result;
         }
@@ -1242,6 +819,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             if (ignoreSystemErrors() && issue == IssueRegistry.LINT_ERROR) {
                 return;
             }
+
+
             // Use plain ascii in the test golden files for now. (This also ensures
             // that the markup is well-formed, e.g. if we have a ` without a matching
             // closing `, the ` would show up in the plain text.)
@@ -1354,7 +933,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return incrementalCheck != null;
         }
 
-
         @Nullable
         protected String getProjectResourceLibraryName() {
             return null;
@@ -1372,7 +950,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
             ResourceMerger merger = new ResourceMerger(0);
 
-            ResourceSet resourceSet = new ResourceSet(getName(), getProjectResourceLibraryName()) {
+            ResourceSet resourceSet = new ResourceSet(project.getName(),
+                    getProjectResourceLibraryName()) {
                 @Override
                 protected void checkItems() throws DuplicateDataException {
                     // No checking in ProjectResources; duplicates can happen, but
@@ -1410,7 +989,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     }
 
                     for (List<ResourceItem> list : lists) {
-                        Collections.sort(list, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
+                        list.sort((o1, o2) -> o1.getKey().compareTo(o2.getKey()));
                     }
 
                     // Store back in list multi map in new sorted order
@@ -1479,31 +1058,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return repository;
         }
 
-        private void addIds(Set<String> ids, Node node) {
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element element = (Element) node;
-                String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
-                if (id != null && !id.isEmpty()) {
-                    ids.add(LintUtils.stripIdPrefix(id));
-                }
-
-                NamedNodeMap attributes = element.getAttributes();
-                for (int i = 0, n = attributes.getLength(); i < n; i++) {
-                    Attr attribute = (Attr) attributes.item(i);
-                    String value = attribute.getValue();
-                    if (value.startsWith(NEW_ID_PREFIX)) {
-                        ids.add(value.substring(NEW_ID_PREFIX.length()));
-                    }
-                }
-            }
-
-            NodeList children = node.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                addIds(ids, child);
-            }
-        }
-
         @Nullable
         @Override
         public IAndroidTarget getCompileTarget(@NonNull Project project) {
@@ -1526,7 +1080,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public List<File> getTestSourceFolders(@NonNull Project project) {
             List<File> testSourceFolders = super.getTestSourceFolders(project);
 
-            //List<File> tests = new ArrayList<File>();
             File tests = new File(project.getDir(), "test");
             if (tests.exists()) {
                 List<File> all = Lists.newArrayList(testSourceFolders);
@@ -1535,6 +1088,101 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             }
 
             return testSourceFolders;
+        }
+
+        public String analyze(List<File> files) throws Exception {
+            driver = new LintDriver(new LintDetectorTest.CustomIssueRegistry(), this);
+            configureDriver(driver);
+
+            LintRequest request = new LintRequest(this, files);
+            if (incrementalCheck != null) {
+                assertEquals(1, files.size());
+                File projectDir = files.get(0);
+                assertTrue(isProjectDirectory(projectDir));
+                Project project = createProject(projectDir, projectDir);
+                project.addFile(incrementalCheck);
+                List<Project> projects = Collections.singletonList(project);
+                request.setProjects(projects);
+            }
+
+            driver.analyze(request.setScope(getLintScope(files)));
+
+            // Check compare contract
+            Warning prev = null;
+            for (Warning warning : warnings) {
+                if (prev != null) {
+                    boolean equals = warning.equals(prev);
+                    assertEquals(equals, prev.equals(warning));
+                    int compare = warning.compareTo(prev);
+                    assertEquals(equals, compare == 0);
+                    assertEquals(-compare, prev.compareTo(warning));
+                }
+                prev = warning;
+            }
+
+            Collections.sort(warnings);
+
+            // Check compare contract and transitivity
+            Warning prev2 = prev;
+            prev = null;
+            for (Warning warning : warnings) {
+                if (prev != null && prev2 != null) {
+                    assertTrue(warning.compareTo(prev) >= 0);
+                    assertTrue(prev.compareTo(prev2) >= 0);
+                    assertTrue(warning.compareTo(prev2) >= 0);
+
+                    assertTrue(prev.compareTo(warning) <= 0);
+                    assertTrue(prev2.compareTo(prev) <= 0);
+                    assertTrue(prev2.compareTo(warning) <= 0);
+                }
+                prev2 = prev;
+                prev = warning;
+            }
+
+            Stats stats = new Stats(errorCount, warningCount);
+            for (Reporter reporter : flags.getReporters()) {
+                reporter.write(stats, warnings);
+            }
+
+            mOutput.append(writer.toString());
+
+            if (mOutput.length() == 0) {
+                mOutput.append("No warnings.");
+            }
+
+            String result = mOutput.toString();
+            if (result.equals("No issues found.\n")) {
+                result = "No warnings.";
+            }
+
+            result = cleanup(result);
+
+            return result;
+        }
+    }
+
+    private static void addIds(Set<String> ids, Node node) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
+            if (id != null && !id.isEmpty()) {
+                ids.add(LintUtils.stripIdPrefix(id));
+            }
+
+            NamedNodeMap attributes = element.getAttributes();
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attribute = (Attr) attributes.item(i);
+                String value = attribute.getValue();
+                if (value.startsWith(NEW_ID_PREFIX)) {
+                    ids.add(value.substring(NEW_ID_PREFIX.length()));
+                }
+            }
+        }
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            addIds(ids, child);
         }
     }
 
@@ -1582,6 +1230,54 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public void setSeverity(@NonNull Issue issue, @Nullable Severity severity) {
             fail("Not supported in tests.");
+        }
+    }
+
+    /**
+     * Test file description, which can copy from resource directory or from
+     * a specified hardcoded string literal, and copy into a target directory
+     * <p>
+     * This class is just a temporary shim to keep the API compatible; new code should
+     * reference com.android.tools.lint.checks.infrastructure.TestFile.
+     */
+    public static class TestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
+        public TestFile() {
+        }
+
+        @Override
+        public TestFile withSource(@NonNull String source) {
+            super.withSource(source);
+            return this;
+        }
+
+        @Override
+        public TestFile from(@NonNull String from, @NonNull TestResourceProvider provider) {
+            super.from(from, provider);
+            return this;
+        }
+
+        @Override
+        public TestFile to(@NonNull String to) {
+            super.to(to);
+            return this;
+        }
+
+        @Override
+        public TestFile copy(@NonNull String relativePath, @NonNull TestResourceProvider provider) {
+            super.copy(relativePath, provider);
+            return this;
+        }
+
+        @Override
+        public TestFile withBytes(@NonNull byte[] bytes) {
+            super.withBytes(bytes);
+            return this;
+        }
+
+        @Override
+        public TestFile within(@Nullable String root) {
+            super.within(root);
+            return this;
         }
     }
 }

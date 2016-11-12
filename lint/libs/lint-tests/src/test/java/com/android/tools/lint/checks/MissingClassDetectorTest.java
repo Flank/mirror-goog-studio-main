@@ -22,12 +22,10 @@ import static com.android.tools.lint.checks.MissingClassDetector.MISSING;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
 import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.Sets;
@@ -54,42 +52,8 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && mEnabled.contains(issue);
-            }
-        };
-    }
-
-    public void test() throws Exception {
-        mScopes = null;
-        mEnabled = Sets.newHashSet(MISSING);
-        //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:13: Error: Class referenced in the manifest, test.pkg.TestProvider, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <activity android:name=\".TestProvider\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.TestProvider2, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <service android:name=\"test.pkg.TestProvider2\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:15: Error: Class referenced in the manifest, test.pkg.TestService, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <provider android:name=\".TestService\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:16: Error: Class referenced in the manifest, test.pkg.OnClickActivity, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <receiver android:name=\"OnClickActivity\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:17: Error: Class referenced in the manifest, test.pkg.TestReceiver, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <service android:name=\"TestReceiver\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "5 errors, 0 warnings\n",
-
-            lintProject(
-                mAndroidManifestWrongRegs,
-                mApiCallTest,
-                classpath()
-            ));
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     public void testIncrementalInManifest() throws Exception {
@@ -102,6 +66,35 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                 lintProject(
                     mAndroidManifestWrongRegs,
                     classpath()
+                ));
+    }
+
+    public void test() throws Exception {
+        mScopes = null;
+        mEnabled = Sets.newHashSet(MISSING);
+        //noinspection all // Sample code
+        assertEquals(""
+                        + "AndroidManifest.xml:13: Error: Class referenced in the manifest, test.pkg.TestProvider, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <activity android:name=\".TestProvider\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.TestProvider2, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <service android:name=\"test.pkg.TestProvider2\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:15: Error: Class referenced in the manifest, test.pkg.TestService, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <provider android:name=\".TestService\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:16: Error: Class referenced in the manifest, test.pkg.OnClickActivity, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <receiver android:name=\"OnClickActivity\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:17: Error: Class referenced in the manifest, test.pkg.TestReceiver, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <service android:name=\"TestReceiver\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "5 errors, 0 warnings\n",
+
+                lintProject(
+                        mAndroidManifestWrongRegs,
+                        mApiCallTest,
+                        classpath()
                 ));
     }
 

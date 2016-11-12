@@ -16,23 +16,17 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -45,14 +39,15 @@ import junit.framework.TestCase;
  * files, computing string diffs, etc.
  */
 @SuppressWarnings("javadoc")
-public abstract class BaseLintDetectorTest extends TestCase {
+public abstract class BaseLintDetectorTest extends TestCase implements TestResourceProvider  {
     /** Update golden files if different from the actual results */
     private static final boolean UPDATE_DIFFERENT_FILES = false;
     /** Create golden files if missing */
     private static final boolean UPDATE_MISSING_FILES = true;
     private static File sTempDir = null;
-    protected static Set<File> sCleanDirs = Sets.newHashSet();
+    protected static final Set<File> sCleanDirs = Sets.newHashSet();
 
+    @SuppressWarnings("MethodMayBeStatic")
     protected String getTestDataRelPath() {
         fail("Must be overridden");
         return null;
@@ -61,7 +56,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
     public static int getCaretOffset(String fileContent, String caretLocation) {
         assertTrue(caretLocation, caretLocation.contains("^"));
 
-        int caretDelta = caretLocation.indexOf("^");
+        int caretDelta = caretLocation.indexOf('^');
         assertTrue(caretLocation, caretDelta != -1);
 
         // String around caret/range without the range and caret marker characters
@@ -156,11 +151,13 @@ public abstract class BaseLintDetectorTest extends TestCase {
         return sTempDir;
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     protected String removeSessionData(String data) {
         return data;
     }
 
-    protected InputStream getTestResource(String relativePath, boolean expectExists) {
+    @Override
+    public InputStream getTestResource(String relativePath, boolean expectExists) {
         String path = "testdata" + File.separator + relativePath;
         InputStream stream = BaseLintDetectorTest.class.getResourceAsStream(path);
         if (!expectExists && stream == null) {
@@ -243,16 +240,11 @@ public abstract class BaseLintDetectorTest extends TestCase {
         }
     }
 
-    protected void deleteFile(File dir) {
+    protected static void deleteFile(File dir) {
         TestUtils.deleteFile(dir);
     }
 
-    protected File makeTestFile(String name, String relative,
-            final InputStream contents) throws IOException {
-        return makeTestFile(getTargetDir(), name, relative, contents);
-    }
-
-    protected File makeTestFile(File dir, String name, String relative,
+    protected static File makeTestFile(File dir, String name, String relative,
             final InputStream contents) throws IOException {
         if (relative != null) {
             dir = new File(dir, relative);
@@ -272,98 +264,6 @@ public abstract class BaseLintDetectorTest extends TestCase {
         java.nio.file.Files.copy(contents, tempFile.toPath());
 
         return tempFile;
-    }
-
-    /**
-     * Test file description, which can copy from resource directory or from
-     * a specified hardcoded string literal, and copy into a target directory
-     */
-    public class TestFile {
-        public String sourceRelativePath;
-        public String targetRelativePath;
-        public String contents;
-        public byte[] bytes;
-
-        public TestFile() {
-        }
-
-        public TestFile withSource(@NonNull String source) {
-            contents = source;
-            return this;
-        }
-
-        public TestFile from(@NonNull String from) {
-            sourceRelativePath = from;
-            return this;
-        }
-
-        public TestFile to(@NonNull String to) {
-            targetRelativePath = to;
-            return this;
-        }
-
-        public TestFile copy(@NonNull String relativePath) {
-            // Support replacing filenames and paths with a => syntax, e.g.
-            //   dir/file.txt=>dir2/dir3/file2.java
-            // will read dir/file.txt from the test data and write it into the target
-            // directory as dir2/dir3/file2.java
-            String targetPath = relativePath;
-            int replaceIndex = relativePath.indexOf("=>");
-            if (replaceIndex != -1) {
-                // foo=>bar
-                targetPath = relativePath.substring(replaceIndex + "=>".length());
-                relativePath = relativePath.substring(0, replaceIndex);
-            }
-            sourceRelativePath = relativePath;
-            targetRelativePath = targetPath;
-            return this;
-        }
-
-        @NonNull
-        public File createFile(@NonNull File targetDir) throws IOException {
-            InputStream stream;
-            if (contents != null) {
-                stream = new ByteArrayInputStream(contents.getBytes(Charsets.UTF_8));
-            } else if (bytes != null) {
-                stream = new ByteArrayInputStream(bytes);
-            } else {
-                stream = getTestResource(sourceRelativePath, true);
-                assertNotNull(sourceRelativePath + " does not exist", stream);
-            }
-            int index = targetRelativePath.lastIndexOf('/');
-            String relative = null;
-            String name = targetRelativePath;
-            if (index != -1) {
-                name = targetRelativePath.substring(index + 1);
-                relative = targetRelativePath.substring(0, index);
-            }
-
-            return makeTestFile(targetDir, name, relative, stream);
-        }
-
-        @Nullable
-        public String getContents() {
-            if (contents != null) {
-                return contents;
-            } else if (bytes != null) {
-                return Base64.getEncoder().encodeToString(bytes);
-            } else if (sourceRelativePath != null) {
-                InputStream stream = getTestResource(sourceRelativePath, true);
-                if (stream != null) {
-                    try {
-                        return new String(ByteStreams.toByteArray(stream), Charsets.UTF_8);
-                    } catch (IOException ignore) {
-                        return "<couldn't open test file " + sourceRelativePath + ">";
-                    }
-                }
-            }
-            return null;
-        }
-
-        public TestFile withBytes(@NonNull byte[] bytes) {
-            this.bytes = bytes;
-            return this;
-        }
     }
 
     protected File getTestfile(File targetDir, String relativePath) throws IOException {
@@ -403,10 +303,11 @@ public abstract class BaseLintDetectorTest extends TestCase {
         sCleanDirs.add(dir.getAbsoluteFile());
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     protected String cleanup(String result) {
         List<File> sorted = new ArrayList<>(sCleanDirs);
         // Process dirs in order such that we match longest substrings first
-        Collections.sort(sorted, (file1, file2) -> {
+        sorted.sort((file1, file2) -> {
             String path1 = file1.getPath();
             String path2 = file2.getPath();
             int delta = path2.length() - path1.length();
@@ -434,6 +335,7 @@ public abstract class BaseLintDetectorTest extends TestCase {
     }
 
     /** Get the location to write missing golden files to */
+    @SuppressWarnings("MethodMayBeStatic")
     protected File findSrcDir() {
         // Set $ANDROID_SRC to point to your git AOSP working tree
         String rootPath = System.getenv("ANDROID_SRC");

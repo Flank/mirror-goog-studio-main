@@ -9,9 +9,8 @@ dependencies {
     compile project(':base:lint')
     compile project(':base:testutils')
     compile libs.junit
+    compile libs.mockito_all
 
-
-    testCompile libs.mockito_all
     testCompile libs.groovy
     testCompile libs.truth
 }
@@ -19,10 +18,6 @@ dependencies {
 sourceSets {
     main.resources.srcDir 'src/main/java'
     test.resources.srcDir 'src/test/java'
-}
-
-test {
-    exclude '**/LintBazelSuite.class'
 }
 
 project.ext.pomName = 'Android Tools Lint Test API'
