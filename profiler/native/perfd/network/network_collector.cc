@@ -21,7 +21,7 @@
 #include "perfd/network/connection_sampler.h"
 #include "perfd/network/connectivity_sampler.h"
 #include "perfd/network/network_constants.h"
-#include "perfd/network/traffic_sampler.h"
+#include "perfd/network/speed_sampler.h"
 #include "utils/trace.h"
 #include "utils/clock.h"
 #include "utils/thread_name.h"
@@ -57,6 +57,11 @@ void NetworkCollector::Collect() {
   while (is_running_.load()) {
     Trace::Begin("NET:Collect");
     for (const auto &sampler : samplers_) {
+      // TODO: Sometimes, we may actually want to create more than one response
+      // entry per tick. Revisit this logic to allow that.
+      // (For example, between the last tick and this tick, TrafficSampler may
+      // want to create an additional point in the middle where the speed
+      // dropped to 0)
       profiler::proto::NetworkProfilerData response;
       sampler->GetData(&response);
       int64_t time = clock.GetCurrentTime();
@@ -83,7 +88,7 @@ void NetworkCollector::CreateSamplers() {
   bool has_uid = UidFetcher::GetUidString(pid_, &uid);
   if (has_uid) {
     samplers_.emplace_back(
-        new TrafficSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
+        new SpeedSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
     samplers_.emplace_back(
         new ConnectionSampler(uid, NetworkConstants::GetConnectionFilePaths()));
   }
