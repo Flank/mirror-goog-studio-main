@@ -48,6 +48,7 @@ import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.internal.packaging.OldPackager;
 import com.android.builder.model.SigningConfig;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SigningException;
 import com.android.builder.packaging.ZipAbortException;
@@ -212,10 +213,15 @@ public class AndroidBuilder {
                 getLogger(), mTargetInfo, mJavaProcessExecutor, mVerboseExec);
 
         if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
-                            + "Minimum required is %3$s",
-                    mTargetInfo.getBuildTools().getRevision(), mProjectId, MIN_BUILD_TOOLS_REV));
+            mErrorReporter.handleSyncError(
+                    MIN_BUILD_TOOLS_REV.toString(),
+                    SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
+                    String.format(
+                            "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
+                                    + "Minimum required is %3$s",
+                            mTargetInfo.getBuildTools().getRevision(),
+                            mProjectId,
+                            MIN_BUILD_TOOLS_REV));
         }
     }
 
