@@ -13,34 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_NETWORK_TRAFFIC_SAMPLER_H_
-#define PERFD_NETWORK_TRAFFIC_SAMPLER_H_
+#ifndef PERFD_NETWORK_SPEED_SAMPLER_H_
+#define PERFD_NETWORK_SPEED_SAMPLER_H_
 
 #include "perfd/network/network_sampler.h"
+
+#include "perfd/network/net_stats_file_reader.h"
+#include "perfd/network/speed_converter.h"
 
 #include <string>
 
 namespace profiler {
 
 // Data collector of network traffic information. For example, it provides sent
-// and received bytes of an app.
-class TrafficSampler final : public NetworkSampler {
+// and received network speeds of an app.
+class SpeedSampler final : public NetworkSampler {
  public:
-  TrafficSampler(const std::string &uid, const std::string &file)
-      : uid_(uid), file_(file) {}
+  SpeedSampler(const std::string &uid, const std::string &file)
+      : stats_reader_(uid, file) {}
 
   // Reads traffic bytes sent and received, and store data in given {@code
   // NetworkProfilerData}.
   void GetData(profiler::proto::NetworkProfilerData *data) override;
 
  private:
-  // App uid for parsing file to get app's traffic information.
-  const std::string uid_;
-
-  // Traffic file path.
-  const std::string file_;
+  NetStatsFileReader stats_reader_;
+  std::unique_ptr<SpeedConverter> tx_speed_converter_;
+  std::unique_ptr<SpeedConverter> rx_speed_converter_;
 };
 
 }  // namespace profiler
 
-#endif  // PERFD_NETWORK_TRAFFIC_SAMPLER_H_
+#endif  // PERFD_NETWORK_SPEED_SAMPLER_H_

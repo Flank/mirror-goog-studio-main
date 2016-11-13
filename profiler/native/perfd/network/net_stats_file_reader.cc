@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "traffic_sampler.h"
+#include "net_stats_file_reader.h"
 
 #include "utils/file_reader.h"
 #include "utils/tokenizer.h"
 
-#include <cstdlib>
-
 namespace profiler {
 
-void TrafficSampler::GetData(profiler::proto::NetworkProfilerData *data) {
-  int64_t bytes_sent = 0;
-  int64_t bytes_received = 0;
+void NetStatsFileReader::Refresh() {
+  bytes_tx_ = 0;
+  bytes_rx_ = 0;
 
   std::vector<std::string> lines;
   FileReader::Read(file_, &lines);
@@ -46,15 +44,11 @@ void TrafficSampler::GetData(profiler::proto::NetworkProfilerData *data) {
       if (t.EatTokens(1) && t.GetNextToken(&rx_str) && t.EatTokens(1) &&
           t.GetNextToken(&tx_str)) {
         // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
-        bytes_sent += atol(tx_str.c_str());
-        bytes_received += atol(rx_str.c_str());
+        bytes_tx_ += atol(tx_str.c_str());
+        bytes_rx_ += atol(rx_str.c_str());
       }
     }
   }
-
-  profiler::proto::TrafficData *traffic_data = data->mutable_traffic_data();
-  traffic_data->set_bytes_sent(bytes_sent);
-  traffic_data->set_bytes_received(bytes_received);
 }
 
 }  // namespace profiler

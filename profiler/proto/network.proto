@@ -55,15 +55,18 @@ service NetworkService {
 message NetworkProfilerData {
   CommonData basic_info = 1;
   oneof data {
-    TrafficData traffic_data = 2;
+    SpeedData speed_data = 2;
     ConnectionData connection_data = 3;
     ConnectivityData connectivity_data = 4;
   }
 }
 
-message TrafficData {
-  int64 bytes_sent = 1;
-  int64 bytes_received = 2;
+// TODO: Break these up into their own messages (since tx and rx speeds can
+// have unique timestamps), unless the error we get by combining them in the
+// same message ends up being too subtle to matter
+message SpeedData {
+  int64 sent = 1; // bytes / sec
+  int64 received = 2; // bytes / sec
 }
 
 message ConnectionData { int32 connection_number = 1; }
@@ -100,8 +103,8 @@ message NetworkDataRequest {
     // This data is device-wide and the same values will be returned across all
     // valid |app_id| values.
     CONNECTIVITY = 1;
-    // Network transmitted and received bytes.
-    TRAFFIC = 2;
+    // Network transmitted and received speeds (in bytes / sec).
+    SPEED = 2;
     // Number of open connections.
     CONNECTIONS = 3;
   }

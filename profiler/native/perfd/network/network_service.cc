@@ -75,7 +75,7 @@ grpc::Status NetworkServiceImpl::GetData(
 
   for (auto &value : app_buffer->GetValues(start_time, end_time)) {
     if (type == NetworkDataRequest::ALL ||
-        (type == NetworkDataRequest::TRAFFIC && value.has_traffic_data()) ||
+        (type == NetworkDataRequest::SPEED && value.has_speed_data()) ||
         (type == NetworkDataRequest::CONNECTIONS &&
          value.has_connection_data())) {
       response->add_data()->Swap(&value);
