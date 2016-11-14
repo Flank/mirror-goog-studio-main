@@ -49,8 +49,6 @@ public class JackPluginsTest {
 
     @Test
     public void checkCoverageAsPlugin() throws Exception {
-        // http://b.android.com/224564
-        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
@@ -60,10 +58,9 @@ public class JackPluginsTest {
         updateBuildFile(
                 ImmutableList.of("com.android.jack.coverage.CodeCoverage"),
                 ImmutableList.of(coveragePlugin));
-        GradleBuildResult result = mProject.executor().run("assembleDebug");
+        GradleBuildResult result = mProject.executor().withArgument("--debug").run("assembleDebug");
 
-        assertThat(result.getStdout()).contains("--plugin com.android.jack.coverage.CodeCoverage");
-        assertThat(result.getStdout()).contains("--pluginpath " + coveragePlugin);
+        assertThat(result.getStdout()).contains("com.android.jack.coverage.CodeCoverage");
     }
 
     @Test
@@ -75,8 +72,7 @@ public class JackPluginsTest {
         assertThat(result.getException()).isNotNull();
         //noinspection ThrowableResultOfMethodCallIgnored - should not throw
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("finished with non-zero exit value");
-        assertThat(result.getStderr()).contains("Plugin 'Plugin1' not found");
+                .contains("Plugin 'Plugin1' not found");
     }
 
     @Test
@@ -94,8 +90,6 @@ public class JackPluginsTest {
 
     @Test
     public void checkNameDuplicates() throws Exception {
-        // http://b.android.com/224564
-        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
@@ -108,16 +102,13 @@ public class JackPluginsTest {
                         "com.android.jack.coverage.CodeCoverage"),
                 ImmutableList.of(coveragePlugin));
 
-        GradleBuildResult result = mProject.executor().run("assembleDebug");
+        GradleBuildResult result = mProject.executor().withArgument("--debug").run("assembleDebug");
 
-        assertThat(result.getStdout()).contains("--plugin com.android.jack.coverage.CodeCoverage");
-        assertThat(result.getStdout()).contains("--pluginpath " + coveragePlugin);
+        assertThat(result.getStdout()).contains("com.android.jack.coverage.CodeCoverage");
     }
 
     @Test
     public void checkPathDuplicates() throws Exception {
-        // http://b.android.com/224564
-        AssumeUtil.assumeBuildToolsAtLeast(24, 0, 4, 1);
         File coveragePlugin =
                 SdkHelper.getBuildTool(
                         Revision.parseRevision(
@@ -128,10 +119,9 @@ public class JackPluginsTest {
                 ImmutableList.of("com.android.jack.coverage.CodeCoverage"),
                 ImmutableList.of(coveragePlugin, coveragePlugin));
 
-        GradleBuildResult result = mProject.executor().run("assembleDebug");
+        GradleBuildResult result = mProject.executor().withArgument("--debug").run("assembleDebug");
 
-        assertThat(result.getStdout()).contains("--plugin com.android.jack.coverage.CodeCoverage");
-        assertThat(result.getStdout()).contains("--pluginpath " + coveragePlugin);
+        assertThat(result.getStdout()).contains("com.android.jack.coverage.CodeCoverage");
     }
 
     private void updateBuildFile(@NonNull List<String> pluginNames, @NonNull List<File> paths)
@@ -150,7 +140,6 @@ public class JackPluginsTest {
                         + "     defaultConfig {\n"
                         + "        jackOptions {\n"
                         + "            enabled true\n"
-                        + "            jackInProcess false\n" // see http://b.android.com/222326
                         + "            pluginNames = [" + names + "]\n"
                         + "        }\n"
                         + "    }\n"
