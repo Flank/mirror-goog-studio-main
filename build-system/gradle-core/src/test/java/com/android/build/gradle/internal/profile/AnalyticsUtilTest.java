@@ -22,10 +22,6 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
 import com.google.protobuf.ProtocolMessageEnum;
-
-import org.gradle.api.Task;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -33,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.gradle.api.Task;
+import org.junit.Test;
 
 public class AnalyticsUtilTest {
 
@@ -41,7 +39,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName);
+                AnalyticsUtil::getPotentialTaskExecutionTypeName,
+                "com.android.build.gradle.internal.tasks.ResolveDependenciesTask");
     }
 
     @Test
