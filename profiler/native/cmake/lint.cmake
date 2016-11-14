@@ -14,11 +14,17 @@
 
 add_custom_target(lint)
 
+file(GLOB_RECURSE ignore_lint_files ".idea/*")
+
 if(CLANG_TIDY_PATH AND CMAKE_EXPORT_COMPILE_COMMANDS)
   add_custom_target(clang-tidy)
   add_custom_target(clang-tidy-fix)
 
-  file(GLOB_RECURSE clang_tidy_files *.cc)
+  file(GLOB_RECURSE clang_tidy_files "*.cc")
+  foreach(file ${ignore_lint_files})
+    list(REMOVE_ITEM clang_tidy_files ${file})
+  endforeach()
+
   foreach(file ${clang_tidy_files})
     string(REPLACE "/" "-" target_name "${file}.tidy")
     add_custom_target(${target_name}
@@ -33,4 +39,27 @@ if(CLANG_TIDY_PATH AND CMAKE_EXPORT_COMPILE_COMMANDS)
   endforeach()
 
   add_dependencies(lint clang-tidy)
+endif()
+
+if(CLANG_FORMAT_PATH)
+  add_custom_target(clang-format)
+  add_custom_target(clang-format-fix)
+
+  file(GLOB_RECURSE clang_format_files "*.cc" "*.h")
+  foreach(file ${ignore_lint_files})
+    list(REMOVE_ITEM clang_format_files ${file})
+  endforeach()
+
+  foreach(file ${clang_format_files})
+    string(REPLACE "/" "-" target_name "${file}.format")
+    add_custom_target(${target_name}
+                      ${CLANG_FORMAT_PATH} ${file} | diff ${file} -)
+    add_custom_target(${target_name}-fix
+                      ${CLANG_FORMAT_PATH} ${file} -i)
+
+    add_dependencies(clang-format ${target_name})
+    add_dependencies(clang-format-fix ${target_name}-fix)
+  endforeach()
+
+  add_dependencies(lint clang-format)
 endif()
