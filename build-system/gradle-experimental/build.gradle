@@ -7,7 +7,7 @@ apply plugin: 'idea'
 apply plugin: 'jacoco-tools-base'
 
 // Extract gradle libraries to ensure gradle-core is compatible with older version.
-String gradleVersion = "3.1"
+String gradleVersion = "3.2"
 File gradleBinary = file("$rootProject.projectDir/external/gradle/gradle-$gradleVersion-bin.zip")
 File gradleLib = file("$rootProject.ext.androidHostOut/alternate-gradle/gradle-$gradleVersion/lib")
 
