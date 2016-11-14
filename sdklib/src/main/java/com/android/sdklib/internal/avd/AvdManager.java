@@ -762,13 +762,15 @@ public class AvdManager {
 
             File userdataDest = new File(avdFolder, USERDATA_IMG);
 
-            mFop.copyFile(userdataSrc, userdataDest);
-
             if (!mFop.exists(userdataDest)) {
-                log.warning("Unable to create '%1$s' file in the AVD folder.",
-                        userdataDest);
-                needCleanup = true;
-                return null;
+                mFop.copyFile(userdataSrc, userdataDest);
+
+                if (!mFop.exists(userdataDest)) {
+                    log.warning("Unable to create '%1$s' file in the AVD folder.",
+                                userdataDest);
+                    needCleanup = true;
+                    return null;
+                }
             }
 
             // Config file.
