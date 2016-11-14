@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.core.Toolchain;
 import com.android.repository.Revision;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Properties;
+import org.gradle.api.logging.Logging;
 
 /**
  * Handles NDK related information.
@@ -166,7 +166,37 @@ public class NdkHandler {
             properties = readProperties(localProperties);
         }
 
-        return findNdkDirectory(properties);
+        File ndkDir = findNdkDirectory(properties);
+        if (ndkDir == null) {
+            return null;
+        }
+        return checkNdkDir(ndkDir) ? ndkDir : null;
+    }
+
+    /**
+     * Perform basic verification on the NDK directory.
+     */
+    private static boolean checkNdkDir(File ndkDir) {
+        if (!new File(ndkDir, "platforms").isDirectory()) {
+            invalidNdkWarning("NDK is missing a \"platforms\" directory.", ndkDir);
+            return false;
+        }
+        if (!new File(ndkDir, "toolchains").isDirectory()) {
+            invalidNdkWarning("NDK is missing a \"toolchains\" directory.", ndkDir);
+            return false;
+        }
+        return true;
+    }
+
+    private static void invalidNdkWarning(String message, File ndkDir) {
+        Logging.getLogger(NdkHandler.class).warn(
+                "{}\n"
+                        + "If you are using NDK, verify the ndk.dir is set to a valid NDK "
+                        + "directory.  It is currently set to {}.\n"
+                        + "If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME "
+                        + "or local.properties to remove this warning.\n",
+                message,
+                ndkDir.getAbsolutePath());
     }
 
     /**
