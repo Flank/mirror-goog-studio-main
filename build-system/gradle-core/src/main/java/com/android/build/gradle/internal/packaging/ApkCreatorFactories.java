@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.builder.internal.packaging.zfile.ApkZFileCreatorFactory;
-import com.android.builder.internal.packaging.zip.ZFileOptions;
-import com.android.builder.internal.packaging.zip.compress.BestAndDefaultDeflateExecutorCompressor;
-import com.android.builder.internal.packaging.zip.compress.DeflateExecutionCompressor;
-import com.android.builder.packaging.ApkCreatorFactory;
+import com.android.apkzlib.zfile.ApkZFileCreatorFactory;
+import com.android.apkzlib.zip.ZFileOptions;
+import com.android.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor;
+import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
+import com.android.apkzlib.zfile.ApkCreatorFactory;
 
 import org.gradle.api.Project;
 

@@ -44,7 +44,7 @@ import com.android.builder.dependency.DependencyContainerImpl;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
-import com.android.builder.internal.utils.FileCache;
+import com.android.apkzlib.utils.FileCache;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;

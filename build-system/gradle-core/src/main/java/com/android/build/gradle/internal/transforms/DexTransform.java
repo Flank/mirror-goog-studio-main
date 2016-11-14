@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
-import com.android.builder.internal.utils.FileCache;
+import com.android.apkzlib.utils.FileCache;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;

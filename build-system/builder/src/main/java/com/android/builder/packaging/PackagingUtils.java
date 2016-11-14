@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.model.AaptOptions;
 import com.google.common.base.Charsets;
