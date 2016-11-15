@@ -31,7 +31,7 @@ maven_java_library(
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",

@@ -19,7 +19,7 @@ maven_java_library(
     resources = glob(["dvlib/src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
     ],
 )

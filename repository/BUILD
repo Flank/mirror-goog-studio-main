@@ -32,7 +32,7 @@ maven_java_library(
     visibility = ["//visibility:public"],
     # TODO: Why is MockFileOp in main sources?
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:org.apache.commons_commons-compress",

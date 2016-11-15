@@ -27,7 +27,7 @@ maven_java_library(
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",  # for now, can't canonicalize because _maven gets appended
+        "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )

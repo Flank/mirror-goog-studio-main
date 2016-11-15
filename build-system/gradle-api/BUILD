@@ -8,8 +8,8 @@ maven_java_library(
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/external/gradle:gradle-api.jar_neverlink",
     ],

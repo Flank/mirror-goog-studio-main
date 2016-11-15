@@ -44,7 +44,7 @@ maven_java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/device_validator:tools.dvlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

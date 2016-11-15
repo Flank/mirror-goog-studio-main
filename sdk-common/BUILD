@@ -41,9 +41,9 @@ maven_java_library(
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/build-system:tools.builder-test-api",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
