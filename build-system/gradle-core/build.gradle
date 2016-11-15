@@ -139,9 +139,9 @@ dependencies {
         transitive = false
     }
 }
-sourceSets.main.compileClasspath += [configurations.subsumedProvided]
-sourceSets.test.compileClasspath += [configurations.subsumedProvided]
-sourceSets.test.runtimeClasspath += [configurations.subsumedProvided]
+sourceSets.main.compileClasspath += configurations.subsumedProvided
+sourceSets.test.compileClasspath += configurations.subsumedProvided
+sourceSets.test.runtimeClasspath += configurations.subsumedProvided
 tasks.compileJava.dependsOn(configurations.subsumedProvided)
 tasks.sourcesJar.dependsOn(configurations.sourcesSubsumedProvided)
 tasks.jar {
