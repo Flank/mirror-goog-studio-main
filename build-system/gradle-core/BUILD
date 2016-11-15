@@ -17,7 +17,6 @@ maven_java_library(
         "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
         "//tools/base/build-system/instant-run-instrumentation:sources",
     ],
-    javacopts = ["-extra_checks:off"],
     pom = ":pom",
     resources = glob([
         "src/main/resources/**",
@@ -77,7 +76,6 @@ java_test(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
-    javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     tags = ["manual"],  # TODO: Make these test pass.

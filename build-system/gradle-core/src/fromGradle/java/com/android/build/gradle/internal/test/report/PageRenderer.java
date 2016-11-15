@@ -135,7 +135,7 @@ abstract class PageRenderer<T extends CompositeTestResults> extends TabbedPageRe
             .endElement();
 
             htmlWriter.startElement("td").attribute("class", test.getStatusClass())
-                    .startElement("a").attribute("href", String.format("%s.html#s", test.getClassResults().getFilename(reportType), test.getName()))
+                    .startElement("a").attribute("href", String.format("%s.html#%s", test.getClassResults().getFilename(reportType), test.getName()))
                     .characters(test.getName()).endElement()
                     .endElement();
             htmlWriter.endElement(); //tr
