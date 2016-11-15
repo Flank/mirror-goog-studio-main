@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.sdklib",
@@ -32,8 +33,9 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.sdklib",
+    pom = ":pom",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(
@@ -42,7 +44,7 @@ java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/common:tools.common",
         "//tools/base/device_validator:tools.dvlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -52,6 +54,13 @@ java_library(
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.apache.httpcomponents_httpclient",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "sdklib",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

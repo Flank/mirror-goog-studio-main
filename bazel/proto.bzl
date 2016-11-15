@@ -1,3 +1,5 @@
+load(":maven.bzl", "maven_java_library")
+
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
 proto_languages = struct(
@@ -87,7 +89,7 @@ _gen_proto_rule = rule(
   implementation = _gen_proto_impl,
 )
 
-def java_proto_library(name, srcs=None, deps=[], visibility=None, grpc_support=False):
+def java_proto_library(name, srcs=None, deps=[], pom=None, visibility=None, grpc_support=False):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
   _gen_proto_rule(
@@ -99,14 +101,16 @@ def java_proto_library(name, srcs=None, deps=[], visibility=None, grpc_support=F
       grpc_plugin =
           "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.1:exe"
               if grpc_support else None,
-      target_language = proto_languages.JAVA
+      target_language = proto_languages.JAVA,
+      visibility = visibility,
     )
 
   deps = ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
   if grpc_support:
     deps += ["//tools/base/third_party:io.grpc_grpc-all"]
-  native.java_library(
+  maven_java_library(
       name  = name,
+      pom = pom,
       srcs = outs,
       deps = deps,
       visibility = visibility,

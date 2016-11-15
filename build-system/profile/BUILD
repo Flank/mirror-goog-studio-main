@@ -1,3 +1,11 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
+
+fileset(
+    name = "sources",
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//tools/base/build-system/builder:__pkg__"]
+)
+
 java_library(
     name = "profile",
     srcs = glob(["src/main/java/**"]),

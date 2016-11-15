@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.ddmlib",
@@ -24,16 +25,24 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.ddmlib",
+    pom = ":pom",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "ddmlib",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

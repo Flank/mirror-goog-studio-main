@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.lint-api",
@@ -31,8 +32,9 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.lint-api",
+    pom = "lint-api.pom",
     # TODO: move resources out of java?
     srcs = glob(["libs/lint-api/src/main/java/**/*.java"]),
     resources = glob(
@@ -42,8 +44,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
+        "//tools/base/annotations:annotations",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
@@ -56,6 +58,13 @@ java_library(
     ],
 )
 
+maven_pom(
+    name = "lint-api.pom",
+    artifact = "lint-api",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
+)
+
 iml_module(
     name = "studio.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
@@ -65,8 +74,9 @@ iml_module(
     deps = ["//tools/base/lint:studio.lint-api[module]"],
 )
 
-java_library(
+maven_java_library(
     name = "tools.lint-checks",
+    pom = "lint-checks.pom",
     # TODO: move resources out of java?
     srcs = glob(["libs/lint-checks/src/main/java/**/*.java"]),
     resources = glob(
@@ -77,8 +87,8 @@ java_library(
     deps = [
         ":tools.lint-api",
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
+        "//tools/base/annotations:annotations",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
@@ -89,4 +99,11 @@ java_library(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
     ],
+)
+
+maven_pom(
+    name = "lint-checks.pom",
+    artifact = "lint-checks",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
 )
