@@ -665,6 +665,16 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.mockito_mockito-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.9.5:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.hamcrest_hamcrest-core",
+        ":org.objenesis_objenesis",
+    ],
+)
+
+maven_java_library(
     name = "org.objenesis_objenesis",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.1:jar",
     visibility = ["//visibility:public"],
@@ -681,6 +691,13 @@ maven_java_library(
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.ow2.asm_asm-tree"],
+)
+
+maven_java_library(
+    name = "org.ow2.asm_asm-commons",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )

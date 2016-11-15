@@ -3,9 +3,14 @@ package com.android.tools.maven;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.tools.utils.WorkspaceUtils;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.HashSet;
+import java.util.Properties;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -47,7 +52,7 @@ public class ThirdPartyBuildGenerator {
         Path buildFile;
         Path localRepo;
 
-        if (!MavenCoordinates.isMavenCoordinate(args.get(0))) {
+        if (!args.isEmpty() && !MavenCoordinates.isMavenCoordinate(args.get(0))) {
             buildFile = Paths.get(args.get(0));
             localRepo = Paths.get(args.get(1));
             args.remove(0);
@@ -62,8 +67,22 @@ public class ThirdPartyBuildGenerator {
             usage();
         }
 
-        Set<Artifact> artifacts =
-                args.stream().map(DefaultArtifact::new).collect(Collectors.toSet());
+        Set<Artifact> artifacts;
+        if (!args.isEmpty()) {
+            artifacts = args.stream().map(DefaultArtifact::new).collect(Collectors.toSet());
+        } else {
+            Path dependenciesProperties =
+                    WorkspaceUtils.findWorkspace()
+                            .resolve("tools/buildSrc/base/dependencies.properties");
+            Properties dependencies = new Properties();
+            try(InputStream inputStream = Files.newInputStream(dependenciesProperties)) {
+                dependencies.load(inputStream);
+            }
+            artifacts = new HashSet<>();
+            for (String key: dependencies.stringPropertyNames()) {
+                artifacts.add(new DefaultArtifact(dependencies.getProperty(key)));
+            }
+        }
 
         new ThirdPartyBuildGenerator(buildFile, localRepo).generateBuildFile(artifacts);
     }
