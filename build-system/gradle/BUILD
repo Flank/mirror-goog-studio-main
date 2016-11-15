@@ -32,7 +32,7 @@ maven_java_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api.jar_neverlink",
+        "//tools/external/gradle:gradle-api-2.14.1_neverlink",
     ],
 )
 
