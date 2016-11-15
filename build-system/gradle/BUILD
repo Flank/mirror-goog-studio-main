@@ -12,8 +12,8 @@ fileset(
 
 maven_java_library(
     name = "gradle",
-    pom = ":pom",
     srcs = glob(["src/main/java/**/*.java"]),
+    pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle",
     resources = [":resources"],
     visibility = ["//visibility:public"],
@@ -40,7 +40,7 @@ maven_pom(
     name = "pom",
     artifact = "gradle",
     group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version"
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(

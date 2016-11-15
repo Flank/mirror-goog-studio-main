@@ -34,9 +34,9 @@ iml_module(
 
 maven_java_library(
     name = "tools.lint-api",
-    pom = "lint-api.pom",
     # TODO: move resources out of java?
     srcs = glob(["libs/lint-api/src/main/java/**/*.java"]),
+    pom = "lint-api.pom",
     resources = glob(
         include = ["libs/lint-api/src/main/java/**"],
         exclude = ["libs/lint-api/src/main/java/**/*.java"],
@@ -76,9 +76,9 @@ iml_module(
 
 maven_java_library(
     name = "tools.lint-checks",
-    pom = "lint-checks.pom",
     # TODO: move resources out of java?
     srcs = glob(["libs/lint-checks/src/main/java/**/*.java"]),
+    pom = "lint-checks.pom",
     resources = glob(
         include = ["libs/lint-checks/src/main/java/**"],
         exclude = ["libs/lint-checks/src/main/java/**/*.java"],

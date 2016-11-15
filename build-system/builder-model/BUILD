@@ -18,10 +18,10 @@ fileset(
 
 maven_java_library(
     name = "builder-model",
-    pom = ":pom",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
+    pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder-model",
     resources = [":version.properties"],
     visibility = ["//visibility:public"],
