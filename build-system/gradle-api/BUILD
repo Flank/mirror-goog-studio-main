@@ -36,5 +36,6 @@ java_test(
         ":gradle-api",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
+        "//tools/external/gradle:gradle-api.jar",
     ],
 )
