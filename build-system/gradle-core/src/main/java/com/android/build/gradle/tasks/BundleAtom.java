@@ -73,6 +73,9 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             for (File lib : FileUtils.find(jniFolder, Pattern.compile("\\.so$"))) {
                 File destLibFile =
                         new File(libBundleFolder, FileUtils.relativePath(lib, jniFolder));
+                if (!destLibFile.getParentFile().exists()) {
+                    FileUtils.mkdirs(destLibFile.getParentFile());
+                }
                 FileUtils.copyFile(lib, destLibFile);
             }
         }
