@@ -54,41 +54,46 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
 "}\n");
 
     // JNI Implementation in C.
-    private static final TestSourceFile cSource = new TestSourceFile(
-            "src/main/jni", "hello-jni.c",
-"#include <string.h>\n" +
-"#include <jni.h>\n" +
-"\n" +
-"// This is a trivial JNI example where we use a native method\n" +
-"// to return a new VM String.\n" +
-"jstring\n" +
-"Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n" +
-"{\n" +
-"    return (*env)->NewStringUTF(env, \"hello world!\");\n" +
-"}\n");
+    public static TestSourceFile cSource(String folder) {
+        return new TestSourceFile(
+                folder,
+                "hello-jni.c",
+                "#include <string.h>\n"
+                        + "#include <jni.h>\n"
+                        + "\n"
+                        + "// This is a trivial JNI example where we use a native method\n"
+                        + "// to return a new VM String.\n"
+                        + "jstring\n"
+                        + "Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n"
+                        + "{\n"
+                        + "    return (*env)->NewStringUTF(env, \"hello world!\");\n"
+                        + "}\n");
+    }
 
     // JNI Implementation in C++.\n" +
-    private static final TestSourceFile cppSource = new TestSourceFile(
-            "src/main/jni", "hello-jni.cpp",
-"#include <string.h>\n" +
-"#include <jni.h>\n" +
-"#include <cctype>\n" +
-"\n" +
-"// This is a trivial JNI example where we use a native method\n" +
-"// to return a new VM String.\n" +
-"extern \"C\"\n" +
-"jstring\n" +
-"Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n" +
-"{\n" +
-"    char greeting[] = \"HELLO WORLD!\";\n" +
-"    char* ptr = greeting;\n" +
-"    while (*ptr) {\n" +
-"        *ptr = std::tolower(*ptr);\n" +
-"        ++ptr;\n" +
-"    }\n" +
-"    return env->NewStringUTF(greeting);\n" +
-"}\n");
-
+    public static TestSourceFile cppSource(String folder) {
+        return new TestSourceFile(
+                folder,
+                "hello-jni.cpp",
+                "#include <string.h>\n"
+                        + "#include <jni.h>\n"
+                        + "#include <cctype>\n"
+                        + "\n"
+                        + "// This is a trivial JNI example where we use a native method\n"
+                        + "// to return a new VM String.\n"
+                        + "extern \"C\"\n"
+                        + "jstring\n"
+                        + "Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n"
+                        + "{\n"
+                        + "    char greeting[] = \"HELLO WORLD!\";\n"
+                        + "    char* ptr = greeting;\n"
+                        + "    while (*ptr) {\n"
+                        + "        *ptr = std::tolower(*ptr);\n"
+                        + "        ++ptr;\n"
+                        + "    }\n"
+                        + "    return env->NewStringUTF(greeting);\n"
+                        + "}\n");
+    }
 
     private static final TestSourceFile resSource =
             new TestSourceFile("src/main/res/values", "strings.xml",
@@ -282,7 +287,10 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
     }
 
     HelloWorldJniApp(String jniDir, boolean useCppSource) {
-        TestSourceFile jniSource = useCppSource ? cppSource : cSource;
+        TestSourceFile jniSource =
+                useCppSource
+                        ? cppSource("src/main/jni")
+                        : cSource("src/main/jni");
         addFiles(
                 javaSource,
                 new TestSourceFile("src/main/" + jniDir, jniSource.getName(), jniSource.getContent()),
