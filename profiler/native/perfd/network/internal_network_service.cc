@@ -127,6 +127,20 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
   return Status::OK;
 }
 
+Status InternalNetworkServiceImpl::SendHttpResponse(
+    ServerContext *context,
+    const proto::HttpResponseRequest *httpResponse,
+    proto::EmptyNetworkReply *reply) {
+  ConnectionDetails* conn = network_cache_.GetDetails(httpResponse->conn_id());
+  if (conn != nullptr) {
+    conn->response.fields = httpResponse->fields();
+  }
+  else {
+    Log::V("Unhandled http response (%ld)", (long) httpResponse->conn_id());
+  }
+  return Status::OK;
+}
+
 void InternalNetworkServiceImpl::JanitorThread() {
   SetThreadName("NetJanitor");
 
