@@ -17,7 +17,6 @@
 package com.android.tools.bazel.parser.ast;
 
 import com.google.common.base.Preconditions;
-
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -31,16 +30,25 @@ public class Build extends Node {
     }
 
     public void write(PrintWriter writer) {
-        boolean first = true;
-        for (Statement statement : statements) {
-            if (!first) {
+        for (int i = 0; i < statements.size(); i++) {
+            Statement statement = statements.get(i);
+            if (i > 0 && !shouldCompact(statements.get(i-1), statement)) {
                 writer.append("\n");
             }
             if (!statement.isHidden()) {
                 statement.write(writer);
             }
-            first = false;
         }
+    }
+
+    /**
+     * Returns {@code true} if the pair of statements {@code s1}, {@code s2}
+     * should be printed with no intervening blank line.
+     */
+    private boolean shouldCompact(Statement s1, Statement s2) {
+        return !s2.hasPreComment()
+            && s1 instanceof CallStatement && ((CallStatement)s1).getCall().getFunctionName().equals("load")
+            && s2 instanceof CallStatement && ((CallStatement)s2).getCall().getFunctionName().equals("load");
     }
 
     @Override
