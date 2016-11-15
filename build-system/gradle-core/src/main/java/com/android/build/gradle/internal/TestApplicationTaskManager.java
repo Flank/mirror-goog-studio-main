@@ -159,8 +159,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                     getTestTargetConfiguration(VariantDependencies.CONFIGURATION_MAPPING);
         }
 
-        if (mTestTargetMapping.getFiles().isEmpty()
-                || variantScope.getVariantConfiguration().getProvidedOnlyJars().isEmpty()){
+        if (mTestTargetMapping.getFiles().isEmpty()){
             return null;
         }
         else {

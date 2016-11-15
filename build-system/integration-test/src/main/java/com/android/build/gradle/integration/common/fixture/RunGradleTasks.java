@@ -50,6 +50,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private final boolean isUseJack;
     private final boolean isMinifyEnabled;
     @Nullable private final String buildToolsVersion;
+    private final boolean isImproveDependencyEnabled;
 
     private boolean mExpectingFailure = false;
 
@@ -67,6 +68,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         isUseJack = gradleTestProject.isUseJack();
         isMinifyEnabled = gradleTestProject.isMinifyEnabled();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
+        isImproveDependencyEnabled = gradleTestProject.isImprovedDependencyEnabled();
     }
 
     /**
@@ -155,6 +157,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 + Boolean.toString(isUseJack));
         args.add("-Pcom.android.build.gradle.integratonTest.minifyEnabled="
                 + Boolean.toString(isMinifyEnabled));
+        if (isImproveDependencyEnabled) {
+            args.add("-P" + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
+                    + "=true");
+        }
         if (buildToolsVersion != null) {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
         }

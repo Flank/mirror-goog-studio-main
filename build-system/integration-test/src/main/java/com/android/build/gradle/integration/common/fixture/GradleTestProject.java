@@ -101,6 +101,7 @@ public final class GradleTestProject implements TestRule {
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
     public static final boolean USE_JACK;
+    public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
@@ -128,6 +129,9 @@ public final class GradleTestProject implements TestRule {
 
         String envJack = System.getenv().get("CUSTOM_JACK");
         USE_JACK = !Strings.isNullOrEmpty(envJack);
+
+        IMPROVED_DEPENDENCY_RESOLUTION = !Strings.isNullOrEmpty(
+                System.getenv().get("IMPROVED_DEPENDENCY_RESOLUTION"));
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
@@ -162,6 +166,7 @@ public final class GradleTestProject implements TestRule {
 
     private final boolean useJack;
     private final boolean minifyEnabled;
+    private final boolean improvedDependencyEnabled;
     @Nullable
     private final String buildToolsVersion;
 
@@ -180,6 +185,7 @@ public final class GradleTestProject implements TestRule {
             @Nullable TestProject testProject,
             boolean minifyEnabled,
             boolean useJack,
+            boolean improvedDependencyEnabled,
             String targetGradleVersion,
             @Nullable File sdkDir,
             @Nullable File ndkDir,
@@ -194,6 +200,7 @@ public final class GradleTestProject implements TestRule {
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.minifyEnabled = minifyEnabled;
+        this.improvedDependencyEnabled = improvedDependencyEnabled;
         this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
@@ -231,6 +238,7 @@ public final class GradleTestProject implements TestRule {
         targetGradleVersion = rootProject.getTargetGradleVersion();
         minifyEnabled = false;
         useJack = false;
+        improvedDependencyEnabled = rootProject.isImprovedDependencyEnabled();
         openConnections = null;
         buildToolsVersion = null;
         benchmarkRecorder = rootProject.benchmarkRecorder;
@@ -792,6 +800,10 @@ public final class GradleTestProject implements TestRule {
 
     boolean isMinifyEnabled() {
         return minifyEnabled;
+    }
+
+    public boolean isImprovedDependencyEnabled() {
+        return improvedDependencyEnabled;
     }
 
     public File getLocalProp() {

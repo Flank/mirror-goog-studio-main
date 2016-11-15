@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import org.gradle.api.GradleException;
 import org.gradle.tooling.BuildException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -60,8 +64,17 @@ public class AppWithCompileLocalAarFromOlderIdeTest {
         project = null;
     }
 
-    @Test(expected=BuildException.class)
+    @Test
     public void checkModelFailedToLoad() {
-        project.model().asStudio1().getSingle();
+        try {
+            project.model().asStudio1().getSingle();
+            fail("should have failed");
+        } catch(BuildException e) {
+            assertThat(project.isImprovedDependencyEnabled()).isFalse();
+        } catch (AssertionError e) {
+            // If ImprovedDependencyEnabled, then error happens when we build the model, and the
+            // AssertionError is raised in BuildModel.getSingle()
+            assertThat(project.isImprovedDependencyEnabled()).isTrue();
+        }
     }
 }

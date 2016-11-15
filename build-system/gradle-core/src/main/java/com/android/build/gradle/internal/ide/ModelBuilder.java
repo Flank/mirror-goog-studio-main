@@ -143,9 +143,9 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     private void resolveDependencies() {
         for (BaseVariantData variantData : variantManager.getVariantDataList()) {
-            final String testedProjectPath = config instanceof TestAndroidConfig ?
-                    ((TestAndroidConfig) config).getTargetProjectPath() :
-                    null;
+            final String testedProjectPath = config instanceof TestAndroidConfig
+                    ? ((TestAndroidConfig) config).getTargetProjectPath()
+                    : null;
             taskManager.getDependencyManager().resolveDependencies(
                     variantData.getVariantDependency(),
                     testedProjectPath);

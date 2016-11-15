@@ -91,7 +91,10 @@ public class TestWithMismatchDep {
         project.execute("assembleDebug");
 
         // check there is a log output
-        assertThat(project.getStdout()).named("stdout").contains(ERROR_MSG);
+        if (!project.isImprovedDependencyEnabled()) {
+            // There won't be an error message if dependency is not resolved on configuration.
+            assertThat(project.getStdout()).named("stdout").contains(ERROR_MSG);
+        }
     }
 
     @Test
@@ -101,6 +104,9 @@ public class TestWithMismatchDep {
         project.execute("dependencies");
 
         // check there is a log output
-        assertThat(project.getStdout()).named("stdout").contains(ERROR_MSG);
+        if (!project.isImprovedDependencyEnabled()) {
+            // There won't be an error message if dependency is not resolved on configuration.
+            assertThat(project.getStdout()).named("stdout").contains(ERROR_MSG);
+        }
     }
 }
