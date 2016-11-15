@@ -370,6 +370,7 @@ def iml_module(name,
     test_class="com.android.testutils.JarTestSuite",
     test_shard_count=None,
     tags=None,
+    test_tags=None,
     back_target=0,
     back_deps=[]):
 
@@ -423,6 +424,7 @@ def iml_module(name,
       shard_count = test_shard_count,
       data = test_data,
       jvm_flags = ["-Dtest.suite.jar=" + name + "_testlib.jar"],
+      tags = test_tags,
       test_class = test_class,
       visibility = ["//visibility:public"],
     )
