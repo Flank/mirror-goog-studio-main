@@ -20,12 +20,12 @@ import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.incremental.FileRecord;
+import com.google.common.truth.Subject;
+import com.google.common.truth.Truth;
 
 import java.io.File;
 import java.nio.file.Path;
-
-import com.google.common.truth.Subject;
-import com.google.common.truth.Truth;
 
 /**
  * Additional entry point to {@link Truth} framework for custom {@link Subject}.
@@ -39,6 +39,10 @@ public class MoreTruth {
     @NonNull
     public static PathSubject assertThat(@Nullable Path path) {
         return assert_().about(PathSubject.FACTORY).that(path);
+    }
+
+    public static FileRecordSubject assertThat(@NonNull FileRecord fileRecord) {
+        return assert_().about(FileRecordSubject.FACTORY).that(fileRecord);
     }
 
     @NonNull
