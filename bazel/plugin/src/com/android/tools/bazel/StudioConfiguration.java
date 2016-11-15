@@ -42,14 +42,11 @@ public class StudioConfiguration implements Configuration {
 
     @Override
     public String mapImportJar(String jar) {
-        if (jar.equals("tools/vendor/google3/blaze/third_party/trickle/trickle-0.6.1.jar")) {
-            return "tools/vendor/google3/blaze/third_party:trickle";
-        } else if (jar.equals("tools/vendor/google3/blaze/blaze-base/lib/proto_deps.jar")) {
-            return "tools/vendor/google3/blaze/blaze-base:proto_deps";
-        } else if (jar.equals("out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar")) {
-            return "tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
-        } else {
-            return null;
+        switch (jar) {
+            case "out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar":
+                return "tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
+            default:
+                return null;
         }
     }
 
