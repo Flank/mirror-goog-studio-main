@@ -17,7 +17,9 @@
 package com.android.build.gradle.integration.common.truth;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
+import com.google.common.base.Objects;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
@@ -58,14 +60,14 @@ public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
         }
     }
 
-    public void hasData(@NonNull String data) {
-        if (!data.equals(getSubject().getData())) {
+    public void hasData(@Nullable String data) {
+        if (!Objects.equal(data, getSubject().getData())) {
             failWithBadResults("has data", data, "is", getSubject().getData());
         }
     }
 
-    public void hasMessage(@NonNull String message) {
-        if (!message.equals(getSubject().getMessage())) {
+    public void hasMessage(@Nullable String message) {
+        if (!Objects.equal(message, getSubject().getMessage())) {
             failWithBadResults("has message", message, "is", getSubject().getMessage());
         }
     }
