@@ -57,7 +57,11 @@ public class ListExpression extends Expression {
                     writer.append(", ");
                 }
             } else {
-                writer.append(",\n");
+                writer.append(",");
+                if (expression.hasPostComment()) {
+                    writer.append("  ").append(expression.getPostComment());
+                }
+                writer.append("\n");
             }
             i++;
         }
