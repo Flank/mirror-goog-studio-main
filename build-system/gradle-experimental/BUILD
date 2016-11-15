@@ -32,7 +32,7 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api-2.14.1",
+        "//tools/base/build-system:gradle-api_neverlink",
     ],
 )
 
@@ -47,6 +47,6 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "//tools/base/build-system:gradle-api",
     ],
 )
