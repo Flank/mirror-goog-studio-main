@@ -24,6 +24,8 @@ import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import android.databinding.tool.DataBindingBuilder;
+import android.databinding.tool.DataBindingCompilerArgs;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -177,7 +179,18 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
+import groovy.lang.Closure;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -196,23 +209,6 @@ import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-import android.databinding.tool.DataBindingCompilerArgs;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import groovy.lang.Closure;
 
 /**
  * Manages tasks creation.
@@ -1118,8 +1114,10 @@ public abstract class TaskManager {
         AndroidTask<JavaPreCompileTask> preCompileTask = androidTasks.create(tasks,
                 new JavaPreCompileTask.ConfigAction(scope));
 
-        final AndroidTask<? extends JavaCompile> javacTask = androidTasks.create(tasks,
-                new JavaCompileConfigAction(scope));
+        final AndroidTask<? extends JavaCompile> javacTask =
+                androidTasks.create(
+                        tasks,
+                        new JavaCompileConfigAction(scope, androidBuilder.getErrorReporter()));
         scope.setJavacTask(javacTask);
         javacTask.dependsOn(tasks, javacIncrementalSafeguard, preCompileTask);
 
