@@ -38,6 +38,11 @@ public class JavaLibrary extends BazelRule {
 
         call.setArgument("runtime_deps", dependencies);
         call.setArgument("exports", exported);
+
+        String reason = "must match IML order";
+        call.setDoNotSort("exports", reason);
+        call.setDoNotSort("runtime_deps", reason);
+
         call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         call.addElementToList("tags", "managed");
     }

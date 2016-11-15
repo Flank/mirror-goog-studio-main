@@ -37,6 +37,7 @@ public class JavaImport extends BazelRule {
         CallExpression call = statement.getCall();
 
         call.setArgument("jars", jars);
+        call.setDoNotSort("jars", "must match IML order");
         call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         call.addElementToList("tags", "managed");
     }
