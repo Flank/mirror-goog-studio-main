@@ -52,7 +52,6 @@ public class ImlModule extends BazelRule {
         call.setArgument("deps", tagDependencies(dependencies));
         call.setArgument("exports", exported);
         if (!statement.isFromFile()) {
-            call.setArgument("javacopts", ImmutableList.of("-extra_checks:off"));
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
         String reason = "must match IML order";
