@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.io.File.separator;
 
 import android.databinding.tool.DataBindingBuilder;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -113,7 +114,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class BasePlugin implements ToolingRegistryProvider {
 
     @VisibleForTesting
-    public static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.parse("3.1");
+    public static final GradleVersion GRADLE_MIN_VERSION =
+            GradleVersion.parse(SdkConstants.GRADLE_MINIMUM_VERSION);
 
     private BaseExtension extension;
 
