@@ -203,4 +203,5 @@ maven_repo(
     artifacts = [
         "//tools/base/build-system/gradle:gradle",
     ],
+    visibility = ["//visibility:public"],
 )
