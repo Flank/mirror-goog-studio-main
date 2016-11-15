@@ -57,7 +57,6 @@ import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaPsiVisitor;
-import com.android.tools.lint.client.api.JavaVisitor;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
@@ -142,8 +141,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     protected void setUp() throws Exception {
         super.setUp();
         BuiltinIssueRegistry.reset();
-        JavaVisitor.clearCrashCount();
-        JavaPsiVisitor.clearCrashCount();
+        LintDriver.clearCrashCount();
     }
 
     @Override
@@ -159,8 +157,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             issues = Collections.emptyList();
         }
         for (Issue issue : issues) {
-            if (issue.getImplementation().getScope().contains(Scope.JAVA_FILE)) {
-                if (JavaVisitor.getCrashCount() > 0 || JavaPsiVisitor.getCrashCount() > 0) {
+            EnumSet<Scope> scope = issue.getImplementation().getScope();
+            if (scope.contains(Scope.JAVA_FILE)
+                    || scope.contains(Scope.ALL_JAVA_FILES)
+                    || scope.contains(Scope.RESOURCE_FILE)
+                    || scope.contains(Scope.ALL_RESOURCE_FILES)) {
+                if (LintDriver.getCrashCount() > 0) {
                     fail("There was a crash during lint execution; consult log for details");
                 }
                 break;
