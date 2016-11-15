@@ -32,7 +32,7 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api.jar",
+        "//tools/external/gradle:gradle-api-2.14.1",
     ],
 )
 
