@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -37,6 +38,9 @@ public class JavaResAtomPackagingTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
+        // b.android.com/227451
+        AssumeUtil.assumeResolveDependencyOnConfiguration();
+
         GradleTestProject atomProject = sProject.getSubproject(":atom");
         File atomAssetDir =
                 FileUtils.join(atomProject.getTestDir(), "src", "main", "resources", "com", "foo");

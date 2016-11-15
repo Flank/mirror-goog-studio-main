@@ -43,6 +43,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private File ndkDir = findNdkDir();
     @Nullable private String targetGradleVersion;
     private boolean useJack = GradleTestProject.USE_JACK;
+    private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
     private boolean useMinify = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
@@ -63,6 +64,7 @@ public final class GradleTestProjectBuilder {
                 testProject,
                 useMinify,
                 useJack,
+                improvedDependencyEnabled,
                 targetGradleVersion,
                 sdkDir,
                 ndkDir,
@@ -171,6 +173,12 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withJack(boolean useJack) {
         this.useJack = useJack;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withImprovedDependencyResolution(
+            boolean improvedDependencyEnabled) {
+        this.improvedDependencyEnabled = improvedDependencyEnabled;
         return this;
     }
 

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.test.BaseTest
 import com.android.build.gradle.internal.variant.BaseVariantData
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import static org.junit.Assume.assumeFalse;
 
 import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
 import static com.google.common.truth.Truth.assertThat
@@ -49,6 +50,8 @@ public class DependencyTest extends BaseTest {
 
 
         project.apply plugin: 'com.android.application'
+
+        assumeFalse(AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project))
 
         println providedJar.isFile()
         project.android {

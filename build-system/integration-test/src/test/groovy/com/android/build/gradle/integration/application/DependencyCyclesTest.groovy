@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import groovy.transform.CompileStatic
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +38,8 @@ class DependencyCyclesTest {
 
     @Test
     public void cycle() {
+        AssumeUtil.assumeResolveDependencyOnConfiguration();
+
         project.file("lib/build.gradle") << """
 dependencies {
     compile project(':app')
