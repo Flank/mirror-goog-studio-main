@@ -1236,11 +1236,6 @@ public abstract class TaskManager {
             return;
         }
 
-        // Disable instant run when external native build is enabled.
-        scope.getVariantConfiguration()
-                .setInstantRunSupportStatusOverride(
-                        InstantRun.STATUS_NOT_SUPPORTED_FOR_EXTERNAL_NATIVE_BUILD);
-
         scope.setExternalNativeJsonGenerator(ExternalNativeJsonGenerator.create(
                 project.getProjectDir(),
                 pathResolution.buildSystem,
