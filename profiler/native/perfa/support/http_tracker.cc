@@ -33,6 +33,7 @@ using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;
 using profiler::proto::HttpDataRequest;
 using profiler::proto::HttpEventRequest;
+using profiler::proto::HttpResponseRequest;
 using profiler::proto::EmptyNetworkReply;
 
 namespace {
@@ -88,7 +89,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
 
   ClientContext ctx;
   ChunkRequest chunk;
-  EmptyNetworkReply response;
+  EmptyNetworkReply reply;
 
   JByteArrayWrapper bytes(env, jbytes);
 
@@ -96,7 +97,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
   chunk.set_content(bytes.get());
   chunk.set_type(ChunkRequest::RESPONSE);
 
-  net_stub.SendChunk(&ctx, chunk, &response);
+  net_stub.SendChunk(&ctx, chunk, &reply);
 }
 
 JNIEXPORT void JNICALL
@@ -142,7 +143,15 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponse(
     JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
-  // TODO: Report reponse code and fields
+  auto net_stub = Perfa::Instance().network_stub();
+  ClientContext ctx;
+  HttpResponseRequest httpResponse;
+  EmptyNetworkReply reply;
+
+  httpResponse.set_conn_id(juid);
+  JStringWrapper fields(env, jfields);
+  httpResponse.set_fields(fields.get());
+  net_stub.SendHttpResponse(&ctx, httpResponse, &reply);
 }
 
 JNIEXPORT void JNICALL

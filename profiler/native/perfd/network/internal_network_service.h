@@ -46,6 +46,11 @@ class InternalNetworkServiceImpl final
                              const proto::HttpEventRequest *httpEvent,
                              proto::EmptyNetworkReply *reply) override;
 
+  grpc::Status SendHttpResponse(
+      grpc::ServerContext *context,
+      const proto::HttpResponseRequest *httpResponse,
+      proto::EmptyNetworkReply *reply) override;
+
  private:
   // While running, periodically walks the cache and removes old files
   void JanitorThread();
