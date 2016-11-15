@@ -5,7 +5,6 @@ import static com.android.builder.core.VariantType.UNIT_TEST;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
@@ -14,24 +13,21 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Configuration Action for a JavaCompile task.
@@ -39,10 +35,13 @@ import java.util.concurrent.Callable;
 public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaCompile> {
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileConfigAction.class);
 
-    private VariantScope scope;
+    @NonNull private VariantScope scope;
+    @NonNull private ErrorReporter errorReporter;
 
-    public JavaCompileConfigAction(VariantScope scope) {
+    public JavaCompileConfigAction(
+            @NonNull VariantScope scope, @NonNull ErrorReporter errorReporter) {
         this.scope = scope;
+        this.errorReporter = errorReporter;
     }
 
     @NonNull
@@ -179,6 +178,15 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.getOptions().getCompilerArgs().add("-processor");
             javacTask.getOptions().getCompilerArgs().add(
                     Joiner.on(',').join(annotationProcessorOptions.getClassNames()));
+        }
+        if ((!processorPath.isEmpty() || !annotationProcessorOptions.getClassNames().isEmpty())
+                && project.getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
+            // warn user if using android-apt plugin, as it overwrites the annotation processor opts
+            errorReporter.handleSyncWarning(
+                    null,
+                    SyncIssue.TYPE_GENERIC,
+                    "Using incompatible plugins for the annotation processing: "
+                            + "android-apt. This may result in an unexpected behavior.");
         }
         if (!annotationProcessorOptions.getArguments().isEmpty()) {
             for (Map.Entry<String, String> arg :

@@ -32,11 +32,15 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,11 +48,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Tests for annotation processor.
@@ -245,5 +244,31 @@ public class AnnotationProcessorTest {
 
         // make sure we resolve used class to the 2.6 version
         project.execute("assembleDebug");
+    }
+
+    @Test
+    public void checkWarningWhenAptAndAnnotationProcessor() throws IOException {
+        // this warning is shown only for the javac toolchain and non-component plugin
+        Assume.assumeTrue(!forJack && !forComponentPlugin);
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n "
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "apply plugin: 'com.neenbedankt.android-apt'\n"
+                        + "dependencies {\n"
+                        + "    annotationProcessor 'com.google.dagger:dagger-compiler:2.6'\n"
+                        + "}");
+        AndroidProject model = project.model().ignoreSyncIssues().getMulti().get(":app");
+        assertThat(model)
+                .hasSingleIssue(
+                        SyncIssue.SEVERITY_WARNING,
+                        SyncIssue.TYPE_GENERIC,
+                        null,
+                        "Using incompatible plugins for the annotation processing: "
+                                + "android-apt. This may result in an unexpected behavior.");
     }
 }

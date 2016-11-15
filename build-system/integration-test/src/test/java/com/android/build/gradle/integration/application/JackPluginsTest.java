@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.repository.Revision;
