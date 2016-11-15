@@ -12,8 +12,8 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations:annotations",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",

@@ -44,8 +44,8 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations:annotations",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
@@ -87,8 +87,8 @@ maven_java_library(
     deps = [
         ":tools.lint-api",
         "//prebuilts/tools/common/uast:uast-162.2228.14",
-        "//tools/base/annotations:annotations",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",

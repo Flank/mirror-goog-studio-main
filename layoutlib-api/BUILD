@@ -28,7 +28,7 @@ maven_java_library(
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],

@@ -143,11 +143,15 @@ def maven_java_library(name, deps=None, export_artifact=None, srcs=None, exports
   maven_deps = exports if not deps else deps if not exports else deps + exports
   maven_pom(
     name = name + "_maven",
-    deps = [dep + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps and not export_artifact else None,
+    deps = [_explicit_target(dep) + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps and not export_artifact else None,
     library = export_artifact if export_artifact else name,
     visibility = visibility,
-    source = export_artifact + "_maven" if export_artifact else pom,
+    source = _explicit_target(export_artifact) + "_maven" if export_artifact else pom,
   )
+
+# Adds an explict target-name part if label doesn't have it.
+def _explicit_target(label):
+  return label if ":" in label else label + ":" + label.rsplit("/", 1)[-1]
 
 # A java_import rule extended with pom and parent attributes for maven libraries.
 def maven_java_import(name, pom=None, visibility=None, parent=None, **kwargs):
@@ -212,6 +216,6 @@ _maven_repo = rule(
 # )
 def maven_repo(artifacts=[], **kwargs):
     _maven_repo(
-      artifacts = [artifact + "_maven" for artifact in artifacts],
+      artifacts = [_explicit_target(artifact) + "_maven" for artifact in artifacts],
       **kwargs
     )

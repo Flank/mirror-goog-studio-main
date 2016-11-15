@@ -45,7 +45,7 @@ maven_java_library(
     pom = ":builder-test-api.pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/third_party:com.google.guava_guava",
@@ -78,8 +78,8 @@ maven_java_library(
     pom = ":manifest-merger.pom",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
-        "//tools/base/build-system/builder-model:builder-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

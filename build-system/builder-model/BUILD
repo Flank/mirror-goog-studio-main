@@ -26,7 +26,7 @@ maven_java_library(
     resources = [":version.properties"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations",
+        "//tools/base/annotations",
     ],
 )
 
