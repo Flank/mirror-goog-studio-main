@@ -14,8 +14,8 @@ iml_module(
 
 maven_java_library(
     name = "tools.dvlib",
-    pom = ":pom",
     srcs = glob(["dvlib/src/main/java/**"]),
+    pom = ":pom",
     resources = glob(["dvlib/src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [

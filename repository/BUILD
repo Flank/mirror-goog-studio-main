@@ -22,9 +22,9 @@ iml_module(
 
 maven_java_library(
     name = "tools.repository",
-    pom = ":pom",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
+    pom = ":pom",
     resources = glob(
         include = ["src/main/java/**"],
         exclude = ["src/main/java/**/*.java"],

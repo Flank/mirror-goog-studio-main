@@ -2,9 +2,9 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 maven_java_library(
     name = "cli",
-    pom = ":pom",
     # TODO: move resources out of java?
     srcs = glob(["src/main/java/**/*.java"]),
+    pom = ":pom",
     resources = glob(
         include = ["src/main/java/**"],
         exclude = ["src/main/java/**/*.java"],

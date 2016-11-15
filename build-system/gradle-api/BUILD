@@ -2,10 +2,10 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 maven_java_library(
     name = "gradle-api",
-    pom = ":pom",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
+    pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations:annotations",
@@ -16,10 +16,10 @@ maven_java_library(
 )
 
 maven_pom(
-  name = "pom",
-  artifact = "gradle-api",
-  group = "com.android.tools.build",
-  source = "//tools/buildSrc/base:build_version",
+    name = "pom",
+    artifact = "gradle-api",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(

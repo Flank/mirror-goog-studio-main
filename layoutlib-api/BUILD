@@ -24,8 +24,8 @@ iml_module(
 
 maven_java_library(
     name = "tools.layoutlib-api",
-    pom = ":pom",
     srcs = glob(["src/main/java/**"]),
+    pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations:annotations",

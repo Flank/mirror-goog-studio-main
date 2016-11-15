@@ -8,13 +8,16 @@ antlr_sources(
 
 maven_java_library(
     name = "gradle-core",
-    pom = ":pom",
     srcs = glob([
         "src/main/java/**/*.java",
         "src/main/generated/**/*.java",
         "src/fromGradle/java/**/*.java",
-    ]) + [":proguard-parser", "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs"],
+    ]) + [
+        ":proguard-parser",
+        "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
+    ],
     javacopts = ["-extra_checks:off"],
+    pom = ":pom",
     resources = glob([
         "src/main/resources/**",
         "src/fromGradle/resources/**",

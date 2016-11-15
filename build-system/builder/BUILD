@@ -12,8 +12,11 @@ fileset(
 
 maven_java_library(
     name = "builder",
+    srcs = glob(["src/main/java/**/*.java"]) + [
+        "//tools/base/apkzlib:sources",
+        "//tools/base/build-system/profile:sources",
+    ],  # TODO: Implement this properly.
     pom = ":pom",
-    srcs = glob(["src/main/java/**/*.java"]) + ["//tools/base/apkzlib:sources", "//tools/base/build-system/profile:sources"], # TODO: Implement this properly.
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
     visibility = ["//visibility:public"],

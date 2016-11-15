@@ -41,8 +41,8 @@ iml_module(
 # TODO(bendowski): Move this to the right directory.
 maven_java_library(
     name = "tools.builder-test-api",
-    pom = ":builder-test-api.pom",
     srcs = glob(["builder-test-api/src/main/java/**"]),
+    pom = ":builder-test-api.pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations:annotations",
@@ -74,8 +74,8 @@ java_test(
 
 maven_java_library(
     name = "tools.manifest-merger",
-    pom = ":manifest-merger.pom",
     srcs = glob(["manifest-merger/src/main/java/**"]),
+    pom = ":manifest-merger.pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations:annotations",
