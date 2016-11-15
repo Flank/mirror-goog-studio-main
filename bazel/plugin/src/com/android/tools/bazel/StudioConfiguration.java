@@ -44,7 +44,7 @@ public class StudioConfiguration implements Configuration {
     public String mapImportJar(String jar) {
         switch (jar) {
             case "out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar":
-                return "tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
+                return "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
             default:
                 return null;
         }
@@ -58,9 +58,9 @@ public class StudioConfiguration implements Configuration {
     @Override
     public List<String> getLabelsToExport() {
         return ImmutableList.of(
-            "tools/adt/idea:uitest-framework",
-            "tools/adt/idea/android-gradle-jps:android-gradle-jps",
-            "tools/vendor/google/android-apk:android-apk");
+            "//tools/adt/idea:uitest-framework",
+            "//tools/adt/idea/android-gradle-jps",
+            "//tools/vendor/google/android-apk");
     }
 
     @Override
