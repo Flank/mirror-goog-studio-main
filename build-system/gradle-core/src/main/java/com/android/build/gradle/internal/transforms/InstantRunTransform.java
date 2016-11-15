@@ -352,7 +352,7 @@ public class InstantRunTransform extends Transform {
             throws IOException {
         if (inputFile.getPath().endsWith(SdkConstants.DOT_CLASS)) {
             File outputFile = IncrementalVisitor.instrumentClass(
-                    inputDir, inputFile, outputDir, IncrementalSupportVisitor.VISITOR_BUILDER);
+                    inputDir, inputFile, outputDir, IncrementalSupportVisitor.VISITOR_BUILDER, LOGGER);
         }
     }
 
@@ -387,7 +387,7 @@ public class InstantRunTransform extends Transform {
             throws IOException {
 
         File outputFile = IncrementalVisitor.instrumentClass(
-                inputDir, inputFile, outputDir, IncrementalChangeVisitor.VISITOR_BUILDER);
+                inputDir, inputFile, outputDir, IncrementalChangeVisitor.VISITOR_BUILDER, LOGGER);
 
         // if the visitor returned null, that means the class cannot be hot swapped or more likely
         // that it was disabled for InstantRun, we don't add it to our collection of generated

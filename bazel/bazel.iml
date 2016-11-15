@@ -85,5 +85,14 @@
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="library" name="antlr3" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/jasmin/jasmin.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

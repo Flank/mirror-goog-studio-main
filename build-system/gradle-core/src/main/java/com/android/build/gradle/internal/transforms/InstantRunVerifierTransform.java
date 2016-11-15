@@ -332,7 +332,7 @@ public class InstantRunVerifierTransform extends Transform {
                     @Override
                     @NonNull
                     public InstantRunVerifierStatus call() throws Exception {
-                        return InstantRunVerifier.run(originalClass, updatedClass);
+                        return InstantRunVerifier.run(originalClass, updatedClass, LOGGER);
                     }
                 });
         // TODO: re-add approximation of target.

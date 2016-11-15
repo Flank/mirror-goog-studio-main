@@ -9,13 +9,11 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/fromGradle/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/src/test/incremental-test-classes/base" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/fromGradle/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.gradle" />
-      <excludeFolder url="file://$MODULE_DIR$/src/test/java/com/android/build/gradle/internal/incremental/hotswap/gen" />
     </content>
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="inheritedJdk" />
@@ -1070,6 +1068,6 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
-    <orderEntry type="module" module-name="apkzlib" exported="" />
+    <orderEntry type="module" module-name="instant-run-instrumentation" />
   </component>
 </module>

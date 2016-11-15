@@ -1,0 +1,31 @@
+apply plugin: 'java'
+apply plugin: 'jacoco-tools-base'
+apply plugin: 'clone-artifacts'
+
+// Do not compile tests.
+sourceSets.test.java.srcDirs = []
+dependencies {
+    compile project(':base:common')
+    compile project(':base:annotations')
+    compile project(':base:builder-model')
+    compile 'org.ow2.asm:asm:5.0.4'
+    compile 'org.ow2.asm:asm-debug-all:5.0.4'
+    compile 'org.ow2.asm:asm-tree:5.0.4'
+    compile 'org.ow2.asm:asm-analysis:5.0.4'
+    compile 'org.ow2.asm:asm-commons:5.0.4'
+    compile 'com.google.guava:guava:18.0'
+}
+
+configurations {
+    sourcesOnly
+}
+
+task sourcesOnlyTask(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    sourcesOnly sourcesOnlyTask
+}
+

@@ -15,6 +15,7 @@ maven_java_library(
     ]) + [
         ":proguard-parser",
         "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
+        "//tools/base/build-system/instant-run-instrumentation:sources",
     ],
     javacopts = ["-extra_checks:off"],
     pom = ":pom",

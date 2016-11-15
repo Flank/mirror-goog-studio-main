@@ -34,7 +34,7 @@ public class Unzipper {
 
     /**
      * Unzips files from a zip file to the specified locations.
-     * Each file putput needs to be individually specified. For example:
+     * Each file output needs to be individually specified. For example:
      *
      * Unzipper file.zip my/compressed/path/image.png:new/path/and/name.png
      */
