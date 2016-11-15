@@ -25,7 +25,10 @@ service EventService {
   // Requests profiler data from the app with ID being |app_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
-  rpc GetData(EventDataRequest) returns (EventDataResponse) {
+  rpc GetActivityData(EventDataRequest) returns (ActivityDataResponse) {
+  }
+
+  rpc GetSystemData(EventDataRequest) returns (SystemDataResponse) {
   }
 
   rpc StartMonitoringApp(EventStartRequest) returns (EventStartResponse) {
@@ -61,18 +64,17 @@ message EventStopResponse {
   Status status = 1;
 }
 
-message EventProfilerData {
-  CommonData basic_info = 1;
-  oneof data {
-    SystemEventData system_data = 2;
-    FragmentEventData fragment_data = 3;
-    ActivityEventData activity_data = 4;
-  }
+message ActivityDataResponse {
+    repeated ActivityData data = 1;
+}
+
+message SystemDataResponse {
+    repeated SystemData data = 1;
 }
 
 // TODO: Add support for KeyEvents, and ButtonEvents. The current setup allows
 // for only touch.
-message SystemEventData {
+message SystemData {
   // Each system event message is associated with one event type.
   enum SystemEventType {
     UNSPECIFIED = 0;
@@ -86,34 +88,44 @@ message SystemEventData {
   // defined in MotionEvent.java.
   // https://developer.android.com/reference/android/view/MotionEvent.html
   int32 action_id = 2;
-  int64 action_downtime = 3;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
+  int32 app_id = 5;
+  int64 event_id = 6;
 }
 
-message ActivityEventData {
-  enum ActivityState {
-    UNSPECIFIED = 0;
-    // State when an activity gets created
-    CREATED = 1;
-    STARTED = 2;
-    RESUMED = 3;
-    PAUSED = 4;
-    STOPPED = 5;
-    SAVED = 6;
-    // Event to fire when an activity gets destroyed
-    DESTROYED = 7;
-    RESTARTED = 8;
-    // TODO: Flush this out to map the activity lifecycle.
-  }
-
+message ActivityData {
+  // Name of the activity
   string name = 1;
-  ActivityState activity_state = 2;
-
-  // Hash code to uniquely identify this activity.
-  int32 activity_hash = 3;
+  // Unique hash identifying this activity from similarly named ones, current hashCode of object.
+  int64 hash = 2;
+  // Application Id this activity is associated with.
+  int32 app_id = 3;
+  // State changes that took place on this activity.
+  repeated ActivityStateData state_changes = 4;
 }
 
+message ActivityStateData {
+    enum ActivityState {
+      UNSPECIFIED = 0;
+      // State when an activity gets created
+      CREATED = 1;
+      STARTED = 2;
+      RESUMED = 3;
+      PAUSED = 4;
+      STOPPED = 5;
+      SAVED = 6;
+      // Event to fire when an activity gets destroyed
+      DESTROYED = 7;
+      RESTARTED = 8;
+      // TODO: Flush this out to map the activity lifecycle.
+    }
+  int64 timestamp = 1;
+  ActivityState state = 2;
+}
+
+//TODO: Send fragment data to studio.
 message FragmentEventData {
-  // The current state of a fragment.
   enum FragmentState {
     UNSPECIFIED = 0;
     ADDED = 1;
@@ -130,11 +142,6 @@ message FragmentEventData {
     DESTROYED = 12;
     DETACHED = 13;
   }
-  string name = 1;
-  FragmentState fragment_state = 2;
-
-  // Hash code to uniquely identify this fragment.
-  int32 fragment_hash = 3;
 }
 
 message EventDataRequest {
@@ -153,8 +160,4 @@ message EventDataRequest {
   int64 start_timestamp = 2;
   int64 end_timestamp = 3;
   EventType data_type = 4;
-}
-
-message EventDataResponse {
-  repeated EventProfilerData data = 1;
 }
