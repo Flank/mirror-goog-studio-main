@@ -39,8 +39,8 @@ public abstract class Statement extends Node {
             writer.append(comment);
         }
         doWrite(writer);
-        for (String comment : postComments) {
-            writer.append("  " + comment);
+        if (hasPostComment()) {
+            writer.append("  ").append(getPostComment());
         }
         writer.write("\n");
     }

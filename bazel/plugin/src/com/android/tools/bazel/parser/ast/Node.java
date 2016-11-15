@@ -27,7 +27,7 @@ public abstract class Node {
 
     protected List<String> preComments = new LinkedList<>();
 
-    protected List<String> postComments = new LinkedList<>();
+    private String postComment;
 
     protected Node(Token start, Token end) {
         this.start = start;
@@ -57,10 +57,21 @@ public abstract class Node {
     }
 
     public void addPostComment(Token comment) {
-        postComments.add(comment.value().trim());
+        if (postComment != null) {
+            throw new AssertionError("more than one post-comment");
+        }
+        postComment = comment.value().trim();
     }
 
     public boolean hasPreComment() {
         return !preComments.isEmpty();
+    }
+
+    public boolean hasPostComment() {
+        return postComment != null;
+    }
+
+    public String getPostComment() {
+        return postComment;
     }
 }
