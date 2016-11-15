@@ -54,7 +54,7 @@ maven_java_library(
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api-2.14.1_neverlink",
+        "//tools/base/build-system:gradle-api_neverlink",
     ],
 )
 
@@ -112,6 +112,6 @@ java_test(
         "//tools/base/third_party:org.ow2.asm_asm-debug-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/external/gradle:gradle-api-2.14.1",
+        "//tools/base/build-system:gradle-api",
     ],
 )
