@@ -301,12 +301,29 @@ public class GenerateBazelAction extends AnAction {
         public final String target;
 
         public Label(String label) {
-            String[] split = label.split(":");
-            if (split.length != 2) {
-                throw new IllegalArgumentException("Label is malformed: " + label);
+            if (label.startsWith("@")) {
+                int endOfRepo = label.indexOf("//");
+                if (endOfRepo < 0) {
+                    throw new RuntimeException("invalid label: " + label);
+                }
+                label = label.substring(endOfRepo);
             }
-            this.pkg = split[0];
-            this.target = split[1];
+            if (!label.startsWith("//")) {
+                throw new RuntimeException("invalid label: " + label);
+            }
+            // Find the package/suffix separation:
+            int colonIndex = label.indexOf(':');
+            int splitAt = colonIndex >= 0 ? colonIndex : label.length();
+            pkg = label.substring("//".length(), splitAt);
+            String suffix = label.substring(splitAt);
+            // ('suffix' is empty, or starts with a colon.)
+
+            // "If packagename and version are elided, the colon is not necessary."
+            target = suffix.isEmpty()
+                // Target name is last package segment: (works in slash-free case too.)
+                ? pkg.substring(pkg.lastIndexOf('/') + 1)
+                // Target name is what's after colon:
+                : suffix.substring(1);
         }
     }
 }
