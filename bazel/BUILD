@@ -245,6 +245,6 @@ config_setting(
 maven_repo(
     name = "offline_repo",
     artifacts = [
-        "//tools/base/common:tools.common",
+        "//tools/base/build-system/gradle:gradle",
     ],
 )

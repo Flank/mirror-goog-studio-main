@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.repository",
@@ -19,8 +20,9 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.repository",
+    pom = ":pom",
     # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(
@@ -30,11 +32,18 @@ java_library(
     visibility = ["//visibility:public"],
     # TODO: Why is MockFileOp in main sources?
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:org.apache.commons_commons-compress",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "repository",
+    group = "com.android.tools.repository",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

@@ -1,6 +1,13 @@
 # Bazel (https://bazel.io/) BUILD file for apkzlib library.
+load("//tools/base/bazel:bazel.bzl", "fileset")
 
 licenses(["notice"])  # Apache License 2.0
+
+fileset(
+    name = "sources",
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//tools/base/build-system/builder:__pkg__"],
+)
 
 java_library(
     name = "apkzlib",

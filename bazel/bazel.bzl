@@ -161,7 +161,8 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
 
   native.filegroup(
     name = name,
-    srcs = outs + rem
+    srcs = outs + rem,
+    **kwargs
   )
 
 def _form_jar_impl(ctx):

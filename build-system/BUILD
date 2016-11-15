@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.builder-test-api",
@@ -38,16 +39,24 @@ iml_module(
 )
 
 # TODO(bendowski): Move this to the right directory.
-java_library(
+maven_java_library(
     name = "tools.builder-test-api",
+    pom = ":builder-test-api.pom",
     srcs = glob(["builder-test-api/src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/third_party:com.google.guava_guava",
     ],
+)
+
+maven_pom(
+    name = "builder-test-api.pom",
+    artifact = "builder-test-api",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(
@@ -63,19 +72,27 @@ java_test(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.manifest-merger",
+    pom = ":manifest-merger.pom",
     srcs = glob(["manifest-merger/src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
+        "//tools/base/annotations:annotations",
+        "//tools/base/build-system/builder-model:builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
     ],
+)
+
+maven_pom(
+    name = "manifest-merger.pom",
+    artifact = "manifest-merger",
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(
