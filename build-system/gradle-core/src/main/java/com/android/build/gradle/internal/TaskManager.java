@@ -2233,8 +2233,10 @@ public abstract class TaskManager {
                 .getAnnotationProcessorOptions();
         if (processorOptions instanceof AnnotationProcessorOptions) {
             AnnotationProcessorOptions ots = (AnnotationProcessorOptions) processorOptions;
-            // specify data binding only if another class is specified
-            if (!ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
+            // Specify data binding only if another class is specified. Doing so disables discovery
+            // so we must explicitly list data binding.
+            if (!ots.getClassNames().isEmpty()
+                    && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 ots.className(DataBindingBuilder.PROCESSOR_NAME);
             }
             String packageName = variantConfiguration.getOriginalApplicationId();
