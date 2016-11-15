@@ -18,6 +18,7 @@ java_library(
     deps = [
         "//tools/analytics-library:analytics-protos",
         "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
@@ -32,7 +33,6 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/base/build-system:gradle-api_neverlink",
     ],
 )
 
@@ -45,8 +45,8 @@ java_test(
     deps = [
         ":gradle-experimental",
         "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/build-system:gradle-api",
     ],
 )

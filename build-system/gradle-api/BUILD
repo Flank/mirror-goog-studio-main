@@ -9,9 +9,9 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/builder-model",
         "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/build-system:gradle-api_neverlink",
     ],
 )
 
@@ -34,8 +34,8 @@ java_test(
     ],
     deps = [
         ":gradle-api",
+        "//tools/base/build-system:gradle-api",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
-        "//tools/base/build-system:gradle-api",
     ],
 )

@@ -47,8 +47,8 @@ filegroup(
 java_library(
     name = "gradle-api_neverlink",
     neverlink = 1,
-    exports = [":gradle-api"],
     visibility = ["//visibility:public"],
+    exports = [":gradle-api"],
 )
 
 java_import(
