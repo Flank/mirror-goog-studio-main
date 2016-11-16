@@ -14,172 +14,179 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk
+package com.android.build.gradle.integration.ndk;
 
-import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.AssumeUtil
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.build.gradle.integration.common.utils.NdkHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.NativeLibrary
-import com.android.builder.model.Variant
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import static com.android.SdkConstants.ABI_ARM64_V8A;
+import static com.android.SdkConstants.ABI_ARMEABI;
+import static com.android.SdkConstants.ABI_ARMEABI_V7A;
+import static com.android.SdkConstants.ABI_INTEL_ATOM;
+import static com.android.SdkConstants.ABI_INTEL_ATOM64;
+import static com.android.SdkConstants.ABI_MIPS;
+import static com.android.SdkConstants.ABI_MIPS64;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.NativeLibrary;
+import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.Variant;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Test the return model of the NDK.
  */
-class NdkModelTest {
+public class NdkModelTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(new HelloWorldJniApp())
             .addGradleProperties("android.useDeprecatedNdk=true")
-            .create()
+            .create();
 
     @Before
-    void setUp() {
-        project.buildFile <<
-"""
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    defaultConfig {
-        ndk {
-            moduleName "hello-jni"
-            cFlags = "-DTEST_FLAG"
-        }
-    }
-}
-"""
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "apply plugin: 'com.android.application'\n"
+                + "\n"
+                + "android {\n"
+                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "    defaultConfig {\n"
+                + "        ndk {\n"
+                + "            moduleName \"hello-jni\"\n"
+                + "            cFlags = \"-DTEST_FLAG\"\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
     }
 
     @Test
-    void "check native libraries in model"() {
-        checkModel(
-                debug : [
-                    SdkConstants.ABI_ARMEABI,
-                    SdkConstants.ABI_ARMEABI_V7A,
-                    SdkConstants.ABI_ARM64_V8A,
-                    SdkConstants.ABI_INTEL_ATOM,
-                    SdkConstants.ABI_INTEL_ATOM64,
-                    SdkConstants.ABI_MIPS,
-                    SdkConstants.ABI_MIPS64
-                ]);
+    public void checkNativeLibrariesInModel() {
+        checkModel(ImmutableMap.of(
+                "debug", Lists.newArrayList(
+                        ABI_ARMEABI, ABI_ARMEABI_V7A, ABI_ARM64_V8A,
+                        ABI_INTEL_ATOM, ABI_INTEL_ATOM64,
+                        ABI_MIPS, ABI_MIPS64)));
     }
 
     @Test
-    void "check native libraries with splits"() {
+    public void checkNativeLibrariesWithSplits() throws IOException {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        project.buildFile <<
-"""
-android {
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'x86', 'armeabi-v7a', 'mips'
-        }
-    }
-}
-"""
-        checkModel(
-                debug: [SdkConstants.ABI_ARMEABI_V7A, SdkConstants.ABI_INTEL_ATOM, SdkConstants.ABI_MIPS]);
-    }
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "android {\n"
+                + "    splits {\n"
+                + "        abi {\n"
+                + "            enable true\n"
+                + "            reset()\n"
+                + "            include 'x86', 'armeabi-v7a', 'mips'\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
 
-    @Test
-    void "check native libraries with splits and universalApk"() {
-        // This test uses the deprecated NDK integration, which does not work properly on Windows.
-        AssumeUtil.assumeNotWindows();
-
-        project.buildFile <<
-                """
-android {
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'x86', 'armeabi-v7a', 'mips'
-            universalApk true
-        }
-    }
-}
-"""
-        checkModel(
-                debug : [
-                        SdkConstants.ABI_ARMEABI,
-                        SdkConstants.ABI_ARMEABI_V7A,
-                        SdkConstants.ABI_ARM64_V8A,
-                        SdkConstants.ABI_INTEL_ATOM,
-                        SdkConstants.ABI_INTEL_ATOM64,
-                        SdkConstants.ABI_MIPS,
-                        SdkConstants.ABI_MIPS64
-                ]);
+        checkModel(ImmutableMap.of(
+                "debug", Lists.newArrayList(ABI_ARMEABI_V7A, ABI_INTEL_ATOM, ABI_MIPS)));
     }
 
     @Test
-    void "check native libraries with abiFilters"() {
+    public void checkNativeLibrariesWithSplitsAndUniversalApk() throws IOException {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        project.buildFile <<
-                """
-android {
-    productFlavors {
-        x86 {
-            ndk {
-                abiFilter "x86"
-            }
-        }
-        arm {
-            ndk {
-                abiFilters "armeabi-v7a"
-            }
-        }
-        mips {
-            ndk {
-                abiFilter "mips"
-            }
-        }
-    }
-}
-"""
-        checkModel(
-                x86Debug : [SdkConstants.ABI_INTEL_ATOM],
-                armDebug : [SdkConstants.ABI_ARMEABI_V7A],
-                mipsDebug : [SdkConstants.ABI_MIPS]);
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "android {\n"
+                + "    splits {\n"
+                + "        abi {\n"
+                + "            enable true\n"
+                + "            reset()\n"
+                + "            include 'x86', 'armeabi-v7a', 'mips'\n"
+                + "            universalApk true\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
+
+        checkModel(ImmutableMap.of(
+                "debug", Lists.newArrayList(
+                        ABI_ARMEABI, ABI_ARMEABI_V7A, ABI_ARM64_V8A,
+                        ABI_INTEL_ATOM, ABI_INTEL_ATOM64,
+                        ABI_MIPS, ABI_MIPS64)));
     }
 
     @Test
-    void "check using add on string for compileSdkVersion"() {
+    public void checkNativeLibrariesWithAbiFilters() throws IOException {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        project.buildFile <<
-"""
-android {
-    compileSdkVersion "Google Inc.:Google APIs:$GradleTestProject.LATEST_GOOGLE_APIS_VERSION"
-}
-"""
-        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
-        NativeLibrary lib = ModelHelper.getVariant(model.getVariants(), "debug").getMainArtifact()
-                .getNativeLibraries().first()
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "android {\n"
+                + "    productFlavors {\n"
+                + "        x86 {\n"
+                + "            ndk {\n"
+                + "                abiFilter \"x86\"\n"
+                + "            }\n"
+                + "        }\n"
+                + "        arm {\n"
+                + "            ndk {\n"
+                + "                abiFilters \"armeabi-v7a\"\n"
+                + "            }\n"
+                + "        }\n"
+                + "        mips {\n"
+                + "            ndk {\n"
+                + "                abiFilter \"mips\"\n"
+                + "            }\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
+
+        checkModel(ImmutableMap.of(
+                "x86Debug", Lists.newArrayList(ABI_INTEL_ATOM),
+                "armDebug", Lists.newArrayList(ABI_ARMEABI_V7A),
+                "mipsDebug", Lists.newArrayList(ABI_MIPS)));
+    }
+
+    @Test
+    public void checkUsingAddOnStringForCompileSdkVersion() throws IOException {
+        // This test uses the deprecated NDK integration, which does not work properly on Windows.
+        AssumeUtil.assumeNotWindows();
+
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "android {\n"
+                + "    compileSdkVersion \"Google Inc.:Google APIs:" + GradleTestProject.LATEST_GOOGLE_APIS_VERSION + "\"\n"
+                + "}\n");
+
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
+
+        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        assertThat(variant).isNotNull();
+        AndroidArtifact artifact = variant.getMainArtifact();
+        assertThat(artifact).isNotNull();
+        Collection<NativeLibrary> nativeLibraries = artifact.getNativeLibraries();
+        assertThat(nativeLibraries).isNotNull();
+        NativeLibrary lib = Iterables.getFirst(nativeLibraries, null);
         for (String flag : lib.getCCompilerFlags()) {
             if (flag.contains("sysroot")) {
                 int expected =
                         NdkHelper.getPlatformSupported(
                                 project.getNdkDir(),
-                                Integer.toString(GradleTestProject.LATEST_GOOGLE_APIS_VERSION))
-                assertThat(flag).contains("android-${expected}")
+                                Integer.toString(GradleTestProject.LATEST_GOOGLE_APIS_VERSION));
+                assertThat(flag).contains("android-" + expected);
             }
         }
     }
@@ -189,33 +196,35 @@ android {
      *
      * @param variantToolchains map of variant name to array of expected toolchains.
      */
-    private void checkModel(Map variantToolchains) {
+    private void checkModel(Map<String, List<String>> variantToolchains) {
 
-        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
 
-        Collection<Variant> variants = model.getVariants()
-        for (Map.Entry entry : variantToolchains) {
-            Variant variant = ModelHelper.getVariant(variants, (String) entry.getKey())
-            AndroidArtifact mainArtifact = variant.getMainArtifact()
+        Collection<Variant> variants = model.getVariants();
+        for (Map.Entry<String, List<String>> entry : variantToolchains.entrySet()) {
+            Variant variant = ModelHelper.getVariant(variants, entry.getKey());
+            AndroidArtifact mainArtifact = variant.getMainArtifact();
 
-            assertThat(mainArtifact.getNativeLibraries()).hasSize(((Collection)entry.getValue()).size())
+            assertThat(mainArtifact.getNativeLibraries()).hasSize(((Collection)entry.getValue()).size());
             for (NativeLibrary nativeLibrary : mainArtifact.getNativeLibraries()) {
-                assertThat(nativeLibrary.getName()).isEqualTo("hello-jni")
+                assertThat(nativeLibrary.getName()).isEqualTo("hello-jni");
                 assertThat(nativeLibrary.getCCompilerFlags()).contains("-DTEST_FLAG");
                 assertThat(nativeLibrary.getCppCompilerFlags()).contains("-DTEST_FLAG");
                 assertThat(nativeLibrary.getCSystemIncludeDirs()).isEmpty();
                 assertThat(nativeLibrary.getCppSystemIncludeDirs()).isNotEmpty();
-                File solibSearchPath = nativeLibrary.getDebuggableLibraryFolders().first()
-                assertThat(new File(solibSearchPath, "libhello-jni.so")).exists()
+                File solibSearchPath = nativeLibrary.getDebuggableLibraryFolders().get(0);
+                assertThat(new File(solibSearchPath, "libhello-jni.so")).isFile();
             }
 
-            Collection<String> expectedToolchainNames = entry.getValue().collect { "gcc-" + it }
-            Collection<String> toolchainNames = model.getNativeToolchains().collect { it.getName() }
-            assertThat(toolchainNames).containsAllIn(expectedToolchainNames)
-            Collection<String> nativeLibToolchains = mainArtifact.getNativeLibraries().
-                    collect { it.getToolchainName() }
-            assertThat(nativeLibToolchains).containsExactlyElementsIn(expectedToolchainNames)
-        }
+            Collection<String> expectedToolchainNames = entry.getValue().stream()
+                    .map(s -> "gcc-" + s).collect(Collectors.toList());
+            Collection<String> toolchainNames = model.getNativeToolchains().stream()
+                    .map(NativeToolchain::getName).collect(Collectors.toList());
 
+            assertThat(toolchainNames).containsAllIn(expectedToolchainNames);
+            Collection<String> nativeLibToolchains = mainArtifact.getNativeLibraries().stream()
+                    .map(NativeLibrary::getToolchainName).collect(Collectors.toList());
+            assertThat(nativeLibToolchains).containsExactlyElementsIn(expectedToolchainNames);
+        }
     }
 }

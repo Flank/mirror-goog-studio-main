@@ -14,60 +14,60 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+package com.android.build.gradle.integration.ndk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.ide.common.process.ProcessException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 /**
  * Assemble tests for ndkJniLib.
  */
-@CompileStatic
-class NdkJniLibTest {
+public class NdkJniLibTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("ndkJniLib")
             .addGradleProperties("android.useDeprecatedNdk=true")
-            .create()
+            .create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    public static void setUp() {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() {
+        project.execute("lint");
     }
 
     @Test
-    void "check version code"() {
-        GradleTestProject app = project.getSubproject("app")
+    public void checkVersionCode() throws ProcessException {
+        GradleTestProject app = project.getSubproject("app");
         
-        assertThatApk(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123)
-        assertThatApk(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123)
-        assertThatApk(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123)
-        assertThatApk(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123)
-        assertThatApk(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123)
-        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123)
-        assertThatApk(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123)
-        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123)
+        assertThatApk(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123);
+        assertThatApk(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123);
+        assertThatApk(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123);
+        assertThatApk(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123);
+        assertThatApk(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123);
+        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123);
+        assertThatApk(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123);
+        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123);
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() {
+        project.executeConnectedCheck();
     }
 }
