@@ -74,6 +74,11 @@ public abstract class BazelRule {
         return export;
     }
 
+    boolean shouldUpdate() throws IOException {
+        return !pkg.getBuildFile().getCall(name).getPreComments().stream().anyMatch(
+            (s) -> s.toLowerCase().contains("do not generate"));
+    }
+
     @Override
     public String toString() {
         return getLabel();

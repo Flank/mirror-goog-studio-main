@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.parser.ast;
 
+import com.google.common.collect.ImmutableList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -69,6 +70,10 @@ public abstract class Node {
 
     public boolean hasPostComment() {
         return postComment != null;
+    }
+
+    public ImmutableList<String> getPreComments() {
+        return ImmutableList.copyOf(preComments);
     }
 
     public String getPostComment() {
