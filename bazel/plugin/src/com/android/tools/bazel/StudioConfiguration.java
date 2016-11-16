@@ -64,6 +64,7 @@ public class StudioConfiguration implements Configuration {
             "//tools/adt/idea/android-tests",
             "//tools/adt/idea/designer-tests",
             "//tools/adt/idea/sdk-updates-tests",
+            "//tools/studio/google/appindexing:google-appindexing",
             "//tools/vendor/google/android-apk");
     }
 
