@@ -65,6 +65,7 @@ public class StudioConfiguration implements Configuration {
             "//tools/adt/idea/designer-tests",
             "//tools/adt/idea/sdk-updates-tests",
             "//tools/studio/google/appindexing:google-appindexing",
+            "//tools/studio/google/cloud/tools/android-studio-plugin:google-cloud-tools-as",
             "//tools/vendor/google/android-apk",
             "//tools/vendor/google/firebase",
             "//tools/vendor/google/url-assistant");

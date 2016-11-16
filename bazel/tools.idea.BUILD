@@ -371,7 +371,7 @@ iml_module(
         "//tools:idea.extensions[module]",
         "//tools/idea/.idea/libraries:picocontainer",
         "//tools:idea.platform-resources-en[module]",
-        "//tools:idea/lib/automaton",
+        "//tools/idea/lib:automaton",
         "//tools/idea/.idea/libraries:asm",
         "//tools/idea/.idea/libraries:CGLIB",
     ],
@@ -476,7 +476,7 @@ iml_module(
         "//tools:idea.platform-resources-en[module]",
         "//tools/idea/.idea/libraries:OroMatcher",
         "//tools:idea.icons[module]",
-        "//tools:idea/lib/automaton",
+        "//tools/idea/lib:automaton",
         "//tools:idea.projectModel-api[module]",
         "//tools/idea/.idea/libraries:Netty",
         "//tools/idea/.idea/libraries:proxy-vole",
@@ -681,7 +681,7 @@ iml_module(
         "//tools:idea.bootstrap[module]",
         "//tools:idea.platform-resources-en[module]",
         "//tools:idea.icons[module]",
-        "//tools:idea/lib/automaton",
+        "//tools/idea/lib:automaton",
         "//tools:idea.projectModel-api[module]",
     ],
 )
@@ -1482,7 +1482,6 @@ iml_module(
         "//tools:idea.lang-api[module]",
     ],
 )
-
 
 iml_module(
     name = "idea.jps-model-tests",
@@ -2388,258 +2387,6 @@ iml_module(
 )
 
 java_import(
-    name = "idea/lib/protobuf-2.5.0",
-    jars = ["idea/lib/protobuf-2.5.0.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/guava-18.0",
-    jars = ["idea/lib/guava-18.0.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/hamcrest-core-1.3",
-    jars = ["idea/lib/hamcrest-core-1.3.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/junit-4.12",
-    jars = ["idea/lib/junit-4.12.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/gson-2.5",
-    jars = ["idea/lib/gson-2.5.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/trove4j",
-    jars = ["idea/lib/trove4j.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsr305",
-    jars = ["idea/lib/jsr305.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/junit",
-    jars = ["idea/lib/junit.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/httpcore-4.4.1",
-    jars = ["idea/lib/httpcore-4.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/httpmime-4.4.1",
-    jars = ["idea/lib/httpmime-4.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/httpclient-4.4.1",
-    jars = ["idea/lib/httpclient-4.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/fluent-hc-4.4.1",
-    jars = ["idea/lib/fluent-hc-4.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xmlrpc-2.0",
-    jars = ["idea/lib/xmlrpc-2.0.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-commons-net",
-    jars = ["idea/lib/ant/lib/ant-commons-net.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-jmf",
-    jars = ["idea/lib/ant/lib/ant-jmf.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-resolver",
-    jars = ["idea/lib/ant/lib/ant-apache-resolver.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-jai",
-    jars = ["idea/lib/ant/lib/ant-jai.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-bsf",
-    jars = ["idea/lib/ant/lib/ant-apache-bsf.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-commons-logging",
-    jars = ["idea/lib/ant/lib/ant-commons-logging.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-junit",
-    jars = ["idea/lib/ant/lib/ant-junit.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-jsch",
-    jars = ["idea/lib/ant/lib/ant-jsch.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-bcel",
-    jars = ["idea/lib/ant/lib/ant-apache-bcel.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant",
-    jars = ["idea/lib/ant/lib/ant.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-netrexx",
-    jars = ["idea/lib/ant/lib/ant-netrexx.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-oro",
-    jars = ["idea/lib/ant/lib/ant-apache-oro.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-antlr",
-    jars = ["idea/lib/ant/lib/ant-antlr.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-jdepend",
-    jars = ["idea/lib/ant/lib/ant-jdepend.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-launcher",
-    jars = ["idea/lib/ant/lib/ant-launcher.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-regexp",
-    jars = ["idea/lib/ant/lib/ant-apache-regexp.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-apache-log4j",
-    jars = ["idea/lib/ant/lib/ant-apache-log4j.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-swing",
-    jars = ["idea/lib/ant/lib/ant-swing.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ant/lib/ant-javamail",
-    jars = ["idea/lib/ant/lib/ant-javamail.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/asm-all",
-    jars = ["idea/lib/asm-all.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jdom",
-    jars = ["idea/lib/jdom.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jgoodies-forms",
-    jars = ["idea/lib/jgoodies-forms.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/hamcrest-library-1.3",
-    jars = ["idea/lib/hamcrest-library-1.3.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
     name = "idea/plugins/testng/lib/testng",
     jars = ["idea/plugins/testng/lib/testng.jar"],
     tags = ["managed"],
@@ -2649,27 +2396,6 @@ java_import(
 java_import(
     name = "idea/plugins/testng/lib/jcommander",
     jars = ["idea/plugins/testng/lib/jcommander.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/coverage-agent",
-    jars = ["idea/lib/coverage-agent.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/coverage-instrumenter",
-    jars = ["idea/lib/coverage-instrumenter.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/coverage-util",
-    jars = ["idea/lib/coverage-util.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
@@ -2717,246 +2443,8 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/eawtstub",
-    jars = ["idea/lib/eawtstub.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/log4j",
-    jars = ["idea/lib/log4j.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/picocontainer",
-    jars = ["idea/lib/picocontainer.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jna",
-    jars = ["idea/lib/jna.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jna-platform",
-    jars = ["idea/lib/jna-platform.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/oromatcher",
-    jars = ["idea/lib/oromatcher.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/imgscalr-lib-4.2",
-    jars = ["idea/lib/imgscalr-lib-4.2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/batik-all",
-    jars = ["idea/lib/batik-all.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xmlgraphics-commons-1.5",
-    jars = ["idea/lib/xmlgraphics-commons-1.5.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xml-apis-ext",
-    jars = ["idea/lib/xml-apis-ext.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xstream-1.4.8",
-    jars = ["idea/lib/xstream-1.4.8.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xercesImpl",
-    jars = ["idea/lib/xercesImpl.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xml-apis",
-    jars = ["idea/lib/xml-apis.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/automaton",
-    jars = ["idea/lib/automaton.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/asm",
-    jars = ["idea/lib/asm.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/asm-commons",
-    jars = ["idea/lib/asm-commons.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/cglib-2.2.2",
-    jars = ["idea/lib/cglib-2.2.2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/nanoxml-2.2.3",
-    jars = ["idea/lib/nanoxml-2.2.3.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/commons-codec-1.9",
-    jars = ["idea/lib/commons-codec-1.9.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/proxy-vole_20131209",
-    jars = ["idea/lib/proxy-vole_20131209.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/easymock",
-    jars = ["idea/lib/dev/easymock.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/easymockclassextension",
-    jars = ["idea/lib/dev/easymockclassextension.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/jmock-2.5.1",
-    jars = ["idea/lib/dev/jmock-2.5.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/jmock-junit4-2.5.1",
-    jars = ["idea/lib/dev/jmock-junit4-2.5.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/jmock-legacy-2.5.1",
-    jars = ["idea/lib/dev/jmock-legacy-2.5.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/objenesis-1.0",
-    jars = ["idea/lib/dev/objenesis-1.0.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/microba",
-    jars = ["idea/lib/microba.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
     name = "idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1",
     jars = ["idea/plugins/maven/maven-server-api/lib/lucene-core-2.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/groovy-all-2.4.6",
-    jars = ["idea/lib/groovy-all-2.4.6.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jaxen-1.1.3",
-    jars = ["idea/lib/jaxen-1.1.3.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsr173_1.0_api",
-    jars = ["idea/lib/jsr173_1.0_api.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xbean",
-    jars = ["idea/lib/xbean.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/resolver",
-    jars = ["idea/lib/resolver.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jcip-annotations",
-    jars = ["idea/lib/jcip-annotations.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/swingx-core-1.6.2",
-    jars = ["idea/lib/swingx-core-1.6.2.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
@@ -2990,127 +2478,8 @@ java_import(
 )
 
 java_import(
-    name = "idea/lib/sanselan-0.98-snapshot",
-    jars = ["idea/lib/sanselan-0.98-snapshot.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/velocity",
-    jars = ["idea/lib/velocity.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/xpp3-1.1.4-min",
-    jars = ["idea/lib/xpp3-1.1.4-min.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/cli-parser-1.1",
-    jars = ["idea/lib/cli-parser-1.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/commons-logging-1.2",
-    jars = ["idea/lib/commons-logging-1.2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jh",
-    jars = ["idea/lib/jh.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/winp-1.23",
-    jars = ["idea/lib/winp-1.23.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/miglayout-swing",
-    jars = ["idea/lib/miglayout-swing.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jayatana-1.2.4",
-    jars = ["idea/lib/jayatana-1.2.4.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/slf4j-api-1.7.10",
-    jars = ["idea/lib/slf4j-api-1.7.10.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/slf4j-log4j12-1.7.10",
-    jars = ["idea/lib/slf4j-log4j12-1.7.10.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/minlog-1.2",
-    jars = ["idea/lib/minlog-1.2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/kryo-2.22",
-    jars = ["idea/lib/kryo-2.22.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/reflectasm-1.07",
-    jars = ["idea/lib/reflectasm-1.07.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/objenesis-1.2",
-    jars = ["idea/lib/objenesis-1.2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/serviceMessages",
-    jars = ["idea/lib/serviceMessages.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
     name = "idea/jps/lib/optimizedFileManager",
     jars = ["idea/jps/lib/optimizedFileManager.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/ecj-4.5.2",
-    jars = ["idea/lib/ecj-4.5.2.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
@@ -3216,13 +2585,6 @@ java_import(
 java_import(
     name = "idea/plugins/maven/lib/plexus-utils-2.0.6",
     jars = ["idea/plugins/maven/lib/plexus-utils-2.0.6.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/nekohtml-1.9.14",
-    jars = ["idea/lib/nekohtml-1.9.14.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
@@ -3466,13 +2828,6 @@ iml_module(
 )
 
 java_import(
-    name = "idea/lib/commons-compress-1.10",
-    jars = ["idea/lib/commons-compress-1.10.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
     name = "idea/plugins/junit5_rt/lib/junit-jupiter-engine-5.0.0-M1",
     jars = ["idea/plugins/junit5_rt/lib/junit-jupiter-engine-5.0.0-M1.jar"],
     tags = ["managed"],
@@ -3517,76 +2872,6 @@ java_import(
 java_import(
     name = "idea/plugins/junit5_rt/lib/opentest4j-1.0.0-M1",
     jars = ["idea/plugins/junit5_rt/lib/opentest4j-1.0.0-M1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/netty-all-4.1.2.Final",
-    jars = ["idea/lib/netty-all-4.1.2.Final.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/pty4j-0.7.1",
-    jars = ["idea/lib/pty4j-0.7.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/imageio-tiff-3.2.1",
-    jars = ["idea/lib/imageio-tiff-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/imageio-core-3.2.1",
-    jars = ["idea/lib/imageio-core-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/common-lang-3.2.1",
-    jars = ["idea/lib/common-lang-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/common-io-3.2.1",
-    jars = ["idea/lib/common-io-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/common-image-3.2.1",
-    jars = ["idea/lib/common-image-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/imageio-metadata-3.2.1",
-    jars = ["idea/lib/imageio-metadata-3.2.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/dev/assertj-core-3.4.1",
-    jars = ["idea/lib/dev/assertj-core-3.4.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/snappy-in-java-0.5.1",
-    jars = ["idea/lib/snappy-in-java-0.5.1.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
@@ -3671,17 +2956,17 @@ iml_module(
         "//tools:idea.vcs-api[module]",
         "//tools:idea.platform-api[module]",
         "//tools:idea.platform-impl_and_others[module]",
-        "//tools:idea/plugins/svn4idea/lib/svnkit",
+        "//tools/idea/plugins/svn4idea/lib:svnkit",
         "//tools/idea/.idea/libraries:trilead-ssh2",
-        "//tools:idea/plugins/svn4idea/lib/sequence-library",
-        "//tools:idea/plugins/svn4idea/lib/sqljet",
-        "//tools:idea/plugins/svn4idea/lib/antlr",
-        "//tools:idea/plugins/svn4idea/lib/svnkit-javahl",
+        "//tools/idea/plugins/svn4idea/lib:sequence-library",
+        "//tools/idea/plugins/svn4idea/lib:sqljet",
+        "//tools/idea/plugins/svn4idea/lib:antlr",
+        "//tools/idea/plugins/svn4idea/lib:svnkit-javahl",
         "//tools/idea/.idea/libraries:jna",
         "//tools/idea/.idea/libraries:pty4j",
         "//tools/idea/.idea/libraries:purejavacomm",
         "//tools/idea/.idea/libraries:jsch-agent-proxy",
-        "//tools:idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2",
+        "//tools/idea/plugins/svn4idea/lib:jsch.agentproxy.svnkit-trilead-ssh2",
         "//tools/idea/.idea/libraries:http-client",
         "//tools/idea/.idea/libraries:sqlite",
     ],
@@ -3708,123 +2993,4 @@ iml_module(
         "//tools:idea.compiler-impl_and_others[module]",
         "//tools:idea.platform-impl_and_others[module]",
     ],
-)
-
-java_import(
-    name = "idea/plugins/git4idea/lib/trilead-ssh2",
-    jars = ["idea/plugins/git4idea/lib/trilead-ssh2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/cvs/lib/trilead-ssh2-build213",
-    jars = ["idea/plugins/cvs/lib/trilead-ssh2-build213.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/purejavacomm",
-    jars = ["idea/lib/purejavacomm.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/svnkit",
-    jars = ["idea/plugins/svn4idea/lib/svnkit.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/trilead",
-    jars = ["idea/plugins/svn4idea/lib/trilead.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/sequence-library",
-    jars = ["idea/plugins/svn4idea/lib/sequence-library.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/sqljet",
-    jars = ["idea/plugins/svn4idea/lib/sqljet.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/antlr",
-    jars = ["idea/plugins/svn4idea/lib/antlr.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/svnkit-javahl",
-    jars = ["idea/plugins/svn4idea/lib/svnkit-javahl.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.usocket-nc",
-    jars = ["idea/lib/jsch.agentproxy.usocket-nc.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.usocket-jna",
-    jars = ["idea/lib/jsch.agentproxy.usocket-jna.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.sshagent",
-    jars = ["idea/lib/jsch.agentproxy.sshagent.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.pageant",
-    jars = ["idea/lib/jsch.agentproxy.pageant.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.core",
-    jars = ["idea/lib/jsch.agentproxy.core.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/jsch.agentproxy.connector-factory",
-    jars = ["idea/lib/jsch.agentproxy.connector-factory.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2",
-    jars = ["idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "idea/lib/sqlite-jdbc-3.6.20.1",
-    jars = ["idea/lib/sqlite-jdbc-3.6.20.1.jar"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
 )
