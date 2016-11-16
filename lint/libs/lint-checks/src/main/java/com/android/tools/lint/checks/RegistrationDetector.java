@@ -79,7 +79,10 @@ public class RegistrationDetector extends LayoutDetector implements JavaPsiScann
                     RegistrationDetector.class,
                     EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)))
             .addMoreInfo(
-            "http://developer.android.com/guide/topics/manifest/manifest-intro.html");
+            "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+            // Temporary workaround for https://code.google.com/p/android/issues/detail?id=227579
+            // The real solution is to have a merged manifest, which is coming
+            .setEnabledByDefault(false);
 
     protected Map<String, String> mManifestRegistrations;
 
