@@ -23,7 +23,7 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.android.apkzlib.utils.FileCache;
+import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.apkzlib.utils;
+package com.android.builder.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.apkzlib.utils.IOExceptionFunction;
+import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.testutils.truth.MoreTruth;
 import java.io.File;
 import java.io.IOException;
