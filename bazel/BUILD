@@ -78,10 +78,12 @@ genrule(
     outs = [
         "kotlin-runtime.jar",
         "kotlin-reflect.jar",
+        "kotlin-test.jar",
     ],
     cmd = "$(location :unzipper) $< " +
           "Kotlin/kotlinc/lib/kotlin-runtime.jar:$(@D)/kotlin-runtime.jar " +
-          "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar",
+          "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar " +
+          "Kotlin/kotlinc/lib/kotlin-test.jar:$(@D)/kotlin-test.jar",
     tools = [":unzipper"],
     visibility = ["//visibility:public"],
 )
