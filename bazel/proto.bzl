@@ -10,8 +10,16 @@ proto_languages = struct(
 def _gen_proto_impl(ctx):
   gen_dir = ctx.label.package
   inputs = []
-  inputs += ctx.files.srcs
-  args = ["--proto_path=" + gen_dir] + [s.path for s in inputs]
+  inputs += ctx.files.srcs + ctx.files.include
+  args = [
+      "--proto_path=" + gen_dir, \
+      "--proto_path=prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include"
+  ]
+  for dep in ctx.attr.deps:
+    args += ["--proto_path=" + dep.proto_package]
+    inputs += dep.proto_src
+
+  args += [s.path for s in ctx.files.srcs]
 
   # Try to generate cc protos first.
   if ctx.attr.target_language == proto_languages.CPP:
@@ -62,6 +70,11 @@ def _gen_proto_impl(ctx):
         command = "cp " + srcjar.path + ".jar" + " " + srcjar.path
     )
 
+  return struct(
+      proto_src=ctx.files.srcs,
+      proto_package=ctx.label.package,
+  )
+
 _gen_proto_rule = rule(
   attrs = {
       "srcs": attr.label_list(
@@ -69,7 +82,10 @@ _gen_proto_rule = rule(
       ),
       "deps": attr.label_list(
           allow_files = False,
-          providers = ["proto_src"],
+          providers = ["proto_src","proto_package"],
+      ),
+      "include": attr.label(
+          allow_files = FileType([".proto"]),
       ),
       "protoc": attr.label(
           cfg = "host",
@@ -89,13 +105,15 @@ _gen_proto_rule = rule(
   implementation = _gen_proto_impl,
 )
 
-def java_proto_library(name, srcs=None, deps=[], pom=None, visibility=None, grpc_support=False):
+def java_proto_library(
+    name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
   _gen_proto_rule(
       name = srcs_name,
       srcs = srcs,
-      deps = deps,
+      deps = proto_deps,
+      include = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include",
       outs = outs,
       protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
       grpc_plugin =
@@ -105,14 +123,14 @@ def java_proto_library(name, srcs=None, deps=[], pom=None, visibility=None, grpc
       visibility = visibility,
     )
 
-  deps = ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
+  java_deps += ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
   if grpc_support:
-    deps += ["//tools/base/third_party:io.grpc_grpc-all"]
+    java_deps += ["//tools/base/third_party:io.grpc_grpc-all"]
   maven_java_library(
       name  = name,
       pom = pom,
       srcs = outs,
-      deps = deps,
+      deps = java_deps,
       visibility = visibility,
   )
 
