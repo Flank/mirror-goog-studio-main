@@ -19,8 +19,10 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import com.android.builder.model.level2.Library;
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether
@@ -113,8 +115,9 @@ public interface AndroidProject {
 
     int MODEL_LEVEL_0_ORIGNAL = 0 ; // studio 1.0, no support for SyncIssue
     int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
-    int MODEL_LEVEL_2_DEP_GRAPH = 2; // studio 2.2+, with full dep graph
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_DEP_GRAPH;
+    int MODEL_LEVEL_2_NEW_DEP_MODEL = 2; // studio 2.3+, new model for dependencies
+    //int MODEL_LEVEL_3_FULL_DEP_GRAPH = 3; // studio 2.3+, new model for dependencies
+    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_NEW_DEP_MODEL;
 
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;

@@ -19,6 +19,7 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import com.android.builder.model.level2.LibraryGraph;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
@@ -64,10 +65,9 @@ public interface BaseArtifact {
     File getJavaResourcesFolder();
 
     /**
-     * @deprecated Use {@link #getCompileDependencies()} instead.
+     * Return the level 0-1 type dependencies
      */
     @NonNull
-    @Deprecated
     Dependencies getDependencies();
 
     /**
@@ -79,7 +79,7 @@ public interface BaseArtifact {
      * @return The dependencies.
      */
     @NonNull
-    Dependencies getCompileDependencies();
+    LibraryGraph getCompileGraph();
 
     /**
      * Returns the resolved 'package' dependencies for this artifact.
@@ -93,7 +93,7 @@ public interface BaseArtifact {
      * @return The dependencies.
      */
     @NonNull
-    Dependencies getPackageDependencies();
+    LibraryGraph getPackageGraph();
 
     /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as
