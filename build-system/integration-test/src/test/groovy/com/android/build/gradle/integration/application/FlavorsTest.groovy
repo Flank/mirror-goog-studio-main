@@ -71,7 +71,6 @@ class FlavorsTest {
 
         SourceProviderContainer testSourceProviderContainer = ModelHelper.getSourceProviderContainer(
                 defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST)
-        assertNotNull("InstrumentTest source Providers null-check", testSourceProviderContainer)
 
         new SourceProviderHelper(model.getName(), projectDir,
                 ANDROID_TEST.prefix, testSourceProviderContainer.getSourceProvider())

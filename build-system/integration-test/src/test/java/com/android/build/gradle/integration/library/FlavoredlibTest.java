@@ -93,7 +93,6 @@ public class FlavoredlibTest {
         // test flavor 1
 
         ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1");
-        assertThat(flavor1).named("flavor1 PFC").isNotNull();
 
         Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
         assertThat(flavor1).named("flavor1 PFC").isNotNull();
@@ -111,7 +110,6 @@ public class FlavoredlibTest {
 
         // test flavor 2
         ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
-        assertThat(flavor2).named("flavor2 PFC").isNotNull();
 
         Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
         assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();

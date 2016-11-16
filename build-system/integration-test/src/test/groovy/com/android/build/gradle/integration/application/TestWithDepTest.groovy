@@ -34,7 +34,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
 import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
 
 /**
  * Assemble tests for testWithDep that loads the model but doesn't build.
@@ -68,7 +67,6 @@ class TestWithDepTest {
         Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts()
         AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(extraAndroidArtifact,
                 ARTIFACT_ANDROID_TEST)
-        assertNotNull(testArtifact)
 
         LibraryGraph graph = testArtifact.getCompileGraph();
         assertEquals(1, helper.on(graph).withType(JAVA).asList().size())
