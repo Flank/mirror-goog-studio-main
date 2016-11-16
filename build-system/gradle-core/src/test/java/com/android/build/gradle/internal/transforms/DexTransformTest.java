@@ -39,7 +39,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.internal.utils.FileCache;
+import com.android.apkzlib.utils.FileCache;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;

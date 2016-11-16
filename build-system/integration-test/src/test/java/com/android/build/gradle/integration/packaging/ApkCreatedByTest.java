@@ -23,8 +23,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.builder.internal.packaging.zip.StoredEntry;
-import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.apkzlib.zip.StoredEntry;
+import com.android.apkzlib.zip.ZFile;
 
 import org.junit.Rule;
 import org.junit.Test;

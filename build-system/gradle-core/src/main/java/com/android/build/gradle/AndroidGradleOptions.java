@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
-import com.android.builder.internal.utils.FileCache;
+import com.android.apkzlib.utils.FileCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;

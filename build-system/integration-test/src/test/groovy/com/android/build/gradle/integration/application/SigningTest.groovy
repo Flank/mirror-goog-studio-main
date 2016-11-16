@@ -26,8 +26,8 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.internal.packaging.sign.DigestAlgorithm
-import com.android.builder.internal.packaging.sign.SignatureAlgorithm
+import com.android.apkzlib.sign.DigestAlgorithm
+import com.android.apkzlib.sign.SignatureAlgorithm
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SigningConfig

@@ -1,6 +1,6 @@
 package com.android.build.gradle.tasks;
 
-import static com.android.builder.packaging.NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED;
+import static com.android.apkzlib.zfile.NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED;
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
 
 import com.android.annotations.NonNull;
@@ -12,7 +12,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
-import com.android.builder.packaging.NativeLibrariesPackagingMode;
+import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
 import com.google.common.base.Preconditions;
 
