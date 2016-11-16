@@ -75,7 +75,8 @@ public abstract class BazelRule {
     }
 
     boolean shouldUpdate() throws IOException {
-        return !pkg.getBuildFile().getCall(name).getPreComments().stream().anyMatch(
+        CallStatement call = pkg.getBuildFile().getCall(name);
+        return (call == null) || !call.getPreComments().stream().anyMatch(
             (s) -> s.toLowerCase().contains("do not generate"));
     }
 
