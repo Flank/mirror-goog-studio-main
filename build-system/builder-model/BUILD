@@ -1,11 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# do not generate: resources and test_srcs removed manually
 iml_module(
     name = "studio.builder-model",
-    # do not sort: must match IML order
     srcs = ["src/main/java"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     deps = ["//tools/base/annotations:studio.android-annotations[module]"],
 )

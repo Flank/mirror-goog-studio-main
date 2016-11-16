@@ -69,9 +69,9 @@ public class Package {
         File dir = getPackageDir();
         File build = new File(dir, "BUILD");
         for (BazelRule rule : rules.values()) {
-            if (rule.isEmpty()) continue;
-            if (!rule.isExport()) continue;
-            rule.update();
+            if (!rule.isEmpty() && rule.isExport() && rule.shouldUpdate()) {
+                rule.update();
+            }
         }
 
         if (buildFile != null) {
