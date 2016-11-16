@@ -59,8 +59,9 @@ public class TransformApiTest {
 
         wholeProject.getSubproject("plugin").execute("uploadArchives");
 
-        AndroidProject model =
-                wholeProject.getSubproject("androidproject").executeAndReturnModel("assembleDebug");
+        AndroidProject model = wholeProject.getSubproject("androidproject")
+                        .executeAndReturnModel("assembleDebug")
+                        .getOnlyModel();
 
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2, variants.size());

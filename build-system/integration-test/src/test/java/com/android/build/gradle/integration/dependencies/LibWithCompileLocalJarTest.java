@@ -22,17 +22,17 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.builder.model.AndroidProject;
 import com.android.ide.common.process.ProcessException;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * test for compile local jar in libs
@@ -43,7 +43,6 @@ public class LibWithCompileLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -61,13 +60,12 @@ public class LibWithCompileLocalJarTest {
                         "    compile files(\"libs/util-1.0.jar\")\n" +
                         "}\n");
 
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
     }
 
     @Test

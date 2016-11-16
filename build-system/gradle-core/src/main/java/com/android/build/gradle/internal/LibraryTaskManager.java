@@ -51,7 +51,7 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.dependency.LibraryDependency;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -501,12 +501,11 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         // configure the variant to be testable.
-        variantConfig.setOutput(LibraryDependency.createLocalTestedAarLibrary(
+        variantConfig.setOutput(AndroidDependency.createLocalTestedAarLibrary(
                 bundle.getArchivePath(),
-                variantBundleDir,
                 variantData.getName(),
                 project.getPath(),
-                variantData.getName()));
+                variantBundleDir));
 
         ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
                 projectPath, variantName, new Recorder.Block<Void>() {

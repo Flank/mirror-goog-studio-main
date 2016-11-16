@@ -90,7 +90,7 @@ dependencies {
 
     @Test
     public void assemble() {
-        AndroidProject model = project.executeAndReturnModel("assemble");
+        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel();
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo(project.name)
         assertThat(model.getBuildTypes()).hasSize(2)

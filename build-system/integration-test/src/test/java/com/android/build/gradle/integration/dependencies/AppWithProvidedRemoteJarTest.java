@@ -16,27 +16,28 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
-import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * test for provided local jar in app
@@ -47,8 +48,6 @@ public class AppWithProvidedRemoteJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
-
     @BeforeClass
     public static void setUp() throws IOException {
         appendToFile(project.getBuildFile(),
@@ -68,13 +67,12 @@ public class AppWithProvidedRemoteJarTest {
                 "    provided \"com.google.guava:guava:17.0\"\n" +
                 "}\n");
 
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
     }
 
     @Test
@@ -85,18 +83,31 @@ public class AppWithProvidedRemoteJarTest {
 
     @Test
     public void checkProvidedRemoteJarIsInTheMainArtifactDependency() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer = project.model()
+                .withFeature(FULL_DEPENDENCIES).getSingle();
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
-        Collection<JavaLibrary> javaLibs = deps.getJavaLibraries();
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        assertThat(javaLibs).named("java libs").hasSize(1);
-        JavaLibrary onlyElement = Iterables.getOnlyElement(javaLibs);
-        assertThat(onlyElement.isProvided()).named("lib provided prop").isTrue();
-        assertThat(onlyElement.getResolvedCoordinates())
-                .isEqualTo("com.google.guava", "guava", "17.0");
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getOnlyModel().getVariants(), "debug");
 
-        Dependencies packageDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDeps.getJavaLibraries()).isEmpty();
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+
+        // assert that there is one sub-module dependency
+        Items javaDependencies = helper.on(compileGraph).withType(JAVA);
+
+        assertThat(javaDependencies.mapTo(COORDINATES))
+                .named("java library dependencies")
+                .containsExactly("com.google.guava:guava:jar:17.0");
+        // and that it's provided
+        GraphItem javaItem = javaDependencies.asSingleGraphItem();
+        assertThat(compileGraph.getProvidedLibraries())
+                .named("compile provided list")
+                .containsExactly(javaItem.getArtifactAddress());
+
+        // check that the package graph does not contain the item (or anything else)
+        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
+
+        assertThat(packageGraph.getDependencies()).named("package dependencies").isEmpty();
     }
 }

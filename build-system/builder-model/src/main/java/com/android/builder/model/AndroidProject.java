@@ -32,9 +32,12 @@ public interface AndroidProject {
     String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
     // Sent by Studio 1.1+
     String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
-    // Sent by Studio 2.2+. The value of the prop is a monotonically increasing integer.
+    // Sent by Studio 2.3+. The value of the prop is a monotonically increasing integer.
     // see MODEL_LEVEL_* constants
     String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
+    // Sent by Studio 2.+. Additional model feature trigger on a case by case basis
+    // Value is simply true to enable.
+    String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
 
     // Sent by Studio 2.2+
     // This property will enable compatibility checks between Android Studio and the Android
@@ -113,8 +116,9 @@ public interface AndroidProject {
 
     int MODEL_LEVEL_0_ORIGNAL = 0 ; // studio 1.0, no support for SyncIssue
     int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
-    int MODEL_LEVEL_2_DEP_GRAPH = 2; // studio 2.2+, with full dep graph
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_DEP_GRAPH;
+    int MODEL_LEVEL_2_NEW_DEP_MODEL = 2; // studio 2.3+, new model for dependencies
+    //int MODEL_LEVEL_3_FULL_DEP_GRAPH = 3; // studio 2.3+, new model for dependencies
+    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_NEW_DEP_MODEL;
 
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;

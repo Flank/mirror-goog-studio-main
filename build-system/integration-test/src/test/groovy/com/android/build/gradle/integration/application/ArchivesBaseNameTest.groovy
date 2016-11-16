@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -72,8 +74,8 @@ class ArchivesBaseNameTest {
     }
 
     private void checkApkName(String name, String extension) {
-        AndroidProject model = project.executeAndReturnModel("assembleDebug")
-        File outputFile = model.getVariants().find { it.name == "debug" }
+        ModelContainer<AndroidProject> model = project.executeAndReturnModel("assembleDebug")
+        File outputFile = model.getOnlyModel().getVariants().find { it.name == "debug" }
                 .getMainArtifact()
                 .getOutputs().first()
                 .getMainOutputFile()

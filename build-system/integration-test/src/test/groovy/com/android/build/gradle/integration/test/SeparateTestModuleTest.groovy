@@ -91,7 +91,7 @@ android {
     @Test
     public void "check model contains tested apks to install"() throws Exception{
         Collection<TestedTargetVariant> toInstall =
-                project.executeAndReturnMultiModel("clean")
+                project.executeAndReturnMultiModel("clean").getModelMap()
                         .get(":test").variants.first().getTestedTargetVariants()
 
         assertThat(toInstall).hasSize(1)

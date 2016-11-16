@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_JAR;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
-import static com.android.build.gradle.internal.dependency.DependencyChecker.computeVersionLessCoordinateKey;
 import static com.android.builder.core.BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE;
 import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE;
 import static com.android.builder.core.ErrorReporter.EvaluationMode.STANDARD;
@@ -31,25 +30,25 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.dependency.DependencyGraph;
+import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.dependency.AtomDependency;
-import com.android.builder.dependency.DependenciesMutableData;
-import com.android.builder.dependency.DependencyContainer;
-import com.android.builder.dependency.DependencyContainerImpl;
-import com.android.builder.dependency.JarDependency;
-import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.internal.utils.FileCache;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dependency.level2.AtomDependency;
+import com.android.builder.dependency.level2.Dependency;
+import com.android.builder.dependency.level2.DependencyNode;
+import com.android.builder.dependency.level2.DependencyNode.NodeType;
+import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.SdkLibData;
 import com.android.sdklib.repository.meta.DetailsTypes;
@@ -62,11 +61,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.stream.Collectors;
 import org.gradle.api.CircularReferenceException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ModuleVersionSelector;
 import org.gradle.api.artifacts.ProjectDependency;
@@ -86,14 +85,12 @@ import org.gradle.util.GUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 
 /**
  * A manager to resolve configuration dependencies.
@@ -129,10 +126,10 @@ public class DependencyManager {
 
         final AndroidTask<DefaultTask> preBuildTask = variantData.getScope().getPreBuildTask();
 
-        final ImmutableList<AndroidLibrary> compileLibraries = variantDeps
-                .getFlattenedCompileDependencies().getAndroidDependencies();
-        final ImmutableList<AndroidLibrary> packageLibraries = variantDeps
-                .getFlattenedPackageDependencies().getAndroidDependencies();
+        final ImmutableList<AndroidDependency> compileLibraries = variantDeps
+                .getCompileDependencies().getAllAndroidDependencies();
+        final ImmutableList<AndroidDependency> packageLibraries = variantDeps
+                .getPackageDependencies().getAllAndroidDependencies();
 
 
         // gather all the libraries first, then make the task depend on the list in a single
@@ -140,11 +137,11 @@ public class DependencyManager {
         List<PrepareLibraryTask> prepareLibraryTasks = Lists
                 .newArrayListWithCapacity(compileLibraries.size() + packageLibraries.size());
 
-        for (AndroidLibrary androidLibrary : Iterables.concat(compileLibraries, packageLibraries)) {
+        for (AndroidDependency dependency : Iterables.concat(compileLibraries, packageLibraries)) {
             // skip sub-module since we don't extract them anymore.
-            if (androidLibrary.getProject() == null) {
+            if (dependency.getProjectPath() == null) {
                 PrepareLibraryTask prepareLibTask = prepareLibTaskMap
-                        .get(androidLibrary.getResolvedCoordinates().toString());
+                        .get(dependency.getCoordinates().toString());
                 if (prepareLibTask != null) {
                     prepareLibraryTasks.add(prepareLibTask);
                     prepareLibTask.dependsOn(preBuildTask.getName());
@@ -157,7 +154,7 @@ public class DependencyManager {
         }
     }
 
-    public Set<LibraryDependency> resolveDependencies(
+    public Set<AndroidDependency> resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
@@ -166,17 +163,17 @@ public class DependencyManager {
         // downloaded during the dependency resolution process.
         // because they are not immutable (them or the children could be skipped()), we use
         // an identity set.
-        Set<LibraryDependency> libsToExplode = Sets.newIdentityHashSet();
+        Set<AndroidDependency> libsToExplode = Sets.newIdentityHashSet();
 
-        resolveDependencyForConfig(
+        resolveDependencies(
                 variantDeps,
                 testedProjectPath,
                 libsToExplode);
         return libsToExplode;
     }
 
-    public void processLibraries(@NonNull Set<LibraryDependency> libsToExplode) {
-        for (LibraryDependency lib: libsToExplode) {
+    public void processLibraries(@NonNull Set<AndroidDependency> libsToExplode) {
+        for (AndroidDependency lib: libsToExplode) {
             maybeCreatePrepareLibraryTask(lib, project);
         }
     }
@@ -190,10 +187,10 @@ public class DependencyManager {
      * @return the prepare task.
      */
     private PrepareLibraryTask maybeCreatePrepareLibraryTask(
-            @NonNull LibraryDependency library,
+            @NonNull AndroidDependency library,
             @NonNull Project project) {
         if (library.isSubModule()) {
-            throw new RuntimeException("Creating PrepareLib task for submodule: " + library.getResolvedCoordinates());
+            throw new RuntimeException("Creating PrepareLib task for submodule: " + library.getCoordinates());
         }
 
         // create proper key for the map. library here contains all the dependencies which
@@ -202,9 +199,9 @@ public class DependencyManager {
         // However there is a possible case of a rewritten dependencies (with resolution strategy)
         // where the aar here could have different dependencies, in which case we would still
         // need the same task.
-        // So we extract a AbstractBundleDependency (no dependencies) from the LibraryDependency to
+        // So we extract a AbstractBundleDependency (no dependencies) from the AndroidDependency to
         // make the map key that doesn't take into account the dependencies.
-        String key = library.getResolvedCoordinates().toString();
+        String key = library.getCoordinates().toString();
 
         PrepareLibraryTask prepareLibraryTask = prepareLibTaskMap.get(key);
 
@@ -217,10 +214,10 @@ public class DependencyManager {
             prepareLibraryTask.setDescription("Prepare " + library.getName());
             prepareLibraryTask.setVariantName("");
             prepareLibraryTask.init(
-                    library.getBundle(),
-                    library.getFolder(),
+                    library.getArtifactFile(),
+                    library.getExtractedFolder(),
                     AndroidGradleOptions.getBuildCache(project),
-                    library.getResolvedCoordinates());
+                    library.getCoordinates());
 
             prepareLibTaskMap.put(key, prepareLibraryTask);
         }
@@ -228,10 +225,10 @@ public class DependencyManager {
         return prepareLibraryTask;
     }
 
-    private void resolveDependencyForConfig(
+    private void resolveDependencies(
             @NonNull final VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Set<LibraryDependency> libsToExplodeOut) {
+            @NonNull Set<AndroidDependency> libsToExplodeOut) {
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
             // if we're only syncing (building the model), then we only need the package
@@ -241,7 +238,9 @@ public class DependencyManager {
             if (modelLevelInt != null) {
                 modelLevel = modelLevelInt;
             }
-            needPackageScope = modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH;
+            if (modelLevel > AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+                needPackageScope = AndroidGradleOptions.buildModelWithFullDependencies(project);
+            }
         }
 
         Configuration compileClasspath = variantDeps.getCompileConfiguration();
@@ -261,9 +260,9 @@ public class DependencyManager {
         Set<String> artifactSet = Sets.newHashSet();
 
         // start with package dependencies, record the artifacts
-        DependencyContainer packagedDependencies;
+        DependencyGraph packagedGraph;
         if (needPackageScope) {
-            packagedDependencies = gatherDependencies(
+            packagedGraph = resolveConfiguration(
                     packageClasspath,
                     variantDeps,
                     libsToExplodeOut,
@@ -272,7 +271,7 @@ public class DependencyManager {
                     artifactSet,
                     ScopeType.PACKAGE);
         } else {
-            packagedDependencies = DependencyContainerImpl.getEmpty();
+            packagedGraph = DependencyGraph.getEmpty();
         }
 
         // then the compile dependencies, comparing against the record package dependencies
@@ -281,7 +280,7 @@ public class DependencyManager {
         // provided bits. This disables the checks on impossible provided libs (provided aar in
         // apk project).
         ScopeType scopeType = needPackageScope ? ScopeType.COMPILE : ScopeType.COMPILE_ONLY;
-        DependencyContainer compileDependencies = gatherDependencies(
+        DependencyGraph compileDependencies = resolveConfiguration(
                 compileClasspath,
                 variantDeps,
                 libsToExplodeOut,
@@ -302,15 +301,11 @@ public class DependencyManager {
             }
         }
 
-        variantDeps.setDependencies(compileDependencies, packagedDependencies);
-
-        // validate the dependencies.
-        if (needPackageScope) {
-            variantDeps.validate();
-        }
+        variantDeps.setDependencies(compileDependencies, packagedGraph, needPackageScope);
 
         if (DEBUG_DEPENDENCY) {
             System.out.println("*** COMPILE DEPS ***");
+            /*
             for (AndroidLibrary lib : compileDependencies.getAndroidDependencies()) {
                 System.out.println("LIB: " + lib);
             }
@@ -324,17 +319,17 @@ public class DependencyManager {
                 System.out.println("LOCAL-JAR: " + jar);
             }
             System.out.println("*** PACKAGE DEPS ***");
-            for (AndroidLibrary lib : packagedDependencies.getAndroidDependencies()) {
+            for (AndroidLibrary lib : packagedGraph.getAndroidDependencies()) {
                 System.out.println("LIB: " + lib);
             }
-            for (JavaLibrary jar : packagedDependencies.getJarDependencies()) {
+            for (JavaLibrary jar : packagedGraph.getJarDependencies()) {
                 System.out.println("JAR: " + jar);
             }
-            for (JavaLibrary jar : packagedDependencies.getLocalDependencies()) {
+            for (JavaLibrary jar : packagedGraph.getLocalDependencies()) {
                 System.out.println("LOCAL-JAR: " + jar);
             }
             System.out.println("***");
-
+            */
             System.out.println(project.getName() + ":" + compileClasspath.getName() + "/" +packageClasspath.getName());
             System.out.println("<<<<<<<<<<");
         }
@@ -347,10 +342,10 @@ public class DependencyManager {
     }
 
     @NonNull
-    private DependencyContainer gatherDependencies(
+    private DependencyGraph resolveConfiguration(
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
-            @NonNull Set<LibraryDependency> libsToExplodeOut,
+            @NonNull Set<AndroidDependency> libsToExplodeOut,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
@@ -362,25 +357,23 @@ public class DependencyManager {
 
         // keep a map of modules already processed so that we don't go through sections of the
         // graph that have been seen elsewhere.
-        Map<ModuleVersionIdentifier, List<LibraryDependency>> foundLibraries = Maps.newHashMap();
-        Map<ModuleVersionIdentifier, List<AtomDependency>> foundAtoms = Maps.newHashMap();
-        Map<ModuleVersionIdentifier, List<JarDependency>> foundJars = Maps.newHashMap();
+        // TODO this is not correct if the requested coordinate is different but keep as is for now
+        Map<ModuleVersionIdentifier, List<DependencyNode>> foundNodes = Maps.newHashMap();
 
         // get the graph for the Android and Jar dependencies. This does not include
         // local jars.
-        List<LibraryDependency> libraryDependencies = Lists.newArrayList();
-        List<AtomDependency> atomDependencies = Lists.newArrayList();
-        List<JarDependency> jarDependencies = Lists.newArrayList();
+        Map<Object, Dependency> dependencyMap = Maps.newHashMap();
+        List<DependencyNode> dependencies = Lists.newArrayList();
 
         Set<? extends DependencyResult> dependencyResultSet = configuration.getIncoming()
                 .getResolutionResult().getRoot().getDependencies();
 
         // create a container for all the dependency related mutable data, only when creating
         // the package dependencies for a test project.
-        DependenciesMutableData mutableDependencyContainer =
-                scopeType == ScopeType.PACKAGE
-                    ? DependenciesMutableData.newInstance()
-                    : DependenciesMutableData.EMPTY;
+        MutableDependencyDataMap mutableDependencyContainer = MutableDependencyDataMap.newInstance();
+                //scopeType == ScopeType.PACKAGE
+                //    ? MutableDependencyDataMap.newInstance()
+                //    : MutableDependencyDataMap.EMPTY;
 
         for (DependencyResult dependencyResult : dependencyResultSet) {
             if (dependencyResult instanceof ResolvedDependencyResult) {
@@ -388,12 +381,9 @@ public class DependencyManager {
                         mutableDependencyContainer,
                         ((ResolvedDependencyResult) dependencyResult).getSelected(),
                         variantDeps,
-                        libraryDependencies,
-                        atomDependencies,
-                        jarDependencies,
-                        foundLibraries,
-                        foundAtoms,
-                        foundJars,
+                        dependencyMap,
+                        dependencies,
+                        foundNodes,
                         artifacts,
                         libsToExplodeOut,
                         currentUnresolvedDependencies,
@@ -413,8 +403,7 @@ public class DependencyManager {
 
         // also need to process local jar files, as they are not processed by the
         // resolvedConfiguration result. This only includes the local jar files for this project.
-        List<JarDependency> localJars = Lists.newArrayList();
-        for (Dependency dependency : configuration.getAllDependencies()) {
+        for (org.gradle.api.artifacts.Dependency dependency : configuration.getAllDependencies()) {
             if (dependency instanceof SelfResolvingDependency &&
                     !(dependency instanceof ProjectDependency)) {
                 Set<File> files = ((SelfResolvingDependency) dependency).resolve();
@@ -432,45 +421,43 @@ public class DependencyManager {
                                         "Project %s: Only Jar-type local dependencies are supported. Cannot handle: %s",
                                         project.getName(), localJarFile.getAbsolutePath()));
                     } else {
-                        JarDependency localJar;
+                        JavaDependency localJar = new JavaDependency(localJarFile);
                         switch (scopeType) {
                             case PACKAGE:
-                                localJar = new JarDependency(localJarFile);
-                                artifactSet.add(
-                                        computeVersionLessCoordinateKey(localJar.getResolvedCoordinates()));
+                                artifactSet.add(localJar.getCoordinates().getVersionlessId());
                                 break;
                             case COMPILE:
-                                MavenCoordinates coord = JarDependency.getCoordForLocalJar(localJarFile);
-                                boolean provided = !artifactSet
-                                        .contains(computeVersionLessCoordinateKey(coord));
-
-                                localJar = new JarDependency(
-                                        localJarFile,
-                                        ImmutableList.of(),
-                                        coord,
-                                        null,
-                                        provided);
+                                if (!artifactSet
+                                        .contains(localJar.getCoordinates().getVersionlessId())) {
+                                    mutableDependencyContainer.setProvided(localJar);
+                                }
                                 break;
                             case COMPILE_ONLY:
                                 // if we only have the compile scope, ignore computation of the
                                 // provided bits.
-                                localJar = new JarDependency(localJarFile);
                                 break;
                             default:
                                 throw new RuntimeException("unsupported ProvidedComputationAction");
                         }
-                        localJars.add(localJar);
+
+                        // add the Dependency to the map
+                        dependencyMap.put(localJar.getAddress(), localJar);
+                        // and add the node to the graph
+                        DependencyNode node = new DependencyNode(
+                                localJar.getAddress(),
+                                NodeType.JAVA,
+                                ImmutableList.of(), // no dependencies
+                                null /*requested coord*/);
+                        dependencies.add(node);
                     }
                 }
             }
         }
 
-        return new DependencyContainerImpl(
-                mutableDependencyContainer,
-                libraryDependencies,
-                atomDependencies,
-                jarDependencies,
-                localJars);
+        return new DependencyGraph(
+                dependencyMap,
+                dependencies,
+                mutableDependencyContainer);
     }
 
     /**
@@ -585,17 +572,14 @@ public class DependencyManager {
     }
 
     private void addDependency(
-            @NonNull DependenciesMutableData mutableDependencyContainer,
+            @NonNull MutableDependencyDataMap mutableDependencyDataMap,
             @NonNull ResolvedComponentResult resolvedComponentResult,
             @NonNull VariantDependencies configDependencies,
-            @NonNull Collection<LibraryDependency> outLibraries,
-            @NonNull Collection<AtomDependency> outAtoms,
-            @NonNull List<JarDependency> outJars,
-            @NonNull Map<ModuleVersionIdentifier, List<LibraryDependency>> alreadyFoundLibraries,
-            @NonNull Map<ModuleVersionIdentifier, List<AtomDependency>> alreadyFoundAtoms,
-            @NonNull Map<ModuleVersionIdentifier, List<JarDependency>> alreadyFoundJars,
+            @NonNull Map<Object, Dependency> outDependencyMap,
+            @NonNull List<DependencyNode> outDependencies,
+            @NonNull Map<ModuleVersionIdentifier, List<DependencyNode>> alreadyFoundNodes,
             @NonNull Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts,
-            @NonNull Set<LibraryDependency> libsToExplodeOut,
+            @NonNull Set<AndroidDependency> libsToExplodeOut,
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull List<String> projectChain,
@@ -614,36 +598,19 @@ public class DependencyManager {
             configDependencies.setAnnotationsPresent(true);
         }
 
-        List<LibraryDependency> libsForThisModule = alreadyFoundLibraries.get(moduleVersion);
-        List<AtomDependency> atomsForThisModule = alreadyFoundAtoms.get(moduleVersion);
-        List<JarDependency> jarsForThisModule = alreadyFoundJars.get(moduleVersion);
+        List<DependencyNode> nodesForThisModule = alreadyFoundNodes.get(moduleVersion);
 
-        if (libsForThisModule != null) {
+        if (nodesForThisModule != null) {
             if (DEBUG_DEPENDENCY) {
-                printIndent(indent, "FOUND LIB: " + moduleVersion.getName());
+                printIndent(indent, "FOUND DEP: " + moduleVersion.getName());
             }
-            outLibraries.addAll(libsForThisModule);
+            outDependencies.addAll(nodesForThisModule);
 
-            for (LibraryDependency lib : libsForThisModule) {
-                if (!lib.isSubModule()) {
-                    libsToExplodeOut.add(lib);
-                }
-            }
-        } else if (atomsForThisModule != null) {
-            if (DEBUG_DEPENDENCY) {
-                printIndent(indent, "FOUND ATOM: " + moduleVersion.getName());
-            }
-            outAtoms.addAll(atomsForThisModule);
-        } else if (jarsForThisModule != null) {
-            if (DEBUG_DEPENDENCY) {
-                printIndent(indent, "FOUND JAR: " + moduleVersion.getName());
-            }
-            outJars.addAll(jarsForThisModule);
         } else {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "NOT FOUND: " + moduleVersion.getName());
             }
-            // new module! Might be a jar, an atom or a library
+            // new dependency artifact! Might be a jar, an atom or a library
 
             // get the associated gradlepath
             ComponentIdentifier id = resolvedComponentResult.getId();
@@ -659,11 +626,9 @@ public class DependencyManager {
             }
 
             // get the nested components first.
-            List<LibraryDependency> nestedLibraries = Lists.newArrayList();
-            List<AtomDependency> nestedAtoms = Lists.newArrayList();
-            List<JarDependency> nestedJars = Lists.newArrayList();
-
             Set<? extends DependencyResult> dependencies = resolvedComponentResult.getDependencies();
+            List<DependencyNode> transitiveDependencies = Lists.newArrayListWithExpectedSize(dependencies.size());
+
             for (DependencyResult dependencyResult : dependencies) {
                 if (dependencyResult instanceof ResolvedDependencyResult) {
                     ResolvedComponentResult selected =
@@ -693,15 +658,12 @@ public class DependencyManager {
                     }
 
                     addDependency(
-                            mutableDependencyContainer,
+                            mutableDependencyDataMap,
                             selected,
                             configDependencies,
-                            nestedLibraries,
-                            nestedAtoms,
-                            nestedJars,
-                            alreadyFoundLibraries,
-                            alreadyFoundAtoms,
-                            alreadyFoundJars,
+                            outDependencyMap,
+                            transitiveDependencies,
+                            alreadyFoundNodes,
                             artifacts,
                             libsToExplodeOut,
                             currentUnresolvedDependencies,
@@ -721,9 +683,7 @@ public class DependencyManager {
 
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "BACK2: " + moduleVersion.getName());
-                printIndent(indent, "NESTED LIBS: " + nestedLibraries.size());
-                printIndent(indent, "NESTED ATOMS: " + nestedAtoms.size());
-                printIndent(indent, "NESTED JARS: " + nestedJars.size());
+                printIndent(indent, "NESTED DEPS: " + transitiveDependencies.size());
             }
 
             // now loop on all the artifact for this modules.
@@ -731,50 +691,183 @@ public class DependencyManager {
 
             if (moduleArtifacts != null) {
                 for (ResolvedArtifact artifact : moduleArtifacts) {
-                    MavenCoordinates mavenCoordinates = createMavenCoordinates(artifact);
-                    boolean provided = forceProvided;
-                    String coordKey = computeVersionLessCoordinateKey(mavenCoordinates);
-                    if (scopeType == ScopeType.PACKAGE) {
-                        artifactSet.add(coordKey);
-                    } else if (scopeType == ScopeType.COMPILE) {
-                        provided |= !artifactSet.contains(coordKey);
-                    }
+                    MavenCoordinatesImpl mavenCoordinates = createMavenCoordinates(artifact);
 
-                    if (EXT_LIB_ARCHIVE.equals(artifact.getExtension())) {
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "TYPE: AAR");
-                        }
-                        if (libsForThisModule == null) {
-                            libsForThisModule = Lists.newArrayList();
-                            alreadyFoundLibraries.put(moduleVersion, libsForThisModule);
+                    // check if we already have a Dependency object for this coordinate.
+                    Dependency alreadyCreatedDependency = outDependencyMap.get(mavenCoordinates);
+                    NodeType nodeType = null;
+                    if (alreadyCreatedDependency != null) {
+                        if (alreadyCreatedDependency instanceof AndroidDependency) {
+                            nodeType = NodeType.ANDROID;
+                        } else if (alreadyCreatedDependency instanceof JavaDependency) {
+                            nodeType = NodeType.JAVA;
+                        } else if (alreadyCreatedDependency instanceof AtomDependency) {
+                            nodeType = NodeType.ATOM;
+                        } else {
+                            throw new RuntimeException("Unknown type of Dependency");
                         }
 
-                        String path = computeArtifactPath(moduleVersion, artifact);
-                        String name = computeArtifactName(moduleVersion, artifact);
-
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "NAME: " + name);
-                            printIndent(indent, "PATH: " + path);
+                    } else {
+                        boolean provided = forceProvided;
+                        String coordKey = mavenCoordinates.getVersionlessId();
+                        if (scopeType == ScopeType.PACKAGE) {
+                            artifactSet.add(coordKey);
+                        } else if (scopeType == ScopeType.COMPILE) {
+                            provided |= !artifactSet.contains(coordKey);
                         }
 
-                        final String variantName = artifact.getClassifier();
+                        // if we don't have one, need to create it.
+                        if (EXT_LIB_ARCHIVE.equals(artifact.getExtension())) {
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "TYPE: AAR");
+                            }
 
-                        LibraryDependency libraryDependency;
-                        Project subProject = null;
+                            String path = computeArtifactPath(moduleVersion, artifact);
+                            String name = computeArtifactName(moduleVersion, artifact);
 
-                        boolean isSubProject = false;
-                        if (gradlePath != null) {
-                            // this is a sub-module. Get the matching object file
-                            // to query its build output;
-                            subProject = project.findProject(gradlePath);
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "NAME: " + name);
+                                printIndent(indent, "PATH: " + path);
+                            }
 
-                            // this could be a simple project wrapping an aar file, so we check the
-                            // presence of the android plugin to make sure it's an android module.
-                            isSubProject = subProject.getPlugins().hasPlugin("com.android.library") ||
-                                    subProject.getPlugins().hasPlugin("com.android.model.library");
-                        }
+                            final String variantName = artifact.getClassifier();
 
-                        if (isSubProject) {
+                            AndroidDependency androidDependency;
+                            Project subProject = null;
+
+                            boolean isSubProject = false;
+                            if (gradlePath != null) {
+                                // this is a sub-module. Get the matching object file
+                                // to query its build output;
+                                subProject = project.findProject(gradlePath);
+
+                                // this could be a simple project wrapping an aar file, so we check the
+                                // presence of the android plugin to make sure it's an android module.
+                                isSubProject =
+                                        subProject.getPlugins().hasPlugin("com.android.library")
+                                                ||
+                                                subProject.getPlugins()
+                                                        .hasPlugin("com.android.model.library");
+                            }
+
+                            if (isSubProject) {
+                                // if there is a variant name then we use it for the leaf
+                                // (this means the subproject is publishing all its variants and each
+                                // artifact has a classifier that is the variant Name).
+                                // Otherwise the subproject only outputs a single artifact
+                                // and the location was set to default.
+                                String pathLeaf = variantName != null ? variantName : "default";
+
+                                File stagingDir = FileUtils.join(
+                                        subProject.getBuildDir(),
+                                        FD_INTERMEDIATES, DIR_BUNDLES,
+                                        pathLeaf);
+
+                                androidDependency = AndroidDependency.createStagedAarLibrary(
+                                        artifact.getFile(),
+                                        mavenCoordinates,
+                                        name,
+                                        gradlePath,
+                                        stagingDir,
+                                        variantName);
+
+                            } else {
+                                // If the build cache is enabled, we create and cache the exploded aar
+                                // inside the build cache directory; otherwise, we explode the aar to a
+                                // location inside the project's build directory.
+                                Optional<FileCache> buildCache =
+                                        AndroidGradleOptions.getBuildCache(project);
+                                File explodedDir;
+                                if (buildCache.isPresent()) {
+                                    explodedDir = buildCache.get().getFileInCache(
+                                            PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates));
+                                } else {
+                                    // When improved dependency resolution is enabled, the aar is
+                                    // exploded to a directory specific to the variant.  Otherwise, it
+                                    // would conflict with the up-to-date check of the original
+                                    // PrepareLibraryTask.
+                                    explodedDir =
+                                            AndroidGradleOptions
+                                                    .isImprovedDependencyResolutionEnabled(project)
+                                                    ? FileUtils.join(
+                                                    project.getBuildDir(),
+                                                    FD_INTERMEDIATES,
+                                                    EXPLODED_AAR ,
+                                                    configDependencies.getName(),
+                                                    path)
+                                                    : FileUtils.join(
+                                                            project.getBuildDir(),
+                                                            FD_INTERMEDIATES,
+                                                            EXPLODED_AAR,
+                                                            path);
+                                }
+
+                                androidDependency = AndroidDependency.createExplodedAarLibrary(
+                                        artifact.getFile(),
+                                        mavenCoordinates,
+                                        name,
+                                        null /*gradlePath*/,
+                                        explodedDir);
+                            }
+
+                            alreadyCreatedDependency = androidDependency;
+                            nodeType = NodeType.ANDROID;
+                            outDependencyMap.put(
+                                    androidDependency.getAddress(), androidDependency);
+
+                            // only record the libraries to explode if they are remote and not
+                            // sub-modules.
+                            if (!isSubProject) {
+                                libsToExplodeOut.add(androidDependency);
+                            }
+
+                            // check this aar does not have a dependency on an atom, as this would
+                            // not work.
+                            if (containsDirectDependency(transitiveDependencies, NodeType.ATOM)) {
+                                configDependencies.getChecker()
+                                        .handleIssue(
+                                                createMavenCoordinates(artifact).toString(),
+                                                SyncIssue.TYPE_AAR_DEPEND_ON_ATOM,
+                                                SyncIssue.SEVERITY_ERROR,
+                                                String.format(
+                                                        "Module '%s' depends on one or more Android Atoms but is a library",
+                                                        moduleVersion));
+                            }
+                        } else if (EXT_ATOMBUNDLE_ARCHIVE.equals(artifact.getExtension())) {
+                            if (provided) {
+                                configDependencies.getChecker()
+                                        .handleIssue(
+                                                createMavenCoordinates(artifact).toString(),
+                                                SyncIssue.TYPE_ATOM_DEPENDENCY_PROVIDED,
+                                                SyncIssue.SEVERITY_ERROR,
+                                                String.format(
+                                                        "Module '%s' is an Atom, which cannot be a provided dependency",
+                                                        moduleVersion));
+                            }
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "TYPE: ATOM");
+                            }
+
+                            // if this is a package scope, then skip the dependencies.
+                            if (scopeType == ScopeType.PACKAGE) {
+                                recursiveSkip(
+                                        mutableDependencyDataMap,
+                                        transitiveDependencies,
+                                        outDependencyMap,
+                                        true /*skipAndroidDep*/,
+                                        true /*skipJavaDep*/);
+                            }
+
+                            String path = computeArtifactPath(moduleVersion, artifact);
+                            String name = computeArtifactName(moduleVersion, artifact);
+
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "NAME: " + name);
+                                printIndent(indent, "PATH: " + path);
+                            }
+
+                            final String variantName = artifact.getClassifier();
+
                             // if there is a variant name then we use it for the leaf
                             // (this means the subproject is publishing all its variants and each
                             // artifact has a classifier that is the variant Name).
@@ -782,264 +875,167 @@ public class DependencyManager {
                             // and the location was set to default.
                             String pathLeaf = variantName != null ? variantName : "default";
 
+                            Project subProject = project.findProject(gradlePath);
                             File stagingDir = FileUtils.join(
                                     subProject.getBuildDir(),
-                                    FD_INTERMEDIATES, DIR_BUNDLES,
+                                    FD_INTERMEDIATES, DIR_ATOMBUNDLES,
                                     pathLeaf);
 
-                            libraryDependency = LibraryDependency.createStagedAarLibrary(
+                            AtomDependency atomDependency = new AtomDependency(
                                     artifact.getFile(),
-                                    stagingDir,
-                                    nestedLibraries,
-                                    nestedJars,
-                                    name,
-                                    variantName,
-                                    gradlePath,
-                                    null /*requestedCoordinates*/,
                                     mavenCoordinates,
-                                    provided);
+                                    name,
+                                    gradlePath,
+                                    stagingDir,
+                                    moduleVersion.getName() /* atomName */,
+                                    variantName);
 
-                        } else {
-                            // If the build cache is enabled, we create and cache the exploded aar
-                            // inside the build cache directory; otherwise, we explode the aar to a
-                            // location inside the project's build directory.
-                            Optional<FileCache> buildCache =
-                                    AndroidGradleOptions.getBuildCache(project);
-                            File explodedDir;
-                            if (buildCache.isPresent()) {
-                                explodedDir = buildCache.get().getFileInCache(
-                                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates));
-                            } else {
-                                // When improved dependency resolution is enabled, the aar is
-                                // exploded to a directory specific to the variant.  Otherwise, it
-                                // would conflict with the up-to-date check of the original
-                                // PrepareLibraryTask.
-                                explodedDir =
-                                        AndroidGradleOptions
-                                                .isImprovedDependencyResolutionEnabled(project)
-                                                ? FileUtils.join(
-                                                        project.getBuildDir(),
-                                                        FD_INTERMEDIATES,
-                                                        EXPLODED_AAR ,
-                                                        configDependencies.getName(),
-                                                        path)
-                                                : FileUtils.join(
-                                                        project.getBuildDir(),
-                                                        FD_INTERMEDIATES,
-                                                        EXPLODED_AAR,
-                                                        path);
+                            alreadyCreatedDependency = atomDependency;
+                            nodeType = NodeType.ATOM;
+
+                            outDependencyMap.put(atomDependency.getAddress(), atomDependency);
+
+                        } else if (EXT_JAR.equals(artifact.getExtension())) {
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "TYPE: JAR");
+                            }
+                            boolean isRootOfSeparateTestedApp = testedProjectPath != null
+                                    && testedProjectPath.equals(gradlePath);
+                            // check this jar does not have a dependency on an library, as this would not work.
+                            if (containsDirectDependency(transitiveDependencies, NodeType.ANDROID)) {
+                                // there is one case where it's ok to have a jar depend on aars:
+                                // when a test project tests a separate app project, the code of the
+                                // app is published as a jar, but it brings in the dependencies
+                                // of the app (which can be aars).
+                                // we know we're in that case if testedProjectPath is non null, so we
+                                // can detect this an accept it.
+                                if (isRootOfSeparateTestedApp) {
+                                    // for now we can only add them as out libraries for the current
+                                    // artifact (rather than the actual jar that is the tested code).
+                                    // TODO: find a way to add them as children of the jar instead.
+                                    // TODO: we should take the jar only (of the aars). The rest doesn't matter.
+
+                                    // get the android dependencies only, and add them to the
+                                    // out list.
+                                    outDependencies.addAll(transitiveDependencies.stream()
+                                            .filter(node -> node.getNodeType() == NodeType.ANDROID)
+                                            .collect(Collectors.toList()));
+
+                                } else {
+                                    configDependencies.getChecker()
+                                            .handleIssue(
+                                                    createMavenCoordinates(artifact).toString(),
+                                                    SyncIssue.TYPE_JAR_DEPEND_ON_AAR,
+                                                    SyncIssue.SEVERITY_ERROR,
+                                                    String.format(
+                                                            "Module '%s' depends on one or more Android Libraries but is a jar",
+                                                            moduleVersion));
+                                }
                             }
 
-                            libraryDependency = LibraryDependency.createExplodedAarLibrary(
-                                    artifact.getFile(),
-                                    explodedDir,
-                                    nestedLibraries,
-                                    nestedJars,
-                                    name,
-                                    variantName,
-                                    null /*gradlePath*/,
-                                    null /*requestedCoordinates*/,
-                                    mavenCoordinates,
-                                    provided);
-                        }
-
-
-                        libsForThisModule.add(libraryDependency);
-                        outLibraries.add(libraryDependency);
-
-                        // only record the libraries to explode if they are remote and not
-                        // sub-modules.
-                        if (!isSubProject) {
-                            libsToExplodeOut.add(libraryDependency);
-                        }
-
-                        // check this aar does not have a dependency on an atom, as this would
-                        // not work.
-                        if (!nestedAtoms.isEmpty()) {
-                            configDependencies.getChecker()
-                                    .handleIssue(
-                                            createMavenCoordinates(artifact).toString(),
-                                            SyncIssue.TYPE_AAR_DEPEND_ON_ATOM,
-                                            SyncIssue.SEVERITY_ERROR,
-                                            String.format(
-                                                    "Module '%s' depends on one or more Android Atoms but is a library",
-                                                    moduleVersion));
-                        }
-                    } else if (EXT_ATOMBUNDLE_ARCHIVE.equals(artifact.getExtension())) {
-                        if (provided) {
-                            configDependencies.getChecker()
-                                    .handleIssue(
-                                            createMavenCoordinates(artifact).toString(),
-                                            SyncIssue.TYPE_ATOM_DEPENDENCY_PROVIDED,
-                                            SyncIssue.SEVERITY_ERROR,
-                                            String.format(
-                                                    "Module '%s' is an Atom, which cannot be a provided dependency",
-                                                    moduleVersion));
-                        }
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "TYPE: ATOM");
-                        }
-                        if (atomsForThisModule == null) {
-                            atomsForThisModule = Lists.newArrayList();
-                            alreadyFoundAtoms.put(moduleVersion, atomsForThisModule);
-                        }
-
-                        // if this is a package scope, then skip the dependencies.
-                        if (scopeType == ScopeType.PACKAGE) {
-                            recursiveLibSkip(mutableDependencyContainer, nestedLibraries);
-                            recursiveJavaSkip(mutableDependencyContainer, nestedJars);
-                        }
-
-                        String path = computeArtifactPath(moduleVersion, artifact);
-                        String name = computeArtifactName(moduleVersion, artifact);
-
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "NAME: " + name);
-                            printIndent(indent, "PATH: " + path);
-                        }
-
-                        final String variantName = artifact.getClassifier();
-
-                        // if there is a variant name then we use it for the leaf
-                        // (this means the subproject is publishing all its variants and each
-                        // artifact has a classifier that is the variant Name).
-                        // Otherwise the subproject only outputs a single artifact
-                        // and the location was set to default.
-                        String pathLeaf = variantName != null ? variantName : "default";
-
-                        Project subProject = project.findProject(gradlePath);
-                        File stagingDir = FileUtils.join(
-                                subProject.getBuildDir(),
-                                FD_INTERMEDIATES, DIR_ATOMBUNDLES,
-                                pathLeaf);
-
-                        @SuppressWarnings("unchecked")
-                        AtomDependency atomDependency = new AtomDependency(
-                                artifact.getFile(),
-                                stagingDir,
-                                nestedLibraries,
-                                nestedAtoms,
-                                nestedJars,
-                                moduleVersion.getName(), /* atomName */
-                                name,
-                                artifact.getClassifier(),
-                                gradlePath,
-                                null /*requestedCoordinates*/,
-                                mavenCoordinates);
-
-                        atomsForThisModule.add(atomDependency);
-                        outAtoms.add(atomDependency);
-                    } else if (EXT_JAR.equals(artifact.getExtension())) {
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "TYPE: JAR");
-                        }
-                        // check this jar does not have a dependency on an library, as this would not work.
-                        if (!nestedLibraries.isEmpty()) {
-                            // there is one case where it's ok to have a jar depend on aars:
-                            // when a test project tests a separate app project, the code of the
-                            // app is published as a jar, but it brings in the dependencies
-                            // of the app (which can be aars).
-                            // we know we're in that case if testedProjectPath is non null, so we
-                            // can detect this an accept it.
-                            if (testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
-                                // for now we can only add them as out libraries for the current
-                                // artifact (rather than the actual jar that is the tested code).
-                                // But we nee to mark them as skipped since we don't want to
-                                // include them.
-                                // TODO: find a way to add them as children of the jar instead.
-                                // TODO: we should take the jar only (of the aars). The rest doesn't matter.
-
-                                // if this is a package scope, then skip the dependencies.
-                                if (scopeType == ScopeType.PACKAGE) {
-                                    recursiveLibSkip(mutableDependencyContainer, nestedLibraries);
-                                } else {
-                                    // if it's compile scope, make it optional.
-                                    provided = true;
-                                }
-
-                                outLibraries.addAll(nestedLibraries);
-
-                            } else {
+                            // check this jar does not have a dependency on an atom, as this would not work.
+                            if (containsDirectDependency(transitiveDependencies, NodeType.ATOM)) {
                                 configDependencies.getChecker()
                                         .handleIssue(
                                                 createMavenCoordinates(artifact).toString(),
-                                                SyncIssue.TYPE_JAR_DEPEND_ON_AAR,
+                                                SyncIssue.TYPE_JAR_DEPEND_ON_ATOM,
                                                 SyncIssue.SEVERITY_ERROR,
                                                 String.format(
-                                                        "Module '%s' depends on one or more Android Libraries but is a jar",
+                                                        "Module '%s' depends on one or more Android Atoms but is a jar",
                                                         moduleVersion));
                             }
+
+                            JavaDependency javaDependency = new JavaDependency(
+                                    artifact.getFile(),
+                                    mavenCoordinates,
+                                    computeArtifactName(moduleVersion, artifact),
+                                    gradlePath);
+
+                            alreadyCreatedDependency = javaDependency;
+                            nodeType = NodeType.JAVA;
+                            outDependencyMap.put(javaDependency.getAddress(), javaDependency);
+
+                            if (isRootOfSeparateTestedApp) {
+                                // the jar and dependencies of the separate tested app must be excluded
+                                // from the test app, so we mark the package scope as skipped and the
+                                // compile scope as provided.
+                                if (scopeType == ScopeType.PACKAGE) {
+                                    mutableDependencyDataMap.skip(javaDependency);
+                                    recursiveSkip(
+                                            mutableDependencyDataMap,
+                                            transitiveDependencies,
+                                            outDependencyMap,
+                                            true /*skipAndroidDep*/,
+                                            true /*skipJavaDep*/);
+                                } else {
+                                    // the current one is done below, so we only need to do the
+                                    // recursive ones.
+                                    recursiveProvided(
+                                            mutableDependencyDataMap,
+                                            transitiveDependencies,
+                                            outDependencyMap,
+                                            true /*skipAndroidDep*/,
+                                            true /*skipJavaDep*/);
+
+                                    provided = true;
+                                }
+                            }
+
+                            if (DEBUG_DEPENDENCY) {
+                                printIndent(indent, "JAR-INFO: " + javaDependency.toString());
+                            }
+
+                        } else if (EXT_ANDROID_PACKAGE.equals(artifact.getExtension())) {
+                            String name = computeArtifactName(moduleVersion, artifact);
+
+                            configDependencies.getChecker().handleIssue(
+                                    name,
+                                    SyncIssue.TYPE_DEPENDENCY_IS_APK,
+                                    SyncIssue.SEVERITY_ERROR,
+                                    String.format(
+                                            "Dependency %s on project %s resolves to an APK archive "
+                                                    +
+                                                    "which is not supported as a compilation dependency. File: %s",
+                                            name, project.getName(), artifact.getFile()));
+                        } else if ("apklib".equals(artifact.getExtension())) {
+                            String name = computeArtifactName(moduleVersion, artifact);
+
+                            configDependencies.getChecker().handleIssue(
+                                    name,
+                                    SyncIssue.TYPE_DEPENDENCY_IS_APKLIB,
+                                    SyncIssue.SEVERITY_ERROR,
+                                    String.format(
+                                            "Packaging for dependency %s is 'apklib' and is not supported. "
+                                                    +
+                                                    "Only 'aar' libraries are supported.", name));
+                        } else {
+                            String name = computeArtifactName(moduleVersion, artifact);
+
+                            logger.warning(String.format(
+                                    "Unrecognized dependency: '%s' (type: '%s', extension: '%s')",
+                                    name, artifact.getType(), artifact.getExtension()));
                         }
 
-                        // check this jar does not have a dependency on an atom, as this would not work.
-                        if (!nestedAtoms.isEmpty()) {
-                            configDependencies.getChecker()
-                                    .handleIssue(
-                                            createMavenCoordinates(artifact).toString(),
-                                            SyncIssue.TYPE_JAR_DEPEND_ON_ATOM,
-                                            SyncIssue.SEVERITY_ERROR,
-                                            String.format(
-                                                    "Module '%s' depends on one or more Android Atoms but is a jar",
-                                                    moduleVersion));
+                        if (provided && alreadyCreatedDependency != null) {
+                            mutableDependencyDataMap.setProvided(alreadyCreatedDependency);
                         }
+                    }
 
-                        if (jarsForThisModule == null) {
-                            jarsForThisModule = Lists.newArrayList();
-                            alreadyFoundJars.put(moduleVersion, jarsForThisModule);
+                    if (alreadyCreatedDependency != null) {
+                        // all we need is to create a DependencyNode
+                        DependencyNode node = new DependencyNode(
+                                alreadyCreatedDependency.getAddress(),
+                                nodeType,
+                                transitiveDependencies,
+                                null /*requested Coordinates*/);
+                        outDependencies.add(node);
+
+                        if (nodesForThisModule == null) {
+                            nodesForThisModule = Lists.newArrayList(node);
+                            alreadyFoundNodes.put(moduleVersion, nodesForThisModule);
+                        } else {
+                            nodesForThisModule.add(node);
                         }
-
-                        JarDependency jarDependency = new JarDependency(
-                                artifact.getFile(),
-                                nestedJars,
-                                mavenCoordinates,
-                                gradlePath,
-                                provided);
-
-                        // if package scope and the jar (and its dependencies) is from a tested
-                        // app module then skip it.
-                        if (scopeType == ScopeType.PACKAGE &&
-                                testedProjectPath != null && testedProjectPath.equals(gradlePath)) {
-                            mutableDependencyContainer.skip(jarDependency);
-
-                            //noinspection unchecked
-                            recursiveJavaSkip(mutableDependencyContainer,
-                                    (List<JarDependency>) jarDependency.getDependencies());
-                        }
-
-                        if (DEBUG_DEPENDENCY) {
-                            printIndent(indent, "JAR-INFO: " + jarDependency.toString());
-                        }
-
-                        jarsForThisModule.add(jarDependency);
-                        outJars.add(jarDependency);
-
-                    } else if (EXT_ANDROID_PACKAGE.equals(artifact.getExtension())) {
-                        String name = computeArtifactName(moduleVersion, artifact);
-
-                        configDependencies.getChecker().handleIssue(
-                                name,
-                                SyncIssue.TYPE_DEPENDENCY_IS_APK,
-                                SyncIssue.SEVERITY_ERROR,
-                                String.format(
-                                        "Dependency %s on project %s resolves to an APK archive " +
-                                        "which is not supported as a compilation dependency. File: %s",
-                                        name, project.getName(), artifact.getFile()));
-                    } else if ("apklib".equals(artifact.getExtension())) {
-                        String name = computeArtifactName(moduleVersion, artifact);
-
-                        configDependencies.getChecker().handleIssue(
-                                name,
-                                SyncIssue.TYPE_DEPENDENCY_IS_APKLIB,
-                                SyncIssue.SEVERITY_ERROR,
-                                String.format(
-                                        "Packaging for dependency %s is 'apklib' and is not supported. " +
-                                        "Only 'aar' libraries are supported.", name));
-                    } else {
-                        String name = computeArtifactName(moduleVersion, artifact);
-
-                        logger.warning(String.format(
-                                        "Unrecognized dependency: '%s' (type: '%s', extension: '%s')",
-                                        name, artifact.getType(), artifact.getExtension()));
                     }
                 }
             }
@@ -1051,7 +1047,7 @@ public class DependencyManager {
     }
 
     @NonNull
-    private static MavenCoordinates createMavenCoordinates(
+    private static MavenCoordinatesImpl createMavenCoordinates(
             @NonNull ResolvedArtifact resolvedArtifact) {
         return new MavenCoordinatesImpl(
                 resolvedArtifact.getModuleVersion().getId().getGroup(),
@@ -1061,27 +1057,70 @@ public class DependencyManager {
                 resolvedArtifact.getClassifier());
     }
 
-    private static void recursiveLibSkip(DependenciesMutableData dependenciesMutableData,
-            @NonNull List<LibraryDependency> libs) {
-        for (LibraryDependency lib : libs) {
-            dependenciesMutableData.skip(lib);
+    private static boolean containsDirectDependency(
+            @NonNull List<DependencyNode> dependencies,
+            @NonNull NodeType nodeType) {
+        return dependencies.stream().anyMatch(
+                dependencyNode -> dependencyNode.getNodeType() == nodeType);
+    }
 
-            //noinspection unchecked
-            recursiveLibSkip(dependenciesMutableData,
-                    (List<LibraryDependency>) lib.getLibraryDependencies());
-            //noinspection unchecked
-            recursiveJavaSkip(dependenciesMutableData,
-                    (List<JarDependency>) lib.getJavaDependencies());
+    private static void recursiveSkip(
+            @NonNull MutableDependencyDataMap mutableDependencyDataMap,
+            @NonNull List<DependencyNode> nodes,
+            @NonNull Map<Object, Dependency> dependencyMap,
+            boolean skipAndroidDependency,
+            boolean skipJavaDependency) {
+        for (DependencyNode node : nodes) {
+            Dependency dep = dependencyMap.get(node.getAddress());
+
+            if (skipAndroidDependency) {
+                if (dep instanceof AndroidDependency) {
+                    mutableDependencyDataMap.skip(dep);
+                }
+            }
+
+            if (skipJavaDependency) {
+                if (dep instanceof JavaDependency) {
+                    mutableDependencyDataMap.skip(dep);
+                }
+            }
+
+            recursiveSkip(
+                    mutableDependencyDataMap,
+                    node.getDependencies(),
+                    dependencyMap,
+                    skipAndroidDependency,
+                    skipJavaDependency);
         }
     }
 
-    private static void recursiveJavaSkip(DependenciesMutableData dependenciesMutableData,
-            @NonNull List<JarDependency> libs) {
-        for (JarDependency lib : libs) {
-            dependenciesMutableData.skip(lib);
+    private static void recursiveProvided(
+            @NonNull MutableDependencyDataMap mutableDependencyDataMap,
+            @NonNull List<DependencyNode> nodes,
+            @NonNull Map<Object, Dependency> dependencyMap,
+            boolean skipAndroidDependency,
+            boolean skipJavaDependency) {
+        for (DependencyNode node : nodes) {
+            Dependency dep = dependencyMap.get(node.getAddress());
 
-            //noinspection unchecked
-            recursiveJavaSkip(dependenciesMutableData, (List<JarDependency>) lib.getDependencies());
+            if (skipAndroidDependency) {
+                if (dep instanceof AndroidDependency) {
+                    mutableDependencyDataMap.setProvided(dep);
+                }
+            }
+
+            if (skipJavaDependency) {
+                if (dep instanceof JavaDependency) {
+                    mutableDependencyDataMap.setProvided(dep);
+                }
+            }
+
+            recursiveSkip(
+                    mutableDependencyDataMap,
+                    node.getDependencies(),
+                    dependencyMap,
+                    skipAndroidDependency,
+                    skipJavaDependency);
         }
     }
 

@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.AndroidAtom;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
@@ -45,20 +45,20 @@ public class AtomResClassJavaCompileConfigAction implements TaskConfigAction<And
             LoggerWrapper.getLogger(AtomResClassJavaCompileConfigAction.class);
 
     private VariantScope scope;
-    private AndroidAtom androidAtom;
+    private AtomDependency atomDependency;
 
     public AtomResClassJavaCompileConfigAction(
             @NonNull VariantScope scope,
-            @NonNull AndroidAtom androidAtom) {
+            @NonNull AtomDependency atomDependency) {
         this.scope = scope;
-        this.androidAtom = androidAtom;
+        this.atomDependency = atomDependency;
     }
 
     @NonNull
     @Override
     public String getName() {
         return scope.getTaskName("compile",
-                StringHelper.capitalize(androidAtom.getAtomName()) + "ResClassWithJavac");
+                StringHelper.capitalize(atomDependency.getAtomName()) + "ResClassWithJavac");
     }
 
     @NonNull
@@ -71,8 +71,8 @@ public class AtomResClassJavaCompileConfigAction implements TaskConfigAction<And
     public void execute(@NonNull AndroidJavaCompile javacTask) {
         javacTask.compileSdkVersion = scope.getGlobalScope().getExtension().getCompileSdkVersion();
         javacTask.mBuildContext = scope.getInstantRunBuildContext();
-        javacTask.source(scope.getRClassSourceOutputDir(androidAtom));
-        javacTask.setDestinationDir(scope.getJavaOutputDir(androidAtom));
+        javacTask.source(scope.getRClassSourceOutputDir(atomDependency));
+        javacTask.setDestinationDir(scope.getJavaOutputDir(atomDependency));
 
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
         AbstractCompilesUtil.configureLanguageLevel(

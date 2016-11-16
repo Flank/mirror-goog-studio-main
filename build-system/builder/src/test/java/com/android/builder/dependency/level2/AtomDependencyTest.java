@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.builder.dependency;
+package com.android.builder.dependency.level2;
 
+import com.android.builder.dependency.MavenCoordinatesImpl;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Test;
 
-public class JarDependencyTest {
+public class AtomDependencyTest {
 
     @Test
     public void equals() throws Exception {
         // because of recursive data structure, equalsVerifier needs prefab values.
-        EqualsVerifier.forClass(JarDependency.class)
-                .withCachedHashCode("hashcode", "computeHashCode",
-                        new JarDependency(new File("foo")))
-                .withPrefabValues(JarDependency.class, getRedValue(), getBlackValue())
+        EqualsVerifier.forClass(AtomDependency.class)
+                .withRedefinedSuperclass()
+                .withCachedHashCode("hashCode", "computeHashCode", new AtomDependency(
+                        new File("red"),
+                        new MavenCoordinatesImpl("", "", ""),
+                        "",
+                        null,
+                        new File(""),
+                        "",
+                        ""))
+                .withIgnoredFields("manifestFile") // pre-computed fields.
                 .suppress(Warning.NULL_FIELDS)
                 .verify();
-    }
-
-    private static JarDependency getRedValue() {
-        return new JarDependency(new File("red"));
-    }
-
-    private static JarDependency getBlackValue() {
-        return new JarDependency(new File("black"));
     }
 }

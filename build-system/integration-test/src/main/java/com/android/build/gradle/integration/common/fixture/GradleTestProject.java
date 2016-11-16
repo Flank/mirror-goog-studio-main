@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.model.Version;
 import com.android.builder.core.BuilderConstants;
@@ -639,7 +640,7 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public AndroidProject executeAndReturnModel(@NonNull String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks) {
         lastBuild = executor().run(tasks);
         return model().getSingle();
     }
@@ -668,7 +669,7 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public AndroidProject executeAndReturnModel(int modelLevel, String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks) {
         lastBuild = executor().run(tasks);
         return model().level(modelLevel).getSingle();
     }
@@ -700,7 +701,7 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public Map<String, AndroidProject> executeAndReturnMultiModel(String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks) {
         lastBuild = executor().run(tasks);
         return model().getMulti();
     }

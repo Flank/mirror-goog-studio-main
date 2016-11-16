@@ -35,6 +35,7 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AndroidAtom;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -177,11 +178,11 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     }
 
     @NonNull
-    public File getProcessResourcePackageOutputFile(AndroidAtom androidAtom) {
+    public File getProcessResourcePackageOutputFile(@NonNull AtomDependency atomDependency) {
         return FileUtils.join(getScope().getGlobalScope().getIntermediatesDir(),
                 FD_RES, FN_RES_BASE
                         + RES_QUALIFIER_SEP
-                        + androidAtom.getAtomName()
+                        + atomDependency.getAtomName()
                         + RES_QUALIFIER_SEP
                         + getBaseName()
                         + DOT_RES);

@@ -23,6 +23,8 @@ import static com.android.build.gradle.integration.instant.InstantRunTestUtils.g
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
@@ -75,8 +77,8 @@ public class LibDependencyTest {
     @Test
     public void buildIncrementallyWithInstantRun() throws Exception {
         project.execute("clean");
-        Map<String, AndroidProject> projects = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(projects.get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
 
         // Check that original class is included.
         project.execute(getInstantRunArgs(), "clean", "assembleRelease", "assembleDebug");
@@ -105,8 +107,8 @@ public class LibDependencyTest {
                 project.file("javalib/build.gradle"), Charsets.UTF_8);
         createJavaLibraryClass("original");
 
-        Map<String, AndroidProject> projects = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(projects.get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
         project.executor()
                 .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
@@ -127,8 +129,8 @@ public class LibDependencyTest {
         Files.write("java resource", resource, Charsets.UTF_8);
 
         project.execute("clean");
-        Map<String, AndroidProject> projects = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(projects.get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
 
         // Check that original class is included.
         project.execute(getInstantRunArgs(), "clean", "assembleDebug");

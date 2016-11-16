@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
-import com.android.builder.model.AndroidAtom;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.dex.Dex;
 import com.android.dx.command.dexer.DxContext;
 import com.android.dx.merge.CollisionPolicy;
@@ -136,20 +136,20 @@ public class MergeDexAtomResClass extends BaseTask {
     public static class ConfigAction implements TaskConfigAction<MergeDexAtomResClass> {
 
         private VariantScope scope;
-        private AndroidAtom androidAtom;
+        private AtomDependency atomDependency;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
-                @NonNull AndroidAtom androidAtom) {
+                @NonNull AtomDependency atomDependency) {
             this.scope = scope;
-            this.androidAtom = androidAtom;
+            this.atomDependency = atomDependency;
         }
 
         @NonNull
         @Override
         public String getName() {
             return scope.getTaskName("dex",
-                    StringHelper.capitalize(androidAtom.getAtomName()) + ATOM_SUFFIX);
+                    StringHelper.capitalize(atomDependency.getAtomName()) + ATOM_SUFFIX);
         }
 
         @NonNull
@@ -163,12 +163,12 @@ public class MergeDexAtomResClass extends BaseTask {
             task.setVariantName(scope.getFullVariantName());
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
 
-            task.setAtomDexDir(androidAtom.getDexFolder());
-            task.setResClassDir(scope.getJavaOutputDir(androidAtom));
+            task.setAtomDexDir(atomDependency.getDexFolder());
+            task.setResClassDir(scope.getJavaOutputDir(atomDependency));
 
             task.setTempDir(scope.getIncrementalDir(
-                    androidAtom.getAtomName() + "-" + scope.getFullVariantName()));
-            task.setOutputDir(scope.getDexOutputFolder(androidAtom));
+                    atomDependency.getAtomName() + "-" + scope.getFullVariantName()));
+            task.setOutputDir(scope.getDexOutputFolder(atomDependency));
             task.scope = scope;
         }
     }

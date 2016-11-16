@@ -26,9 +26,13 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.AndroidLibrary;
 import com.android.io.FileWrapper;
+import com.android.manifmerger.ManifestProvider;
 import com.android.xml.AndroidManifest;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -68,7 +72,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private Boolean handleProfiling;
     private Boolean functionalTest;
     private Map<String, Object> placeholdersValues;
-    private List<AndroidLibrary> libraries;
+    private List<ManifestProvider> providers;
 
     @Nullable
     private String testLabel;
@@ -85,7 +89,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                 getFunctionalTest(),
                 getTestLabel(),
                 getTestManifestFile(),
-                getLibraries(),
+                getProviders(),
                 getPlaceholdersValues(),
                 getManifestOutputFile(),
                 getTmpDir());
@@ -192,36 +196,29 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         this.placeholdersValues = placeholdersValues;
     }
 
-    public List<AndroidLibrary> getLibraries() {
-        return libraries;
+    public List<ManifestProvider> getProviders() {
+        return providers;
     }
 
-    public void setLibraries(
-            List<AndroidLibrary> libraries) {
-        this.libraries = libraries;
+    public void setProviders(List<ManifestProvider> providers) {
+        this.providers = providers;
     }
 
     /**
      * A synthetic input to allow gradle up-to-date checks to work.
      *
-     * Since {@code List<AndroidLibrary>} can't be used directly, as @Nested doesn't work on lists,
+     * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
     @SuppressWarnings("unused")
     @InputFiles
     public List<File> getLibraryManifests() {
-        List<AndroidLibrary> libs = getLibraries();
-        if (libs == null || libs.isEmpty()) {
-            return Collections.emptyList();
+        List<ManifestProvider> manifestProviders = getProviders();
+        if (manifestProviders == null || manifestProviders.isEmpty()) {
+            return ImmutableList.of();
         }
 
-        List<File> files = Lists.newArrayListWithCapacity(libs.size());
-        for (AndroidLibrary androidLibrary : libs) {
-            if (!androidLibrary.isProvided())
-                files.add(androidLibrary.getManifest());
-        }
-
-        return files;
+        return manifestProviders.stream().map(ManifestProvider::getManifest).collect(Collectors.toList());
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessTestManifest> {
@@ -320,7 +317,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             ConventionMappingHelper.map(
                     processTestManifestTask, "testLabel", config::getTestLabel);
             ConventionMappingHelper.map(
-                    processTestManifestTask, "libraries", config::getFlatCompileAndroidLibraries);
+                    processTestManifestTask, "providers", config::getFlatPackageAndroidLibraries);
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());

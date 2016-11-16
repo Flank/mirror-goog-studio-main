@@ -17,9 +17,13 @@
 package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.builder.model.AndroidLibrary;
@@ -27,6 +31,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.utils.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,17 +51,17 @@ public class FlavorlibTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("flavorlib")
             .create();
-    public static Map<String, AndroidProject> models;
+    public static GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() {
-        models = project.executeAndReturnMultiModel("clean", "assembleDebug");
+        modelContainer = project.executeAndReturnMultiModel("clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
@@ -78,6 +83,8 @@ public class FlavorlibTest {
 
     @Test
     public void testModel() throws Exception {
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         AndroidProject appModel = models.get(":app");
         assertThat(appModel).named("app model").isNotNull();
@@ -94,24 +101,11 @@ public class FlavorlibTest {
         Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
         assertThat(flavor1Debug).named("flavor1Debug variant").isNotNull();
 
-        Dependencies dependencies = flavor1Debug.getMainArtifact().getCompileDependencies();
-        assertThat(dependencies).named("flavor 1 deps").isNotNull();
-        Collection<AndroidLibrary> libs = dependencies.getLibraries();
-        assertThat(libs).named("flavor 1 android libs").isNotNull();
-        assertThat(libs).named("flavor 1 android libs").hasSize(1);
-        AndroidLibrary androidLibrary = libs.iterator().next();
-        assertThat(androidLibrary).named("flavor 1 androidLib").isNotNull();
-        assertThat(androidLibrary.getProject())
-                .named("flavor 1 androidLib.getProject")
-                .isEqualTo(":lib1");
-
-        // check that the folder name is located inside the lib project's intermediate staging folder
-        // reconstruct the path
-        File staging = FileUtils.join(project.getTestDir(),
-                "lib1", "build", "intermediates", "bundles", "default");
-        assertThat(androidLibrary.getFolder())
-                .named("flavor 1 androidLib.getFolder")
-                .isEqualTo(staging);
+        LibraryGraph flavor1Graph = flavor1Debug.getMainArtifact().getCompileGraph();
+        assertThat(flavor1Graph).named("flavor 1 graph").isNotNull();
+        assertThat(helper.on(flavor1Graph).withType(MODULE).mapTo(GRADLE_PATH))
+                .named("flavor 1 android lib deps")
+                .containsExactly(":lib1");
 
         ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
         assertThat(flavor2).named("flavor2 PFC").isNotNull();
@@ -119,18 +113,11 @@ public class FlavorlibTest {
         Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
         assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();
 
-        dependencies = flavor2Debug.getMainArtifact().getCompileDependencies();
-        assertThat(dependencies).named("flavor 2 deps").isNotNull();
-        libs = dependencies.getLibraries();
-        assertThat(libs).named("flavor 2 android libs").isNotNull();
-        assertThat(libs).named("flavor 2 android libs").hasSize(1);
-        androidLibrary = libs.iterator().next();
-        assertThat(androidLibrary).named("flavor 2 androidLib").isNotNull();
-        assertThat(androidLibrary.getProject()).named("flavor 2 androidLib.getProject").isEqualTo(":lib2");
-        // check that the folder name is located inside the lib project's intermediate staging folder
-        // reconstruct the path
-        staging = FileUtils.join(project.getTestDir(), "lib2", "build", "intermediates", "bundles", "default");
-        assertThat(androidLibrary.getFolder()).named("flavor 2 androidLib.getFolder").isEqualTo(staging);
+        LibraryGraph flavor2Graph = flavor2Debug.getMainArtifact().getCompileGraph();
+        assertThat(flavor2Graph).named("flavor 2 graph").isNotNull();
+        assertThat(helper.on(flavor2Graph).withType(MODULE).mapTo(GRADLE_PATH))
+                .named("flavor 2 android lib deps")
+                .containsExactly(":lib2");
     }
 
     @Test

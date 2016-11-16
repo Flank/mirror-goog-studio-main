@@ -193,7 +193,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
         project.executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
 
         Map<String, AndroidProject> model =
-                project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
+                project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti().getModelMap();
         assertThat(model.keySet()).contains(":WordPress");
 
 

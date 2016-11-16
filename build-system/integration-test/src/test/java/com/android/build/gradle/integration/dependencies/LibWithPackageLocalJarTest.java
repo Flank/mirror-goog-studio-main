@@ -15,25 +15,30 @@
  */
 
 package com.android.build.gradle.integration.dependencies;
+
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * test for package (publish) local jar in libs
@@ -44,7 +49,8 @@ public class LibWithPackageLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> modelContainer;
+    private static LibraryGraphHelper helper;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -61,13 +67,17 @@ public class LibWithPackageLocalJarTest {
                 "    publish files(\"libs/util-1.0.jar\")\n" +
                 "}\n");
 
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
+        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getSingle();
+        helper = new LibraryGraphHelper(modelContainer);
+
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        modelContainer = null;
+        helper = null;
     }
 
     @Test
@@ -80,17 +90,19 @@ public class LibWithPackageLocalJarTest {
 
     @Test
     public void checkPackagedLocalJarIsNotInTheCompileModel() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
 
-        Dependencies compileDependencies = variant.getMainArtifact().getCompileDependencies();
-        assertThat(compileDependencies.getJavaLibraries()).named("java libs").isEmpty();
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getOnlyModel().getVariants(), "debug");
+
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        assertThat(helper.on(graph).withType(JAVA).asList()).isEmpty();
     }
 
     @Test
     public void checkPackagedLocalJarIsNotInThePackageModel() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
 
-        Dependencies packageDependencies = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDependencies.getJavaLibraries()).named("java libs").hasSize(1);
+        LibraryGraph graph = variant.getMainArtifact().getPackageGraph();
+        assertThat(helper.on(graph).withType(JAVA).asList()).hasSize(1);
     }
 }

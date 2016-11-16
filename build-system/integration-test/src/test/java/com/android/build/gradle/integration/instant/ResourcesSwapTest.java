@@ -96,7 +96,7 @@ public class ResourcesSwapTest {
         Files.write("this is a movie", asset, StandardCharsets.UTF_8);
 
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle());
+                InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(mProject, mPackaging, 21, COLDSWAP_MODE);
         File apk = mProject.getApk("debug");

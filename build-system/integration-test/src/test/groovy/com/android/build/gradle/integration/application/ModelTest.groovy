@@ -55,7 +55,7 @@ dependencies {
     compile 'foo:bar:1.2.3'
 }
 """
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle()
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel()
         assertThat(model).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,

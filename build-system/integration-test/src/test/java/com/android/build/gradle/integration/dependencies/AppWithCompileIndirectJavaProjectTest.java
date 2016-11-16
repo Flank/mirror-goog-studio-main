@@ -16,33 +16,41 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * test for compile jar in app through an aar dependency
@@ -98,8 +106,10 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel1Model() {
-        Map<String, AndroidProject> models = project.model()
+        ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
+
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         // ---
         // test the dependencies on the :app module.
@@ -107,7 +117,7 @@ public class AppWithCompileIndirectJavaProjectTest {
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
         Truth.assertThat(appDebug).isNotNull();
 
-        Dependencies appDeps = appDebug.getMainArtifact().getCompileDependencies();
+        Dependencies appDeps = appDebug.getMainArtifact().getDependencies();
 
         Collection<AndroidLibrary> appLibDeps = appDeps.getLibraries();
         assertThat(appLibDeps).named("app(androidlibs) count").hasSize(1);
@@ -126,7 +136,7 @@ public class AppWithCompileIndirectJavaProjectTest {
         Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
-        Dependencies libDeps = libDebug.getMainArtifact().getCompileDependencies();
+        Dependencies libDeps = libDebug.getMainArtifact().getDependencies();
 
         assertThat(libDeps.getLibraries()).named("lib(androidlibs) count").isEmpty();
 
@@ -141,8 +151,14 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel2Model() {
-        Map<String, AndroidProject> models = project.model()
-                .level(AndroidProject.MODEL_LEVEL_LATEST).getMulti();
+        ModelContainer<AndroidProject> modelContainer = project.model()
+                .level(AndroidProject.MODEL_LEVEL_LATEST)
+                .withFeature(FULL_DEPENDENCIES)
+                .getMulti();
+
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
+
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         // ---
         // test full transitive dependencies from the :app module.
@@ -150,73 +166,124 @@ public class AppWithCompileIndirectJavaProjectTest {
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
         Truth.assertThat(appDebug).isNotNull();
         {
-            Dependencies compileAppDeps = appDebug.getMainArtifact().getCompileDependencies();
+            LibraryGraph compileGraph = appDebug.getMainArtifact().getCompileGraph();
 
-            assertThat(compileAppDeps.getProjects()).named("app(modules) count").isEmpty();
-            assertThat(compileAppDeps.getJavaLibraries()).named("app(javalibs) count").isEmpty();
+            // no direct android library
+            assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+                    .named(":app compile Android")
+                    .isEmpty();
 
-            Collection<AndroidLibrary> libs = compileAppDeps.getLibraries();
-            assertThat(libs).named("app(androidlibs) count").hasSize(1);
+            // no direct java library
+            assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                    .named(":app compile Java")
+                    .isEmpty();
 
-            AndroidLibrary appAndroidLibrary = Iterables.getOnlyElement(libs);
-            assertThat(appAndroidLibrary.getProject()).named("app->:lib project").isEqualTo(":library");
+            // look at direct modules
+            Items moduleItems = helper.on(compileGraph).withType(MODULE);
 
-            Collection<? extends JavaLibrary> applibJavaLibDeps = appAndroidLibrary
-                    .getJavaDependencies();
-            assertThat(applibJavaLibDeps).named("app->:lib(javalibs) count").hasSize(1);
-            JavaLibrary appLibJavaLibDep = Iterables.getOnlyElement(applibJavaLibDeps);
-            assertThat((appLibJavaLibDep.getProject())).named("app->:lib->:jar project")
-                    .isEqualTo(":jar");
+            // should depend on :library
+            assertThat(moduleItems.mapTo(Property.GRADLE_PATH))
+                    .named(":app compile modules")
+                    .containsExactly(":library");
 
-            List<? extends JavaLibrary> appLibJavaLibLibDeps = appLibJavaLibDep.getDependencies();
-            assertThat(appLibJavaLibLibDeps).named("app->:lib->:jar(libs) count").hasSize(1);
+            Items libraryItems = moduleItems.getTransitiveFromSingleItem();
 
-            JavaLibrary appLibJavaLibLibDep = Iterables.getOnlyElement(appLibJavaLibLibDeps);
-            assertThat(appLibJavaLibLibDep.getProject()).named("app->:lib->:jar->guava project")
-                    .isNull();
-            assertThat(appLibJavaLibLibDep.getResolvedCoordinates())
-                    .named("app->:lib->:jar->guava resolved coordinates")
-                    .isEqualTo("com.google.guava", "guava", "17.0");
+            // now look at the transitive dependencies of this item
+            assertThat(libraryItems.withType(ANDROID).asList())
+                    .named(":app->:lib compile Android")
+                    .isEmpty();
+
+            // no direct java library
+            assertThat(libraryItems.withType(JAVA).asList())
+                    .named(":app->:lib compile Java")
+                    .isEmpty();
+
+            // look at direct module
+            Items librarySubModuleItems = libraryItems.withType(MODULE);
+
+            // should depend on :jar
+            assertThat(librarySubModuleItems.mapTo(Property.GRADLE_PATH))
+                    .named(":app compile modules")
+                    .containsExactly(":jar");
+
+            // follow the transitive dependencies again
+            Items libraryToJarItems = librarySubModuleItems.getTransitiveFromSingleItem();
+
+            // no direct android library
+            assertThat(libraryToJarItems.withType(ANDROID).asList())
+                    .named(":app->:lib->:jar compile Android")
+                    .isEmpty();
+
+            // no direct module dep
+            assertThat(libraryToJarItems.withType(MODULE).asList())
+                    .named(":app->:lib->:jar compile module")
+                    .isEmpty();
+
+            assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
+                    .named(":app->:lib->:jar compile java")
+                    .containsExactly("com.google.guava:guava:jar:17.0");
         }
 
-        // same thing with the package deps.
+        // same thing with the package deps. Main difference is guava available as direct
+        // dependencies and transitive one is promoted
         {
-            Dependencies packageAppDeps = appDebug.getMainArtifact().getPackageDependencies();
+            LibraryGraph packageGraph = appDebug.getMainArtifact().getPackageGraph();
 
-            assertThat(packageAppDeps.getProjects()).named("app(modules) count").isEmpty();
+            // no direct android library
+            assertThat(helper.on(packageGraph).withType(ANDROID).asList())
+                    .named(":app package Android")
+                    .isEmpty();
 
-            assertThat(packageAppDeps.getJavaLibraries()).named("app(javalibs) count").hasSize(1);
-            JavaLibrary topLevelGuava = Iterables.getOnlyElement(packageAppDeps.getJavaLibraries());
-            assertThat(topLevelGuava.getProject()).named("app->guava project").isNull();
-            assertThat(topLevelGuava.getResolvedCoordinates())
-                    .named("app->guava resolved coordinates")
-                    .isEqualTo("com.google.guava", "guava", "18.0");
+            // dependency on guava.
+            assertThat(helper.on(packageGraph).withType(JAVA).mapTo(COORDINATES))
+                    .named(":app package Java")
+                    .containsExactly("com.google.guava:guava:jar:18.0");
 
-            Collection<AndroidLibrary> libs = packageAppDeps.getLibraries();
-            assertThat(libs).named("app(androidlibs) count").hasSize(1);
+            // look at direct module
+            Items moduleItems = helper.on(packageGraph).withType(MODULE);
 
-            AndroidLibrary appAndroidLibrary = Iterables.getOnlyElement(libs);
-            assertThat(appAndroidLibrary.getProject()).named("app->:lib project")
-                    .isEqualTo(":library");
+            // should depend on :library
+            assertThat(moduleItems.mapTo(Property.GRADLE_PATH))
+                    .named(":app package modules")
+                    .containsExactly(":library");
 
-            Collection<? extends JavaLibrary> applibJavaLibDeps = appAndroidLibrary
-                    .getJavaDependencies();
-            assertThat(applibJavaLibDeps).named("app->:lib(javalibs) count").hasSize(1);
-            JavaLibrary appLibJavaLibDep = Iterables.getOnlyElement(applibJavaLibDeps);
-            assertThat((appLibJavaLibDep.getProject())).named("app->:lib->:jar project")
-                    .isEqualTo(":jar");
+            // now look at the transitive dependencies of this item
+            Items libraryItems = moduleItems.getTransitiveFromSingleItem();
 
-            List<? extends JavaLibrary> appLibJavaLibLibDeps = appLibJavaLibDep.getDependencies();
-            assertThat(appLibJavaLibLibDeps).named("app->:lib->:jar(libs) count").hasSize(1);
+            // no direct android lib
+            assertThat(libraryItems.withType(ANDROID).asList())
+                    .named(":app->:lib package Android")
+                    .isEmpty();
 
-            JavaLibrary appLibJavaLibLibDep = Iterables.getOnlyElement(appLibJavaLibLibDeps);
-            assertThat(appLibJavaLibLibDep.getProject()).named("app->:lib->:jar->guava project")
-                    .isNull();
-            assertThat(appLibJavaLibLibDep.getResolvedCoordinates())
-                    .named("app->:lib->:jar->guava resolved coordinates")
-                    .isEqualTo("com.google.guava", "guava", "18.0");
+            // no direct java library
+            assertThat(libraryItems.withType(JAVA).asList())
+                    .named(":app->:lib package Java")
+                    .isEmpty();
 
-            //assertThat(appLibJavaLibLibDep).isSameAs(topLevelGuava);
+            // look at direct module
+            Items librarySubModuleItems = libraryItems.withType(MODULE);
+
+            // should depend on :jar
+            assertThat(librarySubModuleItems.mapTo(Property.GRADLE_PATH))
+                    .named(":app->:lib package modules")
+                    .containsExactly(":jar");
+
+            // follow the transitive dependencies again
+            Items libraryToJarItems = librarySubModuleItems.getTransitiveFromSingleItem();
+
+            // no direct android library
+            assertThat(libraryToJarItems.withType(ANDROID).asList())
+                    .named(":app->:lib->:jar package Android")
+                    .isEmpty();
+
+            // no direct module dep
+            assertThat(libraryToJarItems.withType(MODULE).asList())
+                    .named(":app->:lib->:jar package module")
+                    .isEmpty();
+
+            assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
+                    .named(":app->:lib->:jar package java")
+                    .containsExactly("com.google.guava:guava:jar:18.0");
         }
 
         // ---
@@ -226,24 +293,42 @@ public class AppWithCompileIndirectJavaProjectTest {
                     .getVariant(models.get(":library").getVariants(), "debug");
             Truth.assertThat(libDebug).isNotNull();
 
-            Dependencies libDeps = libDebug.getMainArtifact().getCompileDependencies();
+            LibraryGraph compileGraph = libDebug.getMainArtifact().getCompileGraph();
 
-            assertThat(libDeps.getLibraries()).named("lib(androidlibs) count").isEmpty();
-            assertThat(libDeps.getProjects()).named("lib(modules) count").isEmpty();
+            // no direct android library
+            assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+                    .named(":lib compile Android")
+                    .isEmpty();
 
-            Collection<JavaLibrary> libJavaLibDeps = libDeps.getJavaLibraries();
-            assertThat(libJavaLibDeps).named("lib(javalibs) count").hasSize(1);
-            JavaLibrary libJavaLibDep = Iterables.getOnlyElement(libJavaLibDeps);
-            assertThat(libJavaLibDep.getProject()).named("lib->:jar project").isEqualTo(":jar");
+            // no direct java library
+            assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                    .named(":lib compile Java")
+                    .isEmpty();
 
-            List<? extends JavaLibrary> libJavaLibLibDeps = libJavaLibDep.getDependencies();
-            assertThat(libJavaLibLibDeps).named("lib->:jar(libs) count").hasSize(1);
+            // look at direct module
+            Items moduleItems = helper.on(compileGraph).withType(MODULE);
 
-            JavaLibrary libJavaLibLibDep = Iterables.getOnlyElement(libJavaLibLibDeps);
-            assertThat(libJavaLibLibDep.getProject()).named("lib->:jar->guava project").isNull();
-            assertThat(libJavaLibLibDep.getResolvedCoordinates())
-                    .named("lib->:jar->guava resolved coordinates")
-                    .isEqualTo("com.google.guava", "guava", "17.0");
+            // should depend on :jar
+            assertThat(moduleItems.mapTo(Property.GRADLE_PATH))
+                    .named(":lib compile modules")
+                    .containsExactly(":jar");
+
+            // follow the transitive dependencies again
+            Items jarItems = moduleItems.getTransitiveFromSingleItem();
+
+            // no direct android library
+            assertThat(jarItems.withType(ANDROID).asList())
+                    .named(":lib->:jar compile Android")
+                    .isEmpty();
+
+            // no direct module dep
+            assertThat(jarItems.withType(MODULE).asList())
+                    .named(":lib->:jar compile module")
+                    .isEmpty();
+
+            assertThat(jarItems.withType(JAVA).mapTo(COORDINATES))
+                    .named(":lib->:jar compile java")
+                    .containsExactly("com.google.guava:guava:jar:17.0");
         }
     }
 }

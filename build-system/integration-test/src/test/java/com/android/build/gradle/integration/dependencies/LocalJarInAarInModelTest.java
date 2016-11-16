@@ -20,15 +20,22 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.Library;
+import com.android.builder.model.level2.LibraryGraph;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -77,43 +84,52 @@ public class LocalJarInAarInModelTest {
     @Test
     public void checkModelBeforeBuild() {
         //clean the project and get the model. The aar won"t be exploded for this sync event.
-        AndroidProject model = project.executeAndReturnModel("clean");
+        ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean");
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Dependencies dependencies = variant.getMainArtifact().getCompileDependencies();
-        Collection<AndroidLibrary> libraries = dependencies.getLibraries();
-
-        assertThat(libraries).hasSize(1);
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
+        assertThat(androidItems.mapTo(COORDINATES))
+                .containsExactly("com.android.support:support-v4:aar:" + SUPPORT_LIB_VERSION);
 
         // now build the project.
         project.execute("prepareDebugDependencies");
 
         // now check the model validity
-        AndroidLibrary lib = libraries.iterator().next();
-        assertThat(lib.getJarFile()).isFile();
-        for (File localJar : lib.getLocalJars()) {
-            assertThat(localJar).isFile();
+        Library androidLibrary = model.getGlobalLibraryMap().getLibraries()
+                .get(androidItems.asSingleGraphItem().getArtifactAddress());
+
+        File rootFolder = androidLibrary.getFolder();
+        assertThat(new File(rootFolder, androidLibrary.getJarFile())).isFile();
+        for (String localJar : androidLibrary.getLocalJars()) {
+            assertThat(new File(rootFolder, localJar)).isFile();
         }
     }
 
     @Test
     public void checkModelAfterBuild() {
         //build the project and get the model. The aar is exploded for this sync event.
-        AndroidProject model = project.executeAndReturnModel("clean", "prepareDebugDependencies");
+        ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean",
+                "prepareDebugDependencies");
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Dependencies dependencies = variant.getMainArtifact().getCompileDependencies();
-        Collection<AndroidLibrary> libraries = dependencies.getLibraries();
-
-        assertThat(libraries).hasSize(1);
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
+        assertThat(androidItems.mapTo(COORDINATES))
+                .containsExactly("com.android.support:support-v4:aar:" + SUPPORT_LIB_VERSION);
 
         // now check the model validity
-        AndroidLibrary lib = libraries.iterator().next();
-        assertThat(lib.getJarFile()).isFile();
-        for (File localJar : lib.getLocalJars()) {
-            assertThat(localJar).isFile();
+        Library androidLibrary = model.getGlobalLibraryMap().getLibraries()
+                .get(androidItems.asSingleGraphItem().getArtifactAddress());
+
+        File rootFolder = androidLibrary.getFolder();
+        assertThat(new File(rootFolder, androidLibrary.getJarFile())).isFile();
+        for (String localJar : androidLibrary.getLocalJars()) {
+            assertThat(new File(rootFolder, localJar)).isFile();
         }
     }
 }

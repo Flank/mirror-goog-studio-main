@@ -80,7 +80,7 @@ public class JavaResourcesTest {
 
     @Test
     public void testChangingJavaResources() throws Exception {
-        AndroidProject model = project.model().getSingle();
+        AndroidProject model = project.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
                 .withInstantRun(apiLevel, ColdswapMode.DEFAULT)

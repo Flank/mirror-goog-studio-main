@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraph;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 
 import com.android.annotations.NonNull;
@@ -28,6 +29,8 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
+import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -53,6 +56,7 @@ import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
+import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.NativeLibrary;
@@ -64,6 +68,9 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestedTargetVariant;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GlobalLibraryMap;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableCollection;
@@ -109,6 +116,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private final int projectType;
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+    private boolean modelWithFullDependency = false;
 
     public ModelBuilder(
             @NonNull AndroidBuilder androidBuilder,
@@ -132,13 +140,15 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     public static void clearCaches() {
-        DependenciesImpl.clearCaches();
+        DependenciesConverter.clearCaches();
+        DependenciesLevel2Converter.clearCaches();
     }
 
     @Override
     public boolean canBuild(String modelName) {
         // The default name for a model is the name of the Java interface.
-        return modelName.equals(AndroidProject.class.getName());
+        return modelName.equals(AndroidProject.class.getName()) || modelName.equals(
+                GlobalLibraryMap.class.getName());
     }
 
     private void resolveDependencies() {
@@ -154,6 +164,19 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @Override
     public Object buildAll(String modelName, Project project) {
+        if (modelName.equals(AndroidProject.class.getName())) {
+            return buildAndroidProject(project);
+        }
+
+        return buildGlobalLibraryMap(project);
+
+    }
+
+    private Object buildGlobalLibraryMap(Project project) {
+        return new GlobalLibraryMapImpl(DependenciesLevel2Converter.getGlobalLibMap());
+    }
+
+    public Object buildAndroidProject(Project project) {
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
             resolveDependencies();
         }
@@ -162,7 +185,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
         }
-        DependenciesImpl.setModelLevel(modelLevel);
+        modelWithFullDependency = AndroidGradleOptions.buildModelWithFullDependencies(project);
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
@@ -198,11 +221,36 @@ public class ModelBuilder implements ToolingModelBuilder {
                         extraModelInfo.getExtraFlavorSourceProviders(
                                 variantManager.getDefaultConfig().getProductFlavor().getName()));
 
-        DefaultAndroidProject androidProject = new DefaultAndroidProject(
+        Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
+        Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
+        Collection<Variant> variants = Lists.newArrayList();
+
+
+        for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
+            buildTypes.add(BuildTypeContainerImpl.create(
+                    btData,
+                    extraModelInfo.getExtraBuildTypeSourceProviders(btData.getBuildType().getName())));
+        }
+        for (ProductFlavorData pfData : variantManager.getProductFlavors().values()) {
+            productFlavors.add(ProductFlavorContainerImpl.createProductFlavorContainer(
+                    pfData,
+                    extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
+        }
+
+        for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantManager.getVariantDataList()) {
+            if (!variantData.getType().isForTesting()) {
+                variants.add(createVariant(variantData));
+            }
+        }
+
+        return new DefaultAndroidProject(
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 project.getName(),
                 defaultConfig,
                 flavorDimensionList,
+                buildTypes,
+                productFlavors,
+                variants,
                 androidBuilder.getTarget() != null ? androidBuilder.getTarget().hashString() : "",
                 bootClasspath,
                 frameworkSource,
@@ -220,25 +268,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation);
-
-        for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
-            androidProject.addBuildType(BuildTypeContainerImpl.create(
-                    btData,
-                    extraModelInfo.getExtraBuildTypeSourceProviders(btData.getBuildType().getName())));
-        }
-        for (ProductFlavorData pfData : variantManager.getProductFlavors().values()) {
-            androidProject.addProductFlavors(ProductFlavorContainerImpl.createProductFlavorContainer(
-                    pfData,
-                    extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
-        }
-
-        for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantManager.getVariantDataList()) {
-            if (!variantData.getType().isForTesting()) {
-                androidProject.addVariant(createVariant(variantData));
-            }
-        }
-
-        return androidProject;
     }
 
     /**
@@ -356,13 +385,32 @@ public class ModelBuilder implements ToolingModelBuilder {
         VariantDependencies variantDependency = variantData.getVariantDependency();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
 
-        DependenciesImpl compileDependencies = DependenciesImpl.cloneDependencies(
-                variantDependency.getCompileDependencies(), variantConfiguration, androidBuilder);
-
-        DependenciesImpl packageDependencies = DependenciesImpl.cloneDependencies(
-                variantDependency.getPackageDependencies(), variantConfiguration, androidBuilder);
-
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
+
+        DependenciesImpl dependencies;
+        LibraryGraph compileGraph, packageGraph;
+
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+            dependencies = DependenciesConverter.getEmpty();
+
+            compileGraph = cloneGraph(variantDependency.getCompileDependencies(),
+                    variantConfiguration, androidBuilder);
+            if (modelWithFullDependency) {
+                packageGraph = cloneGraph(variantDependency.getPackageDependencies(),
+                        variantConfiguration, androidBuilder);
+            } else {
+                packageGraph = DependenciesLevel2Converter.getEmpty();
+            }
+        } else {
+            dependencies = new DependenciesConverter().cloneDependencies(
+                    variantDependency.getCompileDependencies(),
+                    variantConfiguration,
+                    androidBuilder);
+
+            compileGraph = DependenciesLevel2Converter.getEmpty();
+            packageGraph = DependenciesLevel2Converter.getEmpty();
+        }
+
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
                 variantData.getScope().getAssembleTask().getName(),
@@ -375,8 +423,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                         variantData.getScope().getJavaOutputDir(),
                 variantData.getJavaResourcesForUnitTesting(),
                 taskManager.getGlobalScope().getMockableAndroidJarFile(),
-                compileDependencies,
-                packageDependencies,
+                dependencies,
+                compileGraph,
+                packageGraph,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider);
     }
@@ -479,6 +528,30 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getInstantRunSupportStatus());
 
         VariantDependencies variantDependency = variantData.getVariantDependency();
+
+        DependenciesImpl dependencies;
+        LibraryGraph compileGraph, packageGraph;
+
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+            dependencies = DependenciesConverter.getEmpty();
+
+            compileGraph = cloneGraph(variantDependency.getCompileDependencies(),
+                    variantConfiguration, androidBuilder);
+            if (modelWithFullDependency) {
+                packageGraph = cloneGraph(variantDependency.getPackageDependencies(),
+                        variantConfiguration, androidBuilder);
+            } else {
+                packageGraph = DependenciesLevel2Converter.getEmpty();
+            }
+        } else {
+            dependencies = new DependenciesConverter().cloneDependencies(
+                    variantDependency.getCompileDependencies(),
+                    variantConfiguration, androidBuilder);
+
+            compileGraph = DependenciesLevel2Converter.getEmpty();
+            packageGraph = DependenciesLevel2Converter.getEmpty();
+        }
+
         return new AndroidArtifactImpl(
                 name,
                 outputs,
@@ -496,12 +569,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                         variantData.javacTask.getDestinationDir() :
                         scope.getJavaOutputDir(),
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
-                DependenciesImpl.cloneDependencies(variantDependency.getCompileDependencies(),
-                        variantConfiguration, androidBuilder),
-                (modelLevel >= AndroidProject.MODEL_LEVEL_2_DEP_GRAPH ?
-                        DependenciesImpl.cloneDependencies(variantDependency.getPackageDependencies(),
-                        variantConfiguration, androidBuilder) :
-                        DependenciesImpl.getEmpty()),
+                dependencies,
+                compileGraph,
+                packageGraph,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),

@@ -16,26 +16,24 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * test for package (apk) local jar in app
@@ -46,7 +44,7 @@ public class AppWithPackageLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -80,10 +78,14 @@ public class AppWithPackageLocalJarTest {
 
     @Test
     public void checkPackagedLocalJarIsNotIntheModel() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
-        Collection<JavaLibrary> javaLibs = deps.getJavaLibraries();
-        TruthHelper.assertThat(javaLibs).named("java libs").isEmpty();
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
+
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+
+        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                .named("java libraries")
+                .isEmpty();
     }
 }

@@ -30,8 +30,8 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.core.VariantType;
 
-import com.android.builder.dependency.LibraryDependency;
-import com.android.builder.model.AndroidLibrary;
+import com.android.builder.dependency.level2.AndroidDependency;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -72,30 +72,18 @@ public class ResolveDependenciesTask extends BaseTask {
 
         variantData.getVariantConfiguration().setResolvedDependencies(
                 variantData.getVariantDependency().getCompileDependencies(),
-                variantData.getVariantDependency().getFlattenedCompileDependencies(),
-                variantData.getVariantDependency().getPackageDependencies(),
-                variantData.getVariantDependency().getFlattenedPackageDependencies());
+                variantData.getVariantDependency().getPackageDependencies());
 
         // FIXME: Refactor to DependencyManager.  Move to separate task and make it multithreaded.
         // Explode aar.
-        for (AndroidLibrary androidLibrary : config.getFlatCompileAndroidLibraries()) {
-            if (androidLibrary instanceof LibraryDependency
-                    && ((LibraryDependency)androidLibrary).isSubModule()) {
+        for (AndroidDependency androidDependency : Iterables.concat(
+                config.getFlatCompileAndroidLibraries(), config.getFlatPackageAndroidLibraries())) {
+            if (androidDependency.getProjectPath() != null) {
                 // Don't need to explode sub-module library.
                 continue;
             }
-            extract(androidLibrary.getBundle(), androidLibrary.getFolder());
+            extract(androidDependency.getArtifactFile(), androidDependency.getExtractedFolder());
         }
-
-        for (AndroidLibrary androidLibrary : config.getFlatPackageAndroidLibraries()) {
-            if (androidLibrary instanceof LibraryDependency
-                    && ((LibraryDependency)androidLibrary).isSubModule()) {
-                // Don't need to explode sub-module library.
-                continue;
-            }
-            extract(androidLibrary.getBundle(), androidLibrary.getFolder());
-        }
-
     }
 
     private void extract(File bundle, File outputDir) {

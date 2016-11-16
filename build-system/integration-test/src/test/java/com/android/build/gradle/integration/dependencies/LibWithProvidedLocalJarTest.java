@@ -16,26 +16,31 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.PROVIDED;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * test for provided local jar in libs
@@ -46,7 +51,7 @@ public class LibWithProvidedLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -63,7 +68,8 @@ public class LibWithProvidedLocalJarTest {
                 "    provided files(\"libs/util-1.0.jar\")\n" +
                 "}\n");
 
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
+        model = project.model().withFeature(FULL_DEPENDENCIES).getSingle();
     }
 
     @AfterClass
@@ -79,15 +85,18 @@ public class LibWithProvidedLocalJarTest {
 
     @Test
     public void checkProvidedLocalJarIsInTheMainArtifactDependency() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Dependencies compileDeps = variant.getMainArtifact().getCompileDependencies();
-        Collection<JavaLibrary> javaLibraries = compileDeps.getJavaLibraries();
-        assertThat(javaLibraries).hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.isProvided()).isTrue();
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Dependencies packageDeps = variant.getMainArtifact().getPackageDependencies();
-        assertThat(packageDeps.getJavaLibraries()).isEmpty();
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+
+        LibraryGraphHelper.Items javaDependencies = helper.on(compileGraph).withType(JAVA);
+        assertThat(javaDependencies.asList()).hasSize(1);
+        assertThat(compileGraph.getProvidedLibraries())
+                .containsExactly(javaDependencies.asSingleGraphItem().getArtifactAddress());
+
+        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
+        assertThat(packageGraph.getDependencies()).isEmpty();
     }
 }

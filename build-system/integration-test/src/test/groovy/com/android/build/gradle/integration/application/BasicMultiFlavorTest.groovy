@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper
@@ -46,7 +47,8 @@ class BasicMultiFlavorTest {
 
     @Test
     void "check source providers"() {
-        AndroidProject model = project.model().getSingle()
+        ModelContainer<AndroidProject> modelContainer = project.model().getSingle()
+        AndroidProject model = modelContainer.getOnlyModel();
         File projectDir = project.getTestDir()
         ModelHelper.testDefaultSourceSets(model, projectDir)
 
@@ -100,9 +102,10 @@ class BasicMultiFlavorTest {
     @Test
     void "check res values and manifest placeholders for multi-flavor"() {
         addResValuesAndPlaceholders()
-        AndroidProject model = project.executeAndReturnModel("assembleFreeBetaDebug")
+        ModelContainer<AndroidProject> model = project.executeAndReturnModel("assembleFreeBetaDebug")
 
-        Variant variant = ModelHelper.findVariantByName(model.getVariants(), "freeBetaDebug")
+        Variant variant = ModelHelper.findVariantByName(
+                model.getOnlyModel().getVariants(), "freeBetaDebug")
 
         assertThat(variant.mergedFlavor.resValues.get("VALUE_DEBUG").value)
                 .isEqualTo("13") // Value from "beta".

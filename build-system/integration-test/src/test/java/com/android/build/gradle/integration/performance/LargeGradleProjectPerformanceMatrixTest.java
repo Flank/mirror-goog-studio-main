@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
@@ -138,9 +140,10 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
     @Test
     public void runBenchmarks() throws Exception {
-        Map<String, AndroidProject> model = project.model().ignoreSyncIssues().getMulti();
+        ModelContainer<AndroidProject> modelContainer = project.model().ignoreSyncIssues().getMulti();
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
-        for (AndroidProject project : model.values()) {
+        for (AndroidProject project : models.values()) {
             List<SyncIssue> severeIssues =
                     project.getSyncIssues()
                             .stream()
@@ -170,7 +173,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
         project.executor()
                 .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
-                .run(ModelHelper.getDebugGenerateSourcesCommands(model));
+                .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
         project.executor()
                 .recordBenchmark(BenchmarkMode.EVALUATION)

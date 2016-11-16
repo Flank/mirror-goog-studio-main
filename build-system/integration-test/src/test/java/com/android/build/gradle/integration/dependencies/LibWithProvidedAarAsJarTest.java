@@ -16,31 +16,35 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.PROVIDED;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for provided jar in library where the jar comes from a library project.
@@ -51,7 +55,7 @@ public class LibWithProvidedAarAsJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -77,13 +81,14 @@ public class LibWithProvidedAarAsJarTest {
                 "    fakeJar makeFakeJar\n" +
                 "}\n");
 
-        models = project.executeAndReturnMultiModel("clean", ":library:assembleDebug");
+        project.execute("clean", ":library:assembleDebug");
+        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
@@ -94,13 +99,19 @@ public class LibWithProvidedAarAsJarTest {
 
     @Test
     public void checkProvidedJarIsInTheMainArtifactDependency() {
-        Variant variant = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
-        Collection<JavaLibrary> javaLibraries = deps.getJavaLibraries();
-        assertThat(javaLibraries).hasSize(1);
+        Variant variant = ModelHelper.getVariant(
+                modelContainer.getModelMap().get(":library").getVariants(), "debug");
 
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.isProvided()).isTrue();
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+
+        LibraryGraphHelper.Items moduleItems = helper.on(graph).withType(MODULE);
+
+        assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":library2");
+        assertThat(moduleItems.filter(PROVIDED).asList()).hasSize(1);
+
+        assertThat(graph.getProvidedLibraries())
+                .containsExactly(moduleItems.asSingleGraphItem().getArtifactAddress());
     }
 }

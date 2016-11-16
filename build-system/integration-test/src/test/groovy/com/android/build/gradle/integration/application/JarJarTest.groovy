@@ -17,7 +17,8 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.google.common.collect.Iterators;
+import com.google.common.collect.Iterators
+import groovy.transform.CompileStatic;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.BuilderConstants.DEBUG;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Test for the jarjar integration.
  */
+@CompileStatic
 public class JarJarTest {
 
     static AndroidProject model
@@ -50,7 +52,7 @@ public class JarJarTest {
 
     @BeforeClass
     static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
     }
 
     @AfterClass

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AndroidAtom;
 import com.google.common.collect.ImmutableSet;
 
@@ -30,20 +31,20 @@ import java.util.Set;
 public class BaseAtomPackagingScope extends AtomPackagingScope {
 
     public BaseAtomPackagingScope(@NonNull VariantOutputScope variantOutputScope,
-            @NonNull AndroidAtom androidAtom) {
-        super(variantOutputScope, androidAtom);
+            @NonNull AtomDependency atomDependency) {
+        super(variantOutputScope, atomDependency);
     }
 
     @NonNull
     @Override
     public File getFinalResourcesFile() {
-        return androidAtom.getResourcePackage();
+        return atomDependency.getResourcePackage();
     }
 
     @NonNull
     @Override
     public Set<File> getDexFolders(@NonNull FileType fileType) {
-        return ImmutableSet.<File>builder().add(androidAtom.getDexFolder()).build();
+        return ImmutableSet.<File>builder().add(atomDependency.getDexFolder()).build();
     }
 
 }

@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ApkHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -45,7 +47,7 @@ class ApplicationIdInLibsTest {
 
     @Test
     public void "test library placeholder substitution in final apk"() throws Exception {
-        Map<String, AndroidProject> models =
+        ModelContainer<AndroidProject> models =
                 project.executeAndReturnMultiModel(
                         "clean",
                         "app:assembleDebug")
@@ -69,9 +71,10 @@ class ApplicationIdInLibsTest {
                 "'com.example.manifest_merger_example.change.permission.C2D_MESSAGE'"))
     }
 
-    private static boolean checkPermissionPresent(Map<String, AndroidProject> models, String permission) {
+    private static boolean checkPermissionPresent(
+            ModelContainer<AndroidProject> models, String permission) {
         // Load the custom model for the project
-        Collection<Variant> variants = models.get(":app").getVariants()
+        Collection<Variant> variants = models.getModelMap().get(":app").getVariants()
         assertEquals("Variant Count", 2, variants.size())
 
         // get the main artifact of the debug artifact

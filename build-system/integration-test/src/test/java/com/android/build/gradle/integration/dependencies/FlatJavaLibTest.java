@@ -21,6 +21,8 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
@@ -50,7 +52,7 @@ public class FlatJavaLibTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> models;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -80,9 +82,9 @@ public class FlatJavaLibTest {
 
     @Test
     public void checkDeDupedExternalJavaLibraries() {
-        Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(models.getModelMap().get(":app").getVariants(), "debug");
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
+        Dependencies deps = variant.getMainArtifact().getDependencies();
 
         // check we only have one version of support-annotations.
         Collection<JavaLibrary> javaLibraries = deps.getJavaLibraries();

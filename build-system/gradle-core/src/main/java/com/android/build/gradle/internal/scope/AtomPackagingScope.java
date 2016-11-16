@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
@@ -45,14 +46,14 @@ public class AtomPackagingScope implements PackagingScope {
     protected final VariantOutputScope variantOutputScope;
     protected final VariantScope variantScope;
     protected final GlobalScope globalScope;
-    protected final AndroidAtom androidAtom;
+    protected final AtomDependency atomDependency;
 
     public AtomPackagingScope(@NonNull VariantOutputScope variantOutputScope,
-            @NonNull AndroidAtom androidAtom) {
+            @NonNull AtomDependency atomDependency) {
         this.variantOutputScope = variantOutputScope;
         this.variantScope = variantOutputScope.getVariantScope();
         this.globalScope = variantScope.getGlobalScope();
-        this.androidAtom = androidAtom;
+        this.atomDependency = atomDependency;
     }
 
     @NonNull
@@ -64,7 +65,7 @@ public class AtomPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public File getFinalResourcesFile() {
-        return variantOutputScope.getProcessResourcePackageOutputFile(androidAtom);
+        return variantOutputScope.getProcessResourcePackageOutputFile(atomDependency);
     }
 
     @NonNull
@@ -100,25 +101,25 @@ public class AtomPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public Set<File> getDexFolders(@NonNull FileType fileType) {
-        return ImmutableSet.of(variantScope.getDexOutputFolder(androidAtom));
+        return ImmutableSet.of(variantScope.getDexOutputFolder(atomDependency));
     }
 
     @NonNull
     @Override
     public Set<File> getJavaResources() {
-        return ImmutableSet.of(androidAtom.getJavaResFolder());
+        return ImmutableSet.of(atomDependency.getJavaResFolder());
     }
 
     @NonNull
     @Override
     public File getAssetsDir() {
-        return androidAtom.getAssetsFolder();
+        return atomDependency.getAssetsFolder();
     }
 
     @NonNull
     @Override
     public Set<File> getJniFolders() {
-        return ImmutableSet.of(androidAtom.getLibFolder());
+        return ImmutableSet.of(atomDependency.getLibFolder());
     }
 
     @NonNull
@@ -177,7 +178,7 @@ public class AtomPackagingScope implements PackagingScope {
     @Override
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
         return variantScope.getTaskName(prefix,
-                StringHelper.capitalize(androidAtom.getAtomName()) + suffix);
+                StringHelper.capitalize(atomDependency.getAtomName()) + suffix);
     }
 
     @NonNull
@@ -189,7 +190,7 @@ public class AtomPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public File getOutputPackage() {
-        return variantScope.getPackageAtom(androidAtom);
+        return variantScope.getPackageAtom(atomDependency);
     }
 
     @NonNull
@@ -207,7 +208,7 @@ public class AtomPackagingScope implements PackagingScope {
     @Nullable
     @Override
     public File getAtomMetadataBaseFolder() {
-        return androidAtom.getAtomMetadataFile().getParentFile();
+        return atomDependency.getAtomMetadataFile().getParentFile();
     }
 
     @NonNull
@@ -243,7 +244,7 @@ public class AtomPackagingScope implements PackagingScope {
     @Override
     public File getManifestFile() {
         // TODO: Replace with an empty manifest.
-        return androidAtom.getManifest();
+        return atomDependency.getManifest();
     }
 
 }

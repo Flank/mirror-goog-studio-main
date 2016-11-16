@@ -962,16 +962,14 @@ public class ManifestMerger2 {
         }
 
         /**
-         * Sets library dependencies for this merging activity.
-         * @param libraries the list of library dependencies.
+         * Sets manifest providers for this merging activity.
+         * @param providers the list of manifest providers.
          * @return itself.
          */
         @NonNull
-        public Invoker addAndroidBundleManifests(@NonNull Iterable<? extends AndroidBundle> libraries) {
-            for (AndroidBundle library : libraries) {
-                if (!library.isProvided()) {
-                    mLibraryFilesBuilder.add(Pair.of(library.getName(), library.getManifest()));
-                }
+        public Invoker addManifestProviders(@NonNull Iterable<? extends ManifestProvider> providers) {
+            for (ManifestProvider provider : providers) {
+                mLibraryFilesBuilder.add(Pair.of(provider.getName(), provider.getManifest()));
             }
             return thisAsT();
         }

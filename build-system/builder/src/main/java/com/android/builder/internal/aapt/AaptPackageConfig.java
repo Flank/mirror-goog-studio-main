@@ -19,6 +19,7 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidLibrary;
 import com.android.sdklib.BuildToolInfo;
@@ -73,7 +74,7 @@ public class AaptPackageConfig implements Cloneable {
      * All libraries added (see {@link Builder#setLibraries(List)}).
      */
     @NonNull
-    private ImmutableList<AndroidLibrary> mLibraries;
+    private ImmutableList<AndroidDependency> mLibraries;
 
     /**
      * Symbol output directory (see {@link Builder#setSymbolOutputDir(File)}).
@@ -243,7 +244,7 @@ public class AaptPackageConfig implements Cloneable {
      * @return all libraries; returns an empty list if no libraries were added
      */
     @NonNull
-    public List<? extends AndroidLibrary> getLibraries() {
+    public List<AndroidDependency> getLibraries() {
         return Collections.unmodifiableList(mLibraries);
     }
 
@@ -513,7 +514,7 @@ public class AaptPackageConfig implements Cloneable {
          * @return {@code this}
          */
         @NonNull
-        public Builder setLibraries(@Nullable List<? extends AndroidLibrary> libraries) {
+        public Builder setLibraries(@Nullable List<AndroidDependency> libraries) {
             if (libraries == null) {
                 mConfig.mLibraries = ImmutableList.of();
             } else {

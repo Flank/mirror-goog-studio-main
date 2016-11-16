@@ -22,7 +22,10 @@ import com.google.common.base.MoreObjects;
  * Mutable data for an Android dependency.
  */
 public class DependencyMutableData {
+    // TODO skip in two different classes since different graph use the booleans. No graph use both.
+
     private boolean isSkipped = false;
+    private boolean isProvided = false;
 
     public boolean isSkipped() {
         return isSkipped;
@@ -32,10 +35,19 @@ public class DependencyMutableData {
         isSkipped = true;
     }
 
+    public boolean isProvided() {
+        return isProvided;
+    }
+
+    public void setProvided(boolean provided) {
+        isProvided = provided;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("isSkipped", isSkipped)
+                .add("isProvided", isProvided)
                 .toString();
     }
 }

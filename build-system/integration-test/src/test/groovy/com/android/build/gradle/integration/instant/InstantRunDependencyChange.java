@@ -51,7 +51,7 @@ public class InstantRunDependencyChange {
     public void addingDependency() throws Exception {
 
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle());
+                project.model().getSingle().getOnlyModel());
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
@@ -79,7 +79,7 @@ public class InstantRunDependencyChange {
     public void changingDependency() throws Exception {
 
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle());
+                project.model().getSingle().getOnlyModel());
 
         String originalBuildFile =
                 Files.asCharSource(project.file("build.gradle"), Charsets.UTF_8).read();

@@ -53,4 +53,10 @@ public interface MavenCoordinates {
      */
     @Nullable
     String getClassifier();
+
+    /**
+     * Returns this coordinates Id without the version attribute.
+     * Since 2.3
+     */
+    String getVersionlessId();
 }

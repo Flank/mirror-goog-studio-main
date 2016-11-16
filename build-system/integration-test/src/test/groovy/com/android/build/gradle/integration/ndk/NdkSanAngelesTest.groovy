@@ -56,7 +56,7 @@ class NdkSanAngelesTest {
 
     @BeforeClass
     static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
     }
 
     @AfterClass

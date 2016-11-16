@@ -17,21 +17,23 @@
 package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
+import com.android.builder.model.level2.Library
+import com.android.builder.model.level2.LibraryGraph
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
 import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 
 /**
@@ -44,7 +46,7 @@ class RsSupportModeTest {
             .fromTestProject("rsSupportMode")
             .addGradleProperties("android.useDeprecatedNdk=true")
             .create()
-    static AndroidProject model
+    static ModelContainer<AndroidProject> model
 
     @BeforeClass
     static void setUp() {
@@ -59,16 +61,21 @@ class RsSupportModeTest {
 
     @Test
     void testRsSupportMode() throws Exception {
-        Variant debugVariant = ModelHelper.getVariant(model.getVariants(), "x86Debug")
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
+
+        Variant debugVariant = ModelHelper.getVariant(
+                model.getOnlyModel().getVariants(), "x86Debug")
 
         AndroidArtifact mainArtifact = debugVariant.getMainArtifact()
-        Dependencies dependencies = mainArtifact.getCompileDependencies()
 
-        assertFalse(dependencies.getJavaLibraries().isEmpty())
+        LibraryGraph graph = mainArtifact.getCompileGraph()
+
+        List<Library> libraries = helper.on(graph).withType(JAVA).asLibraries();
+        assertFalse(libraries.isEmpty())
 
         boolean foundSupportJar = false
-        for (JavaLibrary lib : dependencies.getJavaLibraries()) {
-            File file = lib.getJarFile()
+        for (Library lib : libraries) {
+            File file = lib.getArtifact()
             if (SdkConstants.FN_RENDERSCRIPT_V8_JAR.equals(file.getName())) {
                 foundSupportJar = true
                 break

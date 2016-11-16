@@ -100,7 +100,7 @@ class BuildConfigTest {
                 'generateFlavor1DebugBuildConfig',
                 'generateFlavor1ReleaseBuildConfig',
                 'generateFlavor2DebugBuildConfig',
-                'generateFlavor2ReleaseBuildConfig')
+                'generateFlavor2ReleaseBuildConfig').getOnlyModel()
     }
 
     @AfterClass

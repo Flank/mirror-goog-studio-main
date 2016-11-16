@@ -16,11 +16,21 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -29,19 +39,18 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for flavored dependency on a different package.
@@ -52,7 +61,9 @@ public class AppWithResolutionStrategyForJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> models;
+    static LibraryGraphHelper helper;
+
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -89,48 +100,52 @@ public class AppWithResolutionStrategyForJarTest {
                 "    compile \"com.google.guava:guava:17.0\"\n" +
                 "}\n");
 
-        models = project.model().getMulti();
+        models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        helper = new LibraryGraphHelper(models);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         models = null;
+        helper = null;
     }
 
     @Test
     public void checkModelContainsCorrectDependencies() {
-        AndroidProject appProject = models.get(":app");
+
+        AndroidProject appProject = models.getModelMap().get(":app");
         Collection<Variant> appVariants = appProject.getVariants();
 
         Variant debugVariant = ModelHelper.getVariant(appVariants, "debug");
 
         AndroidArtifact mainArtifact = debugVariant.getMainArtifact();
-        checkJarDependency(mainArtifact.getCompileDependencies(), "15.0", "debug");
-        checkJarDependency(mainArtifact.getPackageDependencies(), "17.0", "debug");
+        checkJarDependency(mainArtifact.getCompileGraph(), "15.0", "debug");
+        checkJarDependency(mainArtifact.getPackageGraph(), "17.0", "debug");
 
         Variant releaseVariant = ModelHelper.getVariant(appVariants, "release");
         Truth.assertThat(releaseVariant).isNotNull();
 
         mainArtifact = releaseVariant.getMainArtifact();
-        checkJarDependency(mainArtifact.getCompileDependencies(), "17.0", "release");
-        checkJarDependency(mainArtifact.getPackageDependencies(), "17.0", "release");
+        checkJarDependency(mainArtifact.getCompileGraph(), "17.0", "release");
+        checkJarDependency(mainArtifact.getPackageGraph(), "17.0", "release");
     }
 
-    private static void checkJarDependency(Dependencies dependencies,
-            @NonNull String jarVersion, @NonNull String variantName) {
-        Collection<AndroidLibrary> androidLibraries = dependencies.getLibraries();
-        assertThat(androidLibraries).hasSize(1);
+    private static void checkJarDependency(
+            @NonNull LibraryGraph graph,
+            @NonNull String jarVersion,
+            @NonNull String variantName) {
 
-        AndroidLibrary androidLibrary = Iterables.getOnlyElement(androidLibraries);
-        assertThat(androidLibrary.getProject()).isEqualTo(":library");
+        Items subModuleItems = helper.on(graph).withType(MODULE);
+        assertThat(subModuleItems.mapTo(COORDINATES))
+                .named("Direct modules of " + variantName)
+                .containsExactly(":library");
 
-        Collection<? extends JavaLibrary> javaLibraries = androidLibrary.getJavaDependencies();
-        assertThat(javaLibraries).named("java libs of " + variantName).hasSize(1);
+        // get the transitive
+        Items libraryDeps = subModuleItems.getTransitiveFromSingleItem();
 
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.getResolvedCoordinates())
-                .named("single java lib deps of " + variantName)
-                .hasVersion(jarVersion);
+        assertThat(libraryDeps.withType(JAVA).mapTo(COORDINATES))
+                .named("transitive java libs of " + variantName)
+                .containsExactly("com.google.guava:guava:jar:" + jarVersion);
     }
 }

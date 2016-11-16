@@ -1631,18 +1631,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     @NonNull
-    public static Dependencies getCompileDependencies(@NonNull AndroidArtifact artifact,
+    public static Dependencies getCompileDependencies(
+            @NonNull AndroidArtifact artifact,
             @Nullable GradleVersion version) {
         // getCompileDependencies was added in builder model 2.2; in older versions, just
         // use getDependencies
-        Dependencies compileDependencies;
-        if (version != null &&
-                (version.getMajor() > 2 || version.getMajor() == 2 && version.getMinor() >= 2)) {
-            compileDependencies = artifact.getCompileDependencies();
-        } else {
-            //noinspection deprecation
-            compileDependencies = artifact.getDependencies();
-        }
+        Dependencies compileDependencies = artifact.getDependencies();
         return compileDependencies;
     }
 }

@@ -35,10 +35,13 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dependency.level2.AtomDependency;
+import com.android.builder.dependency.level2.Dependency;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -57,9 +60,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -98,7 +103,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String preferredDensity;
 
-    private List<AndroidLibrary> libraries;
+    private List<AndroidDependency> androidDependencies;
+    private List<Boolean> androidProvided;
 
     private String packageForR;
 
@@ -164,7 +170,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .setManifestFile(manifestFileToPackage)
                     .setOptions(getAaptOptions())
                     .setResourceDir(getResDir())
-                    .setLibraries(getLibraries())
+                    .setLibraries(getAndroidDependencies())
                     .setCustomPackageForR(getPackageForR())
                     .setSymbolOutputDir(getTextSymbolOutputDir())
                     .setSourceOutputDir(srcOut)
@@ -255,13 +261,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
                         .getEnforceUniquePackageName();
 
-                ConventionMappingHelper.map(processResources, "libraries",
-                        new Callable<List<AndroidLibrary>>() {
-                            @Override
-                            public List<AndroidLibrary> call() throws Exception {
-                                return config.getFlatPackageAndroidLibraries();
-                            }
-                        });
+                ConventionMappingHelper.map(
+                        processResources,
+                        "androidDependencies",
+                        config::getFlatPackageAndroidLibraries);
                 ConventionMappingHelper.map(processResources, "packageForR",
                         new Callable<String>() {
                             @Override
@@ -371,7 +374,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setPreviousFeatures(ImmutableSet.of());
 
             processResources.setBaseFeature(() -> {
-                AndroidAtom baseAtom = scope
+                AtomDependency baseAtom = scope
                         .getVariantScope()
                         .getVariantConfiguration()
                         .getPackageDependencies()
@@ -383,30 +386,38 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public static class AtomConfigAction extends ConfigAction {
 
-        private AndroidAtom androidAtom;
+        @NonNull
+        private final DependencyNode atomNode;
+        @NonNull
+        private final AtomDependency atomDependency;
+        @NonNull
+        private final Map<Object, Dependency> dependencyMap;
         private Collection<File> previousAtoms;
 
         public AtomConfigAction(
                 @NonNull VariantOutputScope scope,
                 @NonNull File symbolLocation,
-                @NonNull AndroidAtom androidAtom,
-                @NonNull List<AndroidAtom> previousAtoms) {
+                @NonNull DependencyNode atomNode,
+                @NonNull AtomDependency atomDependency,
+                @NonNull Map<Object, Dependency> dependencyMap,
+                @NonNull List<AtomDependency> previousAtoms) {
             super(scope, symbolLocation, true, false);
-            this.androidAtom = androidAtom;
+            this.atomNode = atomNode;
+            this.atomDependency = atomDependency;
+            this.dependencyMap = dependencyMap;
             ImmutableSet.Builder<File> listBuilder = ImmutableSet.builder();
             // Ignore the first atom as it is the base atom.
             for (int i = 1; i < previousAtoms.size(); i++) {
                 listBuilder.add(scope.getProcessResourcePackageOutputFile(previousAtoms.get(i)));
             }
             this.previousAtoms = listBuilder.build();
-
         }
 
         @NonNull
         @Override
         public String getName() {
             return scope.getTaskName("process",
-                    StringHelper.capitalize(androidAtom.getAtomName()) + "AtomResources");
+                    StringHelper.capitalize(atomDependency.getAtomName()) + "AtomResources");
         }
 
         @Override
@@ -426,12 +437,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .addAll(variantData.getFilters(OutputFile.FilterType.LANGUAGE))
                     .build();
 
-            ConventionMappingHelper.map(processResources, "libraries",
+            ConventionMappingHelper.map(processResources, "androidDependencies",
                     this::computeFlatLibraryList);
 
             ConventionMappingHelper.map(processResources, "packageForR", () -> {
                 String splitName =
-                    new DefaultManifestParser(androidAtom.getManifest()).getSplit();
+                    new DefaultManifestParser(atomDependency.getManifest()).getSplit();
                 if (splitName == null)
                     return config.getOriginalApplicationId();
                 else
@@ -440,15 +451,15 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
             processResources.setSourceOutputDir(
-                    scope.getVariantScope().getRClassSourceOutputDir(androidAtom));
+                    scope.getVariantScope().getRClassSourceOutputDir(atomDependency));
             processResources.setTextSymbolOutputDir(symbolLocation);
 
-            ConventionMappingHelper.map(processResources, "manifestFile", androidAtom::getManifest);
+            ConventionMappingHelper.map(processResources, "manifestFile", atomDependency::getManifest);
 
-            ConventionMappingHelper.map(processResources, "resDir", androidAtom::getResFolder);
+            ConventionMappingHelper.map(processResources, "resDir", atomDependency::getResFolder);
 
             processResources.setPackageOutputFile(
-                    scope.getProcessResourcePackageOutputFile(androidAtom));
+                    scope.getProcessResourcePackageOutputFile(atomDependency));
 
             processResources.setType(VariantType.INSTANTAPP);
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -461,7 +472,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     AndroidGradleOptions.getBuildTargetDensity(
                             scope.getGlobalScope().getProject()));
             processResources.setMergeBlameLogFolder(
-                    scope.getVariantScope().getResourceBlameLogDir(androidAtom));
+                    scope.getVariantScope().getResourceBlameLogDir(atomDependency));
 
             processResources.instantRunSupportDir =
                     scope.getVariantScope().getInstantRunSupportDir();
@@ -472,7 +483,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setPreviousFeatures(previousAtoms);
 
             processResources.setBaseFeature(() -> {
-                AndroidAtom baseAtom = scope
+                AtomDependency baseAtom = scope
                         .getVariantScope()
                         .getVariantConfiguration()
                         .getPackageDependencies()
@@ -482,19 +493,33 @@ public class ProcessAndroidResources extends IncrementalTask {
             });
         }
 
-        private List<AndroidLibrary> computeFlatLibraryList() {
-            List<AndroidLibrary> flatAndroidLibraries = Lists.newArrayList();
-            computeFlatLibraryList(androidAtom.getLibraryDependencies(), flatAndroidLibraries);
+        private List<AndroidDependency> computeFlatLibraryList() {
+            List<AndroidDependency> flatAndroidLibraries = Lists.newArrayList();
+            final List<DependencyNode> androidNodes = atomNode.getDependencies().stream()
+                    .filter(node -> node.getNodeType() == DependencyNode.NodeType.ANDROID)
+                    .collect(Collectors.toList());
+
+            computeFlatLibraryList(androidNodes, flatAndroidLibraries);
             return flatAndroidLibraries;
         }
 
-        private static void computeFlatLibraryList(
-                List<? extends AndroidLibrary> androidLibraries,
-                List<AndroidLibrary> outFlatAndroidLibraries) {
-            for (AndroidLibrary lib : androidLibraries) {
-                if (outFlatAndroidLibraries.contains(lib)) continue;
-                computeFlatLibraryList(lib.getLibraryDependencies(), outFlatAndroidLibraries);
-                outFlatAndroidLibraries.add(lib);
+        private void computeFlatLibraryList(
+                List<DependencyNode> androidDependencies,
+                List<AndroidDependency> outFlatAndroidDependencies) {
+            for (DependencyNode node : androidDependencies) {
+                AndroidDependency androidDependency = (AndroidDependency) dependencyMap
+                        .get(node.getAddress());
+
+                if (outFlatAndroidDependencies.contains(androidDependency)) {
+                    continue;
+                }
+
+                final List<DependencyNode> androidNodes = node.getDependencies().stream()
+                        .filter(n -> n.getNodeType() == DependencyNode.NodeType.ANDROID)
+                        .collect(Collectors.toList());
+
+                computeFlatLibraryList(androidNodes, outFlatAndroidDependencies);
+                outFlatAndroidDependencies.add(androidDependency);
             }
         }
     }
@@ -626,20 +651,21 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public List<File> getInputFilesFromLibraries() {
-        List<AndroidLibrary> libs = getLibraries();
-        if (libs == null) {
+        List<AndroidDependency> dependencies = getAndroidDependencies();
+        if (dependencies == null) {
             return ImmutableList.of();
         }
-        List<File> files = Lists.newArrayListWithCapacity(libs.size() * 2);
-        for (AndroidLibrary androidLibrary : libs) {
-            files.add(androidLibrary.getManifest());
-            files.add(androidLibrary.getSymbolFile());
+        List<File> files = Lists.newArrayListWithCapacity(dependencies.size() * 2);
+        for (AndroidDependency dependency : dependencies) {
+            files.add(dependency.getManifest());
+            files.add(dependency.getSymbolFile());
         }
         return files;
     }
 
-    public List<AndroidLibrary> getLibraries() {
-        return libraries;
+
+    public List<AndroidDependency> getAndroidDependencies() {
+        return androidDependencies;
     }
 
     @Input

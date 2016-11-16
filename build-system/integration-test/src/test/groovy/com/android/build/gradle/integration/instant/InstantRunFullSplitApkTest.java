@@ -66,7 +66,7 @@ public class InstantRunFullSplitApkTest {
 
 
         mProject.execute("clean");
-        AndroidProject model = mProject.model().getSingle();
+        AndroidProject model = mProject.model().getSingle().getOnlyModel();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
     }
 

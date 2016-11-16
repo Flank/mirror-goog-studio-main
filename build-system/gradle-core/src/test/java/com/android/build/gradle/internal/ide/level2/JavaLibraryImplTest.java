@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.builder.dependency;
+package com.android.build.gradle.internal.ide.level2;
 
-import com.android.builder.model.Library;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Test;
 
-/**
- * Marker interface for a library that can be skipped.
- *
- * This can happen in testing artifacts when the same dependency is present in
- * both the tested artifact and the test artifact.
- *
- * @see Library#isSkipped()
- */
-public interface SkippableLibrary extends Library {
+public class JavaLibraryImplTest {
+
+    @Test
+    public void equals() throws Exception {
+        EqualsVerifier.forClass(JavaLibraryImpl.class).verify();
+    }
 }

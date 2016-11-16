@@ -17,17 +17,21 @@
 
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.BuildTypeContainer
-import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
+import com.android.builder.model.level2.LibraryGraph
 import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -35,11 +39,12 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import static com.google.common.truth.Truth.assertThat
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
+
 /**
  * Assemble tests for artifactApi.
  */
@@ -52,7 +57,7 @@ class ArtifactApiTest {
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("artifactApi")
             .create()
-    static AndroidProject model
+    static GetAndroidModelAction.ModelContainer<AndroidProject> model
 
     @BeforeClass
     static void setUp() {
@@ -68,9 +73,9 @@ class ArtifactApiTest {
     @Test
     void "check metadata info in model"() {
         // check the Artifact Meta Data
-        Collection<ArtifactMetaData> extraArtifacts = model.getExtraArtifacts()
+        Collection<ArtifactMetaData> extraArtifacts = model.getOnlyModel().getExtraArtifacts()
         assertNotNull("Extra artifact collection null-check", extraArtifacts)
-        assertThat(extraArtifacts).hasSize(DEFAULT_EXTRA_JAVA_ARTIFACTS + 2)
+        TruthHelper.assertThat(extraArtifacts).hasSize(DEFAULT_EXTRA_JAVA_ARTIFACTS + 2)
 
         assertNotNull("instrument test metadata null-check",
                 ModelHelper.getArtifactMetaData(extraArtifacts, ARTIFACT_ANDROID_TEST))
@@ -87,7 +92,7 @@ class ArtifactApiTest {
     @Test
     void "check build types contain extra source provider artifact is in model"() {
         // check the extra source provider on the build Types.
-        for (BuildTypeContainer btContainer : model.getBuildTypes()) {
+        for (BuildTypeContainer btContainer : model.getOnlyModel().getBuildTypes()) {
             String name = btContainer.getBuildType().getName()
             Collection<SourceProviderContainer> extraSourceProviderContainers = btContainer.getExtraSourceProviders()
             assertNotNull(
@@ -118,7 +123,7 @@ class ArtifactApiTest {
     @Test
     void "check product flavors contain extra source provider artifact is in model"() {
         // check the extra source provider on the product flavors.
-        for (ProductFlavorContainer pfContainer : model.getProductFlavors()) {
+        for (ProductFlavorContainer pfContainer : model.getOnlyModel().getProductFlavors()) {
             String name = pfContainer.getProductFlavor().getName()
             Collection<SourceProviderContainer> extraSourceProviderContainers = pfContainer.
                     getExtraSourceProviders()
@@ -159,10 +164,12 @@ class ArtifactApiTest {
 
     @Test
     void "check extra artifact is in variants"() {
-        for (Variant variant : model.getVariants()) {
+        LibraryGraphHelper helper = new LibraryGraphHelper(model)
+
+        for (Variant variant : model.getOnlyModel().getVariants()) {
             String name = variant.getName()
             Collection<JavaArtifact> javaArtifacts = variant.getExtraJavaArtifacts()
-            assertThat(javaArtifacts).hasSize(DEFAULT_EXTRA_JAVA_ARTIFACTS + 1)
+            TruthHelper.assertThat(javaArtifacts).hasSize(DEFAULT_EXTRA_JAVA_ARTIFACTS + 1)
             JavaArtifact javaArtifact = javaArtifacts.find {it.name == "__test__"}
             assertEquals("assemble:" + name, javaArtifact.getAssembleTaskName())
             assertEquals("compile:" + name, javaArtifact.getCompileTaskName())
@@ -172,9 +179,8 @@ class ArtifactApiTest {
             assertNotNull(variantSourceProvider)
             assertEquals("provider:" + name, variantSourceProvider.getManifestFile().getPath())
 
-            Dependencies deps = javaArtifact.getCompileDependencies()
-            assertNotNull("java artifact deps null-check", deps)
-            assertFalse(deps.getJavaLibraries().isEmpty())
+            LibraryGraph graph = javaArtifact.getCompileGraph();
+            TruthHelper.assertThat(helper.on(graph).withType(JAVA).asList()).isNotEmpty();
         }
     }
 
@@ -182,7 +188,7 @@ class ArtifactApiTest {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        assertThat(FileUtils.sha1(project.file("build.gradle")))
+        TruthHelper.assertThat(FileUtils.sha1(project.file("build.gradle")))
                 .isEqualTo("075b7b983ad2d77a378536f181f3cf17a758380c")
     }
 }

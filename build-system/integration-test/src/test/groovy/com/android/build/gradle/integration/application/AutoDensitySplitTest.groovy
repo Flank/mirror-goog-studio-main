@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
@@ -33,7 +35,7 @@ import static org.junit.Assert.assertEquals
  */
 @CompileStatic
 class AutoDensitySplitTest {
-    static AndroidProject model
+    static GetAndroidModelAction.ModelContainer<AndroidProject> model
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
@@ -62,7 +64,7 @@ class AutoDensitySplitTest {
 
     @Test
     void testPackaging() {
-        for (Variant variant : model.getVariants()) {
+        for (Variant variant : model.getOnlyModel().getVariants()) {
             AndroidArtifact mainArtifact = variant.getMainArtifact()
             if (!variant.getBuildType().equalsIgnoreCase("Debug")) {
                 continue

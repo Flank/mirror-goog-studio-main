@@ -456,10 +456,9 @@ public class VariantManager implements VariantModel {
                         });
                 testVariantConfig.setResolvedDependencies(
                         variantDep.getCompileDependencies(),
-                        variantDep.getFlattenedCompileDependencies(),
-                        variantDep.getPackageDependencies(),
-                        variantDep.getFlattenedPackageDependencies());
+                        variantDep.getPackageDependencies());
             }
+
             switch (variantType) {
                 case ANDROID_TEST:
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
@@ -630,9 +629,7 @@ public class VariantManager implements VariantModel {
 
             variantConfig.setResolvedDependencies(
                     variantDep.getCompileDependencies(),
-                    variantDep.getFlattenedCompileDependencies(),
-                    variantDep.getPackageDependencies(),
-                    variantDep.getFlattenedPackageDependencies());
+                    variantDep.getPackageDependencies());
         }
 
         return variantData;

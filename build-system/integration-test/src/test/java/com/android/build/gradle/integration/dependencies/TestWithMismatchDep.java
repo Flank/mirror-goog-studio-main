@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
@@ -55,9 +57,9 @@ public class TestWithMismatchDep {
     @Test
     public void testMismatchDependencyErrorIsInTheModel() {
         // Query the model to get the mismatch dep sync error.
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle();
+        ModelContainer<AndroidProject> model = project.model().ignoreSyncIssues().getSingle();
 
-        assertThat(model).hasSingleIssue(
+        assertThat(model.getOnlyModel()).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_MISMATCH_DEP,
                 "com.google.guava:guava",

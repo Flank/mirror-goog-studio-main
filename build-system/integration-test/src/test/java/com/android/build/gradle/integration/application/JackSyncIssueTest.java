@@ -55,7 +55,7 @@ public class JackSyncIssueTest {
     @Test
     public void testMismatchDependencyErrorIsInTheModel() {
         // Query the model to get the mismatch dep sync error.
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle();
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_ERROR,

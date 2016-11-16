@@ -73,7 +73,7 @@ android {
 }
 """
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         Collection<Variant> variants = model.getVariants()
         assertEquals("Variant Count", 2, variants.size())
@@ -120,7 +120,7 @@ android {
 }
 """
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle();
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         assertThat(model).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,

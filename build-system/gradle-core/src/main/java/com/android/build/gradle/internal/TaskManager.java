@@ -159,7 +159,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.LibraryDependency;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -373,7 +373,7 @@ public abstract class TaskManager {
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
-        Set<LibraryDependency> libsToExplode =
+        Set<AndroidDependency> libsToExplode =
                 dependencyManager.resolveDependencies(variantDeps, testedProjectPath);
         dependencyManager.processLibraries(libsToExplode);
     }

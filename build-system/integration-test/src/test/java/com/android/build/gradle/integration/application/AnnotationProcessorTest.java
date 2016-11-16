@@ -188,7 +188,7 @@ public class AnnotationProcessorTest {
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
         assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
 
-        AndroidProject model = project.model().getMulti().get(":app");
+        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
         assertThat(ModelHelper.getDebugArtifact(model).getGeneratedSourceFolders())
                 .contains(aptOutputFolder);
     }
@@ -262,7 +262,7 @@ public class AnnotationProcessorTest {
                         + "dependencies {\n"
                         + "    annotationProcessor 'com.google.dagger:dagger-compiler:2.6'\n"
                         + "}");
-        AndroidProject model = project.model().ignoreSyncIssues().getMulti().get(":app");
+        AndroidProject model = project.model().ignoreSyncIssues().getMulti().getModelMap().get(":app");
         assertThat(model)
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_WARNING,
