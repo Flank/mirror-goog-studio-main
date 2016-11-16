@@ -14,105 +14,100 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk
+package com.android.build.gradle.integration.ndk;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.TestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.File;
+import java.io.IOException;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test AndroidTest with NDK.
  */
-class NdkConnectedCheckTest {
+public class NdkConnectedCheckTest {
 
     private static AndroidTestApp app = new HelloWorldJniApp();
     static {
         app.addFile(new TestSourceFile("src/androidTest/jni", "hello-jni-test.c",
-                """
-#include <string.h>
-#include <jni.h>
-
-jstring
-Java_com_example_hellojni_HelloJniTest_expectedString(JNIEnv* env, jobject thiz)
-{
-    return (*env)->NewStringUTF(env, "hello world!");
-}
-"""));
+                "#include <string.h>\n"
+                        + "#include <jni.h>\n"
+                        + "\n"
+                        + "jstring\n"
+                        + "Java_com_example_hellojni_HelloJniTest_expectedString(JNIEnv* env, jobject thiz)\n"
+                        + "{\n"
+                        + "    return (*env)->NewStringUTF(env, \"hello world!\");\n"
+                        + "}\n"));
         app.addFile(new TestSourceFile("src/androidTest/java/com/example/hellojni", "HelloJniTest.java",
-                """
-package com.example.hellojni;
-
-import android.test.ActivityInstrumentationTestCase;
-
-public class HelloJniTest extends ActivityInstrumentationTestCase<HelloJni> {
-
-    public HelloJniTest() {
-        super("com.example.hellojni", HelloJni.class);
-    }
-
-    // Get expected string from JNI.
-    public native String expectedString();
-
-    static {
-        System.loadLibrary("hello-jni_test");
-    }
-
-    public void testJniName() {
-        final HelloJni a = getActivity();
-        // ensure a valid handle to the activity has been returned
-        assertNotNull(a);
-
-        assertTrue(expectedString().equals(a.stringFromJNI()));
-    }
-}
-"""));
+                "package com.example.hellojni;\n"
+                        + "\n"
+                        + "import android.test.ActivityInstrumentationTestCase;\n"
+                        + "\n"
+                        + "public class HelloJniTest extends ActivityInstrumentationTestCase<HelloJni> {\n"
+                        + "\n"
+                        + "    public HelloJniTest() {\n"
+                        + "        super(\"com.example.hellojni\", HelloJni.class);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Get expected string from JNI.\n"
+                        + "    public native String expectedString();\n"
+                        + "\n"
+                        + "    static {\n"
+                        + "        System.loadLibrary(\"hello-jni_test\");\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void testJniName() {\n"
+                        + "        final HelloJni a = getActivity();\n"
+                        + "        // ensure a valid handle to the activity has been returned\n"
+                        + "        assertNotNull(a);\n"
+                        + "\n"
+                        + "        assertTrue(expectedString().equals(a.stringFromJNI()));\n"
+                        + "    }\n"
+                        + "}\n"));
     }
 
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(app)
             .addGradleProperties("android.useDeprecatedNdk=true")
-            .create()
+            .create();
 
 
     @BeforeClass
-    static void setUp() {
-        project.getBuildFile() <<
-                """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    defaultConfig {
-        ndk {
-            moduleName "hello-jni"
-        }
-    }
-}
-"""
+    public static void setUp() throws IOException {
+        TestFileUtils.appendToFile(project.getBuildFile(),
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "    defaultConfig {\n"
+                        + "        ndk {\n"
+                        + "            moduleName \"hello-jni\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         project.execute("clean", "assembleAndroidTest");
     }
 
-
     @Test
-    void "check test lib is packaged"() {
-        File apk = project.getTestApk("debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni_test.so")
+    public void checkTestLibIsPackaged() throws IOException {
+        File apk = project.getTestApk("debug");
+        assertThatZip(apk).contains("lib/x86/libhello-jni_test.so");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() {
+        project.executeConnectedCheck();
     }
 }
