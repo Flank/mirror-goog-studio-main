@@ -17,6 +17,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -241,7 +242,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
                     generatedAssets.add(variantData.copyApkTask.getDestinationDir());
                 }
 
-                return variantConfig.getAssetSets(generatedAssets, includeDependencies);
+                List<AssetSet> assetSets =
+                        variantConfig.getAssetSets(generatedAssets, includeDependencies);
+                AaptOptions options = scope.getGlobalScope().getExtension().getAaptOptions();
+                if (options != null && options.getIgnoreAssets() != null) {
+                    assetSets.forEach(as -> as.setIgnoredPatterns(options.getIgnoreAssets()));
+                }
+
+                return assetSets;
+
             });
             mergeAssetsTask.setOutputDir(scope.getMergeAssetsOutputDir());
         }

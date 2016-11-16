@@ -582,7 +582,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      * @param file the file to check
      * @return true if it is a valid file, false if it should be ignored.
      */
-    protected static boolean checkFileForAndroidRes(@NonNull File file) {
+    protected boolean checkFileForAndroidRes(@NonNull File file) {
         return !isIgnored(file);
     }
 
@@ -605,8 +605,9 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      *   <li> match is not case-sensitive.
      * </ul>
      */
-    private static final Iterable<String> sIgnoredPatterns;
-    static {
+    private Iterable<String> sIgnoredPatterns;
+
+    {
         String patterns = System.getenv("ANDROID_AAPT_IGNORE"); //$NON-NLS-1$
         if (patterns == null || patterns.isEmpty()) {
             // Matches aapt: frameworks/base/tools/aapt/AaptAssets.cpp:gDefaultIgnoreAssets
@@ -616,13 +617,17 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
         sIgnoredPatterns = Splitter.on(':').split(patterns);
     }
 
+    public void setIgnoredPatterns(String aaptStylePattern) {
+        sIgnoredPatterns = Splitter.on(':').split(aaptStylePattern);
+    }
+
     /**
      * Returns whether the given file should be ignored.
      *
      * @param file the file to check
      * @return true if the file is hidden
      */
-    public static boolean isIgnored(@NonNull File file) {
+    public boolean isIgnored(@NonNull File file) {
         String path = file.getPath();
         int nameIndex = path.lastIndexOf(File.separatorChar) + 1;
 
