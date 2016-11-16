@@ -38,6 +38,8 @@ import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.ByteStreams;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
@@ -184,8 +186,8 @@ public class ExtractJarsTransform extends Transform {
         HashSet<String> lowerCaseNames = new HashSet<>();
         boolean foundCaseInsensitiveIssue = false;
 
-        try (FileInputStream fis = new FileInputStream(jarFile);
-                ZipInputStream zis = new ZipInputStream(fis)) {
+        try (InputStream fis = new BufferedInputStream(new FileInputStream(jarFile));
+             ZipInputStream zis = new ZipInputStream(fis)) {
             // loop on the entries of the intermediary package and put them in the final package.
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
