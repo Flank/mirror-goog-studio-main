@@ -36,6 +36,7 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
@@ -68,6 +69,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationParameterList;
@@ -176,6 +178,85 @@ public class LintDriver {
     public LintDriver(@NonNull IssueRegistry registry, @NonNull LintClient client) {
         this.registry = registry;
         this.client = new LintClientWrapper(client);
+    }
+
+    /**
+     * Number of fatal exceptions (internal errors, usually from ECJ) we've
+     * encountered; we don't log each and every one to avoid massive log spam
+     * in code which triggers this condition
+     */
+    private static int exceptionCount;
+
+    /** Max number of logs to include */
+    private static final int MAX_REPORTED_CRASHES = 20;
+
+    /** Logs the given error produced by the various lint detectors */
+    public static void handleDetectorError(@NonNull Context context, @NonNull RuntimeException e) {
+        String simpleClassName = e.getClass().getSimpleName();
+        if (simpleClassName.equals("IndexNotReadyException")) {
+            // Attempting to access PSI during startup before indices are ready; ignore these.
+            // See http://b.android.com/176644 for an example.
+            return;
+        } else if (e instanceof ProcessCanceledException ||
+                simpleClassName.equals("ProcessCanceledException")) {
+            // Cancelling inspections in the IDE
+            context.getDriver().cancel();
+            return;
+        }
+
+        if (exceptionCount++ > MAX_REPORTED_CRASHES) {
+            // No need to keep spamming the user that a lot of the files
+            // are tripping up ECJ, they get the picture.
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder(100);
+        sb.append("Unexpected failure during lint analysis of ");
+        sb.append(context.file.getName());
+        sb.append(" (this is a bug in lint or one of the libraries it depends on)\n");
+
+        sb.append(simpleClassName);
+        sb.append(':');
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        int count = 0;
+        for (StackTraceElement frame : stackTrace) {
+            if (count > 0) {
+                sb.append("<-");
+            }
+
+            String className = frame.getClassName();
+            sb.append(className.substring(className.lastIndexOf('.') + 1));
+            sb.append('.').append(frame.getMethodName());
+            sb.append('(');
+            sb.append(frame.getFileName()).append(':').append(frame.getLineNumber());
+            sb.append(')');
+            count++;
+            // Only print the top 3-4 frames such that we can identify the bug
+            if (count == 4) {
+                break;
+            }
+        }
+        Throwable throwable = null; // NOT e: this makes for very noisy logs
+        //noinspection ConstantConditions
+        context.log(throwable, sb.toString());
+    }
+
+    /**
+     * For testing only: returns the number of exceptions thrown during Java AST analysis
+     *
+     * @return the number of internal errors found
+     */
+    @VisibleForTesting
+    public static int getCrashCount() {
+        return exceptionCount;
+    }
+
+    /**
+     * For testing only: clears the crash counter
+     */
+    @VisibleForTesting
+    public static void clearCrashCount() {
+        exceptionCount = 0;
     }
 
     /** Cancels the current lint run as soon as possible */

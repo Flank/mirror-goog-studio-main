@@ -329,6 +329,26 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testMissingNamespace() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=227687
+        // Make sure we properly handle a missing namespace
+        //noinspection all // Sample code
+        assertEquals("No warnings.",
+
+                lintFiles(xml("res/layout/layout3.xml", ""
+                        + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\" android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\" android:id=\"@+id/tv_portfolio_title\">\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        \n"
+                        + "        android:layout_width=\"match_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        layout_below=\"@+id/tv_portfolio_title\"/>\n"
+                        + "</RelativeLayout>\n"
+                        + "\n")));
+    }
+
     public void testSelfReference() throws Exception {
         // Make sure we highlight direct references to self
         // Regression test for https://code.google.com/p/android/issues/detail?id=136103

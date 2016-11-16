@@ -224,6 +224,7 @@ public class WrongIdDetector extends LayoutDetector {
                         String value = attr.getValue();
                         if ((value.startsWith(NEW_ID_PREFIX) ||
                                 value.startsWith(ID_PREFIX))
+                                && attr.getLocalName() != null
                                 && attr.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                                 && (ANDROID_URI.equals(attr.getNamespaceURI()) ||
                                    AUTO_URI.equals(attr.getNamespaceURI()))) {
