@@ -15,24 +15,27 @@
  */
 
 package com.android.build.gradle.integration.component
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * Test AndroidComponentModelPlugin.
  */
 @CompileStatic
 class AndroidComponentPluginTest {
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
+    @Rule
+    public GradleTestProject project = GradleTestProject.builder()
             .useExperimentalGradleVersion(true)
             .create();
 
-    @BeforeClass
-    public static void setUp() {
+    @Test
+    public void assemble() {
 
         project.buildFile << """
 import com.android.build.gradle.model.AndroidComponentModelPlugin
@@ -50,15 +53,81 @@ model {
     }
 }
 """
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
+        project.execute("assemble")
     }
 
     @Test
-    void assemble() {
-        project.execute("assemble")
+    public void multiFlavor() {
+        project.buildFile << """
+import com.android.build.gradle.model.AndroidComponentModelPlugin
+apply plugin: AndroidComponentModelPlugin
+
+model {
+    android {
+        productFlavors {
+            create("free") {
+                dimension "cost"
+            }
+            create("premium") {
+                dimension "cost"
+            }
+            create("blue") {
+                dimension "color"
+            }
+            create("red") {
+                dimension "color"
+            }
+        }
     }
+}
+"""
+
+        // Gradle creates a task for each binary in the form <component_name><flavor><buildType>.
+        // <component_name> is "android".
+        List<String> tasks = project.model().getTaskList();
+        assertThat(tasks).containsAllOf(
+                "androidBlueFreeDebug",
+                "androidBluePremiumDebug",
+                "androidRedFreeDebug",
+                "androidRedPremiumDebug",
+                "androidBlueFreeRelease",
+                "androidBluePremiumRelease",
+                "androidRedFreeRelease",
+                "androidRedPremiumRelease")
+    }
+
+    @Test
+    public void checkFlavorOrder() {
+        project.buildFile << """
+import com.android.build.gradle.model.AndroidComponentModelPlugin
+apply plugin: AndroidComponentModelPlugin
+
+model {
+    android {
+        productFlavors {
+            create("e") {
+                dimension "e"
+            }
+            create("a") {
+                dimension "a"
+            }
+            create("d") {
+                dimension "d"
+            }
+            create("b") {
+                dimension "b"
+            }
+            create("c") {
+                dimension "c"
+            }
+        }
+    }
+}
+"""
+        List<String> tasks = project.model().getTaskList();
+        assertThat(tasks).containsAllOf(
+                "androidABCDEDebug",
+                "androidABCDERelease")
+    }
+
 }
