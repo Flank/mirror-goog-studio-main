@@ -21,7 +21,6 @@ import static com.android.SdkConstants.R_CLASS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
@@ -151,15 +150,6 @@ public class JavaVisitor {
     private final Map<String, List<VisitingDetector>> mSuperClassDetectors =
             new HashMap<>();
 
-    /**
-     * Number of fatal exceptions (internal errors, usually from ECJ) we've
-     * encountered; we don't log each and every one to avoid massive log spam
-     * in code which triggers this condition
-     */
-    private static int sExceptionCount;
-    /** Max number of logs to include */
-    private static final int MAX_REPORTED_CRASHES = 20;
-
     JavaVisitor(@NonNull JavaParser parser, @NonNull List<Detector> detectors) {
         mParser = parser;
         mAllDetectors = new ArrayList<>(detectors.size());
@@ -279,77 +269,15 @@ public class JavaVisitor {
                 v.getDetector().afterCheckFile(context);
             }
         } catch (RuntimeException e) {
-            if (sExceptionCount++ > MAX_REPORTED_CRASHES) {
-                // No need to keep spamming the user that a lot of the files
-                // are tripping up ECJ, they get the picture.
-                return;
-            }
-
-            if (e.getClass().getSimpleName().equals("IndexNotReadyException")) {
-                // Attempting to access PSI during startup before indices are ready; ignore these.
-                // See http://b.android.com/176644 for an example.
-                return;
-            } else if (e.getClass().getSimpleName().equals("ProcessCanceledException")) {
-                // Cancelling inspections in the IDE
-                context.getDriver().cancel();
-                return;
-            }
-
             // Work around ECJ bugs; see https://code.google.com/p/android/issues/detail?id=172268
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
-            StringBuilder sb = new StringBuilder(100);
-            sb.append("Unexpected failure during lint analysis of ");
-            sb.append(context.file.getName());
-            sb.append(" (this is a bug in lint or one of the libraries it depends on)\n");
-
-            sb.append(e.getClass().getSimpleName());
-            sb.append(':');
-            StackTraceElement[] stackTrace = e.getStackTrace();
-            int count = 0;
-            for (StackTraceElement frame : stackTrace) {
-                if (count > 0) {
-                    sb.append("<-");
-                }
-
-                String className = frame.getClassName();
-                sb.append(className.substring(className.lastIndexOf('.') + 1));
-                sb.append('.').append(frame.getMethodName());
-                sb.append('(');
-                sb.append(frame.getFileName()).append(':').append(frame.getLineNumber());
-                sb.append(')');
-                count++;
-                // Only print the top 3-4 frames such that we can identify the bug
-                if (count == 4) {
-                    break;
-                }
-            }
-            Throwable throwable = null; // NOT e: this makes for very noisy logs
-            //noinspection ConstantConditions
-            context.log(throwable, sb.toString());
+            LintDriver.handleDetectorError(context, e);
         } finally {
             if (compilationUnit != null) {
                 mParser.dispose(context, compilationUnit);
             }
         }
-    }
-
-    /**
-     * For testing only: returns the number of exceptions thrown during Java AST analysis
-     *
-     * @return the number of internal errors found
-     */
-    @VisibleForTesting
-    public static int getCrashCount() {
-        return sExceptionCount;
-    }
-
-    /**
-     * For testing only: clears the crash counter
-     */
-    @VisibleForTesting
-    public static void clearCrashCount() {
-        sExceptionCount = 0;
     }
 
     @Nullable

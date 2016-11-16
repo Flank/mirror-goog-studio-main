@@ -159,6 +159,8 @@ class ResourceVisitor {
             for (Detector check : allDetectors) {
                 check.afterCheckFile(context);
             }
+        } catch (RuntimeException e) {
+            LintDriver.handleDetectorError(context, e);
         } finally {
             if (context.document != null) {
                 parser.dispose(context, context.document);
