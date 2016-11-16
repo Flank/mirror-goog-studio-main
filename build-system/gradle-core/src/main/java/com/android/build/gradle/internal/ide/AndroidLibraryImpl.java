@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
@@ -74,19 +75,27 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @NonNull
     private final Collection<File> localJars;
 
+    private final int hashcode;
+
     AndroidLibraryImpl(
-            @NonNull AndroidLibrary clonedLibrary,
+            @NonNull AndroidDependency clonedLibrary,
+            boolean isProvided,
             boolean isSkipped,
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
             @NonNull Collection<File> localJavaLibraries) {
-        super(clonedLibrary, isSkipped);
+        super(
+                clonedLibrary.getProjectPath(),
+                null,
+                clonedLibrary.getCoordinates(),
+                isSkipped,
+                isProvided);
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
-        variant = clonedLibrary.getProjectVariant();
-        bundle = clonedLibrary.getBundle();
-        folder = clonedLibrary.getFolder();
+        variant = clonedLibrary.getVariant();
+        bundle = clonedLibrary.getArtifactFile();
+        folder = clonedLibrary.getExtractedFolder();
         manifest = clonedLibrary.getManifest();
         jarFile = clonedLibrary.getJarFile();
         resFolder = clonedLibrary.getResFolder();
@@ -99,6 +108,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         annotations = clonedLibrary.getExternalAnnotations();
         publicResources = clonedLibrary.getPublicResources();
         symbolFile = clonedLibrary.getSymbolFile();
+        hashcode = computeHashCode();
     }
 
     @Nullable
@@ -223,10 +233,14 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
+
+        AndroidLibraryImpl that = (AndroidLibraryImpl) o;
+
+        // quick fail on hashcode to avoid comparing the whole tree
+        if (hashcode != that.hashcode || !super.equals(o)) {
             return false;
         }
-        AndroidLibraryImpl that = (AndroidLibraryImpl) o;
+
         return Objects.equal(variant, that.variant) &&
                 Objects.equal(bundle, that.bundle) &&
                 Objects.equal(folder, that.folder) &&
@@ -249,12 +263,15 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
     @Override
     public int hashCode() {
-        return Objects
-                .hashCode(super.hashCode(), variant, bundle, folder, manifest, jarFile, resFolder,
-                        assetsFolder, jniFolder, aidlFolder, renderscriptFolder, proguardRules,
-                        lintJar,
-                        annotations, publicResources, symbolFile, androidLibraries, javaLibraries,
-                        localJars);
+        return hashcode;
+    }
+
+    private int computeHashCode() {
+        return Objects.hashCode(
+                super.hashCode(), variant, bundle, folder, manifest, jarFile, resFolder,
+                assetsFolder, jniFolder, aidlFolder, renderscriptFolder, proguardRules, lintJar,
+                annotations, publicResources, symbolFile, androidLibraries, javaLibraries,
+                localJars);
     }
 
     @Override

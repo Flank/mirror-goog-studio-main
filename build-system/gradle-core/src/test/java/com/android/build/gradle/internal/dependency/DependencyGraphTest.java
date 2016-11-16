@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.Dependency;

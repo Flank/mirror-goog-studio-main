@@ -15,9 +15,25 @@
  */
 package com.android.manifmerger;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import java.io.File;
+
 /**
  * An Object that provides a manifest.
  */
 public interface ManifestProvider {
+
+    /**
+     * Returns the location of the manifest.
+     */
+    @NonNull
+    File getManifest();
+
+    /**
+     * Returns a user friendly name.
+     */
+    @Nullable
+    String getName();
 
 }

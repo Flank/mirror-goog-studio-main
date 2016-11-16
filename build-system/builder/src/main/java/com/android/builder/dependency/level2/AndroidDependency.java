@@ -17,10 +17,10 @@
 package com.android.builder.dependency.level2;
 
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.FD_AAR_LIBS;
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FD_JNI;
-import static com.android.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
@@ -142,10 +142,16 @@ public final class AndroidDependency extends ExtractedDependency {
         return isSubModule;
     }
 
+    /**
+     * returns the list of local jar for this android AAR.
+     *
+     * This look on the file system for any jars under $AAR/lib
+     * @return
+     */
     @NonNull
     public List<File> getLocalJars() {
         List<File> localJars = Lists.newArrayList();
-        File[] jarList = new File(getJarsRootFolder(), FD_NATIVE_LIBS).listFiles();
+        File[] jarList = new File(getJarsRootFolder(), FD_AAR_LIBS).listFiles();
         if (jarList != null) {
             for (File jars : jarList) {
                 if (jars.isFile() && jars.getName().endsWith(DOT_JAR)) {

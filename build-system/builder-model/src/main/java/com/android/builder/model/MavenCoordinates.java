@@ -58,5 +58,5 @@ public interface MavenCoordinates {
      * Returns this coordinates Id without the version attribute.
      * Since 2.3
      */
-    String getVersionLessId();
+    String getVersionlessId();
 }

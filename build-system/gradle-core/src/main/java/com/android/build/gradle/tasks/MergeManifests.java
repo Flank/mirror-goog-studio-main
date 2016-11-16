@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.dependency.level2.ExtractedDependency;
 import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
@@ -33,9 +34,11 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
+import com.android.manifmerger.ManifestProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.function.Function;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -63,7 +66,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ApkVariantOutputData variantOutputData;
-    private List<AndroidBundle> bundles;
+    private List<ManifestProvider> providers;
     private List<Feature> optionalFeatures;
 
     @Override
@@ -71,7 +74,7 @@ public class MergeManifests extends ManifestProcessorTask {
         getBuilder().mergeManifestsForApplication(
                 getMainManifest(),
                 getManifestOverlays(),
-                getBundles(),
+                getProviders(),
                 getPackageOverride(),
                 getVersionCode(),
                 getVersionName(),
@@ -138,24 +141,20 @@ public class MergeManifests extends ManifestProcessorTask {
     /**
      * A synthetic input to allow gradle up-to-date checks to work.
      *
-     * Since {@code List<AndroidBundle>} can't be used directly, as @Nested doesn't work on lists,
+     * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
     @SuppressWarnings("unused")
     @InputFiles
-    public List<File> getBundleManifests() {
-        List<AndroidBundle> bundles = getBundles();
-        if (bundles == null || bundles.isEmpty()) {
-            return Collections.emptyList();
+    public List<File> getManifestInputs() {
+        List<ManifestProvider> providers = getProviders();
+        if (providers == null || providers.isEmpty()) {
+            return ImmutableList.of();
         }
 
-        List<File> files = Lists.newArrayListWithCapacity(bundles.size());
-        for (AndroidBundle androidBundle : bundles) {
-            if (!androidBundle.isProvided())
-                files.add(androidBundle.getManifest());
-        }
-
-        return files;
+        return providers.stream()
+                .map(ManifestProvider::getManifest)
+                .collect(Collectors.toList());
     }
 
     @Input
@@ -227,12 +226,12 @@ public class MergeManifests extends ManifestProcessorTask {
         this.variantOutputData = variantOutputData;
     }
 
-    public List<AndroidBundle> getBundles() {
-        return bundles;
+    public List<ManifestProvider> getProviders() {
+        return providers;
     }
 
-    public void setBundles(List<AndroidBundle> bundles) {
-        this.bundles = bundles;
+    public void setProviders(List<ManifestProvider> providers) {
+        this.providers = providers;
     }
 
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
@@ -277,30 +276,27 @@ public class MergeManifests extends ManifestProcessorTask {
                         (ApkVariantOutputData) variantOutputData;
             }
 
-            ConventionMappingHelper.map(processManifestTask, "bundles",
-                    new Callable<List<AndroidBundle>>() {
-                        @Override
-                        public List<AndroidBundle> call() throws Exception {
-                            List<AndroidBundle> manifests = Lists.newArrayList(
-                                    config.getFlatCompileAndroidLibraries());
-                            manifests.addAll(config.getFlatAndroidAtomsDependencies());
+            ConventionMappingHelper.map(processManifestTask, "providers",
+                    () -> {
+                        List<ManifestProvider> manifests = Lists.newArrayList(
+                                config.getFlatPackageAndroidLibraries());
+                        manifests.addAll(config.getFlatAndroidAtomsDependencies());
 
-                            if (scope.getVariantScope().getMicroApkTask() != null &&
-                                    variantData.getVariantConfiguration().getBuildType().
-                                            isEmbedMicroApp()) {
-                                manifests.add(new ManifestOnlyBundle(
-                                        scope.getVariantScope().getMicroApkManifestFile(),
-                                        "Wear App sub-manifest"));
-                            }
-
-                            if (scope.getCompatibleScreensManifestTask() != null) {
-                                manifests.add(new ManifestOnlyBundle(
-                                        scope.getCompatibleScreensManifestFile(),
-                                        "Compatible-Screens sub-manifest"));
-                            }
-
-                            return manifests;
+                        if (scope.getVariantScope().getMicroApkTask() != null &&
+                                variantData.getVariantConfiguration().getBuildType().
+                                        isEmbedMicroApp()) {
+                            manifests.add(new ManifestProviderImpl(
+                                    scope.getVariantScope().getMicroApkManifestFile(),
+                                    "Wear App sub-manifest"));
                         }
+
+                        if (scope.getCompatibleScreensManifestTask() != null) {
+                            manifests.add(new ManifestProviderImpl(
+                                    scope.getCompatibleScreensManifestFile(),
+                                    "Compatible-Screens sub-manifest"));
+                        }
+
+                        return manifests;
                     });
 
             ConventionMappingHelper.map(processManifestTask, "minSdkVersion",
@@ -356,7 +352,7 @@ public class MergeManifests extends ManifestProcessorTask {
          * This is used to pass to the merger manifest snippet that needs to be added during
          * merge.
          */
-        private static class ManifestOnlyBundle implements AndroidBundle {
+        private static class ManifestProviderImpl implements ManifestProvider {
 
             @NonNull
             private final File manifest;
@@ -364,7 +360,7 @@ public class MergeManifests extends ManifestProcessorTask {
             @NonNull
             private final String name;
 
-            public ManifestOnlyBundle(@NonNull File manifest, @NonNull String name) {
+            public ManifestProviderImpl(@NonNull File manifest, @NonNull String name) {
                 this.manifest = manifest;
                 this.name = name;
             }
@@ -379,84 +375,6 @@ public class MergeManifests extends ManifestProcessorTask {
             @Override
             public String getName() {
                 return name;
-            }
-
-            @NonNull
-            @Override
-            public List<? extends AndroidLibrary> getLibraryDependencies() {
-                return ImmutableList.of();
-            }
-
-            @Override
-            public boolean isProvided() {
-                return false;
-            }
-
-            @Override
-            public boolean isSkipped() {
-                return false;
-            }
-
-            // --------
-
-            @Nullable
-            @Override
-            public String getProject() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @Nullable
-            @Override
-            public String getProjectVariant() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public File getBundle() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public File getFolder() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public Collection<? extends JavaLibrary> getJavaDependencies() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public File getJarFile() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public File getResFolder() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @Nullable
-            @Override
-            public MavenCoordinates getRequestedCoordinates() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public MavenCoordinates getResolvedCoordinates() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
-            }
-
-            @NonNull
-            @Override
-            public File getAssetsFolder() {
-                throw new UnsupportedOperationException("ManifestOnlyBundle can only be queried for the Manifest file.");
             }
         }
     }

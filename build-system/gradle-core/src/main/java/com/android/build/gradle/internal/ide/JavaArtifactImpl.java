@@ -55,8 +55,8 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getClassesFolder(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                DependenciesImpl.cloneDependenciesForJavaArtifacts(javaArtifact.getCompileDependencies()),
-                DependenciesImpl.cloneDependenciesForJavaArtifacts(javaArtifact.getPackageDependencies()),
+                DependenciesConverter.cloneDependenciesForJavaArtifacts(javaArtifact.getCompileDependencies()),
+                DependenciesConverter.cloneDependenciesForJavaArtifacts(javaArtifact.getPackageDependencies()),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }

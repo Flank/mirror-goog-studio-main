@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
@@ -546,8 +547,8 @@ public class GradleVariantConfiguration
     @NonNull
     public ImmutableSet<File> getSubProjectDataBindingArtifactFolders() {
         ImmutableSet.Builder<File> builder = ImmutableSet.builder();
-        for (AndroidLibrary androidLibrary : getFlatPackageAndroidLibraries()) {
-            File dataBindingDir = new File(androidLibrary.getFolder(),
+        for (AndroidDependency dependency : getFlatPackageAndroidLibraries()) {
+            File dataBindingDir = new File(dependency.getExtractedFolder(),
                     DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
             if (dataBindingDir.exists()) {
                 builder.add(dataBindingDir);

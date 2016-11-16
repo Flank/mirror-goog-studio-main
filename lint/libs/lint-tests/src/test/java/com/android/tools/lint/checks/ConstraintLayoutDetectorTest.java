@@ -173,8 +173,6 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                         AndroidArtifact artifact = mock(AndroidArtifact.class);
                         //noinspection deprecation
                         when(artifact.getDependencies()).thenReturn(dependencies);
-                        when(artifact.getCompileDependencies()).thenReturn(dependencies);
-                        when(artifact.getCompileDependencies()).thenReturn(dependencies);
 
                         Variant variant = mock(Variant.class);
                         when(variant.getMainArtifact()).thenReturn(artifact);

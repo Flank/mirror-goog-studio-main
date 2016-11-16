@@ -21,15 +21,17 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.dependency.DependencyContainer;
-import com.android.builder.dependency.JarDependency;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.JavaLibrary;
-import com.google.common.collect.Lists;
+import com.android.builder.dependency.level2.Dependency;
+import com.android.builder.dependency.level2.DependencyContainer;
+import com.android.builder.dependency.level2.DependencyNode;
+import com.android.builder.dependency.level2.JavaDependency;
+import com.android.builder.model.MavenCoordinates;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -38,9 +40,7 @@ import org.gradle.internal.graph.GraphRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
 import org.gradle.util.GUtil;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,9 +50,11 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
     private boolean hasConfigs;
     private boolean hasCyclicDependencies;
     private GraphRenderer renderer;
+    private Project project;
 
     @Override
     public void startProject(Project project) {
+        this.project = project;
         super.startProject(project);
         hasConfigs = false;
         hasCyclicDependencies = false;
@@ -87,35 +89,22 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
                 configuration.getDescription()) ? " - " + configuration.getDescription() : "";
     }
 
-    public void completeConfiguration(BaseVariantData variantData) {}
-
     public void render(BaseVariantData variantData) throws IOException {
-
         VariantDependencies variantDependency = variantData.getVariantDependency();
 
-        // TODO: handle compile vs package.
-        DependencyContainer compileDependencies = variantDependency.getCompileDependencies();
-        DependencyContainer packageDependencies = variantDependency.getPackageDependencies();
-
-        List<AndroidLibrary> libraries = compileDependencies.getAndroidDependencies();
-        List<JavaLibrary> localDeps = compileDependencies.getLocalDependencies();
-
-        List<File> localJars = Lists.newArrayListWithCapacity(localDeps.size());
-        for (JavaLibrary javaLibrary : localDeps) {
-            localJars.add(javaLibrary.getJarFile());
-        }
-        renderNow(libraries, localJars);
+        renderNow(variantDependency.getCompileDependencies());
     }
 
-    void renderNow(@NonNull List<AndroidLibrary> libraries,
-                   @Nullable List<File> localJars) {
-        if (libraries.isEmpty() && (localJars == null || localJars.isEmpty())) {
+    void renderNow(@NonNull DependencyContainer compileDependencies) {
+        final ImmutableList<DependencyNode> dependencies = compileDependencies.getDependencies();
+
+        if (dependencies.isEmpty()) {
             getTextOutput().withStyle(Info).text("No dependencies");
             getTextOutput().println();
             return;
         }
 
-        renderChildren(libraries, localJars);
+        renderChildren(dependencies, compileDependencies.getDependencyMap());
     }
 
     @Override
@@ -128,45 +117,38 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
         super.complete();
     }
 
-    private void render(final AndroidLibrary lib, boolean lastChild) {
-        renderer.visit(new Action<StyledTextOutput>() {
-            @Override
-            public void execute(StyledTextOutput styledTextOutput) {
-                getTextOutput().text(lib.getName());
+    private void render(
+            @NonNull final DependencyNode node,
+            @NonNull Map<Object, Dependency> dependencyMap,
+            boolean lastChild) {
+        renderer.visit(styledTextOutput -> {
+            String name = node.getAddress().toString();
+            Dependency dependency = dependencyMap.get(name);
+
+            if (dependency instanceof JavaDependency) {
+                JavaDependency javaDependency = (JavaDependency) dependency;
+                if (javaDependency.isLocal()) {
+                    String path = FileUtils.relativePath(
+                            javaDependency.getArtifactFile(), project.getProjectDir());
+                    name = path;
+                }
             }
+
+            getTextOutput().text(name);
         }, lastChild);
 
-        renderChildren(lib.getLibraryDependencies(), lib.getLocalJars());
-    }
-
-    private void render(final File jarLibrary, boolean lastChild) {
-        renderer.visit(new Action<StyledTextOutput>() {
-            @Override
-            public void execute(StyledTextOutput styledTextOutput) {
-                getTextOutput().text("LOCAL: " + jarLibrary.getName());
-            }
-        }, lastChild);
+        renderChildren(node.getDependencies(), dependencyMap);
     }
 
     private void renderChildren(
-            @NonNull List<? extends AndroidLibrary> libraries,
-            @Nullable Collection<File> localJars) {
+            @NonNull List<DependencyNode> dependencyNodes,
+            @NonNull Map<Object, Dependency> dependencyMap) {
         renderer.startChildren();
-        if (localJars != null) {
-            final boolean emptyChildren = libraries.isEmpty();
-            final int count = localJars.size();
 
-            int i = 0;
-            for (File javaLibrary : localJars) {
-                render(javaLibrary, emptyChildren && i == count - 1);
-                i++;
-            }
-        }
-
-        final int count = libraries.size();
+        final int count = dependencyNodes.size();
         for (int i = 0; i < count; i++) {
-            AndroidLibrary lib = libraries.get(i);
-            render(lib, i == count - 1);
+            DependencyNode node = dependencyNodes.get(i);
+            render(node, dependencyMap, i == count - 1);
         }
         renderer.completeChildren();
     }

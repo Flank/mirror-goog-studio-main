@@ -30,6 +30,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.compiling.DependencyFileProcessor;
+import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dependency.level2.ExtractedDependency;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
@@ -75,6 +77,7 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.io.FileWrapper;
 import com.android.io.StreamException;
 import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.ManifestSystemProperty;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.PlaceholderHandler;
@@ -497,7 +500,7 @@ public class AndroidBuilder {
     public void mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
-            @NonNull List<? extends AndroidBundle> bundles,
+            @NonNull List<? extends ManifestProvider> dependencies,
             String packageOverride,
             int versionCode,
             String versionName,
@@ -519,7 +522,7 @@ public class AndroidBuilder {
                     .setPlaceHolderValues(placeHolders)
                     .addFlavorAndBuildTypeManifests(
                             manifestOverlays.toArray(new File[manifestOverlays.size()]))
-                    .addAndroidBundleManifests(bundles)
+                    .addManifestProviders(dependencies)
                     .withFeatures(optionalFeatures.toArray(
                             new Invoker.Feature[optionalFeatures.size()]))
                     .setMergeReportFile(reportFile);
@@ -640,7 +643,7 @@ public class AndroidBuilder {
      * @param functionalTest whether or not the Instrumentation class should run as a functional test
      * @param testLabel the label for the tests
      * @param testManifestFile optionally user provided AndroidManifest.xml for testing application
-     * @param libraries the library dependency graph
+     * @param manifestProviders the manifest providers
      * @param manifestPlaceholders used placeholders in the manifest
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
@@ -665,7 +668,7 @@ public class AndroidBuilder {
             @NonNull Boolean functionalTest,
             @Nullable String testLabel,
             @Nullable File testManifestFile,
-            @NonNull List<? extends AndroidLibrary> libraries,
+            @NonNull List<? extends ManifestProvider> manifestProviders,
             @NonNull Map<String, Object> manifestPlaceholders,
             @NonNull File outManifest,
             @NonNull File tmpDir) throws IOException {
@@ -674,7 +677,7 @@ public class AndroidBuilder {
         checkNotNull(instrumentationRunner, "instrumentationRunner cannot be null.");
         checkNotNull(handleProfiling, "handleProfiling cannot be null.");
         checkNotNull(functionalTest, "functionalTest cannot be null.");
-        checkNotNull(libraries, "libraries cannot be null.");
+        checkNotNull(manifestProviders, "manifestProviders cannot be null.");
         checkNotNull(outManifest, "outManifestLocation cannot be null.");
 
         // These temp files are only need in the middle of processing manifests; delete
@@ -685,7 +688,7 @@ public class AndroidBuilder {
         File tempFile2 = null;
         try {
             FileUtils.mkdirs(tmpDir);
-            File generatedTestManifest = libraries.isEmpty() && testManifestFile == null
+            File generatedTestManifest = manifestProviders.isEmpty() && testManifestFile == null
                     ? outManifest
                     : (tempFile1 = File.createTempFile("manifestMerger", ".xml", tmpDir));
 
@@ -726,7 +729,7 @@ public class AndroidBuilder {
                 }
 
                 MergingReport mergingReport = invoker.merge();
-                if (libraries.isEmpty()) {
+                if (manifestProviders.isEmpty()) {
                     handleMergingResult(mergingReport, outManifest);
                 } else {
                     tempFile2 = File.createTempFile("manifestMerger", ".xml", tmpDir);
@@ -735,12 +738,12 @@ public class AndroidBuilder {
                 }
             }
 
-            if (!libraries.isEmpty()) {
+            if (!manifestProviders.isEmpty()) {
                 MergingReport mergingReport = ManifestMerger2.newMerger(
                         generatedTestManifest, mLogger, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
                         .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
-                        .addAndroidBundleManifests(libraries)
+                        .addManifestProviders(manifestProviders)
                         .setPlaceHolderValues(manifestPlaceholders)
                         .merge();
 
@@ -887,11 +890,7 @@ public class AndroidBuilder {
             // list of all the symbol loaders per package names.
             Multimap<String, SymbolLoader> libMap = ArrayListMultimap.create();
 
-            for (AndroidLibrary lib : aaptConfig.getLibraries()) {
-                if (aaptConfig.getVariantType() != VariantType.INSTANTAPP && lib.isProvided()) {
-                    continue;
-                }
-
+            for (AndroidDependency lib : aaptConfig.getLibraries()) {
                 if (Strings.isNullOrEmpty(appPackageName)) {
                     continue;
                 }
