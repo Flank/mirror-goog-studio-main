@@ -20,6 +20,7 @@ maven_java_library(
     deps = [
         "//tools/analytics-library:tools.analytics-protos",
         "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
@@ -32,7 +33,6 @@ maven_java_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/base/build-system:gradle-api_neverlink",
     ],
 )
 
