@@ -43,7 +43,9 @@ public class JavaLibrary extends BazelRule {
         call.setDoNotSort("exports", reason);
         call.setDoNotSort("runtime_deps", reason);
 
-        call.setArgument("visibility", ImmutableList.of("//visibility:public"));
+        if (!statement.isFromFile()) {
+            call.setArgument("visibility", ImmutableList.of("//visibility:public"));
+        }
         call.addElementToList("tags", "managed");
     }
 }
