@@ -397,13 +397,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         signingConfigContainer,
                         extraModelInfo);
 
-        // create the default mapping configuration.
-        project.getConfigurations()
-                .create("default" + VariantDependencies.CONFIGURATION_MAPPING)
-                .setDescription("Configuration for default mapping artifacts.");
-        project.getConfigurations().create("default" + VariantDependencies.CONFIGURATION_METADATA)
-                .setDescription("Metadata for the produced APKs.");
-
         dependencyManager = new DependencyManager(
                 project,
                 extraModelInfo,

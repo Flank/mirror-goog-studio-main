@@ -88,43 +88,38 @@ public class FlavoredlibTest {
         Collection<Variant> variants = appModel.getVariants();
         Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors();
 
-        // test flavor 1
+        // test flavor 1. Query to check presence.
+        ModelHelper.getProductFlavor(productFlavors, "flavor1");
 
-        ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1");
+        validateVariant(variants, "flavor1Debug", "flavor1Debug", helper);
+        validateVariant(variants, "flavor1Release", "flavor1Release", helper);
 
-        Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
-        assertThat(flavor1).named("flavor1 PFC").isNotNull();
+        // test flavor 2. Query to check presence
+        ModelHelper.getProductFlavor(productFlavors, "flavor2");
 
-        DependencyGraphs flavor1Graph = flavor1Debug.getMainArtifact().getDependencyGraphs();
-        assertThat(flavor1Graph).named("flavor 1 compile graph").isNotNull();
-
-        Items flavor1SubModules = helper.on(flavor1Graph).withType(MODULE);
-        assertThat(flavor1SubModules.mapTo(GRADLE_PATH))
-                .named("flavor 1 sub-modules as gradle-path")
-                .containsExactly(":lib");
-        assertThat(flavor1SubModules.mapTo(VARIANT))
-                .named("flavor 1 sub-modules as variant name")
-                .containsExactly("flavor1Release");
-
-        // test flavor 2
-        ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
-
-        Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
-        assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();
-
-        DependencyGraphs flavor2Graph = flavor2Debug.getMainArtifact().getDependencyGraphs();
-
-        assertThat(flavor2Graph).named("flavor 2 graph").isNotNull();
-
-        Items flavor2SubModules = helper.on(flavor2Graph).withType(MODULE);
-        assertThat(flavor2SubModules.mapTo(GRADLE_PATH))
-                .named("flavor 2 sub-modules as gradle-path")
-                .containsExactly(":lib");
-        assertThat(flavor2SubModules.mapTo(VARIANT))
-                .named("flavor 2 sub-modules as variant name")
-                .containsExactly("flavor2Release");
+        validateVariant(variants, "flavor2Debug", "flavor2Debug", helper);
+        validateVariant(variants, "flavor2Release", "flavor2Release", helper);
     }
 
+    private void validateVariant(
+            Collection<Variant> variants,
+            String variantName,
+            String depVariantName,
+            LibraryGraphHelper helper) {
+        Variant variant = ModelHelper.getVariant(variants, variantName);
+
+        DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();
+        assertThat(dependencyGraphs).named(variantName + " dependency graph").isNotNull();
+
+        Items subModules = helper.on(dependencyGraphs).withType(MODULE);
+
+        assertThat(subModules.mapTo(GRADLE_PATH))
+                .named(variantName + " sub-modules as gradle-path")
+                .containsExactly(":lib");
+        assertThat(subModules.mapTo(VARIANT))
+                .named(variantName + " sub-modules as variant name")
+                .containsExactly(depVariantName);
+    }
 
     @Test
     @Category(DeviceTests.class)

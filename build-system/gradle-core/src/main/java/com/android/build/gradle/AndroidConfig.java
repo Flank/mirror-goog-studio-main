@@ -62,9 +62,6 @@ public interface AndroidConfig {
     /** Name of the variant to publish. */
     String getDefaultPublishConfig();
 
-    /** Whether to also publish non-default variants. */
-    boolean getPublishNonDefault();
-
     /** Filter to determine which variants to build. */
     Action<VariantFilter> getVariantFilter();
 

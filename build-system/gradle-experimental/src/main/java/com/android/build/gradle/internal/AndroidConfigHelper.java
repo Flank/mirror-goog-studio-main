@@ -48,7 +48,6 @@ public class AndroidConfigHelper {
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull Instantiator instantiator) {
         model.setDefaultPublishConfig(BuilderConstants.RELEASE);
-        model.setPublishNonDefault(false);
         model.setGeneratePureSplits(false);
         model.setDeviceProviders(Lists.<DeviceProvider>newArrayList());
         model.setTestServers(Lists.<TestServer>newArrayList());

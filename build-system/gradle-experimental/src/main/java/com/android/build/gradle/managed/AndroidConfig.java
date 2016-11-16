@@ -80,10 +80,6 @@ public interface AndroidConfig {
     String getDefaultPublishConfig();
     void setDefaultPublishConfig(String defaultPublishConfig);
 
-    /** Whether to also publish non-default variants */
-    Boolean getPublishNonDefault();
-    void setPublishNonDefault(Boolean publishNonDefault);
-
     /** Filter to determine which variants to build */
     @Unmanaged
     Action<VariantFilter> getVariantFilter();

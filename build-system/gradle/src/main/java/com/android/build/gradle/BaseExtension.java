@@ -15,6 +15,9 @@
  */
 package com.android.build.gradle;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_BUILD_TYPE;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_CONTENT;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
@@ -27,6 +30,8 @@ import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dependency.VariantDependencies.ArtifactContent;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
@@ -145,8 +150,6 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private String defaultPublishConfig = "release";
 
-    private boolean publishNonDefault = false;
-
     private Action<VariantFilter> variantFilter;
 
     protected Logger logger;
@@ -203,10 +206,15 @@ public abstract class BaseExtension implements AndroidConfig {
                     public void execute(AndroidSourceSet sourceSet) {
                         ConfigurationContainer configurations = project.getConfigurations();
 
+                        final String compileName = sourceSet.getCompileConfigurationName();
+                        // due to compatibility with other plugins and with Gradle sync,
+                        // we have to keep 'compile' as resolvable.
+                        // TODO Fix this in gradle sync.
                         createConfiguration(
                                 configurations,
-                                sourceSet.getCompileConfigurationName(),
-                                "Classpath for compiling the " + sourceSet.getName() + " sources.");
+                                compileName,
+                                "Classpath for compiling the " + sourceSet.getName() + " sources.",
+                                "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
 
                         String packageConfigDescription;
                         if (publishPackage) {
@@ -223,35 +231,45 @@ public abstract class BaseExtension implements AndroidConfig {
                         createConfiguration(
                                 configurations,
                                 sourceSet.getPackageConfigurationName(),
-                                packageConfigDescription);
+                                packageConfigDescription,
+                                false /*canBeResolved*/);
 
                         createConfiguration(
                                 configurations,
                                 sourceSet.getProvidedConfigurationName(),
                                 "Classpath for only compiling the "
                                         + sourceSet.getName()
-                                        + " sources.");
+                                        + " sources.",
+                                false /*canBeResolved*/);
 
-                        createConfiguration(
+                        Configuration wearConfig = createConfiguration(
                                 configurations,
                                 sourceSet.getWearAppConfigurationName(),
                                 "Link to a wear app to embed for object '"
                                         + sourceSet.getName()
-                                        + "'.");
+                                        + "'.",
+                                true /*canBeResolved*/);
+                        // wear config is directly resolved and therefore must have
+                        // some attributes. we only want to package the release one.
+                        wearConfig.attribute(CONFIG_ATTR_BUILD_TYPE, "release");
+                        // and we need the apk, not any of the other artifacts (mapping, ...)
+                        wearConfig.attribute(CONFIG_ATTR_CONTENT, ArtifactContent.MAIN.name());
 
                         createConfiguration(
                                 configurations,
                                 sourceSet.getAnnotationProcessorConfigurationName(),
                                 "Classpath for the annotation processor for '"
                                         + sourceSet.getName()
-                                        + "'.");
+                                        + "'.",
+                                false /*canBeResolved*/);
 
                         createConfiguration(
                                 configurations,
                                 sourceSet.getJackPluginConfigurationName(),
                                 String.format(
                                         "Classpath for the '%s' Jack plugins.",
-                                        sourceSet.getName()));
+                                        sourceSet.getName()),
+                                false /*canBeResolved*/);
 
                         sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
                     }
@@ -290,10 +308,22 @@ public abstract class BaseExtension implements AndroidConfig {
         }
     }
 
-    protected void createConfiguration(
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param configurationName the name of the configuration to create.
+     * @param configurationDescription the configuration description.
+     * @param canBeResolved Whether the configuration can be resolved directly.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private Configuration createConfiguration(
             @NonNull ConfigurationContainer configurations,
             @NonNull String configurationName,
-            @NonNull String configurationDescription) {
+            @NonNull String configurationDescription,
+            boolean canBeResolved) {
         logger.info("Creating configuration {}", configurationName);
 
         Configuration configuration = configurations.findByName(configurationName);
@@ -302,6 +332,10 @@ public abstract class BaseExtension implements AndroidConfig {
         }
         configuration.setVisible(false);
         configuration.setDescription(configurationDescription);
+        configuration.setCanBeConsumed(false);
+        configuration.setCanBeResolved(canBeResolved);
+
+        return configuration;
     }
 
     /**
@@ -585,7 +619,8 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * Name of the configuration used to build the default artifact of this project.
+     * Name of the configuration used to build the default artifact of this project, used for
+     * publishing to Maven
      *
      * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Referencing-a-Library">
      * Referencing a Library</a>
@@ -599,19 +634,8 @@ public abstract class BaseExtension implements AndroidConfig {
         defaultPublishConfig = value;
     }
 
-    /**
-     * Whether to publish artifacts for all configurations, not just the default one.
-     *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Referencing-a-Library">
-     * Referencing a Library</a>
-     */
-    @Override
-    public boolean getPublishNonDefault() {
-        return publishNonDefault;
-    }
-
     public void setPublishNonDefault(boolean publishNonDefault) {
-        this.publishNonDefault = publishNonDefault;
+        logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
     public void variantFilter(Action<VariantFilter> filter) {

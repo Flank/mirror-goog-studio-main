@@ -42,12 +42,16 @@ import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
  * Basic instantApp test with a multi-atom project.
+ *
+ * TODO: Reenable when gradle fix default not being consumable
  */
+@Ignore
 @Category(SmokeTests.class)
 public class MultiAtomTest {
     @ClassRule

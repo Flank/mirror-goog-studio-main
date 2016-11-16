@@ -33,10 +33,13 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AarPublishArtifact;
+import com.android.build.gradle.internal.publishing.BasePublishArtifact;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
+import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.LibraryJarTransform;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
@@ -59,14 +62,18 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Action;
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Zip;
@@ -482,22 +489,19 @@ public class LibraryTaskManager extends TaskManager {
         variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
         variantOutputData.assembleTask = variantData.assembleVariantTask;
 
+        // add the artifact to the matching published configuration
+        final Configuration publishConfiguration = variantData.getVariantDependency()
+                .getPublishConfiguration();
+        project.getArtifacts().add(publishConfiguration.getName(),
+                new AarPublishArtifact(bundle, publishConfiguration.getName()));
+
+        // if the variant is the default published, also add a default artifact to the
+        // archives config to have a default one.
         if (getExtension().getDefaultPublishConfig().equals(variantConfig.getFullName())) {
-            VariantHelper.setupDefaultConfig(project,
-                    variantData.getVariantDependency().getPackageConfiguration());
+            VariantHelper.setupArchivesConfig(project, publishConfiguration);
 
             // add the artifact that will be published
-            project.getArtifacts().add("default", bundle);
-
-            getAssembleDefault().dependsOn(variantScope.getAssembleTask().getName());
-        }
-
-        // also publish the artifact with its full config name
-        if (getExtension().getPublishNonDefault()) {
-            project.getArtifacts().add(
-                    variantData.getVariantDependency().getPublishConfiguration().getName(), bundle);
-            bundle.setClassifier(
-                    variantData.getVariantDependency().getPublishConfiguration().getName());
+            project.getArtifacts().add("archives", bundle);
         }
 
         // configure the variant to be testable.

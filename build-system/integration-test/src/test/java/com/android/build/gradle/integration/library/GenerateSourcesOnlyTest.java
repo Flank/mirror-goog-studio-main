@@ -77,6 +77,6 @@ public class GenerateSourcesOnlyTest {
         GradleBuildResult resultWithout = project.executor()
                 .run(generateSources);
 
-        assertThat(resultWithout.getStdout()).contains("compileReleaseJava");
+        assertThat(resultWithout.getStdout()).contains("compileDebugJava");
     }
 }

@@ -129,11 +129,6 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     }
 
     @Override
-    public boolean getPublishNonDefault() {
-        return model.getPublishNonDefault();
-    }
-
-    @Override
     public Action<VariantFilter> getVariantFilter() {
         return model.getVariantFilter();
     }

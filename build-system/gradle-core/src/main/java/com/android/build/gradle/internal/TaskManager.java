@@ -186,17 +186,24 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.Action;
+import org.gradle.api.Attribute;
+import org.gradle.api.AttributeContainer;
+import org.gradle.api.AttributeMatchingStrategy;
+import org.gradle.api.AttributeValue;
+import org.gradle.api.AttributesSchema;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -206,6 +213,7 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -426,6 +434,72 @@ public abstract class TaskManager {
         if (AndroidGradleOptions.isBuildCacheEnabled(project)) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
+
+        // for testing only.
+        androidTasks.create(tasks, new TaskConfigAction<ConfigAttrTask>() {
+            @NonNull
+            @Override
+            public String getName() {
+                return "resolveConfigAttr";
+            }
+
+            @NonNull
+            @Override
+            public Class<ConfigAttrTask> getType() {
+                return ConfigAttrTask.class;
+            }
+
+            @Override
+            public void execute(@NonNull ConfigAttrTask task) {
+                task.resolvable = true;
+            }
+        });
+
+        androidTasks.create(tasks, new TaskConfigAction<ConfigAttrTask>() {
+            @NonNull
+            @Override
+            public String getName() {
+                return "consumeConfigAttr";
+            }
+
+            @NonNull
+            @Override
+            public Class<ConfigAttrTask> getType() {
+                return ConfigAttrTask.class;
+            }
+
+            @Override
+            public void execute(@NonNull ConfigAttrTask task) {
+                task.consumable = true;
+            }
+        });
+    }
+
+    // This is for config attribute debugging
+    public static class ConfigAttrTask extends DefaultTask {
+        boolean consumable = false;
+        boolean resolvable = false;
+        @TaskAction
+        public void run() {
+            for (Configuration config : getProject().getConfigurations()) {
+                AttributeContainer attributes = config.getAttributes();
+                if ((consumable && config.isCanBeConsumed())
+                        || (resolvable && config.isCanBeResolved())) {
+                    System.out.println(config.getName());
+                    System.out.println("\tcanBeResolved: " + config.isCanBeResolved());
+                    System.out.println("\tcanBeConsumed: " + config.isCanBeConsumed());
+                    for (Attribute<?> attr : attributes.keySet()) {
+                        System.out.println(
+                                "\t" + attr.getName() + ": " + attributes.getAttribute(attr));
+                    }
+                    if (consumable && config.isCanBeConsumed()) {
+                        for (PublishArtifact artifact : config.getArtifacts()) {
+                            System.out.println("\tArtifact: " + artifact.getName() + " (" + artifact.getFile().getName() + ")");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void createMockableJarTask(TaskFactory tasks) {
@@ -618,8 +692,9 @@ public abstract class TaskManager {
     /**
      * Adds the manifest artifact for the variant.
      *
-     * <p>This artifact is added if the publishNonDefault option is {@code true}. See variant
-     * dependencies evaluation in {@link VariantDependencies} for more details.
+     * <p>This artifact is added if the publishNonDefault option is {@code true}.
+     * See {@link VariantDependencies.Builder#build()}  variant dependencies evaluation}
+     * for more details
      */
     private void addManifestArtifact(
             @NonNull TaskFactory tasks,
@@ -2501,85 +2576,49 @@ public abstract class TaskManager {
             if (publishApk) {
                 final String projectBaseName = globalScope.getProjectBaseName();
 
-                // if this variant is the default publish config or we also should publish non
-                // defaults, proceed with declaring our artifacts.
-                if (getExtension().getDefaultPublishConfig().equals(outputName)) {
-                    appTask.configure(tasks, packageTask -> project.getArtifacts().add("default",
-                            new ApkPublishArtifact(
-                                    projectBaseName,
-                                    null,
-                                    (FileSupplier) packageTask)));
+                appTask.configure(tasks, packageTask -> project.getArtifacts().add(
+                        variantData.getVariantDependency().getPublishConfiguration().getName(),
+                        new ApkPublishArtifact(
+                                projectBaseName,
+                                null,
+                                (FileSupplier) packageTask)));
 
-                    for (FileSupplier outputFileProvider :
-                            variantOutputData.getSplitOutputFileSuppliers()) {
-                        project.getArtifacts().add("default",
-                                new ApkPublishArtifact(projectBaseName, null, outputFileProvider));
-                    }
-
-                    try {
-                        if (variantOutputData.getMetadataFile() != null) {
-                            project.getArtifacts().add(
-                                    "default" + VariantDependencies.CONFIGURATION_METADATA,
-                                    new MetadataPublishArtifact(projectBaseName, null,
-                                            variantOutputData.getMetadataFile()));
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    if (variantData.getMappingFileProvider() != null) {
-                        project.getArtifacts().add(
-                                "default" + VariantDependencies.CONFIGURATION_MAPPING,
-                                new MappingPublishArtifact(projectBaseName, null,
-                                        variantData.getMappingFileProvider()));
-                    }
-                }
-
-                if (getExtension().getPublishNonDefault()) {
-                    appTask.configure(tasks, packageTask -> project.getArtifacts().add(
+                for (FileSupplier outputFileProvider :
+                        variantOutputData.getSplitOutputFileSuppliers()) {
+                    project.getArtifacts().add(
                             variantData.getVariantDependency().getPublishConfiguration().getName(),
                             new ApkPublishArtifact(
                                     projectBaseName,
                                     null,
-                                    (FileSupplier) packageTask)));
+                                    outputFileProvider));
+                }
 
-                    for (FileSupplier outputFileProvider :
-                            variantOutputData.getSplitOutputFileSuppliers()) {
+                try {
+                    if (variantOutputData.getMetadataFile() != null) {
                         project.getArtifacts().add(
-                                variantData.getVariantDependency().getPublishConfiguration().getName(),
-                                new ApkPublishArtifact(
+                                variantData.getVariantDependency().getMetadataConfiguration().getName(),
+                                new MetadataPublishArtifact(
                                         projectBaseName,
                                         null,
-                                        outputFileProvider));
+                                        variantOutputData.getMetadataFile()));
                     }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
-                    try {
-                        if (variantOutputData.getMetadataFile() != null) {
-                            project.getArtifacts().add(
-                                    variantData.getVariantDependency().getMetadataConfiguration().getName(),
-                                    new MetadataPublishArtifact(
-                                            projectBaseName,
-                                            null,
-                                            variantOutputData.getMetadataFile()));
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                if (variantData.getMappingFileProvider() != null) {
+                    project.getArtifacts().add(
+                            variantData.getVariantDependency().getMappingConfiguration().getName(),
+                            new MappingPublishArtifact(
+                                    projectBaseName,
+                                    null,
+                                    variantData.getMappingFileProvider()));
+                }
 
-                    if (variantData.getMappingFileProvider() != null) {
-                        project.getArtifacts().add(
-                                variantData.getVariantDependency().getMappingConfiguration().getName(),
-                                new MappingPublishArtifact(
-                                        projectBaseName,
-                                        null,
-                                        variantData.getMappingFileProvider()));
-                    }
-
-                    if (variantData.classesJarTask != null) {
-                        project.getArtifacts().add(
-                                variantData.getVariantDependency().getClassesConfiguration().getName(),
-                                variantData.classesJarTask);
-                    }
+                if (variantData.classesJarTask != null) {
+                    project.getArtifacts().add(
+                            variantData.getVariantDependency().getClassesConfiguration().getName(),
+                            variantData.classesJarTask);
                 }
             }
         }

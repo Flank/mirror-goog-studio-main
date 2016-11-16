@@ -33,13 +33,13 @@ import java.util.Set;
  */
 public class VariantHelper {
 
-    public static void setupDefaultConfig(
+    public static void setupArchivesConfig(
             @NonNull final Project project,
             @NonNull Configuration configuration) {
         // The library artifact is published (inter-project( for the "default" configuration so
         // we make sure "default" extends from the actual configuration used for building.
-        Configuration defaultConfig = project.getConfigurations().getAt("default");
-        defaultConfig.setExtendsFrom(Collections.singleton(configuration));
+        Configuration archivesConfig = project.getConfigurations().getAt("archives");
+        archivesConfig.setExtendsFrom(Collections.singleton(configuration));
 
         // for the maven publication (for now), we need to manually include all the configuration
         // object in a special mapping.
@@ -47,30 +47,18 @@ public class VariantHelper {
         // be included.
         final Set<Configuration> flattenedConfigs = flattenConfigurations(configuration);
 
-        project.getPlugins().withType(MavenPlugin.class, new Action<MavenPlugin>() {
-            @Override
-            public void execute(MavenPlugin mavenPlugin) {
-                project.getTasks().withType(Upload.class, new Action<Upload>() {
-                    @Override
-                    public void execute(Upload upload) {
-                        upload.getRepositories().withType(
-                                MavenDeployer.class,
-                                new Action<MavenDeployer>() {
-                                    @Override
-                                    public void execute(MavenDeployer mavenDeployer) {
-                                        for (Configuration config : flattenedConfigs) {
-                                            mavenDeployer.getPom().getScopeMappings().addMapping(
-                                                    300,
-                                                    project.getConfigurations().getByName(
-                                                            config.getName()),
-                                                    "compile");
-                                        }
+        project.getPlugins().withType(MavenPlugin.class,
+                mavenPlugin -> project.getTasks().withType(Upload.class,
+                        upload -> upload.getRepositories().withType(MavenDeployer.class,
+                                mavenDeployer -> {
+                                    for (Configuration config : flattenedConfigs) {
+                                        mavenDeployer.getPom().getScopeMappings().addMapping(
+                                                300,
+                                                project.getConfigurations().getByName(
+                                                        config.getName()),
+                                                "compile");
                                     }
-                                });
-                    }
-                });
-            }
-        });
+                                })));
     }
 
     /**
@@ -90,5 +78,4 @@ public class VariantHelper {
 
         return configs;
     }
-
 }

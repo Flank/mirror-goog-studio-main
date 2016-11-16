@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
 
 import org.gradle.api.Task;
@@ -98,5 +99,15 @@ public abstract class BasePublishArtifact implements PublishArtifact {
     @Override
     public TaskDependency getBuildDependencies() {
         return taskDependency;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("classifier", classifier)
+                .add("outputFile", outputFileSupplier.get())
+                .add("taskDependency", taskDependency)
+                .toString();
     }
 }

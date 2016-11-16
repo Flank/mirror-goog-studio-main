@@ -355,7 +355,7 @@ public class ApplicationTaskManager extends TaskManager {
                     continue;
                 }
 
-                Set<File> file = config.getFiles();
+                Set<File> file = config.resolve();
 
                 int count = file.size();
                 if (count == 1) {
@@ -388,7 +388,7 @@ public class ApplicationTaskManager extends TaskManager {
                 continue;
             }
 
-            if (!config.getFiles().isEmpty()) {
+            if (!config.resolve().isEmpty()) {
                 return true;
             }
         }

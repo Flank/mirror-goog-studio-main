@@ -109,7 +109,6 @@ public class LibraryComponentPluginTest {
                 + "    android {\n"
                 + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
                 + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "        publishNonDefault true\n"
                 + "\n"
                 + "        productFlavors {\n"
                 + "            create(\"free\")\n"

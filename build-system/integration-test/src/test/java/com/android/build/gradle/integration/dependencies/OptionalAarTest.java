@@ -100,8 +100,8 @@ public class OptionalAarTest {
     }
 
     @Test
-    public void checkLIbDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
-        File aar = project.getSubproject("library").getAar("release");
+    public void checkLibDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
+        File aar = project.getSubproject("library").getAar("debug");
 
         assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
         assertThatAar(aar).textSymbolFile().contains("int layout liblayout");

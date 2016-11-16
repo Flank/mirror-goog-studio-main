@@ -59,23 +59,20 @@ public class JacocoPlugin implements Plugin<Project> {
      */
     private void addJacocoConfigurations() {
         this.project.getConfigurations().create(AGENT_CONFIGURATION_NAME,
-                new Action<Configuration>() {
-                    @Override
-                    public void execute(Configuration files) {
-                        files.setVisible(false);
-                        files.setTransitive(true);
-                        files.setDescription("The Jacoco agent to use to get coverage data.");
-                    }
+                configuration -> {
+                    configuration.setVisible(false);
+                    configuration.setTransitive(true);
+                    configuration.setCanBeConsumed(false);
+                    configuration.setDescription(
+                            "The Jacoco agent to use to get coverage data.");
                 });
         this.project.getConfigurations().create(ANT_CONFIGURATION_NAME,
-                new Action<Configuration>() {
-                    @Override
-                    public void execute(Configuration files) {
-                        files.setVisible(false);
-                        files.setTransitive(true);
-                        files.setDescription(
-                                "The Jacoco ant tasks to use to get execute Gradle tasks.");
-                    }
+                configuration -> {
+                    configuration.setVisible(false);
+                    configuration.setTransitive(true);
+                    configuration.setCanBeConsumed(false);
+                    configuration.setDescription(
+                            "The Jacoco ant tasks to use to get execute Gradle tasks.");
                 });
     }
 
