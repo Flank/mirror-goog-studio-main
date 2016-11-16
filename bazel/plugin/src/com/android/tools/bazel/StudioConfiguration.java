@@ -60,6 +60,7 @@ public class StudioConfiguration implements Configuration {
         return ImmutableList.of(
             "//tools/adt/idea/uitest-framework",
             "//tools/adt/idea/android-gradle-jps",
+            "//tools/adt/idea/android-plugin",
             "//tools/adt/idea/android-tests",
             "//tools/adt/idea/designer-tests",
             "//tools/adt/idea/sdk-updates-tests",
