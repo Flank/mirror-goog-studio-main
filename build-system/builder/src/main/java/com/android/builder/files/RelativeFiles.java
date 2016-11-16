@@ -17,9 +17,9 @@
 package com.android.builder.files;
 
 import com.android.annotations.NonNull;
-import com.android.builder.internal.packaging.zip.StoredEntry;
-import com.android.builder.internal.packaging.zip.StoredEntryType;
-import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.apkzlib.zip.StoredEntry;
+import com.android.apkzlib.zip.StoredEntryType;
+import com.android.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;

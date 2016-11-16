@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LibraryCache;
-import com.android.builder.internal.utils.FileCache;
+import com.android.apkzlib.utils.FileCache;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

@@ -17,8 +17,8 @@
 package com.android.builder.signing;
 
 import com.android.annotations.NonNull;
-import com.android.builder.packaging.ApkCreator;
-import com.android.builder.packaging.ApkCreatorFactory;
+import com.android.apkzlib.zfile.ApkCreator;
+import com.android.apkzlib.zfile.ApkCreatorFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.security.NoSuchAlgorithmException;

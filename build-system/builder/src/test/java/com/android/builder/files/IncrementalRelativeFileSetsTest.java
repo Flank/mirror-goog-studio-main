@@ -19,7 +19,7 @@ package com.android.builder.files;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.builder.internal.packaging.zip.ZFile;
+import com.android.apkzlib.zip.ZFile;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.base.Functions;
