@@ -535,6 +535,41 @@ public class AssetPackagingTest {
         });
     }
 
+    @Test
+    public void testIgnoreAssets() throws Exception {
+        File projectFile = appProject.getBuildFile();
+        TestFileUtils.appendToFile(
+                projectFile,
+                "android { aaptOptions { ignoreAssets '*a:b*' } } ");
+
+        byte[] aaData = new byte[] { 'e' };
+        byte[] abData = new byte[] { 'f' };
+        byte[] baData = new byte[] { 'g' };
+        byte[] bbData = new byte[] { 'h' };
+
+        File aaAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "aa");
+        File abAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "ab");
+        File baAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "ba");
+        File bbAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "bb");
+
+        FileUtils.mkdirs(aaAsset.getParentFile());
+        FileUtils.mkdirs(abAsset.getParentFile());
+        FileUtils.mkdirs(baAsset.getParentFile());
+        FileUtils.mkdirs(bbAsset.getParentFile());
+
+        Files.write(aaAsset.toPath(), aaData);
+        Files.write(abAsset.toPath(), abData);
+        Files.write(baAsset.toPath(), baData);
+        Files.write(bbAsset.toPath(), bbData);
+
+        execute("app:assembleDebug");
+
+        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/aa");
+        assertThatApk(appProject.getApk("debug")).containsFileWithContent("assets/ab", abData);
+        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/ba");
+        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/bb");
+    }
+
     /**
      * check an apk has (or not) the given asset file name.
      *
