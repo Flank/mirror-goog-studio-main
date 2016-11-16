@@ -18,18 +18,17 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-
+import java.io.File;
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * test for provided (apk) local aar in app
@@ -40,7 +39,7 @@ public class AppWithProvidedLocalAarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -68,7 +67,7 @@ public class AppWithProvidedLocalAarTest {
 
     @Test
     public void checkModelFailedToLoad() {
-        SyncIssue issue = assertThat(model).hasSingleIssue(
+        SyncIssue issue = assertThat(model.getOnlyModel()).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_LOCAL_DEP);
         assertThat(new File(issue.getData()).getName()).isEqualTo("baseLib-1.0.aar");

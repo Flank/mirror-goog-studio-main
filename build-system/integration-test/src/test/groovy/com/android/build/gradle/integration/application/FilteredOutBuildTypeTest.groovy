@@ -41,7 +41,7 @@ class FilteredOutBuildTypeTest {
 
     @BeforeClass
     static void setUp() {
-        model = project.executeAndReturnModel("clean", "assemble")
+        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel()
     }
 
     @AfterClass

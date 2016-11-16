@@ -16,20 +16,21 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-
+import java.io.File;
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * test for package (apk) local aar in app
@@ -40,7 +41,7 @@ public class AppWithPackageLocalAarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static AndroidProject model;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -57,18 +58,18 @@ public class AppWithPackageLocalAarTest {
                 "    apk files(\"libs/baseLib-1.0.aar\")\n" +
                 "}\n");
 
-        model = project.model().ignoreSyncIssues().getSingle();
+        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).ignoreSyncIssues().getSingle();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        modelContainer = null;
     }
 
     @Test
     public void checkModelFailedToLoad() {
-        SyncIssue issue = assertThat(model).hasSingleIssue(
+        SyncIssue issue = assertThat(modelContainer.getOnlyModel()).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_LOCAL_DEP);
         assertThat(new File(issue.getData()).getName()).isEqualTo("baseLib-1.0.aar");

@@ -91,7 +91,7 @@ public class NdkBuildInstantRunTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
-        AndroidProject model = sProject.model().getSingle();
+        AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         File apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel).file;
         assertThat(apk).exists();
@@ -122,7 +122,7 @@ public class NdkBuildInstantRunTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
-        AndroidProject model = sProject.model().getSingle();
+        AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         File apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel).file;
         assertThat(apk).exists();

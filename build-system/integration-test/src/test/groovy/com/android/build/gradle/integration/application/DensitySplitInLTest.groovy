@@ -29,6 +29,7 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Sets
+import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -57,7 +58,7 @@ class DensitySplitInLTest {
     @BeforeClass
     static void setUp() {
         AssumeUtil.assumeBuildToolsAtLeast(21)
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
     }
 
     @AfterClass
@@ -101,7 +102,7 @@ class DensitySplitInLTest {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("build.gradle", "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                     "exclude \"ldpi\", \"tvdpi\"")
-            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug")
+            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug").getOnlyModel()
 
             List<? extends OutputFile> outputs = getOutputs(incrementalModel);
             assertThat(outputs).hasSize(6);
@@ -143,7 +144,7 @@ class DensitySplitInLTest {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("build.gradle", "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                     "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\", \"xxhdpi\"")
-            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug")
+            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug").getOnlyModel()
 
             List<? extends OutputFile> outputs = getOutputs(incrementalModel);
             assertThat(outputs).hasSize(4);

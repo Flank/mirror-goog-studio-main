@@ -28,6 +28,7 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Sets
+import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -57,7 +58,7 @@ class AbiPureSplits {
 
     @Test
     public void "test abi pure splits"() throws Exception {
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5)
@@ -99,7 +100,7 @@ class AbiPureSplits {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
@@ -109,7 +110,7 @@ class AbiPureSplits {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("build.gradle", "include 'x86', 'armeabi-v7a', 'mips'",
                     "include 'x86', 'armeabi-v7a', 'mips', 'armeabi'")
-            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug")
+            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug").getOnlyModel()
 
             List<? extends OutputFile> outputs = getOutputs(incrementalModel);
             for (OutputFile output : outputs) {
@@ -145,7 +146,7 @@ class AbiPureSplits {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug")
+        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         // record the build time of each APK to ensure we don't rebuild those in incremental mode.
         Map<String, Long> lastModifiedTimePerAbi =
@@ -154,7 +155,7 @@ class AbiPureSplits {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("build.gradle", "include 'x86', 'armeabi-v7a', 'mips'",
                     "include 'x86', 'armeabi-v7a'")
-            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug")
+            AndroidProject incrementalModel = project.executeAndReturnModel("assembleDebug").getOnlyModel()
 
             List<? extends OutputFile> outputs = getOutputs(incrementalModel);
             assertThat(outputs).hasSize(3);
@@ -175,7 +176,7 @@ class AbiPureSplits {
         }
     }
 
-    private List<? extends OutputFile> getOutputs(AndroidProject projectModel) {
+    private Collection<? extends OutputFile> getOutputs(AndroidProject projectModel) {
         // Load the custom model for the project
         Collection<Variant> variants = projectModel.getVariants()
         assertEquals("Variant Count", 2 , variants.size())

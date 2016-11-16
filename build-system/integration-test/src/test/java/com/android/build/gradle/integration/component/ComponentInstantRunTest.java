@@ -68,7 +68,7 @@ public class ComponentInstantRunTest {
         project.executor()
                 .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
-        AndroidProject model = project.model().getSingle();
+        AndroidProject model = project.model().getSingle().getOnlyModel();
         File apk = project.getApk("debug");
         assertThat(apk).exists();
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");

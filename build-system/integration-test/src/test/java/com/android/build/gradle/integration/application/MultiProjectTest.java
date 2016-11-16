@@ -16,24 +16,29 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.Iterables;
 
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Assemble tests for multiproject.
@@ -43,21 +48,23 @@ public class MultiProjectTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("multiproject")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() {
-        models = project.model().getMulti();
+        modelContainer = project.model().getMulti();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
     public void checkModel() {
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         AndroidProject baseLibModel = models.get(":baseLibrary");
         assertThat(baseLibModel).named("Module app").isNotNull();
@@ -72,12 +79,11 @@ public class MultiProjectTest {
         AndroidArtifact mainArtifact = variant.getMainArtifact();
         assertThat(mainArtifact).named("release main artifact").isNotNull();
 
-        Dependencies dependencies = mainArtifact.getCompileDependencies();
-        assertThat(dependencies).named("release main artifact dependencies").isNotNull();
+        LibraryGraph compileGraph = mainArtifact.getCompileGraph();
+        assertThat(compileGraph).named("release main artifact graph").isNotNull();
 
-        Collection<JavaLibrary> javaLibraries = dependencies.getJavaLibraries();
-        assertThat(javaLibraries).named("java dependencies").hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.getProject()).named("single java dep path").isEqualTo(":util");
+        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(GRADLE_PATH))
+                .named("release sub-module dependencies")
+                .containsExactly(":util");
     }
 }

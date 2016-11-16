@@ -16,23 +16,23 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.*;
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.builder;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * test for provided library in app
@@ -43,7 +43,7 @@ public class AppWithProvidedLibTest {
     public static GradleTestProject project = builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -54,18 +54,18 @@ public class AppWithProvidedLibTest {
                 "dependencies {\n" +
                 "    provided project(\":library\")\n" +
                 "}\n");
-        models = project.model().ignoreSyncIssues().getMulti();
+        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).ignoreSyncIssues().getMulti();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        modelContainer = null;
     }
 
     @Test
     public void checkModelFailedToLoad() {
-        assertThat(models.get(":app")).hasSingleIssue(
+        assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,
                 "projectWithModules:library:aar:unspecified");

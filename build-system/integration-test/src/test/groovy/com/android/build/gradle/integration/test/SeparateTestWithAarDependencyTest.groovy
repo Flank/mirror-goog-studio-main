@@ -17,15 +17,15 @@
 package com.android.build.gradle.integration.test
 
 import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.BuildModel
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
-import com.google.common.collect.Iterables
+import com.android.builder.model.level2.LibraryGraph
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -33,8 +33,17 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
+import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.SKIPPED
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.ADDRESS
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE
+
 /**
  * Test separate test module testing an app with aar dependencies.
  */
@@ -46,7 +55,8 @@ public class SeparateTestWithAarDependencyTest {
             .fromTestProject("separateTestModule")
             .create()
 
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
+    static LibraryGraphHelper helper
 
     @BeforeClass
     static void setup() {
@@ -68,13 +78,16 @@ dependencies {
 }
         """
 
-        models = project.executeAndReturnMultiModel("clean", "assemble")
+        project.execute("clean", "assemble")
+        models = project.model().withFeature(FULL_DEPENDENCIES).getMulti()
+        helper = new LibraryGraphHelper(models)
     }
 
     @AfterClass
     static void cleanUp() {
         project = null
         models = null
+        helper = null
     }
 
     @Test
@@ -103,55 +116,64 @@ dependencies {
 
     @Test
     void "check test model's compile deps includes the tested app"() {
-        Collection<Variant> variants = models.get(":test").getVariants()
+        Collection<Variant> variants = models.getModelMap().get(":test").getVariants()
 
         // get the main artifact of the debug artifact and its dependencies
         Variant variant = ModelHelper.getVariant(variants, "debug")
         AndroidArtifact artifact = variant.getMainArtifact();
 
-        Dependencies compileDependencies = artifact.getCompileDependencies()
+        LibraryGraph compileGraph = artifact.getCompileGraph();
 
         // check the app project shows up as a project dependency
-        Collection<JavaLibrary> javaLibraries = compileDependencies.getJavaLibraries();
-        assertThat(javaLibraries).hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.getProject()).isEqualTo(":app");
+        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(GRADLE_PATH))
+                .containsExactly(":app")
 
         // check that the app dependencies show up too. In this case as direct dependencies, since
         // we can't do better for now.
-        Collection<AndroidLibrary> androidLibraries = compileDependencies.getLibraries();
-        assertThat(androidLibraries).hasSize(1);
-        AndroidLibrary androidLibrary = Iterables.getOnlyElement(androidLibraries);
-        assertThat(androidLibrary.getResolvedCoordinates()).isEqualTo(
-                "com.android.support", "appcompat-v7", GradleTestProject.SUPPORT_LIB_VERSION);
+        assertThat(helper.on(compileGraph).withType(ANDROID).mapTo(COORDINATES))
+                .containsExactly( "com.android.support:appcompat-v7:aar:" + GradleTestProject.SUPPORT_LIB_VERSION)
     }
 
     @Test
     void "check test model's package deps includes the tested app"() {
-        Collection<Variant> variants = models.get(":test").getVariants()
+        Collection<Variant> variants = models.getModelMap().get(":test").getVariants()
 
         // get the main artifact of the debug artifact and its dependencies
         Variant variant = ModelHelper.getVariant(variants, "debug")
         AndroidArtifact artifact = variant.getMainArtifact();
 
         // verify the same dependencies in package are skipped.
-        Dependencies packageDependencies = artifact.getPackageDependencies()
+        LibraryGraph packageGraph = artifact.getPackageGraph();
 
         // check the app project shows up as a project dependency
-        Collection<JavaLibrary> javaLibraries = packageDependencies.getJavaLibraries();
-        assertThat(javaLibraries).hasSize(1);
-        JavaLibrary javaLibrary = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLibrary.getProject()).isEqualTo(":app");
-        assertThat(javaLibrary.isSkipped()).isTrue()
+        LibraryGraphHelper.Items moduleItems = helper.on(packageGraph).withType(MODULE)
+        assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":app")
+        // but that it is skipped
+        assertThat(moduleItems.filter(SKIPPED).mapTo(GRADLE_PATH)).containsExactly(":app")
 
         // check that the app dependencies show up too. In this case as direct dependencies, since
         // we can't do better for now.
-        Collection<AndroidLibrary> androidLibraries = packageDependencies.getLibraries();
-        assertThat(androidLibraries).hasSize(1);
-        AndroidLibrary androidLibrary = Iterables.getOnlyElement(androidLibraries);
-        assertThat(androidLibrary.getResolvedCoordinates()).isEqualTo(
-                "com.android.support", "appcompat-v7", GradleTestProject.SUPPORT_LIB_VERSION);
-        assertThat(androidLibrary.isSkipped()).isTrue()
+        LibraryGraphHelper.Items androidItems = helper.on(packageGraph).withType(ANDROID)
+        assertThat(androidItems.mapTo(COORDINATES))
+                .containsExactly( "com.android.support:appcompat-v7:aar:" + GradleTestProject.SUPPORT_LIB_VERSION)
+
+        assertThat(androidItems.filter(SKIPPED).mapTo(COORDINATES))
+                .containsExactly( "com.android.support:appcompat-v7:aar:" + GradleTestProject.SUPPORT_LIB_VERSION)
+
+        // check the list of skipped items also contains all the transitive dependencies
+        assertThat(packageGraph.getSkippedLibraries()).containsExactly(
+                ":app",
+                "com.android.support:support-core-ui:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-core-utils:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:appcompat-v7:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-fragment:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-compat:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-v4:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-annotations:jar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:animated-vector-drawable:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-media-compat:aar:" + GradleTestProject.SUPPORT_LIB_VERSION,
+                "com.android.support:support-vector-drawable:aar:" + GradleTestProject.SUPPORT_LIB_VERSION)
+
     }
 
     @Test

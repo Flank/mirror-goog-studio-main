@@ -379,7 +379,7 @@ class NativeBuildOutputTest {
 
         project.file("src/main/cpp/hello-jni.cpp").write("void main() {}");
 
-        AndroidProject androidProject = project.model().getSingle(AndroidProject.class);
+        AndroidProject androidProject = project.model().getSingle().getOnlyModel();
         assertThat(androidProject.syncIssues).hasSize(0);
         NativeAndroidProject nativeProject = project.model().getSingle(NativeAndroidProject.class);
         // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
@@ -426,7 +426,7 @@ class NativeBuildOutputTest {
     private void checkFailed(List<String> expectInStderr, List<String> expectInSyncIssues,
             int expectedSyncIssueCount) {
         // Check the sync
-        AndroidProject androidProject = project.model().getSingle(AndroidProject.class);
+        AndroidProject androidProject = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         // Check for expected sync issues
         assertThat(androidProject.syncIssues).hasSize(expectedSyncIssueCount);

@@ -43,7 +43,7 @@ class GenFolderApi2Test {
 
     @BeforeClass
     static void setUp() {
-        model = project.model().getSingle()
+        model = project.model().getSingle().getOnlyModel()
     }
 
     @AfterClass

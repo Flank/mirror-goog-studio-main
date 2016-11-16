@@ -42,7 +42,8 @@ public final class DependencyNode {
 
     @NonNull
     private final Object address;
-    @NonNull final NodeType nodeType;
+    @NonNull
+    private final NodeType nodeType;
     @NonNull
     private final ImmutableList<DependencyNode> dependencies;
     @Nullable

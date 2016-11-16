@@ -15,13 +15,11 @@
  */
 
 package com.android.build.gradle.integration.dependencies;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import groovy.transform.CompileStatic;
 
 /**
  * test for Ivy dependencies.

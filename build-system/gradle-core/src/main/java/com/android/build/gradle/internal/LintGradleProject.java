@@ -164,7 +164,7 @@ public class LintGradleProject extends Project {
         }
 
         Set<AndroidLibrary> libraries = Sets.newHashSet();
-        Dependencies dependencies = variant.getMainArtifact().getCompileDependencies();
+        Dependencies dependencies = variant.getMainArtifact().getDependencies();
         for (AndroidLibrary library : dependencies.getLibraries()) {
             lintProject.addDirectLibrary(createLibrary(client, library, libraries, customRules));
         }
@@ -521,7 +521,7 @@ public class LintGradleProject extends Project {
         public List<File> getJavaLibraries(boolean includeProvided) {
             if (includeProvided) {
                 if (javaLibraries == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
+                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
                     Collection<JavaLibrary> libs = dependencies.getJavaLibraries();
                     javaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
                     for (JavaLibrary lib : libs) {
@@ -535,7 +535,7 @@ public class LintGradleProject extends Project {
             } else {
                 // Skip provided libraries?
                 if (nonProvidedJavaLibraries == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
+                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
                     Collection<JavaLibrary> libs = dependencies.getJavaLibraries();
                     nonProvidedJavaLibraries = Lists.newArrayListWithExpectedSize(libs.size());
                     for (JavaLibrary lib : libs) {
@@ -561,7 +561,7 @@ public class LintGradleProject extends Project {
                 for (AndroidArtifact artifact : mVariant.getExtraAndroidArtifacts()) {
                     if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifact.getName())
                             || AndroidProject.ARTIFACT_UNIT_TEST.equals(artifact.getName())) {
-                        Dependencies dependencies = artifact.getCompileDependencies();
+                        Dependencies dependencies = artifact.getDependencies();
 
                         addJarsFromJavaLibrariesTransitively(dependencies.getJavaLibraries(),
                                 testLibraries, false);
@@ -646,13 +646,13 @@ public class LintGradleProject extends Project {
         public Boolean dependsOn(@NonNull String artifact) {
             if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
                 if (supportLib == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
+                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
                     supportLib = dependsOn(dependencies, artifact);
                 }
                 return supportLib;
             } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
                 if (appCompat == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getCompileDependencies();
+                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
                     appCompat = dependsOn(dependencies, artifact);
                 }
                 return appCompat;

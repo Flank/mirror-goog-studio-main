@@ -17,27 +17,31 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.Library;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.File;
-import java.util.Collection;
 
 /**
  * test for same dependency with and without classifier.
@@ -48,57 +52,57 @@ public class AppWithClassifierDepTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithClassifierDep")
             .create();
-    public static AndroidProject model;
+    public static ModelContainer<AndroidProject> model;
+    private static LibraryGraphHelper helper;
 
     @BeforeClass
     public static void setUp() {
         model = project.model().getSingle();
+        helper = new LibraryGraphHelper(model);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         model = null;
+        helper = null;
     }
 
     @Test
     public void checkDebugDepInModel() {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), "debug");
-        Dependencies dependencies = variant.getMainArtifact().getCompileDependencies();
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        Collection<JavaLibrary> javaLibs = dependencies.getJavaLibraries();
+        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
 
-        assertThat(javaLibs).named("javalibs count").hasSize(1);
-        JavaLibrary javaLib = Iterables.getOnlyElement(javaLibs);
+        LibraryGraphHelper.Items javaItems = helper.on(graph).withType(JAVA);
+        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:jar:1.0");
 
-        assertThat(javaLib.getJarFile())
+        Library library = javaItems.asSingleLibrary();
+        assertThat(library.getArtifact())
                 .named("jar location")
-                .isEqualTo(new File(project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0.jar"));
-        assertThat(javaLib.getResolvedCoordinates())
-                .named("resolved coordinates")
-                .isEqualTo("com.foo", "sample", "1.0");
+                .isEqualTo(new File(
+                        project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0.jar"));
     }
 
     @Test
     public void checkAndroidTestDepInModel() {
-        Variant debugVariant = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant debugVariant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
         AndroidArtifact androidTestArtifact = ModelHelper.getAndroidArtifact(
                 debugVariant.getExtraAndroidArtifacts(), ARTIFACT_ANDROID_TEST);
         Truth.assertThat(androidTestArtifact).isNotNull();
 
-        Dependencies dependencies = androidTestArtifact.getCompileDependencies();
 
-        Collection<JavaLibrary> javaLibs = dependencies.getJavaLibraries();
+        LibraryGraph graph = androidTestArtifact.getCompileGraph();
 
-        assertThat(javaLibs).named("javalibs count").hasSize(1);
-        JavaLibrary javaLib = Iterables.getOnlyElement(javaLibs);
+        LibraryGraphHelper.Items javaItems = helper.on(graph).withType(JAVA);
+        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:jar:testlib:1.0");
 
-        assertEquals(
-                new File(project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0-testlib.jar"),
-                javaLib.getJarFile());
-        assertThat(javaLib.getResolvedCoordinates())
-                .named("resolved coordinates")
-                .isEqualTo("com.foo", "sample", "1.0", null, "testlib");
+        Library library = javaItems.asSingleLibrary();
+        assertThat(library.getArtifact())
+                .named("jar location")
+                .isEqualTo(new File(
+                        project.getTestDir(),
+                        "repo/com/foo/sample/1.0/sample-1.0-testlib.jar"));
     }
 }

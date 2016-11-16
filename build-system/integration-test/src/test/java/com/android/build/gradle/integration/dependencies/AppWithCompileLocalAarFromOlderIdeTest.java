@@ -21,16 +21,12 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import org.gradle.api.GradleException;
+import java.io.IOException;
 import org.gradle.tooling.BuildException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * test for package (apk) local aar in app

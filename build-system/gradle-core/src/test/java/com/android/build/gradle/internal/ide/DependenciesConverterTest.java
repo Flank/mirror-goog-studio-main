@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.ide;
 
+import com.android.annotations.NonNull;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
@@ -48,6 +51,18 @@ public class DependenciesConverterTest {
                     public boolean isProvided(Dependency dependency) {
                         return false;
                     }
+
+                    @NonNull
+                    @Override
+                    public List<String> getProvidedList() {
+                        return ImmutableList.of();
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<String> getSkippedList() {
+                        return ImmutableList.of();
+                    }
                 }, new MutableDependencyDataMap() {
                     Map<Dependency, Boolean> skipped = new HashMap<>();
                     Map<Dependency, Boolean> provided = new HashMap<>();
@@ -66,6 +81,17 @@ public class DependenciesConverterTest {
                     @Override
                     public boolean isProvided(Dependency dependency) {
                         return provided.getOrDefault(dependency, Boolean.FALSE);
+                    }
+                    @NonNull
+                    @Override
+                    public List<String> getProvidedList() {
+                        return ImmutableList.of();
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<String> getSkippedList() {
+                        return ImmutableList.of();
                     }
                 })
                 .verify();

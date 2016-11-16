@@ -1651,7 +1651,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         for (Dependency dependency : packageDeps.getAllPackagedDependencies()) {
             File jarFile = dependency.getClasspathFile();
-            if (jarFile.exists()) {
+            if (jarFile.isFile()) {
                 jars.add(jarFile);
             }
             List<File> additionalJarFiles = dependency.getAdditionalClasspath();
@@ -1686,7 +1686,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
 
             File jarFile = dependency.getClasspathFile();
-            if (jarFile.exists()) {
+            if (jarFile.isFile()) {
                 jars.add(jarFile);
             }
             List<File> additionalJarFiles = dependency.getAdditionalClasspath();
@@ -1716,7 +1716,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
             if (javaDependency.getProjectPath() == null && !javaDependency.isLocal()) {
                 File jarFile = javaDependency.getArtifactFile();
-                if (jarFile.exists()) {
+                if (jarFile.isFile()) {
                     jars.add(jarFile);
                 }
             }
@@ -1739,7 +1739,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
             if (javaDependency.isLocal()) {
                 File jarFile = javaDependency.getClasspathFile();
-                if (jarFile.exists()) {
+                if (jarFile.isFile()) {
                     jars.add(jarFile);
                 }
             }
@@ -1763,7 +1763,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             // only take the sub-project dependencies
             if (dependency.getProjectPath() != null) {
                 File libJar = dependency.getClasspathFile();
-                if (libJar.exists()) {
+                if (libJar.isFile()) {
                     jars.add(libJar);
                 }
             }
@@ -1812,7 +1812,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             // only take the sub-project android libraries.
             if (dependency.getProjectPath() != null) {
                 File jniDir = dependency.getJniFolder();
-                if (jniDir.exists()) {
+                if (jniDir.isDirectory()) {
                     jniDirectories.add(jniDir);
                 }
             }
@@ -1835,7 +1835,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
             if (javaDependency.getProjectPath() != null) {
                 File jarFile = javaDependency.getArtifactFile();
-                if (jarFile.exists()) {
+                if (jarFile.isFile()) {
                     jars.add(jarFile);
                 }
             }
@@ -1859,7 +1859,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             // only take the external android libraries.
             if (dependency.getProjectPath() == null) {
                 File jniDir = dependency.getJniFolder();
-                if (jniDir.exists()) {
+                if (jniDir.isDirectory()) {
                     jniDirectories.add(jniDir);
                 }
             }
@@ -2138,7 +2138,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         if (includeLibraries && isDependenciesResolved) {
             for (AndroidDependency androidDependency : packageDependencies.getAllAndroidDependencies()) {
                 File proguardRules = androidDependency.getProguardRules();
-                if (proguardRules.exists()) {
+                if (proguardRules.isFile()) {
                     fullList.add(proguardRules);
                 }
             }

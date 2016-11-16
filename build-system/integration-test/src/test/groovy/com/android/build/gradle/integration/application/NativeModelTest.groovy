@@ -355,7 +355,7 @@ class NativeModelTest {
 
     @Test
     public void checkModel() {
-        AndroidProject androidProject = project.model().getSingle(AndroidProject.class);
+        AndroidProject androidProject = project.model().getSingle().getOnlyModel();
         assertThat(androidProject.syncIssues).hasSize(0);
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model).isNotNull();
@@ -503,14 +503,16 @@ class NativeModelTest {
         Set<String> releaseOnlyFlags = Sets.newHashSet(releaseFlags);
         releaseOnlyFlags.removeAll(debugFlags);
         assertThat(releaseOnlyFlags)
-                .named("release only build flags")
+                //.named("release only build flags")
+        // TODO fix when moved to Java
                 .containsAllOf("-DNDEBUG", "-Os");
 
         // Look at flags that are only in debug build. Should at least contain -O0
         Set<String> debugOnlyFlags = Sets.newHashSet(debugFlags);
         debugOnlyFlags.removeAll(releaseFlags);
         assertThat(debugOnlyFlags)
-                .named("debug only build flags")
+                //.named("debug only build flags")
+        // TODO fix when moved to Java
                 .contains("-O0");
     }
 

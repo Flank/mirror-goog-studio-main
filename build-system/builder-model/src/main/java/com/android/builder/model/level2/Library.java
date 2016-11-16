@@ -45,9 +45,8 @@ public interface Library {
     /**
      * Returns the artifact address in a unique way.
      *
-     * This is either a module path for sub-modules, or a maven coordinate for external
-     * dependencies.
-     *
+     * This is either a module path for sub-modules (with optional variant name), or a maven
+     * coordinate for external dependencies.
      */
     @NonNull
     String getArtifactAddress();
@@ -57,6 +56,14 @@ public interface Library {
      */
     @NonNull
     File getArtifact();
+
+    /**
+     * Returns the gradle path.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_MODULE}
+     */
+    @Nullable
+    String getProjectPath();
 
     /**
      * Returns an optional variant name if the consumed artifact of the library is associated

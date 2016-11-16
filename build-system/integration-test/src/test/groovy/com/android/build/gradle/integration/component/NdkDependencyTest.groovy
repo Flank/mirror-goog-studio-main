@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.component
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
@@ -257,7 +258,9 @@ model {
         prebuiltProject.executor().run("assembleDebug")
 
         project.execute(":app:assembleDebug")
-        Map<String, AndroidProject> models = project.model().getMulti()
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti()
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
+
         GradleTestProject app = project.getSubproject("app")
         GradleTestProject lib1 = project.getSubproject("lib1")
         GradleTestProject lib2 = project.getSubproject("lib2")

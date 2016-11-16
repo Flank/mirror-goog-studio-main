@@ -15,13 +15,14 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
+import com.android.builder.model.level2.LibraryGraph
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -40,7 +41,7 @@ class CustomArtifactDepTest {
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("customArtifactDep")
             .create()
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
 
     @BeforeClass
     static void setUp() {
@@ -55,7 +56,7 @@ class CustomArtifactDepTest {
 
     @Test
     void testModel() {
-        AndroidProject appModel = models.get(":app")
+        AndroidProject appModel = models.getModelMap().get(":app")
         assertNotNull("Module app null-check", appModel)
 
         Collection<Variant> variants = appModel.getVariants()
@@ -66,11 +67,9 @@ class CustomArtifactDepTest {
         AndroidArtifact mainInfo = variant.getMainArtifact()
         assertNotNull("Main Artifact null-check", mainInfo)
 
-        Dependencies dependencies = mainInfo.getCompileDependencies()
-        assertNotNull("Dependencies null-check", dependencies)
+        LibraryGraph graph = mainInfo.getCompileGraph();
+        assertNotNull("Dependencies null-check", graph)
 
-        Collection<JavaLibrary> javaLibraries = dependencies.getJavaLibraries()
-        assertNotNull("jar dep list null-check", javaLibraries)
-        assertEquals("jar dep count", 1, javaLibraries.size())
+        assertEquals("jar dep count", 1, graph.getDependencies().size())
     }
 }

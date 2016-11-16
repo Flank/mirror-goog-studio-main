@@ -16,29 +16,35 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for compile jar in app through an aar dependency
@@ -79,11 +85,11 @@ public class AppWithCompileIndirectJarTest {
     @Test
     public void checkLevel1Model() {
         Map<String, AndroidProject> models = project.model()
-                .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
+                .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti().getModelMap();
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
-        Dependencies deps = appDebug.getMainArtifact().getCompileDependencies();
+        Dependencies deps = appDebug.getMainArtifact().getDependencies();
 
         Collection<AndroidLibrary> libs = deps.getLibraries();
         assertThat(libs).named("app androidlibrary deps count").hasSize(1);
@@ -101,7 +107,7 @@ public class AppWithCompileIndirectJarTest {
         Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
-        deps = libDebug.getMainArtifact().getCompileDependencies();
+        deps = libDebug.getMainArtifact().getDependencies();
 
         assertThat(deps.getLibraries()).named("lib androidlibrary deps count").isEmpty();
 
@@ -115,44 +121,48 @@ public class AppWithCompileIndirectJarTest {
 
     @Test
     public void checkLevel2Model() {
-        Map<String, AndroidProject> models = project.model()
+        final ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_LATEST).getMulti();
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
-        Dependencies deps = appDebug.getMainArtifact().getCompileDependencies();
+        LibraryGraph compileGraph = appDebug.getMainArtifact().getCompileGraph();
 
-        Collection<AndroidLibrary> libs = deps.getLibraries();
-        assertThat(libs).named("app androidlibrary deps count").hasSize(1);
+        // check direct dependencies
+        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
+                .named("app direct module dependencies")
+                .containsExactly(":library");
 
-        AndroidLibrary androidLibrary = Iterables.getOnlyElement(libs);
-        assertThat(androidLibrary.getProject()).named("app androidlib deps path").isEqualTo(":library");
+        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+                .named("app direct java deps")
+                .isEmpty();
 
-        Collection<? extends JavaLibrary> javaLibraries = androidLibrary.getJavaDependencies();
-        assertThat(javaLibraries).named("androidlib java dependency count").hasSize(1);
-        JavaLibrary javaLib = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLib.getResolvedCoordinates())
-                .named("androidlib java lib resolved coordinates")
-                .isEqualTo("com.google.guava", "guava", "18.0");
+        assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+                .named("app direct android deps")
+                .isEmpty();
 
-        assertThat(deps.getProjects()).named("app module dependency count").isEmpty();
-        assertThat(deps.getJavaLibraries()).named("app java dependency count").isEmpty();
+        Items libraryItems = helper.on(compileGraph).withType(MODULE).getTransitiveFromSingleItem();
+
+        assertThat(libraryItems.withType(JAVA).mapTo(Property.COORDINATES))
+                .named("sub-module java dependencies")
+                .containsExactly("com.google.guava:guava:jar:18.0");
 
         // ---
 
         Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
-        deps = libDebug.getMainArtifact().getCompileDependencies();
+        compileGraph = libDebug.getMainArtifact().getCompileGraph();
 
-        assertThat(deps.getLibraries()).named("lib androidlibrary deps count").isEmpty();
+        assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+                .named(":library android dependencies")
+                .isEmpty();
 
-        javaLibraries = deps.getJavaLibraries();
-        assertThat(javaLibraries).named("lib java dependency count").hasSize(1);
-        javaLib = Iterables.getOnlyElement(javaLibraries);
-        assertThat(javaLib.getResolvedCoordinates())
-                .named("lib java lib resolved coordinates")
-                .isEqualTo("com.google.guava", "guava", "18.0");
+        assertThat(helper.on(compileGraph).withType(JAVA).mapTo(Property.COORDINATES))
+                .named(":library java dependencies")
+                .containsExactly("com.google.guava:guava:jar:18.0");
     }
-
 }

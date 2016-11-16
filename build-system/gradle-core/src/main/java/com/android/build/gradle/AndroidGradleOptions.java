@@ -183,7 +183,7 @@ public class AndroidGradleOptions {
      *
      * @see AndroidProject#MODEL_LEVEL_0_ORIGNAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
-     * @see AndroidProject#MODEL_LEVEL_2_DEP_GRAPH
+     * @see AndroidProject#MODEL_LEVEL_2_NEW_DEP_MODEL
      */
     @Nullable
     public static Integer buildModelOnlyVersion(@NonNull Project project) {
@@ -201,6 +201,14 @@ public class AndroidGradleOptions {
         }
 
         return null;
+    }
+
+    public static boolean buildModelWithFullDependencies(@NonNull Project project) {
+        String value = getString(project, AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
+        if (value == null) {
+            return false;
+        }
+        return Boolean.valueOf(value);
     }
 
     /**

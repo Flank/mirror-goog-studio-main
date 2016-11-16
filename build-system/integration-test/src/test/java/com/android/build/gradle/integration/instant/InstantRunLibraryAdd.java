@@ -52,7 +52,7 @@ public class InstantRunLibraryAdd {
 
         project.execute("clean");
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getMulti().get(":app"));
+                project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
@@ -106,7 +106,7 @@ public class InstantRunLibraryAdd {
     public void withColdswapRequested() throws Exception {
         project.execute("clean");
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getMulti().get(":app"));
+                project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)

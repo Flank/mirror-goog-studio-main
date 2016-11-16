@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.dependency;
 import com.android.annotations.NonNull;
 import com.android.builder.dependency.DependencyMutableData;
 import com.android.builder.dependency.level2.Dependency;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,15 +32,15 @@ public interface MutableDependencyDataMap {
 
     static MutableDependencyDataMap newInstance() {
         return new MutableDependencyDataMap() {
-            Map<Dependency, DependencyMutableData> mutableDependencyData = new HashMap<>();
+            Map<Dependency, DependencyMutableData> dataMap = new HashMap<>();
 
             @NonNull
             private synchronized DependencyMutableData getFor(Dependency library) {
-                return mutableDependencyData.computeIfAbsent(library, k -> new DependencyMutableData());
+                return dataMap.computeIfAbsent(library, k -> new DependencyMutableData());
             }
 
             @Override public boolean isSkipped(Dependency dependency) {
-                DependencyMutableData dependencyMutableData = mutableDependencyData.get(dependency);
+                DependencyMutableData dependencyMutableData = dataMap.get(dependency);
                 return dependencyMutableData != null && dependencyMutableData.isSkipped();
             }
 
@@ -53,9 +56,34 @@ public interface MutableDependencyDataMap {
 
             @Override
             public boolean isProvided(Dependency dependency) {
-                DependencyMutableData dependencyMutableData = mutableDependencyData.get(dependency);
+                DependencyMutableData dependencyMutableData = dataMap.get(dependency);
                 return dependencyMutableData != null && dependencyMutableData.isProvided();
             }
+
+            @NonNull
+            @Override
+            public List<String> getProvidedList() {
+                List<String> providedList = Lists.newArrayListWithExpectedSize(dataMap.size());
+                for (Map.Entry<Dependency, DependencyMutableData> entry : dataMap.entrySet()) {
+                    if (entry.getValue().isProvided()) {
+                        providedList.add(entry.getKey().getAddress().toString());
+                    }
+                }
+                return providedList;
+            }
+
+            @NonNull
+            @Override
+            public List<String> getSkippedList() {
+                List<String> skippedList = Lists.newArrayListWithExpectedSize(dataMap.size());
+                for (Map.Entry<Dependency, DependencyMutableData> entry : dataMap.entrySet()) {
+                    if (entry.getValue().isSkipped()) {
+                        skippedList.add(entry.getKey().getAddress().toString());
+                    }
+                }
+                return skippedList;
+            }
+
         };
     }
 
@@ -65,8 +93,12 @@ public interface MutableDependencyDataMap {
     void setProvided(Dependency dependency);
     boolean isProvided(Dependency dependency);
 
-    MutableDependencyDataMap EMPTY = new MutableDependencyDataMap() {
+    @NonNull
+    List<String> getProvidedList();
+    @NonNull
+    List<String> getSkippedList();
 
+    MutableDependencyDataMap EMPTY = new MutableDependencyDataMap() {
         @Override
         public void skip(Dependency dependency) {
             throw new RuntimeException(String.format("cannot set skipped attribute "
@@ -87,6 +119,18 @@ public interface MutableDependencyDataMap {
         @Override
         public boolean isProvided(Dependency dependency) {
             return false;
+        }
+
+        @NonNull
+        @Override
+        public List<String> getProvidedList() {
+            return ImmutableList.of();
+        }
+
+        @NonNull
+        @Override
+        public List<String> getSkippedList() {
+            return ImmutableList.of();
         }
     };
 }

@@ -30,7 +30,6 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
@@ -38,7 +37,7 @@ import org.junit.Test;
 
 public class DependencyGraphTest {
 
-    private final Map<MavenCoordinates, Dependency> dependencyMap = Maps.newHashMap();
+    private final Map<Object, Dependency> dependencyMap = Maps.newHashMap();
 
     @Test
     public void testFlatten() throws Exception {
@@ -74,12 +73,11 @@ public class DependencyGraphTest {
                 ImmutableList.of(libraryModule.getSecond()),
                 MutableDependencyDataMap.EMPTY);
 
-        FlatDependencyContainer flatContainer =
-                (FlatDependencyContainer) graph.flatten(null, null);
+        FlatDependencyContainer flatContainer = graph.flatten(null, null);
 
-        Truth.assertThat(flatContainer.getAllDependencies()).containsExactly(
+        assertThat(flatContainer.getAllDependencies()).containsExactly(
                 libraryModule.getFirst(), jarModule.getFirst(), guava.getFirst()).inOrder();
-        Truth.assertThat(flatContainer.getDirectDependencies()).containsExactly(
+        assertThat(flatContainer.getDirectDependencies()).containsExactly(
                 libraryModule.getFirst()).inOrder();
     }
 
@@ -145,7 +143,7 @@ public class DependencyGraphTest {
         FlatDependencyContainer flatContainer = graph
                 .flatten(testedModule.getFirst(), testedGraph.flatten(null, null).filterSkippedLibraries());
 
-        Truth.assertThat(flatContainer.getAllDependencies())
+        assertThat(flatContainer.getAllDependencies())
                 .containsExactly(testedModule.getFirst(), libraryModule.getFirst(),
                         jarModule.getFirst(), guava.getFirst(), randomLib.getFirst())
                 .inOrder();
@@ -178,7 +176,7 @@ public class DependencyGraphTest {
 
         // we want to test that the libraries contains exactly testedModule, and not
         // the local jar.
-        Truth.assertThat(flatContainer.getAllDependencies())
+        assertThat(flatContainer.getAllDependencies())
                 .containsExactly(localJar.getFirst(), libraryModule.getFirst(), jarModule.getFirst())
                 .inOrder();
     }
@@ -214,7 +212,7 @@ public class DependencyGraphTest {
 
         // we want to test that the libraries contains exactly testedModule, and not
         // the local jar.
-        Truth.assertThat(flatContainer.getAllDependencies()).containsExactly(testedModule);
+        assertThat(flatContainer.getAllDependencies()).containsExactly(testedModule);
     }
 
     @Test
@@ -254,12 +252,12 @@ public class DependencyGraphTest {
                 ImmutableList.of(libraryModule.getSecond(), libraryModule2.getSecond()),
                 MutableDependencyDataMap.EMPTY);
 
-        FlatDependencyContainer flatContainer = (FlatDependencyContainer) graph.flatten(null, null);
+        FlatDependencyContainer flatContainer = graph.flatten(null, null);
 
-        Truth.assertThat(flatContainer.getAllDependencies()).containsExactly(
+        assertThat(flatContainer.getAllDependencies()).containsExactly(
                 libraryModule.getFirst(), libraryModule2.getFirst(), jarModule.getFirst())
                 .inOrder();
-        Truth.assertThat(flatContainer.getDirectDependencies()).containsExactly(
+        assertThat(flatContainer.getDirectDependencies()).containsExactly(
                 libraryModule.getFirst(), libraryModule2.getFirst()).inOrder();
     }
 
@@ -284,14 +282,14 @@ public class DependencyGraphTest {
     private Pair<AndroidDependency, DependencyNode> mockAndroidLibrary(
             @NonNull File jarFile,
             @NonNull MavenCoordinates coordinates,
-            @Nullable String path,
+            @Nullable String gradlePath,
             @NonNull DependencyNode... dependencies) {
 
         AndroidDependency androidDep = AndroidDependency.createExplodedAarLibrary(
                 jarFile,
                 coordinates,
-                path,
-                "",
+                jarFile.getName(), // name
+                gradlePath,
                 new File("exploded-aar", jarFile.getName()));
 
         return Pair.of(androidDep, getDependencyNode(androidDep, dependencies));
@@ -301,7 +299,7 @@ public class DependencyGraphTest {
     private DependencyNode getDependencyNode(
             @NonNull Dependency root,
             @NonNull DependencyNode... dependencies) {
-        MavenCoordinates address = root.getCoordinates();
+        Object address = root.getAddress();
         dependencyMap.put(address, root);
 
         NodeType nodeType = root instanceof AndroidDependency ? NodeType.ANDROID

@@ -15,22 +15,24 @@
  */
 
 package com.android.build.gradle.integration.library
+
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
+import com.android.builder.model.level2.LibraryGraph
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static org.junit.Assert.assertEquals
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
 import static org.junit.Assert.assertNotNull
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+
 /**
  * Assemble tests for localJars.
  */
@@ -40,7 +42,7 @@ class LocalJarsTest {
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("localJars")
             .create()
-    static Map<String, AndroidProject> models
+    static ModelContainer<AndroidProject> models
 
     @BeforeClass
     static void setUp() {
@@ -60,21 +62,18 @@ class LocalJarsTest {
 
     @Test
     void testModel() throws Exception {
-        AndroidProject libModel = models.get(":baseLibrary")
+        AndroidProject libModel = models.getModelMap().get(":baseLibrary")
         assertNotNull("Module app null-check", libModel)
 
         Collection<Variant> variants = libModel.getVariants()
 
         Variant releaseVariant = ModelHelper.getVariant(variants, "release")
 
-        Dependencies dependencies = releaseVariant.getMainArtifact().getCompileDependencies()
-        assertNotNull(dependencies)
+        LibraryGraph graph = releaseVariant.getMainArtifact().getCompileGraph()
+        assertNotNull(graph)
 
-        Collection<JavaLibrary> javaLibraries = dependencies.getJavaLibraries()
-        assertNotNull(javaLibraries)
+        LibraryGraphHelper helper = new LibraryGraphHelper(models)
 
-        //  com.google.guava:guava:15.0
-        //  + the local jar
-        assertEquals(2, javaLibraries.size())
+        assertThat(helper.on(graph).withType(JAVA).asList()).hasSize(2);
     }
 }

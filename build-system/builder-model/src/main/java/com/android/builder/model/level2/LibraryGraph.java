@@ -25,11 +25,7 @@ import java.util.Map;
  *
  * It contains a fairly lightweight graph with each artifact node being mostly an address, children,
  * and modifiers that are specific to this particular usage of the artifact rather than
- * artifact properties.
- *
- * It also contains a map of address to artifact, for external libraries (android and Java) only.
- * sub-modules are just referenced by their gradle path only and are not provided in any other
- * way (besides the modifiers in each graph node).
+ * artifact properties.*
  */
 public interface LibraryGraph {
 

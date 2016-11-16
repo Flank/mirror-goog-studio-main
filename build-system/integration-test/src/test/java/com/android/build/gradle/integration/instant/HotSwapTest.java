@@ -98,7 +98,7 @@ public class HotSwapTest {
     @Test
     public void buildIncrementallyWithInstantRun() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle());
+                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(project, packaging, 19, COLDSWAP_MODE);
 
@@ -130,7 +130,7 @@ public class HotSwapTest {
     @Test
     public void testModel() throws Exception {
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle());
+                project.model().getSingle().getOnlyModel());
 
         assertTrue(instantRunModel.isSupportedByArtifact());
 
@@ -138,7 +138,7 @@ public class HotSwapTest {
                 project.getBuildFile(), "\nandroid.buildTypes.debug.useJack = true");
 
         instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle());
+                project.model().getSingle().getOnlyModel());
 
         assertFalse(instantRunModel.isSupportedByArtifact());
     }

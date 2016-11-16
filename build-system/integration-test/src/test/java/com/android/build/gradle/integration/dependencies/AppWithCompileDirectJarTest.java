@@ -19,26 +19,23 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * test for compile jar in app
@@ -49,7 +46,7 @@ public class AppWithCompileDirectJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static Map<String, AndroidProject> models;
+    static ModelContainer<AndroidProject> models;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -77,10 +74,16 @@ public class AppWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsInTheModel() {
-        Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant variant = ModelHelper.getVariant(
+                models.getModelMap().get(":app").getVariants(), "debug");
 
-        Dependencies deps = variant.getMainArtifact().getCompileDependencies();
-        Collection<JavaLibrary> javaLbis = deps.getJavaLibraries();
-        assertThat(javaLbis).named("java dependency count").hasSize(1);
+        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        LibraryGraphHelper helper = new LibraryGraphHelper(models);
+
+        assertThat(helper.on(compileGraph)
+                .withType(LibraryGraphHelper.Type.MODULE)
+                .mapTo(Property.GRADLE_PATH))
+                .named("java sub-modules")
+                .containsExactly(":jar");
     }
 }
