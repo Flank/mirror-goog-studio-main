@@ -154,6 +154,6 @@ filegroup(
 java_import(
     name = "android_jar",
     jars = [":_android_jar"],
-    visibility = ["//visibility:public"],
     neverlink = 1,
+    visibility = ["//visibility:public"],
 )
