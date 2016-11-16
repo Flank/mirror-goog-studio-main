@@ -19,9 +19,9 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
-import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
@@ -70,17 +70,34 @@ public class LibraryGraphHelper {
         this.container = container;
     }
 
-    public Items on(LibraryGraph libraryGraph) {
-        return new Items(libraryGraph, libraryGraph.getDependencies());
+    public Items on(DependencyGraphs dependencyGraphs) {
+        return new Items(dependencyGraphs);
     }
 
+    @SuppressWarnings("ConstantConditions")
     public class Items {
-        private final LibraryGraph libraryGraph;
+        private final DependencyGraphs dependencyGraphs;
         private final List<GraphItem> items;
+        private final boolean root;
 
-        private Items(LibraryGraph libraryGraph, List<GraphItem> items) {
-            this.libraryGraph = libraryGraph;
+        private Items(DependencyGraphs dependencyGraphs) {
+            this.dependencyGraphs = dependencyGraphs;
+            // default is compile
+            this.items = dependencyGraphs.getCompileDependencies();
+            root = true;
+        }
+        private Items(DependencyGraphs dependencyGraphs, List<GraphItem> items) {
+            this.dependencyGraphs = dependencyGraphs;
             this.items = items;
+            root = false;
+        }
+
+        public Items forPackage() {
+            if (!root) {
+                // can reset with package or it'll remove all the filters.
+                throw new IllegalStateException("Can't call withPackage() after filters/map/etc...");
+            }
+            return new Items(dependencyGraphs, dependencyGraphs.getPackageDependencies());
         }
 
         public List<GraphItem> asList() {
@@ -92,7 +109,7 @@ public class LibraryGraphHelper {
         }
 
         public Items getTransitiveFromSingleItem() {
-            return new Items(libraryGraph, asSingleGraphItem().getDependencies());
+            return new Items(dependencyGraphs, asSingleGraphItem().getDependencies());
         }
 
         public List<Library> asLibraries() {
@@ -112,31 +129,31 @@ public class LibraryGraphHelper {
             Set<GraphItem> flatDependencies = new LinkedHashSet<>();
             computeFlatList(items, flatDependencies);
 
-            return new Items(libraryGraph, Lists.reverse(new ArrayList<>(flatDependencies)));
+            return new Items(dependencyGraphs, Lists.reverse(new ArrayList<>(flatDependencies)));
         }
 
         public Items withType(Type type) {
             Map<String, Library> map = container.getGlobalLibraryMap().getLibraries();
-            return new Items(libraryGraph, items.stream()
+            return new Items(dependencyGraphs, items.stream()
                     .filter(item -> map.get(item.getArtifactAddress()).getType() == type.getValue())
                     .collect(Collectors.toList()));
         }
 
         public Items filter(Filter type) {
-            if (libraryGraph == null) {
-                throw new RuntimeException("Can't filter on LibraryGraphHelper with no LibraryGraph");
+            if (dependencyGraphs == null) {
+                throw new RuntimeException("Can't filter on LibraryGraphHelper with no DependencyGraphs");
             }
-            return new Items(libraryGraph, items.stream()
+            return new Items(dependencyGraphs, items.stream()
                     .filter(item -> {
                         switch (type) {
                             case PROVIDED:
-                                return libraryGraph.getProvidedLibraries().contains(item.getArtifactAddress());
+                                return dependencyGraphs.getProvidedLibraries().contains(item.getArtifactAddress());
                             case NOT_PROVIDED:
-                                return !libraryGraph.getProvidedLibraries().contains(item.getArtifactAddress());
+                                return !dependencyGraphs.getProvidedLibraries().contains(item.getArtifactAddress());
                             case SKIPPED:
-                                return libraryGraph.getSkippedLibraries().contains(item.getArtifactAddress());
+                                return dependencyGraphs.getSkippedLibraries().contains(item.getArtifactAddress());
                             case NOT_SKIPPED:
-                                return !libraryGraph.getSkippedLibraries().contains(item.getArtifactAddress());
+                                return !dependencyGraphs.getSkippedLibraries().contains(item.getArtifactAddress());
                             default:
                                 throw new RuntimeException("Unsupported Filter Type");
                         }

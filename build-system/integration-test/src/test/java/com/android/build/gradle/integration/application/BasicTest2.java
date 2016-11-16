@@ -40,7 +40,7 @@ import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.Library;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -142,7 +142,7 @@ public class BasicTest2 {
                 .isEqualTo(12);
 
         // check debug dependencies
-        LibraryGraph compileGraph = debugMainInfo.getCompileGraph();
+        DependencyGraphs compileGraph = debugMainInfo.getDependencyGraphs();
         assertThat(compileGraph).named("debug compile graph").isNotNull();
 
         assertThat(helper.on(compileGraph).withType(JAVA).asList())
@@ -152,9 +152,9 @@ public class BasicTest2 {
         LibraryGraphHelper.Items androidItems = helper.on(compileGraph).withType(ANDROID);
 
         Map<String, Integer> coordinates = ImmutableMap.of(
-                "com.google.android.gms:play-services-base:aar:" + PLAY_SERVICES_VERSION, 0,
-                "com.android.support:support-v13:aar:" + SUPPORT_LIB_VERSION, 1,
-                "com.android.support:support-v4:aar:" + SUPPORT_LIB_VERSION, 0);
+                "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION + "@aar", 0,
+                "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar", 1,
+                "com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar", 0);
 
         Set<String> coordinateCopies = Sets.newHashSet(coordinates.keySet());
 
@@ -298,7 +298,7 @@ public class BasicTest2 {
         assertThat(relTestInfo).named("release test artifact").isNull();
 
         // check release dependencies
-        LibraryGraph releaseGraph = relMainInfo.getCompileGraph();
+        DependencyGraphs releaseGraph = relMainInfo.getDependencyGraphs();
         assertThat(releaseGraph).named("release compile graph").isNotNull();
 
         assertThat(helper.on(releaseGraph).withType(JAVA).asList())

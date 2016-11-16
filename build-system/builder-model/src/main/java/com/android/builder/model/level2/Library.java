@@ -25,6 +25,7 @@ import java.util.Collection;
 
 /**
  * Represent a variant/module/artifact dependency.
+ * @since 2.3
  */
 public interface Library {
 

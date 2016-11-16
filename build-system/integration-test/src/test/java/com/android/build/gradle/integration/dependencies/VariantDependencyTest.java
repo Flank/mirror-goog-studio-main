@@ -36,8 +36,8 @@ import com.android.builder.core.ApkInfoParser;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.repository.Revision;
@@ -182,7 +182,7 @@ public class VariantDependencyTest {
         checkVariant(
                 variants,
                 variantName,
-                "com.android.support:leanback-v17:aar:" + SUPPORT_LIB_VERSION);
+                "com.android.support:leanback-v17:" + SUPPORT_LIB_VERSION + "@aar");
     }
 
     @Test
@@ -192,11 +192,11 @@ public class VariantDependencyTest {
         checkVariant(
                 variants,
                 "paidIcsDebug",
-                "com.android.support:appcompat-v7:aar:" + SUPPORT_LIB_VERSION);
+                "com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION + "@aar");
         checkVariant(
                 variants,
                 "paidIcsRelease",
-                "com.android.support:appcompat-v7:aar:" + SUPPORT_LIB_VERSION);
+                "com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION + "@aar");
     }
 
     @Test
@@ -222,7 +222,7 @@ public class VariantDependencyTest {
                 .named("main artifact for " + variantName)
                 .isNotNull();
 
-        LibraryGraph graph = artifact.getCompileGraph();
+        DependencyGraphs graph = artifact.getDependencyGraphs();
         assertThat(graph)
                 .named("dependencies for main artifact of " + variantName)
                 .isNotNull();

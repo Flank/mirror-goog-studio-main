@@ -30,7 +30,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -91,7 +91,7 @@ public class LibWithProvidedDirectJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":library").getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         LibraryGraphHelper.Items moduleItems = helper.on(graph).withType(MODULE);
 
@@ -107,8 +107,8 @@ public class LibWithProvidedDirectJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":library").getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getPackageGraph();
-        assertThat(graph.getDependencies()).isEmpty();
+        DependencyGraphs dependencyGrap = variant.getMainArtifact().getDependencyGraphs();
+        assertThat(dependencyGrap.getPackageDependencies()).isEmpty();
     }
 
     @Test
@@ -116,7 +116,7 @@ public class LibWithProvidedDirectJarTest {
         Variant variant = ModelHelper.getVariant
                 (modelContainer.getModelMap().get(":app").getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         // query directly the full transitive list and it should only contain :library
         assertThat(helper.on(graph).withTransitive().mapTo(GRADLE_PATH)).containsExactly(":library");

@@ -27,7 +27,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
@@ -74,7 +74,7 @@ public class MultiProjectTest {
         AndroidArtifact mainArtifact = variant.getMainArtifact();
         assertThat(mainArtifact).named("release main artifact").isNotNull();
 
-        LibraryGraph compileGraph = mainArtifact.getCompileGraph();
+        DependencyGraphs compileGraph = mainArtifact.getDependencyGraphs();
         assertThat(compileGraph).named("release main artifact graph").isNotNull();
 
         assertThat(helper.on(compileGraph).withType(MODULE).mapTo(GRADLE_PATH))

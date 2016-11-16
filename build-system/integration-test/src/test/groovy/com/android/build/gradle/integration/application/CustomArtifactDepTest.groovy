@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
-import com.android.builder.model.level2.LibraryGraph
+import com.android.builder.model.level2.DependencyGraphs
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -67,9 +67,9 @@ class CustomArtifactDepTest {
         AndroidArtifact mainInfo = variant.getMainArtifact()
         assertNotNull("Main Artifact null-check", mainInfo)
 
-        LibraryGraph graph = mainInfo.getCompileGraph();
-        assertNotNull("Dependencies null-check", graph)
+        DependencyGraphs dependencyGraph = mainInfo.getDependencyGraphs();
+        assertNotNull("Dependencies null-check", dependencyGraph)
 
-        assertEquals("jar dep count", 1, graph.getDependencies().size())
+        assertEquals("jar dep count", 1, dependencyGraph.getCompileDependencies().size())
     }
 }

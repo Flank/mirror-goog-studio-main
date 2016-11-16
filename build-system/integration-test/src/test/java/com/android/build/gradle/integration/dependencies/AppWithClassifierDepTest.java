@@ -28,8 +28,8 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
-import com.android.builder.model.level2.LibraryGraph;
 import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -65,10 +65,10 @@ public class AppWithClassifierDepTest {
     public void checkDebugDepInModel() {
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         LibraryGraphHelper.Items javaItems = helper.on(graph).withType(JAVA);
-        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:jar:1.0");
+        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:1.0@jar");
 
         Library library = javaItems.asSingleLibrary();
         assertThat(library.getArtifact())
@@ -84,10 +84,10 @@ public class AppWithClassifierDepTest {
         AndroidArtifact androidTestArtifact = ModelHelper.getAndroidArtifact(
                 debugVariant.getExtraAndroidArtifacts(), ARTIFACT_ANDROID_TEST);
 
-        LibraryGraph graph = androidTestArtifact.getCompileGraph();
+        DependencyGraphs graph = androidTestArtifact.getDependencyGraphs();
 
         LibraryGraphHelper.Items javaItems = helper.on(graph).withType(JAVA);
-        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:jar:testlib:1.0");
+        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:1.0:testlib@jar");
 
         Library library = javaItems.asSingleLibrary();
         assertThat(library.getArtifact())

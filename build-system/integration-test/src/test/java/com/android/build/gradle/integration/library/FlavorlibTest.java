@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.DependencyManager;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Collection;
@@ -97,7 +97,7 @@ public class FlavorlibTest {
         Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
         assertThat(flavor1Debug).named("flavor1Debug variant").isNotNull();
 
-        LibraryGraph flavor1Graph = flavor1Debug.getMainArtifact().getCompileGraph();
+        DependencyGraphs flavor1Graph = flavor1Debug.getMainArtifact().getDependencyGraphs();
         assertThat(flavor1Graph).named("flavor 1 graph").isNotNull();
         assertThat(helper.on(flavor1Graph).withType(MODULE).mapTo(GRADLE_PATH))
                 .named("flavor 1 android lib deps")
@@ -108,7 +108,7 @@ public class FlavorlibTest {
         Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
         assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();
 
-        LibraryGraph flavor2Graph = flavor2Debug.getMainArtifact().getCompileGraph();
+        DependencyGraphs flavor2Graph = flavor2Debug.getMainArtifact().getDependencyGraphs();
         assertThat(flavor2Graph).named("flavor 2 graph").isNotNull();
         assertThat(helper.on(flavor2Graph).withType(MODULE).mapTo(GRADLE_PATH))
                 .named("flavor 2 android lib deps")

@@ -25,6 +25,8 @@ import java.util.Map;
  *
  * This is a separate model to query (the same way {@link AndroidProject} is queried). It must
  * be queried after all the models have been queried for their {@link AndroidProject}.
+ *
+ * @since 2.3
  */
 public interface GlobalLibraryMap {
 
@@ -32,7 +34,6 @@ public interface GlobalLibraryMap {
      * the list of external libraries used by all the variants in the module.
      *
      * @return the map of address to library
-     * @since 2.3
      */
     @NonNull
     Map<String, Library> getLibraries();

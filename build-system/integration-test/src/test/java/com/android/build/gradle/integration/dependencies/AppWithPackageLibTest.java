@@ -67,6 +67,6 @@ public class AppWithPackageLibTest {
         assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_PACKAGE_DEP,
-                "projectWithModules:library:aar:unspecified");
+                "projectWithModules:library:unspecified@aar");
     }
 }

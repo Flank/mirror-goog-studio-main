@@ -30,7 +30,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -97,7 +97,7 @@ public class AppWithProvidedAarAsJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
 
         assertThat(helper.on(compileGraph).withType(MODULE).mapTo(GRADLE_PATH))
                 .named("app sub-module dependencies")
@@ -114,7 +114,7 @@ public class AppWithProvidedAarAsJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
 
         final LibraryGraphHelper.Items subModules = helper.on(compileGraph).withType(MODULE);
 

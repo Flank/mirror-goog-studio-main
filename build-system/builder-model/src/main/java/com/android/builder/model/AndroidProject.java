@@ -35,7 +35,7 @@ public interface AndroidProject {
     // Sent by Studio 2.3+. The value of the prop is a monotonically increasing integer.
     // see MODEL_LEVEL_* constants
     String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
-    // Sent by Studio 2.+. Additional model feature trigger on a case by case basis
+    // Sent by Studio 2.3+. Additional model feature trigger on a case by case basis
     // Value is simply true to enable.
     String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
 

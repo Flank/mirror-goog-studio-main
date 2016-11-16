@@ -71,6 +71,6 @@ public class AppWithJarDependOnLibTest {
         assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_JAR_DEPEND_ON_AAR,
-                "projectWithModules:jar:jar:unspecified");
+                "projectWithModules:jar:unspecified@jar");
     }
 }

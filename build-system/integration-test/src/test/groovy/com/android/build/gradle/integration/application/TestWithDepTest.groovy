@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
-import com.android.builder.model.level2.LibraryGraph
+import com.android.builder.model.level2.DependencyGraphs
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -68,7 +68,7 @@ class TestWithDepTest {
         AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(extraAndroidArtifact,
                 ARTIFACT_ANDROID_TEST)
 
-        LibraryGraph graph = testArtifact.getCompileGraph();
+        DependencyGraphs graph = testArtifact.getDependencyGraphs();
         assertEquals(1, helper.on(graph).withType(JAVA).asList().size())
     }
 }
