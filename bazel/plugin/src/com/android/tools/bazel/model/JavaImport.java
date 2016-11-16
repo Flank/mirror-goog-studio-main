@@ -38,7 +38,9 @@ public class JavaImport extends BazelRule {
 
         call.setArgument("jars", jars);
         call.setDoNotSort("jars", "must match IML order");
-        call.setArgument("visibility", ImmutableList.of("//visibility:public"));
+        if (!statement.isFromFile()) {
+            call.setArgument("visibility", ImmutableList.of("//visibility:public"));
+        }
         call.addElementToList("tags", "managed");
     }
 
