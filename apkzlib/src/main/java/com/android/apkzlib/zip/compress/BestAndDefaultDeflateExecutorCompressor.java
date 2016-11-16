@@ -16,14 +16,13 @@
 
 package com.android.apkzlib.zip.compress;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.CompressionResult;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.google.common.base.Preconditions;
-
 import java.util.concurrent.Executor;
 import java.util.zip.Deflater;
+import javax.annotation.Nonnull;
 
 /**
  * Compressor that tries both the best and default compression algorithms and picks the default
@@ -34,13 +33,13 @@ public class BestAndDefaultDeflateExecutorCompressor extends ExecutorCompressor 
     /**
      * Deflater using the default compression level.
      */
-    @NonNull
+    @Nonnull
     private final DeflateExecutionCompressor mDefaultDeflater;
 
     /**
      * Deflater using the best compression level.
      */
-    @NonNull
+    @Nonnull
     private final DeflateExecutionCompressor mBestDeflater;
 
     /**
@@ -59,8 +58,8 @@ public class BestAndDefaultDeflateExecutorCompressor extends ExecutorCompressor 
      * if {@code 1.0} then the best compression is always picked unless it produces the exact same
      * size as the default compression.
      */
-    public BestAndDefaultDeflateExecutorCompressor(@NonNull Executor executor,
-            @NonNull ByteTracker tracker, double minRatio) {
+    public BestAndDefaultDeflateExecutorCompressor(@Nonnull Executor executor,
+            @Nonnull ByteTracker tracker, double minRatio) {
         super(executor);
 
         Preconditions.checkArgument(minRatio >= 0.0, "minRatio < 0.0");
@@ -73,9 +72,9 @@ public class BestAndDefaultDeflateExecutorCompressor extends ExecutorCompressor 
         mMinRatio = minRatio;
     }
 
-    @NonNull
+    @Nonnull
     @Override
-    protected CompressionResult immediateCompress(@NonNull CloseableByteSource source)
+    protected CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
             throws Exception {
         CompressionResult defaultResult = mDefaultDeflater.immediateCompress(source);
         CompressionResult bestResult = mBestDeflater.immediateCompress(source);

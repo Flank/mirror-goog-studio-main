@@ -16,8 +16,8 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
+import javax.annotation.Nonnull;
 
 /**
  * Result of compressing data.
@@ -27,13 +27,13 @@ public class CompressionResult {
     /**
      * The compression method used.
      */
-    @NonNull
+    @Nonnull
     private final CompressionMethod mCompressionMethod;
 
     /**
      * The resulting data.
      */
-    @NonNull
+    @Nonnull
     private final CloseableByteSource mSource;
 
     /**
@@ -47,7 +47,7 @@ public class CompressionResult {
      * @param source the data source
      * @param method the compression method
      */
-    public CompressionResult(@NonNull CloseableByteSource source, @NonNull CompressionMethod method,
+    public CompressionResult(@Nonnull CloseableByteSource source, @Nonnull CompressionMethod method,
             long size) {
         mCompressionMethod = method;
         mSource = source;
@@ -58,7 +58,7 @@ public class CompressionResult {
      * Obtains the compression method.
      * @return the compression method
      */
-    @NonNull
+    @Nonnull
     public CompressionMethod getCompressionMethod() {
         return mCompressionMethod;
     }
@@ -67,7 +67,7 @@ public class CompressionResult {
      * Obtains the compressed data.
      * @return the data, the resulting array should not be modified
      */
-    @NonNull
+    @Nonnull
     public CloseableByteSource getSource() {
         return mSource;
     }

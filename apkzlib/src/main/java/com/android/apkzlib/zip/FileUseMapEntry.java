@@ -16,13 +16,12 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
-
 import java.util.Comparator;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Represents an entry in the {@link FileUseMap}. Each entry contains an interval of bytes. The
@@ -100,7 +99,7 @@ class FileUseMapEntry<T> {
      * @param <T> the type of data to store in the entry
      * @return the entry
      */
-    public static <T> FileUseMapEntry<T> makeUsed(long start, long end, @NonNull T store) {
+    public static <T> FileUseMapEntry<T> makeUsed(long start, long end, @Nonnull T store) {
         Preconditions.checkNotNull(store, "store == null");
         return new FileUseMapEntry<>(start, end, store);
     }

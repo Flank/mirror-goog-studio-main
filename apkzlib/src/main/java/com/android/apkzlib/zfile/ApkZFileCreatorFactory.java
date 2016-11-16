@@ -16,10 +16,10 @@
 
 package com.android.apkzlib.zfile;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFileOptions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import javax.annotation.Nonnull;
 
 /**
  * Creates instances of {@link ApkZFileCreator}.
@@ -29,7 +29,7 @@ public class ApkZFileCreatorFactory implements ApkCreatorFactory {
     /**
      * Options for the {@link ZFileOptions} to use in all APKs.
      */
-    @NonNull
+    @Nonnull
     private final ZFileOptions mOptions;
 
     /**
@@ -37,14 +37,14 @@ public class ApkZFileCreatorFactory implements ApkCreatorFactory {
      *
      * @param options the options to use for all instances created
      */
-    public ApkZFileCreatorFactory(@NonNull ZFileOptions options) {
+    public ApkZFileCreatorFactory(@Nonnull ZFileOptions options) {
         mOptions = options;
     }
 
 
     @Override
-    @NonNull
-    public ApkCreator make(@NonNull CreationData creationData) {
+    @Nonnull
+    public ApkCreator make(@Nonnull CreationData creationData) {
         try {
             return new ApkZFileCreator(creationData, mOptions);
         } catch (IOException e) {

@@ -18,7 +18,6 @@ package com.android.apkzlib.utils;
 
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
 import com.android.testutils.TestResources;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
@@ -27,6 +26,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import javax.annotation.Nonnull;
 
 /**
  * Utility functions for tests.
@@ -42,8 +42,8 @@ public final class ApkZFileTestUtils {
      * @return the bytes read
      * @throws Exception failed to read the file
      */
-    @NonNull
-    public static byte[] readSegment(@NonNull File file, long start, int length) throws Exception {
+    @Nonnull
+    public static byte[] readSegment(@Nonnull File file, long start, int length) throws Exception {
         Preconditions.checkArgument(start >= 0, "start < 0");
         Preconditions.checkArgument(length >= 0, "length < 0");
 
@@ -72,8 +72,8 @@ public final class ApkZFileTestUtils {
      * @param path the path
      * @return the test resource
      */
-    @NonNull
-    public static File getResource(@NonNull String path) {
+    @Nonnull
+    public static File getResource(@Nonnull String path) {
         File resource = TestResources.getFile(ApkZFileTestUtils.class, path);
         assertTrue(resource.exists());
         return resource;
@@ -85,8 +85,8 @@ public final class ApkZFileTestUtils {
      * @param path the path
      * @return the test resource
      */
-    @NonNull
-    public static ByteSource getResourceBytes(@NonNull String path) {
+    @Nonnull
+    public static ByteSource getResourceBytes(@Nonnull String path) {
         return Resources.asByteSource(Resources.getResource(ApkZFileTestUtils.class, path));
     }
 

@@ -16,10 +16,9 @@
 
 package com.android.apkzlib.sign.v2;
 
-import java.security.MessageDigest;
-
-import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
+import java.security.MessageDigest;
+import javax.annotation.Nonnull;
 
 /**
  * {@code byte[]} which is fed into {@link MessageDigest} instances.
@@ -32,7 +31,7 @@ public class ByteArrayDigestSource implements DigestSource {
      * provided byte array. Changes to the byte array's contents are reflected visible in this
      * source.
      */
-    public ByteArrayDigestSource(@NonNull byte[] buf) {
+    public ByteArrayDigestSource(@Nonnull byte[] buf) {
         mBuf = buf;
     }
 
@@ -42,7 +41,7 @@ public class ByteArrayDigestSource implements DigestSource {
     }
 
     @Override
-    public void feedDigests(long offset, int size, @NonNull MessageDigest[] digests) {
+    public void feedDigests(long offset, int size, @Nonnull MessageDigest[] digests) {
         Preconditions.checkArgument(offset >= 0, "offset: %s", offset);
         Preconditions.checkArgument(size >= 0, "size: %s", size);
         Preconditions.checkArgument(offset <= mBuf.length, "offset too large: %s", offset);

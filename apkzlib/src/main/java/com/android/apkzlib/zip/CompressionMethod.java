@@ -16,7 +16,7 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Enumeration with all known compression methods.

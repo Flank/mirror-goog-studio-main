@@ -16,7 +16,6 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.CachedSupplier;
 import com.android.apkzlib.zip.utils.MsDosDateTimeUtils;
 import com.google.common.base.Preconditions;
@@ -26,7 +25,6 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -34,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 /**
  * Representation of the central directory of a zip archive.
@@ -174,19 +173,19 @@ class CentralDirectory {
     /**
      * Contains all entries in the directory mapped from their names.
      */
-    @NonNull
+    @Nonnull
     private final Map<String, StoredEntry> mEntries;
 
     /**
      * The file where this directory belongs to.
      */
-    @NonNull
+    @Nonnull
     private final ZFile mFile;
 
     /**
      * Supplier that provides a byte representation of the central directory.
      */
-    @NonNull
+    @Nonnull
     private final CachedSupplier<byte[]> mBytesSupplier;
 
     /**
@@ -194,7 +193,7 @@ class CentralDirectory {
      *
      * @param file the file
      */
-    CentralDirectory(@NonNull ZFile file) {
+    CentralDirectory(@Nonnull ZFile file) {
         mEntries = Maps.newHashMap();
         mFile = file;
         mBytesSupplier = new CachedSupplier<>(this::computeByteRepresentation);
@@ -214,7 +213,7 @@ class CentralDirectory {
      * @throws IOException failed to read data from the zip, or the central directory is corrupted
      * or has unsupported features
      */
-    static CentralDirectory makeFromData(@NonNull ByteBuffer bytes, int count, @NonNull ZFile file)
+    static CentralDirectory makeFromData(@Nonnull ByteBuffer bytes, int count, @Nonnull ZFile file)
             throws IOException {
         Preconditions.checkNotNull(bytes, "bytes == null");
         Preconditions.checkArgument(count >= 0, "count < 0");
@@ -247,8 +246,8 @@ class CentralDirectory {
      * @param file the zip file itself
      * @return the created central directory
      */
-    static CentralDirectory makeFromEntries(@NonNull Set<StoredEntry> entries,
-            @NonNull ZFile file) {
+    static CentralDirectory makeFromEntries(@Nonnull Set<StoredEntry> entries,
+            @Nonnull ZFile file) {
         CentralDirectory directory = new CentralDirectory(file);
         for (StoredEntry entry : entries) {
             CentralDirectoryHeader cdr = entry.getCentralDirectoryHeader();
@@ -271,7 +270,7 @@ class CentralDirectory {
      * @throws IOException failed to read the directory entry, either because of an I/O error,
      * because it is corrupt or contains unsupported features
      */
-    private void readEntry(@NonNull ByteBuffer bytes, @NonNull ZFile file) throws IOException {
+    private void readEntry(@Nonnull ByteBuffer bytes, @Nonnull ZFile file) throws IOException {
         F_SIGNATURE.verify(bytes);
         long madeBy = F_MADE_BY.read(bytes);
 
@@ -380,7 +379,7 @@ class CentralDirectory {
      *
      * @return all entries on a non-modifiable map
      */
-    @NonNull
+    @Nonnull
     Map<String, StoredEntry> getEntries() {
         return ImmutableMap.copyOf(mEntries);
     }

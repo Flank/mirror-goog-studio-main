@@ -16,13 +16,12 @@
 
 package com.android.apkzlib.zip.utils;
 
-import com.android.annotations.NonNull;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import javax.annotation.Nonnull;
 
 public class ByteTracker {
 
@@ -42,7 +41,7 @@ public class ByteTracker {
      * @return a byte source containing the cached data from the given stream
      * @throws IOException failed to read the stream
      */
-    public CloseableDelegateByteSource fromStream(@NonNull InputStream stream) throws IOException {
+    public CloseableDelegateByteSource fromStream(@Nonnull InputStream stream) throws IOException {
         byte[] data = ByteStreams.toByteArray(stream);
         updateUsage(data.length);
         return new CloseableDelegateByteSource(ByteSource.wrap(data), data.length) {
@@ -60,7 +59,7 @@ public class ByteTracker {
      * @return a byte source containing the cached data from the given stream
      * @throws IOException failed to read the stream
      */
-    public CloseableDelegateByteSource fromStream(@NonNull ByteArrayOutputStream stream) throws IOException {
+    public CloseableDelegateByteSource fromStream(@Nonnull ByteArrayOutputStream stream) throws IOException {
         byte[] data = stream.toByteArray();
         updateUsage(data.length);
         return new CloseableDelegateByteSource(ByteSource.wrap(data), data.length) {
@@ -78,7 +77,7 @@ public class ByteTracker {
      * @return the tracked byte source
      * @throws IOException failed to read data from the byte source
      */
-    public CloseableDelegateByteSource fromSource(@NonNull ByteSource source) throws IOException {
+    public CloseableDelegateByteSource fromSource(@Nonnull ByteSource source) throws IOException {
         return fromStream(source.openStream());
     }
 

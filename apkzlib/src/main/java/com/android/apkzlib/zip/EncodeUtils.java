@@ -16,12 +16,11 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import javax.annotation.Nonnull;
 
 /**
  * Utilities to encode and decode file names in zips.
@@ -45,8 +44,8 @@ public class EncodeUtils {
      * @param flags the zip entry flags
      * @return the decode file name
      */
-    @NonNull
-    public static String decode(@NonNull ByteBuffer bytes, int length, @NonNull GPFlags flags)
+    @Nonnull
+    public static String decode(@Nonnull ByteBuffer bytes, int length, @Nonnull GPFlags flags)
             throws IOException {
         if (bytes.remaining() < length) {
             throw new IOException("Only " + bytes.remaining() + " bytes exist in the buffer, but "
@@ -66,8 +65,8 @@ public class EncodeUtils {
      * @param flags the zip entry flags
      * @return the decode file name
      */
-    @NonNull
-    public static String decode(@NonNull byte[] data, @NonNull GPFlags flags) {
+    @Nonnull
+    public static String decode(@Nonnull byte[] data, @Nonnull GPFlags flags) {
         Charset charset = flagsCharset(flags);
         return charset.decode(ByteBuffer.wrap(data)).toString();
     }
@@ -79,8 +78,8 @@ public class EncodeUtils {
      * @param flags the zip entry flags
      * @return the encoded file name
      */
-    @NonNull
-    public static byte[] encode(@NonNull String name, @NonNull GPFlags flags) {
+    @Nonnull
+    public static byte[] encode(@Nonnull String name, @Nonnull GPFlags flags) {
         Charset charset = flagsCharset(flags);
         ByteBuffer bytes = charset.encode(name);
         byte[] result = new byte[bytes.remaining()];
@@ -94,8 +93,8 @@ public class EncodeUtils {
      * @param flags the flags
      * @return the charset to use
      */
-    @NonNull
-    private static Charset flagsCharset(@NonNull GPFlags flags) {
+    @Nonnull
+    private static Charset flagsCharset(@Nonnull GPFlags flags) {
         if (flags.isUtf8FileName()) {
             return Charsets.UTF_8;
         } else {

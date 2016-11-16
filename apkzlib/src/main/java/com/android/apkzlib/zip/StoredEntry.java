@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.CloseableDelegateByteSource;
 import com.google.common.base.Preconditions;
@@ -25,11 +23,12 @@ import com.google.common.base.Verify;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * A stored entry represents a file in the zip. The entry may or may not be written to the zip
@@ -152,19 +151,19 @@ public class StoredEntry {
     /**
      * Type of entry.
      */
-    @NonNull
+    @Nonnull
     private StoredEntryType mType;
 
     /**
      * The central directory header with information about the file.
      */
-    @NonNull
+    @Nonnull
     private CentralDirectoryHeader mCdh;
 
     /**
      * The file this entry is associated with
      */
-    @NonNull
+    @Nonnull
     private ZFile mFile;
 
     /**
@@ -175,20 +174,20 @@ public class StoredEntry {
     /**
      * Extra field specified in the local directory.
      */
-    @NonNull
+    @Nonnull
     private ExtraField mLocalExtra;
 
     /**
      * Type of data descriptor associated with the entry.
      */
-    @NonNull
+    @Nonnull
     private DataDescriptorType mDataDescriptorType;
 
     /**
      * Source for this entry's data. If this entry is a directory, this source has to have zero
      * size.
      */
-    @NonNull
+    @Nonnull
     private ProcessedAndRawByteSources mSource;
 
     /**
@@ -201,7 +200,7 @@ public class StoredEntry {
      * read from the zip file, that is, if {@code header.getOffset()} is non-negative
      * @throws IOException failed to create the entry
      */
-    StoredEntry(@NonNull CentralDirectoryHeader header, @NonNull ZFile file,
+    StoredEntry(@Nonnull CentralDirectoryHeader header, @Nonnull ZFile file,
             @Nullable ProcessedAndRawByteSources source) throws IOException {
         mCdh = header;
         mFile = file;
@@ -210,7 +209,7 @@ public class StoredEntry {
         if (header.getOffset() >= 0) {
             /*
              * This will be overwritten during readLocalHeader. However, IJ complains if we don't
-             * assign a value to mLocalExtra because of the @NonNull annotation.
+             * assign a value to mLocalExtra because of the @Nonnull annotation.
              */
             mLocalExtra = new ExtraField();
 
@@ -311,7 +310,7 @@ public class StoredEntry {
      * @return a stream that will return as many bytes as the uncompressed entry size
      * @throws IOException failed to open the stream
      */
-    @NonNull
+    @Nonnull
     public InputStream open() throws IOException {
         return mSource.getProcessedByteSource().openStream();
     }
@@ -322,7 +321,7 @@ public class StoredEntry {
      * @return a byte array with the contents of the file (uncompressed if the file was compressed)
      * @throws IOException failed to read the file
      */
-    @NonNull
+    @Nonnull
     public byte[] read() throws IOException {
         try (InputStream is = open()) {
             return ByteStreams.toByteArray(is);
@@ -334,7 +333,7 @@ public class StoredEntry {
      *
      * @return the type of entry
      */
-    @NonNull
+    @Nonnull
     public StoredEntryType getType() {
         Preconditions.checkState(!mDeleted, "mDeleted");
         return mType;
@@ -370,7 +369,7 @@ public class StoredEntry {
      *
      * @return the CDH
      */
-    @NonNull
+    @Nonnull
     public CentralDirectoryHeader getCentralDirectoryHeader() {
         return mCdh;
     }
@@ -487,7 +486,7 @@ public class StoredEntry {
      * @throws IOException failed to close the old source
      * @return the created source
      */
-    @NonNull
+    @Nonnull
     private ProcessedAndRawByteSources createSourceFromZip(final long zipOffset)
             throws IOException {
         Preconditions.checkArgument(zipOffset >= 0, "zipOffset < 0");
@@ -509,7 +508,7 @@ public class StoredEntry {
                 return compressInfo.getCompressedSize();
             }
 
-            @NonNull
+            @Nonnull
             @Override
             public InputStream openStream() throws IOException {
                 Preconditions.checkState(!mDeleted, "mDeleted");
@@ -540,9 +539,9 @@ public class StoredEntry {
      * @param rawContents the raw data to create the source from
      * @return the sources for this entry
      */
-    @NonNull
+    @Nonnull
     private ProcessedAndRawByteSources createSourcesFromRawContents(
-            @NonNull CloseableByteSource rawContents) {
+            @Nonnull CloseableByteSource rawContents) {
         CentralDirectoryHeaderCompressInfo compressInfo;
         try {
             compressInfo = mCdh.getCompressionInfoWithWait();
@@ -613,7 +612,7 @@ public class StoredEntry {
      *
      * @return the entry source
      */
-    @NonNull
+    @Nonnull
     ProcessedAndRawByteSources getSource() {
         return mSource;
     }
@@ -623,7 +622,7 @@ public class StoredEntry {
      *
      * @return the type of data descriptor
      */
-    @NonNull
+    @Nonnull
     public DataDescriptorType getDataDescriptorType() {
         return mDataDescriptorType;
     }
@@ -634,7 +633,7 @@ public class StoredEntry {
      * @return the header data
      * @throws IOException failed to get header byte data
      */
-    @NonNull
+    @Nonnull
     byte[] toHeaderData() throws IOException {
 
         byte[] encodedFileName = mCdh.getEncodedFileName();
@@ -693,7 +692,7 @@ public class StoredEntry {
      *
      * @return the contents of the local extra field
      */
-    @NonNull
+    @Nonnull
     public ExtraField getLocalExtra() {
         return mLocalExtra;
     }
@@ -704,7 +703,7 @@ public class StoredEntry {
      * @param localExtra the contents of the local extra field
      * @throws IOException failed to update the zip file
      */
-    public void setLocalExtra(@NonNull ExtraField localExtra) throws IOException {
+    public void setLocalExtra(@Nonnull ExtraField localExtra) throws IOException {
         boolean resized = setLocalExtraNoNotify(localExtra);
         mFile.localHeaderChanged(this, resized);
     }
@@ -718,7 +717,7 @@ public class StoredEntry {
      * @return has the local header size changed?
      * @throws IOException failed to load the file
      */
-    boolean setLocalExtraNoNotify(@NonNull ExtraField localExtra) throws IOException {
+    boolean setLocalExtraNoNotify(@Nonnull ExtraField localExtra) throws IOException {
         boolean sizeChanged;
 
         /*
