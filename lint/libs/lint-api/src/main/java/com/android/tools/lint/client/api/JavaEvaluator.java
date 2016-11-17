@@ -21,8 +21,8 @@ import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.google.common.collect.Maps;
 import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiAnnotationOwner;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
@@ -45,7 +45,6 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeVisitor;
 import com.intellij.psi.PsiWildcardType;
 import java.io.File;
-import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
@@ -479,47 +478,18 @@ public abstract class JavaEvaluator {
     @Nullable
     public abstract String findJarPath(@NonNull PsiElement element);
 
-
-    /** Cache for {@link #findGroup(PsiElement)} */
-    private Map<String,String> jarToGroup;
-
     /**
-     * Return the Gradle group id for the given element, <b>if</b> applicable. For example, for
-     * a method in the appcompat library, this would return "com.android.support".
+     * Returns true if the given annotation is inherited (instead of being defined directly
+     * on the given modifier list holder
+     *
+     * @param annotation the annotation to check
+     * @param owner      the owner potentially declaring the annotation
+     * @return true if the annotation is inherited rather than being declared directly on this owner
      */
-    @Nullable
-    public Object findGroup(@NonNull PsiElement element) {
-        String jarFile = findJarPath(element);
-        // Example:
-        // $PROJECT_DIRECTORY/app/build/intermediates/exploded-aar/com.android.support/
-        //          /appcompat-v7/25.0.0-SNAPSHOT/jars/classes.jar
-        // and we want to pick out "com.android.support"
-        if (jarFile != null) {
-            if (jarToGroup == null) {
-                jarToGroup = Maps.newHashMap();
-            }
-            String group = jarToGroup.get(jarFile);
-            if (group == null) {
-                int index = jarFile.indexOf("exploded-aar");
-                if (index != -1) {
-                    index += 13; // "exploded-aar/".length()
-                    for (int i = index; i < jarFile.length(); i++) {
-                        char c = jarFile.charAt(i);
-                        if (c == '/' || c == File.separatorChar) {
-                            group = jarFile.substring(index, i);
-                            break;
-                        }
-                    }
-                }
-                if (group == null) {
-                    group = "";
-                }
-                jarToGroup.put(jarFile, group);
-            }
-            return group.isEmpty() ? null : group;
-        }
-
-        return null;
+    public boolean isInherited(@NonNull PsiAnnotation annotation,
+            @NonNull PsiModifierListOwner owner) {
+        PsiAnnotationOwner annotationOwner = annotation.getOwner();
+        return annotationOwner == null || !annotationOwner.equals(owner.getModifierList());
     }
 
     @Nullable

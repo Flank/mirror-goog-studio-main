@@ -49,6 +49,9 @@ import static com.android.tools.lint.detector.api.ResourceEvaluator.RES_SUFFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.Dependencies;
+import com.android.builder.model.MavenCoordinates;
+import com.android.builder.model.Variant;
 import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.checks.PermissionFinder.Operation;
@@ -1032,34 +1035,63 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             @NonNull PsiAnnotation[] allClassAnnotations,
             int scope) {
 
-        if (!containsAnnotation(allMethodAnnotations, annotation)) {
+        PsiClass containingClass = method.getContainingClass();
+        if (containingClass == null) {
+            return;
+        }
+
+        if (containsAnnotation(allMethodAnnotations, annotation)) {
+            // Make sure that the annotation is *not* inherited.
+            // For example, NavigationView (a public, exposed class) extends ScrimInsetsFrameLayout, which
+            // is a restricted class. We don't want to make all uses of NavigationView to suddenly be
+            // treated as Restricted just because it inherits code from a restricted API.
+            if (bridge.getEvaluator().isInherited(annotation, method)) {
+                return;
+            }
+        } else {
             // Found restriction or class or package: make sure we only check on the most
             // specific scope, otherwise we report the same error multiple times
             // or report errors on restrictions that have been redefined
             if (containsRestrictionAnnotation(allMethodAnnotations)) {
                 return;
             }
-            if (!containsAnnotation(allClassAnnotations, annotation) &&
-                    containsRestrictionAnnotation(allClassAnnotations)) {
+            boolean isClassAnnotation = containsAnnotation(allClassAnnotations, annotation);
+            if (isClassAnnotation) {
+                if (bridge.getEvaluator().isInherited(annotation, containingClass)) {
+                    return;
+                }
+            } else if (containsRestrictionAnnotation(allClassAnnotations)) {
                 return;
             }
-
         }
 
-        PsiClass containingClass = method.getContainingClass();
-        if (containingClass == null) {
-            return;
-        }
-
-        if ((scope & RESTRICT_TO_GROUP_ID )!= 0) {
-            JavaEvaluator evaluator = bridge.getEvaluator();
-            Object thisGroup = evaluator.findGroup(node);
-            Object methodGroup = evaluator.findGroup(method);
+        if ((scope & RESTRICT_TO_LIBRARY_GROUP) != 0) {
+            MavenCoordinates thisCoordinates = bridge.getLibrary(node);
+            MavenCoordinates methodCoordinates = bridge.getLibrary(method);
+            String thisGroup = thisCoordinates != null ? thisCoordinates.getGroupId() : null;
+            String methodGroup = methodCoordinates != null ? methodCoordinates.getGroupId() : null;
             if (!Objects.equals(thisGroup, methodGroup) && methodGroup != null) {
-                String where = String.format("from within the same library "
+                String where = String.format("from within the same library group "
                                 + "(groupId=%1$s)", methodGroup);
                 reportRestriction(annotation, where, containingClass, method, bridge,
                         node);
+            }
+        }
+
+        if ((scope & RESTRICT_TO_LIBRARY) != 0) {
+            MavenCoordinates thisCoordinates = bridge.getLibrary(node);
+            MavenCoordinates methodCoordinates = bridge.getLibrary(method);
+            String thisGroup = thisCoordinates != null ? thisCoordinates.getGroupId() : null;
+            String methodGroup = methodCoordinates != null ? methodCoordinates.getGroupId() : null;
+            if (!Objects.equals(thisGroup, methodGroup) && methodGroup != null) {
+                String thisArtifact = thisCoordinates != null ? thisCoordinates.getArtifactId() : null;
+                String methodArtifact = methodCoordinates.getArtifactId();
+                if (!Objects.equals(thisArtifact, methodArtifact)) {
+                    String where = String.format("from within the same library "
+                            + "(%1$s:%2$s)", methodGroup, methodArtifact);
+                    reportRestriction(annotation, where, containingClass, method, bridge,
+                            node);
+                }
             }
         }
 
@@ -1162,11 +1194,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
 
     /** {@code RestrictTo(RestrictTo.Scope.GROUP_ID} */
     @SuppressWarnings("PointlessBitwiseExpression")
-    private static final int RESTRICT_TO_GROUP_ID   = 1 << 0;
+    private static final int RESTRICT_TO_LIBRARY_GROUP = 1 << 0;
+    /** {@code RestrictTo(RestrictTo.Scope.GROUP_ID} */
+    @SuppressWarnings("PointlessBitwiseExpression")
+    private static final int RESTRICT_TO_LIBRARY       = 1 << 1;
     /** {@code RestrictTo(RestrictTo.Scope.TESTS} */
-    private static final int RESTRICT_TO_TESTS      = 1 << 1;
+    private static final int RESTRICT_TO_TESTS         = 1 << 2;
     /** {@code RestrictTo(RestrictTo.Scope.SUBCLASSES} */
-    private static final int RESTRICT_TO_SUBCLASSES = 1 << 2;
+    private static final int RESTRICT_TO_SUBCLASSES    = 1 << 3;
 
     public static int getRestrictionScope(@NonNull PsiAnnotation annotation) {
         PsiAnnotationMemberValue value = annotation.findAttributeValue(ATTR_VALUE);
@@ -1186,12 +1221,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 PsiElement resolved = ((PsiReferenceExpression) value).resolve();
                 if (resolved instanceof PsiField) {
                     String name = ((PsiField) resolved).getName();
-                    if ("GROUP_ID".equals(name)) {
-                        scope |= RESTRICT_TO_GROUP_ID;
+                    if ("GROUP_ID".equals(name) || "LIBRARY_GROUP".equals(name)) {
+                        scope |= RESTRICT_TO_LIBRARY_GROUP;
                     } else if ("SUBCLASSES".equals(name)) {
                         scope |= RESTRICT_TO_SUBCLASSES;
                     } else if ("TESTS".equals(name)) {
                         scope |= RESTRICT_TO_TESTS;
+                    } else if ("LIBRARY".equals(name)) {
+                        scope |= RESTRICT_TO_LIBRARY;
                     }
                 }
             }
@@ -2451,7 +2488,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         }
     }
 
-    private static class MyLintInspectionBridge implements LintInspectionBridge {
+    private static class MyLintInspectionBridge extends LintInspectionBridge {
         public final JavaContext context;
 
         public MyLintInspectionBridge(@NonNull JavaContext context) {
@@ -2472,6 +2509,20 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             return context.isTestSource();
         }
 
+        @Nullable
+        @Override
+        public Dependencies getDependencies() {
+            Project project = context.getProject();
+            if (project.isAndroidProject()) {
+                Variant variant = project.getCurrentVariant();
+                if (variant != null) {
+                    return variant.getMainArtifact().getDependencies();
+                }
+            }
+            return null;
+        }
+
+        @NonNull
         @Override
         public JavaEvaluator getEvaluator() {
             return context.getEvaluator();
