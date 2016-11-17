@@ -28,17 +28,14 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
-import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ZipMergeTest {
     @Rule
@@ -96,7 +93,7 @@ public class ZipMergeTest {
     public void mergeZipWithDeferredCrc() throws Exception {
         File foo = mTemporaryFolder.newFile("foo");
 
-        byte[] wBytes = Files.toByteArray(ZipTestUtils.rsrcFile("text-files/wikipedia.html"));
+        byte[] wBytes = ZipTestUtils.rsrcBytes("text-files/wikipedia.html");
 
         try (ZipOutputStream fooOut = new ZipOutputStream(new FileOutputStream(foo))) {
             fooOut.putNextEntry(new ZipEntry("w"));
@@ -127,8 +124,8 @@ public class ZipMergeTest {
     public void mergeZipKeepsDeflatedAndStored() throws Exception {
         File foo = mTemporaryFolder.newFile("foo");
 
-        byte[] wBytes = Files.toByteArray(ZipTestUtils.rsrcFile("text-files/wikipedia.html"));
-        byte[] lBytes = Files.toByteArray(ZipTestUtils.rsrcFile("images/lena.png"));
+        byte[] wBytes = ZipTestUtils.rsrcBytes("text-files/wikipedia.html");
+        byte[] lBytes = ZipTestUtils.rsrcBytes("images/lena.png");
 
         try (ZipOutputStream fooOut = new ZipOutputStream(new FileOutputStream(foo))) {
             fooOut.putNextEntry(new ZipEntry("w"));
@@ -175,8 +172,8 @@ public class ZipMergeTest {
     public void mergeZipWithSorting() throws Exception {
         File foo = mTemporaryFolder.newFile("foo");
 
-        byte[] wBytes = Files.toByteArray(ZipTestUtils.rsrcFile("text-files/wikipedia.html"));
-        byte[] lBytes = Files.toByteArray(ZipTestUtils.rsrcFile("images/lena.png"));
+        byte[] wBytes = ZipTestUtils.rsrcBytes("text-files/wikipedia.html");
+        byte[] lBytes = ZipTestUtils.rsrcBytes("images/lena.png");
 
         try (ZipOutputStream fooOut = new ZipOutputStream(new FileOutputStream(foo))) {
             fooOut.putNextEntry(new ZipEntry("w"));
