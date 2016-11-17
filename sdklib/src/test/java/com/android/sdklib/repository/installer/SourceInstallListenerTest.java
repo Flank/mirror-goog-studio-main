@@ -60,7 +60,7 @@ public class SourceInstallListenerTest extends TestCase {
         MockFileOp fop = new MockFileOp();
 
         // Create remote package for sources;android-23
-        FakePackage remote = new FakePackage("sources;android-23");
+        FakePackage.FakeRemotePackage remote = new FakePackage.FakeRemotePackage("sources;android-23");
         URL archiveUrl = new URL("http://www.example.com/plat23/sources.zip");
         remote.setCompleteUrl(archiveUrl.toString());
         DetailsTypes.SourceDetailsType sourceDetails =
@@ -71,7 +71,7 @@ public class SourceInstallListenerTest extends TestCase {
         Map<String, RemotePackage> remotes = ImmutableMap.of(remote.getPath(), remote);
 
         // Create local package for platform;android-23
-        FakePackage local = getLocalPlatformPackage(fop);
+        LocalPackage local = getLocalPlatformPackage(fop);
         Map<String, LocalPackage> locals = ImmutableMap.of(local.getPath(), local);
 
         FakeRepoManager mgr = new FakeRepoManager(ROOT, new RepositoryPackages(locals, remotes));
@@ -114,8 +114,8 @@ public class SourceInstallListenerTest extends TestCase {
 
         // Create local packages for platform;android-23 and sources;android-23
         Map<String, LocalPackage> locals = new HashMap<>();
-        FakePackage localPlatform = getLocalPlatformPackage(fop);
-        FakePackage localSource = getLocalSourcePackage(fop);
+        LocalPackage localPlatform = getLocalPlatformPackage(fop);
+        LocalPackage localSource = getLocalSourcePackage(fop);
 
         locals.put(localPlatform.getPath(), localPlatform);
         locals.put(localSource.getPath(), localSource);
@@ -152,9 +152,9 @@ public class SourceInstallListenerTest extends TestCase {
     }
 
     @NonNull
-    private FakePackage getLocalPlatformPackage(MockFileOp fop) {
+    private static LocalPackage getLocalPlatformPackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/platforms/android-23/build.prop", "");
-        FakePackage local = new FakePackage("platforms;android-23");
+        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage("platforms;android-23");
         local.setInstalledPath(new File("/sdk/platforms/android-23"));
 
         DetailsTypes.PlatformDetailsType platformDetails =
@@ -166,9 +166,9 @@ public class SourceInstallListenerTest extends TestCase {
     }
 
     @NonNull
-    private FakePackage getLocalSourcePackage(MockFileOp fop) {
+    private static LocalPackage getLocalSourcePackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/sources/android-23/build.prop", "");
-        FakePackage local = new FakePackage("sources;android-23");
+        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage("sources;android-23");
         local.setInstalledPath(new File("/sdk/sources/android-23"));
 
         DetailsTypes.SourceDetailsType sourceDetails =

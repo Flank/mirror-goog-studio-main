@@ -32,18 +32,16 @@ import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class DeviceManagerTest {
@@ -326,7 +324,7 @@ public class DeviceManagerTest {
     @Test
     public final void testDeviceOverrides() throws Exception {
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage p = new FakePackage("dummy");
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
         DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
                 .createLatestFactory().createAddonDetailsType();
         details.setApiLevel(22);
