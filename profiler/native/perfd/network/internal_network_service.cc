@@ -66,7 +66,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       auto payload_file = network_cache_.FinishPayload(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
-      details->response.body_path = payload_file->path();
+      details->response.payload_id = payload_file->name();
       details->end_timestamp = httpEvent->timestamp();
     }
 
