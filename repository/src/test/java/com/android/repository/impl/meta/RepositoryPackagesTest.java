@@ -16,19 +16,19 @@
 
 package com.android.repository.impl.meta;
 
+import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
+
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.UpdatablePackage;
-import com.android.repository.testframework.FakePackage;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link RepositoryPackages}
@@ -44,20 +44,20 @@ public class RepositoryPackagesTest extends TestCase {
         Map<String, RemotePackage> remotes = Maps.newHashMap();
 
         // p1 has no corresponding remote
-        locals.put("p1", new FakePackage("p1"));
+        locals.put("p1", new FakeLocalPackage("p1"));
 
         // p2 has an updated remote
-        locals.put("p2", new FakePackage("p2"));
-        FakePackage remote = new FakePackage("p2");
+        locals.put("p2", new FakeLocalPackage("p2"));
+        FakeRemotePackage remote = new FakeRemotePackage("p2");
         remote.setRevision(new Revision(2));
         remotes.put("p2", remote);
 
         // p3 has a non-updated remote
-        locals.put("p3", new FakePackage("p3"));
-        remotes.put("p3", new FakePackage("p3"));
+        locals.put("p3", new FakeLocalPackage("p3"));
+        remotes.put("p3", new FakeRemotePackage("p3"));
 
         // p4 is only remote
-        remotes.put("p4", new FakePackage("p4"));
+        remotes.put("p4", new FakeRemotePackage("p4"));
 
         mPackages = new RepositoryPackages(locals, remotes);
     }
@@ -114,21 +114,25 @@ public class RepositoryPackagesTest extends TestCase {
         Map<String, LocalPackage> locals = Maps.newHashMap();
         Map<String, RemotePackage> remotes = Maps.newHashMap();
 
-        FakePackage p1 = new FakePackage("a;b;c");
-        locals.put("a;b;c", p1);
-        remotes.put("a;b;c", p1);
-        FakePackage p2 = new FakePackage("a;b;d");
-        locals.put("a;b;d", p2);
-        remotes.put("a;b;d", p2);
-        FakePackage p3 = new FakePackage("a;c");
-        locals.put("a;c", p3);
-        remotes.put("a;c", p3);
-        FakePackage p4 = new FakePackage("d");
-        locals.put("d", p4);
-        remotes.put("d", p4);
-        FakePackage localOnly = new FakePackage("l");
+        FakeLocalPackage l1 = new FakeLocalPackage("a;b;c");
+        locals.put("a;b;c", l1);
+        FakeRemotePackage r1 = new FakeRemotePackage("a;b;c");
+        remotes.put("a;b;c", r1);
+        FakeLocalPackage l2 = new FakeLocalPackage("a;b;d");
+        locals.put("a;b;d", l2);
+        FakeRemotePackage r2 = new FakeRemotePackage("a;b;d");
+        remotes.put("a;b;d", r2);
+        FakeLocalPackage l3 = new FakeLocalPackage("a;c");
+        locals.put("a;c", l3);
+        FakeRemotePackage r3 = new FakeRemotePackage("a;c");
+        remotes.put("a;c", r3);
+        FakeLocalPackage l4 = new FakeLocalPackage("d");
+        locals.put("d", l4);
+        FakeRemotePackage r4 = new FakeRemotePackage("d");
+        remotes.put("d", r4);
+        FakeLocalPackage localOnly = new FakeLocalPackage("l");
         locals.put("l", localOnly);
-        FakePackage remoteOnly = new FakePackage("r");
+        FakeRemotePackage remoteOnly = new FakeRemotePackage("r");
         remotes.put("r", remoteOnly);
 
         RepositoryPackages packages = new RepositoryPackages();
@@ -137,27 +141,27 @@ public class RepositoryPackagesTest extends TestCase {
 
         Collection<LocalPackage> localPackages = packages.getLocalPackagesForPrefix("a");
         assertEquals(3, localPackages.size());
-        assertTrue(localPackages.containsAll(Sets.newHashSet(p1, p2, p3)));
+        assertTrue(localPackages.containsAll(Sets.newHashSet(l1, l2, l3)));
 
         Collection<RemotePackage> remotePackages = packages.getRemotePackagesForPrefix("a");
         assertEquals(3, remotePackages.size());
-        assertTrue(remotePackages.containsAll(Sets.newHashSet(p1, p2, p3)));
+        assertTrue(remotePackages.containsAll(Sets.newHashSet(r1, r2, r3)));
 
         localPackages = packages.getLocalPackagesForPrefix("a;b");
         assertEquals(2, localPackages.size());
-        assertTrue(localPackages.containsAll(Sets.newHashSet(p1, p2)));
+        assertTrue(localPackages.containsAll(Sets.newHashSet(l1, l2)));
 
         remotePackages = packages.getRemotePackagesForPrefix("a;b");
         assertEquals(2, remotePackages.size());
-        assertTrue(remotePackages.containsAll(Sets.newHashSet(p1, p2)));
+        assertTrue(remotePackages.containsAll(Sets.newHashSet(r1, r2)));
 
         localPackages = packages.getLocalPackagesForPrefix("a;b;c");
         assertEquals(1, localPackages.size());
-        assertTrue(localPackages.contains(p1));
+        assertTrue(localPackages.contains(l1));
 
         remotePackages = packages.getRemotePackagesForPrefix("a;b;c");
         assertEquals(1, remotePackages.size());
-        assertTrue(remotePackages.contains(p1));
+        assertTrue(remotePackages.contains(r1));
 
         localPackages = packages.getLocalPackagesForPrefix("a;b;f");
         assertEquals(0, localPackages.size());
@@ -171,11 +175,9 @@ public class RepositoryPackagesTest extends TestCase {
 
         remotePackages = packages.getRemotePackagesForPrefix("l");
         assertEquals(0, remotePackages.size());
-        assertFalse(remotePackages.contains(localOnly));
 
         localPackages = packages.getLocalPackagesForPrefix("r");
         assertEquals(0, localPackages.size());
-        assertFalse(localPackages.contains(remoteOnly));
 
         remotePackages = packages.getRemotePackagesForPrefix("r");
         assertEquals(1, remotePackages.size());

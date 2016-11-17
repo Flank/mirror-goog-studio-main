@@ -16,12 +16,12 @@
 
 package com.android.repository.impl.installer;
 
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
@@ -30,13 +30,10 @@ import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDownloader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-
-import org.junit.Test;
-
 import java.io.File;
+import org.junit.Test;
 
 /**
  * Tests for {@link AbstractInstaller}
@@ -62,7 +59,7 @@ public class AbstractInstallerTest {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
-        FakePackage remote = new FakePackage("foo;bar");
+        FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
@@ -90,7 +87,7 @@ public class AbstractInstallerTest {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
-        FakePackage remote = new FakePackage("foo");
+        FakeRemotePackage remote = new FakeRemotePackage("foo");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
@@ -104,7 +101,7 @@ public class AbstractInstallerTest {
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        FakePackage remote = new FakePackage("foo;bar");
+        FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
         // Consume temp dir 1
@@ -116,7 +113,7 @@ public class AbstractInstallerTest {
         do {
             tempDir = FileOpUtils.getNewTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
         } while (tempDir != null);
-        FakePackage remote2 = new FakePackage("foo;baz");
+        FakeRemotePackage remote2 = new FakeRemotePackage("foo;baz");
         TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
         // This will cause the unreferenced temp dirs to be GCd (and a new one created)
         installer.prepare(progress);

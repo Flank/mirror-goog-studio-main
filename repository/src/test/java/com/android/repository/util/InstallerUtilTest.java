@@ -15,6 +15,9 @@
  */
 package com.android.repository.util;
 
+import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
+
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RemotePackage;
@@ -24,25 +27,21 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDependency;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
-import org.apache.commons.compress.archivers.zip.UnixStat;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
+import org.apache.commons.compress.archivers.zip.UnixStat;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 /**
  * Tests for {@link InstallerUtil}.
@@ -53,16 +52,16 @@ public class InstallerUtilTest extends TestCase {
      * Simple case: a package requires itself, even if has no dependencies set.
      */
     public void testNoDeps() throws Exception {
-        RemotePackage r1 = new FakePackage("r1");
+        RemotePackage r1 = new FakeRemotePackage("r1");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         assertEquals(request,
                 InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("l1"))
+                                .addLocal(new FakeLocalPackage("l1"))
                                 .addRemote(r1)
-                                .addRemote(new FakePackage("r2"))
+                                .addRemote(new FakeRemotePackage("r2"))
                                 .build(), progress));
         progress.assertNoErrorsOrWarnings();
     }
@@ -71,11 +70,11 @@ public class InstallerUtilTest extends TestCase {
      * Simple chain of dependencies, r1->r2->r3. Should be returned in reverse order.
      */
     public void testSimple() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
@@ -83,7 +82,7 @@ public class InstallerUtilTest extends TestCase {
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("l1"))
+                                .addLocal(new FakeLocalPackage("l1"))
                                 .addRemote(r1)
                                 .addRemote(r2)
                                 .addRemote(r3)
@@ -95,8 +94,8 @@ public class InstallerUtilTest extends TestCase {
      * Request r1 and r1. The latest version of r1 is installed so only r2 is returned.
      */
     public void testLocalInstalled() throws Exception {
-        RemotePackage r1 = new FakePackage("r1");
-        RemotePackage r2 = new FakePackage("r2");
+        RemotePackage r1 = new FakeRemotePackage("r1");
+        RemotePackage r2 = new FakeRemotePackage("r2");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
@@ -104,7 +103,7 @@ public class InstallerUtilTest extends TestCase {
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("r1"))
+                                .addLocal(new FakeLocalPackage("r1"))
                                 .addRemote(r1)
                                 .addRemote(r2)
                                 .build(), progress));
@@ -116,15 +115,15 @@ public class InstallerUtilTest extends TestCase {
      * r1 and r2 are returned.
      */
     public void testLocalInstalledWithUpdate() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setRevision(new Revision(2));
-        RemotePackage r2 = new FakePackage("r2");
+        RemotePackage r2 = new FakeRemotePackage("r2");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
         List<RemotePackage> result = InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("r1"))
+                                .addLocal(new FakeLocalPackage("r1"))
                                 .addRemote(r1)
                                 .addRemote(r2)
                                 .build(), progress);
@@ -138,16 +137,16 @@ public class InstallerUtilTest extends TestCase {
      * not returned.
      */
     public void testLocalSatisfies() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3", 1, 1, 1)));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         ImmutableList<RemotePackage> expected = ImmutableList.of(r2, r1);
-        FakePackage r3_2 = new FakePackage("r3");
+        FakeLocalPackage r3_2 = new FakeLocalPackage("r3");
         r3_2.setRevision(new Revision(2));
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
@@ -165,11 +164,11 @@ public class InstallerUtilTest extends TestCase {
      * specified, and so is not returned.
      */
     public void testLocalSatisfiesNoVersion() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
@@ -177,7 +176,7 @@ public class InstallerUtilTest extends TestCase {
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("r3"))
+                                .addLocal(new FakeLocalPackage("r3"))
                                 .addRemote(r1)
                                 .addRemote(r2)
                                 .addRemote(r3)
@@ -189,11 +188,11 @@ public class InstallerUtilTest extends TestCase {
      * Dependency chain r1->r2->r3, and r3 is installed but doesn't meet the version requirement.
      */
     public void testUpdateNeeded() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3", 2, null, null)));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setRevision(new Revision(2));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -202,7 +201,7 @@ public class InstallerUtilTest extends TestCase {
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
                         new RepositoryPackagesBuilder()
-                                .addLocal(new FakePackage("r3"))
+                                .addLocal(new FakeLocalPackage("r3"))
                                 .addRemote(r1)
                                 .addRemote(r2)
                                 .addRemote(r3)
@@ -214,10 +213,10 @@ public class InstallerUtilTest extends TestCase {
      * r1->{r2, r3}. All should be returned, with r1 last.
      */
     public void testMulti() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2"), new FakeDependency("r3")));
-        FakePackage r2 = new FakePackage("r2");
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
@@ -237,13 +236,13 @@ public class InstallerUtilTest extends TestCase {
      * r1->{r2, r3}->r4. All should be returned, with r4 first and r1 last.
      */
     public void testDag() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2"), new FakeDependency("r3")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r4")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setDependencies(ImmutableList.of(new FakeDependency("r4")));
-        RemotePackage r4 = new FakePackage("r4");
+        RemotePackage r4 = new FakeRemotePackage("r4");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
@@ -265,11 +264,11 @@ public class InstallerUtilTest extends TestCase {
      * r1->r2->r3->r1. All should be returned, in undefined order.
      */
     public void testCycle() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setDependencies(ImmutableList.of(new FakeDependency("r1")));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -290,14 +289,14 @@ public class InstallerUtilTest extends TestCase {
      * r1->r2->r3->r4->r3. All should be returned, with [r2, r1] last.
      */
     public void testCycle2() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
 
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setDependencies(ImmutableList.of(new FakeDependency("r4")));
-        FakePackage r4 = new FakePackage("r4");
+        FakeRemotePackage r4 = new FakeRemotePackage("r4");
         r4.setDependencies(ImmutableList.of(new FakeDependency("r3")));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -321,11 +320,11 @@ public class InstallerUtilTest extends TestCase {
      * {r1, r2}->r3. Request both r1 and r2. All should be returned, with r3 first.
      */
     public void testMultiRequest() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
@@ -347,11 +346,11 @@ public class InstallerUtilTest extends TestCase {
      * {r1, r2}->r3. Request both r1 and r2. R3 is installed, so only r1 and r2 are returned.
      */
     public void testMultiRequestSatisfied() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r3 = new FakePackage("r3");
+        FakeLocalPackage r3 = new FakeLocalPackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
@@ -374,13 +373,13 @@ public class InstallerUtilTest extends TestCase {
      * All should be returned, with r3 before r2.
      */
     public void testMultiRequestHalfSatisfied() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3", 2, 0, 0)));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setRevision(new Revision(2));
-        LocalPackage l3 = new FakePackage("r3");
+        FakeLocalPackage l3 = new FakeLocalPackage("r3");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
@@ -404,7 +403,7 @@ public class InstallerUtilTest extends TestCase {
      * r1->bogus. Null should be returned, and there should be an error.
      */
     public void testBogus() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("bogus")));
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -420,18 +419,18 @@ public class InstallerUtilTest extends TestCase {
      * be returned, and there should be an error.
      */
     public void testUpdateNotAvailable() throws Exception {
-        FakePackage r1 = new FakePackage("r1");
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
-        FakePackage r2 = new FakePackage("r2");
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
         r2.setDependencies(ImmutableList.of(new FakeDependency("r3", 4, null, null)));
-        FakePackage r3 = new FakePackage("r3");
+        FakeRemotePackage r3 = new FakeRemotePackage("r3");
         r3.setRevision(new Revision(2));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         assertNull(InstallerUtil.computeRequiredPackages(request,
                 new RepositoryPackagesBuilder()
-                        .addLocal(new FakePackage("r3"))
+                        .addLocal(new FakeLocalPackage("r3"))
                         .addRemote(r1)
                         .addRemote(r2)
                         .addRemote(r3)

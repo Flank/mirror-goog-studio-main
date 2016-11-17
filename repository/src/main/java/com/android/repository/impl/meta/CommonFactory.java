@@ -59,6 +59,9 @@ public abstract class CommonFactory {
     public abstract Channel createChannelType();
 
     @NonNull
+    public abstract Archive.PatchesType createPatchesType();
+
+    @NonNull
     public abstract JAXBElement<Repository> generateRepository(Repository repo);
 
     /**
@@ -131,7 +134,7 @@ public abstract class CommonFactory {
     public abstract Archive.CompleteType createCompleteType();
 
     @NonNull
-    protected abstract Archive.PatchType createPatchType();
+    public abstract Archive.PatchType createPatchType();
 
     public abstract RemotePackageImpl.ChannelRef createChannelRefType();
 }
