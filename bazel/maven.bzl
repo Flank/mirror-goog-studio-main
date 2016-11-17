@@ -141,9 +141,10 @@ def maven_java_library(name, deps=None, export_artifact=None, srcs=None, exports
 
   # TODO: Properly exclude libraries from the pom instead of using _neverlink hacks.
   maven_deps = (deps or []) + (exports or [])
+
   maven_pom(
     name = name + "_maven",
-    deps = [_explicit_target(dep) + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps and not export_artifact else None,
+    deps = [_explicit_target(dep) + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps else None,
     library = export_artifact if export_artifact else name,
     visibility = visibility,
     source = _explicit_target(export_artifact) + "_maven" if export_artifact else pom,

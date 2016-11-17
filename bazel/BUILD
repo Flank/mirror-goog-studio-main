@@ -220,4 +220,5 @@ maven_repo(
         "//tools/base/build-system/gradle",
         "//tools/base/build-system/gradle-experimental",
     ],
+    visibility = ["//visibility:public"],
 )
