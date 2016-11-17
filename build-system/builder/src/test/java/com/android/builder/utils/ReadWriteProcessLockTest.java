@@ -25,6 +25,7 @@ import com.android.testutils.truth.MoreTruth;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -70,6 +71,7 @@ public class ReadWriteProcessLockTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testReadAndWriteLocksOnSameLockFile() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
@@ -90,6 +92,7 @@ public class ReadWriteProcessLockTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testReadLocksOnSameLockFile() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
@@ -110,6 +113,7 @@ public class ReadWriteProcessLockTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDifferentLockFiles() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
