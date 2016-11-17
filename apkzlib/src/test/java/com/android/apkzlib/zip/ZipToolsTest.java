@@ -30,23 +30,20 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.junit.Assume;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ZipToolsTest {
@@ -103,7 +100,7 @@ public class ZipToolsTest {
 
     private File cloneZipFile() throws Exception {
         File zfile = mTemporaryFolder.newFile("file.zip");
-        Files.copy(ZipTestUtils.rsrcFile(mZipFile), zfile);
+        Files.write(ZipTestUtils.rsrcBytes(mZipFile), zfile);
         return zfile;
     }
 
@@ -115,7 +112,7 @@ public class ZipToolsTest {
         byte[] inZipData = ByteStreams.toByteArray(is);
         is.close();
 
-        byte[] inFileData = Files.toByteArray(ZipTestUtils.rsrcFile(name));
+        byte[] inFileData = ZipTestUtils.rsrcBytes(name);
         assertArrayEquals(inFileData, inZipData);
     }
 
@@ -156,14 +153,18 @@ public class ZipToolsTest {
 
         File zfile = new File (mTemporaryFolder.getRoot(), "zfile.zip");
         try (ZFile zf = new ZFile(zfile, options)) {
-            zf.add("root", new FileInputStream(ZipTestUtils.rsrcFile("root")));
+            zf.add("root", new ByteArrayInputStream(ZipTestUtils.rsrcBytes("root")));
             zf.add("images/", new ByteArrayInputStream(new byte[0]));
-            zf.add("images/lena.png", new FileInputStream(ZipTestUtils.rsrcFile("images/lena.png")));
+            zf.add(
+                    "images/lena.png",
+                    new ByteArrayInputStream(ZipTestUtils.rsrcBytes("images/lena.png")));
             zf.add("text-files/", new ByteArrayInputStream(new byte[0]));
-            zf.add("text-files/rfc2460.txt", new FileInputStream(
-                    ZipTestUtils.rsrcFile("text-files/rfc2460.txt")));
-            zf.add("text-files/wikipedia.html",
-                    new FileInputStream(ZipTestUtils.rsrcFile("text-files/wikipedia.html")));
+            zf.add(
+                    "text-files/rfc2460.txt",
+                    new ByteArrayInputStream(ZipTestUtils.rsrcBytes("text-files/rfc2460.txt")));
+            zf.add(
+                    "text-files/wikipedia.html",
+                    new ByteArrayInputStream(ZipTestUtils.rsrcBytes("text-files/wikipedia.html")));
         }
 
         List<String> command = Lists.newArrayList(mUnzipCommand);
@@ -200,13 +201,13 @@ public class ZipToolsTest {
 
         assertSize(new String[] { "images/", "images" }, 0, sizes);
         assertSize(new String[] { "text-files/", "text-files"}, 0, sizes);
-        assertSize(new String[] { "root" }, ZipTestUtils.rsrcFile("root").length(), sizes);
+        assertSize(new String[] { "root" }, ZipTestUtils.rsrcBytes("root").length, sizes);
         assertSize(new String[] { "images/lena.png", "images\\lena.png" },
-                ZipTestUtils.rsrcFile("images/lena.png").length(), sizes);
+                ZipTestUtils.rsrcBytes("images/lena.png").length, sizes);
         assertSize(new String[] { "text-files/rfc2460.txt", "text-files\\rfc2460.txt" },
-                ZipTestUtils.rsrcFile("text-files/rfc2460.txt").length(), sizes);
+                ZipTestUtils.rsrcBytes("text-files/rfc2460.txt").length, sizes);
         assertSize(new String[] { "text-files/wikipedia.html", "text-files\\wikipedia.html" },
-                ZipTestUtils.rsrcFile("text-files/wikipedia.html").length(), sizes);
+                ZipTestUtils.rsrcBytes("text-files/wikipedia.html").length, sizes);
     }
 
     private static void assertSize(String[] names, long size, Map<String, Integer> sizes) {

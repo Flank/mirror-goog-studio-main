@@ -20,13 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.android.apkzlib.zip.CentralDirectoryHeaderCompressInfo;
 import com.android.apkzlib.zip.CompressionMethod;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.apkzlib.zip.ZFileOptions;
-import com.android.apkzlib.utils.ApkZFileTestUtils;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -40,11 +39,9 @@ public class MultiCompressorTest {
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     private static byte[] getCompressibleData() throws Exception {
-        File textFiles = ApkZFileTestUtils.getResource("/testData/packaging/text-files");
-        assertTrue(textFiles.isDirectory());
-        File wikipediaFile = new File(textFiles, "wikipedia.html");
-        assertTrue(wikipediaFile.isFile());
-        return Files.asByteSource(wikipediaFile).read();
+        return ApkZFileTestUtils
+                .getResourceBytes("/testData/packaging/text-files/wikipedia.html")
+                .read();
     }
 
     private static byte[] compress(byte[] data, int level) throws Exception {

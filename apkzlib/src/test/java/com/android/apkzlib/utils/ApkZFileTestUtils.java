@@ -19,13 +19,14 @@ package com.android.apkzlib.utils;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestResources;
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.URL;
 
 /**
  * Utility functions for tests.
@@ -73,22 +74,20 @@ public final class ApkZFileTestUtils {
      */
     @NonNull
     public static File getResource(@NonNull String path) {
-        URL url = Resources.getResource(ApkZFileTestUtils.class, path);
-        File resource = new File(url.getFile());
+        File resource = TestResources.getFile(ApkZFileTestUtils.class, path);
         assertTrue(resource.exists());
         return resource;
     }
 
     /**
-     * Sleeps the current thread for enough time to ensure that the local file system had enough
-     * time to notice a "tick". This method is usually called in tests when it is necessary to
-     * ensure filesystem writes are detected through timestamp modification.
+     * Obtains the test resource with the given path.
      *
-     * @throws InterruptedException waiting interrupted
-     * @throws IOException issues creating a temporary file
+     * @param path the path
+     * @return the test resource
      */
-    public static void waitForFileSystemTick() throws InterruptedException, IOException {
-        waitForFileSystemTick(getFreshTimestamp());
+    @NonNull
+    public static ByteSource getResourceBytes(@NonNull String path) {
+        return Resources.asByteSource(Resources.getResource(ApkZFileTestUtils.class, path));
     }
 
     /**

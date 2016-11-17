@@ -17,16 +17,13 @@
 package com.android.apkzlib.zip;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.google.common.io.Files;
-
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Utility method for zip tests.
@@ -34,19 +31,15 @@ import java.io.IOException;
 class ZipTestUtils {
 
     /**
-     * Obtains the file with a resource with the given name. This is a file that lays in
-     * the packaging subdirectory of test resources.
+     * Obtains the data of a resource with the given name.
      *
      * @param rsrcName the resource name inside packaging resource folder
-     * @return the resource file, guaranteed to exist
+     * @return the resource data
+     * @throws IOException I/O failed
      */
     @NonNull
-    static File rsrcFile(@NonNull String rsrcName) {
-        File packagingRoot = ApkZFileTestUtils.getResource("/testData/packaging");
-        String rsrcPath = packagingRoot.getAbsolutePath() + "/" + rsrcName;
-        File rsrcFile = new File(rsrcPath);
-        assertTrue(rsrcFile.isFile());
-        return rsrcFile;
+    static byte[] rsrcBytes(@NonNull String rsrcName) throws IOException {
+        return ApkZFileTestUtils.getResourceBytes("/testData/packaging/" + rsrcName).read();
     }
 
     /**
@@ -83,12 +76,15 @@ class ZipTestUtils {
      * @return the file that was created with the resource
      * @throws IOException failed to clone the resource
      */
-    static File cloneRsrc(@NonNull String rsrcName, @NonNull TemporaryFolder folder,
-            @NonNull String cloneName) throws IOException {
+    static File cloneRsrc(
+            @NonNull String rsrcName,
+            @NonNull TemporaryFolder folder,
+            @NonNull String cloneName)
+            throws IOException {
         File result = new File(folder.getRoot(), cloneName);
         assertFalse(result.exists());
 
-        Files.copy(rsrcFile(rsrcName), result);
+        Files.write(rsrcBytes(rsrcName), result);
         return result;
     }
 }
