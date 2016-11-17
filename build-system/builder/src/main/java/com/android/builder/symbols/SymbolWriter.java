@@ -154,7 +154,7 @@ public class SymbolWriter {
                     Symbol value = matchingSymbols.get(row, symbolName);
                     writer.write("\t\t");
                     writer.write(idModifiers);
-                    writer.write(value.getType());
+                    writer.write(value.getJavaType());
                     writer.write(" ");
                     writer.write(value.getName());
                     writer.write(" = ");

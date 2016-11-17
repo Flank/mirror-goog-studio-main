@@ -63,7 +63,7 @@ public class SymbolLoader {
                 String name = line.substring(pos2 + 1, pos3);
                 String value = line.substring(pos3 + 1);
 
-                mSymbols.put(className, name, new Symbol(name, type, value));
+                mSymbols.put(className, name, new Symbol(className, name, type, value));
             }
         } catch (IndexOutOfBoundsException e) {
             String s = String.format("File format error reading %s\tline %d: '%s'",

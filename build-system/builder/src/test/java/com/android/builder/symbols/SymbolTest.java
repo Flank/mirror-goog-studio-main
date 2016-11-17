@@ -25,16 +25,17 @@ public class SymbolTest {
 
     @Test
     public void symbolData() {
-        Symbol s = new Symbol("a", "b", "c");
+        Symbol s = new Symbol("d", "a", "b", "c");
         assertEquals("a", s.getName());
-        assertEquals("b", s.getType());
+        assertEquals("b", s.getJavaType());
         assertEquals("c", s.getValue());
+        assertEquals("d", s.getResourceType());
     }
 
     @Test
     public void namesCannotContainSpaces() {
         try {
-            new Symbol("a a", "b", "c");
+            new Symbol("d", "a a", "b", "c");
             fail();
         } catch (IllegalArgumentException e) {
             // Expected
@@ -42,9 +43,9 @@ public class SymbolTest {
     }
 
     @Test
-    public void typesCannotContainSpaces() {
+    public void javaTypesCannotContainSpaces() {
         try {
-            new Symbol("a", "b b", "c");
+            new Symbol("d", "a", "b b", "c");
             fail();
         } catch (IllegalArgumentException e) {
             // Expected
@@ -53,22 +54,32 @@ public class SymbolTest {
 
     @Test
     public void valuesCanContainSpaces() {
-        new Symbol("a", "b", "c c");
+        new Symbol("d", "a", "b", "c c");
     }
 
     @Test
-    public void nameCannotBeEmpty() {
+    public void resourceTypesCannotContainSpaces() {
         try {
-            new Symbol("", "b", "c");
+            new Symbol("d d", "a", "b", "c");
+            fail();
         } catch (IllegalArgumentException e) {
             // Expected
         }
     }
 
     @Test
-    public void typeCannotBeEmpty() {
+    public void nameCannotBeEmpty() {
         try {
-            new Symbol("a", "", "c");
+            new Symbol("d", "", "b", "c");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void javaTypeCannotBeEmpty() {
+        try {
+            new Symbol("d", "a", "", "c");
         } catch (IllegalArgumentException e) {
             // Expected
         }
@@ -77,7 +88,16 @@ public class SymbolTest {
     @Test
     public void valueCannotBeEmpty() {
         try {
-            new Symbol("a", "b", "");
+            new Symbol("d", "a", "b", "");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void resourceTypeCannotBeEmpty() {
+        try {
+            new Symbol("", "a", "b", "c");
         } catch (IllegalArgumentException e) {
             // Expected
         }
