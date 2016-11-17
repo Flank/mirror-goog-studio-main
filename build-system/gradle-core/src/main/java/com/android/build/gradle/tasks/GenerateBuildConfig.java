@@ -28,16 +28,15 @@ import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 @ParallelizableTask
 public class GenerateBuildConfig extends BaseTask {
@@ -253,31 +252,51 @@ public class GenerateBuildConfig extends BaseTask {
             generateBuildConfigTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateBuildConfigTask.setVariantName(scope.getVariantConfiguration().getFullName());
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "buildConfigPackageName",
-                    (Callable<String>) variantConfiguration::getOriginalApplicationId);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask,
+                    "buildConfigPackageName",
+                    () -> {
+                        // For atoms, the package name is applicationId.SplitName.
+                        // Non-atom projects should never set a split name.
+                        String splitName = variantConfiguration.getSplitFromManifest();
+                        String applicationId = variantConfiguration.getOriginalApplicationId();
+                        if (splitName == null) {
+                            return applicationId;
+                        } else {
+                            return applicationId + "." + splitName;
+                        }
+                    });
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "appPackageName",
-                    (Callable<String>) variantConfiguration::getApplicationId);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask,
+                    "appPackageName",
+                    variantConfiguration::getApplicationId);
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "versionName",
-                    (Callable<String>) variantConfiguration::getVersionName);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask, "versionName", variantConfiguration::getVersionName);
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "versionCode",
-                    (Callable<Integer>) variantConfiguration::getVersionCode);
-            ConventionMappingHelper.map(generateBuildConfigTask, "debuggable",
-                    (Callable<Boolean>) () -> variantConfiguration.getBuildType().isDebuggable());
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask, "versionCode", variantConfiguration::getVersionCode);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask,
+                    "debuggable",
+                    () -> variantConfiguration.getBuildType().isDebuggable());
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "buildTypeName",
-                    (Callable<String>) () -> variantConfiguration.getBuildType().getName());
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask,
+                    "buildTypeName",
+                    () -> variantConfiguration.getBuildType().getName());
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "flavorName",
-                    (Callable<String>) variantConfiguration::getFlavorName);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask, "flavorName", variantConfiguration::getFlavorName);
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "flavorNamesWithDimensionNames",
-                    (Callable<List<String>>) variantConfiguration::getFlavorNamesWithDimensionNames);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask,
+                    "flavorNamesWithDimensionNames",
+                    variantConfiguration::getFlavorNamesWithDimensionNames);
 
-            ConventionMappingHelper.map(generateBuildConfigTask, "items",
-                    (Callable<List<Object>>) variantConfiguration::getBuildConfigItems);
+            ConventionMappingHelper.map(
+                    generateBuildConfigTask, "items", variantConfiguration::getBuildConfigItems);
 
             generateBuildConfigTask.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
         }

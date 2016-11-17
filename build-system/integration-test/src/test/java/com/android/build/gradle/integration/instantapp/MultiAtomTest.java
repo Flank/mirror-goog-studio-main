@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -29,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
+import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -90,6 +92,37 @@ public class MultiAtomTest {
         assertThat(libResFile)
                 .named("libc R.java file")
                 .containsAllOf("public static final int libc_name =");
+
+        // Tests that the BuildConfig and R class are generated in the proper package.
+        AtomBundleSubject baseAtomBundle =
+                assertThatAtomBundle(sProject.getSubproject("base").getAtomBundle("release"));
+        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/BuildConfig;");
+        baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/R;");
+        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
+        baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/R;");
+
+        // Tests that the BuildConfig and R class are not packaged twice.
+        AtomBundleSubject atomABundle =
+                assertThatAtomBundle(sProject.getSubproject("atoma").getAtomBundle("release"));
+        atomABundle.containsClass("Lcom/android/tests/multiatom/atoma/BuildConfig;");
+        atomABundle.containsClass("Lcom/android/tests/multiatom/atoma/R;");
+        atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
+        atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/R;");
+        atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/base/BuildConfig;");
+        atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/base/R;");
+
+        AtomBundleSubject atomEBundle =
+                assertThatAtomBundle(sProject.getSubproject("atome").getAtomBundle("release"));
+        atomEBundle.containsClass("Lcom/android/tests/multiatom/atome/BuildConfig;");
+        atomEBundle.containsClass("Lcom/android/tests/multiatom/atome/R;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/R;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/base/BuildConfig;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/base/R;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomb/BuildConfig;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomb/R;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomc/BuildConfig;");
+        atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomc/R;");
     }
 
     @Test
@@ -133,7 +166,8 @@ public class MultiAtomTest {
                 .named("InstantApp Android dependencies")
                 .isEmpty();
         assertThat(helper.on(instantAppDeps).withType(MODULE).asList())
-                .named("InstantApp Atoms dependencies").hasSize(3);
+                .named("InstantApp Atoms dependencies")
+                .hasSize(3);
 
         // TODO: do we need this?
         //AndroidAtom baseAtom = instantAppDeps.getBaseAtom();
