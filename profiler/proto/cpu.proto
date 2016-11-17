@@ -25,6 +25,10 @@ service CpuService {
   rpc GetData(CpuDataRequest) returns (CpuDataResponse) {
   }
 
+
+  rpc GetThreads(GetThreadsRequest) returns (GetThreadsResponse) {
+  }
+
   // Starts collecting execution metrics of a running app, such as usage info
   // and thread states. Does nothing if the app is already being monitored.
   // TODO(b/29258733): Support configuring sampling details.
@@ -50,6 +54,50 @@ service CpuService {
       returns (CpuProfilingAppStopResponse) {
   }
 }
+
+// Requests the state of all the threads in the given time range.
+message GetThreadsRequest {
+  int32 app_id = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+}
+
+// All the threads that exist in the requested range, and their
+// state changes during that period of time. If a thread was
+// alive at the beginning of the range, it will have its corresponding
+// state at that time.
+
+message GetThreadsResponse {
+  // TODO: Once the other thread activity is gone, we can move this state to the right place.
+  enum State {
+    UNSPECIFIED = 0;
+    RUNNING = 1;
+    SLEEPING = 2;
+    WAITING = 3;
+    ZOMBIE = 4;
+    STOPPED = 5;
+    TRACING = 6;
+    PAGING = 7;
+    DEAD = 8;
+    WAKEKILL = 9;
+    WAKING = 10;
+    PARKED = 11;
+  }
+
+  message ThreadActivity {
+      int64 timestamp = 1;
+      State new_state = 2;
+  }
+
+  message Thread {
+    int32 tid = 1;
+    string name = 2;
+    repeated ThreadActivity activities = 3;
+  }
+
+  repeated Thread threads = 1;
+}
+
 
 // Requests profiler data from the app with ID being |app_id|, in the time range
 // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
