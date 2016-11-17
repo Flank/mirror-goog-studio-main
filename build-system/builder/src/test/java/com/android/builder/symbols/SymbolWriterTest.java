@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.NullLogger;
 import com.google.common.base.Charsets;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.common.io.Files;
@@ -57,25 +58,25 @@ public class SymbolWriterTest {
         file.deleteOnExit();
         Files.write(rValues, file, Charsets.UTF_8);
         // 2. load symbol from temp file.
-        SymbolLoader symbolValues = new SymbolLoader(file, NullLogger.getLogger());
-        symbolValues.load();
-        Table<String, String, Symbol> values = symbolValues.getSymbols();
+        SymbolTable symbolValues = SymbolIo.load(file);
+        Table<String, String, Symbol> values = HashBasedTable.create();
+        for (Symbol s : symbolValues.allSymbols()) {
+            values.put(s.getResourceType(), s.getName(), s);
+        }
+
         assertNotNull(values);
 
 
         // Load the symbols to write
-        List<SymbolLoader> symbolList = Lists.newArrayListWithCapacity(rTexts.length);
+        List<SymbolTable> symbolList = Lists.newArrayListWithCapacity(rTexts.length);
         for (String rText : rTexts) {
             // 1. write rText in a temp file
             file = File.createTempFile(getClass().getSimpleName(), "txt");
             file.deleteOnExit();
             Files.write(rText, file, Charsets.UTF_8);
             // 2. load symbol from temp file.
-            SymbolLoader loader = new SymbolLoader(file, NullLogger.getLogger());
-            loader.load();
-            Table<String, String, Symbol> symbols = loader.getSymbols();
-            assertNotNull(symbols);
-            symbolList.add(loader);
+            SymbolTable symbol = SymbolIo.load(file);
+            symbolList.add(symbol);
         }
 
         // Write symbols
@@ -86,7 +87,7 @@ public class SymbolWriterTest {
                 packageName,
                 symbolValues,
                 generateFinalIds);
-        for (SymbolLoader symbolLoader : symbolList) {
+        for (SymbolTable symbolLoader : symbolList) {
             writer.addSymbolsToWrite(symbolLoader);
         }
         writer.write();
