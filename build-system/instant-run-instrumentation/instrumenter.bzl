@@ -46,7 +46,6 @@ def _compile_and_instrument(is_base, patch_name, path, instrumenter):
       srcs = native.glob([
           "src/test/incremental-test-classes/" + path + "/**/*.java",
       ]),
-      javacopts = ["-extra_checks:off"],
       visibility = ["//visibility:private"],
       deps = [
           ":instant-run-instrumentation",

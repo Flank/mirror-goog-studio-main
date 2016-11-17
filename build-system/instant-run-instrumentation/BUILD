@@ -12,7 +12,6 @@ fileset(
 java_library(
     name = "instant-run-instrumentation",
     srcs = [":sources"],
-    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -30,7 +29,6 @@ java_library(
     srcs = glob([
         "src/instrumenter/java/**/*.java",
     ]),
-    javacopts = ["-extra_checks:off"],
     visibility = ["//visibility:public"],
     deps = [
         ":instant-run-instrumentation",
@@ -82,7 +80,6 @@ java_test(
         ":lineChangingVerifier-test-classes",
         ":verifier-test-classes",
     ],
-    javacopts = ["-extra_checks:off"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(
         include = ["manifest-merger/src/test/java/**"],

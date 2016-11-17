@@ -47,7 +47,7 @@ public class AllAccessStaticMethodsTest {
                 "package_private,protected,public");
 
         assertWithMessage("base: StaticMethodsInvoker.invokeAllStaticDoubleArrayMethods()")
-                .that(invoker.invokeAllStaticDoubleArrayMethods() == 5d);
+                .that(invoker.invokeAllStaticDoubleArrayMethods()).isWithin(Double.MIN_VALUE).of(5d);
 
         assertWithMessage("base: StaticMethodsInvoker.invokeAllStaticStringArrayMethods()")
                 .that(invoker.invokeAllStaticStringArrayMethods()).isEqualTo(
@@ -69,7 +69,7 @@ public class AllAccessStaticMethodsTest {
                 "public,protected,package_private");
 
         assertWithMessage("base: StaticMethodsInvoker.invokeAllStaticDoubleArrayMethods()")
-                .that(invoker.invokeAllStaticDoubleArrayMethods() == 5d);
+                .that(invoker.invokeAllStaticDoubleArrayMethods()).isWithin(Double.MIN_VALUE).of(5d);
 
         assertWithMessage("base: StaticMethodsInvoker.invokeAllStaticStringArrayMethods()")
                 .that(invoker.invokeAllStaticStringArrayMethods()).isEqualTo(
