@@ -19,16 +19,13 @@ package com.android.build.gradle.internal.incremental;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.objectweb.asm.ClassReader;
@@ -70,6 +67,8 @@ public class IncrementalVisitor extends ClassVisitor {
             Type.getObjectType(PACKAGE + "/AndroidInstantRuntime");
     public static final Type DISABLE_ANNOTATION_TYPE =
             Type.getObjectType("com/android/tools/ir/api/DisableInstantRun");
+    public static final Type TARGET_API_TYPE =
+            Type.getObjectType("android/annotation/TargetApi");
 
     protected static final boolean TRACING_ENABLED = Boolean.getBoolean("FDR_TRACING");
 
@@ -169,6 +168,7 @@ public class IncrementalVisitor extends ClassVisitor {
                 Method.getMethod("void trace(String)"));
     }
 
+    @SuppressWarnings("unused")
     protected static void trace(@NonNull GeneratorAdapter mv, @Nullable String s1,
             @Nullable String s2) {
         mv.push(s1);
@@ -177,6 +177,7 @@ public class IncrementalVisitor extends ClassVisitor {
                 Method.getMethod("void trace(String, String)"));
     }
 
+    @SuppressWarnings("unused")
     protected static void trace(@NonNull GeneratorAdapter mv, @Nullable String s1,
             @Nullable String s2, @Nullable String s3) {
         mv.push(s1);
@@ -224,12 +225,6 @@ public class IncrementalVisitor extends ClassVisitor {
         OutputType getOutputType();
     }
 
-
-
-
-
-
-
     /**
      * Defines when a method access flags are compatible with InstantRun technology.
      *
@@ -246,6 +241,7 @@ public class IncrementalVisitor extends ClassVisitor {
 
     @Nullable
     public static File instrumentClass(
+            int targetApiLevel,
             @NonNull File inputRootDirectory,
             @NonNull File inputFile,
             @NonNull File outputDirectory,
@@ -299,8 +295,7 @@ public class IncrementalVisitor extends ClassVisitor {
             }
         };
 
-        ClassNode classNode = new ClassNode();
-        classReader.accept(classNode, ClassReader.EXPAND_FRAMES);
+        ClassNode classNode =  AsmUtils.readClass(classReader);
 
         // when dealing with interface, we just copy the inputFile over without any changes unless
         // this is a package private interface.
@@ -324,10 +319,19 @@ public class IncrementalVisitor extends ClassVisitor {
             }
         }
 
-        List<ClassNode> parentsNodes = parseParents(inputFile, classNode, logger);
+        AsmUtils.DirectoryBasedClassReader directoryClassReader =
+                new AsmUtils.DirectoryBasedClassReader(getBinaryFolder(inputFile, classNode));
 
+        // if we are targeting a more recent version than the current device, disable instant run
+        // for that class.
+        List<ClassNode> parentsNodes =
+                isClassTargetingNewerPlatform(
+                        targetApiLevel, TARGET_API_TYPE, directoryClassReader, classNode, logger)
+                        ? ImmutableList.of()
+                        : AsmUtils.parseParents(
+                                logger, directoryClassReader, classNode, targetApiLevel);
         // if we could not determine the parent hierarchy, disable instant run.
-        if (parentsNodes.isEmpty() || isPackageInstantRunDisabled(inputFile, classNode)) {
+        if (parentsNodes.isEmpty() || isPackageInstantRunDisabled(inputFile)) {
             if (visitorBuilder.getOutputType() == OutputType.INSTRUMENT) {
                 Files.createParentDirs(outputFile);
                 Files.write(classBytes, outputFile);
@@ -353,74 +357,49 @@ public class IncrementalVisitor extends ClassVisitor {
                 inputFile.getAbsolutePath().length() - (classNode.name.length() + ".class".length())));
     }
 
-    @NonNull
-    private static List<ClassNode> parseParents(
-            @NonNull File inputFile, @NonNull ClassNode classNode, @NonNull ILogger logger)
-            throws IOException {
-        File binaryFolder = getBinaryFolder(inputFile, classNode);
-        List<ClassNode> parentNodes = new ArrayList<>();
-        String currentParentName = classNode.superName;
+    /**
+     * If the passed class is annotated with an annotation type that denotes the target
+     * api level like {@link #TARGET_API_TYPE}, and will return true if the passed targetApiLevel
+     * is lower than the value of the annotation.
+     * @param targetApiLevel the target api level we are instrumenting against.
+     * @param targetApiAnnotationType the type of the annotation to look for
+     * @param locator a class locator implementation that can locate and load outclasses if any
+     * @param classNode the class of interest
+     * @param logger to log messages
+     * @return true if the class of interest is annotated with targetApiAnnotationType and the
+     * annotation value is superior to the passed targetApiLevel.
+     * @throws IOException when outer classes cannot be loaded successfully.
+     */
+    @VisibleForTesting
+    static boolean isClassTargetingNewerPlatform(
+            int targetApiLevel,
+            @NonNull Type targetApiAnnotationType,
+            @NonNull AsmUtils.ClassReaderProvider locator,
+            @NonNull ClassNode classNode,
+            @NonNull ILogger logger) throws IOException {
 
-        while (currentParentName != null) {
-            File parentFile = new File(binaryFolder, currentParentName + ".class");
-            if (parentFile.exists()) {
-                logger.verbose("Parsing %s.", parentFile);
-                InputStream parentFileClassReader = new BufferedInputStream(new FileInputStream(parentFile));
-                ClassReader parentClassReader = new ClassReader(parentFileClassReader);
-                ClassNode parentNode = new ClassNode();
-                parentClassReader.accept(parentNode, ClassReader.EXPAND_FRAMES);
-                parentNodes.add(parentNode);
-                currentParentName = parentNode.superName;
-            } else {
-                // May need method information from outside of the current project. The thread's
-                // context class loader is configured by the caller (InstantRunTransform) to contain
-                // all app's dependencies.
-                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-                try (InputStream parentByteCode =
-                             contextClassLoader.getResourceAsStream(currentParentName + ".class")) {
-                    if (parentByteCode == null) {
-                        throw new IOException("Failed to find byte code for " + currentParentName);
+        List<AnnotationNode> invisibleAnnotations =
+                AsmUtils.getInvisibleAnnotationsOnClassOrOuterClasses(locator, classNode, logger);
+        for (AnnotationNode classAnnotation : invisibleAnnotations) {
+            if (classAnnotation.desc.equals(targetApiAnnotationType.getDescriptor())) {
+                int valueIndex = 0;
+                List values = classAnnotation.values;
+                while (valueIndex < values.size()) {
+                    String name = (String) values.get(valueIndex);
+                    if (name.equals("value")) {
+                        Object value = values.get(valueIndex + 1);
+                        return Integer.class.cast(value) > targetApiLevel;
                     }
-
-                    ClassReader parentClassReader = new ClassReader(parentByteCode);
-                    ClassNode parentNode = new ClassNode();
-                    parentClassReader.accept(parentNode, ClassReader.EXPAND_FRAMES);
-                    parentNodes.add(parentNode);
-                    currentParentName = parentNode.superName;
-                } catch (IOException e) {
-                    // Could not locate parent class. This is as far as we can go locating parents.
-                    logger.warning(e.getMessage());
-                    logger.warning("IncrementalVisitor parseParents could not locate %1$s "
-                                    + "which is an ancestor of project class %2$s.\n"
-                                    + "%2$s is not eligible for hot swap.",
-                            currentParentName, classNode.name);
-                    return ImmutableList.of();
+                    valueIndex = valueIndex + 2;
                 }
             }
         }
-        return parentNodes;
+        return false;
     }
 
-    @Nullable
-    private static ClassNode parsePackageInfo(
-            @NonNull File inputFile, @NonNull ClassNode classNode) throws IOException {
+    private static boolean isPackageInstantRunDisabled(@NonNull File inputFile) throws IOException {
 
-        File packageFolder = inputFile.getParentFile();
-        File packageInfoClass = new File(packageFolder, "package-info.class");
-        if (packageInfoClass.exists()) {
-            InputStream reader = new BufferedInputStream(new FileInputStream(packageInfoClass));
-            ClassReader classReader = new ClassReader(reader);
-            ClassNode packageInfo = new ClassNode();
-            classReader.accept(packageInfo, ClassReader.EXPAND_FRAMES);
-            return packageInfo;
-        }
-        return null;
-    }
-
-    private static boolean isPackageInstantRunDisabled(
-            @NonNull File inputFile, @NonNull ClassNode classNode) throws IOException {
-
-        ClassNode packageInfoClass = parsePackageInfo(inputFile, classNode);
+        ClassNode packageInfoClass =  AsmUtils.parsePackageInfo(inputFile);
         if (packageInfoClass != null) {
             //noinspection unchecked
             List<AnnotationNode> annotations = packageInfoClass.invisibleAnnotations;

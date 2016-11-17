@@ -332,7 +332,7 @@ public class InstantRunBuildContext {
         this.featureLevel = featureLevel;
         // cache the patching policy.
         this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(
-                featureLevel, coldswapMode, targetAbi);
+                featureLevel, coldswapMode);
         this.abi = targetAbi;
     }
 
@@ -635,9 +635,9 @@ public class InstantRunBuildContext {
      * finishes the build-info.xml will contain the artifacts produced by this iteration as well
      * as the artifacts produced in a previous iteration and saved into the temporary build info.
      * @param tmpBuildInfoFile a past build build-info.xml
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException cannot be thrown.
+     * @throws SAXException when the xml is not correct.
+     * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
 
     public void mergeFromFile(@NonNull File tmpBuildInfoFile)
@@ -650,9 +650,9 @@ public class InstantRunBuildContext {
      * finishes the build-info.xml will contain the artifacts produced by this iteration as well
      * as the artifacts produced in a previous iteration and saved into the temporary build info.
      * @param tmpBuildInfo a past build build-info.xml as a String
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException cannot be thrown.
+     * @throws SAXException when the xml is not correct.
+     * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
 
     public void mergeFrom(@NonNull String tmpBuildInfo)
@@ -716,7 +716,6 @@ public class InstantRunBuildContext {
     /**
      * Serialize this context into an xml format.
      * @return the xml persisted information as a {@link String}
-     * @throws ParserConfigurationException
      */
     public String toXml() throws ParserConfigurationException {
         return toXml(buildMode == InstantRunBuildMode.FULL
@@ -728,7 +727,6 @@ public class InstantRunBuildContext {
      * Serialize this context into an xml format.
      * @param persistenceMode desired {@link PersistenceMode}
      * @return the xml persisted information as a {@link String}
-     * @throws ParserConfigurationException
      */
     @NonNull
     @VisibleForTesting
@@ -788,8 +786,6 @@ public class InstantRunBuildContext {
     /**
      * Writes a temporary build-info.xml to persist the produced artifacts in case the build
      * fails before we have a chance to write the final build-info.xml
-     * @throws ParserConfigurationException
-     * @throws IOException
      */
     public void writeTmpBuildInfo(@NonNull File tmpBuildInfo)
             throws ParserConfigurationException, IOException {
