@@ -118,6 +118,13 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 "dependencies \\{\n",
                 "dependencies { compile deps.external.rxjava\n");
 
+        // because we are testing the source generation which will trigger the test manifest
+        // merging, minSdkVersion has to be at least 17
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "minSdkVersion( )*: \\d+,",
+                "minSdkVersion : 17,");
+
         for (ProjectScenario projectScenario : projectScenarios) {
             switch (projectScenario) {
                 case NATIVE_MULTIDEX:
