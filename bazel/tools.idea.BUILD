@@ -1483,18 +1483,6 @@ iml_module(
     ],
 )
 
-iml_module(
-    name = "idea.platform-main",
-    srcs = ["idea/platform/platform-main/src"],
-    javacopts = ["-extra_checks:off"],
-    tags = ["managed"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//tools:idea.platform-impl_and_others[module]",
-        "//tools:idea.bootstrap[module]",
-    ],
-)
 
 iml_module(
     name = "idea.jps-model-tests",
@@ -3660,6 +3648,183 @@ java_import(
 java_import(
     name = "swing-testing/fest-swing/lib/MultithreadedTC-1.01",
     jars = ["swing-testing/fest-swing/lib/MultithreadedTC-1.01.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "idea.svn4idea",
+    # do not sort: must match IML order
+    srcs = [
+        "idea/plugins/svn4idea/resources",
+        "idea/plugins/svn4idea/src",
+    ],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools:idea.util[module]",
+        "//tools/idea/.idea/libraries:JDOM",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:Log4J",
+        "//tools:idea.vcs-api[module]",
+        "//tools:idea.platform-api[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools:idea/plugins/svn4idea/lib/svnkit",
+        "//tools/idea/.idea/libraries:trilead-ssh2",
+        "//tools:idea/plugins/svn4idea/lib/sequence-library",
+        "//tools:idea/plugins/svn4idea/lib/sqljet",
+        "//tools:idea/plugins/svn4idea/lib/antlr",
+        "//tools:idea/plugins/svn4idea/lib/svnkit-javahl",
+        "//tools/idea/.idea/libraries:jna",
+        "//tools/idea/.idea/libraries:pty4j",
+        "//tools/idea/.idea/libraries:purejavacomm",
+        "//tools/idea/.idea/libraries:jsch-agent-proxy",
+        "//tools:idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2",
+        "//tools/idea/.idea/libraries:http-client",
+        "//tools/idea/.idea/libraries:sqlite",
+    ],
+)
+
+iml_module(
+    name = "idea.manifest",
+    srcs = ["idea/java/manifest/src"],
+    javacopts = ["-extra_checks:off"],
+    tags = ["managed"],
+    test_srcs = ["idea/java/manifest/test"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools:idea.util[module]",
+        "//tools:idea.core-api[module]",
+        "//tools:idea.analysis-api[module]",
+        "//tools:idea.platform-api[module]",
+        "//tools:idea.lang-api[module]",
+        "//tools:idea.core-impl[module]",
+        "//tools:idea.java-psi-api[module]",
+        "//tools:idea.java-impl[module]",
+        "//tools:idea.compiler-impl_and_others[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+    ],
+)
+
+java_import(
+    name = "idea/plugins/git4idea/lib/trilead-ssh2",
+    jars = ["idea/plugins/git4idea/lib/trilead-ssh2.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/cvs/lib/trilead-ssh2-build213",
+    jars = ["idea/plugins/cvs/lib/trilead-ssh2-build213.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/purejavacomm",
+    jars = ["idea/lib/purejavacomm.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/svnkit",
+    jars = ["idea/plugins/svn4idea/lib/svnkit.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/trilead",
+    jars = ["idea/plugins/svn4idea/lib/trilead.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/sequence-library",
+    jars = ["idea/plugins/svn4idea/lib/sequence-library.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/sqljet",
+    jars = ["idea/plugins/svn4idea/lib/sqljet.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/antlr",
+    jars = ["idea/plugins/svn4idea/lib/antlr.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/svnkit-javahl",
+    jars = ["idea/plugins/svn4idea/lib/svnkit-javahl.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.usocket-nc",
+    jars = ["idea/lib/jsch.agentproxy.usocket-nc.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.usocket-jna",
+    jars = ["idea/lib/jsch.agentproxy.usocket-jna.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.sshagent",
+    jars = ["idea/lib/jsch.agentproxy.sshagent.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.pageant",
+    jars = ["idea/lib/jsch.agentproxy.pageant.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.core",
+    jars = ["idea/lib/jsch.agentproxy.core.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/jsch.agentproxy.connector-factory",
+    jars = ["idea/lib/jsch.agentproxy.connector-factory.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2",
+    jars = ["idea/plugins/svn4idea/lib/jsch.agentproxy.svnkit-trilead-ssh2.jar"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "idea/lib/sqlite-jdbc-3.6.20.1",
+    jars = ["idea/lib/sqlite-jdbc-3.6.20.1.jar"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )
