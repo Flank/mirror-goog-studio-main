@@ -19,8 +19,6 @@ package com.android.apkzlib.zip;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.ByteTracker;
-import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.zip.Deflater;
 
 /**
@@ -74,7 +72,9 @@ public class ZFileOptions {
         mTracker = new ByteTracker();
         mCompressor =
                 new DeflateExecutionCompressor(
-                        MoreExecutors.directExecutor(), mTracker, Deflater.DEFAULT_COMPRESSION);
+                        Runnable::run,
+                        mTracker,
+                        Deflater.DEFAULT_COMPRESSION);
         mAlignmentRule = AlignmentRules.compose();
     }
 
