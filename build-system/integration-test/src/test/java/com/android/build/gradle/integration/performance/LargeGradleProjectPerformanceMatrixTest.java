@@ -123,7 +123,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "minSdkVersion( )*: \\d+,",
-                "minSdkVersion : 17,");
+                "minSdkVersion : 18,");
 
         for (ProjectScenario projectScenario : projectScenarios) {
             switch (projectScenario) {
