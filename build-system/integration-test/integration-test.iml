@@ -19,6 +19,7 @@
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="instant-run-client" />
+    <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="module" module-name="instant-run-common" />
     <orderEntry type="module" module-name="device-provider" />
@@ -35,11 +36,11 @@
     </orderEntry>
     <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="module" module-name="testutils" />
-    <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="analytics-protos-base" scope="TEST" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
     <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="apkzlib" />
+    <orderEntry type="module" module-name="instant-run-instrumentation" />
   </component>
 </module>
