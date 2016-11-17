@@ -14,85 +14,90 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+package com.android.build.gradle.integration.application;
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE
-import static com.android.SdkConstants.FD_RES
-import static com.android.SdkConstants.FD_RES_RAW
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertNull
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.ide.common.process.ProcessException;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 /**
  * Assemble tests for embedded wear app with a single app.
  */
-@CompileStatic
-class WearSimpleTest {
+public class WearSimpleTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("simpleMicroApp")
-            .create()
+            .create();
 
     @BeforeClass
-    static void setUp() {
-        def mainAppBuildGradle = project.file("main/build.gradle");
+    public static void setUp() throws IOException {
+        File mainAppBuildGradle = project.file("main/build.gradle");
 
-        TestFileUtils.appendToFile(mainAppBuildGradle, """
-dependencies {
-  wearApp project(':wear')
-}
-""")
+        TestFileUtils.appendToFile(mainAppBuildGradle,
+                "dependencies {\n"
+                + "  wearApp project(':wear')\n"
+                + "}\n");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check default embedding"() {
-        project.execute("clean", ":main:assemble")
+    public void checkDefaultEmbedding() throws IOException, ProcessException {
+        project.execute("clean", ":main:assemble");
 
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
-                DOT_ANDROID_PACKAGE
+                DOT_ANDROID_PACKAGE;
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.
-        def variantData = [
+        List<List<String>> variantData = Lists.newArrayList(
                 //Output apk name     Version name
                 //---------------     ------------
-                [ "release-unsigned", "default" ],
-                [ "debug",            null ]
-        ]
+                Lists.newArrayList("release-unsigned", "default" ),
+                Lists.newArrayList("debug",            null));
 
         for (List<String> data : variantData) {
-            File fullApk = project.getSubproject("main").getApk(data[0])
-            File embeddedApk = ZipHelper.extractFile(fullApk, embeddedApkPath)
+            String apkName = data.get(0);
+            String versionName = data.get(1);
+            File fullApk = project.getSubproject("main").getApk(apkName);
+            File embeddedApk = ZipHelper.extractFile(fullApk, embeddedApkPath);
 
-            if (data[1] == null) {
-                assertNull("Expected no embedded app for " + data[0], embeddedApk)
-                break
+            if (versionName == null) {
+                assertNull("Expected no embedded app for " + apkName, embeddedApk);
+                break;
             }
 
-            assertNotNull("Failed to find embedded micro app for " + data[0], embeddedApk)
+            assertNotNull("Failed to find embedded micro app for " + apkName, embeddedApk);
 
             // check for the versionName
-            assertThatApk(embeddedApk).hasVersionName(data[1])
+            assertThatApk(embeddedApk).hasVersionName(versionName);
         }
     }
 
     @Test
-    void "check wear-release not built with main-debug"() {
-        project.execute("clean", ":main:assembleDebug")
-        assertFalse(project.getStdout().contains(":wear:packageRelease"))
+    public void checkWearReleaseNotBuildWithMainDebug() {
+        GradleBuildResult result = project.executor().run("clean", ":main:assembleDebug");
+        assertFalse(result.getStdout().contains(":wear:packageRelease"));
     }
 }

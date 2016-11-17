@@ -14,80 +14,81 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.gradle.api.GradleException
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getFailureMessage;
+import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE
-import static com.android.SdkConstants.FD_RES
-import static com.android.SdkConstants.FD_RES_RAW
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
-import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getFailureMessage
-import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.gradle.api.GradleException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Assemble tests for unbundled wear app with a single app.
  */
-@CompileStatic
-class WearSimpleUnbundledTest {
+public class WearSimpleUnbundledTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("simpleMicroApp")
-            .create()
+            .create();
 
     @Before
-    void setUp() {
-        def mainAppBuildGradle = project.file("main/build.gradle");
+    public void setUp() throws IOException {
+        File mainAppBuildGradle = project.file("main/build.gradle");
 
-        TestFileUtils.appendToFile(mainAppBuildGradle, """
-android {
-  defaultConfig {
-    wearAppUnbundled true
-  }
-}
-""")
+        TestFileUtils.appendToFile(mainAppBuildGradle,
+                "android {\n"
+                + "  defaultConfig {\n"
+                + "    wearAppUnbundled true\n"
+                + "  }\n"
+                + "}\n");
     }
 
     @After
-    void cleanUp() {
-        project = null
+    public void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check default non-embedding"() {
-        project.execute("clean", ":main:assemble")
+    public void checkDefaultNonEmbedding() throws IOException {
+        project.execute("clean", ":main:assemble");
 
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
-                DOT_ANDROID_PACKAGE
+                DOT_ANDROID_PACKAGE;
 
-        List<String> apkNames = [ "release-unsigned", "debug" ]
+        List<String> apkNames = Lists.newArrayList("release-unsigned", "debug");
 
         for (String apkName : apkNames) {
-            File fullApk = project.getSubproject("main").getApk(apkName)
+            File fullApk = project.getSubproject("main").getApk(apkName);
             assertThatZip(fullApk).doesNotContain(embeddedApkPath);
         }
     }
 
     @Test
-    void "check error on unbundled flag + dependency"() {
-        def mainAppBuildGradle = project.file("main/build.gradle");
+    public void checErrorOnUnbundledFlagPlusDependency() throws IOException {
+        File mainAppBuildGradle = project.file("main/build.gradle");
 
-        TestFileUtils.appendToFile(mainAppBuildGradle, """
-dependencies {
-  wearApp project(':wear')
-}
-""")
+        TestFileUtils.appendToFile(mainAppBuildGradle,
+                "dependencies {\n"
+                + "  wearApp project(':wear')\n"
+                + "}\n");
 
-        GradleBuildResult result = project.executor().expectFailure().run("clean", ":main:assembleDebug");
+        GradleBuildResult result = project.executor().expectFailure().run(
+                "clean", ":main:assembleDebug");
 
         //noinspection ThrowableResultOfMethodCallIgnored
         assertThat(getFailureMessage(result.getException(), GradleException.class)).contains(
