@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal;
+package com.android.builder.symbols;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.builder.internal.SymbolLoader.SymbolEntry;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -69,8 +68,8 @@ public class SymbolWriter {
     }
 
     @NonNull
-    private Table<String, String, SymbolEntry> getAllSymbols() {
-        Table<String, String, SymbolEntry> symbols = HashBasedTable.create();
+    private Table<String, String, SymbolLoader.SymbolEntry> getAllSymbols() {
+        Table<String, String, SymbolLoader.SymbolEntry> symbols = HashBasedTable.create();
 
         for (SymbolLoader symbolLoader : mSymbols) {
             symbols.putAll(symbolLoader.getSymbols());
@@ -80,12 +79,12 @@ public class SymbolWriter {
     }
 
     @NonNull
-    private Table<String, String, SymbolEntry> getMatchingSymbols() {
-        ImmutableTable.Builder<String, String, SymbolEntry> symbolBuilder =
+    private Table<String, String, SymbolLoader.SymbolEntry> getMatchingSymbols() {
+        ImmutableTable.Builder<String, String, SymbolLoader.SymbolEntry> symbolBuilder =
                 ImmutableTable.builder();
 
-        Table<String, String, SymbolEntry> symbols = getAllSymbols();
-        Table<String, String, SymbolEntry> values = mValues.getSymbols();
+        Table<String, String, SymbolLoader.SymbolEntry> symbols = getAllSymbols();
+        Table<String, String, SymbolLoader.SymbolEntry> values = mValues.getSymbols();
 
         Set<String> rowSet = symbols.rowKeySet();
 
@@ -94,7 +93,7 @@ public class SymbolWriter {
 
             for (String symbolName : symbolSet) {
                 // get the matching SymbolEntry from the values Table.
-                SymbolEntry value = values.get(row, symbolName);
+                SymbolLoader.SymbolEntry value = values.get(row, symbolName);
                 if (value != null) {
                     symbolBuilder.put(row, symbolName, value);
                 }
@@ -105,7 +104,7 @@ public class SymbolWriter {
     }
 
     public void write() throws IOException {
-        Table<String, String, SymbolEntry> matchingSymbols = getMatchingSymbols();
+        Table<String, String, SymbolLoader.SymbolEntry> matchingSymbols = getMatchingSymbols();
         if (matchingSymbols.isEmpty()) {
             return;
         }
@@ -146,14 +145,14 @@ public class SymbolWriter {
                 writer.write(row);
                 writer.write(" {\n");
 
-                Map<String, SymbolEntry> rowMap = matchingSymbols.row(row);
+                Map<String, SymbolLoader.SymbolEntry> rowMap = matchingSymbols.row(row);
                 Set<String> symbolSet = rowMap.keySet();
                 ArrayList<String> symbolList = Lists.newArrayList(symbolSet);
                 Collections.sort(symbolList);
 
                 for (String symbolName : symbolList) {
                     // get the matching SymbolEntry from the values Table.
-                    SymbolEntry value = matchingSymbols.get(row, symbolName);
+                    SymbolLoader.SymbolEntry value = matchingSymbols.get(row, symbolName);
                     writer.write("\t\t");
                     writer.write(idModifiers);
                     writer.write(value.getType());
