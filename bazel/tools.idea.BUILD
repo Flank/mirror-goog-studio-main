@@ -867,6 +867,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/platform/util/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -1070,6 +1071,7 @@ iml_module(
         "idea/platform/xdebugger-impl/testSrc",
         "idea/platform/testFramework/testSrc",
     ],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -1462,6 +1464,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/platform/smRunner/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -1498,6 +1501,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/jps/model-impl/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.platform-impl_and_others"],
     # do not sort: must match IML order
@@ -1512,6 +1516,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/jps/model-serialization/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.jps-model-tests"],
     # do not sort: must match IML order
@@ -1531,6 +1536,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/jps/jps-builders/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -1571,6 +1577,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/ant/jps-plugin/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -1645,6 +1652,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/maven/jps-plugin/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -1761,6 +1769,7 @@ iml_module(
         "idea/platform/external-system-impl/testSrc",
         "idea/java/compiler/impl/testSrc",
     ],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -1860,6 +1869,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/junit/test"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.smRunner"],
     # do not sort: must match IML order
@@ -1925,6 +1935,7 @@ iml_module(
     resources = ["idea/plugins/eclipse/resources"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/eclipse/testSources"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -1991,6 +2002,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/properties/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -2017,6 +2029,7 @@ iml_module(
     resources = ["idea/plugins/ant/resources"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/ant/tests/src"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -2047,6 +2060,7 @@ iml_module(
     resources = ["idea/plugins/java-i18n/resources"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/java-i18n/testSrc"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -2090,6 +2104,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/java/typeMigration/test"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -2110,6 +2125,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/testng/testSources"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     exports = ["//tools:idea.smRunner"],
     # do not sort: must match IML order
@@ -2152,6 +2168,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/xpath/xpath-lang/test"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -2190,6 +2207,7 @@ iml_module(
     javacopts = ["-extra_checks:off"],
     tags = ["managed"],
     test_srcs = ["idea/plugins/groovy/test"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -2240,6 +2258,7 @@ iml_module(
         "idea/plugins/maven/maven2-server-impl/test",
         "idea/plugins/maven/src/test/java",
     ],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -2348,6 +2367,7 @@ iml_module(
     tags = ["managed"],
     test_resources = ["idea/plugins/gradle/tooling-extension-impl/testData"],
     test_srcs = ["idea/plugins/gradle/tooling-extension-impl/testSources"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -2365,6 +2385,7 @@ iml_module(
         "idea/plugins/gradle/testData",
         "idea/plugins/gradle/testSources",
     ],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -3589,6 +3610,7 @@ iml_module(
     tags = ["managed"],
     test_resources = ["swing-testing/fest-swing/src/test/resources"],
     test_srcs = ["swing-testing/fest-swing/src/test/java"],
+    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
