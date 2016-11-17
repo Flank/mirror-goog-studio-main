@@ -52,10 +52,11 @@ public enum InstantRunPatchingPolicy {
      */
     MULTI_APK(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */);
 
+    @NonNull
     private final DexPackagingPolicy dexPatchingPolicy;
     private final boolean useMultiDex;
 
-    InstantRunPatchingPolicy(DexPackagingPolicy dexPatchingPolicy, boolean useMultiDex) {
+    InstantRunPatchingPolicy(@NonNull DexPackagingPolicy dexPatchingPolicy, boolean useMultiDex) {
         this.dexPatchingPolicy = dexPatchingPolicy;
         this.useMultiDex = useMultiDex;
     }
@@ -72,6 +73,7 @@ public enum InstantRunPatchingPolicy {
      * on the target platforms.
      * @return the desired dex packaging policy for dex files
      */
+    @NonNull
     public DexPackagingPolicy getDexPatchingPolicy() {
         return dexPatchingPolicy;
     }
@@ -82,14 +84,12 @@ public enum InstantRunPatchingPolicy {
      *
      * @param featureLevel the feature level of the target device
      * @param coldswapMode desired coldswap mode optionally provided.
-     * @param targetArchitecture the targeted architecture.
      * @return a {@link InstantRunPatchingPolicy} instance.
      */
     @NonNull
     public static InstantRunPatchingPolicy getPatchingPolicy(
             int featureLevel,
-            @Nullable String coldswapMode,
-            @Nullable String targetArchitecture) {
+            @Nullable String coldswapMode) {
 
         if (featureLevel < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return PRE_LOLLIPOP;

@@ -33,6 +33,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalSupportVisitor;
@@ -77,12 +78,13 @@ public class InstantRunTransform extends Transform {
             new LoggerWrapper(Logging.getLogger(InstantRunTransform.class));
     private final ImmutableList.Builder<String> generatedClasses3Names = ImmutableList.builder();
     private final InstantRunVariantScope transformScope;
+    private final Integer targetPlatformApi;
 
     public InstantRunTransform(InstantRunVariantScope transformScope) {
         this.transformScope = transformScope;
+        this.targetPlatformApi = AndroidGradleOptions.getTargetFeatureLevel(
+                transformScope.getGlobalScope().getProject());
     }
-
-    enum RecordingPolicy {RECORD, DO_NOT_RECORD}
 
     @NonNull
     @Override
@@ -99,7 +101,7 @@ public class InstantRunTransform extends Transform {
     @NonNull
     @Override
     public Set<ContentType> getOutputTypes() {
-        return ImmutableSet.<ContentType>of(
+        return ImmutableSet.of(
                 DefaultContentType.CLASSES,
                 ExtendedContentType.CLASSES_ENHANCED);
     }
@@ -175,7 +177,7 @@ public class InstantRunTransform extends Transform {
                     TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
 
             File classesThreeOutput = outputProvider.getContentLocation("enhanced",
-                    ImmutableSet.<ContentType>of(ExtendedContentType.CLASSES_ENHANCED),
+                    ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
                     getScopes(), Format.DIRECTORY);
 
             if (cleanUpClassesThree) {
@@ -351,8 +353,9 @@ public class InstantRunTransform extends Transform {
             @NonNull final Status change)
             throws IOException {
         if (inputFile.getPath().endsWith(SdkConstants.DOT_CLASS)) {
-            File outputFile = IncrementalVisitor.instrumentClass(
-                    inputDir, inputFile, outputDir, IncrementalSupportVisitor.VISITOR_BUILDER, LOGGER);
+            IncrementalVisitor.instrumentClass(
+                    targetPlatformApi, inputDir, inputFile, outputDir,
+                    IncrementalSupportVisitor.VISITOR_BUILDER, LOGGER);
         }
     }
 
@@ -386,7 +389,7 @@ public class InstantRunTransform extends Transform {
     protected void transformToClasses3Format(File inputDir, File inputFile, File outputDir)
             throws IOException {
 
-        File outputFile = IncrementalVisitor.instrumentClass(
+        File outputFile = IncrementalVisitor.instrumentClass(targetPlatformApi,
                 inputDir, inputFile, outputDir, IncrementalChangeVisitor.VISITOR_BUILDER, LOGGER);
 
         // if the visitor returned null, that means the class cannot be hot swapped or more likely

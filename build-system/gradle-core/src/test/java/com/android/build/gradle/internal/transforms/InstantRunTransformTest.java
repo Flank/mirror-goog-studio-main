@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,6 +78,9 @@ public class InstantRunTransformTest {
     @Mock
     InstantRunBuildContext instantRunBuildContext;
 
+    @Mock
+    Project project;
+
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -86,6 +90,7 @@ public class InstantRunTransformTest {
         AndroidBuilder mockBuilder = Mockito.mock(AndroidBuilder.class);
         when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.of());
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
+        when(globalScope.getProject()).thenReturn(project);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
         when(variantScope.getInstantRunBootClasspath()).thenReturn(ImmutableList.of());
