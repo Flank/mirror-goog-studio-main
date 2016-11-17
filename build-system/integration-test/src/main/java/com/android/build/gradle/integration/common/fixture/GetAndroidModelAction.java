@@ -76,7 +76,8 @@ public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelActi
 
     public GetAndroidModelAction(Class<T> type, boolean isMultiThreaded) {
         this.type = type;
-        this.isMultiThreaded = isMultiThreaded;
+        // parallelization hit a change in Gradle 3.2 which makes it not work.
+        this.isMultiThreaded = false; //isMultiThreaded;
     }
 
     @Override
