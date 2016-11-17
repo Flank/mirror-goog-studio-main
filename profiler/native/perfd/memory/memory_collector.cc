@@ -25,7 +25,7 @@
 #include "utils/thread_name.h"
 #include "utils/trace.h"
 
-using ::profiler::proto::HeapDumpDataResponse;
+using ::profiler::proto::DumpDataResponse;
 
 namespace profiler {
 
@@ -82,7 +82,7 @@ bool MemoryCollector::TriggerHeapDump() {
     ss << "/data/local/tmp/" << pid_ << "_" << request_time << ".hprof";
     std::string dump_file_path = ss.str();
 
-    if (!memory_cache_.StartHeapDumpSample(dump_file_path, request_time)) {
+    if (!memory_cache_.StartHeapDump(dump_file_path, request_time)) {
       Log::V("StartHeapDumpSample failed.");
       return false;
     }
@@ -113,7 +113,7 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
     result = false;
   }
 
-  if (!memory_cache_.EndHeapDumpSample(clock_.GetCurrentTime(), result)) {
+  if (!memory_cache_.EndHeapDump(clock_.GetCurrentTime(), result)) {
     Log::V("EndHeapDumpSample failed.");
   }
 
@@ -121,7 +121,8 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
 }
 
 void MemoryCollector::GetHeapDumpData(int32_t dump_id,
-                                      HeapDumpDataResponse* response) {
+                                      DumpDataResponse* response) {
   memory_cache_.ReadHeapDumpFileContents(dump_id, response);
 }
+
 }  // namespace profiler

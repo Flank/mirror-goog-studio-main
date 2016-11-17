@@ -33,14 +33,14 @@ class MemoryCache {
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
-  bool StartHeapDumpSample(const std::string& dump_file_path,
-                           int64_t request_time);
-  bool EndHeapDumpSample(int64_t end_time, bool success);
+  bool StartHeapDump(const std::string& dump_file_path,
+                     int64_t request_time);
+  bool EndHeapDump(int64_t end_time, bool success);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
   void ReadHeapDumpFileContents(int32_t dump_id,
-                                proto::HeapDumpDataResponse* response);
+                                proto::DumpDataResponse* response);
 
  private:
   // Gets the index into |*_samples_| for the corresponding |id|.
@@ -53,10 +53,10 @@ class MemoryCache {
   // TODO replace these with circular buffer class when it becomes available.
   std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;
   std::unique_ptr<proto::MemoryData::VmStatsSample[]> vm_stats_samples_;
-  std::unique_ptr<proto::MemoryData::HeapDumpSample[]> heap_dump_samples_;
+  std::unique_ptr<proto::HeapDumpInfo[]> heap_dump_infos_;
   std::mutex memory_samples_mutex_;
   std::mutex vm_stats_samples_mutex_;
-  std::mutex heap_dump_samples_mutex_;
+  std::mutex heap_dump_infos_mutex_;
 
   int32_t put_memory_sample_index_;
   int32_t put_vm_stats_sample_index_;
@@ -66,7 +66,7 @@ class MemoryCache {
 
   bool memory_samples_buffer_full_;
   bool vm_stats_samples_buffer_full_;
-  bool has_unfinished_heap_dump_sample_;
+  bool has_unfinished_heap_dump_;
 };
 
 }  // namespace profiler

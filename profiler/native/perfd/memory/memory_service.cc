@@ -19,10 +19,16 @@
 
 #include "utils/trace.h"
 
+using profiler::proto::AllocationDumpDataRequest;
+using profiler::proto::AllocationTrackingRequest;
+using profiler::proto::AllocationTrackingResponse;
+using profiler::proto::DumpDataResponse;
 using profiler::proto::HeapDumpDataRequest;
-using profiler::proto::HeapDumpDataResponse;
-using profiler::proto::HeapDumpRequest;
-using profiler::proto::HeapDumpResponse;
+using profiler::proto::TriggerHeapDumpRequest;
+using profiler::proto::TriggerHeapDumpResponse;
+using profiler::proto::ListAllocationDumpInfosResponse;
+using profiler::proto::ListHeapDumpInfosResponse;
+using profiler::proto::ListDumpInfosRequest;
 using profiler::proto::MemoryData;
 using profiler::proto::MemoryRequest;
 using profiler::proto::MemoryStartRequest;
@@ -68,24 +74,30 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   return ::grpc::Status::OK;
 }
 
+#define PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS( \
+    result, collectors, response, status) { \
+  if ((result) == (collectors).end()) { \
+    (response)->set_status(status); \
+    return ::grpc::Status( \
+        ::grpc::StatusCode::NOT_FOUND, \
+        "The memory collector for the specified pid has not been started yet."); \
+  } \
+}
+
 ::grpc::Status MemoryServiceImpl::TriggerHeapDump(
-    ::grpc::ServerContext* context, const HeapDumpRequest* request,
-    HeapDumpResponse* response) {
+    ::grpc::ServerContext* context, const TriggerHeapDumpRequest* request,
+    TriggerHeapDumpResponse* response) {
   Trace trace("MEM:TriggerHeapDump");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
-  if (result == collectors_.end()) {
-    response->set_status(HeapDumpResponse::FAILURE_UNKNOWN);
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
-  }
+  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
+      result, collectors_, response, TriggerHeapDumpResponse::FAILURE_UNKNOWN)
 
   if ((result->second).TriggerHeapDump()) {
-    response->set_status(HeapDumpResponse::SUCCESS);
+    response->set_status(TriggerHeapDumpResponse::SUCCESS);
   } else {
-    response->set_status(HeapDumpResponse::IN_PROGRESS);
+    response->set_status(TriggerHeapDumpResponse::IN_PROGRESS);
   }
 
   return ::grpc::Status::OK;
@@ -93,24 +105,20 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 
 ::grpc::Status MemoryServiceImpl::GetHeapDump(
     ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
-    HeapDumpDataResponse* response) {
+    DumpDataResponse* response) {
   Trace trace("MEM:GetFile");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
-  if (result == collectors_.end()) {
-    response->set_status(HeapDumpDataResponse::FAILURE_UNKNOWN);
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
-  }
+  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
+      result, collectors_, response, DumpDataResponse::FAILURE_UNKNOWN)
 
   (result->second).GetHeapDumpData(request->dump_id(), response);
   switch (response->status()) {
-    case HeapDumpDataResponse::NOT_READY:
-    case HeapDumpDataResponse::SUCCESS:
+    case DumpDataResponse::NOT_READY:
+    case DumpDataResponse::SUCCESS:
       return ::grpc::Status::OK;
-    case HeapDumpDataResponse::NOT_FOUND:
+    case DumpDataResponse::NOT_FOUND:
       return ::grpc::Status(
           ::grpc::StatusCode::NOT_FOUND,
           "The requested file_id was not matched to a file.");
@@ -119,6 +127,36 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
           ::grpc::StatusCode::UNKNOWN,
           "Unknown issue when attempting to retrieve file.");
   }
+}
+
+#undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
+
+::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
+    ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
+    ListHeapDumpInfosResponse* response) {
+    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                          "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::SetAllocationTracking(
+    ::grpc::ServerContext* context, const AllocationTrackingRequest* request,
+    AllocationTrackingResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::GetAllocationDump(
+    ::grpc::ServerContext* context, const AllocationDumpDataRequest* request,
+    DumpDataResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::ListAllocationDumpInfos(
+    ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
+    ListAllocationDumpInfosResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
 }
 
 MemoryCollector* MemoryServiceImpl::GetCollector(int32_t app_id) {
