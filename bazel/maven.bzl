@@ -172,15 +172,22 @@ def maven_java_import(name, pom=None, visibility=None, parent=None, **kwargs):
   )
 
 def _maven_repo_impl(ctx):
+  seen = {}
   inputs = []
   for artifact in ctx.attr.artifacts:
-    inputs += [artifact.maven.pom] + list(artifact.maven.jars)
-    for pom in artifact.maven.parent.poms:
-      jars = artifact.maven.parent.jars[pom]
-      inputs += [pom] + list(jars)
-    for pom in artifact.maven.deps.poms:
-      jars = artifact.maven.deps.jars[pom]
-      inputs += [pom] + list(jars)
+    if not seen.get(artifact.maven.pom):
+      inputs += [artifact.maven.pom] + list(artifact.maven.jars)
+      seen += {artifact.maven.pom: True}
+      for pom in artifact.maven.parent.poms:
+        jars = artifact.maven.parent.jars[pom]
+        if not seen.get(pom):
+          inputs += [pom] + list(jars)
+          seen += {pom: True}
+      for pom in artifact.maven.deps.poms:
+        jars = artifact.maven.deps.jars[pom]
+        if not seen.get(pom):
+          inputs += [pom] + list(jars)
+          seen += {pom: True}
 
   # Execute the command
   ctx.action(
