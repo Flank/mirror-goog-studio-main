@@ -25,7 +25,7 @@ platform specific, binary and run it.
 The command to run all the bazel tests run by the PSQ is:
 
 ```shell
-bazel test $(<tools/base/bazel/test_targets)
+bazel test $(<tools/base/bazel/targets)
 ```
 
 The test output is typically present in `bazel-testlogs/pkg/target/test.xml` (or `test.log`)
@@ -42,7 +42,7 @@ To run all the tests in the IntelliJ Android plugin:
 bazel test //tools/adt/idea/android-tests/...
 ```
 
-> Note: The file `tools/base/bazel/test_targets` contains the up-to-date list of test targets.
+> Note: The file `tools/base/bazel/targets` contains the up-to-date list of test targets.
 
 To build Studio without running the tests:
 
