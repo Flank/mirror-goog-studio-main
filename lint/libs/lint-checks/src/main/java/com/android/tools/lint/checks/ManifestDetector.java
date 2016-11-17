@@ -690,8 +690,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 Project project = context.getMainProject();
                 Variant variant = project.getCurrentVariant();
                 if (variant != null) {
-                    Dependencies dependencies = GradleDetector.getCompileDependencies(
-                            variant.getMainArtifact(), project.getGradleModelVersion());
+                    // getCompileDependencies was added in builder model 2.2; in older versions, just
+                    // use getDependencies
+                    Dependencies dependencies = variant.getMainArtifact().getDependencies();
                     for (AndroidLibrary library : dependencies.getLibraries()) {
                         if (hasWearableGmsDependency(library)) {
                             context.report(WEARABLE_BIND_LISTENER,
