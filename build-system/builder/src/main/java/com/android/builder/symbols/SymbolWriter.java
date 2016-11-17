@@ -68,8 +68,8 @@ public class SymbolWriter {
     }
 
     @NonNull
-    private Table<String, String, SymbolLoader.SymbolEntry> getAllSymbols() {
-        Table<String, String, SymbolLoader.SymbolEntry> symbols = HashBasedTable.create();
+    private Table<String, String, Symbol> getAllSymbols() {
+        Table<String, String, Symbol> symbols = HashBasedTable.create();
 
         for (SymbolLoader symbolLoader : mSymbols) {
             symbols.putAll(symbolLoader.getSymbols());
@@ -79,12 +79,11 @@ public class SymbolWriter {
     }
 
     @NonNull
-    private Table<String, String, SymbolLoader.SymbolEntry> getMatchingSymbols() {
-        ImmutableTable.Builder<String, String, SymbolLoader.SymbolEntry> symbolBuilder =
-                ImmutableTable.builder();
+    private Table<String, String, Symbol> getMatchingSymbols() {
+        ImmutableTable.Builder<String, String, Symbol> symbolBuilder = ImmutableTable.builder();
 
-        Table<String, String, SymbolLoader.SymbolEntry> symbols = getAllSymbols();
-        Table<String, String, SymbolLoader.SymbolEntry> values = mValues.getSymbols();
+        Table<String, String, Symbol> symbols = getAllSymbols();
+        Table<String, String, Symbol> values = mValues.getSymbols();
 
         Set<String> rowSet = symbols.rowKeySet();
 
@@ -93,7 +92,7 @@ public class SymbolWriter {
 
             for (String symbolName : symbolSet) {
                 // get the matching SymbolEntry from the values Table.
-                SymbolLoader.SymbolEntry value = values.get(row, symbolName);
+                Symbol value = values.get(row, symbolName);
                 if (value != null) {
                     symbolBuilder.put(row, symbolName, value);
                 }
@@ -104,7 +103,7 @@ public class SymbolWriter {
     }
 
     public void write() throws IOException {
-        Table<String, String, SymbolLoader.SymbolEntry> matchingSymbols = getMatchingSymbols();
+        Table<String, String, Symbol> matchingSymbols = getMatchingSymbols();
         if (matchingSymbols.isEmpty()) {
             return;
         }
@@ -145,14 +144,14 @@ public class SymbolWriter {
                 writer.write(row);
                 writer.write(" {\n");
 
-                Map<String, SymbolLoader.SymbolEntry> rowMap = matchingSymbols.row(row);
+                Map<String, Symbol> rowMap = matchingSymbols.row(row);
                 Set<String> symbolSet = rowMap.keySet();
                 ArrayList<String> symbolList = Lists.newArrayList(symbolSet);
                 Collections.sort(symbolList);
 
                 for (String symbolName : symbolList) {
                     // get the matching SymbolEntry from the values Table.
-                    SymbolLoader.SymbolEntry value = matchingSymbols.get(row, symbolName);
+                    Symbol value = matchingSymbols.get(row, symbolName);
                     writer.write("\t\t");
                     writer.write(idModifiers);
                     writer.write(value.getType());
