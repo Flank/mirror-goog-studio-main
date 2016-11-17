@@ -39,9 +39,6 @@ import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.MavenCoordinatesImpl;
-import com.android.apkzlib.utils.FileCache;
-import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
@@ -51,6 +48,7 @@ import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.SdkLibData;
+import com.android.builder.utils.FileCache;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -60,7 +58,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.CircularReferenceException;
 import org.gradle.api.DefaultTask;
@@ -82,15 +87,6 @@ import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.specs.Specs;
 import org.gradle.util.GUtil;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * A manager to resolve configuration dependencies.

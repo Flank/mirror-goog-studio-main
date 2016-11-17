@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apkzlib.utils;
+package com.android.builder.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;

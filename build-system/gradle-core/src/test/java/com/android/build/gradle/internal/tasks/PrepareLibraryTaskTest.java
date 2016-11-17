@@ -21,8 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.dependency.MavenCoordinatesImpl;
-import com.android.apkzlib.utils.FileCache;
 import com.android.builder.model.MavenCoordinates;
+import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
