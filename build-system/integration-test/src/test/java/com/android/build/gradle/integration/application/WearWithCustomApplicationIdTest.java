@@ -14,45 +14,49 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.google.common.base.Throwables
-import groovy.transform.CompileStatic
-import org.gradle.tooling.BuildException
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+package com.android.build.gradle.integration.application;
 
-import static org.junit.Assert.fail
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.fail;
+
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.base.Throwables;
+import java.io.File;
+import java.io.IOException;
+import org.gradle.tooling.BuildException;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
 /**
  * Debug builds with a wearApp with applicationId that does not match that of the main application
  * should fail.
  */
-@CompileStatic
-class WearWithCustomApplicationIdTest {
-    @Rule
-    public GradleTestProject project = GradleTestProject.builder()
+public class WearWithCustomApplicationIdTest {
+    @ClassRule
+    public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("embedded")
-            .create()
+            .create();
 
-    @Before
-    void setUp() {
-        def mainAppBuildGradle = project.file("main/build.gradle");
+    @BeforeClass
+    public static void setUp() throws IOException {
+        File mainAppBuildGradle = project.file("main/build.gradle");
 
-        mainAppBuildGradle.text = mainAppBuildGradle.text.replaceFirst(
-                /flavor1 \{/,
-                "flavor1 {\n" +
-                        "        applicationId \"com.example.change.application.id.breaks.embed\"")
+        TestFileUtils.searchAndReplace(mainAppBuildGradle,
+                "flavor1 \\{",
+                "flavor1 {\n"
+                        + "applicationId \"com.example.change.application.id.breaks.embed\"");
     }
 
     @Test
-    public void "build should fail on applicationId mismatch"() {
+    public void buildShouldFailOnApplicationIdMismatch() {
         try {
-            project.execute("clean", ":main:assembleFlavor1Release")
-            fail("Build should fail: applicationId of wear app does not match the main application")
+            project.execute("clean", ":main:assembleFlavor1Release");
+            fail("Build should fail: applicationId of wear app does not match the main application");
         } catch (BuildException e) {
-            assert Throwables.getRootCause(e).message.contains(
-                    "The main and the micro apps do not have the same package name");
+            assertThat(Throwables.getRootCause(e).getMessage())
+                    .contains("The main and the micro apps do not have the same package name");
         }
     }
 }

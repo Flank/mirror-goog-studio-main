@@ -14,74 +14,79 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE
-import static com.android.SdkConstants.FD_RES
-import static com.android.SdkConstants.FD_RES_RAW
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertNull
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.ide.common.process.ProcessException;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 /**
  * Assemble tests for embedded.
  */
-@CompileStatic
-class WearVariantTest {
+public class WearVariantTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("embedded")
-            .create()
+            .create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", ":main:assemble")
+    public static void setUp() {
+        project.execute("clean", ":main:assemble");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check embedded"() {
+    public void checkEmbedded() throws IOException, ProcessException {
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
-                DOT_ANDROID_PACKAGE
+                DOT_ANDROID_PACKAGE;
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.
-        def variantData = [
+        List<List<String>> variantData = Lists.newArrayList(
                 //Output apk name             Version name
                 //---------------             ------------
-                [ "flavor1-release-unsigned", "flavor1" ],
-                [ "flavor2-release-unsigned", "default" ],
-                [ "flavor1-custom-unsigned",  "custom" ],
-                [ "flavor2-custom-unsigned",  "custom" ],
-                [ "flavor1-debug",            null ],
-                [ "flavor2-debug",            null ]
-        ]
+                Lists.newArrayList( "flavor1-release-unsigned", "flavor1" ),
+                Lists.newArrayList( "flavor2-release-unsigned", "default" ),
+                Lists.newArrayList( "flavor1-custom-unsigned",  "custom" ),
+                Lists.newArrayList( "flavor2-custom-unsigned",  "custom" ),
+                Lists.newArrayList( "flavor1-debug",            null ),
+                Lists.newArrayList( "flavor2-debug",            null )
+        );
 
         for (List<String> data : variantData) {
-            File fullApk = project.getSubproject("main").getApk(data[0])
-            File embeddedApk = ZipHelper.extractFile(fullApk, embeddedApkPath)
+            String apkName = data.get(0);
+            String versionName = data.get(1);
+            File fullApk = project.getSubproject("main").getApk(apkName);
+            File embeddedApk = ZipHelper.extractFile(fullApk, embeddedApkPath);
 
-            if (data[1] == null) {
-                assertNull("Expected no embedded app for " + data[0], embeddedApk)
-                break
+            if (versionName == null) {
+                assertNull("Expected no embedded app for " + apkName, embeddedApk);
+                break;
             }
 
-            assertNotNull("Failed to find embedded micro app for " + data[0], embeddedApk)
+            assertNotNull("Failed to find embedded micro app for " + apkName, embeddedApk);
 
             // check for the versionName
-            assertThatApk(embeddedApk).hasVersionName(data[1])
+            assertThatApk(embeddedApk).hasVersionName(versionName);
         }
     }
 }
