@@ -52,13 +52,13 @@ public class AllAccessStaticFieldsTest {
                 .that(allAccessStaticFields.staticAccessAllFinalFields()).isEqualTo("14284256");
 
         assertWithMessage("base: AllAccessStaticFields.publicInt")
-                .that(AllAccessStaticFields.publicInt == 12);
+                .that(AllAccessStaticFields.publicInt).isEqualTo(48);
 
         assertWithMessage("base: AllAccessStaticFields.")
-                .that(AllAccessStaticFields.finalPublicInt == 56);
+                .that(AllAccessStaticFields.finalPublicInt).isEqualTo(56);
 
         assertWithMessage("base: allAccessStaticFields.publicInt")
-                .that(allAccessStaticFields.publicInt == 12);
+                .that(allAccessStaticFields.publicInt).isEqualTo(48);
 
         harness.applyPatch("changeSubClass");
 
@@ -83,13 +83,13 @@ public class AllAccessStaticFieldsTest {
                 .that(allAccessStaticFields.staticAccessAllFinalFields()).isEqualTo("60453015");
 
         assertWithMessage("changeSubClass: AllAccessStaticFields.publicInt")
-                .that(AllAccessStaticFields.publicInt == 22);
+                .that(AllAccessStaticFields.publicInt).isEqualTo(88);
 
         assertWithMessage("changeSubClass: AllAccessStaticFields.")
-                .that(AllAccessStaticFields.finalPublicInt == 60);
+                .that(AllAccessStaticFields.finalPublicInt).isEqualTo(56);
 
         assertWithMessage("changeSubClass: allAccessStaticFields.publicInt")
-                .that(allAccessStaticFields.publicInt == 22);
+                .that(allAccessStaticFields.publicInt).isEqualTo(88);
 
         AllAccessStaticFields.staticSetAllFields(10, 20, 30, 40);
         assertWithMessage("changeSubClass: AllAccessStaticFields.accessAllFields()")
