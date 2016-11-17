@@ -49,6 +49,10 @@ service NetworkService {
   // |HttpDetailsRequest::Type|. Use |GetHttpRange| to get this ids.
   rpc GetHttpDetails(HttpDetailsRequest) returns (HttpDetailsResponse) {
   }
+
+  // Request the byte data associated with a body payload.
+  rpc GetPayload(NetworkPayloadRequest) returns (NetworkPayloadResponse) {
+  }
 }
 
 
@@ -232,15 +236,18 @@ message HttpDetailsResponse {
   }
 
   message Body {
-    // An absolute path on a device which can be used to pull a file containing
-    // the contents of an http body down over adb. The filename will be a hash
-    // of the contents, and the same hash always indicates the same contents.
-    // This hash value calculation is independent of app, device, etc., and can
-    // always* be relied upon to indicate content equality.
+    // An ID which will uniquely identify the contents of an http body. It can
+    // be used to fetch payload bytes via |GetPayload|, and it can safely be
+    // used as a filename, if you want to cache the contents locally.
+    //
+    // This value will be a hash of the contents, and the same hash always
+    // indicates the same contents. This hash value calculation is independent
+    // of app, device, etc., and can always* be relied upon to indicate content
+    // equality.
     // (*) with negligible probability of a collision
     //
-    // Looks something like: "/data/local/tmp/perfd/cache/d652e629bcf87c998c614"
-    string file_path = 1;
+    // Looks something like: "d652e629bcf87c998c614"
+    string payload_id = 1;
   }
 
   oneof details {
@@ -250,4 +257,16 @@ message HttpDetailsResponse {
     Body response_body = 4;
   }
 }
+
+message NetworkPayloadRequest {
+  string payload_id = 1;
+}
+
+message NetworkPayloadResponse {
+  // The contents of the payload response, or "" if there is no payload (or
+  // otherwise the payload file was not found, e.g. removed from the cache after
+  // time passed). The caller should just treat no data as unable to preview.
+  bytes contents = 1;
+}
+
 

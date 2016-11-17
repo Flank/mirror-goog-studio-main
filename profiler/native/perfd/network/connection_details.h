@@ -44,10 +44,10 @@ struct ConnectionDetails final {
     // Available immediately.
     std::string trace;  // TODO: Populate this
 
-    // An absolute path to a file on the device containing the contents of this
-    // request's body, if any (or empty string otherwise).
+    // A unique ID which can be used as a key to fetch the contents of a request
+    // payload (or empty string otherwise).
     // Available when |downloading_timestamp| is non-zero.
-    std::string body_path;  // TODO: Populate this
+    std::string payload_id;  // TODO: Populate this
   };
 
   // TODO: It seems like all Response data is available when |end_timestamp| is
@@ -62,10 +62,10 @@ struct ConnectionDetails final {
     // Available when |end_timestamp| is non-zero.
     std::string fields;
 
-    // An absolute path to a file on the device containing the contents of this
-    // response's body, if any (or empty string otherwise).
+    // A unique ID which can be used as a key to fetch the contents of a
+    // response payload (or empty string otherwise).
     // Available when |end_timestamp| is non-zero.
-    std::string body_path;  // TODO: Populate this
+    std::string payload_id;
   };
 
   // ID that can identify this connection globally across all active apps

@@ -52,6 +52,10 @@ class NetworkServiceImpl final : public proto::NetworkService::Service {
                               const proto::HttpDetailsRequest *httpDetails,
                               proto::HttpDetailsResponse *response) override;
 
+  grpc::Status GetPayload(grpc::ServerContext *context,
+                          const proto::NetworkPayloadRequest *request,
+                          proto::NetworkPayloadResponse *response) override;
+
  private:
   // Start sampling data for device network information.
   void StartDeviceCollector();
