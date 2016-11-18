@@ -17,16 +17,7 @@
 package com.android.tools.lint;
 
 import com.android.testutils.JarTestSuiteRunner;
-import com.android.tools.lint.checks.AnnotationDetectorTest;
-import com.android.tools.lint.checks.ApiDetectorTest;
-import com.android.tools.lint.checks.CallSuperDetectorTest;
-import com.android.tools.lint.checks.JavaScriptInterfaceDetectorTest;
-import com.android.tools.lint.checks.ObjectAnimatorDetectorTest;
-import com.android.tools.lint.checks.SupportAnnotationDetectorTest;
-import com.android.tools.lint.checks.TypoDetectorTest;
-import com.android.tools.lint.checks.TypoLookupTest;
 import com.android.tools.lint.checks.UnpackedNativeCodeDetectorTest;
-import com.android.tools.lint.checks.VersionChecksTest;
 import com.android.tools.lint.client.api.CustomRuleTest;
 import org.junit.runner.RunWith;
 
@@ -35,18 +26,9 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JarTestSuiteRunner.class)
 @JarTestSuiteRunner.ExcludeClasses({
-        AnnotationDetectorTest.class,
-        ApiDetectorTest.class,
-        VersionChecksTest.class,
-        CallSuperDetectorTest.class,
-        CustomRuleTest.class,
-        JavaScriptInterfaceDetectorTest.class,
         LintBazelSuite.class,
-        MainTest.class,
-        ObjectAnimatorDetectorTest.class,
-        SupportAnnotationDetectorTest.class,
-        TypoDetectorTest.class,
-        TypoLookupTest.class,
+        CustomRuleTest.class,
         UnpackedNativeCodeDetectorTest.class,
 })
 public class LintBazelSuite {}
+
