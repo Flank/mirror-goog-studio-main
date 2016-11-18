@@ -16,6 +16,31 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.fasterxml.jackson.core_jackson-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/fasterxml/jackson/core/jackson-core/2.1.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.google.api-client_google-api-client",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/api-client/google-api-client/1.22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava-jdk5",
+        ":com.google.http-client_google-http-client-jackson2",
+        ":com.google.oauth-client_google-oauth-client",
+    ],
+)
+
+maven_java_library(
+    name = "com.google.apis_google-api-services-storage",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/apis/google-api-services-storage/v1-rev82-1.22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.google.api-client_google-api-client"],
+)
+
+maven_java_library(
     name = "com.google.auth_google-auth-library-credentials",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auth/google-auth-library-credentials/0.4.0:jar",
     visibility = ["//visibility:public"],
@@ -44,10 +69,47 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.google.guava_guava-jdk5",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava-jdk5/17.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.google.http-client_google-http-client",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/http-client/google-http-client/1.22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":org.apache.httpcomponents_httpclient",
+    ],
+)
+
+maven_java_library(
+    name = "com.google.http-client_google-http-client-jackson2",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/http-client/google-http-client-jackson2/1.22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.fasterxml.jackson.core_jackson-core",
+        ":com.google.http-client_google-http-client",
+    ],
+)
+
+maven_java_library(
     name = "com.google.jimfs_jimfs",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/jimfs/jimfs/1.1:jar",
     visibility = ["//visibility:public"],
     exports = [":com.google.guava_guava"],
+)
+
+maven_java_library(
+    name = "com.google.oauth-client_google-oauth-client",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/oauth-client/google-oauth-client/1.22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.http-client_google-http-client",
+    ],
 )
 
 maven_java_library(
@@ -121,6 +183,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "commons-cli_commons-cli",
+    export_artifact = "//prebuilts/tools/common/m2/repository/commons-cli/commons-cli/1.2:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "commons-codec_commons-codec",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar",
     visibility = ["//visibility:public"],
@@ -130,6 +199,13 @@ maven_java_library(
 maven_java_library(
     name = "commons-io_commons-io",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "commons-lang_commons-lang",
+    export_artifact = "//prebuilts/tools/common/m2/repository/commons-lang/commons-lang/2.6:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -634,6 +710,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.jacoco_org.jacoco.agent",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.5.201505241946:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "org.jacoco_org.jacoco.core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.5.201505241946:jar",
     visibility = ["//visibility:public"],
@@ -728,4 +811,26 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.6.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+maven_java_library(
+    name = "org.smali_dexlib2",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.1.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.guava_guava",
+        ":org.smali_util",
+    ],
+)
+
+maven_java_library(
+    name = "org.smali_util",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.1.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.guava_guava",
+        ":commons-cli_commons-cli",
+    ],
 )
