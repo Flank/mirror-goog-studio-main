@@ -199,6 +199,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
         project.executor()
                 .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
+                .withArgument("-Pandroid.injected.generateSourcesOnly=true")
                 .run(ModelHelper.getGenerateSourcesCommands(
                         model,
                         project -> project.equals(":WordPress") ? "vanillaDebug" : "debug"));

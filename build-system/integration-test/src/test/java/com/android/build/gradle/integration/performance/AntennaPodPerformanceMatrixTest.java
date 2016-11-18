@@ -221,8 +221,11 @@ public class AntennaPodPerformanceMatrixTest {
                     break;
                 case GENERATE_SOURCES:
                     project.executor().withEnableInfoLogging(false).run("clean");
-                    tasks = ModelHelper.getDebugGenerateSourcesCommands(models);
-                    break;
+                    project.executor()
+                            .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                            .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
+                            .run(ModelHelper.getDebugGenerateSourcesCommands(models));
+                    continue;
                 case NO_OP:
                     // Do an initial build for NO_OP.
                     tasks = ImmutableList.of(":app:assembleDebug");
