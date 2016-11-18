@@ -46,10 +46,10 @@ import java.io.FileNotFoundException;
 public class NativeBuildConfigValueBuilderTest {
 
     private static void assertThatNativeBuildConfigEquals(String string, String expected) {
-        String projectPath = "/projects/MyProject/jni/Android.mk";
+        File projectPath = new File("/projects/MyProject/jni/Android.mk");
 
         NativeBuildConfigValue actualValue =
-                new NativeBuildConfigValueBuilder(new File(projectPath))
+                new NativeBuildConfigValueBuilder(projectPath, projectPath.getParentFile())
                         .addCommands("echo build command", "debug", string, true)
                         .build();
         String actualResult = new GsonBuilder()
@@ -92,7 +92,7 @@ public class NativeBuildConfigValueBuilderTest {
                 + "      \"files\": [\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.c\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        }\n"
@@ -109,7 +109,7 @@ public class NativeBuildConfigValueBuilderTest {
                 + "      \"files\": [\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.c\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        }\n"
@@ -158,7 +158,7 @@ public class NativeBuildConfigValueBuilderTest {
                 + "      \"files\": [\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.c\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\\\"-Isome-include-path\\\"\"\n"
                 + "        }\n"
@@ -204,13 +204,13 @@ public class NativeBuildConfigValueBuilderTest {
                 + "      \"files\": [\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.S\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.S\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        },\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.c\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        }\n"
@@ -257,13 +257,13 @@ public class NativeBuildConfigValueBuilderTest {
                 + "      \"files\": [\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.S\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.S\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        },\n"
                 + "        {\n"
                 + "          \"src\": {\n"
-                + "            \"path\": \"a.c\"\n"
+                + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                 + "          },\n"
                 + "          \"flags\": \"\"\n"
                 + "        }\n"
