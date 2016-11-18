@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.component
+package com.android.build.gradle.integration.component;
 
-import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
-import groovy.transform.CompileStatic
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import com.android.testutils.TestUtils;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 /**
  * Basic integration test for LibraryComponentModelPlugin.
  */
 @Category(SmokeTests.class)
-@CompileStatic
-class LibraryComponentPluginTest {
+public class LibraryComponentPluginTest {
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -42,80 +46,80 @@ class LibraryComponentPluginTest {
 
 
     @Test
-    void "check build config file is included"() {
-        project.getSubproject("app").buildFile << """
-apply plugin: "com.android.model.application"
+    public void checBuildConfigFileIsIncluded() throws IOException, ProcessException {
+        appendToFile(project.getSubproject("app").getBuildFile(),
+                "apply plugin: \"com.android.model.application\"\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(\":lib\")\n"
+                + "}\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "    }\n"
+                + "}\n");
 
-dependencies {
-    compile project(":lib")
-}
+        appendToFile(project.getSubproject("lib").getBuildFile(),
+                "apply plugin: \"com.android.model.library\"\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    /* Depend on annotations to trigger the creation of the ExtractAnnotations task */\n"
+                + "    compile 'com.android.support:support-annotations:" + GradleTestProject.SUPPORT_LIB_VERSION + "'\n"
+                + "}\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "    }\n"
+                + "}\n");
 
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    }
-}
-"""
-
-        project.getSubproject("lib").buildFile << """
-apply plugin: "com.android.model.library"
-
-dependencies {
-    /* Depend on annotations to trigger the creation of the ExtractAnnotations task */
-    compile 'com.android.support:support-annotations:$GradleTestProject.SUPPORT_LIB_VERSION'
-}
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    }
-}
-"""
-        project.execute("assemble")
+        project.execute("assemble");
         File releaseAar = project.getSubproject("lib").getAar("release");
         assertThatAar(releaseAar).containsClass("Lcom/example/helloworld/BuildConfig;");
     }
 
     @Test
-    void "check multi flavor dependencies"() {
-        project.getSubproject("app").buildFile << """
-apply plugin: "com.android.model.application"
+    public void checkMultiFlavorDependencies() throws IOException {
+        appendToFile(project.getSubproject("app").getBuildFile(),
+                "apply plugin: \"com.android.model.application\"\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(path: \":lib\", configuration: \"freeDebug\")\n"
+                + "}\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "    }\n"
+                + "}\n");
 
-dependencies {
-    compile project(path: ":lib", configuration: "freeDebug")
-}
+        GradleTestProject lib = project.getSubproject("lib");
+        appendToFile(lib.getBuildFile(),
+                "apply plugin: \"com.android.model.library\"\n"
+                + "\n"
+                + "configurations {\n"
+                + "    freeDebug\n"
+                + "}\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "        publishNonDefault true\n"
+                + "\n"
+                + "        productFlavors {\n"
+                + "            create(\"free\")\n"
+                + "            create(\"premium\")\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
 
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    }
-}
-"""
-
-        project.getSubproject("lib").buildFile << """
-apply plugin: "com.android.model.library"
-
-configurations {
-    freeDebug
-}
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        publishNonDefault true
-
-        productFlavors {
-            create("free")
-            create("premium")
-        }
-    }
-}
-"""
-        project.execute(":app:assembleDebug")
-        assertThat(project.getSubproject("lib").file("build/intermediates/bundles/freeDebug")).isDirectory()
+        project.execute(":app:assembleDebug");
+        assertThat(lib.file("build/intermediates/bundles/freeDebug"))
+                .isDirectory();
     }
 }

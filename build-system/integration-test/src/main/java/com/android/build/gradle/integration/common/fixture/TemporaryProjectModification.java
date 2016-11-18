@@ -122,6 +122,7 @@ public class TemporaryProjectModification {
         }
     }
 
+    @FunctionalInterface
     public interface ModifiedProjectTest {
         void runTest(TemporaryProjectModification modifiedProject) throws Exception;
     }
