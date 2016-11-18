@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.GradleOutputVerifier;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.ide.common.process.ProcessException;
@@ -98,6 +99,7 @@ public class WearSimpleTest {
     @Test
     public void checkWearReleaseNotBuildWithMainDebug() {
         GradleBuildResult result = project.executor().run("clean", ":main:assembleDebug");
-        assertFalse(result.getStdout().contains(":wear:packageRelease"));
+        GradleOutputVerifier verifier = new GradleOutputVerifier(result.getStdout());
+        verifier.assertThatTask(":wear:packageRelease").wasNotExecuted();
     }
 }

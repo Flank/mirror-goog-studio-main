@@ -52,34 +52,32 @@ public class GradleOutputTaskSubject extends Subject<GradleOutputTaskSubject, St
     }
 
     public void wasExecuted() {
-        getTaskIndex(getSubject(), getDisplaySubject());
+        int index = getTaskIndex(getSubject());
+        if (index == -1) {
+            failWithRawMessage("Not true that %s was executed", getDisplaySubject());
+        }
+    }
+
+    public void wasNotExecuted() {
+        int index = getTaskIndex(getSubject());
+        if (index != -1) {
+            failWithRawMessage("Not true that %s was not executed", getDisplaySubject());
+        }
     }
 
     public void ranBefore(String task) {
-        if (getTaskIndex(getSubject(), getDisplaySubject()) >= getTaskIndex(task)) {
+        if (getTaskIndex(getSubject()) >= getTaskIndex(task)) {
             fail("was executed before", task);
         }
     }
 
     public void ranAfter(String task) {
-        if (getTaskIndex(getSubject(), getDisplaySubject()) <= getTaskIndex(task)) {
+        if (getTaskIndex(getSubject()) <= getTaskIndex(task)) {
             fail("was executed after", task);
         }
     }
 
     private int getTaskIndex(String taskName) {
-        return getTaskIndex(taskName, "<" + taskName + ">");
-    }
-
-    private int getTaskIndex(String taskName, String displayName) {
-        int index = findTaskIndex(taskName);
-        if (index == -1) {
-            failWithRawMessage("Not true that %s was executed", displayName);
-        }
-        return index;
-    }
-
-    private int findTaskIndex(String taskName) {
         int index = -1;
         for (int i = 0; i < tasks.size(); i++) {
             if (tasks.get(i).getTaskName().equals(taskName)) {

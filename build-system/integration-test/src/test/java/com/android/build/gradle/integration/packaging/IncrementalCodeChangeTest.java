@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.packaging
+package com.android.build.gradle.integration.packaging;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.Packaging
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.google.common.base.Charsets
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.Packaging;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 /**
  * test for incremental code change.
  *
@@ -41,9 +43,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * - native multi-dex
  * - legacy multi-dex
  */
-@CompileStatic
-@RunWith(FilterableParameterized)
-class IncrementalCodeChangeTest {
+@RunWith(FilterableParameterized.class)
+public class IncrementalCodeChangeTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -56,102 +57,101 @@ class IncrementalCodeChangeTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
-            .create()
+            .create();
 
     @Test
-    void "check non-multi-dex"() {
+    public void checkNonMultiDex() throws IOException, ProcessException {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
-        project.getSubproject('app').getBuildFile() << """
+        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+                "\n"
+                + "dependencies {\n"
+                + "    compile project(':library')\n"
+                + "}");
 
-dependencies {
-    compile project(':library')
-}
-"""
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
-                "        setTextSize(30);")
+                "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/library/PersonView;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/MainActivity;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/MainActivity;");
     }
 
     @Test
-    void "check legacy multi-dex"() {
+    public void checkLegayMultiDex() throws IOException, ProcessException {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
-        project.getSubproject('app').getBuildFile() << """
+        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+                "\n"
+                + "android {\n"
+                + "    defaultConfig {\n"
+                + "        multiDexEnabled = true\n"
+                + "    }\n"
+                + "}\n"
+                + "dependencies {\n"
+                + "    compile project(':library')\n"
+                + "}");
 
-android {
-    defaultConfig {
-        multiDexEnabled = true
-    }
-}
-dependencies {
-    compile project(':library')
-}
-"""
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
-                "        setTextSize(30);")
+                "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/library/PersonView;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/MainActivity;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/MainActivity;");
 
         // class from legacy multi-dex lib
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Landroid/support/multidex/MultiDex;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Landroid/support/multidex/MultiDex;");
     }
 
     @Test
-    void "check native multi-dex"() {
+    public void checkNativeMultiDex() throws IOException, ProcessException {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
-        project.getSubproject('app').getBuildFile() << """
+        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+                "\n"
+                + "android {\n"
+                + "    defaultConfig {\n"
+                + "        minSdkVersion 21\n"
+                + "        multiDexEnabled = true\n"
+                + "    }\n"
+                + "}\n"
+                + "dependencies {\n"
+                + "    compile project(':library')\n"
+                + "}\n");
 
-android {
-    defaultConfig {
-        minSdkVersion 21
-        multiDexEnabled = true
-    }
-}
-dependencies {
-    compile project(':library')
-}
-"""
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
-                "        setTextSize(30);")
+                "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug")
+        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/library/PersonView;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject('app').getApk("debug"))
-                .containsClass("Lcom/example/android/multiproject/MainActivity;")
+        assertThatApk(project.getSubproject("app").getApk("debug"))
+                .containsClass("Lcom/example/android/multiproject/MainActivity;");
     }
-
 }

@@ -14,89 +14,87 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.component
+package com.android.build.gradle.integration.component;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.utils.GradleOutputVerifier
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import com.android.utils.FileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.Rule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.GradleOutputVerifier;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.Rule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
 /**
  * Integration test library plugin with JNI sources.
  */
-@CompileStatic
-class NdkJniLib2Test {
-    private static MultiModuleTestProject testApp = new MultiModuleTestProject(
-            ":app" : new EmptyAndroidTestApp(),
-            ":lib" : new HelloWorldJniApp());
+public class NdkJniLib2Test {
+    private static MultiModuleTestProject testApp = new MultiModuleTestProject(ImmutableMap.of(
+            ":app", new EmptyAndroidTestApp(),
+            ":lib", new HelloWorldJniApp()));
 
     static {
-        AndroidTestApp app = (AndroidTestApp) testApp.getSubproject(":app")
-        app.addFile(new TestSourceFile("", "build.gradle", """
-apply plugin: "com.android.model.application"
-
-dependencies {
-    compile project(":lib")
-}
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    }
-}
-"""))
+        AndroidTestApp app = (AndroidTestApp) testApp.getSubproject(":app");
+        app.addFile(new TestSourceFile("", "build.gradle",
+                "apply plugin: \"com.android.model.application\"\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(\":lib\")\n"
+                + "}\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "    }\n"
+                + "}\n"));
 
         // Create AndroidManifest.xml that uses the Activity from the library.
         app.addFile(new TestSourceFile("src/main", "AndroidManifest.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.example.app"
-      android:versionCode="1"
-      android:versionName="1.0">
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "      package=\"com.example.app\"\n"
+                + "      android:versionCode=\"1\"\n"
+                + "      android:versionName=\"1.0\">\n"
+                + "\n"
+                + "    <uses-sdk android:minSdkVersion=\"3\" />\n"
+                + "    <application android:label=\"@string/app_name\">\n"
+                + "        <activity\n"
+                + "            android:name=\"com.example.hellojni.HelloJni\"\n"
+                + "            android:label=\"@string/app_name\">\n"
+                + "            <intent-filter>\n"
+                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                + "            </intent-filter>\n"
+                + "        </activity>\n"
+                + "    </application>\n"
+                + "</manifest>"));
 
-    <uses-sdk android:minSdkVersion="3" />
-    <application android:label="@string/app_name">
-        <activity
-            android:name="com.example.hellojni.HelloJni"
-            android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-"""));
-
-        AndroidTestApp lib = (AndroidTestApp) testApp.getSubproject(":lib")
+        AndroidTestApp lib = (AndroidTestApp) testApp.getSubproject(":lib");
         lib.addFile(new TestSourceFile("", "build.gradle",
-                """
-apply plugin: "com.android.model.library"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        ndk {
-            moduleName "hello-jni"
-        }
-    }
-}
-"""))
+                "apply plugin: \"com.android.model.library\"\n"
+                + "\n"
+                + "model {\n"
+                + "    android {\n"
+                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                + "        ndk {\n"
+                + "            moduleName \"hello-jni\"\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n"));
     }
 
     @Rule
@@ -106,49 +104,50 @@ model {
             .create();
 
     @AfterClass
-    static void cleanUp() {
-        testApp = null
+    public static void cleanUp() {
+        testApp = null;
     }
 
     @Test
-    void "check .so are included in both app and library"() {
-        project.execute("clean", ":app:assembleDebug")
+    public void checkSoAreIncludedInBothAppAndLibrary() throws IOException, InterruptedException {
+        project.execute("clean", ":app:assembleDebug");
 
-        File releaseAar = project.getSubproject("lib").getAar("release")
-        assertThatAar(releaseAar).contains("jni/x86/libhello-jni.so")
+        File releaseAar = project.getSubproject("lib").getAar("release");
+        assertThatAar(releaseAar).contains("jni/x86/libhello-jni.so");
 
-        File app = project.getSubproject("app").getApk("debug")
-        assertThatAar(app).contains("lib/x86/libhello-jni.so")
+        File app = project.getSubproject("app").getApk("debug");
+        assertThatAar(app).contains("lib/x86/libhello-jni.so");
 
-        File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so")
-        assertThatNativeLib(lib).isStripped()
-        lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so")
-        assertThatNativeLib(lib).isStripped()
+        File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so");
+        assertThatNativeLib(lib).isStripped();
+        lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so");
+        assertThatNativeLib(lib).isStripped();
     }
 
     /**
      * Ensure prepareDependency task is executed before compilation task.
      */
     @Test
-    void checkTaskOrder() {
-        File emptyFile = project.getSubproject("app").file("src/main/jni/empty.c")
+    public void checkTaskOrder() throws IOException {
+        File emptyFile = project.getSubproject("app").file("src/main/jni/empty.c");
         FileUtils.createFile(emptyFile, "");
-        project.getSubproject("app").getBuildFile() <<"""
-model {
-    android {
-        ndk {
-            moduleName "empty"
-            abiFilters.add("armeabi")
-        }
-    }
-}
-"""
+        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+                "model {\n"
+                + "    android {\n"
+                + "        ndk {\n"
+                + "            moduleName \"empty\"\n"
+                + "            abiFilters.add(\"armeabi\")\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n");
 
         GradleBuildResult result = project.executor()
                 .withArgument("--dry-run") // Just checking task order.  Don't need to actually run.
-                .run(":app:assembleDebug")
+                .run(":app:assembleDebug");
         GradleOutputVerifier verifier = new GradleOutputVerifier(result.getStdout());
-        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary").wasExecuted()
-        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary").ranAfter(":app:prepareDebugDependencies")
+        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary")
+                .wasExecuted();
+        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary")
+                .ranAfter(":app:prepareDebugDependencies");
     }
 }

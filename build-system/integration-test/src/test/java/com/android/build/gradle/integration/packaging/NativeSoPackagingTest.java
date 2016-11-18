@@ -14,35 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.packaging
+package com.android.build.gradle.integration.packaging;
 
-import com.android.annotations.NonNull
-import com.android.annotations.Nullable
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.Packaging
-import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.TestUtils
-import com.android.utils.FileUtils
-import com.google.common.base.Charsets
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.Packaging;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 /**
  * test for packaging of asset files.
  */
-@CompileStatic
-@RunWith(FilterableParameterized)
-class NativeSoPackagingTest {
+@RunWith(FilterableParameterized.class)
+public class NativeSoPackagingTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -55,452 +56,450 @@ class NativeSoPackagingTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
-            .create()
+            .create();
 
-    private GradleTestProject appProject
-    private GradleTestProject libProject
-    private GradleTestProject libProject2
-    private GradleTestProject testProject
-    private GradleTestProject jarProject
+    private GradleTestProject appProject;
+    private GradleTestProject libProject;
+    private GradleTestProject libProject2;
+    private GradleTestProject testProject;
+    private GradleTestProject jarProject;
 
-    private void execute(String... tasks) {
+    private void execute(String... tasks) throws IOException, InterruptedException {
         // TODO: Remove once we understand the cause of flakiness.
         TestUtils.waitForFileSystemTick();
-        project.executor().withPackaging(mPackaging).run(tasks)
+        project.executor().withPackaging(mPackaging).run(tasks);
     }
 
     @Before
-    void setUp() {
-        appProject = project.getSubproject('app')
-        libProject = project.getSubproject('library')
-        libProject2 = project.getSubproject('library2')
-        testProject = project.getSubproject('test')
-        jarProject = project.getSubproject('jar')
+    public void setUp() throws IOException {
+        appProject = project.getSubproject("app");
+        libProject = project.getSubproject("library");
+        libProject2 = project.getSubproject("library2");
+        testProject = project.getSubproject("test");
+        jarProject = project.getSubproject("jar");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.write("""
-include 'app'
-include 'library'
-include 'library2'
-include 'test'
-include 'jar'
-""", new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+        Files.write(
+                "include 'app'\n"
+                + "include 'library'\n"
+                + "include 'library2'\n"
+                + "include 'test'\n"
+                + "include 'jar'\n",
+                new File(project.getTestDir(), "settings.gradle"),
+                Charsets.UTF_8);
 
         // setup dependencies.
-        appProject.getBuildFile() << """
-android {
-    publishNonDefault true
-}
+        TestFileUtils.appendToFile(appProject.getBuildFile(),
+                "android {\n"
+                + "    publishNonDefault true\n"
+                + "}\n"
+                + "\n"
+                + "dependencies {\n"
+                + "    compile project(':library')\n"
+                + "    compile project(':jar')\n"
+                + "}\n");
 
-dependencies {
-    compile project(':library')
-    compile project(':jar')
-}
-"""
+        TestFileUtils.appendToFile(libProject.getBuildFile(),
+                "dependencies {\n"
+                + "    compile project(':library2')\n"
+                + "}\n");
 
-        libProject.getBuildFile() << """
-dependencies {
-    compile project(':library2')
-}
-"""
-
-        testProject.getBuildFile() << """
-android {
-    targetProjectPath ':app'
-    targetVariant 'debug'
-}
-"""
+        TestFileUtils.appendToFile(testProject.getBuildFile(),
+                "android {\n"
+                + "    targetProjectPath ':app'\n"
+                + "    targetVariant 'debug'\n"
+                + "}\n");
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
-        File appDir = appProject.getTestDir()
-        createOriginalSoFile(appDir,  "main",        "libapp.so",         "app:abcd")
-        createOriginalSoFile(appDir,  "androidTest", "libapptest.so",     "appTest:abcd")
+        File appDir = appProject.getTestDir();
+        createOriginalSoFile(appDir,  "main",        "libapp.so",         "app:abcd");
+        createOriginalSoFile(appDir,  "androidTest", "libapptest.so",     "appTest:abcd");
 
-        File testDir = testProject.getTestDir()
-        createOriginalSoFile(testDir, "main",        "libtest.so",        "test:abcd")
+        File testDir = testProject.getTestDir();
+        createOriginalSoFile(testDir, "main",        "libtest.so",        "test:abcd");
 
-        File libDir = libProject.getTestDir()
-        createOriginalSoFile(libDir,  "main",        "liblibrary.so",      "library:abcd")
-        createOriginalSoFile(libDir,  "androidTest", "liblibrarytest.so",  "libraryTest:abcd")
+        File libDir = libProject.getTestDir();
+        createOriginalSoFile(libDir,  "main",        "liblibrary.so",      "library:abcd");
+        createOriginalSoFile(libDir,  "androidTest", "liblibrarytest.so",  "libraryTest:abcd");
 
-        File lib2Dir = libProject2.getTestDir()
-        createOriginalSoFile(lib2Dir, "main",        "liblibrary2.so",     "library2:abcd")
-        createOriginalSoFile(lib2Dir, "androidTest", "liblibrary2test.so", "library2Test:abcd")
+        File lib2Dir = libProject2.getTestDir();
+        createOriginalSoFile(lib2Dir, "main",        "liblibrary2.so",     "library2:abcd");
+        createOriginalSoFile(lib2Dir, "androidTest", "liblibrary2test.so", "library2Test:abcd");
 
-        File jarDir = jarProject.getTestDir()
-        File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "lib", "x86")
-        FileUtils.mkdirs(resFolder)
-        new File(resFolder, "libjar.so") << "jar:abcd";
+        File jarDir = jarProject.getTestDir();
+        File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "lib", "x86");
+        FileUtils.mkdirs(resFolder);
+        Files.write("jar:abcd", new File(resFolder, "libjar.so"), Charsets.UTF_8);
     }
 
     private static void createOriginalSoFile(
             @NonNull File projectFolder,
             @NonNull String dimension,
             @NonNull String filename,
-            @NonNull String content) {
-        File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86")
-        FileUtils.mkdirs(assetFolder)
-        new File(assetFolder, filename) << content;
+            @NonNull String content) throws IOException {
+        File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86");
+        FileUtils.mkdirs(assetFolder);
+        Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
     }
 
     @Test
-    void "test non incremental packaging"() {
-        execute("clean", "assembleDebug", "assembleAndroidTest")
+    public void testNonIncrementalPackaging() throws IOException, InterruptedException {
+        execute("clean", "assembleDebug", "assembleAndroidTest");
 
         // check the files are there. Start from the bottom of the dependency graph
-        checkAar(    libProject2, "liblibrary2.so",     "library2:abcd")
-        checkTestApk(libProject2, "liblibrary2.so",     "library2:abcd")
-        checkTestApk(libProject2, "liblibrary2test.so", "library2Test:abcd")
+        checkAar(    libProject2, "liblibrary2.so",     "library2:abcd");
+        checkTestApk(libProject2, "liblibrary2.so",     "library2:abcd");
+        checkTestApk(libProject2, "liblibrary2test.so", "library2Test:abcd");
 
-        checkAar(    libProject,  "liblibrary.so",     "library:abcd")
+        checkAar(    libProject,  "liblibrary.so",     "library:abcd");
         // aar does not contain dependency's assets
-        checkAar(    libProject, "liblibrary2.so",     null)
+        checkAar(    libProject, "liblibrary2.so",     null);
         // test apk contains both test-ony assets, lib assets, and dependency assets.
-        checkTestApk(libProject, "liblibrary.so",      "library:abcd")
-        checkTestApk(libProject, "liblibrary2.so",     "library2:abcd")
-        checkTestApk(libProject, "liblibrarytest.so",  "libraryTest:abcd")
+        checkTestApk(libProject, "liblibrary.so",      "library:abcd");
+        checkTestApk(libProject, "liblibrary2.so",     "library2:abcd");
+        checkTestApk(libProject, "liblibrarytest.so",  "libraryTest:abcd");
         // but not the assets of the dependency's own test
-        checkTestApk(libProject, "liblibrary2test.so", null)
+        checkTestApk(libProject, "liblibrary2test.so", null);
 
         // app contain own assets + all dependencies' assets.
-        checkApk(    appProject, "libapp.so",         "app:abcd")
-        checkApk(    appProject, "liblibrary.so",      "library:abcd")
-        checkApk(    appProject, "liblibrary2.so",     "library2:abcd")
-        checkApk(    appProject, "libjar.so",          "jar:abcd")
-        checkTestApk(appProject, "libapptest.so",     "appTest:abcd")
+        checkApk(    appProject, "libapp.so",         "app:abcd");
+        checkApk(    appProject, "liblibrary.so",      "library:abcd");
+        checkApk(    appProject, "liblibrary2.so",     "library2:abcd");
+        checkApk(    appProject, "libjar.so",          "jar:abcd");
+        checkTestApk(appProject, "libapptest.so",     "appTest:abcd");
         // app test does not contain dependencies' own test assets.
-        checkTestApk(appProject, "liblibrarytest.so",  null)
-        checkTestApk(appProject, "liblibrary2test.so", null)
+        checkTestApk(appProject, "liblibrarytest.so",  null);
+        checkTestApk(appProject, "liblibrary2test.so", null);
     }
 
     // ---- APP DEFAULT ---
 
     @Test
-    void "test app project with new asset file"() {
-        execute("app:clean", "app:assembleDebug")
+    public void testAppProjectWithNewAssetFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.addFile("src/main/jniLibs/x86/libnewapp.so", "newfile content");
-            execute("app:assembleDebug")
+        doTest(appProject, project -> {
+            project.addFile("src/main/jniLibs/x86/libnewapp.so", "newfile content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libnewapp.so", "newfile content")
-        }
+            checkApk(appProject, "libnewapp.so", "newfile content");
+        });
     }
 
     @Test
-    void "test app project with removed asset file"() {
-        execute("app:clean", "app:assembleDebug")
+    public void testAppProjectWithRemovedAssetFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.removeFile("src/main/jniLibs/x86/libapp.so")
-            execute("app:assembleDebug")
+        doTest(appProject, project -> {
+            project.removeFile("src/main/jniLibs/x86/libapp.so");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libapp.so", null)
-        }
+            checkApk(appProject, "libapp.so", null);
+        });
     }
 
     @Test
-    void "test app project with modified asset file"() {
-        execute("app:clean", "app:assembleDebug")
+    public void testAppProjectWithModifiedAssetFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.replaceFile("src/main/jniLibs/x86/libapp.so", "new content")
-            execute("app:assembleDebug")
+        doTest(appProject, project -> {
+            project.replaceFile("src/main/jniLibs/x86/libapp.so", "new content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libapp.so", "new content")
-        }
+            checkApk(appProject, "libapp.so", "new content");
+        });
     }
 
     @Test
-    void "test app project with new asset file overriding dependency"() {
-        execute("app:clean", "app:assembleDebug")
+    public void testAppProjectWithNewAssetFileOverridingDependency() throws Exception {
+        execute("app:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.addFile("src/main/jniLibs/x86/liblibrary.so", "new content")
-            execute("app:assembleDebug")
+        doTest(appProject, project -> {
+            project.addFile("src/main/jniLibs/x86/liblibrary.so", "new content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary.so", "new content")
+            checkApk(appProject, "liblibrary.so", "new content");
 
             // now remove it to test it works in the other direction
-            it.removeFile("src/main/jniLibs/x86/liblibrary.so")
-            execute("app:assembleDebug")
+            project.removeFile("src/main/jniLibs/x86/liblibrary.so");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary.so", "library:abcd")
-        }
+            checkApk(appProject, "liblibrary.so", "library:abcd");
+        });
     }
 
     @Test
-    void "test app project with new asset file in debug source set"() {
-        execute("app:clean", "app:assembleDebug")
+    public void testAppProjectWithNewAssetFileInDebugSourceSet() throws Exception {
+        execute("app:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.addFile("src/debug/jniLibs/x86/libapp.so", "new content")
-            execute("app:assembleDebug")
+        doTest(appProject, project -> {
+            project.addFile("src/debug/jniLibs/x86/libapp.so", "new content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libapp.so", "new content")
+            checkApk(appProject, "libapp.so", "new content");
 
             // now remove it to test it works in the other direction
-            it.removeFile("src/debug/jniLibs/x86/libapp.so")
-            execute("app:assembleDebug")
+            project.removeFile("src/debug/jniLibs/x86/libapp.so");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libapp.so", "app:abcd")
-        }
+            checkApk(appProject, "libapp.so", "app:abcd");
+        });
     }
 
     @Test
-    void "test app project with modified asset in dependency"() {
-        execute("app:clean", "library:clean", "app:assembleDebug")
+    public void testAppProjectWithModifiedAssetInDependency() throws Exception {
+        execute("app:clean", "library:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.replaceFile("src/main/jniLibs/x86/liblibrary.so", "new content")
-            execute("app:assembleDebug")
+        doTest(libProject, project -> {
+            project.replaceFile("src/main/jniLibs/x86/liblibrary.so", "new content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary.so", "new content")
-        }
+            checkApk(appProject, "liblibrary.so", "new content");
+        });
     }
 
     @Test
-    void "test app project with added asset in dependency"() {
-        execute("app:clean", "library:clean", "app:assembleDebug")
+    public void testAppProjectWithAddedAssetInDependency() throws Exception {
+        execute("app:clean", "library:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/main/jniLibs/x86/libnewlibrary.so", "new content")
-            execute("app:assembleDebug")
+        doTest(libProject, project -> {
+            project.addFile("src/main/jniLibs/x86/libnewlibrary.so", "new content");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "libnewlibrary.so", "new content")
-        }
+            checkApk(appProject, "libnewlibrary.so", "new content");
+        });
     }
 
     @Test
-    void "test app project with removed asset in dependency"() {
-        execute("app:clean", "library:clean", "app:assembleDebug")
+    public void testAppProjectWithRemovedAssetInDependency() throws Exception {
+        execute("app:clean", "library:clean", "app:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.removeFile("src/main/jniLibs/x86/liblibrary.so")
-            execute("app:assembleDebug")
+        doTest(libProject, project -> {
+            project.removeFile("src/main/jniLibs/x86/liblibrary.so");
+            execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary.so", null)
-        }
+            checkApk(appProject, "liblibrary.so", null);
+        });
     }
 
     // ---- APP TEST ---
 
     @Test
-    void "test app project test with new asset file"() {
-        execute("app:clean", "app:assembleAT")
+    public void testAppProjectTestWithNewAssetFile() throws Exception {
+        execute("app:clean", "app:assembleAT");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.addFile("src/androidTest/jniLibs/x86/libnewapp.so", "new file content");
-            execute("app:assembleAT")
+        doTest(appProject, project -> {
+            project.addFile("src/androidTest/jniLibs/x86/libnewapp.so", "new file content");
+            execute("app:assembleAT");
 
-            checkTestApk(appProject, "libnewapp.so", "new file content")
-        }
+            checkTestApk(appProject, "libnewapp.so", "new file content");
+        });
     }
 
     @Test
-    void "test app project test with removed asset file"() {
-        execute("app:clean", "app:assembleAT")
+    public void testAppProjectTestWithRemovedAssetFile() throws Exception {
+        execute("app:clean", "app:assembleAT");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.removeFile("src/androidTest/jniLibs/x86/libapptest.so")
-            execute("app:assembleAT")
+        doTest(appProject, project -> {
+            project.removeFile("src/androidTest/jniLibs/x86/libapptest.so");
+            execute("app:assembleAT");
 
-            checkTestApk(appProject, "libapptest.so", null)
-        }
+            checkTestApk(appProject, "libapptest.so", null);
+        });
     }
 
     @Test
-    void "test app project test with modified asset file"() {
-        execute("app:clean", "app:assembleAT")
+    public void testAppProjectTestWithModifiedAssetFile() throws Exception {
+        execute("app:clean", "app:assembleAT");
 
-        TemporaryProjectModification.doTest(appProject) {
-            it.replaceFile("src/androidTest/jniLibs/x86/libapptest.so", "new content")
-            execute("app:assembleAT")
+        doTest(appProject, project -> {
+            project.replaceFile("src/androidTest/jniLibs/x86/libapptest.so", "new content");
+            execute("app:assembleAT");
 
-            checkTestApk(appProject, "libapptest.so", "new content")
-        }
+            checkTestApk(appProject, "libapptest.so", "new content");
+        });
     }
 
     // ---- LIB DEFAULT ---
 
     @Test
-    void "test lib project with new asset file"() {
-        execute("library:clean", "library:assembleDebug")
+    public void testLibProjectWithNewAssetFile() throws Exception {
+        execute("library:clean", "library:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/main/jniLibs/x86/libnewlibrary.so", "newfile content");
-            execute("library:assembleDebug")
+        doTest(libProject, project -> {
+            project.addFile("src/main/jniLibs/x86/libnewlibrary.so", "newfile content");
+            execute("library:assembleDebug");
 
-            checkAar(libProject, "libnewlibrary.so", "newfile content")
-        }
+            checkAar(libProject, "libnewlibrary.so", "newfile content");
+        });
     }
 
     @Test
-    void "test lib project with removed asset file"() {
-        execute("library:clean", "library:assembleDebug")
+    public void testLibProjectWithRemovedAssetFile() throws Exception {
+        execute("library:clean", "library:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.removeFile("src/main/jniLibs/x86/liblibrary.so")
-            execute("library:assembleDebug")
+        doTest(libProject, project -> {
+            project.removeFile("src/main/jniLibs/x86/liblibrary.so");
+            execute("library:assembleDebug");
 
-            checkAar(libProject, "liblibrary.so", null)
-        }
+            checkAar(libProject, "liblibrary.so", null);
+        });
     }
 
     @Test
-    void "test lib project with modified asset file"() {
-        execute("library:clean", "library:assembleDebug")
+    public void testLibProjectWithModifiedAssetFile() throws Exception {
+        execute("library:clean", "library:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.replaceFile("src/main/jniLibs/x86/liblibrary.so", "new content")
-            execute("library:assembleDebug")
+        doTest(libProject, project -> {
+            project.replaceFile("src/main/jniLibs/x86/liblibrary.so", "new content");
+            execute("library:assembleDebug");
 
-            checkAar(libProject, "liblibrary.so", "new content")
-        }
+            checkAar(libProject, "liblibrary.so", "new content");
+        });
     }
 
     @Test
-    void "test lib project with new asset file in debug source set"() {
-        execute("library:clean", "library:assembleDebug")
+    public void testLibProjectWithNewAssetFileInDebugSourceSet() throws Exception {
+        execute("library:clean", "library:assembleDebug");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/debug/jniLibs/x86/liblibrary.so", "new content")
-            execute("library:assembleDebug")
+        doTest(libProject, project -> {
+            project.addFile("src/debug/jniLibs/x86/liblibrary.so", "new content");
+            execute("library:assembleDebug");
 
-            checkAar(libProject, "liblibrary.so", "new content")
+            checkAar(libProject, "liblibrary.so", "new content");
 
             // now remove it to test it works in the other direction
-            it.removeFile("src/debug/jniLibs/x86/liblibrary.so")
-            execute("library:assembleDebug")
+            project.removeFile("src/debug/jniLibs/x86/liblibrary.so");
+            execute("library:assembleDebug");
 
-            checkAar(libProject, "liblibrary.so", "library:abcd")
-        }
+            checkAar(libProject, "liblibrary.so", "library:abcd");
+        });
     }
 
     // ---- LIB TEST ---
 
     @Test
-    void "test lib project test with new asset file"() {
-        execute("library:clean", "library:assembleAT")
+    public void testLibProjectTestWithNewAssetFile() throws Exception {
+        execute("library:clean", "library:assembleAT");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/androidTest/jniLibs/x86/libnewlibrary.so", "new file content");
-            execute("library:assembleAT")
+        doTest(libProject, project -> {
+            project.addFile("src/androidTest/jniLibs/x86/libnewlibrary.so", "new file content");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "libnewlibrary.so", "new file content")
-        }
+            checkTestApk(libProject, "libnewlibrary.so", "new file content");
+        });
     }
 
     @Test
-    void "test lib project test with removed asset file"() {
-        execute("library:clean", "library:assembleAT")
+    public void testLibProjectTestWithRemovedAssetFile() throws Exception {
+        execute("library:clean", "library:assembleAT");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.removeFile("src/androidTest/jniLibs/x86/liblibrarytest.so")
-            execute("library:assembleAT")
+        doTest(libProject, project -> {
+            project.removeFile("src/androidTest/jniLibs/x86/liblibrarytest.so");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrarytest.so", null)
-        }
+            checkTestApk(libProject, "liblibrarytest.so", null);
+        });
     }
 
     @Test
-    void "test lib project test with modified asset file"() {
-        execute("library:clean", "library:assembleAT")
+    public void testLibProjectTestWithModifiedAssetFile() throws Exception {
+        execute("library:clean", "library:assembleAT");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.replaceFile("src/androidTest/jniLibs/x86/liblibrarytest.so", "new content")
-            execute("library:assembleAT")
+        doTest(libProject, project -> {
+            project.replaceFile("src/androidTest/jniLibs/x86/liblibrarytest.so", "new content");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrarytest.so", "new content")
-        }
+            checkTestApk(libProject, "liblibrarytest.so", "new content");
+        });
     }
 
     @Test
-    void "test lib project test with new asset file overriding tested lib"() {
-        execute("library:clean", "library:assembleAT")
+    public void testLibProjectTestWithNewAssetFileOverridingTestedLib() throws Exception {
+        execute("library:clean", "library:assembleAT");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/androidTest/jniLibs/x86/liblibrary.so", "new content")
-            execute("library:assembleAT")
+        doTest(libProject, project -> {
+            project.addFile("src/androidTest/jniLibs/x86/liblibrary.so", "new content");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary.so", "new content")
+            checkTestApk(libProject, "liblibrary.so", "new content");
 
             // now remove it to test it works in the other direction
-            it.removeFile("src/androidTest/jniLibs/x86/liblibrary.so")
-            execute("library:assembleAT")
+            project.removeFile("src/androidTest/jniLibs/x86/liblibrary.so");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary.so", "library:abcd")
-        }
+            checkTestApk(libProject, "liblibrary.so", "library:abcd");
+        });
     }
 
     @Test
-    void "test lib project test with new asset file overriding dependency"() {
-        execute("library:clean", "library:assembleAT")
+    public void testLibProjectTestWithNewAssetFileOverridingDepenency() throws Exception {
+        execute("library:clean", "library:assembleAT");
 
-        TemporaryProjectModification.doTest(libProject) {
-            it.addFile("src/androidTest/jniLibs/x86/liblibrary2.so", "new content")
-            execute("library:assembleAT")
+        doTest(libProject, project -> {
+            project.addFile("src/androidTest/jniLibs/x86/liblibrary2.so", "new content");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary2.so", "new content")
+            checkTestApk(libProject, "liblibrary2.so", "new content");
 
             // now remove it to test it works in the other direction
-            it.removeFile("src/androidTest/jniLibs/x86/liblibrary2.so")
-            execute("library:assembleAT")
+            project.removeFile("src/androidTest/jniLibs/x86/liblibrary2.so");
+            execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary2.so", "library2:abcd")
-        }
+            checkTestApk(libProject, "liblibrary2.so", "library2:abcd");
+        });
     }
 
     // ---- TEST DEFAULT ---
 
     @Test
-    void "test test-project with new asset file"() {
-        execute("test:clean", "test:assembleDebug")
+    public void testTestProjectWithNewAssetFile() throws Exception {
+        execute("test:clean", "test:assembleDebug");
 
-        TemporaryProjectModification.doTest(testProject) {
-            it.addFile("src/main/jniLibs/x86/libnewtest.so", "newfile content");
-            execute("test:assembleDebug")
+        doTest(testProject, project -> {
+            project.addFile("src/main/jniLibs/x86/libnewtest.so", "newfile content");
+            execute("test:assembleDebug");
 
-            checkApk(testProject, "libnewtest.so", "newfile content")
-        }
+            checkApk(testProject, "libnewtest.so", "newfile content");
+        });
     }
 
     @Test
-    void "test test-project with removed asset file"() {
-        execute("test:clean", "test:assembleDebug")
+    public void testTestProjectWithRemovedAssetFile() throws Exception {
+        execute("test:clean", "test:assembleDebug");
 
-        TemporaryProjectModification.doTest(testProject) {
-            it.removeFile("src/main/jniLibs/x86/libtest.so")
-            execute("test:assembleDebug")
+        doTest(testProject, project -> {
+            project.removeFile("src/main/jniLibs/x86/libtest.so");
+            execute("test:assembleDebug");
 
-            checkApk(testProject, "libtest.so", null)
-        }
+            checkApk(testProject, "libtest.so", null);
+        });
     }
 
     @Test
-    void "test test-project with modified asset file"() {
-        execute("test:clean", "test:assembleDebug")
+    public void testTestProjectWithModifiedAssetFile() throws Exception {
+        execute("test:clean", "test:assembleDebug");
 
-        TemporaryProjectModification.doTest(testProject) {
-            it.replaceFile("src/main/jniLibs/x86/libtest.so", "new content")
-            execute("test:assembleDebug")
+        doTest(testProject, project -> {
+            project.replaceFile("src/main/jniLibs/x86/libtest.so", "new content");
+            execute("test:assembleDebug");
 
-            checkApk(testProject, "libtest.so", "new content")
-        }
+            checkApk(testProject, "libtest.so", "new content");
+        });
     }
 
     // ---- SO ALIGNMENT ----
     @Test
-    public void "test shared object files alignment"() throws Exception {
+    public void testSharedObjectFilesAlignment() throws Exception {
         TestFileUtils.searchAndReplace(
                 appProject.file("src/main/AndroidManifest.xml"),
                 "<application ",
-                "<application android:extractNativeLibs=\"false\" ")
+                "<application android:extractNativeLibs=\"false\" ");
 
-        execute("app:assembleDebug")
-        checkApk(appProject, "libapp.so", "app:abcd")
-        PackagingTests.checkZipAlignWithPageAlignedSoFiles(appProject.getApk("debug"))
+        execute("app:assembleDebug");
+        checkApk(appProject, "libapp.so", "app:abcd");
+        PackagingTests.checkZipAlignWithPageAlignedSoFiles(appProject.getApk("debug"));
     }
 
     /**
@@ -516,10 +515,10 @@ android {
     private static void checkApk(
             @NonNull GradleTestProject project,
             @NonNull String filename,
-            @Nullable String content) {
-        File apk = project.getApk("debug")
-        check(assertThatApk(apk), "lib", filename, content)
-        PackagingTests.checkZipAlign(apk)
+            @Nullable String content) throws IOException, InterruptedException {
+        File apk = project.getApk("debug");
+        check(assertThatApk(apk), "lib", filename, content);
+        PackagingTests.checkZipAlign(apk);
     }
 
     /**
@@ -535,8 +534,8 @@ android {
     private void checkTestApk(
             @NonNull GradleTestProject project,
             @NonNull String filename,
-            @Nullable String content) {
-        check(assertThatApk(project.getTestApk(mPackaging, "debug")), "lib", filename, content)
+            @Nullable String content) throws IOException {
+        check(assertThatApk(project.getTestApk(mPackaging, "debug")), "lib", filename, content);
     }
 
     /**
@@ -552,19 +551,19 @@ android {
     private static void checkAar(
             @NonNull GradleTestProject project,
             @NonNull String filename,
-            @Nullable String content) {
-        check(assertThatAar(project.getAar("debug")), "jni", filename, content)
+            @Nullable String content) throws IOException {
+        check(assertThatAar(project.getAar("debug")), "jni", filename, content);
     }
 
     private static void check(
             @NonNull AbstractAndroidSubject subject,
             @NonNull String folderName,
             @NonNull String filename,
-            @Nullable String content) {
+            @Nullable String content) throws IOException {
         if (content != null) {
-            subject.containsFileWithContent(folderName + "/x86/" + filename, content)
+            subject.containsFileWithContent(folderName + "/x86/" + filename, content);
         } else {
-            subject.doesNotContain(folderName + "/x86/" + filename)
+            subject.doesNotContain(folderName + "/x86/" + filename);
         }
     }
 }
