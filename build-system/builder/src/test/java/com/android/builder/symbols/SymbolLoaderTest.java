@@ -43,7 +43,7 @@ public class SymbolLoaderTest {
         Files.write(r, file, Charsets.UTF_8);
         SymbolLoader loader = new SymbolLoader(file, NullLogger.getLogger());
         loader.load();
-        Table<String, String, SymbolLoader.SymbolEntry> symbols = loader.getSymbols();
+        Table<String, String, Symbol> symbols = loader.getSymbols();
         assertNotNull(symbols);
         assertEquals(1, symbols.size());
         assertNotNull(symbols.get("xml", "authenticator"));
@@ -61,7 +61,7 @@ public class SymbolLoaderTest {
         Files.write(r, file, Charsets.UTF_8);
         SymbolLoader loader = new SymbolLoader(file, NullLogger.getLogger());
         loader.load();
-        Table<String, String, SymbolLoader.SymbolEntry> symbols = loader.getSymbols();
+        Table<String, String, Symbol> symbols = loader.getSymbols();
         assertNotNull(symbols);
         assertEquals(4, symbols.size());
     }
