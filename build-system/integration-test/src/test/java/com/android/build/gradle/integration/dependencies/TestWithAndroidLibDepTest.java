@@ -21,13 +21,11 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * test dependency on a library sub-module that brings in a transitive

@@ -23,12 +23,10 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Files;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MergeResourcesTest {
     @Rule

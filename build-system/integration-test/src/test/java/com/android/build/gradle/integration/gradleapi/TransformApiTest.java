@@ -29,15 +29,13 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterators;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Test for building a transform against version 1.5.

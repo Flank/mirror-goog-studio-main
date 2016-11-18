@@ -28,14 +28,12 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Expect;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class AntennaPodInstantRunTest {
 

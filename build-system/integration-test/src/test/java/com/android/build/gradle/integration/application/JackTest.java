@@ -25,7 +25,9 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import org.gradle.api.JavaVersion;
 import org.junit.Assume;
 import org.junit.Before;
@@ -34,10 +36,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Test Jack integration.

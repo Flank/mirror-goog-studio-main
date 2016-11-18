@@ -26,18 +26,16 @@ import com.android.build.gradle.integration.common.truth.AarSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {

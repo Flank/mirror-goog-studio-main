@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SyncIssue;
-
 import org.junit.Test;
 
 public class IssueSubjectTest {

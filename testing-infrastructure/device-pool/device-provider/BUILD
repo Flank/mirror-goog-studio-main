@@ -1,6 +1,6 @@
 java_library(
-    name = "main",
-    srcs = glob(["java/**/*.java"]),
+    name = "device-provider",
+    srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["resources/**"]),
     visibility = ["//visibility:public"],
     deps = [

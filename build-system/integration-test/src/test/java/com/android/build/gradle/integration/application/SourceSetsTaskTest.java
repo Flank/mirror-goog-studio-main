@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.utils.FileUtils;
-import com.google.api.client.util.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,50 +39,50 @@ public class SourceSetsTaskTest {
 
         String expected =
                 "debug"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "-----"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Compile configuration: debugCompile"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "build.gradle name: android.sourceSets.debug"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Java sources: ["
                         + FileUtils.toSystemDependentPath("src/debug/java")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Manifest file: "
                         + FileUtils.toSystemDependentPath("src/debug/AndroidManifest.xml")
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Android resources: ["
                         + FileUtils.toSystemDependentPath("src/debug/res")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Assets: ["
                         + FileUtils.toSystemDependentPath("src/debug/assets")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "AIDL sources: ["
                         + FileUtils.toSystemDependentPath("src/debug/aidl")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "RenderScript sources: ["
                         + FileUtils.toSystemDependentPath("src/debug/rs")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "JNI sources: ["
                         + FileUtils.toSystemDependentPath("src/debug/jni")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "JNI libraries: ["
                         + FileUtils.toSystemDependentPath("src/debug/jniLibs")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + "Java-style resources: ["
                         + FileUtils.toSystemDependentPath("src/debug/resources")
                         + "]"
-                        + StringUtils.LINE_SEPARATOR
+                        + System.lineSeparator()
                         + ""
-                        + StringUtils.LINE_SEPARATOR;
+                        + System.lineSeparator();
 
         assertThat(project.getStdout()).contains(expected);
     }

@@ -21,19 +21,16 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.builder.model.AndroidProject;
-
+import java.io.File;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Test for a separate test module run against the minified app.

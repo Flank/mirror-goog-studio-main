@@ -11,14 +11,12 @@ import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Test STL version.

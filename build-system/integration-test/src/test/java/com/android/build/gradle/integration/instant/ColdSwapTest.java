@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.junit.Assume;
 import org.junit.Before;

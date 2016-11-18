@@ -28,11 +28,9 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
 
 public class ResourceValidationTest {
 

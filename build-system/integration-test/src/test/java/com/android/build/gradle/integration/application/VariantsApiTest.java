@@ -25,15 +25,13 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 
 /**
  * Tests for all the methods exposed in the so-called variants API.
