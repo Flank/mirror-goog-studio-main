@@ -27,25 +27,10 @@ import com.android.tools.lint.detector.api.Issue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.security.Permission;
-import java.util.List;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
 public class MainTest extends AbstractCheckTest {
-    protected String checkLint(String[] args, List<File> files) throws Exception {
-        PrintStream previousOut = System.out;
-        try {
-            final ByteArrayOutputStream output = new ByteArrayOutputStream();
-            System.setOut(new PrintStream(output));
-
-            Main.main(args);
-
-            return output.toString();
-        } finally {
-            System.setOut(previousOut);
-        }
-    }
 
     private void checkDriver(String expectedOutput, String expectedError, int expectedExitCode,
             String[] args)
@@ -53,34 +38,15 @@ public class MainTest extends AbstractCheckTest {
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
         try {
-            // Trap System.exit calls:
-            System.setSecurityManager(new SecurityManager() {
-                @Override
-                public void checkPermission(Permission perm)
-                {
-                        // allow anything.
-                }
-                @Override
-                public void checkPermission(Permission perm, Object context)
-                {
-                        // allow anything.
-                }
-                @Override
-                public void checkExit(int status) {
-                    throw new ExitException(status);
-                }
-            });
-
             final ByteArrayOutputStream output = new ByteArrayOutputStream();
             System.setOut(new PrintStream(output));
             final ByteArrayOutputStream error = new ByteArrayOutputStream();
             System.setErr(new PrintStream(error));
 
-            int exitCode = 0xCAFEBABE; // not set
+            int exitCode = 0;
             try {
-                Main.main(args);
-            } catch (ExitException e) {
-                // Allow
+                new Main().run(args);
+            } catch (Main.ExitException e) {
                 exitCode = e.getStatus();
             }
 
@@ -88,9 +54,6 @@ public class MainTest extends AbstractCheckTest {
             assertEquals(expectedOutput, cleanup(output.toString()));
             assertEquals(expectedExitCode, exitCode);
         } finally {
-            // Re-enable system exit for unit test
-            System.setSecurityManager(null);
-
             System.setOut(previousOut);
             System.setErr(previousErr);
         }
@@ -405,21 +368,6 @@ public class MainTest extends AbstractCheckTest {
         return new AccessibilityDetector();
     }
 
-    private static class ExitException extends SecurityException {
-        private static final long serialVersionUID = 1L;
-
-        private final int mStatus;
-
-        public ExitException(int status) {
-            super("Unit test");
-            mStatus = status;
-        }
-
-        public int getStatus() {
-            return mStatus;
-        }
-    }
-
     public void test_getCleanPath() throws Exception {
         assertEquals("foo", LintCliClient.getCleanPath(new File("foo")));
         String sep = File.separator;
@@ -486,7 +434,7 @@ public class MainTest extends AbstractCheckTest {
         );
 
         File outputDir = new File(project, "build");
-        outputDir.mkdirs();
+        assertTrue(outputDir.mkdirs());
         assertTrue(outputDir.setWritable(true));
 
         checkDriver(
