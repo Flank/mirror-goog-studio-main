@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.SdkHelper
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.android.repository.testframework.FakeProgressIndicator
@@ -84,7 +85,7 @@ class OptionalLibraryTest {
         AndroidProject project = project.model().getSingle().getOnlyModel()
 
         // get the SDK folder
-        File sdkLocation = new File(System.getenv("ANDROID_HOME"))
+        File sdkLocation = SdkHelper.findSdkDir()
         FakeProgressIndicator progress = new FakeProgressIndicator()
         AndroidTargetManager targetMgr = AndroidSdkHandler.getInstance(sdkLocation).
                 getAndroidTargetManager(progress)
@@ -118,7 +119,7 @@ class OptionalLibraryTest {
         AndroidProject project = project.model().getSingle().getOnlyModel()
 
         // get the SDK folder
-        File sdkLocation = new File(System.getenv("ANDROID_HOME"))
+        File sdkLocation = SdkHelper.findSdkDir()
         FakeProgressIndicator progress = new FakeProgressIndicator()
         AndroidTargetManager targetMgr = AndroidSdkHandler.getInstance(sdkLocation).
                 getAndroidTargetManager(progress)
