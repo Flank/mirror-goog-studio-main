@@ -52,9 +52,9 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     @Nullable private final String buildToolsVersion;
     private final boolean isImproveDependencyEnabled;
 
-    private boolean mExpectingFailure = false;
-
-    private Packaging mPackaging;
+    private boolean isExpectingFailure = false;
+    private boolean isSdkAutoDownload = false;
+    private Packaging packaging;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -77,7 +77,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * The resulting exception is stored in the {@link GradleBuildResult}.
      */
     public RunGradleTasks expectFailure() {
-        mExpectingFailure = true;
+        isExpectingFailure = true;
         return this;
     }
 
@@ -116,7 +116,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * Sets the desired packaging implementation.
      */
     public RunGradleTasks withPackaging(@NonNull Packaging packaging) {
-        mPackaging = packaging;
+        this.packaging = packaging;
+        return this;
+    }
+
+    public RunGradleTasks withSdkAutoDownload() {
+        this.isSdkAutoDownload = true;
         return this;
     }
 
@@ -165,19 +170,21 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
         }
 
-        if (mPackaging != null) {
+        if (packaging != null) {
             args.add(
                     String.format(
                             "-P%s=%s",
                             AndroidGradleOptions.PROPERTY_USE_OLD_PACKAGING,
-                            mPackaging.mFlagValue));
+                            packaging.mFlagValue));
         }
 
-        args.add(
-                String.format(
-                        "-P%s=%s",
-                        AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD,
-                        "false"));
+        if (!isSdkAutoDownload) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD,
+                            "false"));
+        }
 
         args.addAll(arguments);
 
@@ -205,9 +212,9 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (mExpectingFailure && failure == null) {
+        if (isExpectingFailure && failure == null) {
             throw new AssertionError("Expecting build to fail");
-        } else if (!mExpectingFailure && failure != null) {
+        } else if (!isExpectingFailure && failure != null) {
             throw failure;
         }
         return new GradleBuildResult(stdout, stderr, failure);
