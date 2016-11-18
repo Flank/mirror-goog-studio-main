@@ -59,7 +59,7 @@ public class SymbolWriterTest {
         // 2. load symbol from temp file.
         SymbolLoader symbolValues = new SymbolLoader(file, NullLogger.getLogger());
         symbolValues.load();
-        Table<String, String, SymbolLoader.SymbolEntry> values = symbolValues.getSymbols();
+        Table<String, String, Symbol> values = symbolValues.getSymbols();
         assertNotNull(values);
 
 
@@ -73,7 +73,7 @@ public class SymbolWriterTest {
             // 2. load symbol from temp file.
             SymbolLoader loader = new SymbolLoader(file, NullLogger.getLogger());
             loader.load();
-            Table<String, String, SymbolLoader.SymbolEntry> symbols = loader.getSymbols();
+            Table<String, String, Symbol> symbols = loader.getSymbols();
             assertNotNull(symbols);
             symbolList.add(loader);
         }

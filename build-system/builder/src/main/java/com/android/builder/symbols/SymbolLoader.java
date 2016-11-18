@@ -33,32 +33,8 @@ import java.util.List;
 public class SymbolLoader {
 
     private final File mSymbolFile;
-    private Table<String, String, SymbolEntry> mSymbols;
+    private Table<String, String, Symbol> mSymbols;
     private final ILogger mLogger;
-
-    public static class SymbolEntry {
-        private final String mName;
-        private final String mType;
-        private final String mValue;
-
-        public SymbolEntry(String name, String type, String value) {
-            mName = name;
-            mType = type;
-            mValue = value;
-        }
-
-        public String getValue() {
-            return mValue;
-        }
-
-        public String getName() {
-            return mName;
-        }
-
-        public String getType() {
-            return mType;
-        }
-    }
 
     public SymbolLoader(File symbolFile, ILogger logger) {
         mSymbolFile = symbolFile;
@@ -87,7 +63,7 @@ public class SymbolLoader {
                 String name = line.substring(pos2 + 1, pos3);
                 String value = line.substring(pos3 + 1);
 
-                mSymbols.put(className, name, new SymbolEntry(name, type, value));
+                mSymbols.put(className, name, new Symbol(name, type, value));
             }
         } catch (IndexOutOfBoundsException e) {
             String s = String.format("File format error reading %s\tline %d: '%s'",
@@ -97,7 +73,7 @@ public class SymbolLoader {
         }
     }
 
-    public Table<String, String, SymbolEntry> getSymbols() {
+    public Table<String, String, Symbol> getSymbols() {
         return mSymbols;
     }
 }
