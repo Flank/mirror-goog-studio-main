@@ -26,23 +26,29 @@ import java.util.Optional;
  * Truth Subject for Java 8 Optional.
  */
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-public class Java8OptionalSubject extends Subject<Java8OptionalSubject, Optional<?>> {
+public class Java8OptionalSubject<T> extends Subject<Java8OptionalSubject<T>, Optional<T>> {
 
-    public static final SubjectFactory<Java8OptionalSubject, Optional<?>> FACTORY =
-            new SubjectFactory<Java8OptionalSubject, Optional<?>>() {
-                @Override
-                public Java8OptionalSubject getSubject(FailureStrategy fs, Optional<?> that) {
-                    return new Java8OptionalSubject(fs, that);
-                }
-            };
-
-    public Java8OptionalSubject(FailureStrategy failureStrategy, Optional<?> subject) {
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public Java8OptionalSubject(
+            FailureStrategy failureStrategy, Optional<T> subject) {
         super(failureStrategy, subject);
     }
 
     public void isPresent() {
         if (!getSubject().isPresent()) {
             fail("is present");
+        }
+    }
+
+    public void hasValueEqualTo(T value) {
+        if (!getSubject().isPresent()) {
+            fail("is present");
+        }
+
+        //noinspection OptionalGetWithoutIsPresent
+        T actual = getSubject().get();
+        if (!actual.equals(value)) {
+            failWithBadResults("is equals to", value.toString(), "is", actual);
         }
     }
 

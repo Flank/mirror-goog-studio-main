@@ -21,11 +21,14 @@ import static com.google.common.truth.Truth.assert_;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.incremental.FileRecord;
+import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
+import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Additional entry point to {@link Truth} framework for custom {@link Subject}.
@@ -46,9 +49,15 @@ public class MoreTruth {
     }
 
     @NonNull
-    public static Java8OptionalSubject assertThat(
+    public static <T> Java8OptionalSubject<T> assertThat(
             @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-            @NonNull java.util.Optional<?> optional) {
-        return assert_().about(Java8OptionalSubject.FACTORY).that(optional);
+            @NonNull java.util.Optional<T> optional) {
+        // need to create a new factory here so that it's generic
+        return assert_().about(new SubjectFactory<Java8OptionalSubject<T>, Optional<T>>() {
+            @Override
+            public Java8OptionalSubject<T> getSubject(FailureStrategy fs, java.util.Optional<T> that) {
+                return new Java8OptionalSubject<>(fs, that);
+            }
+        }).that(optional);
     }
 }

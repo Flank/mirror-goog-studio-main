@@ -23,12 +23,15 @@ import com.android.ide.common.process.ProcessException;
 import com.google.common.truth.FailureStrategy;
 import java.io.File;
 import java.io.IOException;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 /**
  * Base Truth support for android archives (aar and apk)
  */
 public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> extends AbstractZipSubject<T> {
+
+    private static final Pattern CLASS_FORMAT = Pattern.compile("^L([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z0-9$._]+;$");
 
     public AbstractAndroidSubject(@NonNull FailureStrategy failureStrategy, @NonNull File subject) {
         super(failureStrategy, subject);
@@ -90,17 +93,13 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
 
     @Override
     public void contains(@NonNull String path) throws IOException {
-        checkArgument(
-                !path.startsWith("L") || !path.endsWith(";"),
-                "Use containsClass to check for classes.");
+        checkArgument(!isClassName(path), "Use containsClass to check for classes.");
         super.contains(path);
     }
 
     @Override
     public void doesNotContain(@NonNull String path) throws IOException {
-        checkArgument(
-                !path.startsWith("L") || !path.endsWith(";"),
-                "Use doesNotContainClass to check for classes.");
+        checkArgument(!isClassName(path), "Use doesNotContainClass to check for classes.");
         super.doesNotContain(path);
     }
 
@@ -170,6 +169,17 @@ public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> ex
     private boolean checkForResource(String name) throws IOException {
         try (ZipFile zipFile = new ZipFile(getSubject())) {
             return zipFile.getEntry("res/" + name) != null;
+        }
+    }
+
+    protected static boolean isClassName(@NonNull String className) {
+        return CLASS_FORMAT.matcher(className).matches();
+    }
+
+    protected void checkClassName(@NonNull String className) {
+        if (!CLASS_FORMAT.matcher(className).matches()) {
+            failWithRawMessage(
+                    "class name '%s' must be in the format Lcom/foo/Main;", className);
         }
     }
 }

@@ -97,9 +97,7 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
     private DexBackedClassDef getDexClass(
             @NonNull final String className, @NonNull final ClassFileScope scope)
             throws IOException, ProcessException {
-        if (!className.startsWith("L") || !className.endsWith(";")) {
-            throw new IllegalArgumentException("class name must be in the format Lcom/foo/Main;");
-        }
+        checkClassName(className);
 
         switch (scope) {
             case MAIN:

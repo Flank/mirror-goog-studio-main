@@ -223,6 +223,7 @@ public class DependenciesLevel2Converter {
         private final List<String> providedLibraries;
         @NonNull
         private final List<String> skippedLibraries;
+        private final int hashCode;
 
         public LibraryGraphImpl(
                 @NonNull List<GraphItem> items,
@@ -231,6 +232,7 @@ public class DependenciesLevel2Converter {
             this.items = items;
             this.providedLibraries = ImmutableList.copyOf(providedLibraries);
             this.skippedLibraries = ImmutableList.copyOf(skippedLibraries);
+            hashCode = computeHashCode();
         }
 
         @NonNull
@@ -249,6 +251,38 @@ public class DependenciesLevel2Converter {
         @Override
         public List<String> getSkippedLibraries() {
             return skippedLibraries;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            LibraryGraphImpl that = (LibraryGraphImpl) o;
+
+            if (!items.equals(that.items)) {
+                return false;
+            }
+            if (!providedLibraries.equals(that.providedLibraries)) {
+                return false;
+            }
+            return skippedLibraries.equals(that.skippedLibraries);
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        private int computeHashCode() {
+            int result = items.hashCode();
+            result = 31 * result + providedLibraries.hashCode();
+            result = 31 * result + skippedLibraries.hashCode();
+            return result;
         }
     }
 }

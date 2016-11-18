@@ -377,11 +377,8 @@ public class DependencyChecker implements SyncIssueHandler {
                 .newHashMapWithExpectedSize(packageDeps.getAllDependencies().size());
 
         for (Dependency dependency : packageDeps.getAllDependencies()) {
-            // ignore sub-modules, which will skip the atom automatically.
-            if (dependency.getProjectPath() == null) {
-                MavenCoordinates coordinates = dependency.getCoordinates();
-                map.put(coordinates.getVersionlessId(), coordinates.getVersion());
-            }
+            MavenCoordinates coordinates = dependency.getCoordinates();
+            map.put(coordinates.getVersionlessId(), coordinates.getVersion());
         }
 
         return map;
@@ -405,20 +402,11 @@ public class DependencyChecker implements SyncIssueHandler {
 
         for (Dependency dependency : dependencies) {
             if (dependency instanceof AndroidDependency) {
-                if (dependency.getProjectPath() != null) {
-                    androidMap.put(dependency.getProjectPath(), (AndroidDependency) dependency);
-                } else {
-                    MavenCoordinates coordinates = dependency.getCoordinates();
-                    androidMap.put(coordinates.getVersionlessId(), (AndroidDependency) dependency);
-                }
-
+                MavenCoordinates coordinates = dependency.getCoordinates();
+                androidMap.put(coordinates.getVersionlessId(), (AndroidDependency) dependency);
             } else if (dependency instanceof JavaDependency) {
-                if (dependency.getProjectPath() != null) {
-                    javaMap.put(dependency.getProjectPath(), (JavaDependency) dependency);
-                } else {
-                    MavenCoordinates coordinates = dependency.getCoordinates();
-                    javaMap.put(coordinates.getVersionlessId(), (JavaDependency) dependency);
-                }
+                MavenCoordinates coordinates = dependency.getCoordinates();
+                javaMap.put(coordinates.getVersionlessId(), (JavaDependency) dependency);
             }
         }
     }

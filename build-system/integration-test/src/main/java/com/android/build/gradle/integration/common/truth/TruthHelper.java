@@ -47,6 +47,7 @@ import com.google.common.truth.ClassSubject;
 import com.google.common.truth.ComparableSubject;
 import com.google.common.truth.DefaultSubject;
 import com.google.common.truth.DoubleSubject;
+import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.GuavaOptionalSubject;
 import com.google.common.truth.IntegerSubject;
 import com.google.common.truth.IterableSubject;
@@ -66,6 +67,7 @@ import com.google.common.truth.PrimitiveLongArraySubject;
 import com.google.common.truth.SetMultimapSubject;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
+import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.TableSubject;
 import com.google.common.truth.TestVerb;
 import com.google.common.truth.ThrowableSubject;
@@ -145,9 +147,16 @@ public class TruthHelper {
                 dependencies);
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @NonNull
-    public static Java8OptionalSubject assertThat(@NonNull java.util.Optional<?> optional) {
-        return assert_().about(Java8OptionalSubject.FACTORY).that(optional);
+    public static <T> Java8OptionalSubject<T> assertThat(@NonNull java.util.Optional<T> optional) {
+        // need to create a new factory here so that it's generic
+        return assert_().about(new SubjectFactory<Java8OptionalSubject<T>, java.util.Optional<T>>() {
+            @Override
+            public Java8OptionalSubject<T> getSubject(FailureStrategy fs, java.util.Optional<T> that) {
+                return new Java8OptionalSubject<>(fs, that);
+            }
+        }).that(optional);
     }
 
     public static LogCatMessagesSubject assertThat(Logcat logcat) {

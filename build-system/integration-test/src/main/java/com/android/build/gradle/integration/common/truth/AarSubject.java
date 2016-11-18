@@ -91,9 +91,7 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject> {
             @NonNull String expectedClassName,
             @NonNull ClassFileScope scope)
             throws ProcessException, IOException {
-        if (!expectedClassName.startsWith("L") || !expectedClassName.endsWith(";")) {
-            throw new RuntimeException("class name must be in the format Lcom/foo/Main;");
-        }
+        checkClassName(expectedClassName);
 
         // in case of an aar, we look in the zip file, so we convert the class name to a zip entry
         // path.
