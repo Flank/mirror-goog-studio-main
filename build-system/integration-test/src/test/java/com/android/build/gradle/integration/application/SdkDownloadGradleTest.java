@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.category.OnlineTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -132,7 +133,7 @@ public class SdkDownloadGradleTest {
 
         // Copy one version of build tools and one platform from the real SDK, so we have something
         // to start with.
-        File realAndroidHome = new File(System.getenv(SdkConstants.ANDROID_HOME_ENV));
+        File realAndroidHome = SdkHelper.findSdkDir();
 
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(
