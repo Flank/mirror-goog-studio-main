@@ -25,7 +25,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta3'
     compile "com.android.support:design:${rootProject.supportLibVersion}"
 //    compile project(path: ':mylibrary')
 }
