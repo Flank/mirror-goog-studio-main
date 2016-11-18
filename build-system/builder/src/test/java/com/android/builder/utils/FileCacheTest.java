@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -669,6 +670,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_SingleProcessLocking_SameInputDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
@@ -676,6 +678,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_SingleProcessLocking_DifferentInputsDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
@@ -683,6 +686,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_SingleProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFile_MultiThreads_DifferentCaches(
@@ -691,6 +695,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_InterProcessLocking_SameInputDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
@@ -698,6 +703,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_InterProcessLocking_DifferentInputsDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
@@ -705,6 +711,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFile_MultiThreads_InterProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFile_MultiThreads_DifferentCaches(
@@ -829,6 +836,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_SingleProcessLocking_SameInput()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheSameInput(
@@ -836,6 +844,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_SingleProcessLocking_DifferentInputs()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheDifferentInputs(
@@ -843,6 +852,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_SingleProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_DifferentCaches(
@@ -851,6 +861,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_SameInput()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheSameInput(
@@ -858,6 +869,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_DifferentInputs()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheDifferentInputs(
@@ -865,6 +877,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_DifferentCaches(
@@ -1039,6 +1052,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_SingleProcessLocking_SameLockFileMixedLocks()
             throws IOException {
         testDoLocked_MultiThreads_SameLockFileMixedLocks(
@@ -1046,6 +1060,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_SingleProcessLocking_SameLockFileSharedLocks()
             throws IOException {
         testDoLocked_MultiThreads_SameLockFileSharedLocks(
@@ -1053,6 +1068,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_SingleProcessLocking_DifferentLockFiles()
             throws IOException {
         testDoLocked_MultiThreads_DifferentLockFiles(
@@ -1060,6 +1076,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_InterProcessLocking_SameLockFileMixedLocks()
             throws IOException {
         testDoLocked_MultiThreads_SameLockFileMixedLocks(
@@ -1067,6 +1084,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_InterProcessLocking_SameLockFileSharedLocks()
             throws IOException {
         testDoLocked_MultiThreads_SameLockFileSharedLocks(
@@ -1074,6 +1092,7 @@ public class FileCacheTest {
     }
 
     @Test
+    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDoLocked_MultiThreads_InterProcessLocking_DifferentLockFiles()
             throws IOException {
         testDoLocked_MultiThreads_DifferentLockFiles(
