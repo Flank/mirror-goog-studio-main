@@ -37,8 +37,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * implementation of {@link com.android.ide.common.internal.PngCruncher} that queues request and
- * use a pool or aapt server processes to serve those.
+ * Implementation of {@link com.android.ide.common.internal.PngCruncher} that queues request and use
+ * a pool of aapt server processes to serve those.
  */
 public class QueuedCruncher implements PngCruncher {
 

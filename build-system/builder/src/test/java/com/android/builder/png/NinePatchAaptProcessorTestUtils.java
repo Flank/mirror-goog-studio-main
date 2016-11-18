@@ -49,6 +49,7 @@ import java.util.zip.DataFormatException;
 import javax.imageio.ImageIO;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Assert;
 
 /**
  * Utilities common to tests for both the synchronous and the asynchronous Aapt processor.
@@ -62,14 +63,7 @@ public class NinePatchAaptProcessorTestUtils {
     /** Returns the aapt binary to use. */
     static File getAapt() {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-
-        Range<Revision> workingRange =
-                Range.closedOpen(
-                        // Minimum version with server mode.
-                        AaptV1.VERSION_FOR_SERVER_AAPT,
-                        // 24.* changed something in the cruncher code, which makes
-                        // the golden files we compare against no longer match.
-                        new Revision(24, 0, 0));
+        Range<Revision> versionRange = Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT);
 
         BuildToolInfo buildToolInfo =
                 BuildToolInfo.fromLocalPackage(
@@ -77,10 +71,10 @@ public class NinePatchAaptProcessorTestUtils {
                                 AndroidSdkHandler.getInstance(TestUtils.getSdk())
                                         .getPackageInRange(
                                                 SdkConstants.FD_BUILD_TOOLS,
-                                                workingRange,
+                                                versionRange,
                                                 progress),
                                 "Build tools in %s required.",
-                                workingRange));
+                                versionRange));
 
         return new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
     }
@@ -92,10 +86,6 @@ public class NinePatchAaptProcessorTestUtils {
             @NonNull AtomicLong classStartTime,
             @NonNull TestVerb expect)
             throws IOException, DataFormatException, InterruptedException {
-        if (isOnJenkins()) {
-            return;
-        }
-
         long startTime = System.currentTimeMillis();
         try {
             cruncher.end(cruncherKey);
@@ -117,7 +107,7 @@ public class NinePatchAaptProcessorTestUtils {
                     compareChunks(expect, crunched, sourceAndCrunched.getValue());
 
             try {
-                compareImageContent(expect, crunched, sourceAndCrunched.getValue(), false);
+                compareImageContent(expect, crunched, sourceAndCrunched.getValue());
             } catch (Throwable e) {
                 throw new RuntimeException("Failed with " + testedChunks.get("IHDR"), e);
             }
@@ -126,6 +116,16 @@ public class NinePatchAaptProcessorTestUtils {
                 - comparisonStartTime));
     }
 
+    /**
+     * Suffix used by "golden" files, generated with aapt.
+     *
+     * <p>To regenerate the files using a new version of aapt, run the following:
+     * <pre>
+     * $ cd src/test/resources/testData/png/ninepatch
+     * $ rm *.crunched.aapt
+     * $ for f in *png; do aapt s -i $f -o $f.crunched.aapt; done
+     * </pre>
+     */
     protected static String getControlFileSuffix() {
         return ".crunched.aapt";
     }
@@ -189,10 +189,8 @@ public class NinePatchAaptProcessorTestUtils {
     }
 
     protected static void compareImageContent(
-            @NonNull TestVerb expect,
-            @NonNull File originalFile,
-            @NonNull File createdFile,
-            boolean is9Patch) throws IOException {
+            @NonNull TestVerb expect, @NonNull File originalFile, @NonNull File createdFile)
+            throws IOException {
         BufferedImage originalImage = ImageIO.read(originalFile);
         BufferedImage createdImage = ImageIO.read(createdFile);
 
@@ -204,20 +202,14 @@ public class NinePatchAaptProcessorTestUtils {
 
         // compare sizes taking into account if the image is a 9-patch
         // in which case the original is bigger by 2 since it has the patch area still.
-        Assert.assertEquals(originalWidth, createdWidth + (is9Patch ? 2 : 0));
-        Assert.assertEquals(originalHeight, createdHeight + (is9Patch ? 2 : 0));
+        Assert.assertEquals(originalWidth, createdWidth);
+        Assert.assertEquals(originalHeight, createdHeight);
 
         // get the file content
         // always use the created Size. And for the original image, if 9-patch, just take
         // the image minus the 1-pixel border all around.
         int[] originalContent = new int[createdWidth * createdHeight];
-        if (is9Patch) {
-            originalImage
-                    .getRGB(1, 1, createdWidth, createdHeight, originalContent, 0, createdWidth);
-        } else {
-            originalImage
-                    .getRGB(0, 0, createdWidth, createdHeight, originalContent, 0, createdWidth);
-        }
+        originalImage.getRGB(0, 0, createdWidth, createdHeight, originalContent, 0, createdWidth);
 
         int[] createdContent = new int[createdWidth * createdHeight];
         createdImage.getRGB(0, 0, createdWidth, createdHeight, createdContent, 0, createdWidth);
@@ -283,18 +275,5 @@ public class NinePatchAaptProcessorTestUtils {
         File folder = TestResources.getDirectory("/testData/png");
         assertTrue(folder.isDirectory());
         return folder;
-    }
-
-    /**
-     *  Skips the test if running on Jenkins.
-     *
-     *  <p>The 9-patch tests don't seem to play well with a network file system.
-     */
-    static void skipOnJenkins() {
-        Assume.assumeFalse(isOnJenkins());
-    }
-
-    private static boolean isOnJenkins() {
-        return System.getenv("JENKINS_URL") != null;
     }
 }
