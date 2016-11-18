@@ -17,12 +17,12 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -77,6 +77,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     @Before
     public void initializeProject() throws IOException {
 
+        //noinspection ConstantConditions
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
@@ -84,7 +85,8 @@ public class LargeGradleProjectPerformanceMatrixTest {
                         + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
                         + "'} \n"
                         + "        maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("ANDROID_HOME"))
+                        + FileUtils.toSystemIndependentPath(
+                                SdkHelper.findSdkDir().getAbsolutePath())
                         + "/extras/android/m2repository' };"
                         + "        jcenter()");
 
