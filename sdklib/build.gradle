@@ -106,9 +106,8 @@ task removeSdkComponents(type: JavaExec) {
       '--uninstall',
       // Entries below are temporary and should always include dates. For example:
       // 'extras;android;gapid;3',  // added 2016-11-18
-      'system-images;android-19;default;x86',  // added 2016-11-18
-      'system-images;android-23;default;x86',  // added 2016-11-18
-      'extras;android;gapid;3',  // added 2016-11-18
+      'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-beta3',  // added 2016-11-21
+      'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta3',  // added 2016-11-21
     ]
 }
 
