@@ -23,12 +23,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
 
 /**
  * Simple test to check that built-in shrinker doesn't crash on iosched.

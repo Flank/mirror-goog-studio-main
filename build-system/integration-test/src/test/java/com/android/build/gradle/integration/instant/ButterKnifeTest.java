@@ -37,16 +37,14 @@ import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 public class ButterKnifeTest {
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;

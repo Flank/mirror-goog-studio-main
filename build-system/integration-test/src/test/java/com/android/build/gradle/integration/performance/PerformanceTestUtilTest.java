@@ -19,11 +19,9 @@ package com.android.build.gradle.integration.performance;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-
-import org.junit.Test;
-
 import java.util.EnumSet;
 import java.util.Set;
+import org.junit.Test;
 
 public final class PerformanceTestUtilTest {
 

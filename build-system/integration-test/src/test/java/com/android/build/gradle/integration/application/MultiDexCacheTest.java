@@ -17,16 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-
-import org.junit.Before;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * Checking if multidex and non-multidex variant requiring the same remote library will

@@ -28,21 +28,19 @@ import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.ddmlib.IDevice;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.io.IOException;
 
 /**
  * Simple test to ensure component model plugin do not crash when instant run is enabled.

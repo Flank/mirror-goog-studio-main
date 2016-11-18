@@ -24,23 +24,18 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
-import com.android.build.gradle.integration.common.utils.DeviceHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.IDevice;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.zip.ZipFile;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.zip.ZipFile;
 
 /**
  * Integration test of the native plugin with multiple variants without using splits.

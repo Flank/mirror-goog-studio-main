@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

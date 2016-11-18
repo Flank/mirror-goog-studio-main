@@ -16,29 +16,24 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.LibraryGraph;
-import com.google.common.collect.Iterables;
-
+import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
-
-import java.util.Collection;
 
 /**
  * Assemble tests for multiproject.

@@ -31,7 +31,12 @@ import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Collection;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -42,13 +47,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.Collection;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
 
 /**
  * test for packaging of asset files.

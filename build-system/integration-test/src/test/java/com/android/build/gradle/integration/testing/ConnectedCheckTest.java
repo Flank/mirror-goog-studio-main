@@ -23,18 +23,13 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.ddmlib.IDevice;
-import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.core.IsAnything;
-import org.junit.Ignore;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.io.IOException;
 
 @RunWith(JUnit4.class)
 public class ConnectedCheckTest {

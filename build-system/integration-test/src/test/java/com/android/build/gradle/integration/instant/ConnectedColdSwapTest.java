@@ -31,8 +31,8 @@ import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.ddmlib.IDevice;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.AppState;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
@@ -41,7 +41,7 @@ import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,8 +51,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.io.IOException;
 
 /**
  * Connected smoke test for cold swap.

@@ -20,18 +20,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.contains;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-
+import java.io.File;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 
 /**
  * Integration tests for manifest merging.
@@ -75,12 +71,7 @@ public class ManifestMergingTest {
         flavors.execute("clean", "assemble");
 
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
-        File[] reports = logs.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.getName().startsWith("manifest-merger");
-            }
-        });
+        File[] reports = logs.listFiles(file -> file.getName().startsWith("manifest-merger"));
         assertEquals(8, reports.length);
     }
 

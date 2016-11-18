@@ -21,10 +21,8 @@ import static com.android.build.gradle.integration.common.utils.AndroidVersionMa
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.ddmlib.IDevice;
 import com.google.common.collect.ImmutableList;
-
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
