@@ -22,22 +22,16 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.Library;
 import com.android.builder.model.level2.LibraryGraph;
-import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth;
 import java.io.File;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -90,8 +84,6 @@ public class AppWithClassifierDepTest {
 
         AndroidArtifact androidTestArtifact = ModelHelper.getAndroidArtifact(
                 debugVariant.getExtraAndroidArtifacts(), ARTIFACT_ANDROID_TEST);
-        Truth.assertThat(androidTestArtifact).isNotNull();
-
 
         LibraryGraph graph = androidTestArtifact.getCompileGraph();
 

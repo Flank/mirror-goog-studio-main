@@ -31,25 +31,18 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.Library;
 import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
@@ -190,7 +183,6 @@ public class BasicTest2 {
                 debugExtraAndroidArtifacts,
                 AndroidProject.ARTIFACT_ANDROID_TEST);
 
-        assertThat(debugTestInfo).named("test artifact").isNotNull();
         assertThat(debugTestInfo.getApplicationId())
                 .named("test package")
                 .isEqualTo("com.android.tests.basic.debug.test");
@@ -301,7 +293,7 @@ public class BasicTest2 {
 
         Collection<AndroidArtifact> releaseExtraAndroidArtifacts =
             releaseVariant.getExtraAndroidArtifacts();
-        AndroidArtifact relTestInfo = ModelHelper.getAndroidArtifact(
+        AndroidArtifact relTestInfo = ModelHelper.getOptionalAndroidArtifact(
                 releaseExtraAndroidArtifacts, AndroidProject.ARTIFACT_ANDROID_TEST);
         assertThat(relTestInfo).named("release test artifact").isNull();
 

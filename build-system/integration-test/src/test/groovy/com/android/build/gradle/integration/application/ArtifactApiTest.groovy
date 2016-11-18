@@ -77,13 +77,13 @@ class ArtifactApiTest {
         assertNotNull("Extra artifact collection null-check", extraArtifacts)
         TruthHelper.assertThat(extraArtifacts).hasSize(DEFAULT_EXTRA_JAVA_ARTIFACTS + 2)
 
-        assertNotNull("instrument test metadata null-check",
-                ModelHelper.getArtifactMetaData(extraArtifacts, ARTIFACT_ANDROID_TEST))
+        // query to validate presence
+        ArtifactMetaData metaData = ModelHelper.getArtifactMetaData(extraArtifacts,
+                ARTIFACT_ANDROID_TEST)
 
         // get the custom one.
         ArtifactMetaData extraArtifactMetaData = ModelHelper.getArtifactMetaData(
                 extraArtifacts, "__test__")
-        assertNotNull("custom extra metadata null-check", extraArtifactMetaData)
         assertFalse("custom extra meta data is Test check", extraArtifactMetaData.isTest())
         assertEquals("custom extra meta data type check", ArtifactMetaData.TYPE_JAVA,
                 extraArtifactMetaData.getType())
@@ -136,16 +136,13 @@ class ArtifactApiTest {
                     3, // unit test, android test, extra provider from the API
                     extraSourceProviderContainers.size())
 
-            assertNotNull(
-                    "Extra source provider container for product flavor '" + name +
-                            "': instTest check",
-                    ModelHelper.getSourceProviderContainer(extraSourceProviderContainers,
-                            ARTIFACT_ANDROID_TEST))
+            // query to validate presence
+            ModelHelper.getSourceProviderContainer(extraSourceProviderContainers,
+                    ARTIFACT_ANDROID_TEST)
 
 
             SourceProviderContainer sourceProviderContainer = ModelHelper.
-                    getSourceProviderContainer(
-                            extraSourceProviderContainers, "__test__")
+                    getSourceProviderContainer(extraSourceProviderContainers, "__test__")
             assertNotNull(
                     "Custom source provider container for " + name + " null check",
                     sourceProviderContainer)

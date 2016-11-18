@@ -22,8 +22,6 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Variant
 import com.android.builder.model.level2.Library
 import com.android.builder.model.level2.LibraryGraph
@@ -38,7 +36,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
 import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 /**
  * Assemble tests for libTestDep.
@@ -77,7 +74,6 @@ class LibTestDepTest {
         Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts()
         AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(extraAndroidArtifact,
                 ARTIFACT_ANDROID_TEST)
-        assertNotNull(testArtifact)
 
         LibraryGraph testGraph = testArtifact.getCompileGraph();
         List<Library> javaLibraries = helper.on(testGraph).withType(JAVA).asLibraries();

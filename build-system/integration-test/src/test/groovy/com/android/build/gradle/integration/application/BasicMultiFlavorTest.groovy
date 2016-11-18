@@ -69,7 +69,6 @@ class BasicMultiFlavorTest {
             assertThat(pfContainer.getExtraSourceProviders()).hasSize(2)
             SourceProviderContainer container = ModelHelper.getSourceProviderContainer(
                     pfContainer.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST)
-            assertThat(container).isNotNull()
 
             new SourceProviderHelper(
                     model.getName(),

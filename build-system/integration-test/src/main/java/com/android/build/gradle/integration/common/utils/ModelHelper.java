@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifact;
@@ -42,7 +43,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Utility helper to help read/test the AndroidProject Model.
@@ -137,7 +141,6 @@ public class ModelHelper {
         // test the main instrumentTest source provider
         SourceProviderContainer testSourceProviders = getSourceProviderContainer(
                 defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
-        assertNotNull("InstrumentTest source Providers null-check", testSourceProviders);
 
         new SourceProviderHelper(model.getName(), projectDir,
                 ANDROID_TEST.getPrefix(), testSourceProviders.getSourceProvider())
@@ -195,10 +198,7 @@ public class ModelHelper {
     public static Variant getVariant(
             @NonNull Collection<Variant> items,
             @NonNull String name) {
-        return items.stream()
-                .filter(item -> name.equals(item.getName()))
-                .findAny()
-                .orElseThrow(() ->  new AssertionError("Unable to find variant '" + name + "'."));
+        return searchForExistingItem(items, name, Variant::getName, "Variant");
     }
 
     @NonNull
@@ -211,49 +211,40 @@ public class ModelHelper {
         return getDebugVariant(project).getMainArtifact();
     }
 
-    @Nullable
+    /**
+     * return the only item with the given name, or throw an exception if 0 or 2+ items match
+     */
+    @NonNull
     public static AndroidArtifact getAndroidArtifact(
             @NonNull Collection<AndroidArtifact> items,
             @NonNull String name) {
-        for (AndroidArtifact item : items) {
-            assertNotNull("AndroidArtifact list item null-check:" + name, item);
-            assertNotNull("AndroidArtifact.getName() list item null-check: " + name, item.getName());
-            if (name.equals(item.getName())) {
-                return item;
-            }
-        }
-
-        return null;
+        return searchForExistingItem(items, name, AndroidArtifact::getName, "AndroidArtifact");
     }
 
+    /**
+     * search for an item matching the name and return it if found.
+     *
+     */
     @Nullable
+    public static AndroidArtifact getOptionalAndroidArtifact(
+            @NonNull Collection<AndroidArtifact> items,
+            @NonNull String name) {
+        return searchForOptionalItem(items, name, AndroidArtifact::getName);
+    }
+
+    @NonNull
     public static SigningConfig getSigningConfig(
             @NonNull Collection<SigningConfig> items,
             @NonNull String name) {
-        for (SigningConfig item : items) {
-            assertNotNull("SigningConfig list item null-check:" + name, item);
-            assertNotNull("SigningConfig.getName() list item null-check: " + name, item.getName());
-            if (name.equals(item.getName())) {
-                return item;
-            }
-        }
-
-        return null;
+        return searchForExistingItem(items, name, SigningConfig::getName, "SigningConfig");
     }
 
-    @Nullable
+    @NonNull
     public static SourceProviderContainer getSourceProviderContainer(
             @NonNull Collection<SourceProviderContainer> items,
             @NonNull String name) {
-        for (SourceProviderContainer item : items) {
-            assertNotNull("SourceProviderContainer list item null-check:" + name, item);
-            assertNotNull("SourceProviderContainer.getName() list item null-check: " + name, item.getArtifactName());
-            if (name.equals(item.getArtifactName())) {
-                return item;
-            }
-        }
-
-        return null;
+        return searchForExistingItem(
+                items, name, SourceProviderContainer::getArtifactName, "SourceProviderContainer");
     }
 
     @Nullable
@@ -266,35 +257,20 @@ public class ModelHelper {
         return null;
     }
 
-    @Nullable
+    @NonNull
     public static ArtifactMetaData getArtifactMetaData(
             @NonNull Collection<ArtifactMetaData> items,
             @NonNull String name) {
-        for (ArtifactMetaData item : items) {
-            assertNotNull("ArtifactMetaData list item null-check:" + name, item);
-            assertNotNull("ArtifactMetaData.getName() list item null-check: " + name, item.getName());
-            if (name.equals(item.getName())) {
-                return item;
-            }
-        }
-
-        return null;
+        return searchForExistingItem(items, name, ArtifactMetaData::getName,
+                "ArtifactMetaData");
     }
 
-    @Nullable
+    @NonNull
     public static ProductFlavorContainer getProductFlavor(
             @NonNull Collection<ProductFlavorContainer> items,
             @NonNull String name) {
-        for (ProductFlavorContainer item : items) {
-            assertNotNull("ProductFlavorContainer list item null-check:" + name, item);
-            assertNotNull("ProductFlavorContainer.getProductFlavor() list item null-check: " + name, item.getProductFlavor());
-            assertNotNull("ProductFlavorContainer.getProductFlavor().getName() list item null-check: " + name, item.getProductFlavor().getName());
-            if (name.equals(item.getProductFlavor().getName())) {
-                return item;
-            }
-        }
-
-        return null;
+        return searchForExistingItem(items, name, flavor -> flavor.getProductFlavor().getName(),
+                "ArtifactMetaData");
     }
 
 
@@ -340,5 +316,51 @@ public class ModelHelper {
             }
         }
         return commands.build();
+    }
+
+    @Nullable
+    private static <T> T searchForOptionalItem(
+            @NonNull Collection<T> items,
+            @NonNull String name,
+            @NonNull Function<T, String> nameFunction) {
+        return searchForSingleItemInList(items, name, nameFunction).orElse(null);
+
+    }
+
+    @NonNull
+    private static <T> T searchForExistingItem(
+            @NonNull Collection<T> items,
+            @NonNull String name,
+            @NonNull Function<T, String> nameFunction,
+            @NonNull String className) {
+        return searchForSingleItemInList(items, name, nameFunction)
+                .orElseThrow(() -> new AssertionError(
+                        "Unable to find " + className + " '" + name + "'. Options are: " + items.stream()
+                                .map(nameFunction)
+                                .collect(Collectors.toList())));
+    }
+
+    @VisibleForTesting
+    @NonNull
+    static <T> Optional<T> searchForSingleItemInList(
+            @NonNull Collection<T> items,
+            @NonNull String name,
+            @NonNull Function<T, String> nameFunction) {
+        return items.stream()
+                .filter(item -> name.equals(nameFunction.apply(item)))
+                .reduce(toSingleItem());
+    }
+
+    /**
+     * The goal of this operator is not to reduce anything but to ensure that
+     * there is a single item in the list. If it gets called it means
+     * that there are two object in the list that had the same name, and this is an error.
+     *
+     * @see #searchForSingleItemInList(Collection, String, Function)
+     */
+    private static <T> BinaryOperator<T> toSingleItem() {
+        return (name1, name2) -> {
+            throw new IllegalArgumentException("Duplicate objects with name: " + name1);
+        };
     }
 }

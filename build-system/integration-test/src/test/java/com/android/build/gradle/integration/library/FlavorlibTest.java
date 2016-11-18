@@ -96,7 +96,6 @@ public class FlavorlibTest {
         Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors();
 
         ProductFlavorContainer flavor1 = ModelHelper.getProductFlavor(productFlavors, "flavor1");
-        assertThat(flavor1).named("flavor1 PFC").isNotNull();
 
         Variant flavor1Debug = ModelHelper.getVariant(variants, "flavor1Debug");
         assertThat(flavor1Debug).named("flavor1Debug variant").isNotNull();
@@ -108,7 +107,6 @@ public class FlavorlibTest {
                 .containsExactly(":lib1");
 
         ProductFlavorContainer flavor2 = ModelHelper.getProductFlavor(productFlavors, "flavor2");
-        assertThat(flavor2).named("flavor2 PFC").isNotNull();
 
         Variant flavor2Debug = ModelHelper.getVariant(variants, "flavor2Debug");
         assertThat(flavor2Debug).named("flavor2Debug variant").isNotNull();
