@@ -18,7 +18,7 @@ maven_java_library(
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library:tools.analytics-protos",
+        "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.builder-test-api",
