@@ -24,6 +24,7 @@ filegroup(
     visibility = [
         "//tools/adt/idea/android-tests:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
+        "//tools/base/build-system/builder:__pkg__",
     ],
 )
 
@@ -32,53 +33,6 @@ filegroup(
     srcs = glob(
         include = ["*/build-tools/24.0.3/**"],
     ),
-)
-
-filegroup(
-    name = "build-tools/24.0.1",
-    srcs = glob(
-        include = ["*/build-tools/24.0.1/**"],
-    ),
-)
-
-filegroup(
-    name = "build-tools/23.0.0",
-    srcs = glob(
-        include = ["*/build-tools/23.0.0/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-filegroup(
-    name = "build-tools/22.0.1",
-    srcs = glob(
-        include = ["*/build-tools/22.0.1/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-filegroup(
-    name = "build-tools/21.0.0",
-    srcs = glob(
-        include = ["*/build-tools/21.0.0/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
-)
-
-filegroup(
-    name = "build-tools/20.0.0",
-    srcs = glob(
-        include = ["*/build-tools/20.0.0/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
 )
 
 filegroup(
@@ -128,9 +82,6 @@ filegroup(
 # TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
     name = "platforms/android-25",
-    visibility = [
-        "//tools/base/build-system/builder:__pkg__",
-    ],
 )
 
 # This will be needed by the "gradle" module, together with the google_apis add-on.
