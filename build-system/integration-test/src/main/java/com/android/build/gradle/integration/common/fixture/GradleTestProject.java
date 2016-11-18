@@ -170,7 +170,7 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private String heapSize;
 
-    private GradleBuildResult lastBuild;
+    private GradleBuildResult lastBuildResult;
     private ProjectConnection projectConnection;
     private final GradleTestProject rootProject;
     private final List<ProjectConnection> openConnections;
@@ -607,25 +607,25 @@ public final class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      */
     public void execute(@NonNull String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
     }
 
 
     public void execute(@NonNull List<String> arguments, @NonNull String... tasks) {
-        lastBuild = executor().withArguments(arguments).run(tasks);
+        lastBuildResult = executor().withArguments(arguments).run(tasks);
     }
 
     public GradleConnectionException executeExpectingFailure(@NonNull String... tasks) {
-        lastBuild =  executor().expectFailure().run(tasks);
-        return lastBuild.getException();
+        lastBuildResult =  executor().expectFailure().run(tasks);
+        return lastBuildResult.getException();
     }
 
     public void executeConnectedCheck() {
-        lastBuild = executor().executeConnectedCheck();
+        lastBuildResult = executor().executeConnectedCheck();
     }
 
     public void executeConnectedCheck(@NonNull List<String> arguments) {
-        lastBuild = executor().withArguments(arguments).executeConnectedCheck();
+        lastBuildResult = executor().withArguments(arguments).executeConnectedCheck();
     }
 
     /**
@@ -637,7 +637,7 @@ public final class GradleTestProject implements TestRule {
      */
     @NonNull
     public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
         return model().getSingle();
     }
 
@@ -652,7 +652,7 @@ public final class GradleTestProject implements TestRule {
      */
     @NonNull
     public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
         return model().getSingle(modelClass);
     }
 
@@ -666,7 +666,7 @@ public final class GradleTestProject implements TestRule {
      */
     @NonNull
     public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle();
     }
 
@@ -684,7 +684,7 @@ public final class GradleTestProject implements TestRule {
             Class<T> modelClass,
             int modelLevel,
             String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle(modelClass);
     }
 
@@ -698,29 +698,16 @@ public final class GradleTestProject implements TestRule {
      */
     @NonNull
     public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks) {
-        lastBuild = executor().run(tasks);
+        lastBuildResult = executor().run(tasks);
         return model().getMulti();
     }
 
     /**
-     * Return the stdout from the last execute command.
-     *
-     * @deprecated  use {@link GradleBuildResult#getStdout()} ()} instead.
+     * Returns the latest build result.
      */
-    @Deprecated
-    public String getStdout() {
-        return lastBuild.getStdout();
-    }
+    public GradleBuildResult getBuildResult() {
+        return lastBuildResult;
 
-    /**
-     * Return the stderr from the last execute command.
-     *
-     * @deprecated  use {@link GradleBuildResult#getStderr()} instead.
-     */
-    @Deprecated
-    @NonNull
-    public String getStderr() {
-        return lastBuild.getStderr();
     }
 
     /**
@@ -736,8 +723,6 @@ public final class GradleTestProject implements TestRule {
             return new File(testDir, path);
         }
     }
-
-
 
     /**
      * Returns a Gradle project Connection

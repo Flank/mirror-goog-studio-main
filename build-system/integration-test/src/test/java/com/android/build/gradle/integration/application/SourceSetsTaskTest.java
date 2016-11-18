@@ -84,6 +84,6 @@ public class SourceSetsTaskTest {
                         + ""
                         + System.lineSeparator();
 
-        assertThat(project.getStdout()).contains(expected);
+        assertThat(project.getBuildResult().getStdout()).contains(expected);
     }
 }

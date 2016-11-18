@@ -93,7 +93,7 @@ class WarningsShrinkerTest {
     public void "Warnings stop build"() throws Exception {
         project.executeExpectingFailure("assembleDebug")
 
-        String output = project.getStdout()
+        String output = project.getBuildResult().getStdout()
         assertThat(output).contains("references unknown")
         assertThat(output).contains("Unsafe")
         assertThat(output).contains("Nullable")
@@ -103,7 +103,7 @@ class WarningsShrinkerTest {
 
         project.executeExpectingFailure("assembleDebug")
 
-        output = project.getStdout()
+        output = project.getBuildResult().getStdout()
         assertThat(output).contains("references unknown")
         assertThat(output).contains("Unsafe")
         assertThat(output).contains("Nullable")
@@ -118,7 +118,7 @@ class WarningsShrinkerTest {
 
         project.executeExpectingFailure("assembleDebug")
 
-        String output = project.getStdout()
+        String output = project.getBuildResult().getStdout()
         assertThat(output).contains("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).contains("Nullable")
@@ -130,7 +130,7 @@ class WarningsShrinkerTest {
         rules << "-dontwarn"
         project.execute("assembleDebug")
 
-        String output = project.getStdout()
+        String output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
@@ -140,7 +140,7 @@ class WarningsShrinkerTest {
 
         project.execute("assembleDebug")
 
-        output = project.getStdout()
+        output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
@@ -152,7 +152,7 @@ class WarningsShrinkerTest {
         rules << "-dontwarn com.google.common.**"
         project.execute("assembleDebug")
 
-        String output = project.getStdout()
+        String output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
@@ -162,7 +162,7 @@ class WarningsShrinkerTest {
 
         project.execute("assembleDebug")
 
-        output = project.getStdout()
+        output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
@@ -178,7 +178,7 @@ class WarningsShrinkerTest {
 
         project.execute("assembleDebug")
 
-        String output = project.getStdout()
+        String output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
@@ -188,7 +188,7 @@ class WarningsShrinkerTest {
 
         project.execute("assembleDebug")
 
-        output = project.getStdout()
+        output = project.getBuildResult().getStdout()
         assertThat(output).doesNotContain("references unknown")
         assertThat(output).doesNotContain("Unsafe")
         assertThat(output).doesNotContain("Nullable")
