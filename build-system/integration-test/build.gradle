@@ -31,7 +31,7 @@ dependencies {
 
     compile libs.junit
     compile libs.apache_commons_io
-    compile libs.commons_lang
+    compile libs.apache_commons_lang
     compile libs.protobuf
     compile libs.protobuf_util
     compile libs.truth
