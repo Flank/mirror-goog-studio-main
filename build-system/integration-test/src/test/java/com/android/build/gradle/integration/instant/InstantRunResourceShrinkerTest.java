@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.OptionalCompilationStep;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

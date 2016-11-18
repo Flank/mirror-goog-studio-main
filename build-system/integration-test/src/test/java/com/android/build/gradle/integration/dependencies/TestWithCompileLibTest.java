@@ -38,7 +38,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.util.Collection;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

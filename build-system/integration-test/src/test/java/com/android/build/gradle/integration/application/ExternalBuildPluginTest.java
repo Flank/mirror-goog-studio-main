@@ -38,20 +38,7 @@ import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkM
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.Artifact;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.xml.sax.SAXException;
-
+import groovy.util.FileNameFinder;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -67,10 +54,19 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-
 import javax.xml.parsers.ParserConfigurationException;
-
-import groovy.util.FileNameFinder;
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.xml.sax.SAXException;
 
 /**
  * Integration test for the ExternalBuildPlugin.
@@ -172,7 +168,7 @@ public class ExternalBuildPluginTest {
 
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(artifact.getLocation());
         apkSubject.contains("instant-run.zip");
-        assertThat(apkSubject.hasMainDexFile());
+        apkSubject.hasMainDexFile();
 
         // now perform a hot swap test.
         File mainClasses = new File(mProject.getTestDir(), "jars/main/classes.jar");

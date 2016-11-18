@@ -23,7 +23,6 @@ import static com.android.build.gradle.integration.instant.InstantRunTestUtils.g
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
@@ -42,17 +41,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Hot swap test for sub projects.

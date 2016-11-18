@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -28,10 +27,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.tools.fd.client.InstantRunBuildInfo;
-
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 /** Helper class for testing cold-swap scenarios. */
 class ColdSwapTester {

@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

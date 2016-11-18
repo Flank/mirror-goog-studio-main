@@ -19,11 +19,9 @@ package com.android.build.gradle.integration.common.truth;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Lists;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.util.List;
+import org.junit.Test;
 
 public class ApkSubjectTest {
 

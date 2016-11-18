@@ -26,17 +26,15 @@ import com.android.repository.Revision;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * Test case that executes "standard" gradle tasks in all our tests projects.

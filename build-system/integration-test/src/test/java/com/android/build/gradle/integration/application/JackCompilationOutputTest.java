@@ -24,12 +24,12 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
-import com.google.api.client.util.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.Before;
@@ -85,7 +85,7 @@ public class JackCompilationOutputTest {
                         + "    List<String> names = new ArrayList();\n"
                         + "}\n",
                 userJava,
-                Charsets.UTF_8);
+                StandardCharsets.UTF_8);
 
         GradleBuildResult result =
                 project.executor()
@@ -117,7 +117,7 @@ public class JackCompilationOutputTest {
                         + "    List<String> names = new ArrayList();\n"
                         + "}\n",
                 userJava,
-                Charsets.UTF_8);
+                StandardCharsets.UTF_8);
 
         GradleBuildResult result =
                 project.executor()

@@ -19,22 +19,20 @@ package com.android.build.gradle.integration.packaging;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.apkzlib.zip.StoredEntry;
+import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.apkzlib.zip.StoredEntry;
-import com.android.apkzlib.zip.ZFile;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Properties;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
 public class ApkCreatedByTest {
