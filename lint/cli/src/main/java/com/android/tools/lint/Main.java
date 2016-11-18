@@ -30,6 +30,7 @@ import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -116,7 +117,11 @@ public class Main {
      * @param args program arguments
      */
     public static void main(String[] args) {
-        new Main().run(args);
+        try {
+            new Main().run(args);
+        } catch (ExitException exitException) {
+            System.exit(exitException.getStatus());
+        }
     }
 
     /**
@@ -128,7 +133,7 @@ public class Main {
     public void run(String[] args) {
         if (args.length < 1) {
             printUsage(System.err);
-            System.exit(ERRNO_USAGE);
+            exit(ERRNO_USAGE);
         }
 
 
@@ -229,14 +234,14 @@ public class Main {
                     String topic = args[index + 1];
                     if (topic.equals("suppress") || topic.equals("ignore")) {
                         printHelpTopicSuppress();
-                        System.exit(ERRNO_HELP);
+                        exit(ERRNO_HELP);
                     } else {
                         System.err.println(String.format("Unknown help topic \"%1$s\"", topic));
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                 }
                 printUsage(System.out);
-                System.exit(ERRNO_HELP);
+                exit(ERRNO_HELP);
             } else if (arg.equals(ARG_LIST_IDS)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Did the user provide a category list?
@@ -257,13 +262,13 @@ public class Main {
                         } else {
                             System.err.println("Invalid category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
-                            System.exit(ERRNO_INVALID_ARGS);
+                            exit(ERRNO_INVALID_ARGS);
                         }
                     }
                 } else {
                     displayValidIds(registry, System.out);
                 }
-                System.exit(ERRNO_SUCCESS);
+                exit(ERRNO_SUCCESS);
             } else if (arg.equals(ARG_SHOW)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Show specific issues?
@@ -288,13 +293,13 @@ public class Main {
                         } else {
                             System.err.println("Invalid id or category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
-                            System.exit(ERRNO_INVALID_ARGS);
+                            exit(ERRNO_INVALID_ARGS);
                         }
                     }
                 } else {
                     showIssues(registry);
                 }
-                System.exit(ERRNO_SUCCESS);
+                exit(ERRNO_SUCCESS);
             } else if (arg.equals(ARG_FULL_PATH)
                     || arg.equals(ARG_FULL_PATH + "s")) { // allow "--fullpaths" too
                 flags.setFullPath(true);
@@ -308,11 +313,11 @@ public class Main {
                 flags.setSetExitCode(true);
             } else if (arg.equals(ARG_VERSION)) {
                 printVersion(client);
-                System.exit(ERRNO_SUCCESS);
+                exit(ERRNO_SUCCESS);
             } else if (arg.equals(ARG_URL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing URL mapping string");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String map = args[++index];
                 // Allow repeated usage of the argument instead of just comma list
@@ -324,18 +329,18 @@ public class Main {
             } else if (arg.equals(ARG_CONFIG)) {
                 if (index == args.length - 1 || !endsWith(args[index + 1], DOT_XML)) {
                     System.err.println("Missing XML configuration file argument");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 File file = getInArgumentPath(args[++index]);
                 if (!file.exists()) {
                     System.err.println(file.getAbsolutePath() + " does not exist");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 flags.setDefaultConfiguration(file);
             } else if (arg.equals(ARG_HTML) || arg.equals(ARG_SIMPLE_HTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 File output = getOutArgumentPath(args[++index]);
                 // Get an absolute path such that we can ask its parent directory for
@@ -347,7 +352,7 @@ public class Main {
                         boolean mkdirs = output.mkdirs();
                         if (!mkdirs) {
                             log(null, "Could not create output directory %1$s", output);
-                            System.exit(ERRNO_EXISTS);
+                            exit(ERRNO_EXISTS);
                         }
                     }
                     try {
@@ -359,7 +364,7 @@ public class Main {
                         flags.getReporters().add(reporter);
                     } catch (IOException e) {
                         log(e, null);
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     continue;
                 }
@@ -367,12 +372,12 @@ public class Main {
                     boolean delete = output.delete();
                     if (!delete) {
                         System.err.println("Could not delete old " + output);
-                        System.exit(ERRNO_EXISTS);
+                        exit(ERRNO_EXISTS);
                     }
                 }
                 if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write HTML output file " + output);
-                    System.exit(ERRNO_EXISTS);
+                    exit(ERRNO_EXISTS);
                 }
                 try {
                     HtmlReporter htmlReporter = new HtmlReporter(client, output, flags);
@@ -382,12 +387,12 @@ public class Main {
                     flags.getReporters().add(htmlReporter);
                 } catch (IOException e) {
                     log(e, null);
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
             } else if (arg.equals(ARG_XML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing XML output file name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 File output = getOutArgumentPath(args[++index]);
                 // Get an absolute path such that we can ask its parent directory for
@@ -398,23 +403,23 @@ public class Main {
                     boolean delete = output.delete();
                     if (!delete) {
                         System.err.println("Could not delete old " + output);
-                        System.exit(ERRNO_EXISTS);
+                        exit(ERRNO_EXISTS);
                     }
                 }
                 if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write XML output file " + output);
-                    System.exit(ERRNO_EXISTS);
+                    exit(ERRNO_EXISTS);
                 }
                 try {
                     flags.getReporters().add(new XmlReporter(client, output));
                 } catch (IOException e) {
                     log(e, null);
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
             } else if (arg.equals(ARG_TEXT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing text output file name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
 
                 Writer writer = null;
@@ -435,19 +440,19 @@ public class Main {
                         boolean delete = output.delete();
                         if (!delete) {
                             System.err.println("Could not delete old " + output);
-                            System.exit(ERRNO_EXISTS);
+                            exit(ERRNO_EXISTS);
                         }
                     }
                     if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                         System.err.println("Cannot write text output file " + output);
-                        System.exit(ERRNO_EXISTS);
+                        exit(ERRNO_EXISTS);
                     }
                     try {
                         //noinspection IOResourceOpenedButNotSafelyClosed
                         writer = new BufferedWriter(new FileWriter(output));
                     } catch (IOException e) {
                         log(e, null);
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     closeWriter = true;
                 }
@@ -455,7 +460,7 @@ public class Main {
             } else if (arg.equals(ARG_DISABLE) || arg.equals(ARG_IGNORE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to disable");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
                 String[] ids = args[++index].split(",");
@@ -474,7 +479,7 @@ public class Main {
                     } else if (!registry.isIssueId(id)) {
                         System.err.println("Invalid id or category \"" + id + "\".\n");
                         displayValidIds(registry, System.err);
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     } else {
                         flags.getSuppressedIds().add(id);
                     }
@@ -482,7 +487,7 @@ public class Main {
             } else if (arg.equals(ARG_ENABLE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to enable");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
                 String[] ids = args[++index].split(",");
@@ -499,7 +504,7 @@ public class Main {
                     } else if (!registry.isIssueId(id)) {
                         System.err.println("Invalid id or category \"" + id + "\".\n");
                         displayValidIds(registry, System.err);
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     } else {
                         flags.getEnabledIds().add(id);
                     }
@@ -507,7 +512,7 @@ public class Main {
             } else if (arg.equals(ARG_CHECK)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to check");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 Set<String> checkedIds = flags.getExactCheckedIds();
                 if (checkedIds == null) {
@@ -531,7 +536,7 @@ public class Main {
                     } else if (!registry.isIssueId(id)) {
                         System.err.println("Invalid id or category \"" + id + "\".\n");
                         displayValidIds(registry, System.err);
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     } else {
                         checkedIds.add(id);
                     }
@@ -545,14 +550,14 @@ public class Main {
             } else if (arg.equals(ARG_CLASSES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing class folder name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
                 for (String path : LintUtils.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Class path entry " + input + " does not exist.");
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     List<File> classes = flags.getClassesOverride();
                     if (classes == null) {
@@ -564,14 +569,14 @@ public class Main {
             } else if (arg.equals(ARG_SOURCES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing source folder name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
                 for (String path : LintUtils.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Source folder " + input + " does not exist.");
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     List<File> sources = flags.getSourcesOverride();
                     if (sources == null) {
@@ -583,14 +588,14 @@ public class Main {
             } else if (arg.equals(ARG_RESOURCES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing resource folder name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
                 for (String path : LintUtils.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Resource folder " + input + " does not exist.");
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     List<File> resources = flags.getResourcesOverride();
                     if (resources == null) {
@@ -602,14 +607,14 @@ public class Main {
             } else if (arg.equals(ARG_LIBRARIES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing library folder name");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
                 for (String path : LintUtils.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Library " + input + " does not exist.");
-                        System.exit(ERRNO_INVALID_ARGS);
+                        exit(ERRNO_INVALID_ARGS);
                     }
                     List<File> libraries = flags.getLibrariesOverride();
                     if (libraries == null) {
@@ -621,13 +626,13 @@ public class Main {
             } else if (arg.equals(ARG_BASELINE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing baseline file path");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 String path = args[++index];
                 File input = getInArgumentPath(path);
                 if (!input.exists()) {
                     System.err.println("Library " + input + " does not exist.");
-                    System.exit(ERRNO_INVALID_ARGS);
+                    exit(ERRNO_INVALID_ARGS);
                 }
                 flags.setBaselineFile(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
@@ -635,14 +640,14 @@ public class Main {
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
-                System.exit(ERRNO_INVALID_ARGS);
+                exit(ERRNO_INVALID_ARGS);
             } else {
                 String filename = arg;
                 File file = getInArgumentPath(filename);
 
                 if (!file.exists()) {
                     System.err.println(String.format("%1$s does not exist.", filename));
-                    System.exit(ERRNO_EXISTS);
+                    exit(ERRNO_EXISTS);
                 }
                 files.add(file);
             }
@@ -650,7 +655,7 @@ public class Main {
 
         if (files.isEmpty()) {
             System.err.println("No files to analyze.");
-            System.exit(ERRNO_INVALID_ARGS);
+            exit(ERRNO_INVALID_ARGS);
         } else if (files.size() > 1
                 && (flags.getClassesOverride() != null
                     || flags.getSourcesOverride() != null
@@ -659,7 +664,7 @@ public class Main {
             System.err.println(String.format(
                   "The %1$s, %2$s, %3$s and %4$s arguments can only be used with a single project",
                   ARG_SOURCES, ARG_CLASSES, ARG_LIBRARIES, ARG_RESOURCES));
-            System.exit(ERRNO_INVALID_ARGS);
+            exit(ERRNO_INVALID_ARGS);
         }
 
         List<Reporter> reporters = flags.getReporters();
@@ -691,7 +696,7 @@ public class Main {
                         if (index == -1) {
                             System.err.println(
                               "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                            System.exit(ERRNO_INVALID_ARGS);
+                            exit(ERRNO_INVALID_ARGS);
                         }
                         String key = s.substring(0, index);
                         String value = s.substring(index + 1);
@@ -708,10 +713,10 @@ public class Main {
             // Not using mGg; LintClient will do its own registry merging
             // also including project rules.
             int exitCode = client.run(new BuiltinIssueRegistry(), files);
-            System.exit(exitCode);
+            exit(exitCode);
         } catch (IOException e) {
             log(e, null);
-            System.exit(ERRNO_INVALID_ARGS);
+            exit(ERRNO_INVALID_ARGS);
         }
     }
 
@@ -1099,5 +1104,23 @@ public class Main {
         if (exception != null) {
             exception.printStackTrace();
         }
+    }
+
+    @VisibleForTesting
+    static final class ExitException extends RuntimeException {
+
+        private final int status;
+
+        ExitException(int status) {
+            this.status = status;
+        }
+
+        int getStatus() {
+            return status;
+        }
+    }
+
+    private static void exit(int value) {
+        throw new ExitException(value);
     }
 }
