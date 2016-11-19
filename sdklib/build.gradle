@@ -95,7 +95,24 @@ sdk {
     }
 }
 
-task initSdkForTests(type: JavaExec) {
+// Used for changes to remove components from initSdkForTests, so that continuous-build results
+// (both pre- and post-submit) give good feedback and proper attribution in case of failure.
+task removeSdkComponents(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = "com.android.sdklib.tool.SdkManagerCli"
+    args = [
+      '--sdk_root=' + System.getenv("ANDROID_HOME"),
+      '--verbose',
+      '--uninstall',
+      // Entries below are temporary and should always include dates. For example:
+      // 'extras;android;gapid;3',  // added 2016-11-18
+      'system-images;android-19;default;x86',  // added 2016-11-18
+      'system-images;android-23;default;x86',  // added 2016-11-18
+      'extras;android;gapid;3',  // added 2016-11-18
+    ]
+}
+
+task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.SdkManagerCli"
@@ -111,6 +128,7 @@ task initSdkForTests(type: JavaExec) {
             args = ['--sdk_root=' + sdk_home,
                     '--channel=3',
                     '--verbose',
+                    // When you remove an entry below, please add it to removeSdkComponents above.
                     'tools',
                     'platform-tools',
                     'build-tools;25.0.0',
@@ -147,9 +165,6 @@ task initSdkForTests(type: JavaExec) {
                     'extras;android;m2repository',
                     'cmake;3.6.3155560',
                     'ndk-bundle',
-                    "system-images;android-19;default;x86",
-                    "system-images;android-23;default;x86",
-                    "extras;android;gapid;3",
             ]
 
             println "Running SdkManagerCli with args " + args
