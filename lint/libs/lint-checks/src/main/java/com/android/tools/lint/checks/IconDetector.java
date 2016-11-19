@@ -389,7 +389,9 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             Category.ICONS,
             6,
             Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+            IMPLEMENTATION_JAVA)
+            // Actual performance being benchmarked
+            .setEnabledByDefault(false);
 
     /** Webp unsupported? */
     public static final Issue WEBP_UNSUPPORTED = Issue.create(
