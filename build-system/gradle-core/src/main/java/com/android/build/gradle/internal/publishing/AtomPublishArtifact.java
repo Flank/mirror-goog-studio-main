@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import org.gradle.api.AttributeContainer;
 
 /**
  * custom implementation of PublishArtifact for published APKs.
@@ -40,5 +41,12 @@ public class AtomPublishArtifact extends BasePublishArtifact {
     @Override
     public String getType() {
         return "atombundle";
+    }
+
+    @Override
+    public AttributeContainer getAttributes() {
+        // This is temporary and is likely to change in another nightly of Gradle 3.3
+        // as there is no way to return a new instance of this.
+        return null;
     }
 }
