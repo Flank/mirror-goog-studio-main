@@ -317,7 +317,7 @@ public abstract class GraphicGenerator {
             ZipFile zipFile = null;
             ProtectionDomain protectionDomain = GraphicGenerator.class.getProtectionDomain();
             URL url = protectionDomain.getCodeSource().getLocation();
-            if (url != null) {
+            if (url != null && url.getProtocol().equals("jar")) {
                 File file = SdkUtils.urlToFile(url);
                 zipFile = new JarFile(file);
             } else {
