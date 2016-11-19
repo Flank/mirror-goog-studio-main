@@ -49,13 +49,33 @@ class MemoryServiceImpl final
 
   ::grpc::Status TriggerHeapDump(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::HeapDumpRequest* request,
-      ::profiler::proto::HeapDumpResponse* response) override;
+      const ::profiler::proto::TriggerHeapDumpRequest* request,
+      ::profiler::proto::TriggerHeapDumpResponse* response) override;
 
   ::grpc::Status GetHeapDump(
       ::grpc::ServerContext* context,
       const ::profiler::proto::HeapDumpDataRequest* request,
-      ::profiler::proto::HeapDumpDataResponse* response) override;
+      ::profiler::proto::DumpDataResponse* response) override;
+
+  ::grpc::Status ListHeapDumpInfos(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::ListDumpInfosRequest* request,
+      ::profiler::proto::ListHeapDumpInfosResponse* response) override;
+
+  ::grpc::Status SetAllocationTracking(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::AllocationTrackingRequest* request,
+      ::profiler::proto::AllocationTrackingResponse* response) override;
+
+  ::grpc::Status GetAllocationDump(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::AllocationDumpDataRequest* request,
+      ::profiler::proto::DumpDataResponse* response) override;
+
+  ::grpc::Status ListAllocationDumpInfos(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::ListDumpInfosRequest* request,
+      ::profiler::proto::ListAllocationDumpInfosResponse* response) override;
 
  private:
   MemoryCollector* GetCollector(int32_t app_id);

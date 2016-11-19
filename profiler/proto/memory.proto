@@ -26,9 +26,17 @@ service MemoryService {
   }
   rpc GetData(MemoryRequest) returns (MemoryData) {
   }
-  rpc TriggerHeapDump(HeapDumpRequest) returns (HeapDumpResponse) {
+  rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
   }
-  rpc GetHeapDump(HeapDumpDataRequest) returns (HeapDumpDataResponse) {
+  rpc GetHeapDump(HeapDumpDataRequest) returns (DumpDataResponse) {
+  }
+  rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
+  }
+  rpc SetAllocationTracking(AllocationTrackingRequest) returns (AllocationTrackingResponse) {
+  }
+  rpc GetAllocationDump(AllocationDumpDataRequest) returns (DumpDataResponse) {
+  }
+  rpc ListAllocationDumpInfos(ListDumpInfosRequest) returns (ListAllocationDumpInfosResponse) {
   }
 }
 
@@ -64,6 +72,29 @@ message MemoryRequest {
   int64 end_time = 3;    // inclusive
 }
 
+// A HeapDumpInfo is returned if either the start_time or end_time falls
+// within the MemoryRequest time window.
+// e.g. An info can be returned across multiple requests:
+// 1. When a heap dump is first triggered with start_time specified.
+// 2. When the heap dump completes/fails with end_time specified.
+//
+// It is the responsibility of the requester to dedupe a completed info if
+// there was an unfinished info that was previously sent.
+message HeapDumpInfo {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int32 dump_id = 3;
+  string file_path = 4;
+  bool success = 5;
+}
+
+message AllocationDumpInfo {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int32 dump_id = 3;
+  bool success = 4;
+}
+
 message MemoryData {
   message MemorySample {
     int64 timestamp = 1;
@@ -83,35 +114,37 @@ message MemoryData {
     int32 gc_count = 4;
   }
 
-  // A HeapDumpSample is returned if either the start_time or end_time falls
-  // within the MemoryRequest time window.
-  // e.g. A sample can be returned across multiple requests:
-  // 1. When a heap dump is first triggered with start_time specified.
-  // 2. When the heap dump completes/fails with end_time specified.
-  //
-  // It is the responsibility of the requester to dedupe a completed sample if
-  // there was an unfinished sample that was previously sent.
-  message HeapDumpSample {
-    int64 start_time = 1;
-    int64 end_time = 2;
-    int32 dump_id = 3;
-    string file_path = 4;
-    bool success = 5;
-  }
-
   // end timestamp after which values are yet to be queried for
   int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
   repeated VmStatsSample vm_stats_samples = 3;
-  repeated HeapDumpSample heap_dump_samples = 4;
+  repeated HeapDumpInfo heap_dump_infos = 4;
 }
 
-message HeapDumpRequest {
+message ListDumpInfosRequest {
+  int32 app_id = 1;
+  int64 start_time = 2;  // exclusive
+  int64 end_time = 3;    // inclusive
+}
+
+message DumpDataResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  bytes data = 2;
+}
+
+message TriggerHeapDumpRequest {
   int32 app_id = 1;
   int64 request_time = 2;
 }
 
-message HeapDumpResponse {
+message TriggerHeapDumpResponse {
   enum Status {
     UNSPECIFIED = 0;
     SUCCESS = 1;
@@ -126,14 +159,33 @@ message HeapDumpDataRequest {
   int32 dump_id = 2;
 }
 
-message HeapDumpDataResponse {
+message ListHeapDumpInfosResponse {
+  repeated HeapDumpInfo infos = 1;
+}
+
+message AllocationTrackingRequest {
+  int32 app_id = 1;
+  int64 request_time = 2;
+  bool enabled = 3;
+}
+
+message AllocationTrackingResponse {
   enum Status {
     UNSPECIFIED = 0;
     SUCCESS = 1;
-    NOT_READY = 2;
-    NOT_FOUND = 3;
+    IN_PROGRESS = 2;
+    NOT_ENABLED = 3;
     FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
-  bytes data = 2;
+  AllocationDumpInfo info = 2;
+}
+
+message AllocationDumpDataRequest {
+  int32 app_id = 1;
+  int32 dump_id = 2;
+}
+
+message ListAllocationDumpInfosResponse {
+  repeated AllocationDumpInfo infos = 1;
 }

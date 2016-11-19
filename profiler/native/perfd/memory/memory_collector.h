@@ -43,7 +43,7 @@ class MemoryCollector {
   void Stop();
   bool TriggerHeapDump();
   void GetHeapDumpData(int32_t dump_id,
-                       ::profiler::proto::HeapDumpDataResponse* response);
+                       proto::DumpDataResponse* response);
   MemoryCache* memory_cache() { return &memory_cache_; }
 
  private:
