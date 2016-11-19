@@ -58,6 +58,7 @@ public class StudioConfiguration implements Configuration {
     @Override
     public List<String> getLabelsToExport() {
         return ImmutableList.of(
+            "//tools/adt/idea/adt-branding",
             "//tools/adt/idea/uitest-framework",
             "//tools/adt/idea/android-gradle-jps",
             "//tools/adt/idea/android-plugin",
