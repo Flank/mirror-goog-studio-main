@@ -27,7 +27,7 @@ java_test(
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
-        "//tools/adt/idea:android-annotations",
+        "//tools/adt/idea/android/annotations",
         "//tools/base/files/typos",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
