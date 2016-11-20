@@ -23,7 +23,8 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::EventProfilerData;
+using profiler::proto::ActivityData;
+using profiler::proto::SystemData;
 using profiler::proto::EmptyEventResponse;
 using profiler::EventCache;
 
@@ -33,12 +34,21 @@ InternalEventServiceImpl::InternalEventServiceImpl(EventCache* cache)
     : cache_(*cache) {
   Log::V("Event Service Setup Properly");
 }
-Status InternalEventServiceImpl::SendEvent(ServerContext* context,
-                                           const EventProfilerData* data,
-                                           EmptyEventResponse* response) {
+Status InternalEventServiceImpl::SendActivity(ServerContext* context,
+                                              const ActivityData* data,
+                                              EmptyEventResponse* response) {
   // TODO: Validate incomming data has timestamp set, and at least one of
   // the event data type messages set.
-  cache_.AddData(*data);
+  cache_.AddActivityData(*data);
+  return Status::OK;
+}
+
+Status InternalEventServiceImpl::SendSystem(ServerContext* context,
+                                            const SystemData* data,
+                                            EmptyEventResponse* response) {
+  // TODO: Validate incomming data has timestamp set, and at least one of
+  // the event data type messages set.
+  cache_.AddSystemData(*data);
   return Status::OK;
 }
 

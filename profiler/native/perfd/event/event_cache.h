@@ -29,21 +29,29 @@ namespace profiler {
 class EventCache {
  public:
   // Adds data to the event cache, the data is copied.
-  void AddData(const profiler::proto::EventProfilerData& data);
+  void AddActivityData(const profiler::proto::ActivityData& data);
+  void AddSystemData(const profiler::proto::SystemData& data);
 
-  // Populates a EventDataResponse with a copy of the EventProfilerData protos
-  // that
-  // exist within a given time range. The start time is exclusive, while the end
+  // Populates a Response with a copy of the proper protos
+  // that exist within a given time range. The start time is exclusive, while
+  // the end
   // time is inclusive.
-  void GetData(int64_t start_time, int64_t end_time,
-               profiler::proto::EventDataResponse* response);
+  void GetActivityData(int app_id, int64_t start_time, int64_t end_time,
+                       profiler::proto::ActivityDataResponse* response);
+
+  void GetSystemData(int app_id, int64_t start_time, int64_t end_time,
+                     profiler::proto::SystemDataResponse* response);
 
  private:
   // TODO: The current cache grows unlimited, the data needs a timeout, or
   // changed to a ring buffer.
-  std::vector<profiler::proto::EventProfilerData> cache_;
+  // Map of event id to SystemData to map start/stop events
+  std::map<long, profiler::proto::SystemData> system_cache_map_;
+  // Map of activity hash to activity data to map activity states.
+  std::map<int, profiler::proto::ActivityData> activity_cache_map_;
   // Guards |cache_|
-  std::mutex cache_mutex_;
+  std::mutex activity_cache_mutex_;
+  std::mutex system_cache_mutex_;
 };
 
 }  // end of namespace profiler

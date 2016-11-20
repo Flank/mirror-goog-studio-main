@@ -18,13 +18,14 @@
 #include <grpc++/grpc++.h>
 #include <vector>
 
-#include "utils/trace.h"
 #include "perfd/event/event_cache.h"
+#include "utils/trace.h"
 
 using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::EventDataRequest;
-using profiler::proto::EventDataResponse;
+using profiler::proto::ActivityDataResponse;
+using profiler::proto::SystemDataResponse;
 using profiler::proto::EventStartRequest;
 using profiler::proto::EventStartResponse;
 using profiler::proto::EventStopRequest;
@@ -33,27 +34,38 @@ using profiler::proto::EventStopResponse;
 namespace profiler {
 EventServiceImpl::EventServiceImpl(EventCache* cache) : cache_(*cache) {}
 
-Status EventServiceImpl::GetData(ServerContext* context,
-                                 const EventDataRequest* request,
-                                 EventDataResponse* response) {
+Status EventServiceImpl::GetSystemData(ServerContext* context,
+                                       const EventDataRequest* request,
+                                       SystemDataResponse* response) {
   Trace trace("EVT:GetData");
   Status status = Status::OK;
   int64_t startTime = request->start_timestamp();
   int64_t endTime = request->end_timestamp();
-  cache_.GetData(startTime, endTime, response);
+  cache_.GetSystemData(request->app_id(), startTime, endTime, response);
   return status;
 }
 
-grpc::Status EventServiceImpl::StartMonitoringApp(ServerContext* context,
-                                                const EventStartRequest* request,
-                                                EventStartResponse* response) {
+Status EventServiceImpl::GetActivityData(ServerContext* context,
+                                         const EventDataRequest* request,
+                                         ActivityDataResponse* response) {
+  Trace trace("EVT:GetData");
+  Status status = Status::OK;
+  int64_t startTime = request->start_timestamp();
+  int64_t endTime = request->end_timestamp();
+  cache_.GetActivityData(request->app_id(), startTime, endTime, response);
+  return status;
+}
+
+grpc::Status EventServiceImpl::StartMonitoringApp(
+    ServerContext* context, const EventStartRequest* request,
+    EventStartResponse* response) {
   response->set_status(EventStartResponse::SUCCESS);
   return grpc::Status::OK;
 }
 
-grpc::Status EventServiceImpl::StopMonitoringApp(ServerContext* context,
-                                               const EventStopRequest* request,
-                                               EventStopResponse* response) {
+grpc::Status EventServiceImpl::StopMonitoringApp(
+    ServerContext* context, const EventStopRequest* request,
+    EventStopResponse* response) {
   response->set_status(EventStopResponse::SUCCESS);
   return grpc::Status::OK;
 }
