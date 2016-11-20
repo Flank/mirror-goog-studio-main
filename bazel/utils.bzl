@@ -25,3 +25,7 @@ def create_java_compiler_args(ctx, path, deps):
   args += ["@" + source_file.path]
 
   return (args, option_files)
+
+# Adds an explict target-name part if label doesn't have it.
+def explicit_target(label):
+  return label if ":" in label else label + ":" + label.rsplit("/", 1)[-1]

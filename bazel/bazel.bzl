@@ -1,5 +1,4 @@
-
-load(":utils.bzl", "create_java_compiler_args")
+load(":utils.bzl", "create_java_compiler_args", "explicit_target")
 
 def _kotlin_jar_impl(ctx):
 
@@ -384,7 +383,7 @@ def iml_module(name,
       main_deps += [label]
     new_test_deps = [label]
     if "module" in tags:
-      new_test_deps += [label + "_testlib"]
+      new_test_deps += [explicit_target(label) + "_testlib"]
     test_deps += new_test_deps
     if label in exports:
       test_exports += new_test_deps
