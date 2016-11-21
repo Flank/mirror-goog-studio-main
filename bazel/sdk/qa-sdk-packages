@@ -1,0 +1,5 @@
+# SDK packages (additional to dev-sdk-packages) for TestGroup.QA UI tests
+
+# Line format: <sdk package>[:include-glob[:exclude-glob]
+
+system-images;android-24;default;x86  # for AvdListDialogTest
