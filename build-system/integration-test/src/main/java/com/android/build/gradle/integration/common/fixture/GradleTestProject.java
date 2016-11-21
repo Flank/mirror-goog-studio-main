@@ -79,13 +79,7 @@ public final class GradleTestProject implements TestRule {
     public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
     /** Latest published Google APIs version. Update this once new version is out. */
-    public static final int LATEST_GOOGLE_APIS_VERSION = 23;
-
-    /**
-     * Last SDK that contained java 6 bytecode in the platform jar. Since we run integration tests
-     * on Java 6, this is needed to cover unit testing support.
-     */
-    public static final int LAST_JAVA6_SDK_VERSION = 19;
+    public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
@@ -138,7 +132,7 @@ public final class GradleTestProject implements TestRule {
     }
 
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
-    public static final String SUPPORT_LIB_VERSION = "24.2.1";
+    public static final String SUPPORT_LIB_VERSION = "25.0.0";
     public static final int SUPPORT_LIB_MIN_SDK = 9;
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
