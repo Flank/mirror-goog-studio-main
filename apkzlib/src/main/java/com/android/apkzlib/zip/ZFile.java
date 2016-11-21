@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.CachedFileContents;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.apkzlib.utils.IOExceptionRunnable;
@@ -60,6 +58,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * The {@code ZFile} provides the main interface for interacting with zip files. A {@code ZFile}
@@ -232,7 +232,7 @@ public class ZFile implements Closeable {
     /**
      * File zip file.
      */
-    @NonNull
+    @Nonnull
     private final File mFile;
 
     /**
@@ -246,7 +246,7 @@ public class ZFile implements Closeable {
      * The map containing the in-memory contents of the zip file. It keeps track of which parts of
      * the zip file are used and which are not.
      */
-    @NonNull
+    @Nonnull
     private final FileUseMap mMap;
 
     /**
@@ -268,7 +268,7 @@ public class ZFile implements Closeable {
      * All entries in the zip file. It includes in-memory changes and may not reflect what is
      * written on disk. Only entries that have been compressed are in this list.
      */
-    @NonNull
+    @Nonnull
     private final Map<String, FileUseMapEntry<StoredEntry>> mEntries;
 
     /**
@@ -285,13 +285,13 @@ public class ZFile implements Closeable {
      * <p>Moving files out of this list to {@link #mEntries} is done by
      * {@link #processAllReadyEntries()}.
      */
-    @NonNull
+    @Nonnull
     private final List<StoredEntry> mUncompressedEntries;
 
     /**
      * Current state of the zip file.
      */
-    @NonNull
+    @Nonnull
     private ZipFileState mState;
 
     /**
@@ -310,13 +310,13 @@ public class ZFile implements Closeable {
     /**
      * The alignment rule.
      */
-    @NonNull
+    @Nonnull
     private final AlignmentRule mAlignmentRule;
 
     /**
      * Extensions registered with the file.
      */
-    @NonNull
+    @Nonnull
     private final List<ZFileExtension> mExtensions;
 
     /**
@@ -324,7 +324,7 @@ public class ZFile implements Closeable {
      * list collects all runnables by the order they were requested. Together with
      * {@link #mIsNotifying}, it is used to avoid reordering notifications.
      */
-    @NonNull
+    @Nonnull
     private final List<IOExceptionRunnable> mToRun;
 
     /**
@@ -347,13 +347,13 @@ public class ZFile implements Closeable {
     /**
      * Compressor to use.
      */
-    @NonNull
+    @Nonnull
     private Compressor mCompressor;
 
     /**
      * Byte tracker to use.
      */
-    @NonNull
+    @Nonnull
     private final ByteTracker mTracker;
 
     /**
@@ -382,7 +382,7 @@ public class ZFile implements Closeable {
      * @param file the zip file
      * @throws IOException some file exists but could not be read
      */
-    public ZFile(@NonNull File file) throws IOException {
+    public ZFile(@Nonnull File file) throws IOException {
         this(file, new ZFileOptions());
     }
 
@@ -396,7 +396,7 @@ public class ZFile implements Closeable {
      * @param options configuration options
      * @throws IOException some file exists but could not be read
      */
-    public ZFile(@NonNull File file, @NonNull ZFileOptions options) throws IOException {
+    public ZFile(@Nonnull File file, @Nonnull ZFileOptions options) throws IOException {
         mFile = file;
         mMap = new FileUseMap(
                 0,
@@ -454,7 +454,7 @@ public class ZFile implements Closeable {
      *
      * @return all entries in the zip
      */
-    @NonNull
+    @Nonnull
     public Set<StoredEntry> entries() {
         Map<String, StoredEntry> entries = Maps.newHashMap();
 
@@ -482,7 +482,7 @@ public class ZFile implements Closeable {
      * @return the entry at the path or {@code null} if none exists
      */
     @Nullable
-    public StoredEntry get(@NonNull String path) {
+    public StoredEntry get(@Nonnull String path) {
         /*
          * The latest entries are the last ones in uncompressed and they may eventually override
          * files in mEntries.
@@ -726,7 +726,7 @@ public class ZFile implements Closeable {
      * returned <em>as is</em>
      * @throws IOException failed to open the zip file
      */
-    @NonNull
+    @Nonnull
     public InputStream directOpen(final long start, final long end) throws IOException {
         Preconditions.checkState(mState != ZipFileState.CLOSED, "mState == ZipFileState.CLOSED");
         Preconditions.checkState(mRaf != null, "mRaf == null");
@@ -754,7 +754,7 @@ public class ZFile implements Closeable {
             }
 
             @Override
-            public int read(@NonNull byte[] b, int off, int len) throws IOException {
+            public int read(@Nonnull byte[] b, int off, int len) throws IOException {
                 Preconditions.checkNotNull(b, "b == null");
                 Preconditions.checkArgument(off >= 0, "off < 0");
                 Preconditions.checkArgument(off <= b.length, "off > b.length");
@@ -791,7 +791,7 @@ public class ZFile implements Closeable {
      * {@code false} if the entry is being removed as part of a replacement
      * @throws IOException failed to delete the entry
      */
-    void delete(@NonNull final StoredEntry entry, boolean notify) throws IOException {
+    void delete(@Nonnull final StoredEntry entry, boolean notify) throws IOException {
         String path = entry.getCentralDirectoryHeader().getName();
         FileUseMapEntry<StoredEntry> mapEntry = mEntries.get(path);
         Preconditions.checkNotNull(mapEntry, "mapEntry == null");
@@ -1052,7 +1052,7 @@ public class ZFile implements Closeable {
      * @param positionHint hint to where the file should be positioned when re-adding
      * @throws IOException failed to load the entry into memory
      */
-    private void reAdd(@NonNull StoredEntry entry, @NonNull PositionHint positionHint)
+    private void reAdd(@Nonnull StoredEntry entry, @Nonnull PositionHint positionHint)
             throws IOException {
         String name = entry.getCentralDirectoryHeader().getName();
         FileUseMapEntry<StoredEntry> mapEntry = mEntries.get(name);
@@ -1076,7 +1076,7 @@ public class ZFile implements Closeable {
      * @param resized was the local header resized?
      * @throws IOException failed to load the entry into memory
      */
-    void localHeaderChanged(@NonNull StoredEntry entry, boolean resized) throws IOException {
+    void localHeaderChanged(@Nonnull StoredEntry entry, boolean resized) throws IOException {
         mDirty = true;
 
         if (resized) {
@@ -1134,7 +1134,7 @@ public class ZFile implements Closeable {
      * @param offset the offset at which the entry should be written
      * @throws IOException failed to write the entry
      */
-    private void writeEntry(@NonNull StoredEntry entry, long offset) throws IOException {
+    private void writeEntry(@Nonnull StoredEntry entry, long offset) throws IOException {
         Preconditions.checkArgument(entry.getDataDescriptorType()
                 == DataDescriptorType. NO_DATA_DESCRIPTOR, "Cannot write entries with a data "
                 + "descriptor.");
@@ -1249,7 +1249,7 @@ public class ZFile implements Closeable {
      * @return the byte representation, or an empty array if there are no entries in the zip
      * @throws IOException failed to compute the central directory byte representation
      */
-    @NonNull
+    @Nonnull
     public byte[] getCentralDirectoryBytes() throws IOException {
         if (mEntries.isEmpty()) {
             Preconditions.checkState(mDirectoryEntry == null, "mDirectoryEntry != null");
@@ -1333,7 +1333,7 @@ public class ZFile implements Closeable {
      * @return the byte representation of the EOCD
      * @throws IOException failed to obtain the byte representation of the EOCD
      */
-    @NonNull
+    @Nonnull
     public byte[] getEocdBytes() throws IOException {
         Preconditions.checkNotNull(mEocdEntry, "mEocdEntry == null");
 
@@ -1429,7 +1429,7 @@ public class ZFile implements Closeable {
      * @param stream the source for the file's data
      * @throws IOException failed to read the source data
      */
-    public void add(@NonNull String name, @NonNull InputStream stream) throws IOException {
+    public void add(@Nonnull String name, @Nonnull InputStream stream) throws IOException {
         add(name, stream, true);
     }
 
@@ -1443,10 +1443,10 @@ public class ZFile implements Closeable {
      * @return the created entry
      * @throws IOException failed to create the entry
      */
-    @NonNull
+    @Nonnull
     private StoredEntry makeStoredEntry(
-            @NonNull String name,
-            @NonNull InputStream stream,
+            @Nonnull String name,
+            @Nonnull InputStream stream,
             boolean mayCompress)
             throws IOException {
         CloseableByteSource source = mTracker.fromStream(stream);
@@ -1489,12 +1489,12 @@ public class ZFile implements Closeable {
      * @return the sources whose data may or may not be already defined
      * @throws IOException failed to create the raw sources
      */
-    @NonNull
+    @Nonnull
     private ProcessedAndRawByteSources createSources(
             boolean mayCompress,
-            @NonNull CloseableByteSource source,
-            @NonNull SettableFuture<CentralDirectoryHeaderCompressInfo> compressInfo,
-            @NonNull CentralDirectoryHeader newFileData)
+            @Nonnull CloseableByteSource source,
+            @Nonnull SettableFuture<CentralDirectoryHeaderCompressInfo> compressInfo,
+            @Nonnull CentralDirectoryHeader newFileData)
             throws IOException {
         if (mayCompress) {
             ListenableFuture<CompressionResult> result = mCompressor.compress(source);
@@ -1506,7 +1506,7 @@ public class ZFile implements Closeable {
                 }
 
                 @Override
-                public void onFailure(@NonNull Throwable t) {
+                public void onFailure(@Nonnull Throwable t) {
                     compressInfo.setException(t);
                 }
             });
@@ -1539,7 +1539,7 @@ public class ZFile implements Closeable {
      * rules force the file to be aligned, in which case the file will not be compressed.
      * @throws IOException failed to read the source data
      */
-    public void add(@NonNull String name, @NonNull InputStream stream, boolean mayCompress)
+    public void add(@Nonnull String name, @Nonnull InputStream stream, boolean mayCompress)
             throws IOException {
 
         /*
@@ -1564,7 +1564,7 @@ public class ZFile implements Closeable {
      * @throws IOException failed to process this entry (or a previous one whose future only
      * completed now)
      */
-    private void add(@NonNull final StoredEntry newEntry) throws IOException {
+    private void add(@Nonnull final StoredEntry newEntry) throws IOException {
         mUncompressedEntries.add(newEntry);
         processAllReadyEntries();
     }
@@ -1641,7 +1641,7 @@ public class ZFile implements Closeable {
      * @param newEntry the new entry to add
      * @throws IOException failed to add the file
      */
-    private void addToEntries(@NonNull final StoredEntry newEntry) throws IOException {
+    private void addToEntries(@Nonnull final StoredEntry newEntry) throws IOException {
         Preconditions.checkArgument(newEntry.getDataDescriptorType() ==
                 DataDescriptorType.NO_DATA_DESCRIPTOR, "newEntry has data descriptor");
 
@@ -1685,10 +1685,10 @@ public class ZFile implements Closeable {
      * @param positionHint hint to where the file should be positioned
      * @return the position in the file where the entry should be placed
      */
-    @NonNull
+    @Nonnull
     private FileUseMapEntry<StoredEntry> positionInFile(
-            @NonNull StoredEntry entry,
-            @NonNull PositionHint positionHint)
+            @Nonnull StoredEntry entry,
+            @Nonnull PositionHint positionHint)
             throws IOException {
         deleteDirectoryAndEocd();
         long size = entry.getInFileSize();
@@ -1725,7 +1725,7 @@ public class ZFile implements Closeable {
      * required for the entry
      * @throws IOException failed to determine the alignment
      */
-    private int chooseAlignment(@NonNull StoredEntry entry) throws IOException {
+    private int chooseAlignment(@Nonnull StoredEntry entry) throws IOException {
         CentralDirectoryHeader cdh = entry.getCentralDirectoryHeader();
         CentralDirectoryHeaderCompressInfo compressionInfo = cdh.getCompressionInfoWithWait();
 
@@ -1751,7 +1751,7 @@ public class ZFile implements Closeable {
      * should be ignored by merging; merging will behave as if these files were not there
      * @throws IOException failed to read from <em>src</em> or write on the output
      */
-    public void mergeFrom(@NonNull ZFile src, @NonNull Predicate<String> ignoreFilter)
+    public void mergeFrom(@Nonnull ZFile src, @Nonnull Predicate<String> ignoreFilter)
             throws IOException {
         for (StoredEntry fromEntry : src.entries()) {
             if (ignoreFilter.test(fromEntry.getCentralDirectoryHeader().getName())) {
@@ -1890,7 +1890,7 @@ public class ZFile implements Closeable {
      * @throws IOException failed to read/write an entry; the entry may no longer exist in the
      * file
      */
-    boolean realign(@NonNull StoredEntry entry) throws IOException {
+    boolean realign(@Nonnull StoredEntry entry) throws IOException {
         FileUseMapEntry<StoredEntry> mapEntry =
                 mEntries.get(entry.getCentralDirectoryHeader().getName());
         Verify.verify(entry == mapEntry.getStore());
@@ -1982,7 +1982,7 @@ public class ZFile implements Closeable {
      *
      * @param extension the listener to add
      */
-    public void addZFileExtension(@NonNull ZFileExtension extension) {
+    public void addZFileExtension(@Nonnull ZFileExtension extension) {
         mExtensions.add(extension);
     }
 
@@ -1991,7 +1991,7 @@ public class ZFile implements Closeable {
      *
      * @param extension the listener to remove
      */
-    public void removeZFileExtension(@NonNull ZFileExtension extension) {
+    public void removeZFileExtension(@Nonnull ZFileExtension extension) {
         mExtensions.remove(extension);
     }
 
@@ -2002,7 +2002,7 @@ public class ZFile implements Closeable {
      * notification method on the listener and return the result of that invocation
      * @throws IOException failed to process some extensions
      */
-    private void notify(@NonNull IOExceptionFunction<ZFileExtension, IOExceptionRunnable> function)
+    private void notify(@Nonnull IOExceptionFunction<ZFileExtension, IOExceptionRunnable> function)
             throws IOException {
         for (ZFileExtension fl : Lists.newArrayList(mExtensions)) {
             IOExceptionRunnable r = function.apply(fl);
@@ -2036,7 +2036,7 @@ public class ZFile implements Closeable {
      * @param count number of bytes of data to write
      * @throws IOException failed to write the data
      */
-    public void directWrite(long offset, @NonNull byte[] data, int start, int count)
+    public void directWrite(long offset, @Nonnull byte[] data, int start, int count)
             throws IOException {
         Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkArgument(start >= 0, "start >= 0");
@@ -2063,7 +2063,7 @@ public class ZFile implements Closeable {
      * @param data the data to write, may be an empty array
      * @throws IOException failed to write the data
      */
-    public void directWrite(long offset, @NonNull byte[] data) throws IOException {
+    public void directWrite(long offset, @Nonnull byte[] data) throws IOException {
         directWrite(offset, data, 0, data.length);
     }
 
@@ -2079,7 +2079,7 @@ public class ZFile implements Closeable {
      * to be read
      * @throws IOException failed to write the data
      */
-    public int directRead(long offset, @NonNull byte[] data, int start, int count)
+    public int directRead(long offset, @Nonnull byte[] data, int start, int count)
             throws IOException {
         Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkArgument(start >= 0, "start >= 0");
@@ -2111,7 +2111,7 @@ public class ZFile implements Closeable {
      * @param data receives the read data, may be an empty array
      * @throws IOException failed to read the data
      */
-    public int directRead(long offset, @NonNull byte[] data) throws IOException {
+    public int directRead(long offset, @Nonnull byte[] data) throws IOException {
         return directRead(offset, data, 0, data.length);
     }
 
@@ -2123,7 +2123,7 @@ public class ZFile implements Closeable {
      * @param data the array that receives the data read
      * @throws IOException failed to read some data or there is not enough data to read
      */
-    public void directFullyRead(long offset, @NonNull byte[] data) throws IOException {
+    public void directFullyRead(long offset, @Nonnull byte[] data) throws IOException {
         Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkNotNull(mRaf, "File is closed");
 
@@ -2141,7 +2141,7 @@ public class ZFile implements Closeable {
      * added recursively
      * @throws IOException failed to some (or all ) of the files
      */
-    public void addAllRecursively(@NonNull File file) throws IOException {
+    public void addAllRecursively(@Nonnull File file) throws IOException {
         addAllRecursively(file, f -> true);
     }
 
@@ -2153,8 +2153,8 @@ public class ZFile implements Closeable {
      * @param mayCompress a function that decides whether files may be compressed
      * @throws IOException failed to some (or all ) of the files
      */
-    public void addAllRecursively(@NonNull File file,
-            @NonNull Function<? super File, Boolean> mayCompress) throws IOException {
+    public void addAllRecursively(@Nonnull File file,
+            @Nonnull Function<? super File, Boolean> mayCompress) throws IOException {
         /*
          * The case of file.isFile() is different because if file.isFile() we will add it to the
          * zip in the root. However, if file.isDirectory() we won't add it and add its children.
@@ -2340,7 +2340,7 @@ public class ZFile implements Closeable {
      * @return the file that may or may not exist (depending on whether something existed there
      * before the zip was created and on whether the zip has been updated or not)
      */
-    @NonNull
+    @Nonnull
     public File getFile() {
         return mFile;
     }

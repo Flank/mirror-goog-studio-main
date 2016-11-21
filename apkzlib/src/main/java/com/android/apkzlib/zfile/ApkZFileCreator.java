@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.zfile;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.AlignmentRule;
 import com.android.apkzlib.zip.AlignmentRules;
 import com.android.apkzlib.zip.StoredEntry;
@@ -30,6 +28,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * {@link ApkCreator} that uses {@link ZFileOptions} to generate the APK.
@@ -50,7 +50,7 @@ class ApkZFileCreator implements ApkCreator {
     /**
      * The zip file.
      */
-    @NonNull
+    @Nonnull
     private final ZFile mZip;
 
     /**
@@ -61,7 +61,7 @@ class ApkZFileCreator implements ApkCreator {
     /**
      * Predicate defining which files should not be compressed.
      */
-    @NonNull
+    @Nonnull
     private final Predicate<String> mNoCompressPredicate;
 
     /**
@@ -72,8 +72,8 @@ class ApkZFileCreator implements ApkCreator {
      * @throws IOException failed to create the zip
      */
     ApkZFileCreator(
-            @NonNull ApkCreatorFactory.CreationData creationData,
-            @NonNull ZFileOptions options)
+            @Nonnull ApkCreatorFactory.CreationData creationData,
+            @Nonnull ZFileOptions options)
             throws IOException {
 
         switch (creationData.getNativeLibrariesPackagingMode()) {
@@ -105,7 +105,7 @@ class ApkZFileCreator implements ApkCreator {
     }
 
     @Override
-    public void writeZip(@NonNull File zip, @Nullable Function<String, String> transform,
+    public void writeZip(@Nonnull File zip, @Nullable Function<String, String> transform,
             @Nullable Predicate<String> isIgnored) throws IOException {
         Preconditions.checkState(!mClosed, "mClosed == true");
         Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
@@ -130,7 +130,7 @@ class ApkZFileCreator implements ApkCreator {
     }
 
     @Override
-    public void writeFile(@NonNull File inputFile, @NonNull String apkPath) throws IOException {
+    public void writeFile(@Nonnull File inputFile, @Nonnull String apkPath) throws IOException {
         Preconditions.checkState(!mClosed, "mClosed == true");
 
         boolean mayCompress = !mNoCompressPredicate.test(apkPath);
@@ -149,7 +149,7 @@ class ApkZFileCreator implements ApkCreator {
     }
 
     @Override
-    public void deleteFile(@NonNull String apkPath) throws IOException {
+    public void deleteFile(@Nonnull String apkPath) throws IOException {
         Preconditions.checkState(!mClosed, "mClosed == true");
 
         StoredEntry entry = mZip.get(apkPath);

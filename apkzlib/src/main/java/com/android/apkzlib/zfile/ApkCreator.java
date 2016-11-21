@@ -16,14 +16,13 @@
 
 package com.android.apkzlib.zfile;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Creates or updates APKs based on provided entries.
@@ -43,7 +42,7 @@ public interface ApkCreator extends Closeable {
      * predicate applies after transformation
      * @throws IOException I/O error
      */
-    void writeZip(@NonNull File zip, @Nullable Function<String, String> transform,
+    void writeZip(@Nonnull File zip, @Nullable Function<String, String> transform,
             @Nullable Predicate<String> isIgnored) throws IOException;
 
     /**
@@ -54,7 +53,7 @@ public interface ApkCreator extends Closeable {
      * @param apkPath the filepath inside the archive.
      * @throws IOException I/O error
      */
-    void writeFile(@NonNull File inputFile, @NonNull String apkPath) throws IOException;
+    void writeFile(@Nonnull File inputFile, @Nonnull String apkPath) throws IOException;
 
     /**
      * Deletes a file in a given path.
@@ -62,5 +61,5 @@ public interface ApkCreator extends Closeable {
      * @param apkPath the path to remove
      * @throws IOException failed to remove the entry
      */
-    void deleteFile(@NonNull String apkPath) throws IOException;
+    void deleteFile(@Nonnull String apkPath) throws IOException;
 }

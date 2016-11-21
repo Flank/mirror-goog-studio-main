@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
@@ -28,6 +26,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
 import java.util.TreeSet;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * The file use map keeps track of which parts of the zip file are used which parts are not.
@@ -59,14 +59,14 @@ class FileUseMap {
      * If {@link #mSize} is zero then this set is empty. This is the only situation in which the map
      * will be empty.
      */
-    @NonNull
+    @Nonnull
     private TreeSet<FileUseMapEntry<?>> mMap;
 
     /**
      * Tree with all free blocks ordered by size. This is essentially a view over {@link #mMap}
      * containing only the free blocks, but in a different order.
      */
-    @NonNull
+    @Nonnull
     private TreeSet<FileUseMapEntry<?>> mFree;
 
     /**
@@ -99,7 +99,7 @@ class FileUseMap {
      *
      * @param entry the entry to add
      */
-    private void internalAdd(@NonNull FileUseMapEntry<?> entry) {
+    private void internalAdd(@Nonnull FileUseMapEntry<?> entry) {
         mMap.add(entry);
 
         if (entry.isFree()) {
@@ -112,7 +112,7 @@ class FileUseMap {
      *
      * @param entry the entry to remove
      */
-    private void internalRemove(@NonNull FileUseMapEntry<?> entry) {
+    private void internalRemove(@Nonnull FileUseMapEntry<?> entry) {
         boolean wasRemoved = mMap.remove(entry);
         Preconditions.checkState(wasRemoved, "entry not in mMap");
 
@@ -128,7 +128,7 @@ class FileUseMap {
      *
      * @param entry the entry to add
      */
-    private void add(@NonNull FileUseMapEntry<?> entry) {
+    private void add(@Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkArgument(entry.getStart() < mSize, "entry.getStart() >= mSize");
         Preconditions.checkArgument(entry.getEnd() <= mSize, "entry.getEnd() > mSize");
         Preconditions.checkArgument(!entry.isFree(), "entry.isFree()");
@@ -149,7 +149,7 @@ class FileUseMap {
      *
      * @param entry the entry
      */
-    void remove(@NonNull FileUseMapEntry<?> entry) {
+    void remove(@Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkState(mMap.contains(entry), "!mMap.contains(entry)");
         Preconditions.checkArgument(!entry.isFree(), "entry.isFree()");
 
@@ -174,7 +174,7 @@ class FileUseMap {
      * @param <T> the type of data to store in the entry
      * @return the new entry
      */
-    <T> FileUseMapEntry<T> add(long start, long end, @NonNull T store) {
+    <T> FileUseMapEntry<T> add(long start, long end, @Nonnull T store) {
         Preconditions.checkArgument(start >= 0, "start < 0");
         Preconditions.checkArgument(end > start, "end < start");
 
@@ -189,8 +189,8 @@ class FileUseMap {
      * @param entry the entry whose container we're looking for
      * @return the container
      */
-    @NonNull
-    private FileUseMapEntry<?> findContainer(@NonNull FileUseMapEntry<?> entry) {
+    @Nonnull
+    private FileUseMapEntry<?> findContainer(@Nonnull FileUseMapEntry<?> entry) {
         FileUseMapEntry container = mMap.floor(entry);
         Verify.verifyNotNull(container);
         Verify.verify(container.getStart() <= entry.getStart());
@@ -209,9 +209,9 @@ class FileUseMap {
      * @return a set of non-overlapping entries that completely covers {@code container} and that
      * includes {@code entry}
      */
-    @NonNull
-    private static Set<FileUseMapEntry<?>> split(@NonNull FileUseMapEntry<?> container,
-            @NonNull FileUseMapEntry<?> entry) {
+    @Nonnull
+    private static Set<FileUseMapEntry<?>> split(@Nonnull FileUseMapEntry<?> container,
+            @Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkArgument(container.isFree(), "!container.isFree()");
 
         long farStart = container.getStart();
@@ -243,7 +243,7 @@ class FileUseMap {
      *
      * @param entry the free entry to coalesce with neighbors
      */
-    private void coalesce(@NonNull FileUseMapEntry<?> entry) {
+    private void coalesce(@Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkArgument(entry.isFree(), "!entry.isFree()");
 
         FileUseMapEntry<?> prevToMerge = null;
@@ -381,7 +381,7 @@ class FileUseMap {
      * @param alg which algorithm to use
      * @return the location of the contiguous area; this may be located at the end of the map
      */
-    long locateFree(long size, long alignOffset, long align, @NonNull PositionAlgorithm alg) {
+    long locateFree(long size, long alignOffset, long align, @Nonnull PositionAlgorithm alg) {
         Preconditions.checkArgument(size > 0, "size <= 0");
 
         FileUseMapEntry<?> minimumSizedEntry = FileUseMapEntry.makeFree(0, size);
@@ -511,7 +511,7 @@ class FileUseMap {
      * in file order, that is, if area {@code x} starts before area {@code y}, then area {@code x}
      * will be stored before area {@code y} in the list
      */
-    @NonNull
+    @Nonnull
     List<FileUseMapEntry<?>> getFreeAreas() {
         List<FileUseMapEntry<?>> freeAreas = Lists.newArrayList();
 
@@ -532,7 +532,7 @@ class FileUseMap {
      * in the map
      */
     @Nullable
-    FileUseMapEntry<?> before(@NonNull FileUseMapEntry<?> entry) {
+    FileUseMapEntry<?> before(@Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkNotNull(entry, "entry == null");
 
         return mMap.lower(entry);

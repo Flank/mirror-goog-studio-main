@@ -16,13 +16,12 @@
 
 package com.android.apkzlib.zip.utils;
 
-import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import javax.annotation.Nonnull;
 
 /**
  * Utilities to read and write 16 and 32 bit integers with support for little-endian
@@ -44,7 +43,7 @@ public class LittleEndianUtils {
      * @return the 32-bit value
      * @throws IOException failed to read the value
      */
-    public static long readUnsigned4Le(@NonNull ByteBuffer bytes) throws IOException {
+    public static long readUnsigned4Le(@Nonnull ByteBuffer bytes) throws IOException {
         Preconditions.checkNotNull(bytes, "bytes == null");
 
         if (bytes.remaining() < 4) {
@@ -70,7 +69,7 @@ public class LittleEndianUtils {
      * @return the 16-bit value
      * @throws IOException failed to read the value
      */
-    public static int readUnsigned2Le(@NonNull ByteBuffer bytes) throws IOException {
+    public static int readUnsigned2Le(@Nonnull ByteBuffer bytes) throws IOException {
         Preconditions.checkNotNull(bytes, "bytes == null");
 
         if (bytes.remaining() < 2) {
@@ -94,7 +93,7 @@ public class LittleEndianUtils {
      * @param value the 32-bit value to convert
      * @throws IOException failed to write the value data
      */
-    public static void writeUnsigned4Le(@NonNull ByteBuffer output, long value)
+    public static void writeUnsigned4Le(@Nonnull ByteBuffer output, long value)
             throws IOException {
         Preconditions.checkNotNull(output, "output == null");
         Preconditions.checkArgument(value >= 0, "value (%s) < 0", value);
@@ -114,7 +113,7 @@ public class LittleEndianUtils {
      * @param value the 16-bit value to convert
      * @throws IOException failed to write the value data
      */
-    public static void writeUnsigned2Le(@NonNull ByteBuffer output, int value)
+    public static void writeUnsigned2Le(@Nonnull ByteBuffer output, int value)
             throws IOException {
         Preconditions.checkNotNull(output, "output == null");
         Preconditions.checkArgument(value >= 0, "value (%s) < 0", value);

@@ -18,14 +18,13 @@ package com.android.apkzlib.zfile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Factory that creates instances of {@link ApkCreator}.
@@ -37,7 +36,7 @@ public interface ApkCreatorFactory {
      *
      * @param creationData the information to create the APK
      */
-    ApkCreator make(@NonNull CreationData creationData);
+    ApkCreator make(@Nonnull CreationData creationData);
 
     /**
      * Data structure with the required information to initiate the creation of an APK. See
@@ -49,7 +48,7 @@ public interface ApkCreatorFactory {
          * The path where the APK should be located. May already exist or not (if it does, then
          * the APK may be updated instead of created).
          */
-        @NonNull
+        @Nonnull
         private final File mApkPath;
 
         /**
@@ -92,10 +91,10 @@ public interface ApkCreatorFactory {
          */
         private final int mMinSdkVersion;
 
-        @NonNull
+        @Nonnull
         private final NativeLibrariesPackagingMode mNativeLibrariesPackagingMode;
 
-        @NonNull
+        @Nonnull
         private final Predicate<String> mNoCompressPredicate;
 
         /**
@@ -118,7 +117,7 @@ public interface ApkCreatorFactory {
          * @param noCompressPredicate predicate to decide which file paths should be uncompressed
          */
         public CreationData(
-                @NonNull File apkPath,
+                @Nonnull File apkPath,
                 @Nullable PrivateKey key,
                 @Nullable X509Certificate certificate,
                 boolean v1SigningEnabled,
@@ -126,8 +125,8 @@ public interface ApkCreatorFactory {
                 @Nullable String builtBy,
                 @Nullable String createdBy,
                 int minSdkVersion,
-                @NonNull NativeLibrariesPackagingMode nativeLibrariesPackagingMode,
-                @NonNull Predicate<String> noCompressPredicate) {
+                @Nonnull NativeLibrariesPackagingMode nativeLibrariesPackagingMode,
+                @Nonnull Predicate<String> noCompressPredicate) {
             Preconditions.checkArgument((key == null) == (certificate == null),
                     "(key == null) != (certificate == null)");
             Preconditions.checkArgument(minSdkVersion >= 0, "minSdkVersion < 0");
@@ -150,7 +149,7 @@ public interface ApkCreatorFactory {
          *
          * @return the path that may already exist or not
          */
-        @NonNull
+        @Nonnull
         public File getApkPath() {
             return mApkPath;
         }
@@ -224,7 +223,7 @@ public interface ApkCreatorFactory {
         /**
          * Returns the packaging policy that the {@link ApkCreator} should use for native libraries.
          */
-        @NonNull
+        @Nonnull
         public NativeLibrariesPackagingMode getNativeLibrariesPackagingMode() {
             return mNativeLibrariesPackagingMode;
         }
@@ -232,7 +231,7 @@ public interface ApkCreatorFactory {
         /**
          * Returns the predicate to decide which file paths should be uncompressed.
          */
-        @NonNull
+        @Nonnull
         public Predicate<String> getNoCompressPredicate() {
             return mNoCompressPredicate;
         }

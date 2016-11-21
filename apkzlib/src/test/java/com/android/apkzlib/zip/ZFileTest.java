@@ -27,7 +27,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
@@ -38,11 +37,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -59,6 +53,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import javax.annotation.Nonnull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ZFileTest {
     @Rule
@@ -1027,9 +1025,9 @@ public class ZFileTest {
         boolean[] done = new boolean[1];
         options.setCompressor(new DeflateExecutionCompressor(executor, options.getTracker(),
                 Deflater.BEST_COMPRESSION) {
-            @NonNull
+            @Nonnull
             @Override
-            protected CompressionResult immediateCompress(@NonNull CloseableByteSource source)
+            protected CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
                     throws Exception {
                 Thread.sleep(500);
                 CompressionResult cr = super.immediateCompress(source);

@@ -16,9 +16,8 @@
 
 package com.android.apkzlib.sign;
 
-import com.android.annotations.NonNull;
-
 import java.security.NoSuchAlgorithmException;
+import javax.annotation.Nonnull;
 
 /**
  * Signature algorithm.
@@ -42,7 +41,7 @@ public enum SignatureAlgorithm {
     /**
      * Name of the private key as reported by {@code PrivateKey}.
      */
-    @NonNull
+    @Nonnull
     public final String keyAlgorithm;
 
     /**
@@ -53,7 +52,7 @@ public enum SignatureAlgorithm {
     /**
      * Suffix appended to digest algorithm to obtain signature algorithm.
      */
-    @NonNull
+    @Nonnull
     public final String signatureAlgorithmSuffix;
 
     /**
@@ -64,7 +63,7 @@ public enum SignatureAlgorithm {
      * @param signatureAlgorithmSuffix suffix for signature name with used with a digest
      */
     SignatureAlgorithm(
-            @NonNull String keyAlgorithm, int minSdkVersion, @NonNull String signatureAlgorithmSuffix) {
+            @Nonnull String keyAlgorithm, int minSdkVersion, @Nonnull String signatureAlgorithmSuffix) {
         this.keyAlgorithm = keyAlgorithm;
         this.minSdkVersion = minSdkVersion;
         this.signatureAlgorithmSuffix = signatureAlgorithmSuffix;
@@ -80,8 +79,8 @@ public enum SignatureAlgorithm {
      * @throws NoSuchAlgorithmException if no algorithm was found for the given private key; an
      * algorithm was found but is not applicable to the given SDK version
      */
-    @NonNull
-    public static SignatureAlgorithm fromKeyAlgorithm(@NonNull String keyAlgorithm,
+    @Nonnull
+    public static SignatureAlgorithm fromKeyAlgorithm(@Nonnull String keyAlgorithm,
             int minSdkVersion) throws NoSuchAlgorithmException {
         for (SignatureAlgorithm alg : values()) {
             if (alg.keyAlgorithm.equalsIgnoreCase(keyAlgorithm)) {
@@ -106,8 +105,8 @@ public enum SignatureAlgorithm {
      * @param digestAlgorithm the digest algorithm to use
      * @return the name of the signature algorithm
      */
-    @NonNull
-    public String signatureAlgorithmName(@NonNull DigestAlgorithm digestAlgorithm) {
+    @Nonnull
+    public String signatureAlgorithmName(@Nonnull DigestAlgorithm digestAlgorithm) {
         return digestAlgorithm.messageDigestName.replace("-", "") + signatureAlgorithmSuffix;
     }
 }

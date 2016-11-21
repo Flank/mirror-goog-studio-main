@@ -16,14 +16,13 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.utils.MsDosDateTimeUtils;
 import com.google.common.base.Verify;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import javax.annotation.Nonnull;
 
 /**
  * The Central Directory Header contains information about files stored in the zip. Instances of
@@ -45,7 +44,7 @@ public class CentralDirectoryHeader implements Cloneable {
     /**
      * Name of the file.
      */
-    @NonNull
+    @Nonnull
     private String mName;
 
     /**
@@ -66,7 +65,7 @@ public class CentralDirectoryHeader implements Cloneable {
     /**
      * General-purpose bit flag.
      */
-    @NonNull
+    @Nonnull
     private GPFlags mGpBit;
 
     /**
@@ -83,13 +82,13 @@ public class CentralDirectoryHeader implements Cloneable {
      * Extra data field contents. This field follows a specific structure according to the
      * specification.
      */
-    @NonNull
+    @Nonnull
     private ExtraField mExtraField;
 
     /**
      * File comment.
      */
-    @NonNull
+    @Nonnull
     private byte[] mComment;
 
     /**
@@ -116,13 +115,13 @@ public class CentralDirectoryHeader implements Cloneable {
     /**
      * Compress information that may not have been computed yet due to lazy compression.
      */
-    @NonNull
+    @Nonnull
     private Future<CentralDirectoryHeaderCompressInfo> mCompressInfo;
 
     /**
      * The file this header belongs to.
      */
-    @NonNull
+    @Nonnull
     private final ZFile mFile;
 
     /**
@@ -135,11 +134,11 @@ public class CentralDirectoryHeader implements Cloneable {
      * @param zFile the file this header belongs to
      */
     CentralDirectoryHeader(
-            @NonNull String name,
+            @Nonnull String name,
             long uncompressedSize,
-            @NonNull Future<CentralDirectoryHeaderCompressInfo> compressInfo,
-            @NonNull GPFlags flags,
-            @NonNull ZFile zFile) {
+            @Nonnull Future<CentralDirectoryHeaderCompressInfo> compressInfo,
+            @Nonnull GPFlags flags,
+            @Nonnull ZFile zFile) {
         mName = name;
         mUncompressedSize = uncompressedSize;
         mCrc32 = 0;
@@ -167,7 +166,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @return the name
      */
-    @NonNull
+    @Nonnull
     public String getName() {
         return mName;
     }
@@ -222,7 +221,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @return the bit flag
      */
-    @NonNull
+    @Nonnull
     public GPFlags getGpBit() {
         return mGpBit;
     }
@@ -272,7 +271,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @return the data (returns an empty array if there is none)
      */
-    @NonNull
+    @Nonnull
     public ExtraField getExtraField() {
         return mExtraField;
     }
@@ -282,7 +281,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param extraField the data to set
      */
-    public void setExtraField(@NonNull ExtraField extraField) {
+    public void setExtraField(@Nonnull ExtraField extraField) {
         setExtraFieldNoNotify(extraField);
         mFile.centralDirectoryChanged();
     }
@@ -293,7 +292,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param extraField the data to set
      */
-    void setExtraFieldNoNotify(@NonNull ExtraField extraField) {
+    void setExtraFieldNoNotify(@Nonnull ExtraField extraField) {
         mExtraField = extraField;
     }
 
@@ -302,7 +301,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @return the comment (returns an empty array if there is no comment)
      */
-    @NonNull
+    @Nonnull
     public byte[] getComment() {
         return mComment;
     }
@@ -312,7 +311,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @param comment the comment
      */
-    void setComment(@NonNull byte[] comment) {
+    void setComment(@Nonnull byte[] comment) {
         mComment = comment;
     }
 
@@ -405,7 +404,7 @@ public class CentralDirectoryHeader implements Cloneable {
      *
      * @return the information
      */
-    @NonNull
+    @Nonnull
     public Future<CentralDirectoryHeaderCompressInfo> getCompressionInfo() {
         return mCompressInfo;
     }
@@ -417,7 +416,7 @@ public class CentralDirectoryHeader implements Cloneable {
      * @return the result of the future
      * @throws IOException failed to get the information
      */
-    @NonNull
+    @Nonnull
     public CentralDirectoryHeaderCompressInfo getCompressionInfoWithWait()
             throws IOException {
         try {

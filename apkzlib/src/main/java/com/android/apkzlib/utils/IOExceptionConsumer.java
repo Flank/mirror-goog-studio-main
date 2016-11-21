@@ -16,11 +16,11 @@
 
 package com.android.apkzlib.utils;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Consumer;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Consumer that can throw an {@link IOException}.
@@ -40,8 +40,8 @@ public interface IOExceptionConsumer<T> {
      *
      * @param c the consumer
      */
-    @NonNull
-    static <T> Consumer<T> asConsumer(@NonNull IOExceptionConsumer<T> c)  {
+    @Nonnull
+    static <T> Consumer<T> asConsumer(@Nonnull IOExceptionConsumer<T> c)  {
         return i -> {
             try {
                 c.accept(i);

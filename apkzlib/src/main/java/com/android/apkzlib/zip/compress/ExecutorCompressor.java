@@ -16,14 +16,13 @@
 
 package com.android.apkzlib.zip.compress;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.CompressionResult;
 import com.android.apkzlib.zip.Compressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.concurrent.Executor;
+import javax.annotation.Nonnull;
 
 /**
  * A synchronous compressor is a compressor that computes the result of compression immediately
@@ -34,21 +33,21 @@ public abstract class ExecutorCompressor implements Compressor {
     /**
      * The executor that does the work.
      */
-    @NonNull
+    @Nonnull
     private final Executor mExecutor;
 
     /**
      * Compressor that delegates execution into the given executor.
      * @param executor the executor that will do the compress
      */
-    public ExecutorCompressor(@NonNull Executor executor) {
+    public ExecutorCompressor(@Nonnull Executor executor) {
         mExecutor = executor;
     }
 
-    @NonNull
+    @Nonnull
     @Override
     public ListenableFuture<CompressionResult> compress(
-            @NonNull final CloseableByteSource source) {
+            @Nonnull final CloseableByteSource source) {
         final SettableFuture<CompressionResult> future = SettableFuture.create();
         mExecutor.execute(() -> {
             try {
@@ -67,7 +66,7 @@ public abstract class ExecutorCompressor implements Compressor {
      * @return the result of compression
      * @throws Exception failed to compress
      */
-    @NonNull
-    protected abstract CompressionResult immediateCompress(@NonNull CloseableByteSource source)
+    @Nonnull
+    protected abstract CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
             throws Exception;
 }

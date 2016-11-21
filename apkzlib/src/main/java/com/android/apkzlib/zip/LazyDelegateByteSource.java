@@ -17,7 +17,6 @@
 package com.android.apkzlib.zip;
 
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -26,12 +25,12 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nonnull;
 
 /**
  * {@code ByteSource} that delegates all operations to another {@code ByteSource}. The other
@@ -42,14 +41,14 @@ public class LazyDelegateByteSource extends CloseableByteSource {
     /**
      * Byte source where we delegate operations to.
      */
-    @NonNull
+    @Nonnull
     private final ListenableFuture<CloseableByteSource> mDelegate;
 
     /**
      * Creates a new byte source that delegates operations to the provided source.
      * @param delegate the source that will receive all operations
      */
-    public LazyDelegateByteSource(@NonNull ListenableFuture<CloseableByteSource> delegate) {
+    public LazyDelegateByteSource(@Nonnull ListenableFuture<CloseableByteSource> delegate) {
         mDelegate = delegate;
     }
 
@@ -57,7 +56,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
      * Obtains the delegate future.
      * @return the delegate future, that may be computed or not
      */
-    @NonNull
+    @Nonnull
     public ListenableFuture<CloseableByteSource> getDelegate() {
         return mDelegate;
     }
@@ -67,7 +66,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
      * @return the byte source
      * @throws IOException failed to compute the future :)
      */
-    @NonNull
+    @Nonnull
     private CloseableByteSource get() throws IOException {
         try {
             CloseableByteSource r = mDelegate.get();
@@ -117,12 +116,12 @@ public class LazyDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public long copyTo(@NonNull OutputStream output) throws IOException {
+    public long copyTo(@Nonnull OutputStream output) throws IOException {
         return get().copyTo(output);
     }
 
     @Override
-    public long copyTo(@NonNull ByteSink sink) throws IOException {
+    public long copyTo(@Nonnull ByteSink sink) throws IOException {
         return get().copyTo(sink);
     }
 
@@ -132,7 +131,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public <T> T read(@NonNull ByteProcessor<T> processor) throws IOException {
+    public <T> T read(@Nonnull ByteProcessor<T> processor) throws IOException {
         return get().read(processor);
     }
 
@@ -142,7 +141,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public boolean contentEquals(@NonNull ByteSource other) throws IOException {
+    public boolean contentEquals(@Nonnull ByteSource other) throws IOException {
         return get().contentEquals(other);
     }
 

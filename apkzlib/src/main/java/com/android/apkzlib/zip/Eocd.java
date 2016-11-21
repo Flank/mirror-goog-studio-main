@@ -16,16 +16,15 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.CachedSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.primitives.Ints;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import javax.annotation.Nonnull;
 
 /**
  * End Of Central Directory record in a zip file.
@@ -105,13 +104,13 @@ class Eocd {
     /**
      * Contents of the EOCD comment.
      */
-    @NonNull
+    @Nonnull
     private final byte[] mComment;
 
     /**
      * Supplier of the byte representation of the EOCD.
      */
-    @NonNull
+    @Nonnull
     private final CachedSupplier<byte[]> mByteSupplier;
 
     /**
@@ -122,7 +121,7 @@ class Eocd {
      * buffer's position will have moved to the end of the EOCD
      * @throws IOException failed to read information or the EOCD data is corrupt or invalid
      */
-    Eocd(@NonNull ByteBuffer bytes) throws IOException {
+    Eocd(@Nonnull ByteBuffer bytes) throws IOException {
 
         /*
          * Read the EOCD record.
@@ -224,7 +223,7 @@ class Eocd {
      * @return a byte representation of the EOCD that has exactly {@link #getEocdSize()} bytes
      * @throws IOException failed to generate the EOCD data
      */
-    @NonNull
+    @Nonnull
     byte[] toBytes() throws IOException {
         return mByteSupplier.get();
     }
@@ -235,7 +234,7 @@ class Eocd {
      * @return a byte representation of the EOCD that has exactly {@link #getEocdSize()} bytes
      * @throws UncheckedIOException failed to generate the EOCD data
      */
-    @NonNull
+    @Nonnull
     private byte[] computeByteRepresentation() {
         ByteBuffer out = ByteBuffer.allocate(F_COMMENT_SIZE.endOffset() + mComment.length);
 

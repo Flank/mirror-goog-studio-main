@@ -16,7 +16,6 @@
 
 package com.android.apkzlib.sign.v2;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.ApkZLibPair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -45,6 +44,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 /**
  * APK Signature Scheme v2 signer.
@@ -91,21 +91,21 @@ public abstract class ApkSignerV2 {
         /**
          * Private key.
          */
-        @NonNull
+        @Nonnull
         public PrivateKey privateKey;
 
         /**
          * Certificates, with the first certificate containing the public key corresponding to
          * {@link #privateKey}.
          */
-        @NonNull
+        @Nonnull
         public List<X509Certificate> certificates;
 
         /**
          * List of signature algorithms with which to sign. At least one algorithm must be
          * provided.
          */
-        @NonNull
+        @Nonnull
         public List<SignatureAlgorithm> signatureAlgorithms;
     }
 
@@ -120,7 +120,7 @@ public abstract class ApkSignerV2 {
      *         APK Signature Scheme v2
      */
     public static List<SignatureAlgorithm> getSuggestedSignatureAlgorithms(
-            @NonNull PublicKey signingKey, int minSdkVersion) throws InvalidKeyException {
+            @Nonnull PublicKey signingKey, int minSdkVersion) throws InvalidKeyException {
         String keyAlgorithm = signingKey.getAlgorithm();
         if ("RSA".equalsIgnoreCase(keyAlgorithm)) {
             // Use RSASSA-PKCS1-v1_5 signature scheme instead of RSASSA-PSS to guarantee
@@ -172,12 +172,12 @@ public abstract class ApkSignerV2 {
      * @throws SignatureException if an error occurs when computing digests of generating
      *         signatures
      */
-    @NonNull
+    @Nonnull
     public static byte[] generateApkSigningBlock(
-            @NonNull DigestSource beforeCentralDir,
-            @NonNull DigestSource centralDir,
-            @NonNull DigestSource eocd,
-            @NonNull List<SignerConfig> signerConfigs)
+            @Nonnull DigestSource beforeCentralDir,
+            @Nonnull DigestSource centralDir,
+            @Nonnull DigestSource eocd,
+            @Nonnull List<SignerConfig> signerConfigs)
                     throws InvalidKeyException, SignatureException {
         if (signerConfigs.isEmpty()) {
             throw new IllegalArgumentException(
@@ -207,10 +207,10 @@ public abstract class ApkSignerV2 {
         return generateApkSigningBlock(signerConfigs, contentDigests);
     }
 
-    @NonNull
+    @Nonnull
     private static Map<ContentDigestAlgorithm, byte[]> computeContentDigests(
-            @NonNull Set<ContentDigestAlgorithm> digestAlgorithms,
-            @NonNull DigestSource[] contents) throws DigestException {
+            @Nonnull Set<ContentDigestAlgorithm> digestAlgorithms,
+            @Nonnull DigestSource[] contents) throws DigestException {
         // For each digest algorithm the result is computed as follows:
         // 1. Each segment of contents is split into consecutive chunks of 1 MB in size.
         //    The final chunk will be shorter iff the length of segment is not a multiple of 1 MB.

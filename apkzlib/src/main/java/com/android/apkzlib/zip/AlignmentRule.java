@@ -16,7 +16,7 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
+import javax.annotation.Nonnull;
 
 /**
  * An alignment rule defines how to a file should be aligned in a zip, based on its name.
@@ -35,7 +35,7 @@ public interface AlignmentRule {
      * @return the alignment value, always greater than {@code 0}; if this rule places no
      * restrictions on the provided path, then {@link AlignmentRule#NO_ALIGNMENT} is returned
      */
-    int alignment(@NonNull String path);
+    int alignment(@Nonnull String path);
 }
 
 

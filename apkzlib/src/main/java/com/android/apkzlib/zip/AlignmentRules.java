@@ -16,8 +16,8 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
+import javax.annotation.Nonnull;
 
 /**
  * Factory for instances of {@link AlignmentRule}.
@@ -46,7 +46,7 @@ public final class AlignmentRules {
      * @param alignment the alignment for paths that match the provided suffix
      * @return the rule
      */
-    public static AlignmentRule constantForSuffix(@NonNull String suffix, int alignment) {
+    public static AlignmentRule constantForSuffix(@Nonnull String suffix, int alignment) {
         Preconditions.checkArgument(!suffix.isEmpty(), "suffix.isEmpty()");
         Preconditions.checkArgument(alignment > 0, "alignment <= 0");
 
@@ -62,7 +62,7 @@ public final class AlignmentRules {
      * {@link AlignmentRule#NO_ALIGNMENT} is returned
      * @return the composition rule
      */
-    public static AlignmentRule compose(@NonNull AlignmentRule... rules) {
+    public static AlignmentRule compose(@Nonnull AlignmentRule... rules) {
         return (String path) -> {
             for (AlignmentRule r : rules) {
                 int align = r.alignment(path);

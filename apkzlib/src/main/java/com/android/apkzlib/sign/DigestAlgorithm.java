@@ -16,7 +16,7 @@
 
 package com.android.apkzlib.sign;
 
-import com.android.annotations.NonNull;
+import javax.annotation.Nonnull;
 
 /**
  * Message digest algorithms.
@@ -54,19 +54,19 @@ public enum DigestAlgorithm {
     /**
      * Name of algorithm for message digest.
      */
-    @NonNull
+    @Nonnull
     public final String messageDigestName;
 
     /**
      * Name of attribute in signature file with the manifest digest.
      */
-    @NonNull
+    @Nonnull
     public final String manifestAttributeName;
 
     /**
      * Name of attribute in entry (both manifest and signature file) with the entry's digest.
      */
-    @NonNull
+    @Nonnull
     public final String entryAttributeName;
 
     /**
@@ -75,7 +75,7 @@ public enum DigestAlgorithm {
      * @param attributeName attribute name in the signature file
      * @param messageDigestName name of algorithm for message digest
      */
-    DigestAlgorithm(@NonNull String attributeName, @NonNull String messageDigestName) {
+    DigestAlgorithm(@Nonnull String attributeName, @Nonnull String messageDigestName) {
         this.messageDigestName = messageDigestName;
         this.entryAttributeName = attributeName + "-Digest";
         this.manifestAttributeName = attributeName + "-Digest-Manifest";
@@ -88,10 +88,10 @@ public enum DigestAlgorithm {
      * @param signatureAlgorithm signature algorithm used
      * @return the best algorithm found
      */
-    @NonNull
+    @Nonnull
     public static DigestAlgorithm findBest(
             int minSdk,
-            @NonNull SignatureAlgorithm signatureAlgorithm) {
+            @Nonnull SignatureAlgorithm signatureAlgorithm) {
         if (signatureAlgorithm == SignatureAlgorithm.RSA) {
             // PKCS #7 RSA signatures with SHA-256 are
             // supported only since API Level 18 (JB MR2).

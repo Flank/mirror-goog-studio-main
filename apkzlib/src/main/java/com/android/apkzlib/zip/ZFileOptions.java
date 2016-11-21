@@ -16,10 +16,10 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import java.util.zip.Deflater;
+import javax.annotation.Nonnull;
 
 /**
  * Options to create a {@link ZFile}.
@@ -29,13 +29,13 @@ public class ZFileOptions {
     /**
      * The byte tracker.
      */
-    @NonNull
+    @Nonnull
     private ByteTracker mTracker;
 
     /**
      * The compressor to use.
      */
-    @NonNull
+    @Nonnull
     private Compressor mCompressor;
 
     /**
@@ -46,7 +46,7 @@ public class ZFileOptions {
     /**
      * The alignment rule to use.
      */
-    @NonNull
+    @Nonnull
     private AlignmentRule mAlignmentRule;
 
     /**
@@ -83,7 +83,7 @@ public class ZFileOptions {
      *
      * @return the byte tracker
      */
-    @NonNull
+    @Nonnull
     public ByteTracker getTracker() {
         return mTracker;
     }
@@ -93,7 +93,7 @@ public class ZFileOptions {
      *
      * @return the compressor
      */
-    @NonNull
+    @Nonnull
     public Compressor getCompressor() {
         return mCompressor;
     }
@@ -103,7 +103,7 @@ public class ZFileOptions {
      *
      * @param compressor the compressor
      */
-    public void setCompressor(@NonNull Compressor compressor) {
+    public void setCompressor(@Nonnull Compressor compressor) {
         mCompressor = compressor;
     }
 
@@ -130,7 +130,7 @@ public class ZFileOptions {
      *
      * @return the alignment rule
      */
-    @NonNull
+    @Nonnull
     public AlignmentRule getAlignmentRule() {
         return mAlignmentRule;
     }
@@ -140,7 +140,7 @@ public class ZFileOptions {
      *
      * @param alignmentRule the alignment rule
      */
-    public void setAlignmentRule(@NonNull AlignmentRule alignmentRule) {
+    public void setAlignmentRule(@Nonnull AlignmentRule alignmentRule) {
         mAlignmentRule = alignmentRule;
     }
 

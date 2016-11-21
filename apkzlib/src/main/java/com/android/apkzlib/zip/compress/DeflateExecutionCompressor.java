@@ -16,16 +16,15 @@
 
 package com.android.apkzlib.zip.compress;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.CompressionMethod;
 import com.android.apkzlib.zip.CompressionResult;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
-
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.Executor;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import javax.annotation.Nonnull;
 
 /**
  * Compressor that uses deflate with an executor.
@@ -41,7 +40,7 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
     /**
      * Byte tracker to use to create byte sources.
      */
-    @NonNull
+    @Nonnull
     private final ByteTracker mTracker;
 
     /**
@@ -51,7 +50,7 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
      * @param tracker the byte tracker to use to keep track of memory usage
      * @param level the compression level
      */
-    public DeflateExecutionCompressor(@NonNull Executor executor, @NonNull ByteTracker tracker,
+    public DeflateExecutionCompressor(@Nonnull Executor executor, @Nonnull ByteTracker tracker,
             int level) {
         super(executor);
 
@@ -59,9 +58,9 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
         mTracker = tracker;
     }
 
-    @NonNull
+    @Nonnull
     @Override
-    protected CompressionResult immediateCompress(@NonNull CloseableByteSource source)
+    protected CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
             throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         Deflater deflater = new Deflater(mLevel, true);
