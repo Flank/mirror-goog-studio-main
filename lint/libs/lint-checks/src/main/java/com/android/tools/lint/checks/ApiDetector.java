@@ -31,6 +31,7 @@ import static com.android.SdkConstants.ATTR_PADDING_START;
 import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_TARGET_API;
 import static com.android.SdkConstants.ATTR_TEXT_IS_SELECTABLE;
+import static com.android.SdkConstants.ATTR_THEME;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.ATTR_WIDTH;
 import static com.android.SdkConstants.BUTTON;
@@ -46,6 +47,7 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TARGET_API;
 import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_TAG;
 import static com.android.tools.lint.checks.RtlDetector.ATTR_SUPPORTS_RTL;
 import static com.android.tools.lint.checks.VersionChecks.SDK_INT;
@@ -519,6 +521,18 @@ public class ApiDetector extends ResourceXmlDetector
             // since this will work just fine. See issue 67440 for more.
             if (name.equals("divider")) {
                 return;
+            }
+
+            if (name.equals(ATTR_THEME) && VIEW_INCLUDE.equals(attribute.getOwnerElement().getTagName())) {
+                // Requires API 23
+                int minSdk = getMinSdk(context);
+                if (Math.max(minSdk, context.getFolderVersion()) < 23) {
+                    Location location = context.getLocation(attribute);
+                    String message = String.format(
+                      "Attribute `android:theme` is only used by `<include>` tags in API level 23 and higher "
+                      + "(current min is %1$d)", minSdk);
+                    context.report(UNUSED, attribute, location, message);
+                }
             }
         }
 
