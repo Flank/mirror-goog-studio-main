@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -31,12 +31,12 @@ import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
 
 /**
- * Implementation of {@link LibraryGraph} over a Gradle
+ * Implementation of {@link DependencyGraphs} over a Gradle
  * Configuration object. This is used to lazily query the list of files from the config object.
  *
  * This is only used when registering extra Java Artifacts.
  */
-public class ConfigurationLibraryGraph implements LibraryGraph {
+public class ConfigurationDependencyGraphs implements DependencyGraphs {
 
     @NonNull
     private final Configuration configuration;
@@ -46,22 +46,29 @@ public class ConfigurationLibraryGraph implements LibraryGraph {
     private List<Dependency>  dependencies;
 
 
-    public ConfigurationLibraryGraph(@NonNull Configuration configuration) {
+    public ConfigurationDependencyGraphs(@NonNull Configuration configuration) {
 
         this.configuration = configuration;
-    }
-
-    @NonNull
-    @Override
-    public List<GraphItem> getDependencies() {
-        init();
-        return graphItems;
     }
 
     @NonNull
     public List<Dependency> getDependencyObjects() {
         init();
         return dependencies;
+    }
+
+    @NonNull
+    @Override
+    public List<GraphItem> getCompileDependencies() {
+        init();
+        return graphItems;
+    }
+
+    @NonNull
+    @Override
+    public List<GraphItem> getPackageDependencies() {
+        init();
+        return graphItems;
     }
 
     @NonNull
@@ -77,7 +84,7 @@ public class ConfigurationLibraryGraph implements LibraryGraph {
     }
 
     private void init() {
-        //noinspection ConstantConditions
+        //noinspection ConstantConditions,VariableNotUsedInsideIf
         if (graphItems != null) {
             return;
         }
@@ -92,7 +99,6 @@ public class ConfigurationLibraryGraph implements LibraryGraph {
         graphItems = Lists.newArrayListWithCapacity(files.size());
         dependencies = Lists.newArrayListWithCapacity(files.size());
 
-        int index = 1;
         for (File file : files) {
             JavaDependency dependency = new JavaDependency(file);
             dependencies.add(dependency);

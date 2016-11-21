@@ -28,7 +28,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -82,14 +82,13 @@ public class LibWithProvidedLocalJarTest {
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
-        LibraryGraphHelper.Items javaDependencies = helper.on(compileGraph).withType(JAVA);
+        LibraryGraphHelper.Items javaDependencies = helper.on(dependencyGraph).withType(JAVA);
         assertThat(javaDependencies.asList()).hasSize(1);
-        assertThat(compileGraph.getProvidedLibraries())
+        assertThat(dependencyGraph.getProvidedLibraries())
                 .containsExactly(javaDependencies.asSingleGraphItem().getArtifactAddress());
 
-        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
-        assertThat(packageGraph.getDependencies()).isEmpty();
+        assertThat(dependencyGraph.getPackageDependencies()).isEmpty();
     }
 }

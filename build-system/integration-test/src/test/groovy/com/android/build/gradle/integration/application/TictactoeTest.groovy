@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
-import com.android.builder.model.level2.LibraryGraph
+import com.android.builder.model.level2.DependencyGraphs
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -73,7 +73,7 @@ class  TictactoeTest {
         Collection<Variant> variants = appModel.getVariants()
         Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
 
-        LibraryGraph graph = debugVariant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = debugVariant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":lib")
     }
 }

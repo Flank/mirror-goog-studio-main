@@ -26,13 +26,14 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -104,47 +105,46 @@ public class AppTestWithSkippedModuleDepTest {
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        DependencyGraphs dependencyGraphs = appDebug.getMainArtifact().getDependencyGraphs();
 
         // --- Compile Graph
-
-        LibraryGraph compileGraph = appDebug.getMainArtifact().getCompileGraph();
+        Items compileItems = helper.on(dependencyGraphs);
 
         // check direct dependencies
-        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
+        assertThat(compileItems.withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("app direct compile module dependencies")
                 .containsExactly(":jar");
 
-        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+        assertThat(compileItems.withType(JAVA).asList())
                 .named("app direct compile java deps")
                 .isEmpty();
 
-        assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+        assertThat(compileItems.withType(ANDROID).asList())
                 .named("app direct compile android deps")
                 .isEmpty();
 
         // --- package Graph
-
-        LibraryGraph packageGraph = appDebug.getMainArtifact().getPackageGraph();
+        Items packageItems = helper.on(dependencyGraphs).forPackage();
 
         // check direct dependencies
-        assertThat(helper.on(packageGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
+        assertThat(packageItems.withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("app direct package module dependencies")
                 .containsExactly(":jar");
 
-        assertThat(helper.on(packageGraph).withType(JAVA).asList())
+        assertThat(packageItems.withType(JAVA).asList())
                 .named("app direct package java deps")
                 .isEmpty();
 
-        assertThat(helper.on(packageGraph).withType(ANDROID).asList())
+        assertThat(packageItems.withType(ANDROID).asList())
                 .named("app direct package android deps")
                 .isEmpty();
 
         // --- skipped/provided states
-        assertThat(packageGraph.getSkippedLibraries())
+        assertThat(dependencyGraphs.getSkippedLibraries())
                 .named("package skipped libraries")
                 .isEmpty();
-        assertThat(compileGraph.getSkippedLibraries())
-                .named("compile skipped libraries")
+        assertThat(dependencyGraphs.getProvidedLibraries())
+                .named("compile provided libraries")
                 .isEmpty();
     }
 
@@ -159,46 +159,46 @@ public class AppTestWithSkippedModuleDepTest {
         AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(
                 appDebug.getExtraAndroidArtifacts(), AndroidProject.ARTIFACT_ANDROID_TEST);
 
-        // --- compile Graph
+        DependencyGraphs dependencyGraphs = testArtifact.getDependencyGraphs();
 
-        LibraryGraph compileGraph = testArtifact.getCompileGraph();
+        // --- compile Graph
+        Items compileItems = helper.on(dependencyGraphs);
 
         // check direct dependencies
-        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
+        assertThat(compileItems.withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("app direct compile module dependencies")
                 .containsExactly(":jar");
 
-        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+        assertThat(compileItems.withType(JAVA).asList())
                 .named("app direct compile java deps")
                 .isEmpty();
 
-        assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+        assertThat(compileItems.withType(ANDROID).asList())
                 .named("app direct compile android deps")
                 .isEmpty();
 
         // --- package Graph
-
-        LibraryGraph packageGraph = testArtifact.getPackageGraph();
+        Items packageItems = helper.on(dependencyGraphs).forPackage();
 
         // check direct dependencies
-        assertThat(helper.on(packageGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
+        assertThat(packageItems.withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("app direct package module dependencies")
                 .containsExactly(":jar");
 
-        assertThat(helper.on(packageGraph).withType(JAVA).asList())
+        assertThat(packageItems.withType(JAVA).asList())
                 .named("app direct package java deps")
                 .isEmpty();
 
-        assertThat(helper.on(packageGraph).withType(ANDROID).asList())
+        assertThat(packageItems.withType(ANDROID).asList())
                 .named("app direct package android deps")
                 .isEmpty();
 
         // --- provided/skipppd state
-        assertThat(packageGraph.getSkippedLibraries())
+        assertThat(dependencyGraphs.getSkippedLibraries())
                 .named("package skipped libraries")
                 .containsExactly(":jar");
-        assertThat(compileGraph.getSkippedLibraries())
-                .named("compile skipped libraries")
+        assertThat(dependencyGraphs.getProvidedLibraries())
+                .named("compile provided libraries")
                 .isEmpty();
     }
 }

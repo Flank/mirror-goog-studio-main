@@ -31,7 +31,7 @@ import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
-import com.android.builder.model.level2.LibraryGraph
+import com.android.builder.model.level2.DependencyGraphs
 import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -176,7 +176,7 @@ class ArtifactApiTest {
             assertNotNull(variantSourceProvider)
             assertEquals("provider:" + name, variantSourceProvider.getManifestFile().getPath())
 
-            LibraryGraph graph = javaArtifact.getCompileGraph();
+            DependencyGraphs graph = javaArtifact.getDependencyGraphs();
             TruthHelper.assertThat(helper.on(graph).withType(JAVA).asList()).isNotEmpty();
         }
     }

@@ -19,12 +19,15 @@ package com.android.build.gradle.internal.ide;
 import static com.android.builder.dependency.level2.DependencyNode.NodeType.JAVA;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dependency.ConfigurationLibraryGraph;
+import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dependency.DependencyContainerImpl;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
+import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
+import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl;
+import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.dependency.MavenCoordinatesImpl;
@@ -33,10 +36,7 @@ import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.JavaDependency;
-import com.android.builder.model.AndroidAtom;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
@@ -45,10 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,12 +67,10 @@ public class DependenciesLevel2Converter {
     }
 
     @NonNull
-    private static final LibraryGraphImpl
-            EMPTY = new LibraryGraphImpl(
-                    ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+    private static final DependencyGraphs EMPTY = new EmptyDependencyGraphs();
 
     @NonNull
-    public static LibraryGraphImpl getEmpty() {
+    public static DependencyGraphs getEmpty() {
         return EMPTY;
     }
 
@@ -89,48 +84,36 @@ public class DependenciesLevel2Converter {
     }
 
     @NonNull
-    static LibraryGraphImpl cloneGraphForJavaArtifacts(@NonNull LibraryGraph libraryGraph) {
-        if (libraryGraph == EMPTY) {
+    public static DependencyGraphs cloneGraphForJavaArtifacts(@NonNull DependencyGraphs dependencyGraphs) {
+        if (dependencyGraphs == EMPTY) {
             return EMPTY;
         }
 
-        ConfigurationLibraryGraph graph = (ConfigurationLibraryGraph) libraryGraph;
+        ConfigurationDependencyGraphs graph = (ConfigurationDependencyGraphs) dependencyGraphs;
 
         // add the dependency instances to the global map
         for (Dependency dependency : graph.getDependencyObjects()) {
             sLibraryCache.get(dependency);
         }
 
-        return new LibraryGraphImpl(
-                libraryGraph.getDependencies(),
-                libraryGraph.getProvidedLibraries(),
-                libraryGraph.getSkippedLibraries());
+        return new SimpleDependencyGraphsImpl(dependencyGraphs.getCompileDependencies());
     }
 
     @NonNull
-    public static LibraryGraph cloneGraph(
-            @NonNull DependencyContainer dependencyContainer,
+    public static DependencyGraphs cloneGraph(
+            @NonNull DependencyContainer compileContainer,
+            @NonNull DependencyContainer packageContainer,
             @NonNull VariantConfiguration variantConfiguration,
             @NonNull AndroidBuilder androidBuilder) {
-        DependencyContainerImpl container = (DependencyContainerImpl) dependencyContainer;
-        List<DependencyNode> nodes = dependencyContainer.getDependencies();
-
-        // first go through the graph and convert it.
-        List<GraphItem> items = Lists.newArrayListWithCapacity(nodes.size());
+        // first go through the compile graph and convert it.
+        List<DependencyNode> nodes = compileContainer.getDependencies();
+        List<GraphItem> compileItems = Lists.newArrayListWithCapacity(nodes.size());
         for (DependencyNode node : nodes) {
-            items.add(sGraphItemCache.get(node));
+            compileItems.add(sGraphItemCache.get(node));
         }
 
-        final List<String> skippedList = container.getSkippedList();
-
-        // now go through the Dependency, through the flat list and convert those
-        Collection<Dependency> dependencies = dependencyContainer.getAllDependencies();
-        if (!skippedList.isEmpty()) {
-            // if there are skipped info, then this is the package container, and we need to
-            // include the skipped packages, so we're taking the map values.
-            dependencies = dependencyContainer.getDependencyMap().values();
-        }
-        for (Dependency dependency : dependencies) {
+        // then go through the compile Dependencies instances and convert them
+        for (Dependency dependency : compileContainer.getAllDependencies()) {
             sLibraryCache.get(dependency);
         }
 
@@ -140,11 +123,44 @@ public class DependenciesLevel2Converter {
                 handleRenderscriptSupport(variantConfiguration, androidBuilder);
         if (renderscriptDependency != null) {
             sLibraryCache.get(renderscriptDependency.getFirst());
-            items.add(sGraphItemCache.get(renderscriptDependency.getSecond()));
+            compileItems.add(sGraphItemCache.get(renderscriptDependency.getSecond()));
         }
 
-        // return the graph
-        return new LibraryGraphImpl(items, container.getProvidedList(), skippedList);
+        // if the package is the empty container, then return a simple one.
+        if (packageContainer == DependencyContainerImpl.empty()) {
+
+            return new SimpleDependencyGraphsImpl(compileItems);
+        }
+
+        // else do the same on the package container
+        nodes = packageContainer.getDependencies();
+        List<GraphItem> packageItems = Lists.newArrayListWithCapacity(nodes.size());
+        for (DependencyNode node : nodes) {
+            packageItems.add(sGraphItemCache.get(node));
+        }
+
+        // then go through the package Dependencies instances and convert them
+        // if we have skipped items, we have to get all the map values to include the
+        // skipped items.
+        List<String> skippedList = (((DependencyContainerImpl) packageContainer)).getSkippedList();
+        Collection<Dependency> packageDependencies = skippedList.isEmpty()
+                ? packageContainer.getAllDependencies()
+                : packageContainer.getDependencyMap().values();
+
+        // We have to use the map rather than the flat list in order
+        for (Dependency dependency : packageDependencies) {
+            sLibraryCache.get(dependency);
+        }
+
+        if (renderscriptDependency != null) {
+            packageItems.add(sGraphItemCache.get(renderscriptDependency.getSecond()));
+        }
+
+        return new FullDependencyGraphsImpl(
+                compileItems,
+                packageItems,
+                (((DependencyContainerImpl) compileContainer)).getProvidedList(),
+                skippedList);
     }
 
     private static Library instantiateLibrary(@NonNull Dependency dependency) {
@@ -212,77 +228,5 @@ public class DependenciesLevel2Converter {
         }
 
         return null;
-    }
-
-    private static final class LibraryGraphImpl implements LibraryGraph, Serializable {
-        private static final long serialVersionUID = 1L;
-
-        @NonNull
-        private final List<GraphItem> items;
-        @NonNull
-        private final List<String> providedLibraries;
-        @NonNull
-        private final List<String> skippedLibraries;
-        private final int hashCode;
-
-        public LibraryGraphImpl(
-                @NonNull List<GraphItem> items,
-                @NonNull List<String> providedLibraries,
-                @NonNull List<String> skippedLibraries) {
-            this.items = items;
-            this.providedLibraries = ImmutableList.copyOf(providedLibraries);
-            this.skippedLibraries = ImmutableList.copyOf(skippedLibraries);
-            hashCode = computeHashCode();
-        }
-
-        @NonNull
-        @Override
-        public List<GraphItem> getDependencies() {
-            return items;
-        }
-
-        @NonNull
-        @Override
-        public List<String> getProvidedLibraries() {
-            return providedLibraries;
-        }
-
-        @NonNull
-        @Override
-        public List<String> getSkippedLibraries() {
-            return skippedLibraries;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            LibraryGraphImpl that = (LibraryGraphImpl) o;
-
-            if (!items.equals(that.items)) {
-                return false;
-            }
-            if (!providedLibraries.equals(that.providedLibraries)) {
-                return false;
-            }
-            return skippedLibraries.equals(that.skippedLibraries);
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
-
-        private int computeHashCode() {
-            int result = items.hashCode();
-            result = 31 * result + providedLibraries.hashCode();
-            result = 31 * result + skippedLibraries.hashCode();
-            return result;
-        }
     }
 }

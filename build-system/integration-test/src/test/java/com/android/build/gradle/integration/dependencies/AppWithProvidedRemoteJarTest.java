@@ -30,8 +30,8 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Item
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -91,23 +91,23 @@ public class AppWithProvidedRemoteJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
         // assert that there is one sub-module dependency
-        Items javaDependencies = helper.on(compileGraph).withType(JAVA);
+        Items javaDependencies = helper.on(dependencyGraph).withType(JAVA);
 
         assertThat(javaDependencies.mapTo(COORDINATES))
                 .named("java library dependencies")
-                .containsExactly("com.google.guava:guava:jar:17.0");
+                .containsExactly("com.google.guava:guava:17.0@jar");
         // and that it's provided
         GraphItem javaItem = javaDependencies.asSingleGraphItem();
-        assertThat(compileGraph.getProvidedLibraries())
+        assertThat(dependencyGraph.getProvidedLibraries())
                 .named("compile provided list")
                 .containsExactly(javaItem.getArtifactAddress());
 
         // check that the package graph does not contain the item (or anything else)
-        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
-
-        assertThat(packageGraph.getDependencies()).named("package dependencies").isEmpty();
+        assertThat(dependencyGraph.getPackageDependencies())
+                .named("package dependencies")
+                .isEmpty();
     }
 }

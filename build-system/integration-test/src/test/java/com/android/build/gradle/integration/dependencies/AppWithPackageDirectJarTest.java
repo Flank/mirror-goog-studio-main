@@ -30,7 +30,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -82,7 +82,7 @@ public class AppWithPackageDirectJarTest {
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(compileGraph).withType(MODULE).asList())
                 .named("app sub-module compile deps")
                 .isEmpty();
@@ -97,11 +97,13 @@ public class AppWithPackageDirectJarTest {
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
-        assertThat(helper.on(packageGraph).withType(MODULE).mapTo(COORDINATES))
+        DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
+        LibraryGraphHelper.Items packageItems = helper.on(dependencyGraph).forPackage();
+
+        assertThat(packageItems.withType(MODULE).mapTo(COORDINATES))
                 .named("app sub-module package deps")
                 .containsExactly(":jar");
-        assertThat(helper.on(packageGraph).withType(JAVA).asList())
+        assertThat(packageItems.withType(JAVA).asList())
                 .named("app java package deps")
                 .isEmpty();
     }

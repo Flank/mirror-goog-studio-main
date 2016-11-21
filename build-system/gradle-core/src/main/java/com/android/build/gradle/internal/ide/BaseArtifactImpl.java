@@ -23,7 +23,7 @@ import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.SourceProvider;
 
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -50,9 +50,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     @NonNull
     private final Dependencies compileDependencies;
     @NonNull
-    private final LibraryGraph compileGraph;
-    @NonNull
-    private final LibraryGraph packageGraph;
+    private final DependencyGraphs dependencyGraphs;
     @Nullable
     private final SourceProvider variantSourceProvider;
     @Nullable
@@ -64,8 +62,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
             @NonNull File classesFolder,
             @NonNull File javaResourcesFolder,
             @NonNull Dependencies compileDependencies,
-            @NonNull LibraryGraph compileGraph,
-            @NonNull LibraryGraph packageGraph,
+            @NonNull DependencyGraphs dependencyGraphs,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
             @NonNull Collection<File> generatedSourceFolders) {
@@ -75,8 +72,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         this.classesFolder = classesFolder;
         this.javaResourcesFolder = javaResourcesFolder;
         this.compileDependencies = compileDependencies;
-        this.compileGraph = compileGraph;
-        this.packageGraph = packageGraph;
+        this.dependencyGraphs = dependencyGraphs;
         this.variantSourceProvider = variantSourceProvider;
         this.multiFlavorSourceProviders = multiFlavorSourceProviders;
         this.generatedSourceFolders = generatedSourceFolders;
@@ -120,14 +116,8 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
     @NonNull
     @Override
-    public LibraryGraph getCompileGraph() {
-        return compileGraph;
-    }
-
-    @NonNull
-    @Override
-    public LibraryGraph getPackageGraph() {
-        return packageGraph;
+    public DependencyGraphs getDependencyGraphs() {
+        return dependencyGraphs;
     }
 
     @Nullable
@@ -164,8 +154,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
                 Objects.equals(classesFolder, that.classesFolder) &&
                 Objects.equals(javaResourcesFolder, that.javaResourcesFolder) &&
                 Objects.equals(compileDependencies, that.compileDependencies) &&
-                Objects.equals(compileGraph, that.compileGraph) &&
-                Objects.equals(packageGraph, that.packageGraph) &&
+                Objects.equals(dependencyGraphs, that.dependencyGraphs) &&
                 Objects.equals(variantSourceProvider, that.variantSourceProvider) &&
                 Objects.equals(multiFlavorSourceProviders, that.multiFlavorSourceProviders);
     }
@@ -175,7 +164,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         return Objects
                 .hash(generatedSourceFolders, name, assembleTaskName, compileTaskName,
                         classesFolder,
-                        javaResourcesFolder, compileDependencies, compileGraph, packageGraph,
+                        javaResourcesFolder, compileDependencies, dependencyGraphs,
                         variantSourceProvider, multiFlavorSourceProviders);
     }
 }

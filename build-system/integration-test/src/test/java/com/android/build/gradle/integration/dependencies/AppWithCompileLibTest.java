@@ -28,7 +28,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -83,7 +83,7 @@ public class AppWithCompileLibTest {
         Map<String, AndroidProject> models = modelContainer.getModelMap();
         Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         assertThat(helper.on(graph).withType(MODULE).mapTo(COORDINATES))
                 .named("app compile dependencies sub-modules")

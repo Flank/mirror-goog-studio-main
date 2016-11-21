@@ -26,6 +26,8 @@ import java.util.List;
  * This does not directly contain artifact information, instead it focuses on the graph
  * information (transitive dependencies) as well as the usage of this particular dependency
  * in this node of the graph (ie what are its modifiers: what version was originally requested.)
+ *
+ * @since 2.3
  */
 public interface GraphItem {
 
@@ -34,6 +36,8 @@ public interface GraphItem {
      *
      * This is either a module path for sub-modules, or a maven coordinate for external
      * dependencies.
+     *
+     * The maven coordinates are in the format: groupId:artifactId:version[:classifier][@extension]
      *
      */
     @NonNull

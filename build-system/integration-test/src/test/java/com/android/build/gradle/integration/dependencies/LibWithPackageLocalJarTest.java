@@ -29,7 +29,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -91,7 +91,7 @@ public class LibWithPackageLocalJarTest {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(graph).withType(JAVA).asList()).isEmpty();
     }
 
@@ -99,7 +99,7 @@ public class LibWithPackageLocalJarTest {
     public void checkPackagedLocalJarIsNotInThePackageModel() {
         Variant variant = ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getPackageGraph();
-        assertThat(helper.on(graph).withType(JAVA).asList()).hasSize(1);
+        DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();
+        assertThat(helper.on(dependencyGraphs).forPackage().withType(JAVA).asList()).hasSize(1);
     }
 }

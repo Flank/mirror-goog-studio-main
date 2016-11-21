@@ -27,7 +27,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -82,7 +82,7 @@ public class AppWithPackageLocalJarTest {
 
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
 
         assertThat(helper.on(compileGraph).withType(JAVA).asList())
                 .named("java libraries")

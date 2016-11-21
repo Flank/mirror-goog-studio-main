@@ -26,7 +26,7 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
@@ -82,8 +82,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull File classesFolder,
             @NonNull File javaResourcesFolder,
             @NonNull Dependencies compileDependencies,
-            @NonNull LibraryGraph compileGraph,
-            @NonNull LibraryGraph packageGraph,
+            @NonNull DependencyGraphs dependencyGraphs,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
             @Nullable Set<String> abiFilters,
@@ -93,7 +92,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull InstantRun instantRun) {
         super(name, assembleTaskName, compileTaskName,
                 classesFolder, javaResourcesFolder,
-                compileDependencies, compileGraph, packageGraph,
+                compileDependencies, dependencyGraphs,
                 variantSourceProvider, multiFlavorSourceProviders,
                 generatedSourceFolders);
 

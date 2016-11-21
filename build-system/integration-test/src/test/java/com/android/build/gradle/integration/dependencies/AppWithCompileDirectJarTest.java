@@ -27,7 +27,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -77,7 +77,7 @@ public class AppWithCompileDirectJarTest {
         Variant variant = ModelHelper.getVariant(
                 models.getModelMap().get(":app").getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
 
         assertThat(helper.on(compileGraph)

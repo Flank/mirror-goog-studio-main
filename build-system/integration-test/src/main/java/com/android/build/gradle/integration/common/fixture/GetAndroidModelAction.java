@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -135,7 +134,7 @@ public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelActi
         long t2 = System.currentTimeMillis();
         System.out.println("GetAndroidModelAction: " + (t2-t1) + "ms");
 
-        return new ModelContainer<T>(modelMap, globalLibraryMap);
+        return new ModelContainer<>(modelMap, globalLibraryMap);
     }
 
     // index used by threads to get the new project to query.

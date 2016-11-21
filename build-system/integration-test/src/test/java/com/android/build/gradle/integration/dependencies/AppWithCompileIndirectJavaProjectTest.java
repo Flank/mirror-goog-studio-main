@@ -36,7 +36,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
@@ -164,21 +164,23 @@ public class AppWithCompileIndirectJavaProjectTest {
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
         Truth.assertThat(appDebug).isNotNull();
+
+        DependencyGraphs dependencyGraph = appDebug.getMainArtifact().getDependencyGraphs();
+
         {
-            LibraryGraph compileGraph = appDebug.getMainArtifact().getCompileGraph();
 
             // no direct android library
-            assertThat(helper.on(compileGraph).withType(ANDROID).asList())
+            assertThat(helper.on(dependencyGraph).withType(ANDROID).asList())
                     .named(":app compile Android")
                     .isEmpty();
 
             // no direct java library
-            assertThat(helper.on(compileGraph).withType(JAVA).asList())
+            assertThat(helper.on(dependencyGraph).withType(JAVA).asList())
                     .named(":app compile Java")
                     .isEmpty();
 
             // look at direct modules
-            Items moduleItems = helper.on(compileGraph).withType(MODULE);
+            Items moduleItems = helper.on(dependencyGraph).withType(MODULE);
 
             // should depend on :library
             assertThat(moduleItems.mapTo(Property.GRADLE_PATH))
@@ -220,26 +222,26 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app->:lib->:jar compile java")
-                    .containsExactly("com.google.guava:guava:jar:17.0");
+                    .containsExactly("com.google.guava:guava:17.0@jar");
         }
 
         // same thing with the package deps. Main difference is guava available as direct
         // dependencies and transitive one is promoted
         {
-            LibraryGraph packageGraph = appDebug.getMainArtifact().getPackageGraph();
+            Items packageItems = helper.on(dependencyGraph).forPackage();
 
             // no direct android library
-            assertThat(helper.on(packageGraph).withType(ANDROID).asList())
+            assertThat(packageItems.withType(ANDROID).asList())
                     .named(":app package Android")
                     .isEmpty();
 
             // dependency on guava.
-            assertThat(helper.on(packageGraph).withType(JAVA).mapTo(COORDINATES))
+            assertThat(packageItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app package Java")
-                    .containsExactly("com.google.guava:guava:jar:18.0");
+                    .containsExactly("com.google.guava:guava:18.0@jar");
 
             // look at direct module
-            Items moduleItems = helper.on(packageGraph).withType(MODULE);
+            Items moduleItems = packageItems.withType(MODULE);
 
             // should depend on :library
             assertThat(moduleItems.mapTo(Property.GRADLE_PATH))
@@ -282,7 +284,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app->:lib->:jar package java")
-                    .containsExactly("com.google.guava:guava:jar:18.0");
+                    .containsExactly("com.google.guava:guava:18.0@jar");
         }
 
         // ---
@@ -292,7 +294,7 @@ public class AppWithCompileIndirectJavaProjectTest {
                     .getVariant(models.get(":library").getVariants(), "debug");
             Truth.assertThat(libDebug).isNotNull();
 
-            LibraryGraph compileGraph = libDebug.getMainArtifact().getCompileGraph();
+            DependencyGraphs compileGraph = libDebug.getMainArtifact().getDependencyGraphs();
 
             // no direct android library
             assertThat(helper.on(compileGraph).withType(ANDROID).asList())
@@ -327,7 +329,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(jarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":lib->:jar compile java")
-                    .containsExactly("com.google.guava:guava:jar:17.0");
+                    .containsExactly("com.google.guava:guava:17.0@jar");
         }
     }
 }

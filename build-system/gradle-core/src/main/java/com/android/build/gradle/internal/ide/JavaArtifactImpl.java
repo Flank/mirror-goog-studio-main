@@ -25,7 +25,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -60,8 +60,7 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
                 cloneDependenciesForJavaArtifacts(javaArtifact.getDependencies()),
-                cloneGraphForJavaArtifacts(javaArtifact.getCompileGraph()),
-                cloneGraphForJavaArtifacts(javaArtifact.getPackageGraph()),
+                cloneGraphForJavaArtifacts(javaArtifact.getDependencyGraphs()),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }
@@ -76,12 +75,11 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
             @NonNull File javaResourcesFolder,
             @Nullable File mockablePlatformJar,
             @NonNull Dependencies compileDependencies,
-            @NonNull LibraryGraph compileGraph,
-            @NonNull LibraryGraph packageGraph,
+            @NonNull DependencyGraphs dependencyGraphs,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders) {
         super(name, assembleTaskName, compileTaskName,
-                classesFolder, javaResourcesFolder, compileDependencies, compileGraph, packageGraph,
+                classesFolder, javaResourcesFolder, compileDependencies, dependencyGraphs,
                 variantSourceProvider, multiFlavorSourceProviders, generatedSourceFolders);
         this.ideSetupTaskNames = Sets.newHashSet(ideSetupTaskNames);
         this.mockablePlatformJar = mockablePlatformJar;
