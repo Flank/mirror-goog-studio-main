@@ -485,6 +485,35 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testUnusedThemeOnIncludeTag() throws Exception {
+        // Regression test for b/32879096: Add lint TargetApi warning for android:theme
+        // attribute in <include> tag
+        String expected = ""
+                + "res/layout/linear.xml:11: Warning: Attribute android:theme is only used by <include> tags in API level 23 and higher (current min is 21) [UnusedAttribute]\n"
+                + "        android:theme=\"@android:style/Theme.Holo\" />\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+
+        lint().files(
+                manifest().minSdk(21),
+                xml("res/layout/linear.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    android:orientation=\"vertical\">\n"
+                        + "\n"
+                        + "    <include\n"
+                        + "        layout=\"@layout/included\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:theme=\"@android:style/Theme.Holo\" />\n"
+                        + "\n"
+                        + "</LinearLayout>"))
+                .run()
+                .expect(expected);
+    }
+
     public void testUnusedLevelListAttribute() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=214143
         assertEquals(""
