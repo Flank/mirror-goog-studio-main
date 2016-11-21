@@ -15,40 +15,37 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.OutputFile
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.google.common.collect.Sets
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
+
 /**
  * Test to ensure that "auto" resConfig setting only package application's languages.
  */
+@Ignore("http://b.android.com/228274")
 class AutoPureSplits {
 
-    static AndroidProject model
-
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
+    @Rule
+    public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("combinedDensityAndLanguagePureSplits")
             .create()
 
-    @BeforeClass
-    static void setup() {
-        AssumeUtil.assumeBuildToolsAtLeast(21)
+    @Before
+    void setUpBuildFile() {
         project.getBuildFile() << """android {
               defaultConfig {
                 versionCode 12
@@ -67,23 +64,15 @@ class AutoPureSplits {
                 }
               }
               dependencies {
-
                 compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
                 compile 'com.android.support:support-v4:$GradleTestProject.SUPPORT_LIB_VERSION'
               }
         }"""
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
     }
 
     @Test
-    public void "test auto resConfigs only package application specific language"()
-            throws Exception {
+    void "test auto resConfigs only package application specific language"() throws Exception {
+        def model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
 
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants()
