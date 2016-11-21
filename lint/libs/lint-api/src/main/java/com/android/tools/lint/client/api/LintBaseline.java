@@ -41,7 +41,6 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -505,7 +504,7 @@ public class LintBaseline {
         }
 
         @Override
-        public int compareTo(@NotNull ReportedEntry other) {
+        public int compareTo(@NonNull ReportedEntry other) {
             // Sort by category, then by priority, then by id,
             // then by file, then by line
             int categoryDelta = issue.getCategory().compareTo(other.issue.getCategory());

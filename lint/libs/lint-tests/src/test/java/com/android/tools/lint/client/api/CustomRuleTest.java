@@ -15,34 +15,45 @@
  */
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.classpath;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.manifest;
+import static org.junit.Assert.assertTrue;
+
 import com.android.annotations.NonNull;
-import com.android.tools.lint.checks.AbstractCheckTest;
-import com.android.tools.lint.checks.HardcodedValuesDetector;
-import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestFiles;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Project;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class CustomRuleTest extends AbstractCheckTest {
-    private List<File> myGlobalJars = Collections.emptyList();
-    private List<File> myProjectJars = Collections.emptyList();
+public class CustomRuleTest {
+    @ClassRule
+    public static TemporaryFolder temp = new TemporaryFolder();
 
-    public void test() throws Exception {
-        File projectDir = getProjectDir(null,
-                classpath(),
-                manifest().minSdk(1),
-                mAppcompat,
-                mAppCompatTest,
-                mAppCompatTest2
-        );
+    private static File lintJar;
+    private static File oldLintJar;
 
-        File lintJar = new File(projectDir, "lint.jar");
+    @BeforeClass
+    public static void createLintJars() throws IOException {
+        File root = temp.getRoot();
+        lintJar = base64gzip("lint1.jar", LINT_JAR_BASE64_GZIP).createFile(root);
+        oldLintJar = base64gzip("lint2.jar", OLD_LINT_JAR_BASE64_GZIP).createFile(root);
         assertTrue(lintJar.getPath(), lintJar.isFile());
+        assertTrue(oldLintJar.getPath(), oldLintJar.isFile());
+    }
 
-        myProjectJars = Collections.singletonList(lintJar);
-        assertEquals(""
+    @Test
+    public void testProjectLintJar() throws Exception {
+        String expected = ""
                 + "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
                 + "        getActionBar();                    // ERROR\n"
                 + "        ~~~~~~~~~~~~\n"
@@ -61,24 +72,34 @@ public class CustomRuleTest extends AbstractCheckTest {
                 + "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n"
                 + "        setProgressBarIndeterminateVisibility(true);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-                checkLint(Collections.singletonList(projectDir)));
+                + "0 errors, 6 warnings\n";
+
+        TestLintTask.lint().files(
+                TestFiles.classpath(),
+                manifest().minSdk(1),
+                appCompatTestSource,
+                appCompatTestClass)
+                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @NonNull
+                    @Override
+                    public List<File> findGlobalRuleJars() {
+                        return Collections.emptyList();
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<File> findRuleJars(@NonNull Project project) {
+                        return Collections.singletonList(lintJar);
+                    }
+                })
+                .customRules(lintJar)
+                .run()
+                .expect(expected);
     }
 
-    public void test2() throws Exception {
-        File projectDir = getProjectDir(null,
-                classpath(),
-                manifest().minSdk(1),
-                mAppcompat,
-                mAppCompatTest,
-                mAppCompatTest2
-        );
-
-        File lintJar = new File(projectDir, "lint.jar");
-        assertTrue(lintJar.getPath(), lintJar.isFile());
-
-        myGlobalJars = Collections.singletonList(lintJar);
-        assertEquals(""
+    @Test
+    public void testGlobalLintJar() throws Exception {
+        String expected = ""
                 + "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
                 + "        getActionBar();                    // ERROR\n"
                 + "        ~~~~~~~~~~~~\n"
@@ -97,63 +118,41 @@ public class CustomRuleTest extends AbstractCheckTest {
                 + "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n"
                 + "        setProgressBarIndeterminateVisibility(true);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-                checkLint(Collections.singletonList(projectDir)));
-    }
-
-    public void testLLegacyLombokJavaLintRule() throws Exception {
-        @SuppressWarnings("all") // sample code
-        File projectDir = getProjectDir(null,
+                + "0 errors, 6 warnings\n";
+        TestLintTask.lint().files(
                 classpath(),
                 manifest().minSdk(1),
-                base64gzip("lint.jar", ""
-                        + "H4sIAAAAAAAAAI1WezgTeh+fy2xTaJp6c0m5TDQjIYWGMYYxM5dJHMZEzV0R"
-                        + "vee4tCG3yK0sl6hXCLnrOl1cNsQ0iYiG5DK3UHR6nafnfU7pPe97Pr/n+8fv"
-                        + "eT6f7/f7x/eGtxISFgUAwGDAuJklFrAJQcA3QDYNZ0Y0VsfaYDSEAPgfiI0x"
-                        + "3V7oTYL5psG+J+KMbbAYM3siEodZwrFZ1lbqyB4xK3W1LnZ3DUGz7/Db8cV2"
-                        + "9sEeMUtcNwKperuWYNHdbduN7WT3W2E7O/uXKpYRSCTuInYpeCFYYEvQrdn5"
-                        + "BAT4nPH2Dfgpu++J4t8TvbypP7OtdjTESgABgPPbAYC9P7FxEabeod7k0IBg"
-                        + "JPmMR0hIieOJczsdYL/T4LlK1qrFvYRi6SoTS1/QPOYaIcmX+Uu65y0Y04ph"
-                        + "bcOJzj0aNKEkeWH+3PyEbVqzo8eUC/LCx9W198FN3Up1yVQSxICdx5phNTyq"
-                        + "WT2+NIl6tCHyVu2hrSdsW9CQxRial74GjpCywpoGHU45EbyhF+0B42UPBkUp"
-                        + "tHrKluh1BCFUAkH58CpB9LPbifcg5aNukqpRWU8vGOAXmhI1YKbbaEHnsExi"
-                        + "z9gd//MO+YMOJwPnhJvJkSaVWkwE88Kb8sHz+8HSiLJ9ugGR9c54zbRcV/sd"
-                        + "7Utq9prEWkNH/0apicqrUvSzBDP/3K6rU4PBbwaS4nH6+MBm53f3JzSvZUhk"
-                        + "T5dwPVuljuo5kBWcKvXrlcMsrc8s+g2E7pkq0cp4Rqdw+mRazi4XyYHTbf9x"
-                        + "tvOw2ROV9clVCLuhP2XqZSh6rd6JhUzr7bkp96qI6sqk3FQR9c8oMVgVjkTc"
-                        + "NaPfk/rd4ohQ4aRgNbwTuvFgkDoNrMSagq9Fktqd2LNrBvUtgnPapDBQnOO8"
-                        + "wcSk3GGwV3m/RKzXUd0bHqAXchyJHFQPNVmBWKFLADp9Fk+pvTb7Gyxpr6Sq"
-                        + "3M3de7+sbSM77ljVf0GMMrObA6jTOwayLxHUMqaM0TncG+kkCc7BWlR173zc"
-                        + "rFaMkZFvtrZqhPBSyPVWM3DiK8PB8f6hL8XZTU7+euIk1LnG7RCLVK3mCJPX"
-                        + "yPhipszDZ/6vtTj0syHnMZQCWn8QLZESGyI1Lf2QVlpUxBRcUEgIv8jhVkVL"
-                        + "D8AjxK5V6SSN1tLo4cVvnxadxDWEK85qcaycrL/SREBIhlupQ0G5jEZdr9QI"
-                        + "RWaqYLT55ojlUnLtKy/fE1z9y0YjcnMvc/IpqdNEzH7gSRM1AzHZMKmRU/PG"
-                        + "M26zpYWNYfQmmOspO+6X/YbGwIsvjewJaxWJrdIuazbMEre8mVf4wAr5BUh7"
-                        + "nUfuXYVSUmgFxf0YWSpviGoTMafHK2OkxArowOmQufbrZqS8AU591kEJrGak"
-                        + "0TRnHXHm9rTNIbUDPitcqjM+o5KYRGe0RneIprB0+f3SWkKLeYm69+1ERWmd"
-                        + "Xf7tMC58m+OJsBj9dNUZPi9D4n1gm001hwrjfY6/falkzP9J4qfyrgstS+iA"
-                        + "fpN1ytBkA6oBJNzAJadM4ph+QwHQ3Z/GMzNLNvwi2jVh7OW4X8zXgSqvlAOq"
-                        + "4EtU4+G+yKbM4MKoMidb/as837sqEZdYGfLNjBOsihEELJubvLEo99ljz7A9"
-                        + "xMrtiU4OgrYt8jT8PqYG1IZ1jFx0O7X6KGf8sKcF0z33i3kfx8adjn+f2j68"
-                        + "WFPWs+IsMVv8nPSZJQvU8Tn/nFdn8ugW9CrHG8MPcpnSVtPGaByPXbwCN58X"
-                        + "eUAendg3XNzA3WV0lR09MTm/C4sdZ8mNO39oC9m+sYya7TF8XZ2yYnpgSXeW"
-                        + "0XoxJXPSSx/zbqhvWVch5HJ1m3z8ceayM++c6WQRuYf6VAHlGYU4lkZogP4a"
-                        + "09e3S5JDMMg91iyGG9sLNswXV2dEW2bRT/nEaboqjdTwSEWkAr5iHCpWddHy"
-                        + "uH4jb0byJro8JGe/S0pcDavRJMvhPvrXj3xoGJ/jL9sxkuOwIHCnxy/8tysU"
-                        + "tOdEy+qZA+lfUkdJSmiQj31sKbm0UF0WtXewJcH9cnO+9HDL6e7AxaOYf2LG"
-                        + "fP/1kDVyqEVTfjGM4ZlWLbZjwswaIxnnA+X3hic6/66Vtbb7x1GqR9axSxMA"
-                        + "AB5sTl/F/zJKsSEhYd4Ebx/fkNDgiG/zNJOAs5U5BJNFp1N7L8bBOo4UEiQg"
-                        + "Fs5XyEXLAKKJi5HC4zcDzpcUWzH3hi03DnYA+4RQBajbHwapwmBhycj5Gp/J"
-                        + "TpnUjUk+PxIwUuVmDM3vyHnmCsw/xPdgPlFAl95ICj5Ja6dM5xVWnQalF0of"
-                        + "UEzttXN/fquoElIK0oV9dn2qpp/KjLmHh6AV48uTa4lZEry2xSdlsUrY8YQk"
-                        + "4thYmS76aDqyNf5kQH1M4Zpq+IcrEwJ2Wia2ZphGbfhLvgaYsa9WEcneV+/3"
-                        + "mFF3bNRlj/m7vO2M5KZGooH8i7l0lxIfjt4VFJESvJLLqLAeNIdcpyvLs5wX"
-                        + "qj6QxcRoL49otDx2X4D6KZcaNIbPOIffaTxSz8YbvP/YtbJHdyRIn9bUeups"
-                        + "BdcUz8WX2ydoabeRMpSfz9d9QpmqWz9NXUcr1LsLp2oceHGv7SGkCrHTBfXC"
-                        + "l652w2WoEbie+RXJcSkUjSqG568U6KhAx+yVd+bAMfAqw13z/ppB9PZpUAJB"
-                        + "vP96beS7Fb+uUqhuBv/D183dKCAIE/rrpfsNOwCzxoDv9/5W2dYD4T8ojlb9"
-                        + "i3Ph7we+/n1l/S+Z+A+y1p8Kcqt26yXwZ9If/+9dsNXX1lb405eRyN9qDLwV"
-                        + "UOQPgcjmS9h0BAX/8fs37IxfaLAJAAA="),
+                appCompatTestSource,
+                appCompatTestClass)
+                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @NonNull
+                    @Override
+                    public List<File> findGlobalRuleJars() {
+                        return Collections.singletonList(lintJar);
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<File> findRuleJars(@NonNull Project project) {
+                        return Collections.emptyList();
+                    }
+                })
+                .customRules(lintJar)
+                .run()
+                .expect(expected);
+    }
+
+    @Test
+    public void testLegacyLombokJavaLintRule() throws Exception {
+        String expected = ""
+                + "src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]\n"
+                + "        foo(5);\n"
+                + "        ~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+
+        TestLintTask.lint().files(
+                classpath(),
+                manifest().minSdk(1),
                 java(""
                         + "package test.pkg;\n"
                         + "\n"
@@ -161,52 +160,29 @@ public class CustomRuleTest extends AbstractCheckTest {
                         + "    public void foo(int var) {\n"
                         + "        foo(5);\n"
                         + "    }\n"
-                        + "}")
-        );
+                        + "}"))
+                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @NonNull
+                    @Override
+                    public List<File> findGlobalRuleJars() {
+                        return Collections.singletonList(oldLintJar);
+                    }
 
-        File lintJar = new File(projectDir, "lint.jar");
-        assertTrue(lintJar.getPath(), lintJar.isFile());
-
-        myGlobalJars = Collections.singletonList(lintJar);
-        assertEquals(""
-                        + "src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]\n"
-                        + "        foo(5);\n"
-                        + "        ~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                checkLint(Collections.singletonList(projectDir)));
-
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        return new TestLintClient() {
-            @NonNull
-            @Override
-            public List<File> findGlobalRuleJars() {
-                return myGlobalJars;
-            }
-
-            @NonNull
-            @Override
-            public List<File> findRuleJars(@NonNull Project project) {
-                return myProjectJars;
-            }
-        };
-    }
-
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        // Allow other issues than the one returned by getDetector below
-        return true;
-    }
-
-    @Override
-    protected Detector getDetector() {
-        return new HardcodedValuesDetector();
+                    @NonNull
+                    @Override
+                    public List<File> findRuleJars(@NonNull Project project) {
+                        return Collections.emptyList();
+                    }
+                })
+                .issueIds("MyId")
+                .allowCompilationErrors()
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code
-    private TestFile mAppCompatTest = java(""
+    private TestFile appCompatTestSource
+            = java(""
             + "package test.pkg;\n"
             + "\n"
             + "import android.support.v7.app.ActionBarActivity;\n"
@@ -232,7 +208,7 @@ public class CustomRuleTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-    private TestFile mAppCompatTest2 = base64gzip("bin/classes/test/pkg/AppCompatTest.class", ""
+    private TestFile appCompatTestClass = base64gzip("bin/classes/test/pkg/AppCompatTest.class", ""
             + "H4sIAAAAAAAAAJVU21ITQRA9E0ICcRTkjqAogmwisuIF1AASolRRFS1LqKSK"
             + "t0kyhSNhd92dhPJb/ApfYpUPfoAfZdmzhFzKxOg+nLmd7j7d07M/f33/AeAR"
             + "XscRYZjSMtC2d3piZzwv6555Qh/RThxRBks4Zd9VZTuoep7ra7u2aQvPszMl"
@@ -318,5 +294,52 @@ public class CustomRuleTest extends AbstractCheckTest {
             + "T6jmf/ED/04NPKEGkZyC/qcbsJ4w0Pq1wX9GgZP3/vOLvHjCJew3LqeMBn83"
             + "/7nhMifM6an+vyduDDtL/qNLFAD5Y1fac993/wK1/pChWw4AAA==";
 
-    private TestFile mAppcompat = base64gzip("lint.jar", LINT_JAR_BASE64_GZIP);
+    public static final String OLD_LINT_JAR_BASE64_GZIP = ""
+            + "H4sIAAAAAAAAAI1WezgTeh+fy2xTaJp6c0m5TDQjIYWGMYYxM5dJHMZEzV0R"
+            + "vee4tCG3yK0sl6hXCLnrOl1cNsQ0iYiG5DK3UHR6nafnfU7pPe97Pr/n+8fv"
+            + "eT6f7/f7x/eGtxISFgUAwGDAuJklFrAJQcA3QDYNZ0Y0VsfaYDSEAPgfiI0x"
+            + "3V7oTYL5psG+J+KMbbAYM3siEodZwrFZ1lbqyB4xK3W1LnZ3DUGz7/Db8cV2"
+            + "9sEeMUtcNwKperuWYNHdbduN7WT3W2E7O/uXKpYRSCTuInYpeCFYYEvQrdn5"
+            + "BAT4nPH2Dfgpu++J4t8TvbypP7OtdjTESgABgPPbAYC9P7FxEabeod7k0IBg"
+            + "JPmMR0hIieOJczsdYL/T4LlK1qrFvYRi6SoTS1/QPOYaIcmX+Uu65y0Y04ph"
+            + "bcOJzj0aNKEkeWH+3PyEbVqzo8eUC/LCx9W198FN3Up1yVQSxICdx5phNTyq"
+            + "WT2+NIl6tCHyVu2hrSdsW9CQxRial74GjpCywpoGHU45EbyhF+0B42UPBkUp"
+            + "tHrKluh1BCFUAkH58CpB9LPbifcg5aNukqpRWU8vGOAXmhI1YKbbaEHnsExi"
+            + "z9gd//MO+YMOJwPnhJvJkSaVWkwE88Kb8sHz+8HSiLJ9ugGR9c54zbRcV/sd"
+            + "7Utq9prEWkNH/0apicqrUvSzBDP/3K6rU4PBbwaS4nH6+MBm53f3JzSvZUhk"
+            + "T5dwPVuljuo5kBWcKvXrlcMsrc8s+g2E7pkq0cp4Rqdw+mRazi4XyYHTbf9x"
+            + "tvOw2ROV9clVCLuhP2XqZSh6rd6JhUzr7bkp96qI6sqk3FQR9c8oMVgVjkTc"
+            + "NaPfk/rd4ohQ4aRgNbwTuvFgkDoNrMSagq9Fktqd2LNrBvUtgnPapDBQnOO8"
+            + "wcSk3GGwV3m/RKzXUd0bHqAXchyJHFQPNVmBWKFLADp9Fk+pvTb7Gyxpr6Sq"
+            + "3M3de7+sbSM77ljVf0GMMrObA6jTOwayLxHUMqaM0TncG+kkCc7BWlR173zc"
+            + "rFaMkZFvtrZqhPBSyPVWM3DiK8PB8f6hL8XZTU7+euIk1LnG7RCLVK3mCJPX"
+            + "yPhipszDZ/6vtTj0syHnMZQCWn8QLZESGyI1Lf2QVlpUxBRcUEgIv8jhVkVL"
+            + "D8AjxK5V6SSN1tLo4cVvnxadxDWEK85qcaycrL/SREBIhlupQ0G5jEZdr9QI"
+            + "RWaqYLT55ojlUnLtKy/fE1z9y0YjcnMvc/IpqdNEzH7gSRM1AzHZMKmRU/PG"
+            + "M26zpYWNYfQmmOspO+6X/YbGwIsvjewJaxWJrdIuazbMEre8mVf4wAr5BUh7"
+            + "nUfuXYVSUmgFxf0YWSpviGoTMafHK2OkxArowOmQufbrZqS8AU591kEJrGak"
+            + "0TRnHXHm9rTNIbUDPitcqjM+o5KYRGe0RneIprB0+f3SWkKLeYm69+1ERWmd"
+            + "Xf7tMC58m+OJsBj9dNUZPi9D4n1gm001hwrjfY6/falkzP9J4qfyrgstS+iA"
+            + "fpN1ytBkA6oBJNzAJadM4ph+QwHQ3Z/GMzNLNvwi2jVh7OW4X8zXgSqvlAOq"
+            + "4EtU4+G+yKbM4MKoMidb/as837sqEZdYGfLNjBOsihEELJubvLEo99ljz7A9"
+            + "xMrtiU4OgrYt8jT8PqYG1IZ1jFx0O7X6KGf8sKcF0z33i3kfx8adjn+f2j68"
+            + "WFPWs+IsMVv8nPSZJQvU8Tn/nFdn8ugW9CrHG8MPcpnSVtPGaByPXbwCN58X"
+            + "eUAendg3XNzA3WV0lR09MTm/C4sdZ8mNO39oC9m+sYya7TF8XZ2yYnpgSXeW"
+            + "0XoxJXPSSx/zbqhvWVch5HJ1m3z8ceayM++c6WQRuYf6VAHlGYU4lkZogP4a"
+            + "09e3S5JDMMg91iyGG9sLNswXV2dEW2bRT/nEaboqjdTwSEWkAr5iHCpWddHy"
+            + "uH4jb0byJro8JGe/S0pcDavRJMvhPvrXj3xoGJ/jL9sxkuOwIHCnxy/8tysU"
+            + "tOdEy+qZA+lfUkdJSmiQj31sKbm0UF0WtXewJcH9cnO+9HDL6e7AxaOYf2LG"
+            + "fP/1kDVyqEVTfjGM4ZlWLbZjwswaIxnnA+X3hic6/66Vtbb7x1GqR9axSxMA"
+            + "AB5sTl/F/zJKsSEhYd4Ebx/fkNDgiG/zNJOAs5U5BJNFp1N7L8bBOo4UEiQg"
+            + "Fs5XyEXLAKKJi5HC4zcDzpcUWzH3hi03DnYA+4RQBajbHwapwmBhycj5Gp/J"
+            + "TpnUjUk+PxIwUuVmDM3vyHnmCsw/xPdgPlFAl95ICj5Ja6dM5xVWnQalF0of"
+            + "UEzttXN/fquoElIK0oV9dn2qpp/KjLmHh6AV48uTa4lZEry2xSdlsUrY8YQk"
+            + "4thYmS76aDqyNf5kQH1M4Zpq+IcrEwJ2Wia2ZphGbfhLvgaYsa9WEcneV+/3"
+            + "mFF3bNRlj/m7vO2M5KZGooH8i7l0lxIfjt4VFJESvJLLqLAeNIdcpyvLs5wX"
+            + "qj6QxcRoL49otDx2X4D6KZcaNIbPOIffaTxSz8YbvP/YtbJHdyRIn9bUeups"
+            + "BdcUz8WX2ydoabeRMpSfz9d9QpmqWz9NXUcr1LsLp2oceHGv7SGkCrHTBfXC"
+            + "l652w2WoEbie+RXJcSkUjSqG568U6KhAx+yVd+bAMfAqw13z/ppB9PZpUAJB"
+            + "vP96beS7Fb+uUqhuBv/D183dKCAIE/rrpfsNOwCzxoDv9/5W2dYD4T8ojlb9"
+            + "i3Ph7we+/n1l/S+Z+A+y1p8Kcqt26yXwZ9If/+9dsNXX1lb405eRyN9qDLwV"
+            + "UOQPgcjmS9h0BAX/8fs37IxfaLAJAAA=";
 }

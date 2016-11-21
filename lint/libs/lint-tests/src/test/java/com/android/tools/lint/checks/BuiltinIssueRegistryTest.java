@@ -31,7 +31,6 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junit.framework.TestCase;
-import org.jetbrains.annotations.NotNull;
 
 public class BuiltinIssueRegistryTest extends TestCase {
     public void testNoListResize() {
@@ -110,7 +109,7 @@ public class BuiltinIssueRegistryTest extends TestCase {
                 // the field would have been initialized and other threads could
                 // skip the whole locked region.
                 return new ArrayList<Issue>() {
-                    @NotNull
+                    @NonNull
                     @Override
                     public Iterator<Issue> iterator() {
                         try {

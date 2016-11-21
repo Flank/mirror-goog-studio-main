@@ -17,6 +17,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.UnusedResourceDetector;
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Detector;
@@ -92,7 +93,7 @@ public class WarningTest extends AbstractCheckTest {
             @Override
             public String analyze(List<File> files) throws Exception {
                 //String analyze = super.analyze(files);
-                driver = new LintDriver(new CustomIssueRegistry(), this);
+                driver = new LintDriver(new LintDetectorTest.CustomIssueRegistry(), this);
                 configureDriver(driver);
                 driver.analyze(new LintRequest(this, files).setScope(getLintScope(files)));
                 warningsHolder.set(warnings);

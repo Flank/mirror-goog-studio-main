@@ -45,7 +45,6 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeVisitor;
 import com.intellij.psi.PsiWildcardType;
 import java.io.File;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
 public abstract class JavaEvaluator {
@@ -345,7 +344,7 @@ public abstract class JavaEvaluator {
         return true;
     }
 
-    public boolean areSignaturesEqual(@NotNull PsiMethod method1, @NotNull PsiMethod method2) {
+    public boolean areSignaturesEqual(@NonNull PsiMethod method1, @NonNull PsiMethod method2) {
         PsiParameterList parameterList1 = method1.getParameterList();
         PsiParameterList parameterList2 = method2.getParameterList();
         if (parameterList1.getParametersCount() != parameterList2.getParametersCount()) {

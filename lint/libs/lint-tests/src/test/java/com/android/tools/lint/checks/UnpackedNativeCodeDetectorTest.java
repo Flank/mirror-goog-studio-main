@@ -16,13 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-
-import com.android.annotations.NonNull;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Project;
-import java.io.File;
 
 /**
  * <b>NOTE: This is not a final API; if you rely on this be prepared to adjust your code for the
@@ -36,48 +30,21 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
         return new UnpackedNativeCodeDetector();
     }
 
-    @Override
-    protected TestLintClient createClient() {
-        return new TestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-
-                    private final GradleVersion GRADLE_VERSION = GradleVersion.parse("2.2.0");
-
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Override
-                    public int getBuildSdk() {
-                        return 23;
-                    }
-
-                    @Override
-                    public GradleVersion getGradleModelVersion() {
-                        return GRADLE_VERSION;
-                    }
-                };
-            }
-        };
-    }
-
     /**
      * Test that a manifest without extractNativeLibs produces warnings for Runtime.loadLibrary
      */
     public void testRuntimeLoadLibrary() throws Exception {
         String expected = ""
-                + "AndroidManifest.xml:4: Warning: Missing attribute "
+                + "src/main/AndroidManifest.xml:4: Warning: Missing attribute "
                 + "android:extractNativeLibs=\"false\" on the "
                 + "<application> tag. [UnpackedNativeCode]\n"
                 + "    <application android:allowBackup=\"true\">\n"
                 + "    ^\n"
                 + "0 errors, 1 warnings\n";
 
-        String result = lintProject(xml(FN_ANDROID_MANIFEST_XML, ""
+        //noinspection all // Sample code
+        lint().files(
+                manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
                         + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -85,7 +52,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    <application android:allowBackup=\"true\">\n"
                         + "    </application>\n"
                         + "</manifest>"),
-                java("src/test/pkg/Load.java", ""
+                java("src/main/java/test/pkg/Load.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import java.lang.Runtime;\n"
@@ -94,8 +61,18 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    public static void foo() {\n"
                         + "            Runtime.getRuntime().loadLibrary(\"hello\"); \n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 23\n"
+                        + "}"))
+                .run()
+                .expect(expected);
     }
 
     /**
@@ -103,12 +80,14 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
      */
     public void testSystemLoadLibrary() throws Exception {
         String expected = ""
-                + "AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag. [UnpackedNativeCode]\n"
+                + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag. [UnpackedNativeCode]\n"
                 + "    <application>\n"
                 + "    ^\n"
                 + "0 errors, 1 warnings\n";
 
-        String result = lintProject(xml(FN_ANDROID_MANIFEST_XML, ""
+        //noinspection all // Sample code
+        lint().files(
+                manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
                         + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -116,7 +95,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    <application>\n"
                         + "    </application>\n"
                         + "</manifest>"),
-                java("src/test/pkg/Load.java", ""
+                java("src/main/java/test/pkg/Load.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import java.lang.System;\n"
@@ -125,23 +104,34 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    public static void foo() {\n"
                         + "            System.loadLibrary(\"hello\"); \n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 23\n"
+                        + "}"))
+                .run()
+                .expect(expected);
     }
 
     /**
      * Test that a manifest with extractNativeLibs has no warnings.
      */
     public void testHasExtractNativeLibs() throws Exception {
-        String expected = "No warnings.";
-        String result = lintProject(xml(FN_ANDROID_MANIFEST_XML, ""
+        //noinspection all // Sample code
+        lint().files(
+                manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
                         + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <application android:extractNativeLibs=\"false\">\n"
                         + "    </application>\n"
                         + "</manifest>"),
-                java("src/test/pkg/Load.java", ""
+                java("src/main/java/test/pkg/Load.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import java.lang.Runtime;\n"
@@ -150,16 +140,27 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    public static void foo() {\n"
                         + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 23\n"
+                        + "}"))
+                .run()
+                .expectClean();
     }
 
     /**
-     * Test that supperssing the lint check using tools:ignore works.
+     * Test that suppressing the lint check using tools:ignore works.
      */
     public void testSuppress() throws Exception {
-        String expected = "No warnings.";
-        String result = lintProject(xml(FN_ANDROID_MANIFEST_XML, ""
+        //noinspection all // Sample code
+        lint().files(
+                manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
                         + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"
@@ -168,7 +169,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    <application tools:ignore=\"UnpackedNativeCode\">\n"
                         + "    </application>\n"
                         + "</manifest>"),
-                java("src/test/pkg/Load.java", ""
+                java("src/main/java/test/pkg/Load.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import java.lang.Runtime;\n"
@@ -177,8 +178,17 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    public static void foo() {\n"
                         + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 23\n"
+                        + "}"))
+                .run()
+                .expectClean();
     }
-
 }

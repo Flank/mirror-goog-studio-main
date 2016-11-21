@@ -16,21 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.Variant;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Project;
-import java.io.File;
-import java.util.Collections;
 import org.intellij.lang.annotations.Language;
 
 /**
@@ -74,102 +60,87 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
         return new VectorDrawableCompatDetector();
     }
 
-    @Override
-    protected TestLintClient createClient() {
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        Variant onlyVariant = mock(Variant.class);
-                        ProductFlavor productFlavor = mock(ProductFlavor.class);
-                        VectorDrawablesOptions vectorDrawables = mock(VectorDrawablesOptions.class);
-
-                        Dependencies dependencies = mock(Dependencies.class);
-                        when(dependencies.getLibraries()).thenReturn(Collections.emptyList());
-                        AndroidArtifact artifact = mock(AndroidArtifact.class);
-                        when(artifact.getDependencies()).thenReturn(dependencies);
-                        when(onlyVariant.getMainArtifact()).thenReturn(artifact);
-
-                        when(onlyVariant.getMergedFlavor()).thenReturn(productFlavor);
-                        when(productFlavor.getVectorDrawables()).thenReturn(vectorDrawables);
-
-                        if (getName().contains("SrcCompat")) {
-                            when(vectorDrawables.getUseSupportLibrary()).thenReturn(false);
-                        } else {
-                            when(vectorDrawables.getUseSupportLibrary()).thenReturn(true);
-                        }
-
-                        return onlyVariant;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        AndroidProject project = mock(AndroidProject.class);
-                        when(project.getModelVersion()).thenReturn("2.0.0");
-                        return project;
-                    }
-                };
-            }
-        };
-    }
-
     public void testSrcCompat() throws Exception {
-        assertEquals(""
-                + "res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
+        String expected = ""
+                + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
                 + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
                 + "               ~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(
-                        xml("res/drawable/foo.xml", VECTOR),
-                        xml("res/layout/main_activity.xml", LAYOUT_SRC_COMPAT)
-                ));
+                + "1 errors, 0 warnings\n";
+
+        lint().files(
+                xml("src/main/res/drawable/foo.xml", VECTOR),
+                xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC_COMPAT),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = false\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testSrcCompat_incremental() throws Exception {
-        assertEquals(""
-                + "res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
+        String expected = ""
+                + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
                 + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
                 + "               ~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProjectIncrementally(
-                        "res/layout/main_activity.xml",
-                        xml("res/drawable/foo.xml", VECTOR),
-                        xml("res/layout/main_activity.xml", LAYOUT_SRC_COMPAT)
-                ));
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                xml("src/main/res/drawable/foo.xml", VECTOR),
+                xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC_COMPAT),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = false\n"))
+                .incremental("src/main/res/layout/main_activity.xml")
+                .run()
+                .expect(expected);
     }
 
     public void testSrc() throws Exception {
-        assertEquals(""
-                + "res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+        String expected = ""
+                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
                 + "    <ImageView android:src=\"@drawable/foo\" />\n"
                 + "               ~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(
-                        xml("res/drawable/foo.xml", VECTOR),
-                        xml("res/layout/main_activity.xml", LAYOUT_SRC)
-                ));
+                + "1 errors, 0 warnings\n";
+        lint().files(
+                xml("src/main/res/drawable/foo.xml", VECTOR),
+                xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testSrc_incremental() throws Exception {
-        assertEquals(""
-                + "res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+        String expected = ""
+                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
                 + "    <ImageView android:src=\"@drawable/foo\" />\n"
                 + "               ~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProjectIncrementally(
-                        "res/layout/main_activity.xml",
-                        xml("res/drawable/foo.xml", VECTOR),
-                        xml("res/layout/main_activity.xml", LAYOUT_SRC)
-                ));
+                + "1 errors, 0 warnings\n";
+
+        lint().files(
+                xml("src/main/res/drawable/foo.xml", VECTOR),
+                xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                .incremental("src/main/res/layout/main_activity.xml")
+                .run()
+                .expect(expected);
     }
 }

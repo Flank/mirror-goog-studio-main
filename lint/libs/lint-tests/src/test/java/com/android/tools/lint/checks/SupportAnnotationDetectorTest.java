@@ -21,25 +21,13 @@ import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23;
 import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M;
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.Variant;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.ExternalAnnotationRepositoryTest;
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.client.api.JavaParser.ResolvedAnnotation;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Project;
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 @SuppressWarnings("all") // Lots of test sample projects with faulty code
 public class SupportAnnotationDetectorTest extends AbstractCheckTest {
@@ -2516,35 +2504,23 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    @SuppressWarnings("ALL") // sample code with warnings
-    public void testRestrictToGroupId() throws Exception {
-        assertEquals(""
-                + "src/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
-                + "        Library.privateMethod(); // ERROR\n"
-                + "                ~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
-                + "        PrivateClass.method(); // ERROR\n"
-                + "        ~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
-                + "        InternalClass.method(); // ERROR\n"
-                + "                      ~~~~~~\n"
-                + "3 errors, 0 warnings\n",
-                lintProject(
-                        java(""
-                                + "package test.pkg;\n"
-                                + "\n"
-                                + "import library.pkg.internal.InternalClass;\n"
-                                + "import library.pkg.Library;\n"
-                                + "import library.pkg.PrivateClass;\n"
-                                + "\n"
-                                + "public class TestLibrary {\n"
-                                + "    public void test() {\n"
-                                + "        Library.method(); // OK\n"
-                                + "        Library.privateMethod(); // ERROR\n"
-                                + "        PrivateClass.method(); // ERROR\n"
-                                + "        InternalClass.method(); // ERROR\n"
-                                + "    }\n"
-                                + "}\n"),
+    public void testRestrictToGroupId() {
+        ProjectDescription project = project().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import library.pkg.internal.InternalClass;\n"
+                        + "import library.pkg.Library;\n"
+                        + "import library.pkg.PrivateClass;\n"
+                        + "\n"
+                        + "public class TestLibrary {\n"
+                        + "    public void test() {\n"
+                        + "        Library.method(); // OK\n"
+                        + "        Library.privateMethod(); // ERROR\n"
+                        + "        PrivateClass.method(); // ERROR\n"
+                        + "        InternalClass.method(); // ERROR\n"
+                        + "    }\n"
+                        + "}\n"),
 
                         /*
                         Compiled version of these 5 files (and the RestrictTo annotation);
@@ -2591,7 +2567,8 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 }
                             }
                          */
-                        base64gzip("libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar", ""
+                base64gzip("libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar",
+                        ""
                                 + "H4sIAAAAAAAAAJVXB1RT2RYNxdBCMQSQXpQS6eWLCogBiXTpMhQNhCIQEghF"
                                 + "iqJIkSYd6dXQJnRHRIpSIjXggChSVFAQEAQElCb4wfF/Ez4w829Wsl5Wzt65"
                                 + "b5/zzrnbQIeKGgKgpaUFXDvLqwUgWXQAaoCehglMUksfLr3VCQBQAQx0aGh3"
@@ -2662,10 +2639,29 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "B6kOOIDvpiE99vCR0aQc+ruD4G4u0mFMzlUN/LtjE2ky9xrfvxaKlnSY749i"
                                 + "IUPF0+413PdHc5OhG/dAkw37X0LsdEzSXipLRrR2MNHew383PekTL06uM8P/"
                                 + "1Z4NdA4Bd2DM2y/p7b1iGHe+/RsdMTpPtBEAAA=="
-                        ),
-                        classpath(SUPPORT_JAR_PATH, "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"),
-                        mSupportJar
-                ));
+                ),
+                classpath(SUPPORT_JAR_PATH,
+                        "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"),
+                mSupportJar,
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n"
+                        + "}")
+
+        );
+        lint().projects(project).run().expect(""
+                + "src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
+                + "        Library.privateMethod(); // ERROR\n"
+                + "                ~~~~~~~~~~~~~\n"
+                + "src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
+                + "        PrivateClass.method(); // ERROR\n"
+                + "        ~~~~~~~~~~~~\n"
+                + "src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"
+                + "        InternalClass.method(); // ERROR\n"
+                + "                      ~~~~~~\n"
+                + "3 errors, 0 warnings\n");
     }
 
     @SuppressWarnings("ALL") // sample code with warnings
@@ -2913,60 +2909,6 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         mSupportClasspath,
                         mSupportJar
                 ));
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                if ("testRestrictToGroupId".equals(getName())) {
-                    return new Project(this, dir, referenceDir) {
-                        @Override
-                        public boolean isGradleProject() {
-                            return true;
-                        }
-
-                        @Nullable
-                        @Override
-                        public Variant getCurrentVariant() {
-                        /*
-                        Simulate variant which has an AndroidLibrary with
-                        resolved coordinates
-
-                        my.group.id:mylib:25.0.0-SNAPSHOT"
-                         */
-                            MavenCoordinates coordinates = mock(MavenCoordinates.class);
-                            when(coordinates.getGroupId()).thenReturn("my.group.id");
-                            when(coordinates.getArtifactId()).thenReturn("mylib");
-                            when(coordinates.getVersion()).thenReturn("25.0.0-SNAPSHOT");
-
-                            AndroidLibrary library = mock(AndroidLibrary.class);
-                            when(library.getResolvedCoordinates()).thenReturn(coordinates);
-                            when(library.getJarFile()).thenReturn(new File("libs/"
-                                    + "exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/"
-                                    + "classes.jar"));
-                            when(library.getLocalJars()).thenReturn(Collections.emptyList());
-                            List<AndroidLibrary> libraries = Collections.singletonList(library);
-
-                            Dependencies dependencies = mock(Dependencies.class);
-                            when(dependencies.getLibraries()).thenReturn(libraries);
-
-                            AndroidArtifact artifact = mock(AndroidArtifact.class);
-                            //noinspection deprecation
-                            when(artifact.getDependencies()).thenReturn(dependencies);
-
-                            Variant variant = mock(Variant.class);
-                            when(variant.getMainArtifact()).thenReturn(artifact);
-                            return variant;
-                        }
-                    };
-                }
-
-                return super.createProject(dir, referenceDir);
-            }
-        };
     }
 
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";

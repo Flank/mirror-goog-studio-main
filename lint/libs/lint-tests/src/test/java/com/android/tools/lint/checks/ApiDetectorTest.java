@@ -21,13 +21,11 @@ import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.OBSOLETE_SDK;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
@@ -42,12 +40,6 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ApiDetectorTest extends AbstractCheckTest {
-
-    private boolean forceSymbolErrors;
-
-    @Override protected boolean forceErrors() {
-        return forceSymbolErrors;
-    }
 
     @Override
     protected Detector getDetector() {
@@ -64,7 +56,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        forceSymbolErrors = false;
     }
 
     /**
@@ -75,21 +66,38 @@ public class ApiDetectorTest extends AbstractCheckTest {
             @NonNull String expected,
             @Nullable String expectedBytecode,
             @NonNull TestFile... files) throws Exception {
+        checkApiCheck(expected, expectedBytecode, false, true, null, files);
+    }
 
+    protected void checkApiCheck(
+            @NonNull String expected,
+            @Nullable String expectedBytecode,
+            boolean allowCompilationErrors,
+            boolean allowSystemErrors,
+            @Nullable com.android.tools.lint.checks.infrastructure.TestLintClient lintClient,
+            @NonNull TestFile... files) throws Exception {
         // First check with PSI
-        assertEquals(expected, lintProject(files));
+        lint().projects(project(files).name(getName()))
+                .allowCompilationErrors(allowCompilationErrors)
+                .allowSystemErrors(allowSystemErrors)
+                .client(lintClient)
+                .run()
+                .expect(expected);
+
 
         // Then check with bytecode
         if (expectedBytecode == null) {
             expectedBytecode = expected;
         }
 
-        try {
-            forceSymbolErrors = true;
-            assertEquals(expectedBytecode, lintProject(files));
-        } finally {
-            forceSymbolErrors = false;
-        }
+        lint().projects(project(files).name(getName()))
+                // This is how we check with bytecode: simulate symbol resolution errors
+                .forceSymbolResolutionErrors()
+                .allowCompilationErrors(allowCompilationErrors)
+                .allowSystemErrors(allowSystemErrors)
+                .client(lintClient)
+                .run()
+                .expect(expectedBytecode);
     }
 
     public void testXmlApi1() throws Exception {
@@ -2064,6 +2072,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         );
     }
 
+// hook up to lint test task
     @Override
     public String getSuperClass(Project project, String name) {
         // For testInterfaceInheritance
@@ -3201,6 +3210,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
                 null,
+                true,
+                false,
+                null,
 
                 manifest().minSdk(15),
                 java("src/test/pkg/MyAnnotation.java", ""
@@ -3533,9 +3545,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
         ApiLookup.dispose();
         //noinspection all // Sample code
         checkApiCheck(""
-                + "ApiDetectorTest_testMissingApiDatabase: Error: Can't find API database; API check not performed [LintError]\n"
-                + "1 errors, 0 warnings\n",
+                        + "testMissingApiDatabase: Error: Can't find API database; API check not performed [LintError]\n"
+                        + "1 errors, 0 warnings\n",
                 null,
+                false,
+                false,
+                new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @Override
+                    public File findResource(@NonNull String relativePath) {
+                        return null;
+                    }
+                },
                 manifest().minSdk(1),
                 mLayout,
                 mThemes,
@@ -3595,11 +3615,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testVector_withGradleSupport() throws Exception {
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-                lintProject(
-                        manifest().minSdk(4),
-                        mVector
-                ));
+        lint().files(
+                manifest().minSdk(4),
+                mVector,
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.4.0-alpha1'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
     public void testAnimatedSelector() throws Exception {
@@ -3922,6 +3948,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "                      ~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
                 null,
+                true,
+                false,
+                null,
 
                 // Master project
                 manifest().pkg("foo.master").minSdk(14),
@@ -4117,6 +4146,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        System.out.println(TextView::getCompoundPaddingEnd);\n"
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n",
+                null,
+                true,
+                false,
                 null,
                 manifest().minSdk(4),
                 java(""
@@ -4614,22 +4646,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 }
             };
         }
-        if (getName().equals("testVector_withGradleSupport")) {
-            return new ToolsBaseTestLintClient() {
-                @NonNull
-                @Override
-                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                    AndroidProject model = mock(AndroidProject.class);
-                    when(model.getModelVersion()).thenReturn("1.4.0-alpha1");
-
-                    Project fromSuper = super.createProject(dir, referenceDir);
-                    Project spy = spy(fromSuper);
-                    when(spy.getGradleProjectModel()).thenReturn(model);
-                    when(spy.isGradleProject()).thenReturn(true);
-                    return spy;
-                }
-            };
-        }
         if (getName().equals("testPaddingStart")) {
             return new ToolsBaseTestLintClient() {
                 @NonNull
@@ -5061,6 +5077,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "        vector3.setTint(0xFFFFFF); // ERROR\n"
                 + "                ~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
+                null,
+                true,
+                false,
                 null,
 
                 classpath(),

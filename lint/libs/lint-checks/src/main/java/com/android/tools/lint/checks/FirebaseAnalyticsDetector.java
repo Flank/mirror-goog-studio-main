@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 public class FirebaseAnalyticsDetector extends Detector implements Detector.JavaPsiScanner {
 
@@ -243,7 +242,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             mParameters.addAll(bundleModifications);
         }
 
-        @NotNull
+        @NonNull
         static List<BundleModification> find(JavaContext context,
                 PsiReferenceExpression bundleReference) {
             BundleModificationFinder scanner = new BundleModificationFinder(context,

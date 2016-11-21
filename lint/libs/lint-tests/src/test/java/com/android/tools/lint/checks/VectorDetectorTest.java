@@ -16,18 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.Variant;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Project;
-import java.io.File;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
@@ -69,7 +58,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
             + "</vector>";
 
     public void testWarn() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                 + "        android:autoMirrored=\"true\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~\n"
@@ -94,99 +83,88 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 + "res/drawable/foo.xml:25: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                 + "            android:trimPathStart=\"0\" />\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 8 warnings\n",
-                lintProject(
-                        xml("res/drawable/foo.xml", VECTOR),
-                        manifest().minSdk(14)
-                ));
+                + "0 errors, 8 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(14),
+                xml("res/drawable/foo.xml", VECTOR),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.4.0-alpha2'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNoWarningsWithMinSdk21() throws Exception {
-        assertEquals("No warnings.",
-            lintProject(
-                    xml("res/drawable/foo.xml", VECTOR),
-                    manifest().minSdk(21)
-        ));
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(21),
+                xml("res/drawable/foo.xml", VECTOR),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.4.0-alpha2'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
     public void testNoWarningsInV21Folder() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        xml("res/drawable-v21/foo.xml", VECTOR),
-                        manifest().minSdk(14)
-                ));
+        lint().files(
+                manifest().minSdk(14),
+                xml("res/drawable-v21/foo.xml", VECTOR),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.4.0-alpha2'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
     public void testNoGroupWarningWithPlugin15() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        xml("res/drawable/foo.xml", ""
-                                + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "        android:height=\"76dp\"\n"
-                                + "        android:width=\"76dp\"\n"
-                                + "        android:viewportHeight=\"48\"\n"
-                                + "        android:viewportWidth=\"48\">\n"
-                                + "\n"
-                                + "    <group />"
-                                + "\n"
-                                + "</vector>"
-                                + ""),
-                        manifest().minSdk(14)
-                ));
+        lint().files(
+                manifest().minSdk(14),
+                xml("res/drawable/foo.xml", ""
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        android:height=\"76dp\"\n"
+                        + "        android:width=\"76dp\"\n"
+                        + "        android:viewportHeight=\"48\"\n"
+                        + "        android:viewportWidth=\"48\">\n"
+                        + "\n"
+                        + "    <group />"
+                        + "\n"
+                        + "</vector>"
+                        + ""),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.5.0-alpha1'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
     public void testNoWarningsWithSupportLibVectors() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=206005
-        assertEquals("No warnings.",
-                lintProject(
-                        xml("res/drawable/foo.xml", VECTOR),
-                        manifest().minSdk(14)
-                ));
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        String modelVersion = "1.4.0-alpha2";
-                        if (getName().equals("VectorDetectorTest_testNoGroupWarningWithPlugin15")) {
-                            modelVersion = "1.5.0-alpha1";
-                        } else if (getName().equals("VectorDetectorTest_testNoWarningsWithSupportLibVectors")) {
-                            modelVersion = "2.0.0";
-                        }
-                        return PrivateResourceDetectorTest.createMockProject(modelVersion, 3);
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        Variant onlyVariant = mock(Variant.class);
-                        ProductFlavor productFlavor = mock(ProductFlavor.class);
-                        VectorDrawablesOptions vectorDrawables = mock(VectorDrawablesOptions.class);
-
-                        when(onlyVariant.getMergedFlavor()).thenReturn(productFlavor);
-                        when(productFlavor.getVectorDrawables()).thenReturn(vectorDrawables);
-                        if ("VectorDetectorTest_testNoWarningsWithSupportLibVectors".equals(getName())) {
-                            when(vectorDrawables.getUseSupportLibrary()).thenReturn(true);
-                        } else {
-                            when(vectorDrawables.getUseSupportLibrary()).thenReturn(false);
-                        }
-
-                        return onlyVariant;
-                    }
-                };
-            }
-        };
+        lint().files(
+                manifest().minSdk(14),
+                xml("res/drawable/foo.xml", VECTOR),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                .run()
+                .expectClean();
     }
 }

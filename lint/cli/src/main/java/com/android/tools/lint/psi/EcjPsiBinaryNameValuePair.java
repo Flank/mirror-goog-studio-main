@@ -36,7 +36,6 @@ import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.jetbrains.annotations.NotNull;
 
 class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameValuePair,
         PsiAnnotationMemberValue, PsiLiteral {
@@ -107,7 +106,7 @@ class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameVa
             }
         }
 
-        @NotNull
+        @NonNull
         @Override
         public PsiAnnotationMemberValue[] getInitializers() {
             return mInitializers;
@@ -118,7 +117,7 @@ class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameVa
             PsiReferenceExpression {
 
         EcjPsiBinaryReferenceExpression(@NonNull EcjPsiManager manager,
-                @NotNull Binding binding) {
+                @NonNull Binding binding) {
             super(manager, binding);
         }
 
@@ -149,7 +148,7 @@ class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameVa
             return null;
         }
 
-        @NotNull
+        @NonNull
         @Override
         public PsiType[] getTypeParameters() {
             return new PsiType[0];
@@ -212,7 +211,7 @@ class EcjPsiBinaryNameValuePair extends EcjPsiBinaryElement implements PsiNameVa
             return mManager.findElement(mBinding);
         }
 
-        @NotNull
+        @NonNull
         @Override
         public String getCanonicalText() {
             return "";

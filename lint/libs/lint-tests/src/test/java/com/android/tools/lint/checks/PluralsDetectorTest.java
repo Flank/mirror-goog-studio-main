@@ -16,11 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.HashSet;
@@ -163,13 +160,8 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     private Set<Issue> mEnabled = new HashSet<>();
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && mEnabled.contains(issue);
-            }
-        };
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     @SuppressWarnings("all") // Sample code
