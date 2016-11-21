@@ -145,9 +145,6 @@ public final class DevSdkUpdater {
                 case "--dest":
                     try {
                         sdkDest = new File(args[i]);
-                        if (!checkSdkDest(sdkDest)) {
-                            return Status.ERROR;
-                        }
                     } catch (ArrayIndexOutOfBoundsException ignored) {
                         usage("Dest path not set");
                         return Status.ERROR;
@@ -165,9 +162,9 @@ public final class DevSdkUpdater {
         // If the paths were not provided, use the default repo layout.
         if (sdkDest == null) {
             sdkDest = WorkspaceUtils.findPrebuiltsSdks().toFile();
-            if (!checkSdkDest(sdkDest)) {
-                return Status.ERROR;
-            }
+        }
+        if (!checkSdkDest(sdkDest, platform)) {
+          return Status.ERROR;
         }
 
         if (packageLines.isEmpty()) {
@@ -183,8 +180,11 @@ public final class DevSdkUpdater {
         return Status.SUCCESS;
     }
 
-    private static boolean checkSdkDest(File sdkDest) {
+    private static boolean checkSdkDest(File sdkDest, String platform) {
         for (OsEntry osEntry : OS_ENTRIES) {
+            if (platform != null && !Objects.equals(platform, osEntry.mFolder)) {
+                continue;
+            }
             File f = new File(sdkDest, osEntry.mFolder);
             if (!f.exists()) {
                 usage(
