@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 interface Configuration {
-    String nameRule(String rel, String name);
+    String nameRule(String pkg, String rel, String name);
 
     String mapImportJar(String jar);
 
