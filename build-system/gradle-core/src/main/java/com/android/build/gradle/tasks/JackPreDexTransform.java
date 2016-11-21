@@ -26,15 +26,19 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.transforms.TransformInputUtil;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
+import com.android.sdklib.BuildToolInfo;
+import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,20 +46,35 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
- * Predex Java libraries and convert to class to .jayce format using Jack for the import libraries,
- * and Jill for the classpath ones.
+ * Predex Java libraries and convert the .jar to Jack library format using Jack for the import
+ * libraries, and Jill for the classpath ones.
+ *
+ * <p>For the classpath libraries, we are only interested in compiling the sources against them.
+ * These will not end up in the final .apk, and because of that we only produce the Jack library
+ * file containing the .jayce files.
+ *
+ * <p>Packaged libraries will be converted using Jack, as we would like to pre-dex class files.
+ * Final Jack library file will contain .jayce files (one per type), and .dex files (one per type).
+ * In case we can benefit from the .dex file containing all types from the input jar, we will create
+ * that one as well. For the native multidex variants, we will end up packaging those in the .apk
+ * file. Please see {@link #getOutputTypes()} for more details about the generated output.
  */
 public class JackPreDexTransform extends Transform {
+    private static final ILogger LOG = LoggerWrapper.getLogger(JackPreDexTransform.class);
 
-    @NonNull private AndroidBuilder androidBuilder;
+    @NonNull private final Supplier<List<File>> bootClasspath;
+    @NonNull private final Supplier<BuildToolInfo> buildToolInfo;
+    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final JavaProcessExecutor javaProcessExecutor;
     @Nullable private String javaMaxHeapSize;
     private boolean forPackagedLibs;
     @NonNull
@@ -70,8 +89,12 @@ public class JackPreDexTransform extends Transform {
         return new Builder();
     }
 
-    private JackPreDexTransform(
-            @NonNull AndroidBuilder androidBuilder,
+
+    protected JackPreDexTransform(
+            @NonNull Supplier<List<File>> bootClasspath,
+            @NonNull Supplier<BuildToolInfo> buildToolInfo,
+            @NonNull ErrorReporter errorReporter,
+            @NonNull JavaProcessExecutor javaProcessExecutor,
             @Nullable String javaMaxHeapSize,
             @NonNull CoreJackOptions coreJackOptions,
             @NonNull ApiVersion minSdkVersion,
@@ -79,7 +102,10 @@ public class JackPreDexTransform extends Transform {
             boolean debugJackInternals,
             boolean verboseProcessing,
             boolean debuggable) {
-        this.androidBuilder = androidBuilder;
+        this.bootClasspath = bootClasspath;
+        this.buildToolInfo = buildToolInfo;
+        this.errorReporter = errorReporter;
+        this.javaProcessExecutor = javaProcessExecutor;
         this.javaMaxHeapSize = javaMaxHeapSize;
         this.coreJackOptions = coreJackOptions;
         this.minSdkVersion = minSdkVersion;
@@ -110,9 +136,11 @@ public class JackPreDexTransform extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.Scope> getScopes() {
-        return forPackagedLibs
-                ? TransformManager.SCOPE_FULL_PROJECT
-                :  Collections.singleton(QualifiedContent.Scope.PROVIDED_ONLY);
+        if (forPackagedLibs) {
+            return TransformManager.SCOPE_FULL_PROJECT;
+        } else {
+            return Collections.singleton(QualifiedContent.Scope.PROVIDED_ONLY);
+        }
     }
 
     @Override
@@ -123,9 +151,7 @@ public class JackPreDexTransform extends Transform {
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
-        return ImmutableMap.of(
-                "buildToolsRev",
-                androidBuilder.getTargetInfo().getBuildTools().getRevision().toString());
+        return ImmutableMap.of("buildToolsRev", buildToolInfo.get().getRevision().toString());
     }
 
     @Override
@@ -148,13 +174,13 @@ public class JackPreDexTransform extends Transform {
             IOException {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         checkNotNull(outputProvider);
-        checkNotNull(androidBuilder.getTargetInfo());
 
-        Iterable<File> jarInputs = forPackagedLibs
-                ? TransformInputUtil.getJarFiles(transformInvocation.getInputs())
-                : Iterables.concat(
-                        TransformInputUtil.getJarFiles(transformInvocation.getInputs()),
-                        androidBuilder.getBootClasspath(true));
+        Iterable<File> jarInputs = TransformInputUtil.getJarFiles(transformInvocation.getInputs());
+        if (!forPackagedLibs) {
+            // for the non-packaged libs add the boot classpath
+            jarInputs = Iterables.concat(jarInputs, bootClasspath.get());
+        }
+
         for (File file : jarInputs) {
             JackProcessOptions options = new JackProcessOptions();
             // for classpath libraries (the ones we are not packaging in the apk e.g. android.jar)
@@ -174,12 +200,17 @@ public class JackPreDexTransform extends Transform {
             options.setVerboseProcessing(verboseProcessing);
             options.setDebuggable(debuggable);
 
-            JackConversionCache.getCache().convertLibrary(
-                    androidBuilder,
-                    file,
-                    outFile,
-                    options,
-                    coreJackOptions.isJackInProcess());
+            //noinspection ConstantConditions - jackInProcess has a default value if not set
+            JackConversionCache.getCache()
+                    .convertLibrary(
+                            file,
+                            outFile,
+                            options,
+                            coreJackOptions.isJackInProcess(),
+                            buildToolInfo.get(),
+                            LOG,
+                            errorReporter,
+                            javaProcessExecutor);
         }
     }
 
@@ -214,7 +245,10 @@ public class JackPreDexTransform extends Transform {
     /** Builder class for {@link com.android.build.gradle.tasks.JackPreDexTransform}. */
     public static class Builder {
 
-        private AndroidBuilder androidBuilder;
+        private Supplier<List<File>> bootClasspath = ImmutableList::of;
+        private Supplier<BuildToolInfo> buildToolInfo;
+        private ErrorReporter errorReporter;
+        private JavaProcessExecutor javaProcessExecutor;
         private String javaMaxHeapSize;
         private CoreJackOptions coreJackOptions;
         private Boolean forPackagedLibs;
@@ -223,8 +257,23 @@ public class JackPreDexTransform extends Transform {
         private boolean verboseProcessing = false;
         private boolean debuggable = false;
 
-        public Builder androidBuilder(@NonNull AndroidBuilder androidBuilder) {
-            this.androidBuilder = androidBuilder;
+        public Builder bootClasspath(@NonNull Supplier<List<File>> bootClasspath) {
+            this.bootClasspath = bootClasspath;
+            return this;
+        }
+
+        public Builder buildToolInfo(@NonNull Supplier<BuildToolInfo> buildToolInfo) {
+            this.buildToolInfo = buildToolInfo;
+            return this;
+        }
+
+        public Builder errorReporter(@NonNull ErrorReporter errorReporter) {
+            this.errorReporter = errorReporter;
+            return this;
+        }
+
+        public Builder javaProcessExecutor(@NonNull JavaProcessExecutor javaProcessExecutor) {
+            this.javaProcessExecutor = javaProcessExecutor;
             return this;
         }
 
@@ -269,8 +318,16 @@ public class JackPreDexTransform extends Transform {
         }
 
         public JackPreDexTransform create() {
+            checkNotNull(buildToolInfo);
+            checkNotNull(errorReporter);
+            checkNotNull(javaProcessExecutor);
+            checkNotNull(coreJackOptions);
+            checkNotNull(minApiVersion);
             return new JackPreDexTransform(
-                    androidBuilder,
+                    bootClasspath,
+                    buildToolInfo,
+                    errorReporter,
+                    javaProcessExecutor,
                     javaMaxHeapSize,
                     coreJackOptions,
                     minApiVersion,

@@ -25,7 +25,6 @@ import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -49,9 +48,22 @@ public class MoreTruth {
     }
 
     @NonNull
+    public static ZipFileSubject assertThatZip(@Nullable File file) {
+        return assert_()
+                .about(
+                        new SubjectFactory<ZipFileSubject, File>() {
+                            @Override
+                            public ZipFileSubject getSubject(FailureStrategy fs, File that) {
+                                return new ZipFileSubject(fs, that);
+                            }
+                        })
+                .that(file);
+    }
+
+    @NonNull
     public static <T> Java8OptionalSubject<T> assertThat(
-            @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-            @NonNull java.util.Optional<T> optional) {
+            @SuppressWarnings("OptionalUsedAsFieldOrParameterType") @NonNull
+                    java.util.Optional<T> optional) {
         // need to create a new factory here so that it's generic
         return assert_().about(new SubjectFactory<Java8OptionalSubject<T>, Optional<T>>() {
             @Override
