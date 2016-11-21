@@ -37,17 +37,12 @@ import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Closeables;
-
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -56,6 +51,8 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
 /**
  * Handles the all things SDK for the Gradle plugin. There is one instance per project, around
@@ -280,13 +277,6 @@ public class SdkHandler {
 
     public void setSdkLibData(SdkLibData sdkLibData) {
         this.sdkLibData = sdkLibData;
-    }
-
-    /**
-     * Installs the NDK.
-     */
-    public void installNdk() {
-        ndkFolder = sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
     }
 
     /**

@@ -47,7 +47,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,8 +78,7 @@ public class SdkDownloadGradleTest {
             + System.lineSeparator()
             + "include $(BUILD_SHARED_LIBRARY)";
     private static final String BUILD_TOOLS_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
-    private static final String OLD_PLATFORM = "22";
-    private static final String NEW_PLATFORM = "23";
+    private static final String PLATFORM_VERSION = "25";
 
     @Rule
     public GradleTestProject project =
@@ -136,15 +134,18 @@ public class SdkDownloadGradleTest {
         // to start with.
         File realAndroidHome = SdkHelper.findSdkDir();
 
-        File oldPlatform = FileUtils.join(
-                realAndroidHome, SdkConstants.FD_PLATFORMS, "android-" + OLD_PLATFORM);
+        File platform =
+                FileUtils.join(
+                        realAndroidHome,
+                        SdkConstants.FD_PLATFORMS,
+                        "android-" + PLATFORM_VERSION);
         File buildTools =
                 FileUtils.join(realAndroidHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION);
-        assertThat(oldPlatform).isDirectory();
+        assertThat(platform).isDirectory();
         assertThat(buildTools).isDirectory();
 
         FileUtils.copyDirectoryToDirectory(
-                oldPlatform,
+                platform,
                 FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
 
         FileUtils.copyDirectoryToDirectory(
@@ -165,11 +166,13 @@ public class SdkDownloadGradleTest {
      */
     @Test
     public void checkCompileSdkPlatformDownloading() throws Exception {
+        deletePlatforms();
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + NEW_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -180,8 +183,7 @@ public class SdkDownloadGradleTest {
         File platformTarget = getPlatformFolder();
         assertThat(platformTarget).isDirectory();
 
-        File androidJarFile =
-                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS, "android-23", "android.jar");
+        File androidJarFile = FileUtils.join(getPlatformFolder(), "android.jar");
         assertThat(androidJarFile).exists();
     }
 
@@ -196,7 +198,7 @@ public class SdkDownloadGradleTest {
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -211,10 +213,6 @@ public class SdkDownloadGradleTest {
         File dxFile =
                 FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION, "dx");
         assertThat(dxFile).exists();
-    }
-
-    private void deleteBuildTools() throws IOException {
-        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
     }
 
     /**
@@ -254,7 +252,7 @@ public class SdkDownloadGradleTest {
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -275,7 +273,7 @@ public class SdkDownloadGradleTest {
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -294,13 +292,14 @@ public class SdkDownloadGradleTest {
 
     @Test
     public void checkCmakeMissingLicense() throws Exception {
-        previewLicenseFile.delete();
-        licenseFile.delete();
+        FileUtils.delete(previewLicenseFile);
+        deleteLicense();
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -318,42 +317,12 @@ public class SdkDownloadGradleTest {
     }
 
     @Test
-    @Ignore("TODO: fix, does this need ANDROID_NDK_HOME to be set? Should we default to ANDROID_HOME/ndk-bundle?")
-    public void checkNdkDownloading() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + OLD_PLATFORM
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\""
-                        + System.lineSeparator()
-                        + "android.externalNativeBuild.ndkBuild.path \"src/main/cpp/Android.mk\"");
-
-        TestFileUtils.appendToFile(
-                project.getLocalProp(), System.lineSeparator() + "ndk.dir=/dummy");
-
-        Files.write(project.file("src/main/cpp/Android.mk").toPath(),
-                androidMk.getBytes(StandardCharsets.UTF_8));
-
-        getExecutor().run("assembleDebug");
-
-        File ndkBundle = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
-        assertThat(ndkBundle).isDirectory();
-
-        File ndkBuild = FileUtils.join(mSdkHome, SdkConstants.FD_NDK, "ndk-build");
-        assertThat(ndkBuild).exists();
-    }
-
-    @Test
     public void checkDependencies_androidRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -373,17 +342,18 @@ public class SdkDownloadGradleTest {
     }
 
     @Test
-    @Ignore("TODO: make the project compile with Play Services.")
     public void checkDependencies_googleRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
                         + "\""
+                        + System.lineSeparator()
+                        + "android.defaultConfig.multiDexEnabled true"
                         + System.lineSeparator()
                         + "dependencies { compile 'com.google.android.gms:play-services:"
                         + GradleTestProject.PLAY_SERVICES_VERSION
@@ -404,7 +374,7 @@ public class SdkDownloadGradleTest {
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -463,7 +433,7 @@ public class SdkDownloadGradleTest {
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -481,12 +451,14 @@ public class SdkDownloadGradleTest {
 
     @Test
     public void checkNoLicenseError_PlatformTarget() throws Exception {
-        FileUtils.delete(licenseFile);
+        deleteLicense();
+        deletePlatforms();
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + NEW_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -496,14 +468,20 @@ public class SdkDownloadGradleTest {
         assertNotNull(result.getException());
 
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Android SDK Platform 23");
+                .contains(
+                        "Android SDK Platform "
+                                + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
     }
 
+    private void deleteLicense() throws IOException {
+        FileUtils.delete(licenseFile);
+    }
+
     @Test
     public void checkNoLicenseError_AddonTarget() throws Exception {
-        FileUtils.delete(licenseFile);
+        deleteLicense();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -524,14 +502,14 @@ public class SdkDownloadGradleTest {
 
     @Test
     public void checkNoLicenseError_BuildTools() throws Exception {
-        FileUtils.delete(licenseFile);
+        deleteLicense();
         deleteBuildTools();
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
                         + "android.compileSdkVersion "
-                        + OLD_PLATFORM
+                        + PLATFORM_VERSION
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -550,7 +528,7 @@ public class SdkDownloadGradleTest {
 
     @Test
     public void checkNoLicenseError_MultiplePackages() throws Exception {
-        FileUtils.delete(licenseFile);
+        deleteLicense();
         deleteBuildTools();
 
         TestFileUtils.appendToFile(
@@ -602,7 +580,7 @@ public class SdkDownloadGradleTest {
                     project.getBuildFile(),
                     System.lineSeparator()
                             + "android.compileSdkVersion "
-                            + OLD_PLATFORM
+                            + PLATFORM_VERSION
                             + System.lineSeparator()
                             + "android.buildToolsVersion \""
                             + BUILD_TOOLS_VERSION
@@ -636,6 +614,15 @@ public class SdkDownloadGradleTest {
     }
 
     private File getPlatformFolder() {
-        return FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS, "android-23");
+        return FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS, "android-" + PLATFORM_VERSION);
     }
+
+    private void deleteBuildTools() throws IOException {
+        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
+    }
+
+    private void deletePlatforms() throws IOException {
+        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
+    }
+
 }
