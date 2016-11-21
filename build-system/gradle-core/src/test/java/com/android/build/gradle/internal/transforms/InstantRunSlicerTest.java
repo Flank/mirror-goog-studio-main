@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -42,15 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logger;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -60,6 +52,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.gradle.api.logging.Logger;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Test for the {@link InstantRunSlicer}
@@ -232,7 +232,7 @@ public class InstantRunSlicerTest {
 
         Optional<Integer> sliceForFile =
                 findSliceForFile(getOutputDir(), getInputDir(), singleClassFile);
-        assertThat(sliceForFile.isPresent());
+        assertTrue(sliceForFile.isPresent());
         int slot = sliceForFile.get();
 
         File outputSlice = outputSlices[slot];
@@ -311,7 +311,7 @@ public class InstantRunSlicerTest {
 
         Optional<Integer> sliceForFile =
                 findSliceForFile(getOutputDir(), getInputDir(), singleClassFile);
-        assertThat(sliceForFile.isPresent());
+        assertTrue(sliceForFile.isPresent());
         int slot = sliceForFile.get();
 
         File outputSlice = outputSlices[slot];
@@ -320,6 +320,7 @@ public class InstantRunSlicerTest {
     }
 
     @Test
+    @Ignore("http://b.android.com/228277")
     public void testRemovingDirectory() throws IOException, TransformException,
             InterruptedException {
         InstantRunSlicer slicer = new InstantRunSlicer(logger, variantScope);
@@ -350,7 +351,7 @@ public class InstantRunSlicerTest {
 
         Optional<Integer> sliceForFile =
                 findSliceForFile(getOutputDir(), getInputDir(), singleClassFile);
-        assertThat(!sliceForFile.isPresent());
+        assertFalse(sliceForFile.isPresent());
     }
 
     private static Optional<Integer> findSliceForFile(

@@ -16,18 +16,13 @@
 
 package com.android.build.gradle.internal.pipeline;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
+import com.google.common.truth.Truth;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class BitMaskTestUtilsTest {
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void checkValidCase() {
@@ -36,18 +31,23 @@ public class BitMaskTestUtilsTest {
 
     @Test
     public void checkInvalidCase() {
-        exception.expect(AssertionError.class);
-        exception.expectMessage(containsString("34 [100010]"));
-        exception.expectMessage(containsString("2 [10]"));
-        exception.expectMessage(containsString("are not unique"));
-        BitMaskTestUtils.checkScopeBitMaskUnique(ImmutableSet.of(1,2,4,8,16,34), Integer::intValue);
+        try {
+            BitMaskTestUtils.checkScopeBitMaskUnique(ImmutableSet.of(1,2,4,8,16,34), Integer::intValue);
+            fail();
+        } catch (AssertionError e) {
+            Truth.assertThat(e.getMessage()).contains("34 [100010]");
+            Truth.assertThat(e.getMessage()).contains("2 [10]");
+            Truth.assertThat(e.getMessage()).contains("are not unique");
+        }
     }
 
     @Test
     public void checkEmptyMask() {
-        exception.expect(AssertionError.class);
-        exception.expectMessage(containsString("Bit mask for 0 is zero"));
-        BitMaskTestUtils.checkScopeBitMaskUnique(ImmutableSet.of(0), Integer::intValue);
+        try {
+            BitMaskTestUtils.checkScopeBitMaskUnique(ImmutableSet.of(0), Integer::intValue);
+            fail();
+        } catch (AssertionError e) {
+            Truth.assertThat(e.getMessage()).contains("Bit mask for 0 is zero");
+        }
     }
-
 }
