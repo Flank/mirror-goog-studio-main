@@ -67,19 +67,15 @@ maven_pom(
 
 java_test(
     name = "tests",
-    # TODO: Make IR tests work.
-    srcs = glob(
-        ["src/test/java/**/*.java"],
-        exclude = ["src/test/java/com/android/build/gradle/internal/incremental/**"],
-    ),
+    srcs = glob(["src/test/java/**/*.java"]),
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["manual"],  # TODO: Make these test pass.
-    test_class = "com.android.testutils.JarTestSuite",
+    # TODO: Remove the blacklist, once NDK is checked in.
+    test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     deps = [
         ":gradle-core",
         "//tools/analytics-library:analytics-protos",
