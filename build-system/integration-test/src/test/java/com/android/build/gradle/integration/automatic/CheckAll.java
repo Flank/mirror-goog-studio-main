@@ -40,7 +40,7 @@ import org.junit.runners.Parameterized;
  * Test case that executes "standard" gradle tasks in all our tests projects.
  *
  * <p>You can run only one test like this:
- * <p>{@code gw :b:i-t:automaticTest --tests=*.CheckAll.assembleAndLint[abiPureSplits]}
+ * <p>{@code ./gradlew :base:integration-test:automaticTest --tests=*[abiPureSplits]}
  */
 @RunWith(ParallelParameterized.class)
 public class CheckAll {
