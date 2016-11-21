@@ -16,7 +16,7 @@ java_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
@@ -34,7 +34,6 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":apkzlib",
-        "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",

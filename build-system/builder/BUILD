@@ -36,6 +36,7 @@ maven_java_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.squareup_javawriter",
         "//tools/base/third_party:commons-codec_commons-codec",

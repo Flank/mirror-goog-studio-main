@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.sign;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
@@ -40,6 +38,8 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -186,20 +186,20 @@ public class SignatureExtension {
     /**
      * Extension maintaining the manifest.
      */
-    @NonNull
+    @Nonnull
     private final ManifestGenerationExtension mManifestExtension;
 
     /**
      * Message digest to use.
      */
-    @NonNull
+    @Nonnull
     private final MessageDigest mMessageDigest;
 
     /**
      * Signature file. Note that the signature file is itself a manifest file but it is
      * a different one from the "standard" MANIFEST.MF.
      */
-    @NonNull
+    @Nonnull
     private final Manifest mSignatureFile;
 
     /**
@@ -210,25 +210,25 @@ public class SignatureExtension {
     /**
      * Signer certificate.
      */
-    @NonNull
+    @Nonnull
     private final X509Certificate mCertificate;
 
     /**
      * The private key used to sign the jar.
      */
-    @NonNull
+    @Nonnull
     private final PrivateKey mPrivateKey;
 
     /**
      * Algorithm with which .SF file is signed.
      */
-    @NonNull
+    @Nonnull
     private final SignatureAlgorithm mSignatureAlgorithm;
 
     /**
      * Digest algorithm to use for MANIFEST.MF and contents of APK entries.
      */
-    @NonNull
+    @Nonnull
     private final DigestAlgorithm mDigestAlgorithm;
 
     /**
@@ -256,8 +256,8 @@ public class SignatureExtension {
      *
      * @throws NoSuchAlgorithmException failed to obtain the digest algorithm.
      */
-    public SignatureExtension(@NonNull ManifestGenerationExtension manifestExtension,
-            int minSdkVersion, @NonNull X509Certificate certificate, @NonNull PrivateKey privateKey,
+    public SignatureExtension(@Nonnull ManifestGenerationExtension manifestExtension,
+            int minSdkVersion, @Nonnull X509Certificate certificate, @Nonnull PrivateKey privateKey,
             @Nullable String apkSignedHeaderValue)
             throws NoSuchAlgorithmException {
         mManifestExtension = manifestExtension;
@@ -292,7 +292,7 @@ public class SignatureExtension {
 
             @Nullable
             @Override
-            public IOExceptionRunnable added(@NonNull final StoredEntry entry,
+            public IOExceptionRunnable added(@Nonnull final StoredEntry entry,
                     @Nullable final StoredEntry replaced) {
                 if (replaced != null) {
                     Preconditions.checkArgument(entry.getCentralDirectoryHeader().getName().equals(
@@ -314,7 +314,7 @@ public class SignatureExtension {
 
             @Nullable
             @Override
-            public IOExceptionRunnable removed(@NonNull final StoredEntry entry) {
+            public IOExceptionRunnable removed(@Nonnull final StoredEntry entry) {
                 if (isIgnoredFile(entry.getCentralDirectoryHeader().getName())) {
                     return null;
                 }
@@ -480,7 +480,7 @@ public class SignatureExtension {
      * @throws IOException failed to add the entry to the signature file (or failed to compute the
      * entry's signature)
      */
-    private void added(@NonNull StoredEntry entry) throws IOException {
+    private void added(@Nonnull StoredEntry entry) throws IOException {
         setDigestForEntry(entry);
     }
 
@@ -491,7 +491,7 @@ public class SignatureExtension {
      * @param entry the entry
      * @throws IOException failed to compute the entry's digest
      */
-    private void setDigestForEntry(@NonNull StoredEntry entry) throws IOException {
+    private void setDigestForEntry(@Nonnull StoredEntry entry) throws IOException {
         String entryName = entry.getCentralDirectoryHeader().getName();
         byte[] entryDigestArray = mMessageDigest.digest(entry.read());
         String entryDigest = Base64.getEncoder().encodeToString(entryDigestArray);
@@ -522,7 +522,7 @@ public class SignatureExtension {
      *
      * @param entry the entry removed
      */
-    private void removed(@NonNull StoredEntry entry) {
+    private void removed(@Nonnull StoredEntry entry) {
         mSignatureFile.getEntries().remove(entry.getCentralDirectoryHeader().getName());
         mManifestExtension.removeEntry(entry.getCentralDirectoryHeader().getName());
         mDirty = true;
@@ -534,7 +534,7 @@ public class SignatureExtension {
      * @param name the file name
      * @return should it be ignored
      */
-    public static boolean isIgnoredFile(@NonNull String name) {
+    public static boolean isIgnoredFile(@Nonnull String name) {
         String metaInfPfx = ManifestGenerationExtension.META_INF_DIR + "/";
         boolean inMetaInf = name.startsWith(metaInfPfx)
                 && !name.substring(metaInfPfx.length()).contains("/");
@@ -581,7 +581,7 @@ public class SignatureExtension {
      * @throws OperatorCreationException failed to sign the data
      * @throws CMSException failed to sign the data
      */
-    private byte[] computePkcs7Signature(@NonNull byte[] data) throws IOException,
+    private byte[] computePkcs7Signature(@Nonnull byte[] data) throws IOException,
             CertificateEncodingException, OperatorCreationException, CMSException {
         CMSProcessableByteArray cmsData = new CMSProcessableByteArray(data);
 

@@ -16,12 +16,11 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.google.common.io.Closer;
-
 import java.io.Closeable;
 import java.io.IOException;
+import javax.annotation.Nonnull;
 
 /**
  * Container that has two bytes sources: one representing raw data and another processed data.
@@ -34,13 +33,13 @@ public class ProcessedAndRawByteSources implements Closeable {
     /**
      * The processed byte source.
      */
-    @NonNull
+    @Nonnull
     private final CloseableByteSource mProcessedSource;
 
     /**
      * The processed raw source.
      */
-    @NonNull
+    @Nonnull
     private final CloseableByteSource mRawSource;
 
     /**
@@ -48,8 +47,8 @@ public class ProcessedAndRawByteSources implements Closeable {
      * @param processedSource the processed source
      * @param rawSource the raw source
      */
-    public ProcessedAndRawByteSources(@NonNull CloseableByteSource processedSource,
-            @NonNull CloseableByteSource rawSource) {
+    public ProcessedAndRawByteSources(@Nonnull CloseableByteSource processedSource,
+            @Nonnull CloseableByteSource rawSource) {
         mProcessedSource = processedSource;
         mRawSource = rawSource;
     }
@@ -58,7 +57,7 @@ public class ProcessedAndRawByteSources implements Closeable {
      * Obtains a byte source that read the processed contents of the entry.
      * @return a byte source
      */
-    @NonNull
+    @Nonnull
     public CloseableByteSource getProcessedByteSource() {
         return mProcessedSource;
     }
@@ -69,7 +68,7 @@ public class ProcessedAndRawByteSources implements Closeable {
      * source returned by {@link #getProcessedByteSource()}.
      * @return a byte source
      */
-    @NonNull
+    @Nonnull
     public CloseableByteSource getRawByteSource() {
         return mRawSource;
     }

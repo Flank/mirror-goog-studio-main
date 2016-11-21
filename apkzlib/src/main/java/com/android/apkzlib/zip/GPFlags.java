@@ -16,9 +16,8 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-
 import java.io.IOException;
+import javax.annotation.Nonnull;
 
 /**
  * General purpose bit flags. Contains the encoding of the zip's general purpose bits.
@@ -128,7 +127,7 @@ class GPFlags {
      * @param utf8Encoding should UTF-8 encoding be used?
      * @return the new bit mask
      */
-    @NonNull
+    @Nonnull
     static GPFlags make(boolean utf8Encoding) {
         long flags = 0;
 
@@ -147,7 +146,7 @@ class GPFlags {
      * @return the created flag information
      * @throws IOException unsupported options are used in the bit mask
      */
-    @NonNull
+    @Nonnull
     static GPFlags from(long bits) throws IOException {
         if ((bits & BIT_ENCRYPTION) != 0) {
             throw new IOException("Zip files with encrypted of entries not supported.");

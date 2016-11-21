@@ -16,12 +16,11 @@
 
 package com.android.apkzlib.sign.v2;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.security.MessageDigest;
+import javax.annotation.Nonnull;
 
 /**
  * Contiguous section of {@link ZFile} which is fed into {@link MessageDigest} instances.
@@ -35,7 +34,7 @@ public class ZFileDigestSource implements DigestSource {
      * Constructs a new {@code ZFileDigestSource} representing the section of the file starting
      * at the provided {@code offset} and extending for the provided {@code size} number of bytes.
      */
-    public ZFileDigestSource(@NonNull ZFile file, long offset, long size) {
+    public ZFileDigestSource(@Nonnull ZFile file, long offset, long size) {
         Preconditions.checkArgument(offset >= 0, "offset: %s", offset);
         Preconditions.checkArgument(size >= 0, "size: %s", size);
         mFile = file;
@@ -50,7 +49,7 @@ public class ZFileDigestSource implements DigestSource {
     }
 
     @Override
-    public void feedDigests(long offset, int size, @NonNull MessageDigest[] digests)
+    public void feedDigests(long offset, int size, @Nonnull MessageDigest[] digests)
             throws IOException {
         Preconditions.checkArgument(offset >= 0, "offset: %s", offset);
         Preconditions.checkArgument(size >= 0, "size: %s", size);

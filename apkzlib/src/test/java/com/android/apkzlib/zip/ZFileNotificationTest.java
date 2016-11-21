@@ -21,21 +21,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.ApkZLibPair;
 import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.google.common.collect.Lists;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 public class ZFileNotificationTest {
     private static class KeepListener extends ZFileExtension {
@@ -77,7 +75,7 @@ public class ZFileNotificationTest {
 
         @Nullable
         @Override
-        public IOExceptionRunnable added(@NonNull StoredEntry entry,
+        public IOExceptionRunnable added(@Nonnull StoredEntry entry,
                 @Nullable StoredEntry replaced) {
             added.add(new ApkZLibPair<>(entry, replaced));
             return returnRunnable;
@@ -85,7 +83,7 @@ public class ZFileNotificationTest {
 
         @Nullable
         @Override
-        public IOExceptionRunnable removed(@NonNull StoredEntry entry) {
+        public IOExceptionRunnable removed(@Nonnull StoredEntry entry) {
             removed.add(entry);
             return returnRunnable;
         }

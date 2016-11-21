@@ -16,15 +16,14 @@
 
 package com.android.apkzlib.utils;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Objects;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * A cache for file contents. The cache allows closing a file and saving in memory its contents
@@ -53,7 +52,7 @@ public class CachedFileContents<T> {
     /**
      * The file.
      */
-    @NonNull
+    @Nonnull
     private File mFile;
 
     /**
@@ -84,7 +83,7 @@ public class CachedFileContents<T> {
      *
      * @param file the file
      */
-    public CachedFileContents(@NonNull File file) {
+    public CachedFileContents(@Nonnull File file) {
         mFile = file;
     }
 
@@ -168,7 +167,7 @@ public class CachedFileContents<T> {
      * @return the file; this file always exists and contains the old (cached) contents of the
      * file
      */
-    @NonNull
+    @Nonnull
     public File getFile() {
         return mFile;
     }

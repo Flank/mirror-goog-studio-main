@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.sign;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.sign.v2.ApkSignerV2;
 import com.android.apkzlib.sign.v2.ByteArrayDigestSource;
 import com.android.apkzlib.sign.v2.DigestSource;
@@ -29,13 +27,14 @@ import com.android.apkzlib.zip.ZFileExtension;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Extension that adds full APK signing. This extension will:
@@ -59,19 +58,19 @@ public class FullApkSignExtension {
     /**
      * The zip file this extension is registered with.
      */
-    @NonNull
+    @Nonnull
     private final ZFile mFile;
 
     /**
      * Signer certificate.
      */
-    @NonNull
+    @Nonnull
     private final X509Certificate mCertificate;
 
     /**
      * Signer private key.
      */
-    @NonNull
+    @Nonnull
     private final PrivateKey mPrivateKey;
 
     /**
@@ -101,10 +100,10 @@ public class FullApkSignExtension {
      *
      * @throws InvalidKeyException if the signing key is not suitable for signing this APK.
      */
-    public FullApkSignExtension(@NonNull ZFile file,
+    public FullApkSignExtension(@Nonnull ZFile file,
             int minSdkVersion,
-            @NonNull X509Certificate certificate,
-            @NonNull PrivateKey privateKey) throws InvalidKeyException {
+            @Nonnull X509Certificate certificate,
+            @Nonnull PrivateKey privateKey) throws InvalidKeyException {
         mFile = file;
         mCertificate = certificate;
         mPrivateKey = privateKey;
@@ -129,7 +128,7 @@ public class FullApkSignExtension {
 
             @Nullable
             @Override
-            public IOExceptionRunnable added(@NonNull StoredEntry entry,
+            public IOExceptionRunnable added(@Nonnull StoredEntry entry,
                     @Nullable StoredEntry replaced) {
                 onZipChanged();
                 return null;
@@ -137,7 +136,7 @@ public class FullApkSignExtension {
 
             @Nullable
             @Override
-            public IOExceptionRunnable removed(@NonNull StoredEntry entry) {
+            public IOExceptionRunnable removed(@Nonnull StoredEntry entry) {
                 onZipChanged();
                 return null;
             }
@@ -183,7 +182,7 @@ public class FullApkSignExtension {
      * @return the signature data block
      * @throws IOException failed to generate a signature
      */
-    @NonNull
+    @Nonnull
     private byte[] generateApkSigningBlock() throws IOException {
         byte[] centralDirectoryData = mFile.getCentralDirectoryBytes();
         byte[] eocdData = mFile.getEocdBytes();

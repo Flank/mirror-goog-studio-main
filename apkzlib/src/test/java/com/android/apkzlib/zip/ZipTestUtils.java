@@ -18,11 +18,11 @@ package com.android.apkzlib.zip;
 
 import static org.junit.Assert.assertFalse;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import javax.annotation.Nonnull;
 import org.junit.rules.TemporaryFolder;
 
 /**
@@ -37,8 +37,8 @@ class ZipTestUtils {
      * @return the resource data
      * @throws IOException I/O failed
      */
-    @NonNull
-    static byte[] rsrcBytes(@NonNull String rsrcName) throws IOException {
+    @Nonnull
+    static byte[] rsrcBytes(@Nonnull String rsrcName) throws IOException {
         return ApkZFileTestUtils.getResourceBytes("/testData/packaging/" + rsrcName).read();
     }
 
@@ -52,7 +52,7 @@ class ZipTestUtils {
      * @return the file that was created with the resource
      * @throws IOException failed to clone the resource
      */
-    static File cloneRsrc(@NonNull String rsrcName, @NonNull TemporaryFolder folder)
+    static File cloneRsrc(@Nonnull String rsrcName, @Nonnull TemporaryFolder folder)
             throws IOException {
         String cloneName;
         if (rsrcName.contains("/")) {
@@ -77,9 +77,9 @@ class ZipTestUtils {
      * @throws IOException failed to clone the resource
      */
     static File cloneRsrc(
-            @NonNull String rsrcName,
-            @NonNull TemporaryFolder folder,
-            @NonNull String cloneName)
+            @Nonnull String rsrcName,
+            @Nonnull TemporaryFolder folder,
+            @Nonnull String cloneName)
             throws IOException {
         File result = new File(folder.getRoot(), cloneName);
         assertFalse(result.exists());

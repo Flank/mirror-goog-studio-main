@@ -16,11 +16,10 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-
 import com.android.apkzlib.utils.IOExceptionRunnable;
 import java.io.IOException;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An extension of a {@link ZFile}. Extensions are notified when files are open, updated, closed and
@@ -127,7 +126,7 @@ public abstract class ZFileExtension {
      * @return an optional runnable to run when notification of all listeners has ended
      */
     @Nullable
-    public IOExceptionRunnable added(@NonNull StoredEntry entry, @Nullable StoredEntry replaced) {
+    public IOExceptionRunnable added(@Nonnull StoredEntry entry, @Nullable StoredEntry replaced) {
         return null;
     }
 
@@ -141,7 +140,7 @@ public abstract class ZFileExtension {
      * @return an optional runnable to run when notification of all listeners has ended
      */
     @Nullable
-    public IOExceptionRunnable removed(@NonNull StoredEntry entry) {
+    public IOExceptionRunnable removed(@Nonnull StoredEntry entry) {
         return null;
     }
 }

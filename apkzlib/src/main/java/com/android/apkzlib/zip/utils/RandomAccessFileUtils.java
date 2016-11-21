@@ -16,10 +16,9 @@
 
 package com.android.apkzlib.zip.utils;
 
-import com.android.annotations.NonNull;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import javax.annotation.Nonnull;
 
 /**
  * Utility class with utility methods for random access files.
@@ -39,7 +38,7 @@ public class RandomAccessFileUtils {
      * @param data the array that will receive the data
      * @throws IOException
      */
-    public static void fullyRead(@NonNull RandomAccessFile raf, @NonNull byte[] data)
+    public static void fullyRead(@Nonnull RandomAccessFile raf, @Nonnull byte[] data)
             throws IOException {
         int r;
         int p = 0;

@@ -16,18 +16,16 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Contains an extra field.
@@ -76,7 +74,7 @@ public class ExtraField {
      *
      * @param rawData the raw data; will not be parsed unless needed
      */
-    public ExtraField(@NonNull byte[] rawData) {
+    public ExtraField(@Nonnull byte[] rawData) {
         mRawData = rawData;
         mSegments = null;
     }
@@ -94,7 +92,7 @@ public class ExtraField {
      *
      * @param segments the segments
      */
-    public ExtraField(@NonNull ImmutableList<Segment> segments) {
+    public ExtraField(@Nonnull ImmutableList<Segment> segments) {
         mRawData = null;
         mSegments = segments;
     }
@@ -196,7 +194,7 @@ public class ExtraField {
      * written
      * @throws IOException failed to write the extra fields
      */
-    public void write(@NonNull ByteBuffer out) throws IOException {
+    public void write(@Nonnull ByteBuffer out) throws IOException {
         if (mRawData != null) {
             out.put(mRawData);
         } else {
@@ -213,7 +211,7 @@ public class ExtraField {
      * @param headerId the header ID
      * @return the segmnet factory that creates segments with the given header
      */
-    @NonNull
+    @Nonnull
     private static SegmentFactory identifySegmentFactory(int headerId) {
         if (headerId == ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID) {
             return AlignmentSegment::new;
@@ -249,7 +247,7 @@ public class ExtraField {
          * be written
          * @throws IOException failed to write segment data
          */
-        void write(@NonNull ByteBuffer out) throws IOException;
+        void write(@Nonnull ByteBuffer out) throws IOException;
     }
 
     /**
@@ -266,8 +264,8 @@ public class ExtraField {
          * @return the created segment
          * @throws IOException failed to create the segment from the data
          */
-        @NonNull
-        Segment make(int headerId, @NonNull byte[] data) throws IOException;
+        @Nonnull
+        Segment make(int headerId, @Nonnull byte[] data) throws IOException;
     }
 
     /**
@@ -284,7 +282,7 @@ public class ExtraField {
         /**
          * Data in the segment.
          */
-        @NonNull
+        @Nonnull
         private final byte[] mData;
 
         /**
@@ -293,7 +291,7 @@ public class ExtraField {
          * @param headerId the header ID
          * @param data the segment data
          */
-        RawDataSegment(int headerId, @NonNull byte[] data) {
+        RawDataSegment(int headerId, @Nonnull byte[] data) {
             mHeaderId = headerId;
             mData = data;
         }
@@ -304,7 +302,7 @@ public class ExtraField {
         }
 
         @Override
-        public void write(@NonNull ByteBuffer out) throws IOException {
+        public void write(@Nonnull ByteBuffer out) throws IOException {
             LittleEndianUtils.writeUnsigned2Le(out, mHeaderId);
             LittleEndianUtils.writeUnsigned2Le(out, mData.length);
             out.put(mData);
@@ -360,7 +358,7 @@ public class ExtraField {
          * @param data the segment data
          * @throws IOException failed to create the segment from the data
          */
-        public AlignmentSegment(int headerId, @NonNull byte[] data) throws IOException {
+        public AlignmentSegment(int headerId, @Nonnull byte[] data) throws IOException {
             Preconditions.checkArgument(headerId == ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID);
 
             ByteBuffer dataBuffer = ByteBuffer.wrap(data);
@@ -373,7 +371,7 @@ public class ExtraField {
         }
 
         @Override
-        public void write(@NonNull ByteBuffer out) throws IOException {
+        public void write(@Nonnull ByteBuffer out) throws IOException {
             LittleEndianUtils.writeUnsigned2Le(out, ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID);
             LittleEndianUtils.writeUnsigned2Le(out, mPadding + 2);
             LittleEndianUtils.writeUnsigned2Le(out, mAlignment);

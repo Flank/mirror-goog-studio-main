@@ -16,12 +16,11 @@
 
 package com.android.apkzlib.utils;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Function that can throw an I/O Exception
@@ -41,8 +40,8 @@ public interface IOExceptionFunction<F, T> {
      *
      * @param f the function
      */
-    @NonNull
-    static <F, T> Function<F, T> asFunction(@NonNull IOExceptionFunction<F, T> f)  {
+    @Nonnull
+    static <F, T> Function<F, T> asFunction(@Nonnull IOExceptionFunction<F, T> f)  {
         return i -> {
             try {
                 return f.apply(i);

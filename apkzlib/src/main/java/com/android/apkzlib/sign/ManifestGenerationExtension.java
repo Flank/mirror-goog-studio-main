@@ -16,18 +16,15 @@
 
 package com.android.apkzlib.sign;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.CachedSupplier;
 import com.android.apkzlib.utils.IOExceptionRunnable;
+import com.android.apkzlib.zfile.ManifestAttributes;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.apkzlib.zip.ZFileExtension;
-import com.android.apkzlib.zfile.ManifestAttributes;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +32,8 @@ import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Extension to {@link ZFile} that will generate a manifest. The extension will register
@@ -67,13 +66,13 @@ public class ManifestGenerationExtension {
     /**
      * Who should be reported as the manifest builder.
      */
-    @NonNull
+    @Nonnull
     private final String mBuiltBy;
 
     /**
      * Who should be reported as the manifest creator.
      */
-    @NonNull
+    @Nonnull
     private final String mCreatedBy;
 
     /**
@@ -85,7 +84,7 @@ public class ManifestGenerationExtension {
     /**
      * The zip file's manifest.
      */
-    @NonNull
+    @Nonnull
     private final Manifest mManifest;
 
     /**
@@ -101,7 +100,7 @@ public class ManifestGenerationExtension {
      * and will cache it. All further requests of the manifest's byte representation will
      * receive the same byte array.
      */
-    @NonNull
+    @Nonnull
     private CachedSupplier<byte[]> mManifestBytes;
 
     /**
@@ -126,7 +125,7 @@ public class ManifestGenerationExtension {
      * @param builtBy who built the manifest?
      * @param createdBy who created the manifest?
      */
-    public ManifestGenerationExtension(@NonNull String builtBy, @NonNull String createdBy) {
+    public ManifestGenerationExtension(@Nonnull String builtBy, @Nonnull String createdBy) {
         mBuiltBy = builtBy;
         mCreatedBy = createdBy;
         mManifest = new Manifest();
@@ -158,7 +157,7 @@ public class ManifestGenerationExtension {
      * @param zFile the zip file to add the extension to
      * @throws IOException failed to analyze the zip
      */
-    public void register(@NonNull ZFile zFile) throws IOException {
+    public void register(@Nonnull ZFile zFile) throws IOException {
         Preconditions.checkState(mExtension == null, "register() has already been invoked.");
         mZFile = zFile;
 
@@ -220,7 +219,7 @@ public class ManifestGenerationExtension {
      * @param attribute the attribute
      * @param value the value
      */
-    private void setMainAttribute(@NonNull String attribute, @NonNull String value) {
+    private void setMainAttribute(@Nonnull String attribute, @Nonnull String value) {
         Attributes mainAttributes = mManifest.getMainAttributes();
         String current = mainAttributes.getValue(attribute);
         if (!value.equals(current)) {
@@ -251,7 +250,7 @@ public class ManifestGenerationExtension {
      *
      * @return the {@link ZFile}
      */
-    @NonNull
+    @Nonnull
     public ZFile zFile() {
         Preconditions.checkNotNull(mZFile, "mZFile == null");
         return mZFile;
@@ -278,7 +277,7 @@ public class ManifestGenerationExtension {
      * if it doesn't have the specified attribute
      */
     @Nullable
-    public String getAttribute(@NonNull String entryName, @NonNull String attr) {
+    public String getAttribute(@Nonnull String entryName, @Nonnull String attr) {
         Attributes attrs = mManifest.getAttributes(entryName);
         if (attrs == null) {
             return null;
@@ -295,8 +294,8 @@ public class ManifestGenerationExtension {
      * @param attr the name of the attribute
      * @param value the attribute value
      */
-    public void setAttribute(@NonNull String entryName, @NonNull String attr,
-            @NonNull String value) {
+    public void setAttribute(@Nonnull String entryName, @Nonnull String attr,
+            @Nonnull String value) {
         Attributes attrs = mManifest.getAttributes(entryName);
         if (attrs == null) {
             attrs = new Attributes();
@@ -318,7 +317,7 @@ public class ManifestGenerationExtension {
      * the manifest is not modified
      * @throws IOException failed to compute the manifest's byte representation
      */
-    @NonNull
+    @Nonnull
     public byte[] getManifestBytes() throws IOException {
         return mManifestBytes.get();
     }
@@ -328,7 +327,7 @@ public class ManifestGenerationExtension {
      *
      * @return a map that relates entry names to entry attributes
      */
-    @NonNull
+    @Nonnull
     public Map<String, Attributes> allEntries() {
         return Maps.newHashMap(mManifest.getEntries());
     }
@@ -339,7 +338,7 @@ public class ManifestGenerationExtension {
      *
      * @param name the entry's name
      */
-    public void removeEntry(@NonNull String name) {
+    public void removeEntry(@Nonnull String name) {
         if (mManifest.getEntries().remove(name) != null) {
             markDirty();
         }

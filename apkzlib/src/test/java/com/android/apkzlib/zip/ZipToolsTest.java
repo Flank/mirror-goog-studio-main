@@ -22,8 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -38,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class ZipToolsTest {
     public String mName;
 
     @Rule
-    @NonNull
+    @Nonnull
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "{4} {index}")
@@ -104,7 +104,7 @@ public class ZipToolsTest {
         return zfile;
     }
 
-    private static void assertFileInZip(@NonNull ZFile zfile, @NonNull String name) throws Exception {
+    private static void assertFileInZip(@Nonnull ZFile zfile, @Nonnull String name) throws Exception {
         StoredEntry root = zfile.get(name);
         assertNotNull(root);
 

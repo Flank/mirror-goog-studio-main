@@ -16,18 +16,17 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Set;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * The ZipField class represents a field in a record in a zip file. Zip files are made with records
@@ -58,7 +57,7 @@ abstract class ZipField {
     /**
      * Field name. Used for providing (more) useful error messages.
      */
-    @NonNull
+    @Nonnull
     private final String mName;
 
     /**
@@ -80,7 +79,7 @@ abstract class ZipField {
     /**
      * All invariants that this field must verify.
      */
-    @NonNull
+    @Nonnull
     private Set<ZipFieldInvariant> mInvariants;
 
     /**
@@ -91,7 +90,7 @@ abstract class ZipField {
      * @param name the field's name
      * @param invariants the invariants that must be verified by the field
      */
-    ZipField(int offset, int size, @NonNull String name, ZipFieldInvariant... invariants) {
+    ZipField(int offset, int size, @Nonnull String name, ZipFieldInvariant... invariants) {
         Preconditions.checkArgument(offset >= 0, "offset >= 0");
         Preconditions.checkArgument(size == 2 || size == 4, "size != 2 && size != 4");
 
@@ -110,7 +109,7 @@ abstract class ZipField {
      * @param expected the expected field value
      * @param name the field's name
      */
-    ZipField(int offset, int size, long expected, @NonNull String name) {
+    ZipField(int offset, int size, long expected, @Nonnull String name) {
         Preconditions.checkArgument(offset >= 0, "offset >= 0");
         Preconditions.checkArgument(size == 2 || size == 4, "size != 2 && size != 4");
 
@@ -144,7 +143,7 @@ abstract class ZipField {
      * the size of this field
      * @throws IOException failed to advance the buffer
      */
-    void skip(@NonNull ByteBuffer bytes) throws IOException {
+    void skip(@Nonnull ByteBuffer bytes) throws IOException {
         if (bytes.remaining() < mSize) {
             throw new IOException("Cannot skip field " + mName + " because only "
                     + bytes.remaining() + " remain in the buffer.");
@@ -161,7 +160,7 @@ abstract class ZipField {
      * @return the value of the field
      * @throws IOException failed to read the field
      */
-    long read(@NonNull ByteBuffer bytes) throws IOException {
+    long read(@Nonnull ByteBuffer bytes) throws IOException {
         if (bytes.remaining() < mSize) {
             throw new IOException("Cannot skip field " + mName + " because only "
                     + bytes.remaining() + " remain in the buffer.");
@@ -188,7 +187,7 @@ abstract class ZipField {
      * will be positioned at the first byte after the field
      * @throws IOException failed to read the field or the field does not have the expected value
      */
-    void verify(@NonNull ByteBuffer bytes) throws IOException {
+    void verify(@Nonnull ByteBuffer bytes) throws IOException {
         Preconditions.checkState(mExpected != null, "mExpected == null");
         verify(bytes, mExpected);
     }
@@ -202,7 +201,7 @@ abstract class ZipField {
      * value must verify them
      * @throws IOException failed to read the data or the field does not have the expected value
      */
-    void verify(@NonNull ByteBuffer bytes, long expected) throws IOException {
+    void verify(@Nonnull ByteBuffer bytes, long expected) throws IOException {
         checkVerifiesInvariants(expected);
         long r = read(bytes);
         if (r != expected) {
@@ -219,7 +218,7 @@ abstract class ZipField {
      * @param value the value to write
      * @throws IOException failed to write the value in the stream
      */
-    void write(@NonNull ByteBuffer output, long value) throws IOException {
+    void write(@Nonnull ByteBuffer output, long value) throws IOException {
         checkVerifiesInvariants(value);
 
         Preconditions.checkArgument(value >= 0, "value (%s) < 0", value);
@@ -242,7 +241,7 @@ abstract class ZipField {
      * of the buffer
      * @throws IOException failed to write the value in the stream
      */
-    void write(@NonNull ByteBuffer output) throws IOException {
+    void write(@Nonnull ByteBuffer output) throws IOException {
         Preconditions.checkState(mExpected != null, "mExpected == null");
         write(output, mExpected);
     }
@@ -269,7 +268,7 @@ abstract class ZipField {
          * @param name the field's name
          * @param invariants the invariants that must be verified by the field
          */
-        F2(int offset, @NonNull String name, ZipFieldInvariant... invariants) {
+        F2(int offset, @Nonnull String name, ZipFieldInvariant... invariants) {
             super(offset, 2, name, invariants);
         }
 
@@ -280,7 +279,7 @@ abstract class ZipField {
          * @param expected the expected field value
          * @param name the field's name
          */
-        F2(int offset, long expected, @NonNull String name) {
+        F2(int offset, long expected, @Nonnull String name) {
             super(offset, 2, expected, name);
         }
     }
@@ -296,7 +295,7 @@ abstract class ZipField {
          * @param name the field's name
          * @param invariants the invariants that must be verified by the field
          */
-        F4(int offset, @NonNull String name, ZipFieldInvariant... invariants) {
+        F4(int offset, @Nonnull String name, ZipFieldInvariant... invariants) {
             super(offset, 4, name, invariants);
         }
 
@@ -307,7 +306,7 @@ abstract class ZipField {
          * @param expected the expected field value
          * @param name the field's name
          */
-        F4(int offset, long expected, @NonNull String name) {
+        F4(int offset, long expected, @Nonnull String name) {
             super(offset, 4, expected, name);
         }
     }

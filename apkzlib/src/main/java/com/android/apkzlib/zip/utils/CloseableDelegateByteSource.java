@@ -16,19 +16,18 @@
 
 package com.android.apkzlib.zip.utils;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.io.ByteProcessor;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Closeable byte source that delegates to another byte source.
@@ -54,7 +53,7 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      * @param inner the inner byte source
      * @param size the size of the source
      */
-    public CloseableDelegateByteSource(@NonNull ByteSource inner, long size) {
+    public CloseableDelegateByteSource(@Nonnull ByteSource inner, long size) {
         mInner = inner;
         mSize = size;
     }
@@ -65,7 +64,7 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      *
      * @return the inner byte source
      */
-    @NonNull
+    @Nonnull
     private synchronized ByteSource get() {
         if (mInner == null) {
             throw new ByteSourceDisposedException();
@@ -122,12 +121,12 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public long copyTo(@NonNull OutputStream output) throws IOException {
+    public long copyTo(@Nonnull OutputStream output) throws IOException {
         return get().copyTo(output);
     }
 
     @Override
-    public long copyTo(@NonNull ByteSink sink) throws IOException {
+    public long copyTo(@Nonnull ByteSink sink) throws IOException {
         return get().copyTo(sink);
     }
 
@@ -137,7 +136,7 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public <T> T read(@NonNull ByteProcessor<T> processor) throws IOException {
+    public <T> T read(@Nonnull ByteProcessor<T> processor) throws IOException {
         return get().read(processor);
     }
 
@@ -147,7 +146,7 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
     }
 
     @Override
-    public boolean contentEquals(@NonNull ByteSource other) throws IOException {
+    public boolean contentEquals(@Nonnull ByteSource other) throws IOException {
         return get().contentEquals(other);
     }
 

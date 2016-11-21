@@ -16,8 +16,6 @@
 
 package com.android.apkzlib.zfile;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.apkzlib.sign.FullApkSignExtension;
 import com.android.apkzlib.sign.ManifestGenerationExtension;
 import com.android.apkzlib.sign.SignatureExtension;
@@ -26,13 +24,14 @@ import com.android.apkzlib.zip.AlignmentRules;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.apkzlib.zip.ZFileOptions;
-
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Factory for {@link ZFile}s that are specifically configured to be APKs, AARs, ...
@@ -64,8 +63,8 @@ public class ZFiles {
      * @return the zip file
      * @throws IOException failed to create the zip file
      */
-    @NonNull
-    public static ZFile apk(@NonNull File f, @NonNull ZFileOptions options) throws IOException {
+    @Nonnull
+    public static ZFile apk(@Nonnull File f, @Nonnull ZFileOptions options) throws IOException {
         options.setAlignmentRule(
                 AlignmentRules.compose(options.getAlignmentRule(), APK_DEFAULT_RULE));
         return new ZFile(f, options);
@@ -91,10 +90,10 @@ public class ZFiles {
      * @return the zip file
      * @throws IOException failed to create the zip file
      */
-    @NonNull
+    @Nonnull
     public static ZFile apk(
-            @NonNull File f,
-            @NonNull ZFileOptions options,
+            @Nonnull File f,
+            @Nonnull ZFileOptions options,
             @Nullable PrivateKey key,
             @Nullable X509Certificate certificate,
             boolean v1SigningEnabled,

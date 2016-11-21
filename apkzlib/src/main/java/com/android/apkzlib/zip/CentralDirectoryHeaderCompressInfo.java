@@ -16,7 +16,7 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
+import javax.annotation.Nonnull;
 
 /**
  * Information stored in the {@link CentralDirectoryHeader} that is related to compression and may
@@ -37,7 +37,7 @@ public class CentralDirectoryHeaderCompressInfo {
     /**
      * The compression method.
      */
-    @NonNull
+    @Nonnull
     private final CompressionMethod mMethod;
 
     /**
@@ -59,7 +59,7 @@ public class CentralDirectoryHeaderCompressInfo {
      * {@link #VERSION_WITH_STORE_FILES_ONLY} or {@link #VERSION_WITH_DIRECTORIES_AND_DEFLATE})
      */
     public CentralDirectoryHeaderCompressInfo(
-            @NonNull CompressionMethod method,
+            @Nonnull CompressionMethod method,
             long compressedSize,
             long versionToExtract) {
         mMethod = method;
@@ -74,8 +74,8 @@ public class CentralDirectoryHeaderCompressInfo {
      * @param method the compression method
      * @param compressedSize the compressed size
      */
-    public CentralDirectoryHeaderCompressInfo(@NonNull CentralDirectoryHeader header,
-            @NonNull CompressionMethod method, long compressedSize) {
+    public CentralDirectoryHeaderCompressInfo(@Nonnull CentralDirectoryHeader header,
+            @Nonnull CompressionMethod method, long compressedSize) {
         mMethod = method;
         mCompressedSize = compressedSize;
 
@@ -103,7 +103,7 @@ public class CentralDirectoryHeaderCompressInfo {
      *
      * @return the compression method
      */
-    @NonNull
+    @Nonnull
     public CompressionMethod getMethod() {
         return mMethod;
     }

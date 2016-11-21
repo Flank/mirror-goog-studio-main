@@ -16,15 +16,14 @@
 
 package com.android.apkzlib.zip;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
+import javax.annotation.Nonnull;
 
 /**
  * Byte source that inflates another byte source. It assumed the inner byte source has deflated
@@ -35,14 +34,14 @@ public class InflaterByteSource extends CloseableByteSource {
     /**
      * The stream factory for the deflated data.
      */
-    @NonNull
+    @Nonnull
     private final CloseableByteSource mDeflatedSource;
 
     /**
      * Creates a new source.
      * @param byteSource the factory for deflated data
      */
-    public InflaterByteSource(@NonNull CloseableByteSource byteSource) {
+    public InflaterByteSource(@Nonnull CloseableByteSource byteSource) {
         mDeflatedSource = byteSource;
     }
 

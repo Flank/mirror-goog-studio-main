@@ -18,8 +18,7 @@ package com.android.apkzlib.sign.v2;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-
-import com.android.annotations.NonNull;
+import javax.annotation.Nonnull;
 
 /**
  * Source of data which is fed into {@link MessageDigest} instances.
@@ -47,5 +46,5 @@ public interface DigestSource {
      *        source.
      * @param size size (in bytes) of the chunk.
      */
-    void feedDigests(long offset, int size, @NonNull MessageDigest[] digests) throws IOException;
+    void feedDigests(long offset, int size, @Nonnull MessageDigest[] digests) throws IOException;
 }

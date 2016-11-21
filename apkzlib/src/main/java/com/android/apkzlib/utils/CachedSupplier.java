@@ -16,9 +16,8 @@
 
 package com.android.apkzlib.utils;
 
-import com.android.annotations.NonNull;
-
 import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 
 /**
  * Supplier that will cache a computed value and always supply the same value. It can be used to
@@ -58,13 +57,13 @@ public class CachedSupplier<T> {
     /**
      * Actual supplier of data, if computation is needed.
      */
-    @NonNull
+    @Nonnull
     private final Supplier<T> supplier;
 
     /**
      * Creates a new supplier.
      */
-    public CachedSupplier(@NonNull Supplier<T> supplier) {
+    public CachedSupplier(@Nonnull Supplier<T> supplier) {
         valid = false;
         this.supplier = supplier;
     }

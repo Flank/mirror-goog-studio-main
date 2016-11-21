@@ -19,7 +19,6 @@ package com.android.apkzlib.sign;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.ApkZLibPair;
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -30,6 +29,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
+import javax.annotation.Nonnull;
 import javax.security.auth.x500.X500Principal;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -54,7 +54,7 @@ public class SignatureTestUtils {
      * @return the pair with the private key and certificate
      * @throws Exception failed to generate the signature data
      */
-    @NonNull
+    @Nonnull
     public static ApkZLibPair<PrivateKey, X509Certificate> generateSignaturePre18()
             throws Exception {
         return generateSignature("RSA", "SHA1withRSA");
@@ -66,7 +66,7 @@ public class SignatureTestUtils {
      * @return the pair with the private key and certificate
      * @throws Exception failed to generate the signature data
      */
-    @NonNull
+    @Nonnull
     public static ApkZLibPair<PrivateKey, X509Certificate> generateSignaturePos18()
             throws Exception {
         return generateSignature("EC", "SHA256withECDSA");
@@ -80,10 +80,10 @@ public class SignatureTestUtils {
      * @return the pair with the private key and certificate
      * @throws Exception failed to generate the signature data
      */
-    @NonNull
+    @Nonnull
     public static ApkZLibPair<PrivateKey, X509Certificate> generateSignature(
-            @NonNull String sign,
-            @NonNull String full)
+            @Nonnull String sign,
+            @Nonnull String full)
             throws Exception {
         // http://stackoverflow.com/questions/28538785/
         // easy-way-to-generate-a-self-signed-certificate-for-java-security-keystore-using
